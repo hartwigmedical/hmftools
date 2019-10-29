@@ -1,9 +1,8 @@
 # AMBER
 AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
-When using paired reference/tumor bams, AMBER confirms which of these sites is heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
-
-In tumor only mode, all provided sites are examined in the tumor, but additional filtering is applied. 
+When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
+In tumor only mode, all provided sites are examined in the tumor with additional filtering then applied. 
  
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
@@ -15,18 +14,19 @@ When using paired reference/tumor data, AMBER is also able to:
 
 To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
 
-A set of likely heterozygous sites must be provided. HG19 and HG38 versions are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
+HG19 and HG38 versions of the likely heterozygous sites are available to download from [HMFTools-Resources > Amber](https://resources.hartwigmedicalfoundation.nl/).
 
-AMBER depends on the Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package for segmentation.
+The Bioconductor [copynumber](http://bioconductor.org/packages/release/bioc/html/copynumber.html) package is required for segmentation.
 After installing [R](https://www.r-project.org/) or [RStudio](https://rstudio.com/), the copy number package can be added with the following R commands:
 ```
     library(BiocManager)
     install("copynumber")
 ```
 
-AMBER requires Java 1.8+ and can be run with the minimum set of arguments as follows:
+AMBER requires Java 1.8+ to be installed.
 
 ## Pared Normal/Tumor Mode
+This is the default and recommended mode.
 
 ### Mandatory Arguments
 
@@ -39,9 +39,12 @@ tumor_bam | Path to indexed tumor BAM file
 output_dir | Path to the output directory. This directory will be created if it does not already exist.
 loci | Path to vcf file containing likely heterozygous sites (see below). Gz files supported.  
 
-The bed file used by HMF (GermlineHetPon.hg19.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
+The vcf file used by HMF (GermlineHetPon.hg19.vcf.gz) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
 The sites were chosen by running the GATK HaplotypeCaller over 1700 germline samples and then selecting all SNP sites which are heterozygous in 800 to 900 of the samples. 
 The 1.3 million sites provided in this file typically result in 450k+ BAF points. A HG38 equivalent is also available.
+
+Approximately 1000 sites scattered evenly through the VCF have been tagged with a SNPCHECK flag. 
+The allelic frequency of these sites in the reference bam are written to the `REFERENCE.amber.snp.vcf.gz` file without any filtering to be used downstream for sample matching. 
 
 AMBER supports both BAM and CRAM file formats. 
 
@@ -70,6 +73,7 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ```
 
 ## Tumor Only Mode
+In the absence of a reference bam, AMBER can be put into tumor only mode with the `tumor_only` flag.
 
 ### Mandatory Arguments
 
