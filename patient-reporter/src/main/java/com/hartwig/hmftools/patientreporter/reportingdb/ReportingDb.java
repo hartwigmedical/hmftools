@@ -44,10 +44,10 @@ public final class ReportingDb {
         if (sampleId.startsWith("COLO")) {
             LOGGER.debug("This is a COLO sample. This sample will not be included in Reporting Db");
         } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
-            LOGGER.warn("Skipping addition to Reporting Db, missing summary for WIDE sample {}!", sampleId);
+            LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
         } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORE01LR")
                 && !sampleId.startsWith("CORE01RI")) {
-            LOGGER.warn("Skipping addition to Reporting Db, missing summary for CORE sample {}!", sampleId);
+            LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
         } else {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
@@ -58,7 +58,7 @@ public final class ReportingDb {
             }
 
             if (!present) {
-                LOGGER.info("Adding {} to Reporting Db with type {}", sampleId, reportType);
+                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
                 String stringToAppend =
                         sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliablePurity
                                 + "\t" + hasReliableQuality + "\n";
@@ -76,7 +76,7 @@ public final class ReportingDb {
         String reportType = report.reason().identifier();
 
         if (sampleId.startsWith("COLO")) {
-            LOGGER.debug("This is a COLO sample. This sample will not be included in Reporting Db");
+            LOGGER.debug("This is a COLO sample. This sample will not be included in reporting db");
         } else {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
@@ -87,7 +87,7 @@ public final class ReportingDb {
             }
 
             if (!present) {
-                LOGGER.info("Adding {} to Reporting Db with type {}", sampleId, reportType);
+                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
                 String stringToAppend = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\tN/A\tN/A\tN/A\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }
