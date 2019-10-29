@@ -54,7 +54,7 @@ public class ReportingDbTest {
                 writer.close();
             }
 
-            ReportingDb.generateOutputReportDatesSeqRapports(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829());
+            ReportingDb.generateOutputReportDatesSeqReport(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829());
 
             ReportingDb.generateOutputReportDatesQCFailReport(reportDatesTsv.getPath(),
                     ExampleAnalysisTestFactory.buildQCFailReport("COLO829", QCFailReason.LOW_TUMOR_PERCENTAGE));

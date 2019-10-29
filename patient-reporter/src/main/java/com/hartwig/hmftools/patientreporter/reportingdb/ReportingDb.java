@@ -29,7 +29,7 @@ public final class ReportingDb {
     private ReportingDb() {
     }
 
-    public static void generateOutputReportDatesSeqRapports(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
+    public static void generateOutputReportDatesSeqReport(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
             throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();

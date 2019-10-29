@@ -131,7 +131,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesSeqRapports(cmd.getOptionValue(REPORTING_DB_TSV), report);
+            ReportingDb.generateOutputReportDatesSeqReport(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else {
             printUsageAndExit(options);
         }
