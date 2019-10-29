@@ -91,7 +91,6 @@ public final class ReportableVariantAnalyzer {
             final Map<ReportableVariant, List<EvidenceItem>> evidenceForAllVariants) {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerHighDriverVariant = Maps.newHashMap();
         for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
-
             if (DriverInterpretation.interpret(entry.getKey().driverLikelihood()) == DriverInterpretation.HIGH) {
                 evidencePerHighDriverVariant.put(entry.getKey(), entry.getValue());
             }
