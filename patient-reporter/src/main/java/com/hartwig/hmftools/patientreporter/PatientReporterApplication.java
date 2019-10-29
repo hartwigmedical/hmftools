@@ -86,7 +86,7 @@ public class PatientReporterApplication {
         Options options = createOptions();
         CommandLine cmd = createCommandLine(options, args);
 
-        if (!validInputForReportWriter(cmd) || !validInputForBaseReportData(cmd)) {
+        if (!validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
         }
 
@@ -201,24 +201,20 @@ public class PatientReporterApplication {
                 cmd.getOptionValue(SAMPLE_SUMMARY_TSV));
     }
 
-    private static boolean validInputForReportWriter(@NotNull CommandLine cmd) {
+    private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
                 cmd,
-                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORT_DATES_TSV);
-    }
-
-    private static boolean validInputForBaseReportData(@NotNull CommandLine cmd) {
-        return fileExists(cmd, TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY)
-                && fileExists(cmd, SIGNATURE) && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO);
+                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORT_DATES_TSV) && fileExists(cmd,
+                TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY) && fileExists(cmd, SIGNATURE)
+                && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO);
     }
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
-        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, LINX_DISRUPTION_TSV) && fileExists(cmd, BACHELOR_TSV) && fileExists(
-                cmd,
-                CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && fileExists(cmd, LINX_VIRALINSERTION_TSV) && fileExists(cmd,
-                LINX_DRIVERS_TSV) && valueExists(cmd, REF_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
-                GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV) && fileExists(cmd, PURPLE_QC);
+        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd,
+                SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
+                LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRALINSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
+                CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
+                GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
