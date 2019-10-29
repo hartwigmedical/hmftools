@@ -109,7 +109,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesQCFailReport(cmd.getOptionValue(REPORTING_DB_TSV), reason, sampleMetadata, true);
+            ReportingDb.generateOutputReportDatesQCFailReport(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
@@ -131,13 +131,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesSeqRapports(cmd.getOptionValue(REPORTING_DB_TSV),
-                    cmd.getOptionValue(PURPLE_PURITY_TSV),
-                    sampleMetadata,
-                    cmd.getOptionValue(PURPLE_QC_FILE),
-                    report.isCorrectedReport(),
-                    report.clinicalSummary(),
-                    true);
+            ReportingDb.generateOutputReportDatesSeqRapports(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else {
             printUsageAndExit(options);
         }
@@ -214,7 +208,8 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
-        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd,
+        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(
+                cmd,
                 SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
                 LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
                 CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,

@@ -13,14 +13,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.io.reader.LineReader;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
-import com.hartwig.hmftools.patientreporter.SampleMetadata;
-import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,36 +27,30 @@ public final class ReportingDb {
     private static final String DELIMITER = "\t";
 
     private ReportingDb() {
-
     }
 
-    public static void generateOutputReportDatesSeqRapports(@NotNull String reportingDbTsv, @NotNull String purplePurityTsv,
-            @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport, String clinicalSummary,
-            boolean addToFile) throws IOException {
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleMetadata.tumorSampleId());
+    public static void generateOutputReportDatesSeqRapports(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
+            throws IOException {
+        String sampleId = report.sampleReport().tumorSampleId();
+        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
 
         String reportDate = currentDate();
 
-        String sampleId = sampleMetadata.tumorSampleId();
-        String tumorBarcode = sampleMetadata.tumorSampleBarcode();
+        String purity = new DecimalFormat("#'%'").format(report.impliedPurity() * 100);
+        String hasReliablePurity = String.valueOf(report.hasReliablePurity());
+        String hasReliableQuality = String.valueOf(report.hasReliableQuality());
 
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
-
-        String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
-        FittedPurityStatus status = purityContext.status();
-        PurpleQCStatus qcStatus = purpleQC.status();
-
-        List<ReportingEntry> allReportDates = read(reportingDbTsv);
-        String reasonCorrect = correctReport ? "sequence_report" + "_corrected" : "sequence_report";
+        String reasonCorrect = report.isCorrectedReport() ? "sequence_report" + "_corrected" : "sequence_report";
         String keySample = sampleId + tumorBarcode + reportDate + reasonCorrect;
-        String keySample2 = sampleId + tumorBarcode + reasonCorrect + purity + status + qcStatus;
+        String keySample2 = sampleId + tumorBarcode + reasonCorrect + purity + hasReliablePurity + hasReliableQuality;
 
         boolean present = false;
-        for (ReportingEntry dates : allReportDates) {
-            String keyFile = dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
+        for (ReportingEntry entry : read(reportingDbTsv)) {
+            String keyFile = entry.sampleId() + entry.tumorBarcode() + entry.reportDate() + entry.sourceReport();
             String keyFile2 =
-                    dates.sampleId() + dates.tumorBarcode() + dates.sourceReport() + dates.purity() + dates.status() + dates.qcStatus();
+                    entry.sampleId() + entry.tumorBarcode() + entry.sourceReport() + entry.purity() + entry.status() + entry.qcStatus();
 
             if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
                 LOGGER.warn("Sample is already reported!");
@@ -70,52 +58,50 @@ public final class ReportingDb {
             } else if (sampleId.startsWith("COLO")) {
                 LOGGER.warn("It is a COLO sample. This sample will not be reported!");
                 present = true;
-            } else if (type.equals(LimsSampleType.WIDE) && clinicalSummary.isEmpty()) {
+            } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
                 LOGGER.warn("Add summary to report for WIDE!");
                 present = true;
             } else if (type.equals(LimsSampleType.CORE)) {
-                if (!sampleId.startsWith("CORE01LR") && clinicalSummary.isEmpty()) {
+                if (!sampleId.startsWith("CORE01LR") && report.clinicalSummary().isEmpty()) {
                     LOGGER.warn("Add summary to report for CORE!");
                     present = true;
-                } else if (!sampleId.startsWith("CORE01RI") && clinicalSummary.isEmpty()) {
+                } else if (!sampleId.startsWith("CORE01RI") && report.clinicalSummary().isEmpty()) {
                     LOGGER.warn("Add summary to report for CORE!");
                     present = true;
                 }
             }
         }
 
-        if (!present && addToFile) {
+        if (!present) {
             LOGGER.info("Writing report date to tsv file");
             String stringForFile =
-                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + status + "\t"
-                            + qcStatus + "\n";
+                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + hasReliablePurity
+                            + "\t" + hasReliableQuality + "\n";
             writeToTSV(stringForFile, reportingDbTsv);
         }
     }
 
-    public static void generateOutputReportDatesQCFailReport(@NotNull String reportingDbTsv, @NotNull QCFailReason reason,
-            @NotNull SampleMetadata sampleMetadata, boolean addToFile) throws IOException {
+    public static void generateOutputReportDatesQCFailReport(@NotNull String reportingDbTsv, @NotNull QCFailReport report)
+            throws IOException {
         String reportDate = currentDate();
 
-        String sampleId = sampleMetadata.tumorSampleId();
-        String tumorBarcode = sampleMetadata.tumorSampleBarcode();
+        String sampleId = report.sampleReport().tumorSampleId();
+        String tumorBarcode = report.sampleReport().tumorSampleBarcode();
 
-        List<ReportingEntry> allReportDates = read(reportingDbTsv);
-
-        String keySample = sampleId + tumorBarcode + reportDate + reason;
+        String keySample = sampleId + tumorBarcode + reportDate + report.reason();
 
         boolean present = false;
-        for (ReportingEntry dates : allReportDates) {
-            String keyFile = dates.sampleId() + dates.tumorBarcode() + dates.reportDate() + dates.sourceReport();
+        for (ReportingEntry entry : read(reportingDbTsv)) {
+            String keyFile = entry.sampleId() + entry.tumorBarcode() + entry.reportDate() + entry.sourceReport();
             if (keySample.equals(keyFile)) {
-                LOGGER.warn("Sample is already reported!");
+                LOGGER.warn("Sample {} has already been reported!", sampleId);
                 present = true;
             }
         }
 
-        if (!present && addToFile) {
-            LOGGER.info("Writing report date to tsv file");
-            String stringForFile = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reason + "\n";
+        if (!present) {
+            LOGGER.info("Writing entry to tsv file for {}.", sampleId);
+            String stringForFile = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + report.reason() + "\n";
             writeToTSV(stringForFile, reportingDbTsv);
         }
     }
@@ -150,6 +136,7 @@ public final class ReportingDb {
         return reportingEntryList;
     }
 
+    @NotNull
     private static String currentDate() {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         return formatter.format(new Date());

@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
+import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
@@ -33,6 +34,10 @@ import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLo
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
+import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
@@ -212,6 +217,38 @@ public final class ExampleAnalysisTestFactory {
                 .viralInsertions(viralInsertions)
                 .circosPath(CIRCOS_PATH)
                 .comments(Optional.of("This is a test report and does not relate to any real patient"))
+                .isCorrectedReport(false)
+                .signaturePath(reportData.signaturePath())
+                .logoRVAPath(reportData.logoRVAPath())
+                .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
+    }
+
+    public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
+        SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
+
+        LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
+        QCFailStudy failStudy;
+        switch (sampleType) {
+            case CORE:
+                failStudy = QCFailStudy.CORE;
+                break;
+            case WIDE:
+                failStudy = QCFailStudy.WIDE;
+                break;
+            case DRUP:
+                failStudy = QCFailStudy.DRUP;
+                break;
+            default:
+                failStudy = QCFailStudy.CPCT;
+        }
+
+        final ReportData reportData = testReportData();
+        return ImmutableQCFailReport.builder()
+                .sampleReport(sampleReport)
+                .reason(reason)
+                .study(failStudy)
+                .comments(Optional.empty())
                 .isCorrectedReport(false)
                 .signaturePath(reportData.signaturePath())
                 .logoRVAPath(reportData.logoRVAPath())
