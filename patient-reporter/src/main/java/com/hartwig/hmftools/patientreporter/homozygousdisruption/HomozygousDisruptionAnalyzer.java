@@ -18,16 +18,15 @@ public final class HomozygousDisruptionAnalyzer {
     private static final Logger LOGGER = LogManager.getLogger(HomozygousDisruptionAnalyzer.class);
 
     private HomozygousDisruptionAnalyzer() {
-
     }
 
     @NotNull
-    public static List<ReportableHomozygousDisruption> interpetDriverCatalog(@NotNull String linxDriversCatalogTsv) throws IOException {
-        List<DriverCatalog> allDriversCatalog = DriverCatalogFile.read(linxDriversCatalogTsv);
+    public static List<ReportableHomozygousDisruption> extractFromLinxDriversTsv(@NotNull String linxDriversTsv) throws IOException {
+        List<DriverCatalog> allDriversCatalog = DriverCatalogFile.read(linxDriversTsv);
         LOGGER.info("Loaded {} driver catalog records", allDriversCatalog.size());
 
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptions(allDriversCatalog);
-        LOGGER.info("Loaded {} homozyguous deletion disruptions records", reportableHomozygousDisruptions.size());
+        LOGGER.info("Loaded {} homozygous disruptions ", reportableHomozygousDisruptions.size());
         return reportableHomozygousDisruptions;
     }
 

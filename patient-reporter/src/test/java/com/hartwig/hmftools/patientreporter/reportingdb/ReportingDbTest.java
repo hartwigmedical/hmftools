@@ -16,51 +16,49 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class ReportDatesAnalyzerTest {
-    private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
+public class ReportingDbTest {
 
     private static final String REPORT_DATES_TSV = Resources.getResource("lims/report_dates_lims.tsv").getPath();
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
     private static final boolean WRITE_TO_TSV = false;
 
+    private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
     private static final String PURPLE_QC = BASE_DIRECTORY + "/purple/sample.purple.qc";
 
     @Ignore
     @Test
     public void canReadReportDatesTsv() throws IOException {
-        List<ReportDates> reportDates = ReportDatesAnalyzer.read(REPORT_DATES_TSV);
+        List<ReportingEntry> reportDates = ReportingDb.read(REPORT_DATES_TSV);
 
         assertEquals(2, reportDates.size());
 
-        ReportDates reportDates1 = reportDates.get(0);
-        assertEquals("sampleId", reportDates1.sampleId());
-        assertEquals("ABCD", reportDates1.tumorBarcode());
-        assertEquals("22/10/2019", reportDates1.reportDate());
-        assertEquals("sequence_report", reportDates1.sourceReport());
-        assertEquals("70%", reportDates1.purity());
-        assertEquals("NORMAL", reportDates1.status());
-        assertEquals("PASS", reportDates1.qcStatus());
+        ReportingEntry reportingEntry1 = reportDates.get(0);
+        assertEquals("sampleId", reportingEntry1.sampleId());
+        assertEquals("ABCD", reportingEntry1.tumorBarcode());
+        assertEquals("22/10/2019", reportingEntry1.reportDate());
+        assertEquals("sequence_report", reportingEntry1.sourceReport());
+        assertEquals("70%", reportingEntry1.purity());
+        assertEquals("NORMAL", reportingEntry1.status());
+        assertEquals("PASS", reportingEntry1.qcStatus());
 
-        ReportDates reportDates2 = reportDates.get(1);
-        assertEquals("sampleId", reportDates2.sampleId());
-        assertEquals("EFGH", reportDates2.tumorBarcode());
-        assertEquals("22/10/2019", reportDates2.reportDate());
-        assertEquals("SHALLOW_SEQ_LOW_PURITY", reportDates2.sourceReport());
+        ReportingEntry reportingEntry2 = reportDates.get(1);
+        assertEquals("sampleId", reportingEntry2.sampleId());
+        assertEquals("EFGH", reportingEntry2.tumorBarcode());
+        assertEquals("22/10/2019", reportingEntry2.reportDate());
+        assertEquals("SHALLOW_SEQ_LOW_PURITY", reportingEntry2.sourceReport());
     }
 
     @Test
     public void canWriteReportDatesToTSV() throws IOException {
         if (WRITE_TO_TSV) {
-            File reportDatesTSV = new File(REPORT_BASE_DIR + "/report_dates_lims.tsv");
-            reportDatesTSV.createNewFile();
+            File reportDatesTsv = new File(REPORT_BASE_DIR + "/report_dates_lims.tsv");
 
-            if (reportDatesTSV.length() == 0) {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTSV, true));
+            if (reportDatesTsv.createNewFile()) {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
                 writer.write("sampleId\ttumorBarcode\treportDate\tsourceReport\tpurity\tstatus\tqcStatus\n");
                 writer.close();
             }
-
 
             SampleMetadata sampleMetaData = ImmutableSampleMetadata.builder()
                     .refSampleId("refSampleId")
@@ -71,17 +69,17 @@ public class ReportDatesAnalyzerTest {
 
             String clinicalSummary = "";
 
-            ReportDatesAnalyzer.generateOutputReportDatesSeqRapports(reportDatesTSV.getPath(),
+            ReportingDb.generateOutputReportDatesSeqRapports(reportDatesTsv.getPath(),
                     PURPLE_PURITY_TSV,
                     sampleMetaData,
                     PURPLE_QC,
                     false,
                     clinicalSummary,
-                    WRITE_TO_TSV, "sampleId");
+                    true);
 
             QCFailReason reason = QCFailReason.fromIdentifier("shallow_seq_low_purity");
 
-            ReportDatesAnalyzer.generateOutputReportDatesQCFailReport(reason, reportDatesTSV.getPath(), sampleMetaData, WRITE_TO_TSV);
+            ReportingDb.generateOutputReportDatesQCFailReport(reportDatesTsv.getPath(), reason, sampleMetaData, true);
         }
     }
 }

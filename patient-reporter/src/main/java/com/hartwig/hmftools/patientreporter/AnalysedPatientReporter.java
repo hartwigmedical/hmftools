@@ -32,7 +32,6 @@ import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalysis;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
-import com.hartwig.hmftools.patientreporter.reportingdb.ReportDatesAnalyzer;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
@@ -65,10 +64,10 @@ class AnalysedPatientReporter {
 
     @NotNull
     AnalysedPatientReport run(@NotNull SampleMetadata sampleMetadata, @NotNull String purplePurityTsv, @NotNull String purpleGeneCnvTsv,
-            @NotNull String somaticVariantVcf, @NotNull String linxFusionTsv, @NotNull String linxDisruptionTsv,
-            @NotNull String bachelorTSV, @NotNull String chordPredictionTxt, @NotNull String circosFile,
-            @NotNull String linxViralInsertionTsv, @NotNull String linxDriversCatalogTsv, @NotNull String reportDatesTsv,
-            @NotNull String purpleQCFile, @Nullable String comments, boolean correctedReport) throws IOException {
+            @NotNull String somaticVariantVcf, @NotNull String bachelorTsv, @NotNull String linxFusionTsv,
+            @NotNull String linxDisruptionTsv, @NotNull String linxViralInsertionTsv, @NotNull String linxDriversTsv,
+            @NotNull String chordPredictionTxt, @NotNull String circosFile, @NotNull String purpleQCFile, @Nullable String comments,
+            boolean correctedReport) throws IOException {
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(reportData.patientTumorLocations(),
                         sampleMetadata.tumorSampleId());
@@ -78,7 +77,7 @@ class AnalysedPatientReporter {
                 reportData.hospitalModel(),
                 patientTumorLocation);
 
-        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = analyzeDriverCatalog(linxDriversCatalogTsv);
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
 
         CopyNumberAnalysis copyNumberAnalysis = analyzeCopyNumbers(purplePurityTsv, purpleGeneCnvTsv, patientTumorLocation);
         SomaticVariantAnalysis somaticVariantAnalysis =
@@ -86,7 +85,7 @@ class AnalysedPatientReporter {
 
         ChordAnalysis chordAnalysis = analyzeChord(chordPredictionTxt);
         List<ReportableGermlineVariant> germlineVariantsToReport = analyzeGermlineVariants(sampleMetadata.tumorSampleBarcode(),
-                bachelorTSV,
+                bachelorTsv,
                 copyNumberAnalysis,
                 somaticVariantAnalysis,
                 chordAnalysis);
@@ -140,25 +139,19 @@ class AnalysedPatientReporter {
                 .build();
 
         printReportState(report);
-        ReportDatesAnalyzer.generateOutputReportDatesSeqRapports(reportDatesTsv,
-                purplePurityTsv,
-                sampleReport.sampleMetadata(),
-                purpleQCFile,
-                correctedReport,
-                clinicalSummary, true, report.sampleReport().tumorSampleId());
 
         return report;
     }
 
     @NotNull
-    public List<ReportableHomozygousDisruption> analyzeDriverCatalog(@NotNull String linxDriversCatalogTsv) throws IOException {
-        return HomozygousDisruptionAnalyzer.interpetDriverCatalog(linxDriversCatalogTsv);
+    private List<ReportableHomozygousDisruption> extractHomozygousDisruptionsFromLinxDrivers(@NotNull String linxDriversTsv)
+            throws IOException {
+        return HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
     }
 
     @NotNull
-    public List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
+    private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
         return InterpretViralInsertion.interpretVirals(linxViralInsertionTsv);
-
     }
 
     @NotNull

@@ -14,7 +14,7 @@ import org.junit.Test;
 public class BachelorFileTest {
 
     private static final double EPSILON = 1.0e-10;
-    private static final String BACHELOR_FILE = Resources.getResource("test_run/bachelor/sample_germline_variants.csv").getPath();
+    private static final String BACHELOR_FILE = Resources.getResource("test_run/bachelor/sample_germline_variants.tsv").getPath();
 
     @Test
     public void canReadTestBachelorFile() throws IOException {

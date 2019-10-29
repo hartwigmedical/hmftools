@@ -10,27 +10,27 @@
 
     <modules>
         <module>hmf-common</module>
-        <module>hmf-extensions</module>
-        <module>api-clients</module>
-        <module>ensembl-db</module>
-        <module>patient-db</module>
+<!--        <module>hmf-extensions</module>-->
+<!--        <module>api-clients</module>-->
+<!--        <module>ensembl-db</module>-->
+<!--        <module>patient-db</module>-->
         <module>patient-reporter</module>
-        <module>health-checker</module>
-        <module>fastq-stats</module>
-        <module>amber</module>
-        <module>sage</module>
-        <module>count-bam-lines</module>
-        <module>purity-ploidy-estimator</module>
-        <module>hmf-gene-panel-builder</module>
-        <module>strelka-post-process</module>
-        <module>bam-slicer</module>
-        <module>bachelor</module>
-        <module>hmf-id-generator</module>
-        <module>sv-linx</module>
-        <module>stat_calcs</module>
-        <module>knowledgebase-importer</module>
-        <module>sig_analyser</module>
-        <module>vicc-knowledgebase-importer</module>
+<!--        <module>health-checker</module>-->
+<!--        <module>fastq-stats</module>-->
+<!--        <module>amber</module>-->
+<!--        <module>sage</module>-->
+<!--        <module>count-bam-lines</module>-->
+<!--        <module>purity-ploidy-estimator</module>-->
+<!--        <module>hmf-gene-panel-builder</module>-->
+<!--        <module>strelka-post-process</module>-->
+<!--        <module>bam-slicer</module>-->
+<!--        <module>bachelor</module>-->
+<!--        <module>hmf-id-generator</module>-->
+<!--        <module>sv-linx</module>-->
+<!--        <module>stat_calcs</module>-->
+<!--        <module>knowledgebase-importer</module>-->
+<!--        <module>sig_analyser</module>-->
+<!--        <module>vicc-knowledgebase-importer</module>-->
     </modules>
 
     <properties>
