@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
@@ -40,32 +41,39 @@ public final class ReportableVariantAnalyzer {
             @NotNull LimsGermlineReportingChoice germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
-        Double driverLikelihood = null;
         for (SomaticVariant variant : somaticVariantsReport) {
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
             if (catalog == null) {
-                LOGGER.warn("No driver entry found for gene {}!", variant.gene());
+                throw new IllegalStateException("No driver entry found for gene: " + variant.gene());
             }
-            for (ReportableGermlineVariant interpretGermlineVariant : germlineVariantsToReport) {
-                if (interpretGermlineVariant.germlineVariant().gene().equals(variant.gene())) {
-                    driverLikelihood = interpretGermlineVariant.driverLikelihood();
+            double driverLikelihood = catalog.driverLikelihood();
+            for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+                if (germlineVariant.variant().gene().equals(variant.gene())) {
+                    driverLikelihood = Math.max(driverLikelihood, germlineVariant.driverLikelihood());
                 }
             }
-            Double somaticDriverCatalog = catalog != null ? catalog.driverLikelihood() : null;
-            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(driverGeneView.category(variant.gene()))
-                    .driverLikelihood(driverLikelihood != null ? driverLikelihood : somaticDriverCatalog)
+            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(catalog.category())
+                    .driverLikelihood(driverLikelihood)
                     .notifyClinicalGeneticist(false)
                     .build());
         }
 
         boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
-        for (ReportableGermlineVariant reportableGermlineVariant : germlineVariantsToReport) {
-            allReportableVariants.add(fromGermlineVariant(reportableGermlineVariant.germlineVariant()).driverCategory(driverGeneView.category(
-                    reportableGermlineVariant.germlineVariant().gene()))
-                    .driverLikelihood(reportableGermlineVariant.driverLikelihood())
-                    .notifyClinicalGeneticist(
-                            wantsToBeNotified && germlineReportingModel.notifyAboutGene(reportableGermlineVariant.germlineVariant().gene()))
+        for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+            DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
+            if (category == null) {
+                // This is not correct in theory but we assume every non-driver germline gene is a TSG.
+                category = DriverCategory.TSG;
+            }
+            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
+            double driverLikelihood = germlineVariant.driverLikelihood();
+            if (catalog != null) {
+                driverLikelihood = Math.max(driverLikelihood, catalog.driverLikelihood());
+            }
+            allReportableVariants.add(fromGermlineVariant(germlineVariant.variant()).driverCategory(category)
+                    .driverLikelihood(driverLikelihood)
+                    .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
                     .build());
 
         }

@@ -18,7 +18,7 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(List<GermlineVariant> germlineVariants,
+    public static List<ReportableGermlineVariant> filterGermlineVariantsForReporting(@NotNull List<GermlineVariant> germlineVariants,
             @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers, @NotNull List<SomaticVariant> variantsToReport,
             @NotNull ChordAnalysis chordAnalysis) {
@@ -50,7 +50,14 @@ public final class FilterGermlineVariants {
                         }
                     }
 
-                    if (filterBiallelic || filterSomaticVariantInSameGene) {
+                    boolean filterGermlineVariantInSameGene = false;
+                    for (GermlineVariant variant : germlineVariants) {
+                        if (variant != germlineVariant && variant.gene().equals(germlineVariant.gene())) {
+                            filterGermlineVariantInSameGene = true;
+                        }
+                    }
+
+                    if (filterBiallelic || filterSomaticVariantInSameGene || filterGermlineVariantInSameGene) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                     } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
                         reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
@@ -64,7 +71,7 @@ public final class FilterGermlineVariants {
     @NotNull
     private static ReportableGermlineVariant reportableGermlineVariantWithDriverLikelihood(@NotNull GermlineVariant germlineVariant,
             double driverLikelihood) {
-        return ImmutableReportableGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
+        return ImmutableReportableGermlineVariant.builder().variant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }
 
     @NotNull

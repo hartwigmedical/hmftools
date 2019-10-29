@@ -6,23 +6,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilitySource;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,40 +31,6 @@ public class ReportableEvidenceItemFactoryTest {
         assertTrue(ReportableEvidenceItemFactory.hasHigherEvidence(item1, item2));
         assertFalse(ReportableEvidenceItemFactory.hasHigherEvidence(item2, item1));
         assertFalse(ReportableEvidenceItemFactory.hasHigherEvidence(item1, item1));
-    }
-
-    @Test
-    public void selectHighDriverVariantForEvidence() {
-        SomaticVariant variant =
-                PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene("GENE").build();
-
-        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
-
-        evidencePerVariant.put(variant, Lists.newArrayList(evidenceBuilder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build()));
-
-        List<DriverCatalog> catalog = Lists.newArrayList(catalogBuilder("GENE").driverLikelihood(0.9).build());
-
-        List<EvidenceItem> evidenceForHighDrivers =
-                ReportableEvidenceItemFactory.reportableFlatListDriversSomaticVariantOnly(evidencePerVariant, catalog);
-
-        assertEquals(1, evidenceForHighDrivers.size());
-    }
-
-    @Test
-    public void filterNoneHighDriverVariantsOutForEvidence() {
-        SomaticVariant variant =
-                PatientReporterTestFactory.createTestEnrichedSomaticVariantBuilder().gene("GENE").build();
-
-        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
-
-        evidencePerVariant.put(variant, Lists.newArrayList(evidenceBuilder().level(EvidenceLevel.LEVEL_A).isOnLabel(true).build()));
-
-        List<DriverCatalog> catalog = Lists.newArrayList(catalogBuilder("GENE").driverLikelihood(0.6).build());
-
-        List<EvidenceItem> evidenceForHighDrivers =
-                ReportableEvidenceItemFactory.reportableFlatListDriversSomaticVariantOnly(evidencePerVariant, catalog);
-
-        assertEquals(0, evidenceForHighDrivers.size());
     }
 
     @Test

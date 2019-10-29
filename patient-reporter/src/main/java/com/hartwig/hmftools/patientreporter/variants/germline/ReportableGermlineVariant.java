@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportableGermlineVariant {
 
     @NotNull
-    public abstract GermlineVariant germlineVariant();
+    public abstract GermlineVariant variant();
 
     public abstract double driverLikelihood();
 }
