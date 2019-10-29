@@ -1,3 +1,3 @@
-sampleId	tumorBarcode	reportDate	sourceReport	purity	hasReliablePurity	hasReliableQuality
-sampleId	ABCD	22/10/2019	sequence_report	70%	TRUE	TRUE
-sampleId	EFGH	22/10/2019	SHALLOW_SEQ_LOW_PURITY
+sampleId	tumorBarcode	reportDate	reportType	purity	hasReliablePurity	hasReliableQuality
+sampleId1	ABCD	22/10/2019	sequence_report	70%	TRUE	TRUE
+sampleId2	EFGH	22/10/2019	shallow_seq_low_purity	N/A	N/A	N/A

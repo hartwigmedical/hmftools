@@ -28,36 +28,39 @@ public class ReportingDbTest {
         assertEquals(2, reportDates.size());
 
         ReportingEntry reportingEntry1 = reportDates.get(0);
-        assertEquals("sampleId", reportingEntry1.sampleId());
+        assertEquals("sampleId1", reportingEntry1.sampleId());
         assertEquals("ABCD", reportingEntry1.tumorBarcode());
         assertEquals("22/10/2019", reportingEntry1.reportDate());
-        assertEquals("sequence_report", reportingEntry1.sourceReport());
+        assertEquals("sequence_report", reportingEntry1.reportType());
         assertEquals("70%", reportingEntry1.purity());
-        assertEquals("TRUE", reportingEntry1.status());
-        assertEquals("TRUE", reportingEntry1.qcStatus());
+        assertEquals("TRUE", reportingEntry1.hasReliablePurity());
+        assertEquals("TRUE", reportingEntry1.hasReliableQuality());
 
         ReportingEntry reportingEntry2 = reportDates.get(1);
-        assertEquals("sampleId", reportingEntry2.sampleId());
+        assertEquals("sampleId2", reportingEntry2.sampleId());
         assertEquals("EFGH", reportingEntry2.tumorBarcode());
         assertEquals("22/10/2019", reportingEntry2.reportDate());
-        assertEquals("SHALLOW_SEQ_LOW_PURITY", reportingEntry2.sourceReport());
+        assertEquals("shallow_seq_low_purity", reportingEntry2.reportType());
+        assertEquals("N/A", reportingEntry2.purity());
+        assertEquals("N/A", reportingEntry2.hasReliablePurity());
+        assertEquals("N/A", reportingEntry2.hasReliableQuality());
     }
 
     @Test
-    public void canWriteReportDatesToTSV() throws IOException {
+    public void canWriteReportDatesToTsv() throws IOException {
         if (WRITE_TO_TSV) {
             File reportDatesTsv = new File(REPORT_BASE_DIR + "/reporting_db_test.tsv");
 
             if (reportDatesTsv.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
-                writer.write("sampleId\ttumorBarcode\treportDate\tsourceReport\tpurity\thasReliablePurity\thasReliableQuality\n");
+                writer.write("sampleId\ttumorBarcode\treportDate\treportType\tpurity\thasReliablePurity\thasReliableQuality\n");
                 writer.close();
             }
 
-            ReportingDb.generateOutputReportDatesSeqReport(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829());
+            ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829());
 
-            ReportingDb.generateOutputReportDatesQCFailReport(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("COLO829", QCFailReason.LOW_TUMOR_PERCENTAGE));
+            ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
+                    ExampleAnalysisTestFactory.buildQCFailReport("LowTumorSample", QCFailReason.LOW_TUMOR_PERCENTAGE));
         }
     }
 }

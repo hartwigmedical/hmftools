@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -30,80 +28,69 @@ public final class ReportingDb {
     private ReportingDb() {
     }
 
-    public static void generateOutputReportDatesSeqReport(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
+    public static void addSequenceReportToReportingDb(@NotNull String reportingDbTsv, @NotNull AnalysedPatientReport report)
             throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
-
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-
         String reportDate = ReportResources.REPORT_DATE;
 
         String purity = new DecimalFormat("#'%'").format(report.impliedPurity() * 100);
         String hasReliablePurity = String.valueOf(report.hasReliablePurity());
         String hasReliableQuality = String.valueOf(report.hasReliableQuality());
 
-        String reasonCorrect = report.isCorrectedReport() ? "sequence_report" + "_corrected" : "sequence_report";
-        String keySample = sampleId + tumorBarcode + reportDate + reasonCorrect;
-        String keySample2 = sampleId + tumorBarcode + reasonCorrect + purity + hasReliablePurity + hasReliableQuality;
+        String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
-        boolean present = false;
-        for (ReportingEntry entry : read(reportingDbTsv)) {
-            String keyFile = entry.sampleId() + entry.tumorBarcode() + entry.reportDate() + entry.sourceReport();
-            String keyFile2 =
-                    entry.sampleId() + entry.tumorBarcode() + entry.sourceReport() + entry.purity() + entry.status() + entry.qcStatus();
-
-            if (keySample.equals(keyFile) || keySample2.equals(keyFile2)) {
-                LOGGER.warn("Sample is already reported!");
-                present = true;
-            } else if (sampleId.startsWith("COLO")) {
-                LOGGER.warn("It is a COLO sample. This sample will not be reported!");
-                present = true;
-            } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
-                LOGGER.warn("Add summary to report for WIDE!");
-                present = true;
-            } else if (type.equals(LimsSampleType.CORE)) {
-                if (!sampleId.startsWith("CORE01LR") && report.clinicalSummary().isEmpty()) {
-                    LOGGER.warn("Add summary to report for CORE!");
-                    present = true;
-                } else if (!sampleId.startsWith("CORE01RI") && report.clinicalSummary().isEmpty()) {
-                    LOGGER.warn("Add summary to report for CORE!");
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+        if (sampleId.startsWith("COLO")) {
+            LOGGER.debug("This is a COLO sample. This sample will not be included in Reporting Db");
+        } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
+            LOGGER.warn("Skipping addition to Reporting Db, missing summary for WIDE sample {}!", sampleId);
+        } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORE01LR")
+                && !sampleId.startsWith("CORE01RI")) {
+            LOGGER.warn("Skipping addition to Reporting Db, missing summary for CORE sample {}!", sampleId);
+        } else {
+            boolean present = false;
+            for (ReportingEntry entry : read(reportingDbTsv)) {
+                if (!present && sampleId.equals(entry.sampleId()) && reportType.equals(entry.reportType())) {
+                    LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
                     present = true;
                 }
             }
-        }
 
-        if (!present) {
-            LOGGER.info("Writing report date to tsv file");
-            String stringForFile =
-                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reasonCorrect + "\t" + purity + "\t" + hasReliablePurity
-                            + "\t" + hasReliableQuality + "\n";
-            writeToTSV(stringForFile, reportingDbTsv);
+            if (!present) {
+                LOGGER.info("Adding {} to Reporting Db with type {}", sampleId, reportType);
+                String stringToAppend =
+                        sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliablePurity
+                                + "\t" + hasReliableQuality + "\n";
+                appendToTsv(reportingDbTsv, stringToAppend);
+            }
         }
     }
 
-    public static void generateOutputReportDatesQCFailReport(@NotNull String reportingDbTsv, @NotNull QCFailReport report)
+    public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report)
             throws IOException {
-        String reportDate = ReportResources.REPORT_DATE;
-
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
+        String reportDate = ReportResources.REPORT_DATE;
 
-        String keySample = sampleId + tumorBarcode + reportDate + report.reason();
+        String reportType = report.reason().identifier();
 
-        boolean present = false;
-        for (ReportingEntry entry : read(reportingDbTsv)) {
-            String keyFile = entry.sampleId() + entry.tumorBarcode() + entry.reportDate() + entry.sourceReport();
-            if (keySample.equals(keyFile)) {
-                LOGGER.warn("Sample {} has already been reported!", sampleId);
-                present = true;
+        if (sampleId.startsWith("COLO")) {
+            LOGGER.debug("This is a COLO sample. This sample will not be included in Reporting Db");
+        } else {
+            boolean present = false;
+            for (ReportingEntry entry : read(reportingDbTsv)) {
+                if (!present && sampleId.equals(entry.sampleId()) && reportType.equals(entry.reportType())) {
+                    LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
+                    present = true;
+                }
             }
-        }
 
-        if (!present) {
-            LOGGER.info("Writing entry to tsv file for {}.", sampleId);
-            String stringForFile = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + report.reason() + "\n";
-            writeToTSV(stringForFile, reportingDbTsv);
+            if (!present) {
+                LOGGER.info("Adding {} to Reporting Db with type {}", sampleId, reportType);
+                String stringToAppend = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\tN/A\tN/A\tN/A\n";
+                appendToTsv(reportingDbTsv, stringToAppend);
+            }
         }
     }
 
@@ -115,31 +102,22 @@ public final class ReportingDb {
         for (String line : linesReportDates.subList(1, linesReportDates.size())) {
             String[] values = line.split(DELIMITER);
 
-            if (values.length == 4) {
-                reportingEntryList.add(ImmutableReportingEntry.builder()
-                        .sampleId(values[0])
-                        .tumorBarcode(values[1])
-                        .reportDate(values[2])
-                        .sourceReport(values[3])
-                        .build());
-            } else {
-                reportingEntryList.add(ImmutableReportingEntry.builder()
-                        .sampleId(values[0])
-                        .tumorBarcode(values[1])
-                        .reportDate(values[2])
-                        .sourceReport(values[3])
-                        .purity(values[4])
-                        .status(values[5])
-                        .qcStatus(values[6])
-                        .build());
-            }
+            reportingEntryList.add(ImmutableReportingEntry.builder()
+                    .sampleId(values[0])
+                    .tumorBarcode(values[1])
+                    .reportDate(values[2])
+                    .reportType(values[3])
+                    .purity(values[4])
+                    .hasReliablePurity(values[5])
+                    .hasReliableQuality(values[6])
+                    .build());
         }
         return reportingEntryList;
     }
 
-    private static void writeToTSV(@NotNull String stringForFile, @NotNull String reportDatesTSV) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTSV, true));
-        writer.write(stringForFile);
+    private static void appendToTsv(@NotNull String reportDatesTsv, @NotNull String stringToAppend) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
+        writer.write(stringToAppend);
         writer.close();
     }
 }

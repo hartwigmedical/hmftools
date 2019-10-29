@@ -19,15 +19,15 @@ public abstract class ReportingEntry {
     public abstract String reportDate();
 
     @NotNull
-    public abstract String sourceReport();
+    public abstract String reportType();
 
-    @Nullable
+    @NotNull
     public abstract String purity();
 
-    @Nullable
-    public abstract String status();
+    @NotNull
+    public abstract String hasReliablePurity();
 
-    @Nullable
-    public abstract String qcStatus();
+    @NotNull
+    public abstract String hasReliableQuality();
 
 }

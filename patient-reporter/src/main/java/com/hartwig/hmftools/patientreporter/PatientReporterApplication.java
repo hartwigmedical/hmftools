@@ -109,7 +109,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesQCFailReport(cmd.getOptionValue(REPORTING_DB_TSV), report);
+            ReportingDb.addQCFailReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
@@ -131,7 +131,7 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesSeqReport(cmd.getOptionValue(REPORTING_DB_TSV), report);
+            ReportingDb.addSequenceReportToReportingDb(cmd.getOptionValue(REPORTING_DB_TSV), report);
         } else {
             printUsageAndExit(options);
         }
