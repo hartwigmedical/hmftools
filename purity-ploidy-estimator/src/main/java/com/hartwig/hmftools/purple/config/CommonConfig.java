@@ -31,6 +31,8 @@ public interface CommonConfig {
     @NotNull
     String version();
 
+    boolean tumorOnly();
+
     default int windowSize() {
         return WINDOW_SIZE;
     }
