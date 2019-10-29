@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testActionabilityAnalyzer;
 import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestDisruptionBuilder;
 import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestFusionBuilder;
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
@@ -19,7 +17,7 @@ import org.junit.Test;
 
 public class SvAnalyzerTest {
 
-    private static final String DISRUPTED_GENE = "TP53";
+    private static final String DISRUPTED_GENE = "GENE";
 
     @Test
     public void canAnalyzeFusionsDisruptions() throws IOException {

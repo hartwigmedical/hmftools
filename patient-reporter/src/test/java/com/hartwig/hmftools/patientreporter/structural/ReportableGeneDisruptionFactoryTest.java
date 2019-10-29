@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientreporter.structural;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestFactory.createTestCopyNumberBuilder;
 import static com.hartwig.hmftools.patientreporter.structural.SvAnalysisDatamodelTestFactory.createTestDisruptionBuilder;
 
 import static org.junit.Assert.assertEquals;
@@ -9,7 +8,6 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 

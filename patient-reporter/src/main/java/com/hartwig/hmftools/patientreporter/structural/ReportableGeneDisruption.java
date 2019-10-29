@@ -24,7 +24,7 @@ public abstract class ReportableGeneDisruption {
     @Nullable
     public abstract Double ploidy();
 
-    public abstract int firstAffectedExon();
-
     public abstract double undisruptedCopyNumber();
+
+    public abstract int firstAffectedExon();
 }

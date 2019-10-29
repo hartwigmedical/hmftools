@@ -3,11 +3,9 @@ package com.hartwig.hmftools.patientreporter.structural;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,7 +21,7 @@ final class ReportableGeneDisruptionFactory {
     }
 
     @NotNull
-    public static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions) {
+    static List<ReportableGeneDisruption> convert(@NotNull List<ReportableDisruption> disruptions) {
         List<ReportableGeneDisruption> reportableDisruptions = Lists.newArrayList();
         Map<SvAndGeneKey, Pair<ReportableDisruption, ReportableDisruption>> pairedMap = mapDisruptionsPerStructuralVariant(disruptions);
 
@@ -33,13 +31,11 @@ final class ReportableGeneDisruptionFactory {
 
             if (primaryDisruptionRight != null) {
                 double lowestUndisruptedCopyNumber =
-                        primaryDisruptionLeft.undisruptedCopyNumber() > primaryDisruptionRight.undisruptedCopyNumber()
-                                ? primaryDisruptionRight.undisruptedCopyNumber() : primaryDisruptionLeft.undisruptedCopyNumber();
+                        Math.min(primaryDisruptionLeft.undisruptedCopyNumber(), primaryDisruptionRight.undisruptedCopyNumber());
 
-                boolean valueDisruptedCopyNumber = primaryDisruptionLeft.ploidy().equals(primaryDisruptionRight.ploidy()) ? true : false;
-
-                if (!valueDisruptedCopyNumber) {
-                    LOGGER.warn("The disrupted copy number of the sv is not the same");
+                Double ploidyLeft = primaryDisruptionLeft.ploidy();
+                if (ploidyLeft != null && ploidyLeft.equals(primaryDisruptionRight.ploidy())) {
+                    LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryDisruptionLeft.gene());
                 }
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
                         .location(primaryDisruptionLeft.chromosome() + primaryDisruptionLeft.chrBand())
@@ -47,8 +43,8 @@ final class ReportableGeneDisruptionFactory {
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
                         .ploidy(primaryDisruptionLeft.ploidy())
-                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .undisruptedCopyNumber(lowestUndisruptedCopyNumber)
+                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
             } else {
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
@@ -57,8 +53,8 @@ final class ReportableGeneDisruptionFactory {
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
                         .ploidy(primaryDisruptionLeft.ploidy())
-                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .undisruptedCopyNumber(primaryDisruptionLeft.undisruptedCopyNumber())
+                        .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
             }
         }
