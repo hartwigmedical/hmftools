@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -15,7 +16,6 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -50,15 +50,15 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+        final boolean hasReliablePurityFit = patientReport.hasReliablePurity();
 
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurityFit));
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurityFit));
         reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
         reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurityFit));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurityFit));
-         reportDocument.add(createViralInsertionTable(patientReport.viralInsertion())); // TODO: set table off
-
+        // TODO: Disable viral insertions before making a final release
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
     }
 
     @NotNull
@@ -137,13 +137,13 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 80 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("chromosome band"),
-                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("driver")});
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("driver") });
 
         for (ReportableHomozygousDisruption homozygousDisruption : homozygoudDelDisruptions) {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
-            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.driver().toString()));
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.driver()));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

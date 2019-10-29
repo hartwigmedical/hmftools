@@ -25,16 +25,16 @@ import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocatio
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
-import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
@@ -51,7 +51,7 @@ public final class ExampleAnalysisTestFactory {
 
     @NotNull
     public static AnalysedPatientReport buildCOLO829() {
-        final boolean hasReliablePurityFit = true;
+        final boolean hasReliablePurity = true;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 180;
@@ -68,8 +68,8 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
-        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
         final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
+        final List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         final String sampleId = "PNT00012345T";
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
@@ -82,35 +82,38 @@ public final class ExampleAnalysisTestFactory {
                 + " - high mutational burden (mutational load (ML) of 180, tumor mutation burden (TMB) of 13.6) that is "
                 + "potentially associated with an increased response rate to checkpoint inhibitor immunotherapy";
 
-        return ImmutableAnalysedPatientReport.of(sampleReport,
-                hasReliablePurityFit,
-                impliedTumorPurity,
-                averageTumorPloidy,
-                clinicalSummary,
-                tumorLocationSpecificEvidence,
-                clinicalTrials,
-                offLabelEvidence,
-                reportableVariants,
-                microsatelliteIndelsPerMb,
-                tumorMutationalLoad,
-                tumorMutationalBurden,
-                chordAnalysis,
-                gainsAndLosses,
-                fusions,
-                disruptions,
-                reportableHomozygousDisruptions,
-                viralInsertions,
-                CIRCOS_PATH,
-                Optional.of("this is a test report and is based off COLO829"),
-                false,
-                reportData.signaturePath(),
-                reportData.logoRVAPath(),
-                reportData.logoCompanyPath());
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .impliedPurity(impliedTumorPurity)
+                .hasReliablePurity(hasReliablePurity)
+                .hasReliableQuality(true)
+                .averageTumorPloidy(averageTumorPloidy)
+                .clinicalSummary(clinicalSummary)
+                .tumorSpecificEvidence(tumorLocationSpecificEvidence)
+                .clinicalTrials(clinicalTrials)
+                .offLabelEvidence(offLabelEvidence)
+                .reportableVariants(reportableVariants)
+                .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
+                .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalBurden(tumorMutationalBurden)
+                .chordAnalysis(chordAnalysis)
+                .gainsAndLosses(gainsAndLosses)
+                .geneFusions(fusions)
+                .geneDisruptions(disruptions)
+                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .viralInsertions(viralInsertions)
+                .circosPath(CIRCOS_PATH)
+                .comments(Optional.of("This is a test report and is based off COLO829"))
+                .isCorrectedReport(false)
+                .signaturePath(reportData.signaturePath())
+                .logoRVAPath(reportData.logoRVAPath())
+                .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
     }
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesFilledIn(@NotNull String sampleId) {
-        final boolean hasReliablePurityFit = true;
+        final boolean hasReliablePurity = true;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -133,53 +136,38 @@ public final class ExampleAnalysisTestFactory {
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
 
-        return ImmutableAnalysedPatientReport.of(sampleReport,
-                hasReliablePurityFit,
-                impliedTumorPurity,
-                averageTumorPloidy,
-                clinicalSummary,
-                tumorLocationSpecificEvidence,
-                clinicalTrials,
-                offLabelEvidence,
-                reportableVariants,
-                microsatelliteIndelsPerMb,
-                tumorMutationalLoad,
-                tumorMutationalBurden,
-                chordAnalysis,
-                gainsAndLosses,
-                fusions,
-                disruptions,
-                reportableHomozygousDisruptions,
-                viralInsertions,
-                CIRCOS_PATH,
-                Optional.of("this is a test report and does not relate to any real patient"),
-                false,
-                reportData.signaturePath(),
-                reportData.logoRVAPath(),
-                reportData.logoCompanyPath());
-    }
-
-    @NotNull
-    private static List<ReportableHomozygousDisruption> createReportableHomozygousDisruptions() {
-        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
-                .chromosome("8")
-                .chromosomeBand("p22")
-                .gene("SGCZ")
-                .driver(DriverType.HOM_DISRUPTION.toString().toLowerCase())
-                .build());
-        return Lists.newArrayList(homozygousDisruptions);
-    }
-
-    @NotNull
-    private static List<ViralInsertion> createTestViralInsertions() {
-        List<ViralInsertion> viralInsertions =
-                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus(2).build());
-        return Lists.newArrayList(viralInsertions);
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .impliedPurity(impliedTumorPurity)
+                .hasReliablePurity(hasReliablePurity)
+                .hasReliableQuality(true)
+                .averageTumorPloidy(averageTumorPloidy)
+                .clinicalSummary(clinicalSummary)
+                .tumorSpecificEvidence(tumorLocationSpecificEvidence)
+                .clinicalTrials(clinicalTrials)
+                .offLabelEvidence(offLabelEvidence)
+                .reportableVariants(reportableVariants)
+                .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
+                .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalBurden(tumorMutationalBurden)
+                .chordAnalysis(chordAnalysis)
+                .gainsAndLosses(gainsAndLosses)
+                .geneFusions(fusions)
+                .geneDisruptions(disruptions)
+                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .viralInsertions(viralInsertions)
+                .circosPath(CIRCOS_PATH)
+                .comments(Optional.of("This is a test report and does not relate to any real patient"))
+                .isCorrectedReport(false)
+                .signaturePath(reportData.signaturePath())
+                .logoRVAPath(reportData.logoRVAPath())
+                .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
     }
 
     @NotNull
     public static AnalysedPatientReport buildAnalysisWithAllTablesForBelowDetectionLimitSample(@NotNull String sampleId) {
-        final boolean hasReliablePurityFit = false;
+        final boolean hasReliablePurity = false;
         final double impliedTumorPurity = 1D;
         final double averageTumorPloidy = 3.1;
         final int tumorMutationalLoad = 182;
@@ -202,30 +190,33 @@ public final class ExampleAnalysisTestFactory {
         final SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
         final String clinicalSummary = Strings.EMPTY;
 
-        return ImmutableAnalysedPatientReport.of(sampleReport,
-                hasReliablePurityFit,
-                impliedTumorPurity,
-                averageTumorPloidy,
-                clinicalSummary,
-                tumorLocationSpecificEvidence,
-                clinicalTrials,
-                offLabelEvidence,
-                reportableVariants,
-                microsatelliteIndelsPerMb,
-                tumorMutationalLoad,
-                tumorMutationalBurden,
-                chordAnalysis,
-                gainsAndLosses,
-                fusions,
-                disruptions,
-                reportableHomozygousDisruptions,
-                viralInsertions,
-                CIRCOS_PATH,
-                Optional.of("this is a test report and does not relate to any real patient"),
-                false,
-                reportData.signaturePath(),
-                reportData.logoRVAPath(),
-                reportData.logoCompanyPath());
+        return ImmutableAnalysedPatientReport.builder()
+                .sampleReport(sampleReport)
+                .impliedPurity(impliedTumorPurity)
+                .hasReliablePurity(hasReliablePurity)
+                .hasReliableQuality(true)
+                .averageTumorPloidy(averageTumorPloidy)
+                .clinicalSummary(clinicalSummary)
+                .tumorSpecificEvidence(tumorLocationSpecificEvidence)
+                .clinicalTrials(clinicalTrials)
+                .offLabelEvidence(offLabelEvidence)
+                .reportableVariants(reportableVariants)
+                .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
+                .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalBurden(tumorMutationalBurden)
+                .chordAnalysis(chordAnalysis)
+                .gainsAndLosses(gainsAndLosses)
+                .geneFusions(fusions)
+                .geneDisruptions(disruptions)
+                .reportableHomozygousDisruptions(reportableHomozygousDisruptions)
+                .viralInsertions(viralInsertions)
+                .circosPath(CIRCOS_PATH)
+                .comments(Optional.of("This is a test report and does not relate to any real patient"))
+                .isCorrectedReport(false)
+                .signaturePath(reportData.signaturePath())
+                .logoRVAPath(reportData.logoRVAPath())
+                .logoCompanyPath(reportData.logoCompanyPath())
+                .build();
     }
 
     @NotNull
@@ -713,7 +704,7 @@ public final class ExampleAnalysisTestFactory {
                 .BRCA1Value(brca1Value)
                 .BRCA2Value(brca2Value)
                 .hrdValue(brca1Value + brca2Value)
-                .predictedResponseValue(brca1Value + brca2Value > 0.5 ? true : false)
+                .predictedResponseValue(brca1Value + brca2Value > 0.5)
                 .build();
     }
 
@@ -728,6 +719,24 @@ public final class ExampleAnalysisTestFactory {
                 .build();
 
         return Lists.newArrayList(disruption1);
+    }
+
+    @NotNull
+    private static List<ReportableHomozygousDisruption> createReportableHomozygousDisruptions() {
+        List<ReportableHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(ImmutableReportableHomozygousDisruption.builder()
+                .chromosome("8")
+                .chromosomeBand("p22")
+                .gene("SGCZ")
+                .driver(DriverType.HOM_DISRUPTION.toString().toLowerCase())
+                .build());
+        return Lists.newArrayList(homozygousDisruptions);
+    }
+
+    @NotNull
+    private static List<ViralInsertion> createTestViralInsertions() {
+        List<ViralInsertion> viralInsertions =
+                Lists.newArrayList(ImmutableViralInsertion.builder().virus("Human papillomavirus type 16").countVirus(2).build());
+        return Lists.newArrayList(viralInsertions);
     }
 
     @NotNull

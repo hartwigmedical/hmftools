@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,8 +34,9 @@ public final class CopyNumberAnalyzer {
     }
 
     @NotNull
-    public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers,
-            @NotNull ActionabilityAnalyzer actionabilityAnalyzer, @Nullable PatientTumorLocation patientTumorLocation) {
+    public static CopyNumberAnalysis run(@NotNull PurityContext purityContext, @NotNull PurpleQC purpleQC,
+            @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
 
         CNADrivers copyNumberDriverModel = new CNADrivers();
@@ -63,8 +66,9 @@ public final class CopyNumberAnalyzer {
         }
 
         return ImmutableCopyNumberAnalysis.builder()
-                .hasReliablePurityFit(purityContext.status() != FittedPurityStatus.NO_TUMOR)
                 .purity(bestFit.purity())
+                .hasReliablePurity(purityContext.status() != FittedPurityStatus.NO_TUMOR)
+                .hasReliableQuality(purpleQC.status() == PurpleQCStatus.PASS)
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)

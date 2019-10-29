@@ -18,7 +18,7 @@ public class AnalysedPatientReporterTest {
     private static final String REF_SAMPLE_ID = "ref_sample";
 
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
-    private static final String PURPLE_QC_TSV = BASE_DIRECTORY + "/purple/sample.purple.qc";
+    private static final String PURPLE_QC_FILE = BASE_DIRECTORY + "/purple/sample.purple.qc";
     private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.gene.cnv";
     private static final String SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String BACHELOR_TSV = BASE_DIRECTORY + "/bachelor/sample_germline_variants.tsv";
@@ -42,15 +42,16 @@ public class AnalysedPatientReporterTest {
 
         assertNotNull(reporter.run(sampleMetadata,
                 PURPLE_PURITY_TSV,
+                PURPLE_QC_FILE,
                 PURPLE_GENE_CNV_TSV,
-                SOMATIC_VARIANT_VCF, BACHELOR_TSV,
+                SOMATIC_VARIANT_VCF,
+                BACHELOR_TSV,
                 LINX_FUSIONS_TSV,
                 LINX_DISRUPTIONS_TSV,
                 LINX_VIRAL_INSERTION_TSV,
                 LINX_DRIVERS_TSV,
                 CHORD_PREDICTION_TXT,
                 CIRCOS_FILE,
-                PURPLE_QC_TSV,
                 null,
                 false));
     }

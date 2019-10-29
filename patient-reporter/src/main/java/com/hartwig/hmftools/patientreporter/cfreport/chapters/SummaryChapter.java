@@ -123,7 +123,7 @@ public class SummaryChapter implements ReportChapter {
     }
 
     private void renderTumorCharacteristics(@NotNull AnalysedPatientReport patientReport, @NotNull Document reportDocument) {
-        final boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+        final boolean hasReliablePurityFit = patientReport.hasReliablePurity();
 
         Div div = createSectionStartDiv(contentWidth());
 

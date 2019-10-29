@@ -47,7 +47,7 @@ public class PatientReporterApplication {
     private static final String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
     private static final String OUTPUT_DIRECTORY = "output_dir";
 
-    private static final String REPORT_DATES_TSV = "report_dates_tsv";
+    private static final String REPORTING_DB_TSV = "reporting_db_tsv";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String HOSPITAL_DIRECTORY = "hospital_dir";
@@ -62,7 +62,7 @@ public class PatientReporterApplication {
 
     // Params specific for actual patient reports
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
-    private static final String PURPLE_QC = "purple_qc";
+    private static final String PURPLE_QC_FILE = "purple_qc_file";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String BACHELOR_TSV = "bachelor_tsv";
@@ -109,13 +109,14 @@ public class PatientReporterApplication {
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeQCFailReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesQCFailReport(cmd.getOptionValue(REPORT_DATES_TSV), reason, sampleMetadata, true);
+            ReportingDb.generateOutputReportDatesQCFailReport(cmd.getOptionValue(REPORTING_DB_TSV), reason, sampleMetadata, true);
         } else if (validInputForAnalysedSample(cmd)) {
             LOGGER.info("Generating patient report");
             AnalysedPatientReporter reporter = new AnalysedPatientReporter(buildAnalysedReportData(cmd));
 
             AnalysedPatientReport report = reporter.run(sampleMetadata,
                     cmd.getOptionValue(PURPLE_PURITY_TSV),
+                    cmd.getOptionValue(PURPLE_QC_FILE),
                     cmd.getOptionValue(PURPLE_GENE_CNV_TSV),
                     cmd.getOptionValue(SOMATIC_VARIANT_VCF),
                     cmd.getOptionValue(BACHELOR_TSV),
@@ -125,16 +126,15 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(LINX_DRIVERS_TSV),
                     cmd.getOptionValue(CHORD_PREDICTION_TXT),
                     cmd.getOptionValue(CIRCOS_FILE),
-                    cmd.getOptionValue(PURPLE_QC),
                     cmd.getOptionValue(COMMENTS),
                     cmd.hasOption(CORRECTED_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
-            ReportingDb.generateOutputReportDatesSeqRapports(cmd.getOptionValue(REPORT_DATES_TSV),
+            ReportingDb.generateOutputReportDatesSeqRapports(cmd.getOptionValue(REPORTING_DB_TSV),
                     cmd.getOptionValue(PURPLE_PURITY_TSV),
                     sampleMetadata,
-                    cmd.getOptionValue(PURPLE_QC),
+                    cmd.getOptionValue(PURPLE_QC_FILE),
                     report.isCorrectedReport(),
                     report.clinicalSummary(),
                     true);
@@ -208,13 +208,13 @@ public class PatientReporterApplication {
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, REF_SAMPLE_ID) && valueExists(cmd, REF_SAMPLE_BARCODE) && valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(
                 cmd,
-                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORT_DATES_TSV) && fileExists(cmd,
+                TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORTING_DB_TSV) && fileExists(cmd,
                 TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY) && fileExists(cmd, SIGNATURE)
                 && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO);
     }
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
-        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd,
+        return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd,
                 SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
                 LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
                 CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
@@ -280,7 +280,7 @@ public class PatientReporterApplication {
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(OUTPUT_DIRECTORY, true, "Path to where the PDF reports have to be written to.");
 
-        options.addOption(REPORT_DATES_TSV, true, "Path towards output file for the report dates TSV.");
+        options.addOption(REPORTING_DB_TSV, true, "Path towards output file for the reporting db TSV.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
         options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
@@ -295,7 +295,7 @@ public class PatientReporterApplication {
                 "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
-        options.addOption(PURPLE_QC, true, "Path towards the purple qc.");
+        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");

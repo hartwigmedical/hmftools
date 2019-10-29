@@ -39,7 +39,6 @@ public final class ReportingDb {
     public static void generateOutputReportDatesSeqRapports(@NotNull String reportingDbTsv, @NotNull String purplePurityTsv,
             @NotNull SampleMetadata sampleMetadata, @NotNull String purpleQCFile, boolean correctReport, String clinicalSummary,
             boolean addToFile) throws IOException {
-
         LimsSampleType type = LimsSampleType.fromSampleId(sampleMetadata.tumorSampleId());
 
         String reportDate = currentDate();
@@ -48,7 +47,7 @@ public final class ReportingDb {
         String tumorBarcode = sampleMetadata.tumorSampleBarcode();
 
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        final PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
+        PurpleQC purpleQC = PurpleQCFile.read(purpleQCFile);
 
         String purity = new DecimalFormat("#'%'").format(purityContext.bestFit().purity() * 100);
         FittedPurityStatus status = purityContext.status();

@@ -44,7 +44,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         DecimalFormat singleDecimalFormat = ReportResources.decimalFormat("#.#");
         DecimalFormat doubleDecimalFormat = ReportResources.decimalFormat("#.##");
 
-        boolean hasReliablePurityFit = patientReport.hasReliablePurityFit();
+        boolean hasReliablePurityFit = patientReport.hasReliablePurity();
 
         double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
 
@@ -52,10 +52,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String microSatelliteStabilityString =
                 hasReliablePurityFit ? MSIStatus + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
-        String HRDfootnote = "* HRD score can not be determined reliably when a tumor is microsattellite instable (MSI) "
+        String HRDFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
                 + "and is therefore not reported for this patient.";
 
-        boolean displayFootNote = hasReliablePurityFit && MSIStatus.equals("Stable") ? false : true;
+        boolean displayFootNote = !hasReliablePurityFit || !MSIStatus.equals("Stable");
 
         double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         String hrDeficiencyLabel =
@@ -67,7 +67,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
-                hrChart, HRDfootnote, displayFootNote));
+                hrChart, HRDFootnote, displayFootNote));
 
         BarChart satelliteChart =
                 new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI", false);

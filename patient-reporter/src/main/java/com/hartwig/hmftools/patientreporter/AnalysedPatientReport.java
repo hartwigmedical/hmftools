@@ -6,11 +6,11 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
 import org.immutables.value.Value;
@@ -26,9 +26,11 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract SampleReport sampleReport();
 
-    public abstract boolean hasReliablePurityFit();
-
     public abstract double impliedPurity();
+
+    public abstract boolean hasReliablePurity();
+
+    public abstract boolean hasReliableQuality();
 
     public abstract double averageTumorPloidy();
 
@@ -69,7 +71,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract List<ReportableHomozygousDisruption> reportableHomozygousDisruptions();
 
     @NotNull
-    public abstract List<ViralInsertion> viralInsertion();
+    public abstract List<ViralInsertion> viralInsertions();
 
     @NotNull
     public abstract String circosPath();
