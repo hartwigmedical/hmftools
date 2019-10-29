@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViralInsertionAnalyzer {
@@ -40,14 +39,12 @@ public final class ViralInsertionAnalyzer {
         }
 
         List<ViralInsertion> viralInsertions = Lists.newArrayList();
-        String virusName = Strings.EMPTY;
         for (Map.Entry<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> entry : itemsPerKey.entrySet()) {
             List<LinxViralInsertFile> itemsForKey = entry.getValue();
-            for (LinxViralInsertFile virus : itemsForKey) {
-                virusName = virus.VirusName;
-            }
 
             int count = itemsForKey.size();
+            assert count > 0;
+            String virusName = itemsForKey.get(0).VirusName;
 
             viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
         }
