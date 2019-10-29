@@ -52,10 +52,11 @@ public abstract class ReportableVariant implements AllelicDepth {
 
     public abstract double clonalLikelihood();
 
-    @NotNull
+    @Nullable
     public abstract DriverCategory driverCategory();
 
-    public abstract double driverLikelihood();
+    @Nullable
+    public abstract Double driverLikelihood();
 
     public abstract boolean biallelic();
 

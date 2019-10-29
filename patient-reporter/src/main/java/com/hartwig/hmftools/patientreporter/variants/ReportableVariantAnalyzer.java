@@ -42,17 +42,21 @@ public final class ReportableVariantAnalyzer {
             @Nullable PatientTumorLocation patientTumorLocation) {
         List<ReportableVariant> allReportableVariants = Lists.newArrayList();
         for (SomaticVariant variant : somaticVariantsReport) {
+            DriverCategory category = driverGeneView.category(variant.gene());
+            assert category != null;
+
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
-            if (catalog == null) {
-                throw new IllegalStateException("No driver entry found for gene: " + variant.gene());
-            }
-            double driverLikelihood = catalog.driverLikelihood();
-            for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
-                if (germlineVariant.variant().gene().equals(variant.gene())) {
-                    driverLikelihood = Math.max(driverLikelihood, germlineVariant.driverLikelihood());
+            Double driverLikelihood = null;
+            if (catalog != null) {
+                driverLikelihood = catalog.driverLikelihood();
+                for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
+                    if (germlineVariant.variant().gene().equals(variant.gene())) {
+                        driverLikelihood = Math.max(driverLikelihood, germlineVariant.driverLikelihood());
+                    }
                 }
             }
-            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(catalog.category())
+
+            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(category)
                     .driverLikelihood(driverLikelihood)
                     .notifyClinicalGeneticist(false)
                     .build());
@@ -62,10 +66,6 @@ public final class ReportableVariantAnalyzer {
                 || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
             DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
-            if (category == null) {
-                // This is not correct in theory but we assume every non-driver germline gene is a TSG.
-                category = DriverCategory.TSG;
-            }
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
             double driverLikelihood = germlineVariant.driverLikelihood();
             if (catalog != null) {
@@ -75,7 +75,6 @@ public final class ReportableVariantAnalyzer {
                     .driverLikelihood(driverLikelihood)
                     .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
                     .build());
-
         }
 
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
