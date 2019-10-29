@@ -40,10 +40,10 @@ public final class GermlineReportingFile {
                         germlineGenesAndNotifyMap.put(gene, false);
                         break;
                     default:
-                        LOGGER.warn("Could not interpret notification string in germline reporting genes: " + notifyGene);
+                        LOGGER.warn("Could not interpret notification string in germline reporting genes: {}", notifyGene);
                 }
             } else {
-                LOGGER.warn("Suspicious line detected in germline reporting genes: " + line);
+                LOGGER.warn("Suspicious line detected in germline reporting genes: {}", line);
             }
         }
 

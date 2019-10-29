@@ -42,12 +42,10 @@ public final class BachelorFile {
 
         String program = values[24];
         if (!program.equalsIgnoreCase("HMF")) {
-            LOGGER.warn("Unexpected bachelor program found: " + program);
+            LOGGER.warn("Unexpected bachelor program found: {}", program);
         }
 
         String filter = values[2].trim();
-        int altReadCount = Integer.parseInt(values[15]);
-        int totalReadCount = Integer.parseInt(values[16]);
 
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("PASS"))
@@ -59,8 +57,8 @@ public final class BachelorFile {
                 .position(Integer.parseInt(values[1].trim()))
                 .hgvsCodingImpact(values[21].trim())
                 .hgvsProteinImpact(values[20].trim())
-                .totalReadCount(totalReadCount)
-                .alleleReadCount(altReadCount)
+                .totalReadCount(Integer.parseInt(values[16]))
+                .alleleReadCount(Integer.parseInt(values[15]))
                 .adjustedVAF(Double.parseDouble(values[17].trim()))
                 .adjustedCopyNumber(Double.parseDouble(values[18].trim()))
                 .biallelic(Boolean.parseBoolean(values[22].trim()))

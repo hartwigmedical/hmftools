@@ -24,18 +24,17 @@ public final class FilterGermlineVariants {
             @NotNull ChordAnalysis chordAnalysis) {
         List<ReportableGermlineVariant> reportableGermlineVariants = Lists.newArrayList();
 
-        Set<String> reportingGermlineGenes = germlineReportingModel.reportableGermlineGenes();
+        Set<String> reportableGermlineGenes = germlineReportingModel.reportableGermlineGenes();
         for (GermlineVariant germlineVariant : germlineVariants) {
             assert germlineVariant.passFilter();
 
-            if (reportingGermlineGenes.contains(germlineVariant.gene())) {
-                // Note: Reporting germline genes may not necessarily be present in driverGeneView!
-                // Note: Reporting germline genes when chord predicted response is true
+            if (reportableGermlineGenes.contains(germlineVariant.gene())) {
+                // Note: Reportable germline genes may not necessarily be present in driverGeneView!
                 if (driverGeneView.category(germlineVariant.gene()) == DriverCategory.ONCO) {
                     // Report all germline variants on reportable oncogenes.
-                    reportableGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
+                    reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                 } else {
-                    // Only report germline variants on TSGs if there is a 2nd hit.
+                    // Only report germline variants on TSGs if there is a 2nd hit or CHORD suggests HRD
                     boolean filterBiallelic = germlineVariant.biallelic();
 
                     boolean filterMinCopyNumberTumor = false;
@@ -52,9 +51,9 @@ public final class FilterGermlineVariants {
                     }
 
                     if (filterBiallelic || filterSomaticVariantInSameGene) {
-                        reportableGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 1.0));
+                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 1.0));
                     } else if (filterMinCopyNumberTumor || chordAnalysis.predictedResponseValue()) {
-                        reportableGermlineVariants.add(mergeInterpretGermlineVariants(germlineVariant, 0.5));
+                        reportableGermlineVariants.add(reportableGermlineVariantWithDriverLikelihood(germlineVariant, 0.5));
                     }
                 }
             }
@@ -63,7 +62,7 @@ public final class FilterGermlineVariants {
     }
 
     @NotNull
-    private static ReportableGermlineVariant mergeInterpretGermlineVariants(@NotNull GermlineVariant germlineVariant,
+    private static ReportableGermlineVariant reportableGermlineVariantWithDriverLikelihood(@NotNull GermlineVariant germlineVariant,
             double driverLikelihood) {
         return ImmutableReportableGermlineVariant.builder().germlineVariant(germlineVariant).driverLikelihood(driverLikelihood).build();
     }

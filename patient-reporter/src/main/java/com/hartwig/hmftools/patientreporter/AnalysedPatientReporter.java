@@ -191,13 +191,13 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTSV,
+    private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
             @NotNull ChordAnalysis chordAnalysis) throws IOException {
 
         List<GermlineVariant> variants =
-                BachelorFile.loadBachelorTsv(bachelorTSV).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
-        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTSV);
+                BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
