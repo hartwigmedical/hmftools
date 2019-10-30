@@ -211,20 +211,9 @@ public class PatientReporterApplication {
         return fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_QC_FILE) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(
                 cmd,
                 SOMATIC_VARIANT_VCF) && fileExists(cmd, BACHELOR_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd,
-                LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && valueMissingOrFileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
+                LINX_DISRUPTION_TSV) && fileExists(cmd, LINX_VIRAL_INSERTION_TSV) && fileExists(cmd, LINX_DRIVERS_TSV) && fileExists(cmd,
                 CHORD_PREDICTION_TXT) && fileExists(cmd, CIRCOS_FILE) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd,
                 GERMLINE_GENES_CSV) && fileExists(cmd, SAMPLE_SUMMARY_TSV);
-    }
-
-    private static boolean valueMissingOrFileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-
-        if (value != null && !Files.exists(new File(value).toPath())) {
-            LOGGER.warn(param + " is optional, but when provided it has to be an existing file: " + value);
-            return false;
-        }
-
-        return true;
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
