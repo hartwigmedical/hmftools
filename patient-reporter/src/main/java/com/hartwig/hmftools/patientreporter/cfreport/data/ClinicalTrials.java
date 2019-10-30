@@ -54,7 +54,7 @@ public final class ClinicalTrials {
         return ext.substring(3).trim();
     }
 
-    public static int uniqueEventsCount(@NotNull final List<ClinicalTrial> trials) {
+    public static int uniqueEventCount(@NotNull final List<ClinicalTrial> trials) {
         Set<String> events = Sets.newHashSet();
         for (ClinicalTrial trial : trials) {
             events.add(trial.event());

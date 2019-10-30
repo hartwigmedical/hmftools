@@ -55,7 +55,7 @@ public class ExplanationChapter implements ReportChapter {
                 .add(createContentDiv(new String[] {
                         "The 'Read Depth' displays the raw number of reads supporting the variant versus the total "
                                 + "number of reads on the mutated position.",
-                        "The 'Copies' field indicates the number of alleles present in the tumor on this particular mutated position.",
+                        "The 'Copies' field indicates the number of alleles present in the tumor with this particular mutation.",
                         "The 'tVAF' field displays the variant allele frequency corrected for tumor purity",
                         "The 'Biallelic' field indicates whether the variant is present across all alleles in the tumor "
                                 + "(and is including variants with loss-of-heterozygosity).",
@@ -91,7 +91,9 @@ public class ExplanationChapter implements ReportChapter {
                         "The range of the disruption is indicated by the intron/exon/promoter region of the break point "
                                 + "and the direction the disruption faces.",
                         "The type of disruption can be INV (inversion), DEL (deletion), DUP (duplication), INS "
-                                + "(insertion), SGL (single) or BND (translocation)." })));
+                                + "(insertion), SGL (single) or BND (translocation).",
+                        "A gene for which no wild type exists anymore in the tumor DNA due to disruption(s) " +
+                                "is reported in a separate section called 'homozygous disruptions'" })));
 
         reportDocument.add(table);
     }

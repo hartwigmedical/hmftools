@@ -25,5 +25,4 @@ public final class GeneDisruptions {
             }
         }).collect(Collectors.toList());
     }
-
 }

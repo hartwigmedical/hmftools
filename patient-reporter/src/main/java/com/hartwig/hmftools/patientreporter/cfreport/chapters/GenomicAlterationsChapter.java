@@ -12,6 +12,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
@@ -165,7 +166,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("") });
 
-        for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+        for (ReportableHomozygousDisruption homozygousDisruption : HomozygousDisruptions.sort(homozygousDisruptions)) {
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
@@ -246,8 +247,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         for (ViralInsertion viralInsert : viralInsertions) {
             contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
-            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount())))
-                    .setTextAlignment(TextAlignment.CENTER);
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount()))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 
