@@ -53,14 +53,17 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String microSatelliteStabilityString =
                 hasReliablePurity ? MSIStatus.text() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
+        double hrDeficiency = patientReport.chordAnalysis().hrdValue();
+        String hrDeficiencyLabel = hasReliablePurity ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+
         String hrFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
                 + "and is therefore not reported for this sample.";
-        boolean displayFootNote = MSIStatus == MicroSatelliteStatus.UNSTABLE;
+        boolean displayFootNote = false;
+        if (MSIStatus == MicroSatelliteStatus.UNSTABLE) {
+            displayFootNote = true;
+            hrDeficiencyLabel = DataUtil.NA_STRING + "*";
+        }
 
-        double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        String hrDeficiencyLabel = hasReliablePurity && MSIStatus == MicroSatelliteStatus.STABLE
-                ? HrDeficiency.interpretToString(hrDeficiency)
-                : DataUtil.NA_STRING + "*";
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
         hrChart.enabled(hasReliablePurity && MSIStatus == MicroSatelliteStatus.STABLE);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
