@@ -8,8 +8,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.DriverInterpretation;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -64,8 +64,8 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String ploidyString(double ploidy, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit) {
+    public static String ploidyString(double ploidy, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
 
@@ -73,8 +73,8 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String vafString(@NotNull ReportableVariant variant, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit) {
+    public static String vafString(@NotNull ReportableVariant variant, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         }
         double vaf = variant.allelePloidy() / variant.totalPloidy();
@@ -112,9 +112,9 @@ public final class SomaticVariants {
     }
 
     @NotNull
-    public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurityFit) {
+    public static String biallelicString(boolean biallelic, @Nullable DriverCategory driverCategory, boolean hasReliablePurity) {
         if (driverCategory == DriverCategory.TSG) {
-            if (hasReliablePurityFit) {
+            if (hasReliablePurity) {
                 return biallelic ? "Yes" : "No";
             } else {
                 return DataUtil.NA_STRING;

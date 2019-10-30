@@ -54,8 +54,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurity));
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurity));
-        reportDocument.add(createHomozygousDelDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
-        reportDocument.add(createSomaticFusionsTable(patientReport.geneFusions(), hasReliablePurity));
+        reportDocument.add(createHomozygousDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
+        reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
         // TODO: Disable viral insertions before making a final release
         reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
@@ -129,36 +129,16 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createHomozygousDelDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
-        final String title = "Tumor specific homozygous disruptions";
-        if (homozygousDisruptions.isEmpty()) {
-            return TableUtil.createNoneReportTable(title);
-        }
-
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 80, 80 },
-                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("chromosome band"),
-                        TableUtil.createHeaderCell("Gene")});
-
-        for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
-            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
-            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
-            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
-        }
-
-        return TableUtil.createWrappingReportTable(title, contentTable);
-    }
-
-    @NotNull
-    private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurityFit) {
+    private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity) {
         final String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 45, 125 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80, 45, 105 },
                 new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
                         TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("Type"),
-                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT), TableUtil.createHeaderCell("") });
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER), TableUtil.createHeaderCell("") });
 
         List<ReportableGainLoss> sortedGainsAndLosses = GainsAndLosses.sort(gainsAndLosses);
         for (ReportableGainLoss gainLoss : sortedGainsAndLosses) {
@@ -166,8 +146,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(gainLoss.chromosomeBand()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.gene()));
             contentTable.addCell(TableUtil.createContentCell(gainLoss.interpretation().text()));
-            contentTable.addCell(TableUtil.createContentCell(hasReliablePurityFit ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
-                    .setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(hasReliablePurity ? String.valueOf(gainLoss.copies()) : DataUtil.NA_STRING)
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(""));
         }
 
@@ -175,17 +155,38 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createSomaticFusionsTable(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurityFit) {
+    private static Table createHomozygousDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
+        final String title = "Tumor specific homozygous disruptions";
+        if (homozygousDisruptions.isEmpty()) {
+            return TableUtil.createNoneReportTable(title);
+        }
+
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 80, 80, 100, 80 },
+                new Cell[] { TableUtil.createHeaderCell("Chromosome"), TableUtil.createHeaderCell("Region"),
+                        TableUtil.createHeaderCell("Gene"), TableUtil.createHeaderCell("") });
+
+        for (ReportableHomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosome()));
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.chromosomeBand()));
+            contentTable.addCell(TableUtil.createContentCell(homozygousDisruption.gene()));
+            contentTable.addCell(TableUtil.createContentCell(""));
+        }
+
+        return TableUtil.createWrappingReportTable(title, contentTable);
+    }
+
+    @NotNull
+    private static Table createFusionsTable(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurity) {
         final String title = "Tumor specific gene fusions";
         if (fusions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 95, 85, 85, 40, 40, 40, 30 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 95, 85, 85, 40, 40, 40 },
                 new Cell[] { TableUtil.createHeaderCell("Fusion"), TableUtil.createHeaderCell("5' Transcript"),
                         TableUtil.createHeaderCell("3' Transcript"), TableUtil.createHeaderCell("5' End"),
-                        TableUtil.createHeaderCell("3' Start"), TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell("") });
+                        TableUtil.createHeaderCell("3' Start"),
+                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER) });
 
         final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
@@ -197,26 +198,25 @@ public class GenomicAlterationsChapter implements ReportChapter {
                     .setAction(PdfAction.createURI(GeneFusions.transcriptUrl(fusion.geneTranscriptEnd())))));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextStart()));
             contentTable.addCell(TableUtil.createContentCell(fusion.geneContextEnd()));
-            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurityFit))
-                    .setTextAlignment(TextAlignment.RIGHT));
-            contentTable.addCell(TableUtil.createContentCell(""));
+            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(fusion.ploidy(), hasReliablePurity))
+                    .setTextAlignment(TextAlignment.CENTER));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
 
     @NotNull
-    private static Table createDisruptionsTable(@NotNull List<ReportableGeneDisruption> disruptions, boolean hasReliablePurityFit) {
+    private static Table createDisruptionsTable(@NotNull List<ReportableGeneDisruption> disruptions, boolean hasReliablePurity) {
         final String title = "Tumor specific gene disruptions";
         if (disruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 80, 40, 100 },
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 60, 80, 100, 50, 85, 85 },
                 new Cell[] { TableUtil.createHeaderCell("Location"), TableUtil.createHeaderCell("Gene"),
                         TableUtil.createHeaderCell("Disrupted range"), TableUtil.createHeaderCell("Type"),
-                        TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.RIGHT),
-                        TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.RIGHT) });
+                        TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
 
         final List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
         for (ReportableGeneDisruption disruption : sortedDisruptions) {
@@ -224,10 +224,10 @@ public class GenomicAlterationsChapter implements ReportChapter {
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
             contentTable.addCell(TableUtil.createContentCell(disruption.range()));
             contentTable.addCell(TableUtil.createContentCell(disruption.type()));
-            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurityFit))
-                    .setTextAlignment(TextAlignment.RIGHT));
+            contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.ploidy(), hasReliablePurity))
+                    .setTextAlignment(TextAlignment.CENTER));
             contentTable.addCell(TableUtil.createContentCell(GeneUtil.ploidyToCopiesString(disruption.undisruptedCopyNumber(),
-                    hasReliablePurityFit)).setTextAlignment(TextAlignment.RIGHT));
+                    hasReliablePurity)).setTextAlignment(TextAlignment.CENTER));
         }
         return TableUtil.createWrappingReportTable(title, contentTable);
     }
@@ -239,12 +239,16 @@ public class GenomicAlterationsChapter implements ReportChapter {
             return TableUtil.createNoneReportTable(title);
         }
 
-        Table contentTable = TableUtil.createReportContentTable(new float[] { 100, 50 },
-                new Cell[] { TableUtil.createHeaderCell("Virus"), TableUtil.createHeaderCell("Number of viral insertions") });
+        Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
+                new Cell[] { TableUtil.createHeaderCell("Virus"),
+                        TableUtil.createHeaderCell("Number of viral insertions").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("") });
 
         for (ViralInsertion viralInsert : viralInsertions) {
             contentTable.addCell(TableUtil.createContentCell(viralInsert.virus()));
-            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount())));
+            contentTable.addCell(TableUtil.createContentCell(Integer.toString(viralInsert.viralInsertionCount())))
+                    .setTextAlignment(TextAlignment.CENTER);
+            contentTable.addCell(TableUtil.createContentCell(""));
         }
 
         return TableUtil.createWrappingReportTable(title, contentTable);

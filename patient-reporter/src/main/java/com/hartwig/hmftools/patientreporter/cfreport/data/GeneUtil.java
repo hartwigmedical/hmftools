@@ -12,8 +12,8 @@ public final class GeneUtil {
     }
 
     @NotNull
-    public static String ploidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurityFit) {
-        if (!hasReliablePurityFit) {
+    public static String ploidyToCopiesString(@Nullable Double ploidy, boolean hasReliablePurity) {
+        if (!hasReliablePurity) {
             return DataUtil.NA_STRING;
         } else {
             return ploidy != null ? ReportResources.decimalFormat("#.#").format(ploidy) : Strings.EMPTY;
