@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.patientreporter.variants.somatic;
 
-import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
-
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;

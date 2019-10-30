@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.variants.somatic;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
