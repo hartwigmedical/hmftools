@@ -625,3 +625,18 @@ Shown below is an example of a SS18-SSX1 fusion:
     - Homozygous disruptions are now reported as drivers by LINX and are in the driver catalog
     - Each amplification, deletion or LOH driver in the driver catalog is now linked to the SVs that caused it in the svDriver table
     - Breakends in the 3’UTR region of the upstream gene are permitted to form fusions via exon skipping
+- 1.5
+    - Fusion likelihood calcs - implemented gene-pairs, skip non-coding same-gene fusions
+    - known fusions don't require upstream transcript to be disruptive but will still fail on chain termination
+    - TIs limited by min of achor distances now less sum of breakend homologies
+    - BFB_AMP does not require max ploidy x8
+    - dominant foldback must exceed ploidy 4
+    - DMs can have a single SV and need to be 5x sample ploidy or 2.3x telomere/centromere
+    - dissolve simple groups unless all SVs in LOH or all assembled
+    - set intronic transcripts from LINE clusters to be non-disruptive
+    - bug: only reconfigure chains for RECIP_INV_DUPs if can form positive TI
+    - bug: determination of unique non-reported fusions was skipping first element
+ 
+    
+    
+    
