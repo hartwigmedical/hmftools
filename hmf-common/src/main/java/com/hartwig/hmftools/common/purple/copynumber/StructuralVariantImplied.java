@@ -20,12 +20,12 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class StructuralVariantImplied {
 
+    @NotNull
     private final StructuralVariantLegPloidyFactory<CombinedRegion> svPloidyFactory;
 
-    StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster) {
+    StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, @NotNull final PurityAdjuster purityAdjuster) {
         this.svPloidyFactory = new StructuralVariantLegPloidyFactory<>(averageReadDepth,
                 averageCopyNumber,
                 purityAdjuster,
@@ -33,9 +33,8 @@ class StructuralVariantImplied {
     }
 
     @NotNull
-    ListMultimap<Chromosome, CombinedRegion> svImpliedCopyNumber(final List<StructuralVariant> structuralVariants,
+    ListMultimap<Chromosome, CombinedRegion> svImpliedCopyNumber(@NotNull final List<StructuralVariant> structuralVariants,
             @NotNull final ListMultimap<Chromosome, CombinedRegion> copyNumbers) {
-
         long previousMissingCopyNumbers = copyNumbers.size();
         long currentMissingCopyNumbers = missingCopyNumberCount(copyNumbers);
 
@@ -84,13 +83,13 @@ class StructuralVariantImplied {
     }
 
     private void inferCopyNumberFromStructuralVariants(@NotNull final CombinedRegion region,
-            final Optional<StructuralVariantLegPloidy> start, final Optional<StructuralVariantLegPloidy> end) {
+            @NotNull final Optional<StructuralVariantLegPloidy> start, @NotNull final Optional<StructuralVariantLegPloidy> end) {
         region.setTumorCopyNumber(CopyNumberMethod.STRUCTURAL_VARIANT, inferCopyNumberFromStructuralVariants(start, end));
     }
 
     @VisibleForTesting
-    static double inferCopyNumberFromStructuralVariants(final Optional<StructuralVariantLegPloidy> start,
-            final Optional<StructuralVariantLegPloidy> end) {
+    static double inferCopyNumberFromStructuralVariants(@NotNull final Optional<StructuralVariantLegPloidy> start,
+            @NotNull final Optional<StructuralVariantLegPloidy> end) {
         final double startWeight = start.map(StructuralVariantLegPloidy::impliedRightCopyNumberWeight).orElse(0d);
         final double startCopyNumber = start.map(StructuralVariantLegPloidy::impliedRightCopyNumber).orElse(0d);
 
@@ -101,7 +100,7 @@ class StructuralVariantImplied {
         return Math.max(0, unconstrainedResult);
     }
 
-    private long missingCopyNumberCount(Multimap<?, CombinedRegion> copyNumbers) {
+    private long missingCopyNumberCount(@NotNull Multimap<?, CombinedRegion> copyNumbers) {
         return copyNumbers.values().stream().filter(this::implyCopyNumberFromSV).count();
     }
 

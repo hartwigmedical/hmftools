@@ -24,6 +24,7 @@ public class ConfigSupplier {
     private static final String GC_PROFILE = "gc_profile";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
+    private static final String TUMOR_ONLY = "tumor_only";
 
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
@@ -32,6 +33,7 @@ public class ConfigSupplier {
     private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 50;
 
     public static void addOptions(@NotNull Options options) {
+        options.addOption(TUMOR_ONLY, false, "Tumor only mode. Disables somatic fitting.");
         options.addOption(REF_SAMPLE, true, "Name of the reference sample. This should correspond to the value used in AMBER and COBALT.");
         options.addOption(TUMOR_SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in AMBER and COBALT.");
 
@@ -106,6 +108,7 @@ public class ConfigSupplier {
                 .amberDirectory(amberDirectory)
                 .cobaltDirectory(cobaltDirectory)
                 .gcProfile(gcProfile)
+                .tumorOnly(cmd.hasOption(TUMOR_ONLY))
                 .build();
 
         LOGGER.info("Reference Sample: {}, Tumor Sample: {}", commonConfig.refSample(), commonConfig.tumorSample());

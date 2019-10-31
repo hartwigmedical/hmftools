@@ -9,7 +9,6 @@ import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Value.Immutable
 @Value.Modifiable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
@@ -30,7 +29,6 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
     }
 
     public double impliedRightCopyNumber() {
-
         if (isDecreasingFromZero(1, leftCopyNumber())) {
             return 0;
         }
@@ -39,7 +37,6 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
     }
 
     public double impliedLeftCopyNumber() {
-
         if (isDecreasingFromZero(-1, rightCopyNumber())) {
             return 0;
         }
@@ -62,5 +59,4 @@ public abstract class StructuralVariantLegPloidy implements StructuralVariantLeg
     private boolean isDecreasingFromZero(int orientation, @NotNull final Optional<Double> copyNumber) {
         return orientation() == orientation && copyNumber.filter(Doubles::isZero).isPresent();
     }
-
 }

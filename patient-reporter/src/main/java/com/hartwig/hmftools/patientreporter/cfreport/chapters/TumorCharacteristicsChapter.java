@@ -19,6 +19,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.UnitValue;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class TumorCharacteristicsChapter implements ReportChapter {
@@ -44,34 +45,40 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         DecimalFormat singleDecimalFormat = ReportResources.decimalFormat("#.#");
         DecimalFormat doubleDecimalFormat = ReportResources.decimalFormat("#.##");
 
-        boolean hasReliablePurityFit = patientReport.hasReliablePurity();
+        boolean hasReliablePurity = patientReport.hasReliablePurity();
 
         double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
 
-        String MSIStatus = MicroSatelliteStatus.interpretToString(microSatelliteStability);
+        MicroSatelliteStatus MSIStatus = MicroSatelliteStatus.interpret(microSatelliteStability);
         String microSatelliteStabilityString =
-                hasReliablePurityFit ? MSIStatus + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
-
-        String HRDFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
-                + "and is therefore not reported for this patient.";
-
-        boolean displayFootNote = !hasReliablePurityFit || !MSIStatus.equals("Stable");
+                hasReliablePurity ? MSIStatus.text() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
         double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        String hrDeficiencyLabel =
-                hasReliablePurityFit && MSIStatus.equals("Stable") ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING + "*";
+        String hrDeficiencyLabel = hasReliablePurity ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+
+        String hrFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
+                + "and is therefore not reported for this sample.";
+        boolean displayFootNote = false;
+        if (MSIStatus == MicroSatelliteStatus.UNSTABLE) {
+            displayFootNote = true;
+            hrDeficiencyLabel = DataUtil.NA_STRING + "*";
+        }
+
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
-        hrChart.enabled(hasReliablePurityFit && MSIStatus.equals("Stable"));
+        hrChart.enabled(hasReliablePurity && MSIStatus == MicroSatelliteStatus.STABLE);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
+
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
                 "The HR-deficiency score is determined by CHORD, a WGS signature-based classifier comparing "
                         + "the signature of this sample with signatures found across samples with known BRCA1/BRCA2 inactivation.",
-                hrChart, HRDFootnote, displayFootNote));
+                hrChart,
+                hrFootnote,
+                displayFootNote));
 
         BarChart satelliteChart =
                 new BarChart(microSatelliteStability, MicroSatelliteStatus.RANGE_MIN, MicroSatelliteStatus.RANGE_MAX, "MSS", "MSI", false);
-        satelliteChart.enabled(hasReliablePurityFit);
+        satelliteChart.enabled(hasReliablePurity);
         satelliteChart.scale(InlineBarChart.LOG10_SCALE);
         satelliteChart.setTickMarks(new double[] { MicroSatelliteStatus.RANGE_MIN, 10, MicroSatelliteStatus.RANGE_MAX },
                 doubleDecimalFormat);
@@ -85,15 +92,17 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                         + "(short) repeat sections across the whole genome of the tumor per Mb. This metric can be "
                         + "considered as a good marker for instability in microsatellite repeat regions. Tumors with a "
                         + "score greater than 4.0 are considered microsatellite unstable (MSI).",
-                satelliteChart, "", false));
+                satelliteChart,
+                Strings.EMPTY,
+                false));
 
         int mutationalLoad = patientReport.tumorMutationalLoad();
-        String mutationalLoadString = hasReliablePurityFit
+        String mutationalLoadString = hasReliablePurity
                 ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
                 : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", false);
-        mutationalLoadChart.enabled(hasReliablePurityFit);
+        mutationalLoadChart.enabled(hasReliablePurity);
         mutationalLoadChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalLoadChart.setTickMarks(new double[] { MutationalLoad.RANGE_MIN, 10, 100, MutationalLoad.RANGE_MAX }, noDecimalFormat);
         mutationalLoadChart.enableUndershoot(noDecimalFormat.format(0));
@@ -106,14 +115,16 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 "The tumor mutational load represents the total number of somatic missense variants across "
                         + "the whole genome of the tumor. Patients with a mutational load over 140 could be eligible for "
                         + "immunotherapy within the DRUP study.",
-                mutationalLoadChart, "", false));
+                mutationalLoadChart,
+                Strings.EMPTY,
+                false));
 
         double mutationalBurden = patientReport.tumorMutationalBurden();
         String mutationalBurdenString =
-                hasReliablePurityFit ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb" : DataUtil.NA_STRING;
+                hasReliablePurity ? singleDecimalFormat.format(mutationalBurden) + " variants per Mb" : DataUtil.NA_STRING;
         BarChart mutationalBurdenChart =
                 new BarChart(mutationalBurden, MutationalBurden.RANGE_MIN, MutationalBurden.RANGE_MAX, "Low", "High", false);
-        mutationalBurdenChart.enabled(hasReliablePurityFit);
+        mutationalBurdenChart.enabled(hasReliablePurity);
         mutationalBurdenChart.scale(InlineBarChart.LOG10_SCALE);
         mutationalBurdenChart.setTickMarks(new double[] { MutationalBurden.RANGE_MIN, 10, MutationalBurden.RANGE_MAX },
                 doubleDecimalFormat);
@@ -123,7 +134,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 mutationalBurdenString,
                 "The tumor mutational burden score represents the number of all somatic variants across the "
                         + "whole genome of the tumor per Mb.",
-                mutationalBurdenChart, "", false));
+                mutationalBurdenChart,
+                Strings.EMPTY,
+                false));
     }
 
     @NotNull
@@ -148,8 +161,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         div.add(table);
 
         if (displayFootnote) {
-            div.add(new Paragraph(footnote).addStyle(ReportResources.bodyTextStyle())
-                    .setFixedLeading(ReportResources.BODY_TEXT_LEADING));
+            div.add(new Paragraph(footnote).addStyle(ReportResources.subTextStyle()).setFixedLeading(ReportResources.BODY_TEXT_LEADING));
         }
 
         return div;

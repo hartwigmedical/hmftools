@@ -34,7 +34,7 @@ final class ReportableGeneDisruptionFactory {
                         Math.min(primaryDisruptionLeft.undisruptedCopyNumber(), primaryDisruptionRight.undisruptedCopyNumber());
 
                 Double ploidyLeft = primaryDisruptionLeft.ploidy();
-                if (ploidyLeft != null && ploidyLeft.equals(primaryDisruptionRight.ploidy())) {
+                if (ploidyLeft != null && !ploidyLeft.equals(primaryDisruptionRight.ploidy())) {
                     LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryDisruptionLeft.gene());
                 }
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()

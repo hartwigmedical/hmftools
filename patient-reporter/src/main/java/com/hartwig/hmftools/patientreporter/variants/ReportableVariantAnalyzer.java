@@ -22,14 +22,10 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingM
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class ReportableVariantAnalyzer {
-
-    private static final Logger LOGGER = LogManager.getLogger(ReportableVariantAnalyzer.class);
 
     private ReportableVariantAnalyzer() {
     }

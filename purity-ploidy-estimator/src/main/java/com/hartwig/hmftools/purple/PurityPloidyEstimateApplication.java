@@ -137,7 +137,9 @@ public class PurityPloidyEstimateApplication {
             // Load structural and somatic variants
             final PurpleStructuralVariantSupplier structuralVariants = structuralVariants(configSupplier);
             final List<SomaticVariant> allSomatics = somaticVariants(configSupplier);
-            final List<SomaticVariant> snpSomatics = allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
+            final List<SomaticVariant> fittingSomatics = config.tumorOnly()
+                    ? Collections.emptyList()
+                    : allSomatics.stream().filter(SomaticVariant::isSnp).collect(Collectors.toList());
 
             LOGGER.info("Applying segmentation");
             final Segmentation segmentation = new Segmentation(configSupplier, cobaltGender);
@@ -146,8 +148,7 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
-            final BestFit bestFit =
-                    fitPurity(executorService, configSupplier, cobaltGender, snpSomatics, observedRegions, fittedRegionFactory);
+            final BestFit bestFit = fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
 

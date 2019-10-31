@@ -30,7 +30,7 @@ public class ReportingDbTest {
         ReportingEntry reportingEntry1 = reportDates.get(0);
         assertEquals("sampleId1", reportingEntry1.sampleId());
         assertEquals("ABCD", reportingEntry1.tumorBarcode());
-        assertEquals("22/10/2019", reportingEntry1.reportDate());
+        assertEquals("22-Oct-2019", reportingEntry1.reportDate());
         assertEquals("sequence_report", reportingEntry1.reportType());
         assertEquals("70%", reportingEntry1.purity());
         assertEquals("TRUE", reportingEntry1.hasReliablePurity());
@@ -39,7 +39,7 @@ public class ReportingDbTest {
         ReportingEntry reportingEntry2 = reportDates.get(1);
         assertEquals("sampleId2", reportingEntry2.sampleId());
         assertEquals("EFGH", reportingEntry2.tumorBarcode());
-        assertEquals("22/10/2019", reportingEntry2.reportDate());
+        assertEquals("22-Oct-2019", reportingEntry2.reportDate());
         assertEquals("shallow_seq_low_purity", reportingEntry2.reportType());
         assertEquals("N/A", reportingEntry2.purity());
         assertEquals("N/A", reportingEntry2.hasReliablePurity());

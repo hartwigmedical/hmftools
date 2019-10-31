@@ -12,10 +12,6 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.EvidenceLevel;
 import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -79,26 +75,5 @@ public class ReportableEvidenceItemFactoryTest {
                 .isOnLabel(false)
                 .cancerType(Strings.EMPTY)
                 .scope(EvidenceScope.SPECIFIC);
-    }
-
-    @NotNull
-    private static ImmutableDriverCatalog.Builder catalogBuilder(@NotNull String gene) {
-        return ImmutableDriverCatalog.builder()
-                .gene(gene)
-                .chromosome("1")
-                .chromosomeBand("1p")
-                .driverLikelihood(0D)
-                .category(DriverCategory.ONCO)
-                .driver(DriverType.MUTATION)
-                .likelihoodMethod(LikelihoodMethod.HOTSPOT)
-                .dndsLikelihood(0D)
-                .missense(0)
-                .nonsense(0)
-                .splice(0)
-                .inframe(0)
-                .frameshift(0)
-                .minCopyNumber(0)
-                .maxCopyNumber(0)
-                .biallelic(false);
     }
 }
