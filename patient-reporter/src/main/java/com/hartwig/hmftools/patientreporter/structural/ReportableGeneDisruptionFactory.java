@@ -42,8 +42,8 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.ploidy())
-                        .undisruptedCopyNumber(lowestUndisruptedCopyNumber)
+                        .ploidy(primaryDisruptionLeft.ploidy() >= 0 ? primaryDisruptionLeft.ploidy() : 0)
+                        .undisruptedCopyNumber(lowestUndisruptedCopyNumber >= 0 ? lowestUndisruptedCopyNumber : 0)
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
             } else {
@@ -52,8 +52,9 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.ploidy())
-                        .undisruptedCopyNumber(primaryDisruptionLeft.undisruptedCopyNumber())
+                        .ploidy(primaryDisruptionLeft.ploidy() >= 0 ? primaryDisruptionLeft.ploidy() : 0)
+                        .undisruptedCopyNumber(
+                                primaryDisruptionLeft.undisruptedCopyNumber() >= 0 ? primaryDisruptionLeft.undisruptedCopyNumber() : 0)
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
             }
