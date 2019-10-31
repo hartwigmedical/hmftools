@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,7 +35,8 @@ final class ReportableGeneDisruptionFactory {
                         Math.min(primaryDisruptionLeft.undisruptedCopyNumber(), primaryDisruptionRight.undisruptedCopyNumber());
 
                 Double ploidyLeft = primaryDisruptionLeft.ploidy();
-                if (ploidyLeft != null && !ploidyLeft.equals(primaryDisruptionRight.ploidy())) {
+                Double ploidyRight = primaryDisruptionRight.ploidy();
+                if (ploidyLeft != null && ploidyRight != null && !Doubles.equal(ploidyLeft, ploidyRight)) {
                     LOGGER.warn("The disrupted copy number of a paired sv is not the same on {}", primaryDisruptionLeft.gene());
                 }
                 reportableDisruptions.add(ImmutableReportableGeneDisruption.builder()
@@ -42,8 +44,8 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.ploidy() >= 0 ? primaryDisruptionLeft.ploidy() : 0)
-                        .undisruptedCopyNumber(lowestUndisruptedCopyNumber >= 0 ? lowestUndisruptedCopyNumber : 0)
+                        .ploidy(primaryDisruptionLeft.ploidy())
+                        .undisruptedCopyNumber(Math.max(0, lowestUndisruptedCopyNumber))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
             } else {
@@ -52,9 +54,8 @@ final class ReportableGeneDisruptionFactory {
                         .gene(primaryDisruptionLeft.gene())
                         .type(primaryDisruptionLeft.type())
                         .range(rangeField(pairedDisruption))
-                        .ploidy(primaryDisruptionLeft.ploidy() >= 0 ? primaryDisruptionLeft.ploidy() : 0)
-                        .undisruptedCopyNumber(
-                                primaryDisruptionLeft.undisruptedCopyNumber() >= 0 ? primaryDisruptionLeft.undisruptedCopyNumber() : 0)
+                        .ploidy(primaryDisruptionLeft.ploidy())
+                        .undisruptedCopyNumber(Math.max(0, primaryDisruptionLeft.undisruptedCopyNumber()))
                         .firstAffectedExon(primaryDisruptionLeft.exonUp())
                         .build());
             }
