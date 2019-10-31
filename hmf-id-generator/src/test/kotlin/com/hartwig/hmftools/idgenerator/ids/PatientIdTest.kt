@@ -6,11 +6,13 @@ import io.kotlintest.specs.StringSpec
 class PatientIdTest : StringSpec() {
     private val cpctId = "CPCT01990001"
     private val drupId = "DRUP01990002"
+    private val wideId = "WIDE01010003"
 
     init {
         "can create valid ids" {
             PatientId(cpctId) shouldBe PatientId(IdType.CPCT, cpctId)
             PatientId(drupId) shouldBe PatientId(IdType.DRUP, drupId)
+            PatientId(wideId) shouldBe PatientId(IdType.WIDE, wideId)
         }
 
         "ids that do not start with CPCT/DRUP are invalid" {
