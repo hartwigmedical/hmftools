@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
@@ -564,7 +565,7 @@ public class DisruptionFinder
                     .ploidy(gene.ploidy())
                     .exonUp(transcript.ExonUpstream)
                     .exonDown(transcript.ExonDownstream)
-                    .undisruptedCopyNumber(transcript.undisruptedCopyNumber())
+                    .undisruptedCopyNumber(max(transcript.undisruptedCopyNumber(),0))
                     .build());
         }
 
