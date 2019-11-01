@@ -70,9 +70,9 @@ public final class ExampleAnalysisTestFactory {
         final List<ReportableVariant> reportableVariants = createCOLO829SomaticVariants();
         final List<ReportableGainLoss> gainsAndLosses = createCOLO829GainsLosses();
         final List<ReportableGeneFusion> fusions = Lists.newArrayList();
+        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         final List<ReportableGeneDisruption> disruptions = createCOLO829Disruptions();
         final ChordAnalysis chordAnalysis = createCOLO829ChordAnalysis();
-        final List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = Lists.newArrayList();
         final List<ViralInsertion> viralInsertions = Lists.newArrayList();
 
         final String sampleId = "PNT00012345T";
@@ -556,9 +556,9 @@ public final class ExampleAnalysisTestFactory {
                 .gene("CDKN2A")
                 .position(21971153)
                 .chromosome("9")
-                .ref("C")
-                .alt("T")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .ref("CCG")
+                .alt("C")
+                .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
@@ -578,9 +578,9 @@ public final class ExampleAnalysisTestFactory {
                 .gene("TERT")
                 .position(1295228)
                 .chromosome("5")
-                .ref("C")
-                .alt("T")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .ref("GG")
+                .alt("AA")
+                .canonicalCodingEffect(CodingEffect.NONE)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
@@ -733,7 +733,7 @@ public final class ExampleAnalysisTestFactory {
     @NotNull
     private static ChordAnalysis createCOLO829ChordAnalysis() {
         double brca1Value = 0D;
-        double brca2Value = 0.014;
+        double brca2Value = 0D;
 
         return ImmutableChordAnalysis.builder()
                 .noneValue(1 - (brca1Value + brca2Value))
