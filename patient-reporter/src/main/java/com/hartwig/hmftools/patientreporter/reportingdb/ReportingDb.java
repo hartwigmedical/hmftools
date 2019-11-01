@@ -48,7 +48,7 @@ public final class ReportingDb {
         } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORE01LR")
                 && !sampleId.startsWith("CORE01RI")) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
-        } else {
+        } else if (type != LimsSampleType.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
@@ -75,9 +75,10 @@ public final class ReportingDb {
 
         String reportType = report.reason().identifier();
 
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (sampleId.startsWith("COLO")) {
             LOGGER.debug("This is a COLO sample. This sample will not be included in reporting db");
-        } else {
+        } else if (type != LimsSampleType.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
