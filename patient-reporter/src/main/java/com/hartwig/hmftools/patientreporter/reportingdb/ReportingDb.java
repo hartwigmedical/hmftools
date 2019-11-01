@@ -42,7 +42,7 @@ public final class ReportingDb {
 
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (sampleId.startsWith("COLO")) {
-            LOGGER.debug("This is a COLO sample. This sample will not be included in Reporting Db");
+            LOGGER.debug("This is a COLO sample. This sample will not be included in reporting db");
         } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
         } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORE01LR")
