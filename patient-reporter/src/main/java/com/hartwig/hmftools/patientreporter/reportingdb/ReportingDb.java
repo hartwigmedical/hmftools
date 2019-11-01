@@ -51,7 +51,8 @@ public final class ReportingDb {
         } else {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
-                if (!present && sampleId.equals(entry.sampleId()) && reportType.equals(entry.reportType())) {
+                if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
+                        && reportType.equals(entry.reportType())) {
                     LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
                     present = true;
                 }
@@ -67,8 +68,7 @@ public final class ReportingDb {
         }
     }
 
-    public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report)
-            throws IOException {
+    public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report) throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
@@ -80,7 +80,8 @@ public final class ReportingDb {
         } else {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
-                if (!present && sampleId.equals(entry.sampleId()) && reportType.equals(entry.reportType())) {
+                if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
+                        && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
                     LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
                     present = true;
                 }
