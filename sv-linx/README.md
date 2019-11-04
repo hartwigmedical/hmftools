@@ -123,6 +123,12 @@ java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
     -output_dir /path_to_write_data_files/ 
 ```
 
+Ensembl database URLs for 37 & 38 are:
+- mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
+- mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_92_38
+
+By default LINX will use HG37, but this can be overridden using the ref_genome_version config described above.
+
 ## Key Concepts in LINX
 
 ### LINX terminology and conventions for linking proximate breakends
