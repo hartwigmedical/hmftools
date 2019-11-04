@@ -109,6 +109,44 @@ public class GenomeRegionsTest
         assertRegion( victim.build().get(0), 5000, 5200);
     }
 
+    @Test
+    public void testJoinRegionsWithMinGap() {
+        GenomeRegions victim = new GenomeRegions(CHROM, 100);
+
+        victim.addRegion(5000, 6000);
+        victim.addRegion(6100, 7000);
+        Assert.assertEquals(1, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 7000);
+
+         victim = new GenomeRegions(CHROM, 100);
+
+        victim.addRegion(5000, 6000);
+        victim.addRegion(6101, 7000);
+        Assert.assertEquals(2, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 6000);
+        assertRegion( victim.build().get(1), 6101, 7000);
+    }
+
+    @Test
+    public void testJoinRegions() {
+        GenomeRegions victim = new GenomeRegions(CHROM, 1);
+
+        victim.addRegion(5000, 6000);
+        victim.addRegion(5500, 6500);
+        Assert.assertEquals(1, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 6500);
+
+        victim.addRegion(6501, 7000);
+        Assert.assertEquals(1, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 7000);
+
+        victim.addRegion(7002, 8000);
+        Assert.assertEquals(2, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 7000);
+        assertRegion( victim.build().get(1), 7002, 8000);
+
+    }
+
     private void assertRegion(@NotNull final GenomeRegion region, long expectedStart, long expectedEnd) {
         Assert.assertEquals(expectedStart, region.start());
         Assert.assertEquals(expectedEnd, region.end());
