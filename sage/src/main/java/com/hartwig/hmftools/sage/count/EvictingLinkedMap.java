@@ -10,6 +10,7 @@ import java.util.function.Function;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Deprecated
 public class EvictingLinkedMap<K, V> {
 
     private static final int MAX_CAPACITY = 1024;

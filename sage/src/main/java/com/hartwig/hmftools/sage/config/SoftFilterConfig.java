@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface FilterTierConfig {
+public interface SoftFilterConfig {
 
     String MIN_TUMOR_QUAL = "min_tumor_qual";
     String MIN_TUMOR_VAF = "min_tumor_vaf";
@@ -33,7 +33,7 @@ public interface FilterTierConfig {
     double maxGermlineRelativeReadContextCount();
 
     @NotNull
-    static Options createOptions(@NotNull final String prefix, @NotNull final FilterTierConfig defaultValue) {
+    static Options createOptions(@NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue) {
         final Options options = new Options();
         options.addOption(prefix + "_" + MIN_TUMOR_QUAL,true,"Minimum " + prefix + " tumor quality [" + defaultValue.minTumorQual() + "]");
         options.addOption(prefix + "_" + MIN_TUMOR_VAF, true, "Minimum " + prefix + " tumor VAF [" + defaultValue.minTumorVaf() + "]");
@@ -47,7 +47,7 @@ public interface FilterTierConfig {
     }
 
     @NotNull
-    static FilterTierConfig createConfig(@NotNull final CommandLine cmd, @NotNull final String prefix, @NotNull final FilterTierConfig defaultValue) throws ParseException {
+    static SoftFilterConfig createConfig(@NotNull final CommandLine cmd, @NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue) throws ParseException {
         final int minTumorQual = SageConfig.defaultIntValue(cmd, prefix + "_" + MIN_TUMOR_QUAL, defaultValue.minTumorQual());
         final double minTumorVaf = SageConfig.defaultValue(cmd, prefix + "_" + MIN_TUMOR_VAF, defaultValue.minTumorVaf());
         final int minGermlineDepth = SageConfig.defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH, defaultValue.minGermlineDepth());
@@ -56,7 +56,7 @@ public interface FilterTierConfig {
         final double maxGermlineRelativeQual = SageConfig.defaultValue(cmd, prefix + "_" + MAX_GERMLINE_REL_QUAL, defaultValue.maxGermlineRelativeQual());
         final double maxGermlineRelativeReadContextCount = SageConfig.defaultValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RCC, defaultValue.maxGermlineRelativeReadContextCount());
 
-        return ImmutableFilterTierConfig.builder()
+        return ImmutableSoftFilterConfig.builder()
                 .minTumorQual(minTumorQual)
                 .minTumorVaf(minTumorVaf)
                 .minGermlineDepth(minGermlineDepth)

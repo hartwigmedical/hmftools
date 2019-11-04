@@ -2,12 +2,18 @@ package com.hartwig.hmftools.sage;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.ReadContextCounter;
+import com.hartwig.hmftools.sage.context.RegionSelector;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,19 +41,25 @@ public class SageVCF implements AutoCloseable {
     private final static String READ_CONTEXT_COUNT = "RCC";
     private final static String READ_CONTEXT_QUALITY = "RCQ";
 
+    private final ListMultimap<Chromosome, GenomeRegion> panel;
+    private final Map<String, RegionSelector<GenomeRegion>> panelSelectorMap;
     private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
     private final PhasingQueue phasingQueue;
 
-    SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+    SageVCF(final ListMultimap<Chromosome, GenomeRegion> panel, @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+        this.panel = panel;
         this.config = config;
+        this.panelSelectorMap = Maps.newHashMap();
+
+
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
 
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
-        phasingQueue = new PhasingQueue(entry -> refContextEnrichment.accept(create(entry.normal(), entry.tumorAltContexts())));
+        phasingQueue = new PhasingQueue(entry -> refContextEnrichment.accept(create(entry)));
 
         writer.writeHeader(header);
     }
@@ -75,7 +87,10 @@ public class SageVCF implements AutoCloseable {
     }
 
     @NotNull
-    private VariantContext create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorContexts) {
+    private VariantContext create(@NotNull final SageEntry entry) {
+        final AltContext normal = entry.normal();
+        final List<AltContext> tumorContexts = entry.tumorAltContexts();
+
         assert (tumorContexts.size() >= 1);
 
         final AltContext firstTumor = tumorContexts.get(0);

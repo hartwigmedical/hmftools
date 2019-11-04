@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
+import com.hartwig.hmftools.sage.SageConfig;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -11,7 +13,13 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FilterConfig {
 
-    FilterTierConfig NO_FILTER = ImmutableFilterTierConfig.builder()
+    String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
+    String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_alt_support";
+
+    int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
+    int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 3;
+
+    SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
             .minTumorQual(0)
             .minTumorVaf(0)
             .minGermlineDepth(0)
@@ -20,19 +28,13 @@ public interface FilterConfig {
             .maxGermlineRelativeReadContextCount(1d)
             .build();
 
-    FilterTierConfig DEFAULT_HARD_FILTER = ImmutableFilterTierConfig.builder()
-            .from(NO_FILTER)
-            .minTumorQual(1)
-            .maxGermlineVaf(0.3)
-            .build();
-
-    FilterTierConfig DEFAULT_HOTSPOT_FILTER = ImmutableFilterTierConfig.builder()
+    SoftFilterConfig DEFAULT_HOTSPOT_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
             .minTumorQual(50)
             .minTumorVaf(0.05)
             .build();
 
-    FilterTierConfig DEFAULT_PANEL_FILTER = ImmutableFilterTierConfig.builder()
+    SoftFilterConfig DEFAULT_PANEL_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
             .minTumorQual(100)
             .minTumorVaf(0.01)
@@ -41,7 +43,7 @@ public interface FilterConfig {
             .maxGermlineRelativeReadContextCount(0.05)
             .build();
 
-    FilterTierConfig DEFAULT_WIDE_FILTER = ImmutableFilterTierConfig.builder()
+    SoftFilterConfig DEFAULT_WIDE_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
             .minTumorQual(150)
             .minTumorVaf(0.025)
@@ -51,26 +53,29 @@ public interface FilterConfig {
             .maxGermlineRelativeReadContextCount(0.05)
             .build();
 
-    @NotNull
-    FilterTierConfig hardFilter();
+    int hardMinTumorQual();
+
+    int hardMinTumorAltSupport();
 
     @NotNull
-    FilterTierConfig hotspotFilter();
+    SoftFilterConfig softHotspotFilter();
 
     @NotNull
-    FilterTierConfig panelFilter();
+    SoftFilterConfig softPanelFilter();
 
     @NotNull
-    FilterTierConfig wideFilter();
+    SoftFilterConfig softWideFilter();
 
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
 
-        FilterTierConfig.createOptions("hard", DEFAULT_HARD_FILTER).getOptions().forEach(options::addOption);
-        FilterTierConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
-        FilterTierConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
-        FilterTierConfig.createOptions("wide", DEFAULT_WIDE_FILTER).getOptions().forEach(options::addOption);
+        options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
+        options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+
+        SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
+        SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
+        SoftFilterConfig.createOptions("wide", DEFAULT_WIDE_FILTER).getOptions().forEach(options::addOption);
 
         return options;
     }
@@ -78,10 +83,11 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
-                .hardFilter(FilterTierConfig.createConfig(cmd, "hard", DEFAULT_HARD_FILTER))
-                .hotspotFilter(FilterTierConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
-                .panelFilter(FilterTierConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
-                .wideFilter(FilterTierConfig.createConfig(cmd, "wide", DEFAULT_WIDE_FILTER))
+                .hardMinTumorQual(SageConfig.defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
+                .hardMinTumorAltSupport(SageConfig.defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
+                .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
+                .softWideFilter(SoftFilterConfig.createConfig(cmd, "wide", DEFAULT_WIDE_FILTER))
                 .build();
 
     }

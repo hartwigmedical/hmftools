@@ -4,12 +4,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.config.FilterConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +31,8 @@ public interface SageConfig {
     String OUTPUT_VCF = "out";
     String MIN_MAP_QUALITY = "min_map_quality";
     String MIN_BASE_QUALITY = "min_base_quality";
+    String PANEL = "panel";
+    String HOTSPOTS = "hotspots";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
@@ -46,6 +50,10 @@ public interface SageConfig {
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
+
+        options.addOption(PANEL, true, "Panel");
+        options.addOption(HOTSPOTS, true, "Hotspots");
+        FilterConfig.createOptions().getOptions().forEach(options::addOption);
 
         return options;
     }
@@ -69,6 +77,15 @@ public interface SageConfig {
 
     @NotNull
     String outputFile();
+
+    @NotNull
+    String panel();
+
+    @NotNull
+    String hotspots();
+
+    @NotNull
+    FilterConfig filter();
 
     default int regionSliceSize() {
         return 1_000_000;
@@ -121,6 +138,9 @@ public interface SageConfig {
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
+                .filter(FilterConfig.createConfig(cmd))
+                .panel(cmd.getOptionValue(PANEL, Strings.EMPTY))
+                .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .build();
 
     }

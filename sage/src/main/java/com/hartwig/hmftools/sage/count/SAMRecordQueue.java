@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
+@Deprecated
 public class SAMRecordQueue implements Consumer<SAMRecord> {
 
     private final Consumer<SAMRecord> consumer;
