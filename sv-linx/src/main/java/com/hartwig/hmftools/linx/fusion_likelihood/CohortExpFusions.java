@@ -24,6 +24,8 @@ import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.check
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.divideOverlappingRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.mergePhaseRegions;
 import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.overlapsOtherRegions;
+import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.DEFAULT_BUCKET_REGION_RATIO;
+import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.MIN_BLOCK_SIZE;
 
 import java.util.List;
 import java.util.Map;
@@ -63,7 +65,7 @@ public class CohortExpFusions
 
     public static int PRE_GENE_3P_DISTANCE = 10000;
     public static int SHORT_INV_BUCKET = 100000;
-    public static int MIN_BUCKET_LENGTH = 100;
+    public static int MIN_BUCKET_LENGTH = 10;
     public static int LONG_DDI_BUCKET = 5000000;
 
     public static final double GENOME_BASE_COUNT = 3e9;
@@ -128,7 +130,7 @@ public class CohortExpFusions
         for(int i = 0; i < bucketLengths; ++i)
         {
             int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
-            blockSize = max(blockSize, MIN_BUCKET_LENGTH);
+            blockSize = max(blockSize, MIN_BLOCK_SIZE);
             mDelRegionAllocators.add(i, new RegionAllocator(blockSize));
             mDupRegionAllocators.add(i, new RegionAllocator(blockSize));
         }
@@ -427,8 +429,6 @@ public class CohortExpFusions
 
         regions.add(GenePhaseRegion.from(newRegion, 0, newRegion.length()));
     }
-
-    public static final int DEFAULT_BUCKET_REGION_RATIO = 10;
 
     public void generateSameGeneCounts(GeneRangeData geneData)
     {

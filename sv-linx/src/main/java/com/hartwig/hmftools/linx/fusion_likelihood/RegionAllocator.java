@@ -20,6 +20,10 @@ public class RegionAllocator
 
     private Map<String,Boolean> mAllocations;
 
+    // how many blocks to divide a region into for the allocators
+    public static final int DEFAULT_BUCKET_REGION_RATIO = 10;
+    public static final int MIN_BLOCK_SIZE = 100;
+
     public RegionAllocator(int blockSize)
     {
         mBlockSize = blockSize;

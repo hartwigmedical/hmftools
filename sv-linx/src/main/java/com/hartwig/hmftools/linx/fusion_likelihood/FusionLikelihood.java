@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.BUCKET_MIN;
-import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.DEFAULT_BUCKET_REGION_RATIO;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.GENE_PAIR_DELIM;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.GENOME_BASE_COUNT;
 import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.LONG_DDI_BUCKET;
@@ -34,6 +33,8 @@ import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.DEFAULT_BUCKET_REGION_RATIO;
+import static com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator.MIN_BLOCK_SIZE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -452,7 +453,7 @@ public class FusionLikelihood
             for(int i = 0; i < bucketLengths; ++i)
             {
                 int blockSize = (int)(mProximateBucketLengths.get(i) / DEFAULT_BUCKET_REGION_RATIO);
-                blockSize = max(blockSize, MIN_BUCKET_LENGTH);
+                blockSize = max(blockSize, MIN_BLOCK_SIZE);
                 regionAllocators[i] = new RegionAllocator(blockSize);
             }
 
@@ -569,7 +570,7 @@ public class FusionLikelihood
 
                             writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
                                     geneUp.GeneData.GeneId, geneUp.GeneData.GeneName, geneDown.GeneData.GeneId, geneDown.GeneData.GeneName,
-                                    "INV", 1000, SHORT_INV_BUCKET,
+                                    "INV", MIN_BUCKET_LENGTH, SHORT_INV_BUCKET,
                                     geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_SHORT_INV) * shortInvFusionFactor));
 
                             writer.newLine();
