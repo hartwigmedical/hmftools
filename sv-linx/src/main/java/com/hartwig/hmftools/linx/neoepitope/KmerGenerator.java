@@ -73,7 +73,7 @@ public class KmerGenerator
             final String outputFileName = mOutputDir + "LNX_KMER_STRINGS.csv";
 
             writer = createBufferedWriter(outputFileName, false);
-            writer.write("Chromosome,PosStart,OrientStart,PosEnd,OrientEnd,KmerPosStrand,KmerNegStrand");
+            writer.write("KmerId,Chromosome,PosStart,OrientStart,PosEnd,OrientEnd,KmerPosStrand,KmerNegStrand");
             writer.newLine();
 
             BufferedReader fileReader = new BufferedReader(new FileReader(mKmerInputFile));
@@ -86,7 +86,10 @@ public class KmerGenerator
                 String[] items = line.split(",", -1);
 
                 if(items.length < COL_INSERT_SEQ+1)
+                {
+                    LOGGER.warn("invalid input string: {}", line);
                     continue;
+                }
 
                 final String kmerId = items[COL_KMER_ID];
                 final String chromosome = items[COL_CHR];
