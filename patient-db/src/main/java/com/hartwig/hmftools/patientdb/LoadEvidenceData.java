@@ -71,7 +71,7 @@ public class LoadEvidenceData {
 
         LOGGER.info("Sample: " + sample);
 
-        LOGGER.info("Reading primary tumor location file from db");
+        LOGGER.info("Reading primary tumor location from file.");
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
 
