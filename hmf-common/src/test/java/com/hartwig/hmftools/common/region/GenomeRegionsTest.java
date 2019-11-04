@@ -144,7 +144,21 @@ public class GenomeRegionsTest
         Assert.assertEquals(2, victim.build().size());
         assertRegion( victim.build().get(0), 5000, 7000);
         assertRegion( victim.build().get(1), 7002, 8000);
+    }
 
+    @Test
+    public void testJoinRegionsBoundary() {
+        GenomeRegions victim = new GenomeRegions(CHROM);
+
+        victim.addRegion(5000, 5500);
+        victim.addRegion(6000, 6500);
+        Assert.assertEquals(2, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 5500);
+        assertRegion( victim.build().get(1), 6000, 6500);
+
+        victim.addRegion(5501, 5999);
+        Assert.assertEquals(1, victim.build().size());
+        assertRegion( victim.build().get(0), 5000, 6500);
     }
 
     private void assertRegion(@NotNull final GenomeRegion region, long expectedStart, long expectedEnd) {

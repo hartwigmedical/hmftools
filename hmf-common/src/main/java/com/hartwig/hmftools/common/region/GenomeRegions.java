@@ -36,24 +36,22 @@ public final class GenomeRegions {
     public void addRegion(final long start, final long end) {
         addPosition(start);
         int i = indexOf(start);
-        GenomeRegion current = regions.get(i);
-        current = GenomeRegions.create(current.chromosome(), current.start(), Math.max(current.end(), end));
+
+        final GenomeRegion current = regions.get(i);
+        long extendedEnd = Math.max(current.end(), end);
 
         while (i + 1 < regions.size()) {
-            GenomeRegion next = regions.get(i + 1);
-            if (next.end() < end) {
+            final GenomeRegion next = regions.get(i + 1);
+            if (next.start() <= extendedEnd + minGap) {
                 regions.remove(i + 1);
+                extendedEnd = Math.max(extendedEnd, next.end());
             } else {
-                if (next.start() < end - minGap) {
-                    regions.remove(i + 1);
-                    current = GenomeRegions.create(current.chromosome(), current.start(), Math.max(current.end(), next.end()));
-                }
-
                 break;
             }
         }
 
-        regions.set(i, current);
+        final GenomeRegion extendedRegion = GenomeRegions.create(current.chromosome(), current.start(), extendedEnd);
+        regions.set(i, extendedRegion);
     }
 
     public void addPosition(final long position) {
