@@ -99,14 +99,6 @@ public interface SageConfig {
         return 1000;
     }
 
-    default int minVariantQuality() {
-        return 1;
-    }
-
-    default int minTumorAltSupport() {
-        return 3;
-    }
-
     default int maxNormalAltSupport() {
         return 3;
     }

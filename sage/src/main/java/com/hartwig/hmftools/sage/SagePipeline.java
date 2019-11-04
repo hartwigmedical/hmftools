@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -11,8 +10,7 @@ import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.context.TumorReadContextSupplier;
-import com.hartwig.hmftools.sage.context.TumorRefContextSupplier;
+import com.hartwig.hmftools.sage.context.TumorAltContextSupplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,14 +48,7 @@ public class SagePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new TumorRefContextSupplier(config, sample, region, bam, refSequence), executor)
-                            .thenApply(this::altSupportFilter)
-                            .thenApply(x -> new TumorReadContextSupplier(config.minMapQuality(), sample, region, bam, x).get())
-                            .thenApply(this::qualityFilter);
-
-//            CompletableFuture<List<AltContext>> candidateFuture =
-//                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence), executor)
-//                            .thenApply(this::qualityFilter);
+                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence), executor);
 
             tumorFutures.add(candidateFuture);
         }
@@ -85,18 +76,4 @@ public class SagePipeline {
             return sagePipelineData.results();
         });
     }
-
-    @NotNull
-    private List<AltContext> altSupportFilter(@NotNull final List<RefContext> refContexts) {
-        return refContexts.stream()
-                .flatMap(x -> x.alts().stream())
-                .filter(x -> x.altSupport() >= config.minTumorAltSupport())
-                .collect(Collectors.toList());
-    }
-
-    @NotNull
-    private List<AltContext> qualityFilter(@NotNull final List<AltContext> contexts) {
-        return contexts.stream().filter(x -> x.primaryReadContext().quality() >= config.minVariantQuality()).collect(Collectors.toList());
-    }
-
 }

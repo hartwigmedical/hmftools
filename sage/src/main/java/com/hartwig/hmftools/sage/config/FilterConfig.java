@@ -17,7 +17,7 @@ public interface FilterConfig {
     String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_alt_support";
 
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
-    int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 3;
+    int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
 
     SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
             .minTumorQual(0)

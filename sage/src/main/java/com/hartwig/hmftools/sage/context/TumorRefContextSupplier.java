@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
+@Deprecated
 public class TumorRefContextSupplier implements Supplier<List<RefContext>> {
 
     private static final Logger LOGGER = LogManager.getLogger(TumorRefContextSupplier.class);

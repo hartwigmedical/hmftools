@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
@@ -17,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-
 
 public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
@@ -62,14 +62,14 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
         LOGGER.info("Tumor candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
-        try {
-            final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
+        try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
+
             new SageSamSlicer(0, Lists.newArrayList(bounds)).slice(tumorReader, this::processFirstPass);
 
             // Add all valid alt contexts
             for (final RefContext refContext : candidates.refContexts()) {
                 for (final AltContext altContext : refContext.alts()) {
-                    if (altContext.altSupport() >= config.minTumorAltSupport()) {
+                    if (altContext.altSupport() >= config.filter().hardMinTumorAltSupport()) {
                         altContext.setPrimaryReadCounterFromInterim();
                         altContexts.add(altContext);
                     }
@@ -78,12 +78,18 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
             new SageSamSlicer(config.minMapQuality(), Lists.newArrayList(bounds)).slice(tumorReader, this::processSecondPass);
 
-            tumorReader.close();
         } catch (IOException e) {
             throw new CompletionException(e);
         }
 
-        return altContexts;
+        return hardQualFilter(altContexts);
+    }
+
+    @NotNull
+    private List<AltContext> hardQualFilter(@NotNull final List<AltContext> altContexts) {
+        return altContexts.stream()
+                .filter(x -> x.primaryReadContext().quality() >= config.filter().hardMinTumorQual())
+                .collect(Collectors.toList());
     }
 
 }
