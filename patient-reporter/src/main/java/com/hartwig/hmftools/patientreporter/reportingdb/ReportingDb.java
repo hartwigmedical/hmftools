@@ -42,16 +42,17 @@ public final class ReportingDb {
 
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (sampleId.startsWith("COLO")) {
-            LOGGER.debug("This is a COLO sample. This sample will not be included in Reporting Db");
+            LOGGER.debug("This is a COLO sample. This sample will not be included in reporting db");
         } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
         } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORE01LR")
                 && !sampleId.startsWith("CORE01RI")) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
-        } else {
+        } else if (type != LimsSampleType.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
-                if (!present && sampleId.equals(entry.sampleId()) && reportType.equals(entry.reportType())) {
+                if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
+                        && reportType.equals(entry.reportType())) {
                     LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
                     present = true;
                 }
@@ -67,20 +68,21 @@ public final class ReportingDb {
         }
     }
 
-    public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report)
-            throws IOException {
+    public static void addQCFailReportToReportingDb(@NotNull String reportingDbTsv, @NotNull QCFailReport report) throws IOException {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
 
         String reportType = report.reason().identifier();
 
+        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (sampleId.startsWith("COLO")) {
             LOGGER.debug("This is a COLO sample. This sample will not be included in reporting db");
-        } else {
+        } else if (type != LimsSampleType.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
-                if (!present && sampleId.equals(entry.sampleId()) && reportType.equals(entry.reportType())) {
+                if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
+                        && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
                     LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
                     present = true;
                 }

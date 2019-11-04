@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;

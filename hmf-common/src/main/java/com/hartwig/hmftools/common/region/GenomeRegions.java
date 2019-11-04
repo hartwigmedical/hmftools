@@ -18,6 +18,10 @@ public final class GenomeRegions {
     @NotNull
     private final List<GenomeRegion> regions;
 
+    public GenomeRegions(@NotNull final String chromosome) {
+        this(chromosome, 1);
+    }
+
     public GenomeRegions(@NotNull final String chromosome, final int minGap) {
         this.chromosome = chromosome;
         this.minGap = minGap;
@@ -27,6 +31,29 @@ public final class GenomeRegions {
     @NotNull
     public List<GenomeRegion> build() {
         return regions;
+    }
+
+    public void addRegion(final long start, final long end) {
+        addPosition(start);
+        int i = indexOf(start);
+        GenomeRegion current = regions.get(i);
+        current = GenomeRegions.create(current.chromosome(), current.start(), Math.max(current.end(), end));
+
+        while (i + 1 < regions.size()) {
+            GenomeRegion next = regions.get(i + 1);
+            if (next.end() < end) {
+                regions.remove(i + 1);
+            } else {
+                if (next.start() < end - minGap) {
+                    regions.remove(i + 1);
+                    current = GenomeRegions.create(current.chromosome(), current.start(), Math.max(current.end(), next.end()));
+                }
+
+                break;
+            }
+        }
+
+        regions.set(i, current);
     }
 
     public void addPosition(final long position) {
@@ -78,6 +105,17 @@ public final class GenomeRegions {
             regions.add(create(chromosome, position, position));
         }
 
+    }
+
+    private int indexOf(long position) {
+        for (int i = regions.size() - 1; i >= 0; i--) {
+            GenomeRegion region = regions.get(i);
+            if (position >= region.start() && position <= region.end()) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
 }

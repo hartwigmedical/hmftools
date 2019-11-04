@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;

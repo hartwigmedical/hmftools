@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants.germline;
+package com.hartwig.hmftools.common.bachelor;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public final class BachelorFile {
     }
 
     @NotNull
-    private static GermlineVariant fromString(@NotNull String line) {
+    public static GermlineVariant fromString(@NotNull String line) {
         String[] values = line.split(DELIMITER);
 
         String program = values[24];

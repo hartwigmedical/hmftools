@@ -17,6 +17,7 @@ PURPLE supports both grch 37 and 38 reference assemblies.
   + [AMBER](#amber)
   + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs-optional)
   + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf-optional)
+* [Tumor Only Mode](#tumor-only-mode)  
 * [Algorithm](#algorithm)
   + [1. Gender](#1-gender)
   + [2. Segmentation](#2-segmentation)
@@ -253,6 +254,18 @@ At this point, file `strelka.merged.annotated.vcf.gz` is ready to be used by PUR
 The actual HMF somatic pipeline includes a number of additional filtering steps including applying a panel of normals.  
 
 While these steps are specific to Strelka, these principles can be applied to other callers. 
+
+## Tumor-Only Mode
+Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by including the `tumor_only` flag. 
+This will prevent PURPLE from using the somatic variants as an input to the fit. 
+
+It is important to first run AMBER and COBALT in tumor only mode. 
+
+AMBER has native support for tumor only as described in the [readme](../amber#tumor-only-mode).
+
+COBALT does not have native support for tumor only mode but this can be circumvented by using another samples normal data. 
+It is important that the substituted bam is of the same gender as the sample.   
+
 
 ## Algorithm
 

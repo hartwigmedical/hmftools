@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.bachelor.BachelorFile;
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 
 import org.junit.Test;
 

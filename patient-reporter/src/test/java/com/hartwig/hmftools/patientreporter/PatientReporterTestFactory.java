@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientreporter;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bachelor.ImmutableGermlineVariant;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -21,7 +22,6 @@ import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
-import com.hartwig.hmftools.patientreporter.variants.germline.ImmutableGermlineVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
