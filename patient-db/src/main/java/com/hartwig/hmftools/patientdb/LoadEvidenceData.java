@@ -9,6 +9,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
@@ -24,6 +26,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadEvidenceData {
@@ -34,6 +37,7 @@ public class LoadEvidenceData {
 
     private static final String RUN_DIR = "run_dir";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
+    private static final String TUMORLOCATION_CSV = "tumorlocation_file";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -48,9 +52,10 @@ public class LoadEvidenceData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
+        final String tumorLocationCsv = cmd.getOptionValue(TUMORLOCATION_CSV);
         final String sample = cmd.getOptionValue(SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory, sample)) {
+        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory, sample, tumorLocationCsv)) {
             printUsageAndExit(options);
         }
 
@@ -66,9 +71,20 @@ public class LoadEvidenceData {
 
         LOGGER.info("Sample: " + sample);
 
-        LOGGER.info("Reading primary tumor location from DB");
-        String primaryTumorLocation = dbAccess.readTumorLocation(sample);
-        LOGGER.info("Primary tumor location: " + primaryTumorLocation);
+        LOGGER.info("Reading primary tumor location file from db");
+        List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
+        LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
+
+        PatientTumorLocation patientTumorLocation =
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations,
+                        sample);
+
+        String patientPrimaryTumorLocation = Strings.EMPTY;
+        if (patientTumorLocation != null) {
+            patientPrimaryTumorLocation = patientTumorLocation.primaryTumorLocation();
+        }
+
+        LOGGER.info("Primary tumor location: " + patientTumorLocation);
 
         LOGGER.info("Reading somatic variants from DB");
         List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
@@ -78,7 +94,7 @@ public class LoadEvidenceData {
         LOGGER.info("PASS somatic Variants: " + passSomaticVariants.size());
 
         Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, primaryTumorLocation);
+                actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, patientPrimaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
         LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
@@ -94,7 +110,7 @@ public class LoadEvidenceData {
         LOGGER.info("Sample ploidy: " + ploidy);
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, primaryTumorLocation, ploidy);
+                actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
 
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
         LOGGER.info("Found {} evidence items for {} copy numbers.",
@@ -106,7 +122,7 @@ public class LoadEvidenceData {
         LOGGER.info(" All fusions: " + fusions.size());
 
         Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion =
-                actionabilityAnalyzer.evidenceForFusions(fusions, primaryTumorLocation);
+                actionabilityAnalyzer.evidenceForFusions(fusions, patientPrimaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForGeneFusions = extractAllEvidenceItems(evidencePerFusion);
         LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), fusions.size());
@@ -151,6 +167,7 @@ public class LoadEvidenceData {
         options.addOption(SAMPLE, true, "Tumor sample of run");
         options.addOption(RUN_DIR, true, "Path towards the folder containing sample run.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
+        options.addOption(TUMORLOCATION_CSV, true, "Path towards the file of all the tumor locations");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
