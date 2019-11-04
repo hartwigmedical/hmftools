@@ -27,6 +27,7 @@ public class HmfGenePanelBedTest {
 
 
     @Test
+    @Ignore
     public void write19() throws IOException {
         HmfGenePanelBed.write37File("/Users/jon/hmf/resources/GenePanel.hg19.bed");
     }
