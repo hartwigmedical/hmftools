@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants.germline;
+package com.hartwig.hmftools.common.bachelor;
 
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.AllelicDepth;

@@ -19,7 +19,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.patientreporter.variants.germline.ReportableGermlineVariant;
 
 import org.jetbrains.annotations.NotNull;

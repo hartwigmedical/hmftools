@@ -5,16 +5,23 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.bachelor.BachelorFile;
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
+import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -41,10 +48,13 @@ public class LoadEvidenceData {
     private static final String RUN_DIR = "run_dir";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String TUMOR_LOCATION_CSV = "tumorlocation_file";
+    private static final String LIMS_DIRECTORY = "lims_dir";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
+    private static final String BACHELOR_TSV = "bachelor_tsv";
+    private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -59,10 +69,13 @@ public class LoadEvidenceData {
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        final String limsDir = cmd.getOptionValue(LIMS_DIRECTORY);
 
         final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
+        final String bachelorTsv = cmd.getOptionValue(BACHELOR_TSV);
+        final String chordPredictionTxt = cmd.getOptionValue(CHORD_PREDICTION_TXT);
 
         final String sample = cmd.getOptionValue(SAMPLE);
 
@@ -75,7 +88,10 @@ public class LoadEvidenceData {
                 tumorLocationCsv,
                 somaticVariantVcf,
                 purpleGeneCnvTsv,
-                linxFusionTsv)) {
+                linxFusionTsv,
+                bachelorTsv,
+                limsDir,
+                chordPredictionTxt)) {
             printUsageAndExit(options);
         }
 
@@ -105,9 +121,27 @@ public class LoadEvidenceData {
 
         LOGGER.info("Primary tumor location: " + patientTumorLocation);
 
+        Lims lims = LimsFactory.fromLimsDirectory(limsDir);
+        LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDir);
+        LimsGermlineReportingChoice germlineChoice = lims.germlineReportingChoice(sample);
+
+        ChordAnalysis chord = ChordFileReader.read(chordPredictionTxt);
+        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
+
+        if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
+            LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
+        } else {
+            LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
+        }
+
         LOGGER.info("Reading somatic variants from DB");
         List<SomaticVariant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", passSomaticVariants.size(), somaticVariantVcf);
+
+        LOGGER.info("Reading germline variants from DB");
+        List<GermlineVariant> variants =
+                BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
         Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, patientPrimaryTumorLocation);
@@ -174,9 +208,13 @@ public class LoadEvidenceData {
         options.addOption(RUN_DIR, true, "Path towards the folder containing sample run.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
+        options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
+
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
+        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");

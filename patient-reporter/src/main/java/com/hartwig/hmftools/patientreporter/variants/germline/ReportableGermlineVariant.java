@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientreporter.variants.germline;
 
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
