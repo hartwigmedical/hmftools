@@ -220,8 +220,9 @@ public class ExternalDBFilters
         return clinvarSignificance.contains(CLINVAR_CONFLICTING);
     }
 
-    private static String stripTranscriptVersion(final String transcript)
+    public static String stripTranscriptVersion(final String transcript)
     {
+        // necessary since SnpEff adds the version id in HG38
         if(transcript.contains("."))
             return transcript.substring(0, transcript.indexOf('.'));
         else

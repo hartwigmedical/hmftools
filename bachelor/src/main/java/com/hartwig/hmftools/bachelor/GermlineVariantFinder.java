@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.bachelor;
 
 import static com.hartwig.hmftools.bachelor.ExternalDBFilters.isBenign;
+import static com.hartwig.hmftools.bachelor.ExternalDBFilters.stripTranscriptVersion;
 import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_NONE;
 import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_REQUIRED_EFFECT;
 import static com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant.MATCH_TYPE_WHITELIST;
@@ -297,14 +298,16 @@ public class GermlineVariantFinder
             if (!snpEff.isTranscriptFeature())
                 continue;
 
+            final String transcriptId = stripTranscriptVersion(snpEff.transcript());
+
             if (region != null)
             {
-                if(!region.transcriptID().equals(snpEff.transcript()))
+                if(!region.transcriptID().equals(transcriptId))
                     continue;
             }
             else
             {
-                if(!mPanelTranscripts.contains(snpEff.transcript()))
+                if(!mPanelTranscripts.contains(transcriptId))
                     continue;
             }
 
@@ -312,7 +315,6 @@ public class GermlineVariantFinder
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
             final String varId = variant.getID();
-            final String transcriptId = snpEff.transcript();
             final String chromosome = variant.getContig();
             final long position = variant.getStart();
             final String ref = variant.getReference().toString().replaceAll("\\*", "");
