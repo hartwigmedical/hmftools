@@ -12,10 +12,13 @@ import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,12 +40,15 @@ public class LoadEvidenceData {
 
     private static final String RUN_DIR = "run_dir";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
-    private static final String TUMORLOCATION_CSV = "tumorlocation_file";
+    private static final String TUMOR_LOCATION_CSV = "tumorlocation_file";
+
+    private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
+    private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
+    private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
-
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
@@ -52,10 +58,24 @@ public class LoadEvidenceData {
         final String databaseUrl = cmd.getOptionValue(DB_URL);
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
-        final String tumorLocationCsv = cmd.getOptionValue(TUMORLOCATION_CSV);
+        final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+
+        final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
+        final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
+        final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
+
         final String sample = cmd.getOptionValue(SAMPLE);
 
-        if (Utils.anyNull(userName, password, databaseUrl, runDirectoryPath, knowledgebaseDirectory, sample, tumorLocationCsv)) {
+        if (Utils.anyNull(userName,
+                password,
+                databaseUrl,
+                runDirectoryPath,
+                knowledgebaseDirectory,
+                sample,
+                tumorLocationCsv,
+                somaticVariantVcf,
+                purpleGeneCnvTsv,
+                linxFusionTsv)) {
             printUsageAndExit(options);
         }
 
@@ -76,8 +96,7 @@ public class LoadEvidenceData {
         LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
 
         PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations,
-                        sample);
+                PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sample);
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (patientTumorLocation != null) {
@@ -87,11 +106,8 @@ public class LoadEvidenceData {
         LOGGER.info("Primary tumor location: " + patientTumorLocation);
 
         LOGGER.info("Reading somatic variants from DB");
-        List<EnrichedSomaticVariant> variants = dbAccess.readSomaticVariants(sample);
-        List<SomaticVariant> passSomaticVariants = extractPassSomaticVariants(variants);
-
-        LOGGER.info("All somatic Variants: " + variants.size());
-        LOGGER.info("PASS somatic Variants: " + passSomaticVariants.size());
+        List<SomaticVariant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
+        LOGGER.info("Loaded {} PASS somatic variants from {}", passSomaticVariants.size(), somaticVariantVcf);
 
         Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, patientPrimaryTumorLocation);
@@ -100,8 +116,9 @@ public class LoadEvidenceData {
         LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
 
         LOGGER.info("Reading gene copy numbers and sample ploidy from DB");
-        List<GeneCopyNumber> geneCopyNumbers = dbAccess.readGeneCopynumbers(sample);
-        LOGGER.info("All geneCopyNumbers: " + geneCopyNumbers.size());
+
+        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
+        LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
 
         PurityContext purityContext = dbAccess.readPurityContext(sample);
         assert purityContext != null;
@@ -118,8 +135,8 @@ public class LoadEvidenceData {
                 evidencePerGeneCopyNumber.keySet().size());
 
         LOGGER.info("Reading gene fusions from DB");
-        List<ReportableGeneFusion> fusions = dbAccess.readGeneFusions(sample);
-        LOGGER.info(" All fusions: " + fusions.size());
+        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
+        LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
 
         Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion =
                 actionabilityAnalyzer.evidenceForFusions(fusions, patientPrimaryTumorLocation);
@@ -133,17 +150,6 @@ public class LoadEvidenceData {
         combinedEvidence.addAll(allEvidenceForGeneFusions);
 
         dbAccess.writeClinicalEvidence(sample, combinedEvidence);
-    }
-
-    @NotNull
-    private static List<SomaticVariant> extractPassSomaticVariants(@NotNull List<EnrichedSomaticVariant> somaticVariant) {
-        List<SomaticVariant> passSomaticVariants = Lists.newArrayList();
-        for (SomaticVariant variant : somaticVariant) {
-            if (!variant.isFiltered()) {
-                passSomaticVariants.add(variant);
-            }
-        }
-        return passSomaticVariants;
     }
 
     @NotNull
@@ -167,7 +173,11 @@ public class LoadEvidenceData {
         options.addOption(SAMPLE, true, "Tumor sample of run");
         options.addOption(RUN_DIR, true, "Path towards the folder containing sample run.");
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
-        options.addOption(TUMORLOCATION_CSV, true, "Path towards the file of all the tumor locations");
+        options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
+        options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
+        options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
+        options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
