@@ -1,18 +1,12 @@
 package com.hartwig.hmftools.linx.chaining;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.ChainLinkAllocator.belowPloidyThreshold;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.CLUSTER_ALLELE_PLOIDY_MIN;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatchForSplits;
-import static com.hartwig.hmftools.linx.chaining.ChainingRule.ASSEMBLY;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.areLinkedSection;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.chaining.LinkSkipType.PLOIDY_MISMATCH;
@@ -27,7 +21,6 @@ import static org.apache.logging.log4j.Level.TRACE;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -406,11 +399,6 @@ public class ChainFinder
             mLinkAllocator.clearSkippedState();
             int lastAddedIndex = mLinkAllocator.getLinkIndex();
 
-            if(lastAddedIndex == SPEC_LINK_INDEX)
-            {
-                LOGGER.debug("specifc link index({})", lastAddedIndex);
-            }
-
             List<ProposedLinks> proposedLinks = mRuleSelector.findProposedLinks();
 
             if(proposedLinks.isEmpty())
@@ -570,7 +558,9 @@ public class ChainFinder
                     int minTiLength = getMinTemplatedInsertionLength(lowerBreakend, upperBreakend);
 
                     if(distance < minTiLength)
+                    {
                         continue;
+                    }
 
                     // record the possible link
                     final SvVarData upperSV = upperBreakend.getSV();

@@ -78,39 +78,6 @@ public class FoldbackTest
         assertEquals(var2.getFoldbackId(false), var2.id());
         assertEquals(var2.getFoldbackLength(true), 100);
 
-        // in the examples above, the breakend forming the outer DB cannot be an inferred
-        tester.clearClustersAndSVs();
-
-        cluster = new SvCluster(0);
-
-        var1 = createInv(tester.nextVarId(), "1", 100, 200, 1);
-        cluster.addVariant(var1);
-
-        SvVarData inf = createInf(tester.nextVarId(), "1", 200, -1);
-        cluster.addVariant(inf);
-
-        tester.addClusterAndSVs(cluster);
-        tester.preClusteringInit();
-        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
-
-        assertFalse(var1.isFoldback());
-
-        tester.clearClustersAndSVs();
-
-        cluster = new SvCluster(0);
-
-        var2 = createInv(tester.nextVarId(), "1", 100, 200, -1);
-        cluster.addVariant(var2);
-
-        inf = createInf(tester.nextVarId(), "1", 100, 1);
-        cluster.addVariant(inf);
-
-        tester.addClusterAndSVs(cluster);
-        tester.preClusteringInit();
-        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
-
-        assertFalse(var2.isFoldback());
-
         // now invalidate the foldback by putting a deletion bridge at the start
         tester.clearClustersAndSVs();
 

@@ -55,11 +55,6 @@ public class FoldbackFinder
                     if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
                     && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
                     {
-                        if(nextBreakend.position() == breakend.position() && nextBreakend.getSV().isInferredSgl())
-                        {
-                            break;
-                        }
-
                         ++j;
                         continue;
                     }
@@ -86,11 +81,6 @@ public class FoldbackFinder
                         if(nextNextBreakend.orientation() == breakend.orientation()
                         && nextNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend))
                         {
-                            if(nextBreakend.position() == nextNextBreakend.position() && nextBreakend.getSV().isInferredSgl())
-                            {
-                                break;
-                            }
-
                             nextBreakend = nextNextBreakend;
                         }
                     }
