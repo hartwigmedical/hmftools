@@ -220,6 +220,14 @@ public class ExternalDBFilters
         return clinvarSignificance.contains(CLINVAR_CONFLICTING);
     }
 
+    private static String stripTranscriptVersion(final String transcript)
+    {
+        if(transcript.contains("."))
+            return transcript.substring(0, transcript.indexOf('.'));
+        else
+            return transcript;
+    }
+
     private void processVariant(final VariantContext variant)
     {
         // LOGGER.debug("read var({}) chr({}))", variant.getID(), variant.getContig());
@@ -227,51 +235,54 @@ public class ExternalDBFilters
         // first check against the genes list
         final List<SnpEffAnnotation> variantAnnotations = SnpEffAnnotationFactory.fromContext(variant);
 
-        for (SnpEffAnnotation snpEff : variantAnnotations) {
-            if (!snpEff.isTranscriptFeature()) {
+        for (SnpEffAnnotation snpEff : variantAnnotations)
+        {
+            if (!snpEff.isTranscriptFeature())
                 continue;
-            }
 
-            if (!mPanelTranscripts.contains(snpEff.transcript())) {
+            if (!mPanelTranscripts.contains(stripTranscriptVersion(snpEff.transcript())))
                 continue;
-            }
 
             String clinvarSignificance = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIGNIFICANCE, ""));
             String clinvarSigInfo = stripArrayChars(variant.getCommonInfo().getAttributeAsString(CLINVAR_SIG_INFO, ""));
 
             boolean isPathogenic = isPathogenic(clinvarSignificance);
 
-            if (!isPathogenic && isConflicting(clinvarSignificance)) {
+            if (!isPathogenic && isConflicting(clinvarSignificance))
+            {
                 // look in the significance field for a clear likelihood
                 isPathogenic = isPathogenic(clinvarSigInfo) && !isBenign(clinvarSigInfo);
             }
 
             boolean matchesRequiredEffect = false;
 
-            for (String requiredEffect : mRequiredEffects) {
-                if (snpEff.effects().contains(requiredEffect)) {
+            for (String requiredEffect : mRequiredEffects)
+            {
+                if (snpEff.effects().contains(requiredEffect))
+                {
                     matchesRequiredEffect = true;
                     break;
                 }
             }
 
-            if (!matchesRequiredEffect && !isPathogenic) {
+            if (!matchesRequiredEffect && !isPathogenic)
                 continue;
-            }
 
             String gene = snpEff.gene();
 
             CodingEffect codingEffect = CodingEffect.effect(gene, snpEff.consequences());
 
             //noinspection StatementWithEmptyBody
-            if (codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE) {
+            if (codingEffect == NONSENSE_OR_FRAMESHIFT || codingEffect == SPLICE)
+            {
                 //checkExistingBlacklistConditions(gene, variant, snpEff);
-            } else {
+            }
+            else
+            {
                 //checkExistingWhitelistConditions(gene, variant, snpEff);
 
-                if (!isPathogenic) {
+                if (!isPathogenic)
                     continue;
-                }
 
                 // will form part of the whitelist
             }
@@ -291,8 +302,8 @@ public class ExternalDBFilters
     private void writeFilterRecord(final VariantContext variant, final SnpEffAnnotation snpEff,
             final String gene, CodingEffect codingEffect, final String clinvarSignificance, final String clinvarSigInfo)
     {
-        String transcriptId = snpEff.transcript();
-        String chromosome = variant.getContig();
+        final String transcriptId = stripTranscriptVersion(snpEff.transcript());
+        final String chromosome = variant.getContig();
         long position = variant.getStart();
         String ref = variant.getReference().getBaseString();
         String alt = variant.getAlleles().get(1).getBaseString();
@@ -300,13 +311,13 @@ public class ExternalDBFilters
         ref = ref.replaceAll("\\*", "");
         alt = alt.replaceAll("\\*", "");
 
-        String effects = snpEff.effects();
-        String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "");
-        String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "");
-        String rsDbSnpId = variant.getCommonInfo().getAttributeAsString(CLINVAR_RS_DB_SNP_ID, "");
+        final String effects = snpEff.effects();
+        final String clinvarDisease = variant.getCommonInfo().getAttributeAsString(CLINVAR_DISEASE_NAME, "");
+        final String clinvarEffects = variant.getCommonInfo().getAttributeAsString(CLINVAR_MC, "");
+        final String rsDbSnpId = variant.getCommonInfo().getAttributeAsString(CLINVAR_RS_DB_SNP_ID, "");
 
-        String hgvsp = snpEff.hgvsProtein();
-        String hgvsc = snpEff.hgvsCoding();
+        final String hgvsp = snpEff.hgvsProtein();
+        final String hgvsc = snpEff.hgvsCoding();
 
         if(LOGGER.isDebugEnabled())
         {
