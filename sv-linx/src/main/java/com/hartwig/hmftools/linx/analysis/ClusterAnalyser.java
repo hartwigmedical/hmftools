@@ -371,9 +371,6 @@ public class ClusterAnalyser {
 
     private void findChains(SvCluster cluster, boolean assembledLinksOnly)
     {
-        if(!assembledLinksOnly)
-            isSpecificCluster(cluster);
-
         int svCount = cluster.getSvCount();
 
         if(mConfig.ChainingSvLimit > 0 && svCount > mConfig.ChainingSvLimit)

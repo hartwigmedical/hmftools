@@ -2,10 +2,12 @@ package com.hartwig.hmftools.linx.analyser;
 
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
+import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInf;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.linx.analysis.FoldbackFinder;
@@ -29,10 +31,10 @@ public class FoldbackTest
 
         SvVarData var1 = createInv(tester.nextVarId(), "1", 100, 200, 1);
 
-        SvCluster cluster1 = new SvCluster(0);
-        cluster1.addVariant(var1);
+        SvCluster cluster = new SvCluster(0);
+        cluster.addVariant(var1);
 
-        tester.addClusterAndSVs(cluster1);
+        tester.addClusterAndSVs(cluster);
         tester.preClusteringInit();
         FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
 
@@ -43,13 +45,13 @@ public class FoldbackTest
         // now test with a deletion bridge obscuring the backmost breakend
         tester.clearClustersAndSVs();
 
-        SvCluster cluster2 = new SvCluster(0);
-        cluster2.addVariant(var1);
+        cluster = new SvCluster(0);
+        cluster.addVariant(var1);
 
         SvVarData dup = createDup(tester.nextVarId(), "1", 190, 400);
-        cluster2.addVariant(dup);
+        cluster.addVariant(dup);
 
-        tester.addClusterAndSVs(cluster2);
+        tester.addClusterAndSVs(cluster);
         tester.preClusteringInit();
         FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
 
@@ -57,18 +59,70 @@ public class FoldbackTest
         assertEquals(var1.getFoldbackId(false), var1.id());
         assertEquals(var1.getFoldbackLength(true), 100);
 
+        // and again with the foldback facing the other way
+        tester.clearClustersAndSVs();
+
+        cluster = new SvCluster(0);
+
+        SvVarData var2 = createInv(tester.nextVarId(), "1", 100, 200, -1);
+        cluster.addVariant(var2);
+
+        SvVarData sgl = createSgl(tester.nextVarId(), "1", 110, 1);
+        cluster.addVariant(sgl);
+
+        tester.addClusterAndSVs(cluster);
+        tester.preClusteringInit();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(var2.getFoldbackId(true), var2.id());
+        assertEquals(var2.getFoldbackId(false), var2.id());
+        assertEquals(var2.getFoldbackLength(true), 100);
+
+        // in the examples above, the breakend forming the outer DB cannot be an inferred
+        tester.clearClustersAndSVs();
+
+        cluster = new SvCluster(0);
+
+        var1 = createInv(tester.nextVarId(), "1", 100, 200, 1);
+        cluster.addVariant(var1);
+
+        SvVarData inf = createInf(tester.nextVarId(), "1", 200, -1);
+        cluster.addVariant(inf);
+
+        tester.addClusterAndSVs(cluster);
+        tester.preClusteringInit();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
+
+        assertFalse(var1.isFoldback());
+
+        tester.clearClustersAndSVs();
+
+        cluster = new SvCluster(0);
+
+        var2 = createInv(tester.nextVarId(), "1", 100, 200, -1);
+        cluster.addVariant(var2);
+
+        inf = createInf(tester.nextVarId(), "1", 100, 1);
+        cluster.addVariant(inf);
+
+        tester.addClusterAndSVs(cluster);
+        tester.preClusteringInit();
+        FoldbackFinder.markFoldbacks(tester.Analyser.getState().getChrBreakendMap());
+
+        assertFalse(var2.isFoldback());
+
         // now invalidate the foldback by putting a deletion bridge at the start
         tester.clearClustersAndSVs();
 
-        SvVarData var2 = createInv(tester.nextVarId(), "1", 100, 200, -1);
+        var2 = createInv(tester.nextVarId(), "1", 100, 200, -1);
 
-        SvCluster cluster3 = new SvCluster(1);
-        cluster3.addVariant(var2);
+        cluster = new SvCluster(1);
+        cluster.addVariant(var2);
 
         SvVarData del = createDel(tester.nextVarId(), "1", 190, 400);
-        cluster3.addVariant(del);
+        cluster.addVariant(del);
 
-        tester.addClusterAndSVs(cluster3);
+        tester.addClusterAndSVs(cluster);
         tester.preClusteringInit();
 
         SvLinkedPair dbPair = var2.getDBLink(false);
@@ -86,16 +140,16 @@ public class FoldbackTest
 
         SvVarData var3 = createInv(tester.nextVarId(), "1", 100, 200, 1);
 
-        SvCluster cluster4 = new SvCluster(2);
-        cluster4.addVariant(var3);
+        cluster = new SvCluster(2);
+        cluster.addVariant(var3);
 
-        SvVarData sgl = createSgl(tester.nextVarId(), "1", 90, -1);
-        cluster4.addVariant(sgl);
+        sgl = createSgl(tester.nextVarId(), "1", 90, -1);
+        cluster.addVariant(sgl);
 
         SvVarData sgl2 = createSgl(tester.nextVarId(), "1", 190, -1);
-        cluster4.addVariant(sgl2);
+        cluster.addVariant(sgl2);
 
-        tester.addClusterAndSVs(cluster4);
+        tester.addClusterAndSVs(cluster);
         tester.preClusteringInit();
 
         dbPair = var3.getDBLink(true);

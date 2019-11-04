@@ -41,7 +41,7 @@ public class FoldbackFinder
                 if(breakend.isAssembledLink())
                     continue;
 
-                SvBreakend nextBreakend = breakendList.get(i + 1);
+                SvBreakend nextBreakend = null;
 
                 SvBreakend beFront = null; // the lower position for orientation +1 and vice versa
                 SvBreakend beBack = null;
@@ -55,11 +55,16 @@ public class FoldbackFinder
                     if(j == i + 1 && breakend.orientation() == -1 && nextBreakend.orientation() == 1
                     && nextBreakend.position() - breakend.position() < getMinTemplatedInsertionLength(nextBreakend, breakend))
                     {
+                        if(nextBreakend.position() == breakend.position() && nextBreakend.getSV().isInferredSgl())
+                        {
+                            break;
+                        }
+
                         ++j;
                         continue;
                     }
 
-                    // check check for any assembled links in between the potential foldback breakends
+                    // check for any assembled links in between the potential foldback breakends
                     if(j + 1 < breakendList.size() && nextBreakend.isAssembledLink()
                     && nextBreakend.getSV().getLinkedPair(nextBreakend.usesStart()) != null)
                     {
@@ -79,8 +84,13 @@ public class FoldbackFinder
                         SvBreakend nextNextBreakend = breakendList.get(j + 1);
 
                         if(nextNextBreakend.orientation() == breakend.orientation()
-                                && nextNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend))
+                        && nextNextBreakend.position() - nextBreakend.position() < getMinTemplatedInsertionLength(nextBreakend, nextNextBreakend))
                         {
+                            if(nextBreakend.position() == nextNextBreakend.position() && nextBreakend.getSV().isInferredSgl())
+                            {
+                                break;
+                            }
+
                             nextBreakend = nextNextBreakend;
                         }
                     }

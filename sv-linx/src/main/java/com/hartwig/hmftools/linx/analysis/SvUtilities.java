@@ -121,6 +121,16 @@ public class SvUtilities {
 
                 if (position < otherBreakend.position())
                     break;
+
+                // special case of inferred placed at another SV's location to explain a CN change
+                // ensure the inferred is placed such that it faces its partner breakend
+                if(position == otherBreakend.position() && breakend.orientation() != otherBreakend.orientation())
+                {
+                    if(var.isInferredSgl() && breakend.orientation() == -1)
+                        break;
+                    else if(otherBreakend.getSV().isInferredSgl() &&  otherBreakend.orientation() == 1)
+                        break;
+                }
             }
 
             breakendList.add(index, breakend);
