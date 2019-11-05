@@ -38,13 +38,18 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
 
-    private final static String PASS = "PASS";
     private final static String SUBPRIME_QUALITY_READ_DEPTH = "SDP";
+    private final static String IMPROPER_PAIR_FLAG = "IPF";
+
     private final static String READ_CONTEXT = "RC";
+    private final static String PASS = "PASS";
     private final static String READ_CONTEXT_COUNT = "RCC";
-    private final static String READ_CONTEXT_QUALITY = "RCQ";
     private final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
+    private final static String PHASE = "LPS";
+
+    public static final String REPEAT_COUNT_FLAG = "RCREPC";
+    public static final String REPEAT_SEQUENCE_FLAG = "RCREPS";
 
     private final SageConfig config;
     private final VariantContextWriter writer;
@@ -88,11 +93,9 @@ public class SageVCF implements AutoCloseable {
 
         return new GenotypeBuilder(evidence.sample()).DP(readContextCounter.coverage())
                 .AD(new int[] { evidence.refSupport(), readContextCounter.support() })
-                .attribute("SDP", evidence.subprimeReadDepth())
-                .attribute("QUAL",
-                        new int[] { readContextCounter.quality(), readContextCounter.baseQuality(), readContextCounter.mapQuality() })
+                //                .attribute("SDP", evidence.subprimeReadDepth())
+                .attribute("QUAL", readContextCounter.qual())
                 .attribute("RCC", readContextCounter.rcc())
-                .attribute("RCQ", readContextCounter.rcq())
                 .alleles(alleles)
                 .make();
     }
@@ -116,28 +119,26 @@ public class SageVCF implements AutoCloseable {
 
         final VariantContextBuilder builder = new VariantContextBuilder().chr(normal.chromosome())
                 .start(normal.position())
-
-                //                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, round(tumorEvidence.vaf()))
-                //                .attribute("MAP_Q", tumorEvidence.altMapQuality())
-                //                .attribute("MAP_BASE_Q", tumorEvidence.altMinQuality())
-                //                .attribute("AVG_DISTANCE_RECORD", tumorEvidence.avgAltDistanceFromRecordStart())
-                //                .attribute("AVG_DISTANCE_ALIGNMENT", tumorEvidence.avgAltMinDistanceFromAlignment())
-                //                .attribute(READ_CONTEXT, tumorEvidence.readContext())
-                //                .attribute(READ_CONTEXT_COUNT, tumorEvidence.readContextCount())
-                //                .attribute(READ_CONTEXT_COUNT_OTHER, tumorEvidence.readContextCountOther())
                 .attribute("RC", normal.primaryReadContext().toString())
-                .attribute("RDIF", normal.primaryReadContext().readContext().distanceCigar())
-                .attribute("RDIS", normal.primaryReadContext().readContext().distance())
-                .attribute("RCMH", firstTumor.primaryReadContext().readContext().microhomology())
-                .attribute("RCR", firstTumor.primaryReadContext().readContext().repeat())
-                .attribute("JITTER", firstTumor.primaryReadContext().qualityJitterPenalty())
+                .attribute("RC_DIF", normal.primaryReadContext().readContext().distanceCigar())
+                .attribute("RC_DIS", normal.primaryReadContext().readContext().distance())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumor.primaryReadContext().vaf())
                 .computeEndFromAlleles(alleles, (int) normal.position())
                 .source("SAGE")
                 .genotypes(genotypes)
                 .alleles(alleles);
 
+        if (!firstTumor.primaryReadContext().readContext().microhomology().isEmpty()) {
+            builder.attribute("RC_MH", firstTumor.primaryReadContext().readContext().microhomology());
+        }
+
+        if (firstTumor.primaryReadContext().readContext().repeatCount() > 0) {
+            builder.attribute("RC_REPC", firstTumor.primaryReadContext().readContext().repeatCount())
+                    .attribute("RC_REPS", firstTumor.primaryReadContext().readContext().repeat());
+        }
+
         if (firstTumor.phase() > 0) {
-            builder.attribute("PHASE", firstTumor.phase());
+            builder.attribute(PHASE, firstTumor.phase());
         }
 
         final VariantContext context = builder.make();
@@ -169,37 +170,33 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
-        header.addMetaDataLine(new VCFFormatHeaderLine(SUBPRIME_QUALITY_READ_DEPTH,
-                1,
-                VCFHeaderLineType.Integer,
-                "Subprime quality read depth"));
-
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
+        //        header.addMetaDataLine(new VCFFormatHeaderLine(SUBPRIME_QUALITY_READ_DEPTH,1, VCFHeaderLineType.Integer,"Subprime quality read depth"));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "TODO"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT,
                 5,
                 VCFHeaderLineType.Integer,
-                "[Full, Partial, Realigned, J-, J+]"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
-                3,
-                VCFHeaderLineType.Integer,
-                "[ImproperPairedRead, InconsistentChromosome, ExcessInferredSize]"));
+                "[Full, Partial, Realigned, Shortened, Lengthened]"));
+        //        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
+        //                3,
+        //                VCFHeaderLineType.Integer,
+        //                "[ImproperPairedRead, InconsistentChromosome, ExcessInferredSize]"));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Integer, "[MinBaseMapQual, BaseQual, MapQual]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Integer, "[BaseQual, MapQual, JitterPenalty]"));
         header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Integer, "[AvgRecordDistance, AvgAlignmentDistance]"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RDIF", 1, VCFHeaderLineType.String, "Difference from ref"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RDIS", 1, VCFHeaderLineType.Integer, "Distance from ref"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RCR", 1, VCFHeaderLineType.String, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RCMH", 1, VCFHeaderLineType.String, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("PHASE", 1, VCFHeaderLineType.Integer, "TODO"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("JITTER", 1, VCFHeaderLineType.Integer, "TODO"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIF", 1, VCFHeaderLineType.String, "Difference from ref"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIS", 1, VCFHeaderLineType.Integer, "Distance from ref"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("RC_REPC", 1, VCFHeaderLineType.Integer, "Repeat count in read context"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("RC_REPS", 1, VCFHeaderLineType.String, "Repeat sequence in read context"));
+        header.addMetaDataLine(new VCFInfoHeaderLine("RC_MH", 1, VCFHeaderLineType.String, "Microhomology in read context"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, "Local phase set"));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_QUAL, "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_VAF, "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_GERMLINE_DEPTH, "Insufficient germline depth"));
-
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_VAF, "Excess germline VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_REL_QUAL, "Excess germline relative quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_REL_RCC,
@@ -223,7 +220,6 @@ public class SageVCF implements AutoCloseable {
             result.add(SoftFilterConfig.MIN_TUMOR_VAF);
         }
 
-
         final AltContext normal = entry.normal();
         if (normal.readDepth() < config.minGermlineDepth()) {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
@@ -233,14 +229,21 @@ public class SageVCF implements AutoCloseable {
             result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
         }
 
-        double tumorQual = primaryTumor.primaryReadContext().quality();
-        double germlineQual = normal.primaryReadContext().quality();
-        if (Doubles.positive(germlineQual)) {
-            if (Doubles.greaterThan(germlineQual/ tumorQual, config.maxGermlineRelativeQual())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);
+        double tumorReadContextSupport = primaryTumor.primaryReadContext().support();
+        double germlineReadContextSupport = normal.primaryReadContext().support();
+        if (Doubles.positive(tumorReadContextSupport)) {
+            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
+                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
             }
         }
 
+        double tumorQual = primaryTumor.primaryReadContext().quality();
+        double germlineQual = normal.primaryReadContext().quality();
+        if (Doubles.positive(tumorQual)) {
+            if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
+                result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);
+            }
+        }
 
         if (result.isEmpty()) {
             result.add(PASS);
