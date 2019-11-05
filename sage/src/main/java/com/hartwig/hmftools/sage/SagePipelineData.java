@@ -66,7 +66,7 @@ public class SagePipelineData {
             }
 
             if (!readContextCounters.isEmpty()) {
-                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
+                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::support).reversed());
                 altContext.setPrimaryReadContext(new ReadContextCounter(hotspot, readContextCounters.get(0).readContext()));
             }
         }

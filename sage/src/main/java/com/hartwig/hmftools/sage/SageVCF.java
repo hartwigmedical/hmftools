@@ -8,6 +8,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
@@ -60,7 +61,7 @@ public class SageVCF implements AutoCloseable {
         this.hotspotEnrichment = new HotspotEnrichment(hotspots);
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        refContextEnrichment = new SomaticRefContextEnrichment(reference, writer::add);
+        refContextEnrichment = new SomaticRefContextEnrichment(reference, this::write);
 
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
         phasingQueue = new PhasingQueue(entry -> refContextEnrichment.accept(create(entry)));
@@ -75,12 +76,18 @@ public class SageVCF implements AutoCloseable {
         }
     }
 
+    private void write(@NotNull final VariantContext context) {
+        if (!config.filter().hardFilter() || context.getFilters().contains(PASS)) {
+            writer.add(context);
+        }
+    }
+
     @NotNull
     private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
         ReadContextCounter readContextCounter = evidence.primaryReadContext();
 
-        return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
-                .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
+        return new GenotypeBuilder(evidence.sample()).DP(readContextCounter.coverage())
+                .AD(new int[] { evidence.refSupport(), readContextCounter.support() })
                 .attribute("SDP", evidence.subprimeReadDepth())
                 .attribute("QUAL",
                         new int[] { readContextCounter.quality(), readContextCounter.baseQuality(), readContextCounter.mapQuality() })
@@ -133,7 +140,6 @@ public class SageVCF implements AutoCloseable {
             builder.attribute("PHASE", firstTumor.phase());
         }
 
-
         final VariantContext context = builder.make();
         context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
         if (hotspotEnrichment.isOnHotspot(context)) {
@@ -143,7 +149,7 @@ public class SageVCF implements AutoCloseable {
             filter(config.filter().softPanelFilter(), entry).forEach(x -> context.getCommonInfo().addFilter(x));
             context.getCommonInfo().putAttribute(TIER, "PANEL");
         } else {
-             filter(config.filter().softWideFilter(), entry).forEach(x -> context.getCommonInfo().addFilter(x));
+            filter(config.filter().softWideFilter(), entry).forEach(x -> context.getCommonInfo().addFilter(x));
             context.getCommonInfo().putAttribute(TIER, "WIDE");
         }
         return context;
@@ -213,10 +219,28 @@ public class SageVCF implements AutoCloseable {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
 
+        if (Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
+            result.add(SoftFilterConfig.MIN_TUMOR_VAF);
+        }
+
+
         final AltContext normal = entry.normal();
         if (normal.readDepth() < config.minGermlineDepth()) {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
         }
+
+        if (Doubles.greaterThan(normal.primaryReadContext().vaf(), config.maxGermlineVaf())) {
+            result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
+        }
+
+        double tumorQual = primaryTumor.primaryReadContext().quality();
+        double germlineQual = normal.primaryReadContext().quality();
+        if (Doubles.positive(germlineQual)) {
+            if (Doubles.greaterThan(germlineQual/ tumorQual, config.maxGermlineRelativeQual())) {
+                result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);
+            }
+        }
+
 
         if (result.isEmpty()) {
             result.add(PASS);

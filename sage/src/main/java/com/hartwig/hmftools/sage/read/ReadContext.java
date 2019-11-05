@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.sage.read;
 
-import static com.hartwig.hmftools.sage.context.MatchType.FULL;
-import static com.hartwig.hmftools.sage.context.MatchType.NONE;
-import static com.hartwig.hmftools.sage.context.MatchType.PARTIAL;
+import static com.hartwig.hmftools.sage.read.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.read.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.read.ReadContextMatch.PARTIAL;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.sage.context.MatchType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -131,8 +130,19 @@ public class ReadContext {
         return rightFlankingBases >= 0;
     }
 
+    public boolean isCentreCovered(int otherReadIndex, byte[] otherBases) {
+
+        int otherLeftCentreIndex = otherLeftCentreIndex(otherReadIndex);
+        if (otherLeftCentreIndex < 0) {
+            return false;
+        }
+
+        int otherRightCentreIndex = otherRightCentreIndex(otherReadIndex);
+        return otherRightCentreIndex < otherBases.length;
+    }
+
     @NotNull
-    public MatchType matchAtPosition(int otherReadIndex, byte[] otherBases) {
+    public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
 
         if (otherReadIndex < 0 || !isComplete()) {
             return NONE;
@@ -163,12 +173,12 @@ public class ReadContext {
     @VisibleForTesting
     boolean centreMatch(int otherRefIndex, byte[] otherBases) {
 
-        int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - readIndex;
+        int otherLeftCentreIndex = otherLeftCentreIndex(otherRefIndex);
         if (otherLeftCentreIndex < 0) {
             return false;
         }
 
-        int otherRightCentreIndex = otherLeftCentreIndex + centreLength() - 1;
+        int otherRightCentreIndex = otherRightCentreIndex(otherRefIndex);
         if (otherRightCentreIndex >= otherBases.length) {
             return false;
         }
@@ -181,6 +191,13 @@ public class ReadContext {
 
         return true;
 
+    }
+
+    private int otherLeftCentreIndex(int otherRefIndex) {
+        return otherRefIndex + leftCentreIndex - readIndex;
+    }
+    private int otherRightCentreIndex(int otherRefIndex) {
+        return otherRefIndex + rightCentreIndex - readIndex;
     }
 
     @VisibleForTesting

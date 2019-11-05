@@ -3,8 +3,6 @@ package com.hartwig.hmftools.sage.read;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.sage.context.MatchType;
-
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,23 +52,23 @@ public class ReadContextTest {
     public void testPartialMatchMustHaveAtLeastOneFullSide() {
 
         ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
-        Assert.assertEquals(MatchType.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
+        Assert.assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
 
-        assertEquals(MatchType.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
-        assertEquals(MatchType.PARTIAL, victim.matchAtPosition(2, "GGT".getBytes()));
-        assertEquals(MatchType.NONE, victim.matchAtPosition(1, "GT".getBytes()));
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGT".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(1, "GT".getBytes()));
 
-        assertEquals(MatchType.PARTIAL, victim.matchAtPosition(1, "GTAA".getBytes()));
-        assertEquals(MatchType.PARTIAL, victim.matchAtPosition(0, "TAA".getBytes()));
-        assertEquals(MatchType.NONE, victim.matchAtPosition(0, "TA".getBytes()));
-        assertEquals(MatchType.NONE, victim.matchAtPosition(0, "T".getBytes()));
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(1, "GTAA".getBytes()));
+        assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(0, "TAA".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "TA".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "T".getBytes()));
     }
 
     @Test
     public void testNegativeReadIndex() {
         ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
-        assertEquals(MatchType.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
-        assertEquals(MatchType.NONE, victim.matchAtPosition(-1, "GGTAA".getBytes()));
+        assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
+        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(-1, "GGTAA".getBytes()));
     }
 
     @Test

@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FilterConfig {
 
+    String HARD_FILTER = "hard_filter";
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_alt_support";
 
@@ -51,6 +52,8 @@ public interface FilterConfig {
             .maxGermlineRelativeReadContextCount(0.05)
             .build();
 
+    boolean hardFilter();
+
     int hardMinTumorQual();
 
     int hardMinTumorAltSupport();
@@ -68,6 +71,7 @@ public interface FilterConfig {
     static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(HARD_FILTER, false, "Number of threads");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
 
@@ -81,6 +85,7 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
+                .hardFilter(cmd.hasOption(HARD_FILTER))
                 .hardMinTumorQual(SageConfig.defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorAltSupport(SageConfig.defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
