@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.variant.enrich;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
@@ -30,8 +29,7 @@ public class HotspotEnrichment implements SomaticEnrichment {
         return new HotspotEnrichment(VariantHotspotFile.read(hotspotsFile));
     }
 
-    @VisibleForTesting
-    HotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {
+    public HotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {
         this.hotspots = hotspots;
     }
 

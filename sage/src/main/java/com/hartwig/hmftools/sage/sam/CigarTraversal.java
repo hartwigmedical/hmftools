@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.cigar;
+package com.hartwig.hmftools.sage.sam;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,7 +46,7 @@ public class CigarTraversal {
                     refBase += e.getLength();
                     break;
                 default:
-                    throw new IllegalStateException("Case statement didn't deal with  op: " + e.getOperator() + "in CIGAR: " + cigar);
+                    throw new IllegalStateException("Case statement didn't deal with op: " + e.getOperator() + "in CIGAR: " + cigar);
             }
         }
 

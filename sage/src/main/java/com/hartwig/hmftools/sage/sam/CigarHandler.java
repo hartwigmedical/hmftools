@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.cigar;
+package com.hartwig.hmftools.sage.sam;
 
 import org.jetbrains.annotations.NotNull;
 

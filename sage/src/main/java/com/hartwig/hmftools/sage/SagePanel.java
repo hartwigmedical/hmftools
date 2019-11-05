@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.context.RegionSelector;
+import com.hartwig.hmftools.sage.select.RegionSelector;
 
 import org.jetbrains.annotations.NotNull;
 

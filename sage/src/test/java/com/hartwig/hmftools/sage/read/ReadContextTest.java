@@ -1,9 +1,12 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.sage.context.MatchType;
+
 import org.apache.logging.log4j.util.Strings;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ReadContextTest {
@@ -51,7 +54,7 @@ public class ReadContextTest {
     public void testPartialMatchMustHaveAtLeastOneFullSide() {
 
         ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
-        assertEquals(MatchType.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
+        Assert.assertEquals(MatchType.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
 
         assertEquals(MatchType.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
         assertEquals(MatchType.PARTIAL, victim.matchAtPosition(2, "GGT".getBytes()));

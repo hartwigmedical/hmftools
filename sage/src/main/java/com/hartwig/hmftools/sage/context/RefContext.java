@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.sage.read.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 

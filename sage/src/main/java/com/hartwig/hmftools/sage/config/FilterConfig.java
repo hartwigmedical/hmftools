@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.config;
 
-import com.hartwig.hmftools.sage.SageConfig;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;

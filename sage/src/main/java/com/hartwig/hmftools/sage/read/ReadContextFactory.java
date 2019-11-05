@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.read;
 
 import static com.hartwig.hmftools.common.variant.Microhomology.expandMicrohomologyRepeats;
 import static com.hartwig.hmftools.common.variant.Microhomology.microhomologyAtDeleteFromReadSequence;

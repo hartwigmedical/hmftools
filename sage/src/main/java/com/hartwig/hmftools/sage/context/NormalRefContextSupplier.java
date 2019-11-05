@@ -10,7 +10,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
+import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +31,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefContextCandidates candidates;
     private final String bamFile;
     private final RefContextConsumer refContextConsumer;
-    private final ContextSelector<ReadContextCounter> consumerSelector;
+    private final PositionSelector<ReadContextCounter> consumerSelector;
     private final int minQuality;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
@@ -38,7 +41,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         this.candidates = candidates;
         this.bamFile = bamFile;
         refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
-        consumerSelector = new ContextSelector<>(candidates.refContexts()
+        consumerSelector = new PositionSelector<>(candidates.refContexts()
                 .stream()
                 .flatMap(x -> x.alts().stream())
                 .map(AltContext::primaryReadContext)
@@ -53,7 +56,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
 
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SageSamSlicer slicer = new SageSamSlicer(0, Lists.newArrayList(bounds));
+            SimpleSamSlicer slicer = new SimpleSamSlicer(0, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, this);
             tumorReader.close();
         } catch (IOException e) {

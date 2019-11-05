@@ -1,10 +1,9 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.config;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.config.FilterConfig;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

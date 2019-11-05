@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
+import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +29,7 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
     private final String sample;
     private final GenomeRegion bounds;
     private final String bamFile;
-    private final ContextSelector<ReadContextCounter> consumerSelector;
+    private final PositionSelector<ReadContextCounter> consumerSelector;
     private final List<AltContext> altContexts;
     private final int minQuality;
 
@@ -40,7 +43,7 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
         this.altContexts = altContexts;
         final List<ReadContextCounter> readContextCounters =
                 altContexts.stream().map(AltContext::setPrimaryReadCounterFromInterim).collect(Collectors.toList());
-        consumerSelector = new ContextSelector<>(readContextCounters);
+        consumerSelector = new PositionSelector<>(readContextCounters);
     }
 
     @Override
@@ -49,7 +52,7 @@ public class TumorReadContextSupplier implements Supplier<List<AltContext>>, Con
         LOGGER.info("Tumor read contexts {} position {}:{}", sample, bounds.chromosome(), bounds.start());
         try {
             SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SageSamSlicer slicer = new SageSamSlicer(minQuality, Lists.newArrayList(bounds));
+            SimpleSamSlicer slicer = new SimpleSamSlicer(minQuality, Lists.newArrayList(bounds));
             slicer.slice(tumorReader, this);
             tumorReader.close();
         } catch (IOException e) {

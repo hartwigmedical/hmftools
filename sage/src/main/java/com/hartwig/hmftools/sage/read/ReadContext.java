@@ -1,10 +1,11 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.read;
 
 import static com.hartwig.hmftools.sage.context.MatchType.FULL;
 import static com.hartwig.hmftools.sage.context.MatchType.NONE;
 import static com.hartwig.hmftools.sage.context.MatchType.PARTIAL;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.sage.context.MatchType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -220,7 +221,7 @@ public class ReadContext {
         return maxLength;
     }
 
-    int leftFlankStartIndex() {
+    public int leftFlankStartIndex() {
         return Math.max(0, leftCentreIndex - flankSize);
     }
 
@@ -228,7 +229,7 @@ public class ReadContext {
         return leftCentreIndex - leftFlankStartIndex();
     }
 
-    int rightFlankEndIndex() {
+    public int rightFlankEndIndex() {
         return Math.min(readBases.length - 1, rightCentreIndex + flankSize);
     }
 

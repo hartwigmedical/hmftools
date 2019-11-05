@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,12 +13,12 @@ public class NormalRefContextCandidates implements RefContextCandidates {
 
     private final String sample;
     private final List<RefContext> refContexts;
-    private final ContextSelector<RefContext> refContextSelector;
+    private final PositionSelector<RefContext> refPositionSelector;
 
     public NormalRefContextCandidates(@NotNull final String sample) {
         this.sample = sample;
         this.refContexts = Lists.newArrayList();
-        this.refContextSelector = new ContextSelector<>(refContexts);
+        this.refPositionSelector = new PositionSelector<>(refContexts);
     }
 
     @NotNull
@@ -26,7 +27,7 @@ public class NormalRefContextCandidates implements RefContextCandidates {
             throw new IllegalArgumentException("Can only add sorted ref contexts");
         }
 
-        Optional<RefContext> optionalRefContext = refContextSelector.select(position);
+        Optional<RefContext> optionalRefContext = refPositionSelector.select(position);
         if (optionalRefContext.isPresent()) {
             return optionalRefContext.get();
         }
@@ -40,7 +41,7 @@ public class NormalRefContextCandidates implements RefContextCandidates {
     @Nullable
     @Override
     public RefContext refContext(@NotNull final String chromosome, final long position) {
-        return refContextSelector.select(position).orElse(null);
+        return refPositionSelector.select(position).orElse(null);
     }
 
     @NotNull

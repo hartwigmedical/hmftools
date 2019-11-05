@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.sage.context;
 
-import static com.hartwig.hmftools.sage.context.ReadContextFactory.createDelContext;
-import static com.hartwig.hmftools.sage.context.ReadContextFactory.createInsertContext;
-import static com.hartwig.hmftools.sage.context.ReadContextFactory.createSNVContext;
+import static com.hartwig.hmftools.sage.read.ReadContextFactory.createDelContext;
+import static com.hartwig.hmftools.sage.read.ReadContextFactory.createInsertContext;
+import static com.hartwig.hmftools.sage.read.ReadContextFactory.createSNVContext;
 
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.cigar.CigarHandler;
-import com.hartwig.hmftools.sage.cigar.CigarTraversal;
+import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.sam.CigarHandler;
+import com.hartwig.hmftools.sage.sam.CigarTraversal;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

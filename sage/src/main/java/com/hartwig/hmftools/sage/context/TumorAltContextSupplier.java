@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
+import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +29,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
     private final SageConfig config;
     private final String bamFile;
     private final List<AltContext> altContexts = Lists.newArrayList();
-    private final ContextSelector<AltContext> consumerSelector;
+    private final PositionSelector<AltContext> consumerSelector;
     private final TumorRefContextCandidates candidates;
     private final RefContextConsumer refContextConsumer;
 
@@ -38,7 +40,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
         this.config = config;
         this.sample = sample;
         this.bamFile = bamFile;
-        this.consumerSelector = new ContextSelector<>(altContexts);
+        this.consumerSelector = new PositionSelector<>(altContexts);
         this.candidates = new TumorRefContextCandidates(sample);
         this.bounds = bounds;
         this.refContextConsumer = new RefContextConsumer(true, config, bounds, refGenome, this.candidates);
@@ -64,7 +66,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
 
-            new SageSamSlicer(0, Lists.newArrayList(bounds)).slice(tumorReader, this::processFirstPass);
+            new SimpleSamSlicer(0, Lists.newArrayList(bounds)).slice(tumorReader, this::processFirstPass);
 
             // Add all valid alt contexts
             for (final RefContext refContext : candidates.refContexts()) {
@@ -76,7 +78,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
                 }
             }
 
-            new SageSamSlicer(config.minMapQuality(), Lists.newArrayList(bounds)).slice(tumorReader, this::processSecondPass);
+            new SimpleSamSlicer(config.minMapQuality(), Lists.newArrayList(bounds)).slice(tumorReader, this::processSecondPass);
 
         } catch (IOException e) {
             throw new CompletionException(e);

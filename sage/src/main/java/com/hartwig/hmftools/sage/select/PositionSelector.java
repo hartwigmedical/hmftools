@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.select;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,13 +8,13 @@ import com.hartwig.hmftools.common.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ContextSelector<P extends GenomePosition> {
+public class PositionSelector<P extends GenomePosition> {
 
     @NotNull
     private final List<P> positions;
     private int index = 0;
 
-    public ContextSelector(@NotNull final List<P> positions) {
+    public PositionSelector(@NotNull final List<P> positions) {
         this.positions = positions;
     }
 

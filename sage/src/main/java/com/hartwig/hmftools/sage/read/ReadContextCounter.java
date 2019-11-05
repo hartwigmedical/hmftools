@@ -1,9 +1,12 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.read;
 
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.sage.context.MatchType;
+import com.hartwig.hmftools.sage.context.Realigned;
+import com.hartwig.hmftools.sage.context.RealignedContext;
 
 import org.jetbrains.annotations.NotNull;
 

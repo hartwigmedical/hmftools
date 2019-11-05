@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.sam;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,11 +15,11 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-class SageSamSlicer {
+public class SimpleSamSlicer {
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
-    SageSamSlicer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> slices) {
+    public SimpleSamSlicer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> slices) {
         this.minMappingQuality = minMappingQuality;
         this.regions = slices;
     }
