@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants.germline;
-
-import com.hartwig.hmftools.common.bachelor.GermlineVariant;
+package com.hartwig.hmftools.common.bachelor;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

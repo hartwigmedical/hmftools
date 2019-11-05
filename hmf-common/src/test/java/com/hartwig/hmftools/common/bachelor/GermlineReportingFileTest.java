@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants.germline;
+package com.hartwig.hmftools.common.bachelor;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,7 +10,7 @@ import org.junit.Test;
 
 public class GermlineReportingFileTest {
 
-    private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("germline/germline_genes_reporting.csv").getPath();
+    private static final String GERMLINE_GENES_REPORTING_CSV = Resources.getResource("bachelor/germline_genes_reporting.csv").getPath();
 
     @Test
     public void canLoadGermlineGenesReportingCsv() throws IOException {

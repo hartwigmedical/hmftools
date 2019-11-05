@@ -1,8 +1,9 @@
-package com.hartwig.hmftools.patientreporter.variants.germline;
+package com.hartwig.hmftools.common.bachelor;
 
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 
 import org.junit.Test;
 

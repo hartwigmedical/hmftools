@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants.driver;
+package com.hartwig.hmftools.common.driverGene;
 
 import java.util.Set;
 

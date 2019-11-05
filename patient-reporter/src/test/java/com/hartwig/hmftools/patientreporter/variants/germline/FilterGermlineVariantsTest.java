@@ -5,13 +5,16 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
+import com.hartwig.hmftools.common.bachelor.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
+import com.hartwig.hmftools.common.driverGene.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

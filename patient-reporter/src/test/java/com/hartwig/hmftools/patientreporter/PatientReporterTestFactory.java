@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.bachelor.ImmutableGermlineVariant;
+import com.hartwig.hmftools.common.driverGene.ImmutableDriverGeneView;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
@@ -18,10 +19,9 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
-import com.hartwig.hmftools.patientreporter.variants.driver.ImmutableDriverGeneView;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
+import com.hartwig.hmftools.common.driverGene.DriverGeneView;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingModelTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

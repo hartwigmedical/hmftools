@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
+import com.hartwig.hmftools.common.driverGene.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
