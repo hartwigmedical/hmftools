@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.variant.structural.annotation;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 public class GeneFusion
 {
     private final Transcript mUpstreamTrans;
@@ -65,17 +68,11 @@ public class GeneFusion
     {
         if(isUpstream)
         {
-            if (mUpstreamTrans.isExonic() && !mDownstreamTrans.isExonic())
-                return mUpstreamTrans.ExonUpstream - 1 - mExonsSkippedUp;
-            else
-                return mUpstreamTrans.ExonUpstream - mExonsSkippedUp;
+            return max(mUpstreamTrans.ExonUpstream - mExonsSkippedUp, 1);
         }
         else
         {
-            if (mDownstreamTrans.isExonic() && !mUpstreamTrans.isExonic())
-                return mDownstreamTrans.ExonDownstream + 1 + mExonsSkippedDown;
-            else
-                return mDownstreamTrans.ExonDownstream + mExonsSkippedDown;
+            return min(mDownstreamTrans.ExonDownstream + mExonsSkippedDown, mDownstreamTrans.ExonMax);
         }
     }
 

@@ -334,6 +334,17 @@ public class FusionFinder
                 }
             }
 
+            if(upstreamTrans.isExonic() && !downstreamTrans.isExonic())
+            {
+                if(phaseExonsSkippedUp == 0)
+                    phaseExonsSkippedUp = 1;
+            }
+            else if(!upstreamTrans.isExonic() && downstreamTrans.isExonic())
+            {
+                if(phaseExonsSkippedDown == 0)
+                    phaseExonsSkippedDown = 1;
+            }
+
             if(!phaseMatched)
             {
                 logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_PHASING, "inexact unphased");
