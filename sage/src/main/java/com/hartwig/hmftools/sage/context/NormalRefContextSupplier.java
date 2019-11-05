@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
@@ -33,6 +34,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefContextConsumer refContextConsumer;
     private final PositionSelector<ReadContextCounter> consumerSelector;
     private final int minQuality;
+    private final QualityConfig qualityConfig;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
             @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
@@ -40,6 +42,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         this.bounds = bounds;
         this.candidates = candidates;
         this.bamFile = bamFile;
+        this.qualityConfig = config.qualityConfig();
         refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
         consumerSelector = new PositionSelector<>(candidates.refContexts()
                 .stream()
@@ -54,11 +57,8 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
 
         LOGGER.info("Normal candidates position {}:{}", bounds.chromosome(), bounds.start());
 
-        try {
-            SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile));
-            SimpleSamSlicer slicer = new SimpleSamSlicer(0, Lists.newArrayList(bounds));
-            slicer.slice(tumorReader, this);
-            tumorReader.close();
+        try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
+            new SimpleSamSlicer(0, Lists.newArrayList(bounds)).slice(tumorReader, this);
         } catch (IOException e) {
             throw new CompletionException(e);
         }
@@ -76,7 +76,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         refContextConsumer.accept(samRecord);
 
         if (samRecord.getMappingQuality() >= minQuality) {
-            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord));
+            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord, qualityConfig));
         }
     }
 }

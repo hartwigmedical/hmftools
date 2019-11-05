@@ -71,7 +71,7 @@ public interface FilterConfig {
     static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(HARD_FILTER, false, "Number of threads");
+        options.addOption(HARD_FILTER, false, "Soft filters become hard");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
 

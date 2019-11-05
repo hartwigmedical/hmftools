@@ -53,6 +53,7 @@ public interface SageConfig {
         options.addOption(PANEL, true, "Panel");
         options.addOption(HOTSPOTS, true, "Hotspots");
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
+        QualityConfig.createOptions().getOptions().forEach(options::addOption);
 
         return options;
     }
@@ -86,6 +87,9 @@ public interface SageConfig {
     @NotNull
     FilterConfig filter();
 
+    @NotNull
+    QualityConfig qualityConfig();
+
     default int regionSliceSize() {
         return 1_000_000;
     }
@@ -101,6 +105,7 @@ public interface SageConfig {
     default int maxNormalAltSupport() {
         return 3;
     }
+
 
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
@@ -132,6 +137,7 @@ public interface SageConfig {
                 .filter(FilterConfig.createConfig(cmd))
                 .panel(cmd.getOptionValue(PANEL, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
+                .qualityConfig(QualityConfig.createConfig(cmd))
                 .build();
 
     }

@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.sage.read;
 
-import java.util.function.Consumer;
-
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.context.Realigned;
 import com.hartwig.hmftools.sage.context.RealignedContext;
 
@@ -11,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
+public class ReadContextCounter implements GenomePosition {
     private final VariantHotspot variant;
     private final ReadContext readContext;
 
@@ -92,8 +91,7 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return readContext.centerBases();
     }
 
-    @Override
-    public void accept(final SAMRecord record) {
+    public void accept(final SAMRecord record, final QualityConfig qualityConfig) {
 
         if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position()
                 && readContext.isComplete()) {
@@ -111,12 +109,12 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
                         case FULL:
                             full++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record);
+                            incrementQualityScores(readIndex, record, qualityConfig);
                             break;
                         case PARTIAL:
                             partial++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record);
+                            incrementQualityScores(readIndex, record, qualityConfig);
                             break;
                     }
                 } else {
@@ -127,12 +125,12 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
                             covered = true;
                             break;
                         case LENGTHENED:
-                            jitterPenalty += jitterPenalty(context);
+                            jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
                             lengthened++;
                             covered = true;
                             break;
                         case SHORTENED:
-                            jitterPenalty += jitterPenalty(context);
+                            jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
                             shortened++;
                             covered = true;
                             break;
@@ -146,14 +144,14 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         }
     }
 
-    private void incrementQualityScores(int readBaseIndex, final SAMRecord record) {
+    private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {
         final int baseQuality = baseQuality(readBaseIndex, record);
         final int distanceFromReadEdge = readContext.distanceFromReadEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
 
-        int modifiedMapQuality = mapQuality - 24 - 5 * (readContext.distance() - 1) - 15 * (record.getProperPairFlag() ? 0 : 1);
-        int modifiedBaseQuality = Math.min(baseQuality, distanceFromReadEdge) - 12;
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, readContext.distance(), record.getProperPairFlag());
+        int modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         this.mapQuality += mapQuality;
         this.baseQuality += baseQuality;
@@ -170,9 +168,6 @@ public class ReadContextCounter implements GenomePosition, Consumer<SAMRecord> {
         return (int) jitterPenalty;
     }
 
-    private double jitterPenalty(RealignedContext context) {
-        return (0.25 * Math.max(0, context.repeatCount() - 3));
-    }
 
     public boolean incrementCounters(@NotNull final ReadContext other) {
         if (readContext.isFullMatch(other)) {
