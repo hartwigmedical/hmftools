@@ -320,7 +320,7 @@ public class LoadEvidenceData {
             patientPrimaryTumorLocation = patientTumorLocation.primaryTumorLocation();
         }
 
-        LOGGER.info("Primary tumor location of patient: " + patientTumorLocation);
+        LOGGER.info("Primary tumor location of patient: " + patientPrimaryTumorLocation);
         return patientPrimaryTumorLocation;
     }
 
