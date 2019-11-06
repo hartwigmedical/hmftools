@@ -31,6 +31,7 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -68,6 +69,7 @@ public class LoadEvidenceData {
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String BACHELOR_TSV = "bachelor_tsv";
     private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
+    private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -94,9 +96,10 @@ public class LoadEvidenceData {
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
         final String bachelorTsv = cmd.getOptionValue(BACHELOR_TSV);
         final String chordPredictionTxt = cmd.getOptionValue(CHORD_PREDICTION_TXT);
+        final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
+
         final String sampleId = cmd.getOptionValue(SAMPLE);
         final String tumorSampleBarcode = cmd.getOptionValue(TUMOR_SAMPLE_BARCODE);
-
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
 
         if (Utils.anyNull(userName,
@@ -113,7 +116,8 @@ public class LoadEvidenceData {
                 bachelorTsv,
                 limsDirectory,
                 chordPredictionTxt,
-                germlineGenesCsv)) {
+                germlineGenesCsv,
+                purplePurityTsv)) {
             printUsageAndExit(options);
         }
 
@@ -132,9 +136,7 @@ public class LoadEvidenceData {
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
 
         List<ReportableGeneFusion> fusions = readingGeneFusions(linxFusionTsv);
-
-        LOGGER.info("Reading gene copy numbers and sample ploidy from file");
-        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
+        List<GeneCopyNumber> geneCopyNumbers = readingGeneCopyNumbers(purpleGeneCnvTsv);
 
         LOGGER.info("Extract all reportable variants of sample");
         List<SomaticVariant> passSomaticVariants = readingSomaticVariants(sampleId, somaticVariantVcf);
@@ -154,19 +156,35 @@ public class LoadEvidenceData {
                 germlineReportingModel,
                 tumorSampleBarcode);
 
-        LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
+        double ploidy = extractPloidy(purplePurityTsv);
 
+        List<EvidenceItem> combinedEvidence = createEvidenceOfAllFindings(actionabilityAnalyzer,
+                patientPrimaryTumorLocation,
+                extractAllReportableVariants,
+                geneCopyNumbers,
+                fusions,
+                ploidy);
+
+        LOGGER.info("Writing evidence items into db");
+        dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
+    }
+
+    private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException{
+        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        double ploidy = purityContext.bestFit().ploidy();
+        LOGGER.info("Sample ploidy: " + ploidy);
+        return ploidy;
+    }
+
+    @NotNull
+    private static List<EvidenceItem> createEvidenceOfAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+            @NotNull String patientPrimaryTumorLocation, @NotNull List<ReportableVariant> extractAllReportableVariants,
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> fusions, double ploidy) {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForAllVariants(extractAllReportableVariants, patientPrimaryTumorLocation);
 
-        List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
-        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
-
-        PurityContext purityContext = dbAccess.readPurityContext(sampleId);
-        assert purityContext != null;
-
-        double ploidy = purityContext.bestFit().ploidy();
-        LOGGER.info("Sample ploidy: " + ploidy);
+        List<EvidenceItem> allEvidenceForVariants = extractAllEvidenceItems(evidencePerVariant);
+        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForVariants.size(), extractAllReportableVariants.size());
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
@@ -181,11 +199,10 @@ public class LoadEvidenceData {
         LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), fusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
-        combinedEvidence.addAll(allEvidenceForSomaticVariants);
+        combinedEvidence.addAll(allEvidenceForVariants);
         combinedEvidence.addAll(allEvidenceForCopyNumbers);
         combinedEvidence.addAll(allEvidenceForGeneFusions);
-
-        dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
+        return combinedEvidence;
     }
 
     @NotNull
@@ -216,9 +233,8 @@ public class LoadEvidenceData {
     @NotNull
     private static List<ReportableVariant> extarctReportableVariants(@NotNull String sampleId, @NotNull String limsDirectory,
             @NotNull List<SomaticVariant> passSomaticVariants, @NotNull List<GermlineVariant> passGermlineVariants,
-            @NotNull ChordAnalysis chordAnalysis, List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
-            @NotNull String tumorSampleBarcode) throws IOException {
+            @NotNull ChordAnalysis chordAnalysis, List<GeneCopyNumber> geneCopyNumbers, @NotNull DriverGeneView driverGeneView,
+            @NotNull GermlineReportingModel germlineReportingModel, @NotNull String tumorSampleBarcode) throws IOException {
 
         Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
 
@@ -262,6 +278,14 @@ public class LoadEvidenceData {
                     passSomaticVariants,
                     chordAnalysis);
         }
+    }
+
+    @NotNull
+    private static List<GeneCopyNumber> readingGeneCopyNumbers(@NotNull String purpleGeneCnvTsv) throws IOException {
+        LOGGER.info("Reading gene copy numbers and sample ploidy from file");
+        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
+        LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
+        return geneCopyNumbers;
     }
 
     @NotNull
@@ -336,6 +360,7 @@ public class LoadEvidenceData {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
         options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
+        options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
