@@ -147,7 +147,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases, refIndex, e.getLength() + 1);
-            final String alt = new String(refBases, refIndex, 1);
+            final String alt = new String(record.getReadBases(), readIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
