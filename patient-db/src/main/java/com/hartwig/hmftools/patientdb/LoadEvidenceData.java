@@ -127,6 +127,7 @@ public class LoadEvidenceData {
             printUsageAndExit(options);
         }
 
+        LOGGER.info("Connecting with database");
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading knowledgebase");
@@ -143,7 +144,10 @@ public class LoadEvidenceData {
         List<GermlineVariant> passGermlineVariants = readingGermlineVariants(bachelorTsv);
         ChordAnalysis chordAnalysis = readingChord(chordPredictionTxt);
 
+        LOGGER.info("Retrieve driver gene view");
         final DriverGeneView driverGeneView = DriverGeneViewFactory.create();
+
+        LOGGER.info("Retrieve germline reporting model");
         final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
 
         List<ReportableVariant> extractAllReportableVariants = extarctReportableVariants(sampleId,
@@ -171,6 +175,7 @@ public class LoadEvidenceData {
     }
 
     private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException{
+        LOGGER.info("Reading purple purity file");
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         double ploidy = purityContext.bestFit().ploidy();
         LOGGER.info("Sample ploidy: " + ploidy);
@@ -181,6 +186,7 @@ public class LoadEvidenceData {
     private static List<EvidenceItem> createEvidenceOfAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @NotNull String patientPrimaryTumorLocation, @NotNull List<ReportableVariant> extractAllReportableVariants,
             @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> fusions, double ploidy) {
+        LOGGER.info("Exctracting all evidence");
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForAllVariants(extractAllReportableVariants, patientPrimaryTumorLocation);
 
@@ -208,6 +214,7 @@ public class LoadEvidenceData {
 
     @NotNull
     private static ChordAnalysis readingChord(@NotNull String chordPredictionTxt) throws IOException {
+        LOGGER.info("Reading chord from file");
         ChordAnalysis chordAnalysis = ChordFileReader.read(chordPredictionTxt);
         LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
         return chordAnalysis;
@@ -215,7 +222,7 @@ public class LoadEvidenceData {
 
     @NotNull
     private static List<GermlineVariant> readingGermlineVariants(@NotNull String bachelorTsv) throws IOException {
-        LOGGER.info("Reading germline variants from DB");
+        LOGGER.info("Reading germline variants from file");
         List<GermlineVariant> passGermlineVariants =
                 BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", passGermlineVariants.size(), bachelorTsv);
@@ -225,7 +232,7 @@ public class LoadEvidenceData {
     @NotNull
     private static List<SomaticVariant> readingSomaticVariants(@NotNull String sampleId, @NotNull String somaticVariantVcf)
             throws IOException {
-        LOGGER.info("Reading somatic variants from DB");
+        LOGGER.info("Reading somatic variants from file");
         List<SomaticVariant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", passSomaticVariants.size(), somaticVariantVcf);
         return passSomaticVariants;
@@ -239,6 +246,7 @@ public class LoadEvidenceData {
 
         Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
 
+        LOGGER.info("Filtering germline variants");
         List<ReportableGermlineVariant> reportableGermlineVariants = filterGermlineVariants(sampleId,
                 limsDirectory,
                 chordAnalysis,
@@ -252,6 +260,7 @@ public class LoadEvidenceData {
         driverCatalog.addAll(OncoDrivers.drivers(passSomaticVariants, geneCopyNumbers));
         driverCatalog.addAll(TsgDrivers.drivers(passSomaticVariants, geneCopyNumbers));
 
+        LOGGER.info("Merging all reportable somatic and germline variants");
         return AllReportableVariants.mergeSomaticAndGermlineVariants(passSomaticVariants,
                 driverCatalog,
                 driverGeneView,
@@ -283,7 +292,7 @@ public class LoadEvidenceData {
 
     @NotNull
     private static List<GeneCopyNumber> readingGeneCopyNumbers(@NotNull String purpleGeneCnvTsv) throws IOException {
-        LOGGER.info("Reading gene copy numbers and sample ploidy from file");
+        LOGGER.info("Reading gene copy numbers from file");
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
         LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
         return geneCopyNumbers;
