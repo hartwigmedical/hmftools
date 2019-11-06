@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.copynumber;
+package com.hartwig.hmftools.common.bachelor;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;

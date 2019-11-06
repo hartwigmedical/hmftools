@@ -3,24 +3,32 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.bachelor.AllReportableVariants;
 import com.hartwig.hmftools.common.bachelor.BachelorFile;
+import com.hartwig.hmftools.common.bachelor.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingFile;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
+import com.hartwig.hmftools.common.bachelor.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.common.bachelor.ReportableGainLoss;
 import com.hartwig.hmftools.common.bachelor.ReportableGermlineVariant;
+import com.hartwig.hmftools.common.bachelor.extractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.driverGene.DriverGeneView;
 import com.hartwig.hmftools.common.driverGene.DriverGeneViewFactory;
+import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
@@ -31,6 +39,7 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
@@ -137,7 +146,12 @@ public class LoadEvidenceData {
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
 
         List<ReportableGeneFusion> fusions = readingGeneFusions(linxFusionTsv);
+
+        double ploidy = extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = readingGeneCopyNumbers(purpleGeneCnvTsv);
+
+        LOGGER.info("Extract reportable gains and losses ");
+        List<ReportableGainLoss> reportableGainLosses = extractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, ploidy);
 
         LOGGER.info("Extract all reportable variants of sample");
         List<SomaticVariant> passSomaticVariants = readingSomaticVariants(sampleId, somaticVariantVcf);
@@ -160,14 +174,13 @@ public class LoadEvidenceData {
                 germlineReportingModel,
                 tumorSampleBarcode);
 
-        double ploidy = extractPloidy(purplePurityTsv);
-
         List<EvidenceItem> combinedEvidence = createEvidenceOfAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
                 extractAllReportableVariants,
                 geneCopyNumbers,
                 fusions,
-                ploidy);
+                ploidy,
+                reportableGainLosses);
 
         LOGGER.info("Writing evidence items into db");
         dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
@@ -185,7 +198,8 @@ public class LoadEvidenceData {
     @NotNull
     private static List<EvidenceItem> createEvidenceOfAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @NotNull String patientPrimaryTumorLocation, @NotNull List<ReportableVariant> extractAllReportableVariants,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> fusions, double ploidy) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> fusions, double ploidy,
+            @NotNull List<ReportableGainLoss> reportableGainLosses) {
         LOGGER.info("Exctracting all evidence");
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
                 actionabilityAnalyzer.evidenceForAllVariants(extractAllReportableVariants, patientPrimaryTumorLocation);
@@ -196,6 +210,20 @@ public class LoadEvidenceData {
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
+
+        // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
+        Set<String> reportableGenes = Sets.newHashSet();
+        for (ReportableGainLoss gainLoss : reportableGainLosses) {
+            reportableGenes.add(gainLoss.gene());
+        }
+
+        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
+            GeneCopyNumber geneCopyNumber = entry.getKey();
+            if (!Collections.disjoint(entry.getValue(), reportableGainLosses) && !reportableGenes.contains(geneCopyNumber.gene())) {
+                LOGGER.warn("Copy number with evidence not reported: {}!", geneCopyNumber.gene());
+            }
+        }
+
         LOGGER.info("Found {} evidence items for {} copy numbers.",
                 allEvidenceForCopyNumbers.size(),
                 evidencePerGeneCopyNumber.keySet().size());
