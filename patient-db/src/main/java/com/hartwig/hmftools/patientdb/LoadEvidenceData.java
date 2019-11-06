@@ -167,6 +167,7 @@ public class LoadEvidenceData {
 
         LOGGER.info("Writing evidence items into db");
         dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
+        LOGGER.info("Finished");
     }
 
     private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException{
