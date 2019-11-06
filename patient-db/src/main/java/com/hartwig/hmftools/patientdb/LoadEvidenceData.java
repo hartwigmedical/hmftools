@@ -174,7 +174,7 @@ public class LoadEvidenceData {
         LOGGER.info("Finished");
     }
 
-    private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException{
+    private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException {
         LOGGER.info("Reading purple purity file");
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         double ploidy = purityContext.bestFit().ploidy();
@@ -254,7 +254,8 @@ public class LoadEvidenceData {
                 passGermlineVariants,
                 geneCopyNumbers,
                 driverGeneView,
-                germlineReportingModel);
+                germlineReportingModel,
+                lims);
 
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(passSomaticVariants, geneCopyNumbers));
@@ -273,9 +274,10 @@ public class LoadEvidenceData {
     private static List<ReportableGermlineVariant> filterGermlineVariants(@NotNull String sampleId, @NotNull String limsDirectory,
             @NotNull ChordAnalysis chordAnalysis, @NotNull List<SomaticVariant> passSomaticVariants,
             @NotNull List<GermlineVariant> passGermlineVariants, List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
+            @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel, @NotNull Lims lims)
+            throws IOException {
 
-        LimsGermlineReportingChoice germlineReportingChoice = extarctGermlineChoiceOfPatient(sampleId, limsDirectory);
+        LimsGermlineReportingChoice germlineReportingChoice = extarctGermlineChoiceOfPatient(sampleId, limsDirectory, lims);
         if (germlineReportingChoice == LimsGermlineReportingChoice.UNKNOWN) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
@@ -325,9 +327,8 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static LimsGermlineReportingChoice extarctGermlineChoiceOfPatient(@NotNull String sampleId, @NotNull String limsDirectory)
-            throws IOException {
-        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+    private static LimsGermlineReportingChoice extarctGermlineChoiceOfPatient(@NotNull String sampleId, @NotNull String limsDirectory,
+            @NotNull Lims lims) throws IOException {
         LOGGER.info("Loaded LIMS data for {} samples from {}", lims.sampleBarcodeCount(), limsDirectory);
         LimsGermlineReportingChoice germlineChoice = lims.germlineReportingChoice(sampleId);
         if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
