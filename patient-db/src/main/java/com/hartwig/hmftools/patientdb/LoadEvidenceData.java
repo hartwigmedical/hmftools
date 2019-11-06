@@ -216,7 +216,7 @@ public class LoadEvidenceData {
 
         for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
             GeneCopyNumber geneCopyNumber = entry.getKey();
-            if (!Collections.disjoint(entry.getValue(), reportableGainLosses) && !reportableGenes.contains(geneCopyNumber.gene())) {
+            if (!Collections.disjoint(entry.getValue(), allEvidenceForCopyNumbers) && !reportableGenes.contains(geneCopyNumber.gene())) {
                 LOGGER.warn("Copy number with evidence not reported: {}!", geneCopyNumber.gene());
             }
         }
