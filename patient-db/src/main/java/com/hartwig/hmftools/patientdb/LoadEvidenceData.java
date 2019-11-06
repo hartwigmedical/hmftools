@@ -207,6 +207,7 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
 
+        //TODO fix is semi duplicate code as is CopyNumberAnalysis!
         // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
         Set<String> reportableGenes = Sets.newHashSet();
         for (ReportableGainLoss gainLoss : reportableGainLosses) {
