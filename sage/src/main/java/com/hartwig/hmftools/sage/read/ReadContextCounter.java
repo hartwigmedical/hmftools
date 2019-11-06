@@ -88,7 +88,7 @@ public class ReadContextCounter implements GenomePosition {
 
     @Override
     public String toString() {
-        return readContext.centerBases();
+        return readContext.toString();
     }
 
     public void accept(final SAMRecord record, final QualityConfig qualityConfig) {

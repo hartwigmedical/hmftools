@@ -25,7 +25,7 @@ public class RegionSelector<R extends GenomeRegion> {
             current = current();
         }
 
-        while (index < regions.size() && current.end() < position) {
+        while (index < regions.size() - 1 && current.end() < position) {
             index++;
             current = current();
         }

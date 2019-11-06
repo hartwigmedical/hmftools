@@ -54,6 +54,10 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA -c FILTER COLO829v003.sage.pre.vcf.gz -O z -o COLO829v003.sage.final.vcf.gz
 
 
+    bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA COLO829v003.sage.map.vcf.gz -O z -o COLO829v003.sage.pre.vcf.gz
+    bcftools index COLO829v003.sage.pre.vcf.gz
+    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA COLO829v003.sage.pre.vcf.gz -O z -o COLO829v003.sage.final.vcf.gz
+
     */
 
     private static final String DISTANCE_FROM_REF_TAG = "NM";
