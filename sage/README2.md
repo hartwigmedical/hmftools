@@ -5,10 +5,10 @@ SAGE is a somatic SNV, MNV and small INDEL caller.
 
 ## Distinct Read Context
 
-The read context is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not the ref genome). 
+The read context is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not ref sequence). 
 In this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
 
-For a SNV in a non-repeat sequence this will just be the single alternate base, 'A'. 
+For a SNV in a non-repeat sequence this will just be the single alternate base. 
 For a SNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAC'.
 
 A DEL will always include the bases on either side of the deleted sequence. 
@@ -17,12 +17,10 @@ If the deleted read sequence is part of a microhomology or repeat sequence, this
 An INSERT will always include the base to the left of the insert as well as the new sequence. 
 As with a DEL, the read context will be extended to include any repeats and/or microhomology.
 
-
 The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases is nominally left aligned at 
-position 7 as AAAAC > A but can equally be  represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
-Using a read context of `CAAAAACAAACAAACAAT` which spans the microhomology will match (shown bolded) every alt but not the ref:
+position 7 as AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
 
-The ref and read sequences appear as:
+Using a read context of `CAAAAACAAACAAACAAT` which spans the microhomology will match (bold) every alt but not the ref:
 
 <pre>
 REF:   GTCTCAAAAACAAACAAACAAACAATAAAAAAC 
