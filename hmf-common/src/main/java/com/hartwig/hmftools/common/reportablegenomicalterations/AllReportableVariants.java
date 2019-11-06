@@ -1,13 +1,16 @@
-package com.hartwig.hmftools.common.bachelor;
+package com.hartwig.hmftools.common.reportablegenomicalterations;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.driverGene.DriverGeneView;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
 import com.hartwig.hmftools.common.variant.ReportableVariant;

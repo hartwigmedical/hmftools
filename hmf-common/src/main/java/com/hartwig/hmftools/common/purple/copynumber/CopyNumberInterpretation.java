@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.bachelor;
+package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;

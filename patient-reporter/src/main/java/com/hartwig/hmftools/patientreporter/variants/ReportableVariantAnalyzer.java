@@ -6,7 +6,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.bachelor.AllReportableVariants;
+import com.hartwig.hmftools.common.reportablegenomicalterations.AllReportableVariants;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 import com.hartwig.hmftools.common.driverGene.DriverGeneView;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
-import com.hartwig.hmftools.common.bachelor.ReportableGermlineVariant;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

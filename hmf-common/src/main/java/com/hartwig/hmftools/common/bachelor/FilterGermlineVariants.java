@@ -8,6 +8,8 @@ import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.driverGene.DriverGeneView;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ImmutableReportableGermlineVariant;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;

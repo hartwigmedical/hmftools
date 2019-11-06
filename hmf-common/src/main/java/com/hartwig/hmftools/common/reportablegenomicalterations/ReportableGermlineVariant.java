@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.bachelor;
+package com.hartwig.hmftools.common.reportablegenomicalterations;
+
+import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
-import com.hartwig.hmftools.common.bachelor.ReportableGermlineVariant;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.driverGene.DriverGeneView;
