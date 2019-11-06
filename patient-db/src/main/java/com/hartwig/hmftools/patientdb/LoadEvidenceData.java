@@ -10,11 +10,20 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.bachelor.AllReportableVariants;
 import com.hartwig.hmftools.common.bachelor.BachelorFile;
+import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingFile;
+import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.bachelor.ReportableGermlineVariant;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
+import com.hartwig.hmftools.common.driverGene.DriverGeneView;
+import com.hartwig.hmftools.common.driverGene.DriverGeneViewFactory;
+import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
+import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -23,12 +32,12 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Drivercatalog;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,6 +55,7 @@ public class LoadEvidenceData {
     private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
 
     private static final String SAMPLE = "sample";
+    private static final String TUMOR_SAMPLE_BARCODE = "tumor_sample_barcode";
 
     private static final String RUN_DIR = "run_dir";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
@@ -85,6 +95,8 @@ public class LoadEvidenceData {
         final String bachelorTsv = cmd.getOptionValue(BACHELOR_TSV);
         final String chordPredictionTxt = cmd.getOptionValue(CHORD_PREDICTION_TXT);
         final String sampleId = cmd.getOptionValue(SAMPLE);
+        final String tumorSampleBarcode = cmd.getOptionValue(TUMOR_SAMPLE_BARCODE);
+
         final String runDirectoryPath = cmd.getOptionValue(RUN_DIR);
 
         if (Utils.anyNull(userName,
@@ -93,6 +105,7 @@ public class LoadEvidenceData {
                 runDirectoryPath,
                 knowledgebaseDirectory,
                 sampleId,
+                tumorSampleBarcode,
                 tumorLocationCsv,
                 somaticVariantVcf,
                 purpleGeneCnvTsv,
@@ -112,28 +125,39 @@ public class LoadEvidenceData {
 
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
+        LOGGER.info("Reading knowledgebase");
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
-        //  final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
-        //        final DriverGeneView driverGeneView = DriverGeneViewFactory.create();
-        //
-        List<Drivercatalog> driverCatalog = Lists.newArrayList();
-        //        driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
-        //        driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
 
-        LOGGER.info("Sample: " + sampleId);
-
+        LOGGER.info("SampleId: " + sampleId);
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
 
-        LOGGER.info("Reading gene copy numbers and sample ploidy from DB");
-
-        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
-        LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
         List<ReportableGeneFusion> fusions = readingGeneFusions(linxFusionTsv);
-        List<SomaticVariant> passSomaticVariants =
-                extarctReportableVariants(sampleId, limsDirectory, somaticVariantVcf, bachelorTsv, chordPredictionTxt, geneCopyNumbers);
 
-        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForSomaticVariants(passSomaticVariants, patientPrimaryTumorLocation);
+        LOGGER.info("Reading gene copy numbers and sample ploidy from file");
+        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
+
+        LOGGER.info("Extract all reportable variants of sample");
+        List<SomaticVariant> passSomaticVariants = readingSomaticVariants(sampleId, somaticVariantVcf);
+        List<GermlineVariant> passGermlineVariants = readingGermlineVariants(bachelorTsv);
+        ChordAnalysis chordAnalysis = readingChord(chordPredictionTxt);
+
+        final DriverGeneView driverGeneView = DriverGeneViewFactory.create();
+        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
+
+        List<ReportableVariant> extractAllReportableVariants = extarctReportableVariants(sampleId,
+                limsDirectory,
+                passSomaticVariants,
+                passGermlineVariants,
+                chordAnalysis,
+                geneCopyNumbers,
+                driverGeneView,
+                germlineReportingModel,
+                tumorSampleBarcode);
+
+        LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
+
+        Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
+                actionabilityAnalyzer.evidenceForAllVariants(extractAllReportableVariants, patientPrimaryTumorLocation);
 
         List<EvidenceItem> allEvidenceForSomaticVariants = extractAllEvidenceItems(evidencePerVariant);
         LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForSomaticVariants.size(), passSomaticVariants.size());
@@ -165,30 +189,65 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<SomaticVariant> extarctReportableVariants(@NotNull String sampleId, @NotNull String limsDirectory,
-            @NotNull String somaticVariantVcf, @NotNull String bachelorTsv, @NotNull String chordPredictionTxt,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
+    private static ChordAnalysis readingChord(@NotNull String chordPredictionTxt) throws IOException {
+        ChordAnalysis chordAnalysis = ChordFileReader.read(chordPredictionTxt);
+        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
+        return chordAnalysis;
+    }
 
+    @NotNull
+    private static List<GermlineVariant> readingGermlineVariants(@NotNull String bachelorTsv) throws IOException {
+        LOGGER.info("Reading germline variants from DB");
+        List<GermlineVariant> passGermlineVariants =
+                BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        LOGGER.info("Loaded {} PASS germline variants from {}", passGermlineVariants.size(), bachelorTsv);
+        return passGermlineVariants;
+    }
+
+    @NotNull
+    private static List<SomaticVariant> readingSomaticVariants(@NotNull String sampleId, @NotNull String somaticVariantVcf)
+            throws IOException {
         LOGGER.info("Reading somatic variants from DB");
         List<SomaticVariant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", passSomaticVariants.size(), somaticVariantVcf);
-        List<ReportableGermlineVariant> reportableGermlineVariants =
-                filterGermlineVariants(bachelorTsv, sampleId, limsDirectory, chordPredictionTxt, passSomaticVariants, geneCopyNumbers);
-        // merge somatic and germline variants
         return passSomaticVariants;
     }
 
     @NotNull
-    private static List<ReportableGermlineVariant> filterGermlineVariants(@NotNull String bachelorTsv, @NotNull String sampleId,
-            @NotNull String limsDirectory, @NotNull String chordPredictionTxt, @NotNull List<SomaticVariant> passSomaticVariants,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException {
-        ChordAnalysis chordAnalysis = ChordFileReader.read(chordPredictionTxt);
-        LOGGER.info("Loaded CHORD analysis from {}", chordPredictionTxt);
+    private static List<ReportableVariant> extarctReportableVariants(@NotNull String sampleId, @NotNull String limsDirectory,
+            @NotNull List<SomaticVariant> passSomaticVariants, @NotNull List<GermlineVariant> passGermlineVariants,
+            @NotNull ChordAnalysis chordAnalysis, List<GeneCopyNumber> geneCopyNumbers,
+            @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel,
+            @NotNull String tumorSampleBarcode) throws IOException {
 
-        LOGGER.info("Reading germline variants from DB");
-        List<GermlineVariant> germlineVariants =
-                BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
-        LOGGER.info("Loaded {} PASS germline variants from {}", germlineVariants.size(), bachelorTsv);
+        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+
+        List<ReportableGermlineVariant> reportableGermlineVariants = filterGermlineVariants(sampleId,
+                limsDirectory,
+                chordAnalysis,
+                passSomaticVariants,
+                passGermlineVariants,
+                geneCopyNumbers,
+                driverGeneView,
+                germlineReportingModel);
+
+        List<DriverCatalog> driverCatalog = Lists.newArrayList();
+        driverCatalog.addAll(OncoDrivers.drivers(passSomaticVariants, geneCopyNumbers));
+        driverCatalog.addAll(TsgDrivers.drivers(passSomaticVariants, geneCopyNumbers));
+
+        return AllReportableVariants.mergeSomaticAndGermlineVariants(passSomaticVariants,
+                driverCatalog,
+                driverGeneView,
+                reportableGermlineVariants,
+                germlineReportingModel,
+                lims.germlineReportingChoice(tumorSampleBarcode));
+    }
+
+    @NotNull
+    private static List<ReportableGermlineVariant> filterGermlineVariants(@NotNull String sampleId, @NotNull String limsDirectory,
+            @NotNull ChordAnalysis chordAnalysis, @NotNull List<SomaticVariant> passSomaticVariants,
+            @NotNull List<GermlineVariant> passGermlineVariants, List<GeneCopyNumber> geneCopyNumbers,
+            @NotNull DriverGeneView driverGeneView, @NotNull GermlineReportingModel germlineReportingModel) throws IOException {
 
         LimsGermlineReportingChoice germlineReportingChoice = extarctGermlineChoiceOfPatient(sampleId, limsDirectory);
         if (germlineReportingChoice == LimsGermlineReportingChoice.UNKNOWN) {
@@ -196,20 +255,18 @@ public class LoadEvidenceData {
             return Lists.newArrayList();
         } else {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineReportingChoice);
-            return Lists.newArrayList();
-            //            return FilterGermlineVariants.filterGermlineVariantsForReporting(germlineVariants,
-            //                    reportData.driverGeneView(),
-            //                    reportData.germlineReportingModel(),
-            //                    geneCopyNumbers,
-            //                    passSomaticVariants,
-            //                    chordAnalysis);
+            return FilterGermlineVariants.filterGermlineVariantsForReporting(passGermlineVariants,
+                    driverGeneView,
+                    germlineReportingModel,
+                    geneCopyNumbers,
+                    passSomaticVariants,
+                    chordAnalysis);
         }
-
     }
 
     @NotNull
     private static List<ReportableGeneFusion> readingGeneFusions(@NotNull String linxFusionTsv) throws IOException {
-        LOGGER.info("Reading gene fusions from DB");
+        LOGGER.info("Reading gene fusions from file");
         List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
         LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
         return fusions;
@@ -272,6 +329,7 @@ public class LoadEvidenceData {
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
 
         options.addOption(SAMPLE, true, "Tumor sample of run");
+        options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
         options.addOption(RUN_DIR, true, "Path towards the folder containing sample run.");
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
