@@ -64,14 +64,14 @@ public class LoadEvidenceData {
     private static final String RUN_DIR = "run_dir";
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String TUMOR_LOCATION_CSV = "tumorlocation_file";
-    private static final String LIMS_DIRECTORY = "lims_dir";
-    private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
+    //  private static final String LIMS_DIRECTORY = "lims_dir"; //TODO set on when DEV-1013 is finished
+    //  private static final String GERMLINE_GENES_CSV = "germline_genes_csv"; //TODO set on when DEV-1013 is finished
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
-    private static final String BACHELOR_TSV = "bachelor_tsv";
-    private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt";
+    // private static final String BACHELOR_TSV = "bachelor_tsv"; //TODO set on when DEV-1013 is finished
+    //  private static final String CHORD_PREDICTION_TXT = "chord_prediction_txt"; //TODO set on when DEV-1013 is finished
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
 
     private static final String DB_USER = "db_user";
@@ -79,6 +79,7 @@ public class LoadEvidenceData {
     private static final String DB_URL = "db_url";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
+        //TODO set disables items on when DEV-1013 is solved
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -90,15 +91,15 @@ public class LoadEvidenceData {
         // General params needed for every sample
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
-        final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
-        final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
+        //  final String limsDirectory = cmd.getOptionValue(LIMS_DIRECTORY);
+        //  final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
 
         // Params specific for specific sample
         final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
-        final String bachelorTsv = cmd.getOptionValue(BACHELOR_TSV);
-        final String chordPredictionTxt = cmd.getOptionValue(CHORD_PREDICTION_TXT);
+        //  final String bachelorTsv = cmd.getOptionValue(BACHELOR_TSV);
+        //   final String chordPredictionTxt = cmd.getOptionValue(CHORD_PREDICTION_TXT);
         final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
 
         final String sampleId = cmd.getOptionValue(SAMPLE);
@@ -116,10 +117,10 @@ public class LoadEvidenceData {
                 somaticVariantVcf,
                 purpleGeneCnvTsv,
                 linxFusionTsv,
-                bachelorTsv,
-                limsDirectory,
-                chordPredictionTxt,
-                germlineGenesCsv,
+                //bachelorTsv,
+                // limsDirectory,
+                // chordPredictionTxt,
+                // germlineGenesCsv,
                 purplePurityTsv)) {
             printUsageAndExit(options);
         }
@@ -149,24 +150,17 @@ public class LoadEvidenceData {
 
         LOGGER.info("Extract all reportable variants of sample");
         List<SomaticVariant> passSomaticVariants = readingSomaticVariants(sampleId, somaticVariantVcf);
-        List<GermlineVariant> passGermlineVariants = readingGermlineVariants(bachelorTsv);
-        ChordAnalysis chordAnalysis = readingChord(chordPredictionTxt);
+        //   List<GermlineVariant> passGermlineVariants = readingGermlineVariants(bachelorTsv);
+        //  ChordAnalysis chordAnalysis = readingChord(chordPredictionTxt);
 
         LOGGER.info("Retrieve driver gene view");
         final DriverGeneView driverGeneView = DriverGeneViewFactory.create();
 
-        LOGGER.info("Retrieve germline reporting model");
-        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
+        //        LOGGER.info("Retrieve germline reporting model");
+        //        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
 
-        List<ReportableVariant> extractAllReportableVariants = extarctReportableVariants(sampleId,
-                limsDirectory,
-                passSomaticVariants,
-                passGermlineVariants,
-                chordAnalysis,
-                geneCopyNumbers,
-                driverGeneView,
-                germlineReportingModel,
-                tumorSampleBarcode);
+        List<ReportableVariant> extractAllReportableVariants =
+                extarctReportableVariants(sampleId, passSomaticVariants, geneCopyNumbers, driverGeneView, tumorSampleBarcode);
 
         List<EvidenceItem> combinedEvidence = createEvidenceOfAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
@@ -250,35 +244,36 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<ReportableVariant> extarctReportableVariants(@NotNull String sampleId, @NotNull String limsDirectory,
-            @NotNull List<SomaticVariant> passSomaticVariants, @NotNull List<GermlineVariant> passGermlineVariants,
-            @NotNull ChordAnalysis chordAnalysis, List<GeneCopyNumber> geneCopyNumbers, @NotNull DriverGeneView driverGeneView,
-            @NotNull GermlineReportingModel germlineReportingModel, @NotNull String tumorSampleBarcode) throws IOException {
+    private static List<ReportableVariant> extarctReportableVariants(@NotNull String sampleId,
+            @NotNull List<SomaticVariant> passSomaticVariants, List<GeneCopyNumber> geneCopyNumbers, @NotNull DriverGeneView driverGeneView,
+            @NotNull String tumorSampleBarcode) throws IOException {
 
-        Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
+        // Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
 
         LOGGER.info("Filtering germline variants");
-        List<ReportableGermlineVariant> reportableGermlineVariants = filterGermlineVariants(sampleId,
-                limsDirectory,
-                chordAnalysis,
-                passSomaticVariants,
-                passGermlineVariants,
-                geneCopyNumbers,
-                driverGeneView,
-                germlineReportingModel,
-                lims);
+        //        List<ReportableGermlineVariant> reportableGermlineVariants = filterGermlineVariants(sampleId,
+        //                limsDirectory,
+        //                chordAnalysis,
+        //                passSomaticVariants,
+        //                passGermlineVariants,
+        //                geneCopyNumbers,
+        //                driverGeneView,
+        //                germlineReportingModel,
+        //                lims);
 
         List<DriverCatalog> driverCatalog = Lists.newArrayList();
         driverCatalog.addAll(OncoDrivers.drivers(passSomaticVariants, geneCopyNumbers));
         driverCatalog.addAll(TsgDrivers.drivers(passSomaticVariants, geneCopyNumbers));
 
         LOGGER.info("Merging all reportable somatic and germline variants");
-        return AllReportableVariants.mergeSomaticAndGermlineVariants(passSomaticVariants,
-                driverCatalog,
-                driverGeneView,
-                reportableGermlineVariants,
-                germlineReportingModel,
-                lims.germlineReportingChoice(tumorSampleBarcode));
+        //TODO switch to mergeSomaticAndGermlineVariants when DEV-1013 is solved
+        return AllReportableVariants.mergeAllSomaticVariants(passSomaticVariants, driverCatalog, driverGeneView);
+        //        return AllReportableVariants.mergeSomaticAndGermlineVariants(passSomaticVariants,
+        //                driverCatalog,
+        //                driverGeneView,
+        //                reportableGermlineVariants,
+        //                germlineReportingModel,
+        //                lims.germlineReportingChoice(tumorSampleBarcode));
     }
 
     @NotNull
@@ -371,8 +366,8 @@ public class LoadEvidenceData {
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
-        options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
-        options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
+        // options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
+        //  options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
 
         options.addOption(SAMPLE, true, "Tumor sample of run");
         options.addOption(TUMOR_SAMPLE_BARCODE, true, "The sample barcode for which a patient report will be generated.");
@@ -380,8 +375,8 @@ public class LoadEvidenceData {
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
-        options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
-        options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
+        //options.addOption(BACHELOR_TSV, true, "Path towards the germline TSV (optional).");
+        //options.addOption(CHORD_PREDICTION_TXT, true, "Path towards the CHORD prediction TXT .");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
 
         options.addOption(DB_USER, true, "Database user name.");

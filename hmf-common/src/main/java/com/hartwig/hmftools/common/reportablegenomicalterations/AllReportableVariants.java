@@ -25,6 +25,28 @@ public final class AllReportableVariants {
     }
 
     @NotNull
+    public static List<ReportableVariant> mergeAllSomaticVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
+            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView) {
+        List<ReportableVariant> allReportableVariants = Lists.newArrayList();
+        for (SomaticVariant variant : somaticVariantsReport) {
+            DriverCategory category = driverGeneView.category(variant.gene());
+            assert category != null;
+
+            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
+            Double driverLikelihood = null;
+            if (catalog != null) {
+                driverLikelihood = catalog.driverLikelihood();
+            }
+
+            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(category)
+                    .driverLikelihood(driverLikelihood)
+                    .notifyClinicalGeneticist(false)
+                    .build());
+        }
+        return allReportableVariants;
+    }
+
+    @NotNull
     public static List<ReportableVariant> mergeSomaticAndGermlineVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
             @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView,
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
