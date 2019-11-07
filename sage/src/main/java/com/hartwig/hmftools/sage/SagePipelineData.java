@@ -15,9 +15,9 @@ import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
-import com.hartwig.hmftools.sage.context.ReadContextCounter;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -66,7 +66,7 @@ public class SagePipelineData {
             }
 
             if (!readContextCounters.isEmpty()) {
-                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
+                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::support).reversed());
                 altContext.setPrimaryReadContext(new ReadContextCounter(hotspot, readContextCounters.get(0).readContext()));
             }
         }

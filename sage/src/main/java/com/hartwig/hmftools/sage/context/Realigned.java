@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.sage.context.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.context.RealignedType.SHORTENED;
 
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
+import com.hartwig.hmftools.sage.read.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 

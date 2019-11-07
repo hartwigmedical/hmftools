@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.ReadContext;
+import com.hartwig.hmftools.sage.read.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 

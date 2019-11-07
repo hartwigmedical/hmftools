@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
 
@@ -29,12 +30,17 @@ public class HmfGenePanelBedTest {
     @Test
     @Ignore
     public void write19() throws IOException {
-        HmfGenePanelBed.write37File("/Users/jon/hmf/resources/GenePanel.hg19.bed");
+        String filename = "/Users/jon/hmf/resources/GenePanel.hg19.bed";
+        HmfGenePanelBed.write37File(filename);
+        BEDFileLoader.fromBedFile(filename);
     }
 
+    @Test
     @Ignore
     public void write38() throws IOException {
-        HmfGenePanelBed.write38File("~/hmf/resources/GenePanel.hg38.bed");
+        String filename = "/Users/jon/hmf/resources/GenePanel.hg38.bed";
+        HmfGenePanelBed.write38File(filename);
+        BEDFileLoader.fromBedFile(filename);
     }
 
 

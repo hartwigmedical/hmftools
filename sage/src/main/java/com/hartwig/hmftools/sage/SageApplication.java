@@ -9,10 +9,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.common.region.BEDFileLoader;
 import com.hartwig.hmftools.common.region.GenomeRegion;
 import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.ContigContext;
 
 import org.apache.commons.cli.CommandLine;
@@ -56,11 +65,29 @@ public class SageApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(cmd);
 
+        final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
+        if (!config.panel().isEmpty()) {
+            LOGGER.info("Reading gene panel bed file: {}", config.panel());
+            SortedSetMultimap<String, GenomeRegion> bed = BEDFileLoader.fromBedFile(config.panel());
+            for (String contig : bed.keySet()) {
+                if (HumanChromosome.contains(contig)) {
+                    panel.putAll(HumanChromosome.fromString(contig), bed.get(contig));
+                }
+            }
+        }
+
+        final ListMultimap<Chromosome, VariantHotspot> hotspots;
+        if (!config.hotspots().isEmpty()) {
+            LOGGER.info("Reading hotspot vcf: {}", config.hotspots());
+            hotspots = VariantHotspotFile.readFromVCF(config.hotspots());
+        } else {
+            hotspots = ArrayListMultimap.create();
+        }
+
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        vcf = new SageVCF(refGenome, config);
-
+        vcf = new SageVCF(hotspots, panel, refGenome, config);
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
@@ -68,30 +95,30 @@ public class SageApplication implements AutoCloseable {
         long timeStamp = System.currentTimeMillis();
         final List<ContigContext> contigContexts = Lists.newArrayList();
 
-//                        SAMSequenceDictionary dictionary = dictionary();
-//                        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
-//                            final String contig = samSequenceRecord.getSequenceName();
-//                            if (HumanChromosome.contains(contig)) {
-//                                int maxPosition = samSequenceRecord.getSequenceLength();
-//                                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
-//                            }
-//                        }
+        //        SAMSequenceDictionary dictionary = dictionary();
+        //        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+        //            final String contig = samSequenceRecord.getSequenceName();
+        //            if (HumanChromosome.contains(contig)) {
+        //                int maxPosition = samSequenceRecord.getSequenceLength();
+        //                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
+        //            }
+        //        }
 
         contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-//                        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
-        //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));
+        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+        //        contigContexts.add(runSingleRegion("17", 6133723, 6133723));
         //        contigContexts.add(runSingleRegion("17", 6_200_165, 6200165));
         //        contigContexts.add(runSingleRegion("17", 2888571, 2888571));
         //        contigContexts.add(runSingleRegion("17", 19_465_877, 19465877));
         //        contigContexts.add(runSingleRegion("17", 20077241, 20077241));
         //        contigContexts.add(runSingleRegion("17", 22_260_001, 23_262_000));
         //        contigContexts.add(runSingleRegion("17", 25_282_540, 34000000));
-        //                contigContexts.add(runSingleRegion("17", 32_371_135, 32371135));
-        //                contigContexts.add(runSingleRegion("17", 37_000_000, 38_000_000));
+        //        contigContexts.add(runSingleRegion("17", 32_371_135, 32371135));
+        //        contigContexts.add(runSingleRegion("17", 37_000_000, 38_000_000));
         //        contigContexts.add(runSingleRegion("17", 42_796_634, 42796634));
         //        contigContexts.add(runSingleRegion("17", 47_414_327, 47414327));
         //        contigContexts.add(runSingleRegion("17", 55_639_513, 55639513));
-        //                contigContexts.add(runSingleRegion("17", 72_558_371, 72558371));
+        //        contigContexts.add(runSingleRegion("17", 72_558_371, 72558371));
         //        contigContexts.add(runSingleRegion("17", 33000001, 34000000));
 
         for (final ContigContext contigContext : contigContexts) {

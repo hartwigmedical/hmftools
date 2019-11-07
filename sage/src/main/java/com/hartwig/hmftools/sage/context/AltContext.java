@@ -8,6 +8,9 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.read.ReadContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -58,7 +61,7 @@ public class AltContext implements VariantHotspot {
 
     @NotNull
     public ReadContextCounter setPrimaryReadCounterFromInterim() {
-        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::full).reversed());
+        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::support).reversed());
         readContextCounter = interimReadContexts.isEmpty()
                 ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
                 : new ReadContextCounter(this, interimReadContexts.get(0).readContext());

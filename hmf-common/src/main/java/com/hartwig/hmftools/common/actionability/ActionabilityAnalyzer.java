@@ -87,22 +87,6 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public Map<SomaticVariant, List<EvidenceItem>> evidenceForSomaticVariants(@NotNull List<SomaticVariant> variants,
-            @Nullable String primaryTumorLocation) {
-        Map<SomaticVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
-
-        List<SomaticVariant> variantsOnActionableGenes = variants.stream()
-                .filter(variant -> variantAnalyzer.actionableGenes().contains(variant.gene()))
-                .collect(Collectors.toList());
-
-        for (SomaticVariant variant : variantsOnActionableGenes) {
-            evidencePerVariant.put(variant, variantAnalyzer.evidenceForSomaticVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
-        }
-
-        return evidencePerVariant;
-    }
-
-    @NotNull
     public Map<ReportableVariant, List<EvidenceItem>> evidenceForAllVariants(@NotNull List<ReportableVariant> variants,
             @Nullable String primaryTumorLocation) {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant = Maps.newHashMap();
