@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.phase.PhasingQueue;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
@@ -50,25 +49,18 @@ public class SageVCF implements AutoCloseable {
     private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
-    private final PhasingQueue phasingQueue;
 
     SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
         this.config = config;
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, this::write);
-
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
-        phasingQueue = new PhasingQueue(entry -> refContextEnrichment.accept(create(entry)));
-
         writer.writeHeader(header);
     }
 
     public void write(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.normal();
-        if (normal.altSupport() <= config.maxNormalAltSupport()) {
-            phasingQueue.accept(entry);
-        }
+            refContextEnrichment.accept(create(entry));
     }
 
     private void write(@NotNull final VariantContext context) {
@@ -129,8 +121,8 @@ public class SageVCF implements AutoCloseable {
                     .attribute("RC_REPS", firstTumor.primaryReadContext().readContext().repeat());
         }
 
-        if (firstTumor.phase() > 0) {
-            builder.attribute(PHASE, firstTumor.phase());
+        if (entry.localPhaseSet() > 0) {
+            builder.attribute(PHASE, entry.localPhaseSet());
         }
 
         final VariantContext context = builder.make();
@@ -190,7 +182,6 @@ public class SageVCF implements AutoCloseable {
 
     @Override
     public void close() {
-        phasingQueue.flush();
         writer.close();
     }
 

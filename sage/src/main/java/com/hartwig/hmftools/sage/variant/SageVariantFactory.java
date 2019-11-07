@@ -100,10 +100,6 @@ public class SageVariantFactory {
             }
         }
 
-        if (result.isEmpty()) {
-            result.add("PASS");
-        }
-
         return result;
     }
 

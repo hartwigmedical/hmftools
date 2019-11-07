@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 class InHotspot {
 
-    public static final int DISTANCE = 5;
+    private static final int DISTANCE = 5;
     private final Multimap<Chromosome, VariantHotspot> hotspots;
 
     InHotspot(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {

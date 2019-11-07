@@ -10,19 +10,19 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PhasingQueue implements Consumer<SageVariant> {
+class LocalPhaseSet implements Consumer<SageVariant> {
 
     private int phase;
     private final Consumer<SageVariant> consumer;
     private final ArrayDeque<SageVariant> deque = new ArrayDeque<>();
 
-    public PhasingQueue(@NotNull final Consumer<SageVariant> consumer) {
+    LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer) {
         this.consumer = consumer;
     }
 
     @Override
-    public void accept(@NotNull final SageVariant entry) {
-        final AltContext newAltContext = entry.primaryTumor();
+    public void accept(@NotNull final SageVariant newEntry) {
+        final AltContext newAltContext = newEntry.primaryTumor();
         final ReadContext newReadContext = newAltContext.primaryReadContext().readContext();
 
         Iterator<SageVariant> iterator = deque.iterator();
@@ -37,19 +37,19 @@ public class PhasingQueue implements Consumer<SageVariant> {
                 iterator.remove();
                 consumer.accept(oldEntry);
             } else if (oldReadContext.phased(newReadContext)) {
-                if (oldAltContext.phase() != 0) {
-                    newAltContext.phase(oldAltContext.phase());
-                } else if (newAltContext.phase() != 0) {
-                    oldAltContext.phase(newAltContext.phase());
+                if (oldEntry.localPhaseSet() != 0) {
+                    newEntry.localPhaseSet(oldEntry.localPhaseSet());
+                } else if (newEntry.localPhaseSet() != 0) {
+                    oldEntry.localPhaseSet(newEntry.localPhaseSet());
                 } else {
                     phase++;
-                    oldAltContext.phase(phase);
-                    newAltContext.phase(phase);
+                    oldEntry.localPhaseSet(phase);
+                    newEntry.localPhaseSet(phase);
                 }
             }
         }
 
-        deque.add(entry);
+        deque.add(newEntry);
     }
 
     public void flush() {

@@ -8,18 +8,21 @@ import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class PhasingMnv {
+class MnvFactory {
 
     @NotNull
     final IndexedFastaSequenceFile reference;
+    final SageVariantFactory sageVariantFactory;
 
-    public PhasingMnv(@NotNull final IndexedFastaSequenceFile reference) {
+    MnvFactory(@NotNull final IndexedFastaSequenceFile reference, final SageVariantFactory sageVariantFactory) {
         this.reference = reference;
+        this.sageVariantFactory = sageVariantFactory;
     }
 
     @NotNull
@@ -35,7 +38,7 @@ public class PhasingMnv {
             alts.add(merge(variant, leftTumor, rightTumor));
         }
 
-        return new SageVariant(normal, alts);
+        return sageVariantFactory.create(normal, alts);
 
     }
 

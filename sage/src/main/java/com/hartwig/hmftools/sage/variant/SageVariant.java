@@ -4,16 +4,21 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SageVariant {
+public class SageVariant implements GenomePosition{
+
+    private static final Set<String> PASS = Sets.newHashSet("PASS");
 
     private final AltContext normal;
     private final Set<String> filters;
     private final SageVariantTier tier;
     private final List<AltContext> tumorAltContexts;
+
+    private int localPhaseSet;
 
     public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal,
             final List<AltContext> tumorAltContexts) {
@@ -24,14 +29,20 @@ public class SageVariant {
         this.filters = filters;
     }
 
-    @Deprecated
-    public SageVariant(final AltContext normal, final List<AltContext> tumorAltContexts) {
-        assert (!tumorAltContexts.isEmpty());
+    public boolean isIndel() {
+        return normal.ref().length() != normal.alt().length();
+    }
 
-        this.tier = SageVariantTier.WIDE;
-        this.normal = normal;
-        this.tumorAltContexts = tumorAltContexts;
-        this.filters = Sets.newHashSet();
+    public int localPhaseSet() {
+        return localPhaseSet;
+    }
+
+    public void localPhaseSet(int localPhaseSet) {
+        this.localPhaseSet = localPhaseSet;
+    }
+
+    public boolean isPassing() {
+        return filters.isEmpty();
     }
 
     @NotNull
@@ -41,7 +52,7 @@ public class SageVariant {
 
     @NotNull
     public Set<String> filters() {
-        return filters;
+        return isPassing() ? PASS : filters;
     }
 
     @NotNull
@@ -59,4 +70,14 @@ public class SageVariant {
         return tumorAltContexts.get(0);
     }
 
+    @NotNull
+    @Override
+    public String chromosome() {
+        return normal.chromosome();
+    }
+
+    @Override
+    public long position() {
+        return normal.position();
+    }
 }
