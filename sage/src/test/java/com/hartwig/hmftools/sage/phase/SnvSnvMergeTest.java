@@ -158,7 +158,7 @@ public class SnvSnvMergeTest {
         assertVariant(7, "A", "C", true, consumer.get(4));
     }
 
-    private void assertVariant(long position, String ref, String alt, final boolean filtered, SageVariant variant) {
+    static void assertVariant(long position, String ref, String alt, final boolean filtered, SageVariant variant) {
         assertEquals(position, variant.position());
         assertEquals(ref, variant.normal().ref());
         assertEquals(alt, variant.normal().alt());

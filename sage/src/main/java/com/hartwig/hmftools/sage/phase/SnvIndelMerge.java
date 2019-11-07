@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 class SnvIndelMerge implements Consumer<SageVariant> {
 
     private final Consumer<SageVariant> consumer;
-    private final List<SageVariant> deque = Lists.newLinkedList();
+    private final List<SageVariant> list = Lists.newLinkedList();
 
     SnvIndelMerge(@NotNull final Consumer<SageVariant> consumer) {
         this.consumer = consumer;
@@ -24,8 +24,8 @@ class SnvIndelMerge implements Consumer<SageVariant> {
         flush(newEntry);
         if (newEntry.isPassing() && newEntry.localPhaseSet() > 0) {
 
-            for (int i = 0; i < deque.size(); i++) {
-                final SageVariant oldEntry = deque.get(i);
+            for (int i = 0; i < list.size(); i++) {
+                final SageVariant oldEntry = list.get(i);
                 if (oldEntry.isPassing() && oldEntry.localPhaseSet() == newEntry.localPhaseSet()
                         && oldEntry.position() == newEntry.position()) {
 
@@ -40,18 +40,17 @@ class SnvIndelMerge implements Consumer<SageVariant> {
             }
         }
 
-        deque.add(newEntry);
+        list.add(newEntry);
     }
 
     private void removeSnvInIndel(@NotNull final SageVariant snv, @NotNull final SageVariant indel) {
-
-        if (snv.normal().alt().equals(indel.normal().alt().substring(0, 1))) {
+        if (!snv.isSynthetic() && snv.normal().alt().equals(indel.normal().alt().substring(0, 1))) {
             snv.filters().add("merge");
         }
     }
 
     private void flush(GenomePosition position) {
-        Iterator<SageVariant> iterator = deque.iterator();
+        final Iterator<SageVariant> iterator = list.iterator();
         while (iterator.hasNext()) {
             final SageVariant entry = iterator.next();
             if (!entry.chromosome().equals(position.chromosome()) || entry.position() < position.position()) {
@@ -64,8 +63,8 @@ class SnvIndelMerge implements Consumer<SageVariant> {
     }
 
     public void flush() {
-        deque.forEach(consumer);
-        deque.clear();
+        list.forEach(consumer);
+        list.clear();
     }
 
 }

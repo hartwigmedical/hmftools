@@ -17,9 +17,9 @@ public class Phase implements Consumer<SageVariant>, AutoCloseable {
     public Phase(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
             @NotNull final Consumer<SageVariant> consumer) {
         final MnvFactory mnvFactory = new MnvFactory(reference, sageVariantFactory);
-        mnvMerge = new SnvSnvMerge(consumer, mnvFactory);
-        snvIndelMerge = new SnvIndelMerge(mnvMerge);
-        localPhaseSet = new LocalPhaseSet(snvIndelMerge);
+        snvIndelMerge = new SnvIndelMerge(consumer);
+        mnvMerge = new SnvSnvMerge(snvIndelMerge, mnvFactory);
+        localPhaseSet = new LocalPhaseSet(mnvMerge);
     }
 
     @Override
@@ -30,7 +30,7 @@ public class Phase implements Consumer<SageVariant>, AutoCloseable {
     @Override
     public void close() {
         localPhaseSet.flush();
-        snvIndelMerge.flush();
         mnvMerge.flush();
+        snvIndelMerge.flush();
     }
 }
