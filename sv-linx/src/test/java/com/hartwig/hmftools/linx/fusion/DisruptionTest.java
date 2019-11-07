@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createSgl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -59,6 +60,10 @@ public class DisruptionTest
         SvVarData var7 = createDel(tester.nextVarId(), chromosome, 68000,72000);
         SvVarData var8 = createDup(tester.nextVarId(), chromosome, 78000,96000);
 
+        // a DUP repeating the first exon (which has no splice acceptor)
+        SvVarData var9 = createDup(tester.nextVarId(), chromosome, 10050,10500);
+        SvVarData var10 = createDup(tester.nextVarId(), chromosome, 9500,10500);
+
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);
@@ -67,29 +72,33 @@ public class DisruptionTest
         tester.AllVariants.add(var6);
         tester.AllVariants.add(var7);
         tester.AllVariants.add(var8);
+        tester.AllVariants.add(var9);
+        tester.AllVariants.add(var10);
 
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        assertEquals(8, tester.Analyser.getClusters().size());
+        assertEquals(10, tester.Analyser.getClusters().size());
 
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
         disruptionFinder.addDisruptionGene(geneId);
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        geneTransCache.setSvGeneData(tester.AllVariants, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
 
-        assertTrue(!var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
-        assertTrue(!var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var1.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var2.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var3.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
         assertTrue(var4.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var5.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var6.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var7.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
         assertTrue(var8.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var9.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
+        assertFalse(var10.getGenesList(true).get(0).transcripts().get(0).isDisruptive());
 
         disruptionFinder.findReportableDisruptions(tester.AllVariants);
         assertEquals(8, disruptionFinder.getDisruptions().size());

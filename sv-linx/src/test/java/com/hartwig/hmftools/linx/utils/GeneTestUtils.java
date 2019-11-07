@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx.utils;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
 import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.AMP;
 import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod.BAF_WEIGHTED;
@@ -115,10 +118,139 @@ public class GeneTestUtils
         transData.setExons(exons);
 
         return transData;
+    }
+
+    public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
+            long[] exonStarts, int exonLength, Long codingStart, Long codingEnd, boolean isCanonical)
+    {
+        if(exonStarts.length == 0 || exonLength <= 0)
+            return null;
+
+        int exonCount = exonStarts.length;
+        long transStart = exonStarts[0];
+        long transEnd = exonStarts[exonCount-1] + exonLength;
+
+        final List<ExonData> exons = Lists.newArrayList();
+
+        boolean hasCodingBases = codingStart != null && codingEnd != null;
+
+        // work out phases based on coding start & end
+        boolean inCoding = false;
+        boolean finishedCoding = false;
+        int lastExonEndPhase = -1;
+
+        if(strand == 1)
+        {
+            for (int i = 0; i < exonCount; ++i)
+            {
+                long exonStart = exonStarts[i];
+                long exonEnd = exonStart + exonLength;
+                int exonRank = i + 1;
+
+                int exonPhase = 0;
+                int exonStartPhase = -1;
+                int exonEndPhase = -1;
+                long exonCodingStart = 0;
+
+                if (hasCodingBases && !finishedCoding)
+                {
+                    if (!inCoding)
+                    {
+                        if (codingStart <= exonEnd)
+                        {
+                            inCoding = true;
+                            exonPhase = 0;
+                            exonStartPhase = codingStart == exonStart ? 0 : -1;
+                            exonCodingStart = codingStart;
+                        }
+                    }
+                    else
+                    {
+                        exonPhase = lastExonEndPhase;
+                        exonStartPhase = lastExonEndPhase;
+                        exonCodingStart = exonStart;
+                    }
+
+                    if (inCoding)
+                    {
+                        long exonCodingBases = min(exonEnd, codingEnd) - exonCodingStart + 1;
+                        exonEndPhase = (int) ((exonPhase + exonCodingBases) % 3);
+                        lastExonEndPhase = exonEndPhase;
+
+                        if (codingEnd <= exonEnd)
+                        {
+                            finishedCoding = true;
+                            inCoding = false;
+                            exonEndPhase = -1;
+                        }
+                    }
+                }
+
+                exons.add(new ExonData(transId, exonStart, exonEnd, exonRank, exonStartPhase, exonEndPhase));
+            }
+        }
+        else
+        {
+            for (int i = exonCount-1; i >= 0; --i)
+            {
+                long exonStart = exonStarts[i];
+                long exonEnd = exonStart + exonLength;
+                int exonRank = exonCount - i;
+
+                int exonPhase = 0;
+                int exonStartPhase = -1;
+                int exonEndPhase = -1;
+                long exonCodingEnd = 0;
+
+                if (hasCodingBases && !finishedCoding)
+                {
+                    if (!inCoding)
+                    {
+                        if (codingEnd >= exonStart)
+                        {
+                            inCoding = true;
+                            exonPhase = 0;
+                            exonStartPhase = codingStart == exonStart ? 0 : -1;
+                            exonCodingEnd = codingEnd;
+                        }
+                    }
+                    else
+                    {
+                        exonPhase = lastExonEndPhase;
+                        exonStartPhase = lastExonEndPhase;
+                        exonCodingEnd = exonEnd;
+                    }
+
+                    if (inCoding)
+                    {
+                        long exonCodingBases = exonCodingEnd - max(exonStart, codingStart) + 1;
+                        exonEndPhase = (int) ((exonPhase + exonCodingBases) % 3);
+                        lastExonEndPhase = exonEndPhase;
+
+                        if (codingStart >= exonStart)
+                        {
+                            finishedCoding = false;
+                            inCoding = false;
+                            exonEndPhase = -1;
+                        }
+                    }
+                }
+
+                exons.add(0, new ExonData(transId, exonStart, exonEnd, exonRank, exonStartPhase, exonEndPhase));
+            }
+        }
+
+        TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
+                codingStart, codingEnd, "");
+
+        transData.setExons(exons);
+
+        return transData;
 
     }
 
-        public static GeneCopyNumber createGeneCopyNumber(final String gene, final String chromosome,
+
+    public static GeneCopyNumber createGeneCopyNumber(final String gene, final String chromosome,
                 double minCopyNumber, long posStart, long posEnd)
     {
         return ImmutableGeneCopyNumber.builder()

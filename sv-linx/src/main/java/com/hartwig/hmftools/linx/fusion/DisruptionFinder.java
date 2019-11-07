@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -178,7 +179,7 @@ public class DisruptionFinder
 
         if(isSimpleSV)
         {
-            markNonDisruptiveGeneTranscripts(genesStart, genesEnd, NON_DISRUPT_REASON_SIMPLE_SV);
+            markNonDisruptiveGeneTranscripts(var, genesStart, genesEnd, NON_DISRUPT_REASON_SIMPLE_SV);
         }
 
         final List<SvChain> chains = cluster.findChains(var);
@@ -353,7 +354,7 @@ public class DisruptionFinder
     }
 
     private void markNonDisruptiveGeneTranscripts(
-            final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd, final String context)
+            final SvVarData var, final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd, final String context)
     {
         for(final GeneAnnotation geneStart : genesStart)
         {
@@ -362,6 +363,13 @@ public class DisruptionFinder
 
             if(geneEnd == null)
                 continue;
+
+            if(var.type() == DUP)
+            {
+                markNonDisruptiveDups(
+                        geneStart.isUpstream() ? geneStart.transcripts() : geneEnd.transcripts(),
+                        !geneEnd.isUpstream() ? geneEnd.transcripts() : geneStart.transcripts());
+            }
 
             markNonDisruptiveTranscripts(geneStart.transcripts(), geneEnd.transcripts(), context);
         }
@@ -391,6 +399,30 @@ public class DisruptionFinder
         return foundMatchingTrans;
     }
 
+    private boolean markNonDisruptiveDups(final List<Transcript> upstreamTransList, final List<Transcript> downstreamTransList)
+    {
+        // special case of a DUP around the 1st exon which since it doesn't have a splice acceptor does not change the transcipt
+        boolean foundMatchingTrans = false;
+
+        for (final Transcript upTrans : upstreamTransList)
+        {
+            final Transcript downTrans = downstreamTransList.stream()
+                    .filter(x -> x.StableId.equals(upTrans.StableId)).findFirst().orElse(null);
+
+            if(downTrans == null)
+                continue;
+
+            if(upTrans.ExonUpstream == 1 && downTrans.ExonDownstream <= 2 && !upTrans.isExonic())
+            {
+                foundMatchingTrans = true;
+
+                markNonDisruptiveTranscript(upTrans, NON_DISRUPT_REASON_SIMPLE_SV);
+                markNonDisruptiveTranscript(downTrans, NON_DISRUPT_REASON_SIMPLE_SV);
+            }
+        }
+
+        return foundMatchingTrans;
+    }
     private void markNonDisruptiveTranscript(final Transcript transcript, final String context)
     {
         transcript.setIsDisruptive(false);

@@ -165,20 +165,30 @@ public class FusionRulesTest
         assertTrue(trans2.preCoding());
         assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
+        // exon to exon phasing - to be phased, the upstream phase needs to be 1 less than the downstream phase
+
+        // upstream coding bases - 10, phase = 0, will need the downstream phase to be 1
+
         // unmatched phasing exon to exon
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         trans2 = new Transcript(gene2, transId2, transName2, 2, 1, 2, 0,
-                11, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
+                10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(trans1.isExonic());
         assertTrue(trans2.isExonic());
         assertTrue(checkFusionLogic(trans1, trans2, params) == null);
 
-        // valid exonic fusion
+        // also invalid exonic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
                 11, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
+
+        assertTrue(checkFusionLogic(trans1, trans2, params) == null);
+
+        // valid exonic fusion
+        trans1 = new Transcript(gene1, transId1, transName1, 2, 2, 2, 1,
+                12, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
@@ -187,7 +197,7 @@ public class FusionRulesTest
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         trans2 = new Transcript(gene2, transId2, transName2, 2, 0, 3, 1,
-                10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
+                11, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
 
         assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
@@ -287,7 +297,7 @@ public class FusionRulesTest
     private static int getCodingBases(final Long start, final Long end)
     {
         if(start != null && end != null)
-            return (int)(end - start);
+            return (int)(end - start) + 1;
         return 0;
     }
 

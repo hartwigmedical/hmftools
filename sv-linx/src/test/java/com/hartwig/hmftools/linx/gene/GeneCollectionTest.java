@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.linx.gene;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.POST_CODING_PHASE;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_3P_UTR;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_NON_CODING;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MIN;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
@@ -266,6 +269,105 @@ public class GeneCollectionTest
 
         setAlternativeTranscriptPhasings(trans, transData.exons(), position, posOrientation);
         assertEquals(0, trans.getAlternativePhasing().size());
+    }
+
+    @Test
+    public void testBreakendTranscriptCoding()
+    {
+        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+
+        // first a gene on the forward strand
+        String geneName = "GENE1";
+        String geneId = "ENSG0001";
+        String chromosome = "1";
+
+        GeneAnnotation genePosStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, 0, 1);
+
+        int transId = 1;
+        byte strand = 1;
+
+        long[] exonStarts = new long[]{100, 200, 300, 400, 500};
+
+        // coding taking up exactly the first exon
+        Long codingStart = new Long(100);
+        Long codingEnd = new Long(110);
+
+        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+
+        long position = 150;
+        Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
+
+        assertEquals(5, trans.ExonMax);
+        assertEquals(1, trans.ExonUpstream);
+        assertEquals(2, trans.ExonDownstream);
+        assertEquals(TRANS_CODING_TYPE_3P_UTR, trans.codingType());
+        assertEquals(-2, trans.ExonUpstreamPhase);
+        assertEquals(-2, trans.ExonDownstreamPhase);
+        assertEquals(8, trans.codingBases()); // stop codon is taken out
+        assertEquals(8, trans.totalCodingBases());
+
+        //
+        codingStart = new Long(105);
+        codingEnd = new Long(405);
+
+        transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+
+        position = 350;
+        trans = extractTranscriptExonData(transData, position, genePosStrand);
+
+        assertEquals(3, trans.ExonUpstream);
+        assertEquals(4, trans.ExonDownstream);
+        assertEquals(TRANS_CODING_TYPE_CODING, trans.codingType());
+        assertEquals(1, trans.ExonUpstreamPhase);
+        assertEquals(1, trans.ExonDownstreamPhase);
+        assertEquals(28, trans.codingBases());
+        assertEquals(31, trans.totalCodingBases());
+
+        // test the reverse strand
+        strand = -1;
+        geneName = "GENE2";
+        geneId = "ENSG0002";
+        chromosome = "1";
+
+        GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, strand, chromosome, 0, 1);
+
+        // long[] exonStarts = new long[]{100, 200, 300, 400, 500};
+
+        // coding taking up exactly the first exon
+        codingStart = new Long(500);
+        codingEnd = new Long(510);
+
+        transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+
+
+        position = 450;
+        trans = extractTranscriptExonData(transData, position, geneNegStrand);
+
+        assertEquals(5, trans.ExonMax);
+        assertEquals(1, trans.ExonUpstream);
+        assertEquals(2, trans.ExonDownstream);
+        assertEquals(TRANS_CODING_TYPE_3P_UTR, trans.codingType());
+        assertEquals(-2, trans.ExonUpstreamPhase);
+        assertEquals(-2, trans.ExonDownstreamPhase);
+        assertEquals(8, trans.codingBases());
+        assertEquals(8, trans.totalCodingBases());
+
+        //
+        codingStart = new Long(205);
+        codingEnd = new Long(505);
+
+        transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+
+        position = 250;
+        trans = extractTranscriptExonData(transData, position, geneNegStrand);
+
+        assertEquals(3, trans.ExonUpstream);
+        assertEquals(4, trans.ExonDownstream);
+        assertEquals(TRANS_CODING_TYPE_CODING, trans.codingType());
+        assertEquals(1, trans.ExonUpstreamPhase);
+        assertEquals(1, trans.ExonDownstreamPhase);
+        assertEquals(28, trans.codingBases());
+        assertEquals(31, trans.totalCodingBases());
     }
 
     @Test

@@ -307,7 +307,7 @@ public class FusionFinder
             // just check for a phasing match
             phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
 
-            if(!phaseMatched && params.AllowExonSkipping)
+            if(!phaseMatched && params.AllowExonSkipping && !upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId))
             {
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for (Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
@@ -367,7 +367,10 @@ public class FusionFinder
         transUp.setExonicCodingBase();
         transDown.setExonicCodingBase();
 
-        return transUp.exactCodingBase() == transDown.exactCodingBase();
+        int upPhase = transUp.exonicBasePhase();
+        int downPhase = transDown.exonicBasePhase();
+
+        return ((upPhase + 1) % 3) == (downPhase % 3);
     }
 
     public static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
@@ -502,15 +505,15 @@ public class FusionFinder
             if (isDownstream)
             {
                 // coding must start before the start of the feature for it to be preserved
-                int codingBaseStart = transcript.totalCodingBases() - transcript.calcCodingBases(!isDownstream);
                 int featureCodingBaseStart = featureStart * 3;
-                featurePreserved = (codingBaseStart <= featureCodingBaseStart);
+                int svCodingBaseStart = transcript.codingBases();
+                featurePreserved = (featureCodingBaseStart >= svCodingBaseStart);
             }
             else
             {
-                int codingBaseEnd = transcript.calcCodingBases(!isDownstream);
+                int svCodingBaseEnd = transcript.codingBases();
                 int featureCodingBaseEnd = featureEnd * 3;
-                featurePreserved = (featureCodingBaseEnd <= codingBaseEnd);
+                featurePreserved = (featureCodingBaseEnd <= svCodingBaseEnd);
             }
         }
 
@@ -600,7 +603,7 @@ public class FusionFinder
 
             factor /= 100;
 
-            long length = downTrans.isCoding() ? downTrans.calcCodingBases(false) : downTrans.ExonMax;
+            long length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
 
             // will be a range between 1-99 * current factor
             length = min(round(length/10), 99);
@@ -618,7 +621,7 @@ public class FusionFinder
 
             factor /= 100;
 
-            length = upTrans.isCoding() ? upTrans.calcCodingBases(true) : upTrans.ExonMax;
+            length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
             length = min(round(length/10), 99);
             transScore += length * factor;
 

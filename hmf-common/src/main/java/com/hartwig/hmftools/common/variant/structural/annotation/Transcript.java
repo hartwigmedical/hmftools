@@ -34,9 +34,9 @@ public class Transcript {
     @NotNull
     private final GeneAnnotation mGene;
 
-    private int mExactCodingBase;
-    private final int mCodingBases;
+    private final int mCodingBases; // number of bases into coding where this breakend occurs
     private final int mTotalCodingBases;
+    private int mExonicBasePhase; // phase of base if in exon
 
     private final boolean mCanonical;
     private String mBioType;
@@ -90,7 +90,7 @@ public class Transcript {
 
         mGene = gene;
 
-        mExactCodingBase = -1;
+        mExonicBasePhase = -1;
 
         mBioType = "";
         mPrevSpliceAcceptorDistance = null;
@@ -287,20 +287,29 @@ public class Transcript {
     public final String bioType() { return mBioType; }
 
     public int codingBases() { return mCodingBases; }
-    public int calcCodingBases(boolean isUpstream) { return isUpstream ? mCodingBases : mTotalCodingBases - mCodingBases; }
+
+    public int calcCodingBases()
+    {
+        // returns number of coding bases preserved in the context of this breakend and whether up or down stream
+        return mGene.isUpstream() ? mCodingBases : mTotalCodingBases - mCodingBases;
+    }
+
     public int totalCodingBases() { return mTotalCodingBases; }
 
     public void setExonicCodingBase()
     {
-        int calcStartPhase = calcPositionPhasing(this, isUpstream());
-        setExactCodingBase(calcStartPhase);
+        mExonicBasePhase = calcPositionPhasing(this, isUpstream());
     }
 
     public static int calcPositionPhasing(final Transcript transcript, boolean isUpstream)
     {
-        // if upstream then can just use the coding bases
-        // if downstream then coding bases are what's remaining
-        long codingBases = transcript.calcCodingBases(isUpstream);
+        // long codingBases = transcript.calcCodingBases(isUpstream);
+        long codingBases = transcript.codingBases();
+
+        // subtract 1 to get back to phasing starting at zero, ie start with the first coding base where position == coding start:
+        // coding base: 1 2 3 4 5 6 7 8 9 10
+        // phase:       0 1 2 0 1 2 0 1 2 0
+        codingBases -= 1;
 
         // factor in insert sequence for the upstream partner
         if(isUpstream && !transcript.gene().insertSequence().isEmpty())
@@ -313,8 +322,7 @@ public class Transcript {
         return adjustedPhase;
     }
 
-    public int exactCodingBase() { return mExactCodingBase; }
-    public void setExactCodingBase(int base) { mExactCodingBase = base; }
+    public int exonicBasePhase() { return mExonicBasePhase; }
 
     public final long length() { return TranscriptEnd - TranscriptStart; }
 

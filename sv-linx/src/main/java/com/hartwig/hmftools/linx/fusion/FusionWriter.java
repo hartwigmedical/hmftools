@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotatio
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -29,7 +27,6 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakendFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusionFile;
-import com.hartwig.hmftools.linx.visualiser.file.VisFusionFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,7 +69,7 @@ public class FusionWriter
                     .regionType(transcript.regionType())
                     .codingContext(transcript.codingType())
                     .biotype(transcript.bioType())
-                    .exonBasePhase(transcript.exactCodingBase())
+                    .exonBasePhase(transcript.exonicBasePhase())
                     .nextSpliceExonRank(transcript.nextSpliceExonRank())
                     .nextSpliceExonPhase(transcript.nextSpliceExonPhase())
                     .nextSpliceDistance(transcript.isUpstream() ? transcript.prevSpliceAcceptorDistance() : transcript.nextSpliceAcceptorDistance())
@@ -177,7 +174,7 @@ public class FusionWriter
                     fieldsStr += ",Phase" + upDown;
                     fieldsStr += ",ExonMax" + upDown;
                     fieldsStr += ",Disruptive" + upDown;
-                    fieldsStr += ",ExactBase" + upDown;
+                    fieldsStr += ",ExonicPhase" + upDown;
                     fieldsStr += ",CodingBases" + upDown;
                     fieldsStr += ",TotalCoding" + upDown;
                     fieldsStr += ",CodingStart" + upDown;
@@ -245,7 +242,7 @@ public class FusionWriter
                         trans.ExonMax, trans.isDisruptive()));
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%s,%s",
-                        trans.exactCodingBase(), trans.calcCodingBases(true), trans.totalCodingBases(),
+                        trans.exonicBasePhase(), trans.codingBases(), trans.totalCodingBases(),
                         trans.codingStart(), trans.codingEnd(), trans.TranscriptStart, trans.TranscriptEnd,
                         trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
             }
