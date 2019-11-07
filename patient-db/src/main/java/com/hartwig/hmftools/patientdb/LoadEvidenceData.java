@@ -3,16 +3,14 @@ package com.hartwig.hmftools.patientdb;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.actionability.cnv.CheckEvidenceCnv;
 import com.hartwig.hmftools.common.reportablegenomicalterations.AllReportableVariants;
 import com.hartwig.hmftools.common.bachelor.BachelorFile;
 import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
@@ -207,19 +205,7 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
 
-        //TODO fix is semi duplicate code as is CopyNumberAnalysis!
-        // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
-        Set<String> reportableGenes = Sets.newHashSet();
-        for (ReportableGainLoss gainLoss : reportableGainLosses) {
-            reportableGenes.add(gainLoss.gene());
-        }
-
-        for (Map.Entry<GeneCopyNumber, List<EvidenceItem>> entry : evidencePerGeneCopyNumber.entrySet()) {
-            GeneCopyNumber geneCopyNumber = entry.getKey();
-            if (!Collections.disjoint(entry.getValue(), allEvidenceForCopyNumbers) && !reportableGenes.contains(geneCopyNumber.gene())) {
-                LOGGER.warn("Copy number with evidence not reported: {}!", geneCopyNumber.gene());
-            }
-        }
+        CheckEvidenceCnv.checkingForEvidenceInDriverCatalog(reportableGainLosses, evidencePerGeneCopyNumber, allEvidenceForCopyNumbers);
 
         LOGGER.info("Found {} evidence items for {} copy numbers.",
                 allEvidenceForCopyNumbers.size(),
