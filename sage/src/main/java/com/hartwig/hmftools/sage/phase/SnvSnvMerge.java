@@ -10,7 +10,7 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-class MnvMerge implements Consumer<SageVariant> {
+class SnvSnvMerge implements Consumer<SageVariant> {
 
     private static final int BUFFER = 2;
 
@@ -18,7 +18,7 @@ class MnvMerge implements Consumer<SageVariant> {
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> deque = Lists.newLinkedList();
 
-    MnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
+    SnvSnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
         this.consumer = consumer;
         this.factory = factory;
     }
