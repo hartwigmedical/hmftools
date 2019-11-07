@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.driverGene;
+package com.hartwig.hmftools.common.drivergene;
 
 import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
 

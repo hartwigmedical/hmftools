@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
-import com.hartwig.hmftools.common.driverGene.DriverGeneView;
+import com.hartwig.hmftools.common.drivergene.DriverGeneView;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
 

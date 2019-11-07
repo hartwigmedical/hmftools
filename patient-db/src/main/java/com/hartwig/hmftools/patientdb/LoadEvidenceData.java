@@ -14,23 +14,21 @@ import com.hartwig.hmftools.common.actionability.cnv.CheckEvidenceCnv;
 import com.hartwig.hmftools.common.reportablegenomicalterations.AllReportableVariants;
 import com.hartwig.hmftools.common.bachelor.BachelorFile;
 import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
-import com.hartwig.hmftools.common.bachelor.GermlineReportingFile;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGainLoss;
 import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
-import com.hartwig.hmftools.common.reportablegenomicalterations.extractReportableGainsAndLosses;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
-import com.hartwig.hmftools.common.driverGene.DriverGeneView;
-import com.hartwig.hmftools.common.driverGene.DriverGeneViewFactory;
+import com.hartwig.hmftools.common.drivergene.DriverGeneView;
+import com.hartwig.hmftools.common.drivergene.DriverGeneViewFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -146,7 +144,7 @@ public class LoadEvidenceData {
         List<GeneCopyNumber> geneCopyNumbers = readingGeneCopyNumbers(purpleGeneCnvTsv);
 
         LOGGER.info("Extract reportable gains and losses ");
-        List<ReportableGainLoss> reportableGainLosses = extractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, ploidy);
+        List<ReportableGainLoss> reportableGainLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, ploidy);
 
         LOGGER.info("Extract all reportable variants of sample");
         List<SomaticVariant> passSomaticVariants = readingSomaticVariants(sampleId, somaticVariantVcf);

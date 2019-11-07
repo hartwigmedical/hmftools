@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
-import com.hartwig.hmftools.common.driverGene.DriverGeneView;
+import com.hartwig.hmftools.common.drivergene.DriverGeneView;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

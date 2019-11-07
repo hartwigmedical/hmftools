@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientreporter;
 
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.common.driverGene.DriverGeneView;
+import com.hartwig.hmftools.common.drivergene.DriverGeneView;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 
 import org.immutables.value.Value;

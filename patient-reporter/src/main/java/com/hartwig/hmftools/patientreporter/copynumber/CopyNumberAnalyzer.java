@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.cnv.CheckEvidenceCnv;
 import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGainLoss;
-import com.hartwig.hmftools.common.reportablegenomicalterations.extractReportableGainsAndLosses;
+import com.hartwig.hmftools.common.reportablegenomicalterations.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -31,7 +31,7 @@ public final class CopyNumberAnalyzer {
             @Nullable PatientTumorLocation patientTumorLocation) {
         FittedPurity bestFit = purityContext.bestFit();
         List<ReportableGainLoss> reportableGainsAndLosses =
-                extractReportableGainsAndLosses.toReportableGainsAndLosses(exomeGeneCopyNumbers, bestFit.ploidy());
+                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(exomeGeneCopyNumbers, bestFit.ploidy());
         String primaryTumorLocation = patientTumorLocation != null ? patientTumorLocation.primaryTumorLocation() : null;
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(exomeGeneCopyNumbers, primaryTumorLocation, bestFit.ploidy());

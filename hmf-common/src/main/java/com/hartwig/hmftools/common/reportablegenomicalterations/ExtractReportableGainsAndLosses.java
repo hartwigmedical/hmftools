@@ -11,9 +11,9 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class extractReportableGainsAndLosses {
+public final class ExtractReportableGainsAndLosses {
 
-    private extractReportableGainsAndLosses() {
+    private ExtractReportableGainsAndLosses() {
 
     }
 

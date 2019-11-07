@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
-import com.hartwig.hmftools.common.driverGene.DriverGeneViewFactory;
+import com.hartwig.hmftools.common.drivergene.DriverGeneViewFactory;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingFile;
 import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 
