@@ -60,13 +60,26 @@ public class SageVCF implements AutoCloseable {
     }
 
     public void write(@NotNull final SageVariant entry) {
+        if (shouldWrite(entry)) {
             refContextEnrichment.accept(create(entry));
+        }
     }
 
     private void write(@NotNull final VariantContext context) {
-        if (!config.filter().hardFilter() || context.getFilters().contains(PASS)) {
-            writer.add(context);
+        writer.add(context);
+    }
+
+    private boolean shouldWrite(@NotNull final SageVariant entry) {
+        if (entry.isPassing()) {
+            return true;
         }
+
+        if (config.filter().hardFilter()) {
+            return false;
+        }
+
+        final AltContext normal = entry.normal();
+        return normal.altSupport() > config.filter().hardMaxNormalAltSupport();
     }
 
     @NotNull
