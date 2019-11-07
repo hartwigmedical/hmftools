@@ -246,7 +246,7 @@ public class LoadEvidenceData {
 
         // Lims lims = LimsFactory.fromLimsDirectory(limsDirectory);
 
-        LOGGER.info("Filtering germline variants");
+        //LOGGER.info("Filtering germline variants");
         //        List<ReportableGermlineVariant> reportableGermlineVariants = filterGermlineVariants(sampleId,
         //                limsDirectory,
         //                chordAnalysis,
@@ -261,7 +261,7 @@ public class LoadEvidenceData {
         driverCatalog.addAll(OncoDrivers.drivers(passSomaticVariants, geneCopyNumbers));
         driverCatalog.addAll(TsgDrivers.drivers(passSomaticVariants, geneCopyNumbers));
 
-        LOGGER.info("Merging all reportable somatic and germline variants");
+        LOGGER.info("Merging all reportable somatic variants");
         //TODO switch to mergeSomaticAndGermlineVariants when DEV-1013 is solved
         return AllReportableVariants.mergeAllSomaticVariants(passSomaticVariants, driverCatalog, driverGeneView);
         //        return AllReportableVariants.mergeSomaticAndGermlineVariants(passSomaticVariants,
