@@ -93,7 +93,7 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        variantFactory = new SageVariantFactory(config, hotspots, panel);
+        variantFactory = new SageVariantFactory(config.filter(), hotspots, panel);
         vcf = new SageVCF(refGenome, config);
         phase = new Phase(refGenome, variantFactory, vcf::write);
     }

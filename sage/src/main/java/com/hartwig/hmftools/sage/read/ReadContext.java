@@ -25,10 +25,9 @@ public class ReadContext {
     private final int repeatCount;
     private final String microhomology;
 
-    ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+    public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases) {
-        assert (leftCentreIndex > 0);
-        assert (rightCentreIndex < readBases.length);
+        assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
         this.position = refPosition;

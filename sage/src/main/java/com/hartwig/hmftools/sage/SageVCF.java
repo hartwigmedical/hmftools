@@ -161,7 +161,7 @@ public class SageVCF implements AutoCloseable {
         //                VCFHeaderLineType.Integer,
         //                "[ImproperPairedRead, InconsistentChromosome, ExcessInferredSize]"));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Integer, "[Qual, BaseQual, MapQual, JitterPenalty]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 4, VCFHeaderLineType.Integer, "[Qual, BaseQual, MapQual, JitterPenalty]"));
         header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Integer, "[AvgRecordDistance, AvgAlignmentDistance]"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIF", 1, VCFHeaderLineType.String, "Difference from ref"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIS", 1, VCFHeaderLineType.Integer, "Distance from ref"));

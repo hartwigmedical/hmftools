@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 
@@ -18,10 +18,10 @@ import org.jetbrains.annotations.NotNull;
 public class SageVariantFactory {
 
     private final InPanel inPanel;
-    private final SageConfig config;
+    private final FilterConfig config;
     private final InHotspot inHotspot;
 
-    public SageVariantFactory(@NotNull final SageConfig config, @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots,
+    public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots,
             @NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions) {
 
         this.config = config;
@@ -44,11 +44,11 @@ public class SageVariantFactory {
     private SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
         switch (tier) {
             case HOTSPOT:
-                return config.filter().softHotspotFilter();
+                return config.softHotspotFilter();
             case PANEL:
-                return config.filter().softPanelFilter();
+                return config.softPanelFilter();
             default:
-                return config.filter().softWideFilter();
+                return config.softWideFilter();
         }
     }
 

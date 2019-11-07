@@ -37,7 +37,6 @@ class SnvSnvMerge implements Consumer<SageVariant> {
                         oldEntry.filters().add("merge");
                         newEntry.filters().add("merge");
                     }
-
                     i++;
                 }
             }
@@ -50,7 +49,8 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         Iterator<SageVariant> iterator = deque.iterator();
         while (iterator.hasNext()) {
             final SageVariant entry = iterator.next();
-            if (!entry.chromosome().equals(position.chromosome()) || entry.position() < position.position() - BUFFER) {
+            long entryEnd = entry.position() + entry.normal().ref().length() - 1;
+            if (!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - BUFFER) {
                 iterator.remove();
                 consumer.accept(entry);
             } else {

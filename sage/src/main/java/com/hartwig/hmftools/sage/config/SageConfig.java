@@ -102,11 +102,6 @@ public interface SageConfig {
         return 1000;
     }
 
-    default int maxNormalAltSupport() {
-        return 3;
-    }
-
-
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
 
