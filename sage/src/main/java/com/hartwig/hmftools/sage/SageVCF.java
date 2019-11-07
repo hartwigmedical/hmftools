@@ -127,6 +127,10 @@ public class SageVCF implements AutoCloseable {
 
         final VariantContext context = builder.make();
         context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
+        if (context.isNotFiltered()) {
+            context.getCommonInfo().addFilter("PASS");
+        }
+
         return context;
     }
 
@@ -157,7 +161,7 @@ public class SageVCF implements AutoCloseable {
         //                VCFHeaderLineType.Integer,
         //                "[ImproperPairedRead, InconsistentChromosome, ExcessInferredSize]"));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Integer, "[BaseQual, MapQual, JitterPenalty]"));
+        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 3, VCFHeaderLineType.Integer, "[Qual, BaseQual, MapQual, JitterPenalty]"));
         header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Integer, "[AvgRecordDistance, AvgAlignmentDistance]"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIF", 1, VCFHeaderLineType.String, "Difference from ref"));
         header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIS", 1, VCFHeaderLineType.Integer, "Distance from ref"));
@@ -167,6 +171,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, "Local phase set"));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
+        header.addMetaDataLine(new VCFFilterHeaderLine("merge", "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_QUAL, "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_VAF, "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_GERMLINE_DEPTH, "Insufficient germline depth"));

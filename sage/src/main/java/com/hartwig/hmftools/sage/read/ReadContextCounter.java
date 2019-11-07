@@ -95,7 +95,7 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public int[] qual() {
-        return new int[] { baseQuality, mapQuality, qualityJitterPenalty() };
+        return new int[] { quality(), baseQuality, mapQuality, qualityJitterPenalty() };
     }
 
     @NotNull

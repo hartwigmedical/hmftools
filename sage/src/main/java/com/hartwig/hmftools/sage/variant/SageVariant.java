@@ -3,15 +3,12 @@ package com.hartwig.hmftools.sage.variant;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 
 import org.jetbrains.annotations.NotNull;
 
 public class SageVariant implements GenomePosition{
-
-    private static final Set<String> PASS = Sets.newHashSet("PASS");
 
     private final AltContext normal;
     private final Set<String> filters;
@@ -52,7 +49,7 @@ public class SageVariant implements GenomePosition{
 
     @NotNull
     public Set<String> filters() {
-        return isPassing() ? PASS : filters;
+        return filters;
     }
 
     @NotNull

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,24 +14,31 @@ class MnvMerge implements Consumer<SageVariant> {
 
     private static final int BUFFER = 2;
 
-    private int phase;
+    private final MnvFactory factory;
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> deque = Lists.newLinkedList();
 
-    MnvMerge(@NotNull final Consumer<SageVariant> consumer) {
+    MnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
         this.consumer = consumer;
+        this.factory = factory;
     }
 
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
-        flush(newEntry.position() - BUFFER);
+        flush(newEntry);
         if (newEntry.isPassing() && newEntry.localPhaseSet() > 0 && !newEntry.isIndel()) {
 
             for (int i = 0; i < deque.size(); i++) {
                 final SageVariant oldEntry = deque.get(i);
                 if (oldEntry.isPassing() && oldEntry.localPhaseSet() == newEntry.localPhaseSet() && !newEntry.isIndel()) {
-//                    System.out.println("GHERE");
+                    SageVariant mnv = factory.createMNV(oldEntry, newEntry);
+                    deque.add(i, mnv);
+                    if (mnv.isPassing()) {
+                        oldEntry.filters().add("merge");
+                        newEntry.filters().add("merge");
+                    }
 
+                    i++;
                 }
             }
         }
@@ -38,11 +46,11 @@ class MnvMerge implements Consumer<SageVariant> {
         deque.add(newEntry);
     }
 
-    private void flush(long position) {
+    private void flush(GenomePosition position) {
         Iterator<SageVariant> iterator = deque.iterator();
         while (iterator.hasNext()) {
             final SageVariant entry = iterator.next();
-            if (entry.position() < position) {
+            if (!entry.chromosome().equals(position.chromosome()) || entry.position() < position.position() - BUFFER) {
                 iterator.remove();
                 consumer.accept(entry);
             } else {

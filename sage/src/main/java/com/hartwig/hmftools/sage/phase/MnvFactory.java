@@ -17,8 +17,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 class MnvFactory {
 
     @NotNull
-    final IndexedFastaSequenceFile reference;
-    final SageVariantFactory sageVariantFactory;
+    private final IndexedFastaSequenceFile reference;
+    private final SageVariantFactory sageVariantFactory;
 
     MnvFactory(@NotNull final IndexedFastaSequenceFile reference, final SageVariantFactory sageVariantFactory) {
         this.reference = reference;
@@ -38,17 +38,19 @@ class MnvFactory {
             alts.add(merge(variant, leftTumor, rightTumor));
         }
 
-        return sageVariantFactory.create(normal, alts);
+        SageVariant result = sageVariantFactory.create(normal, alts);
+        result.localPhaseSet(left.localPhaseSet());
+
+        return result;
 
     }
 
     @NotNull
     private AltContext merge(@NotNull final VariantHotspot variant, @NotNull final AltContext left, @NotNull final AltContext right) {
-
         final ReadContextCounter counter = new ReadContextCounter(variant, left.primaryReadContext(), right.primaryReadContext());
-
-        final AltContext result = new AltContext(left.sample(), variant);
+        final AltContext result = new AltContext(left.refContext(),  variant.ref(), variant.alt());
         result.setPrimaryReadContext(counter);
+
         return result;
     }
 
