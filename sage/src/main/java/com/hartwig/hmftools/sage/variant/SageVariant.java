@@ -15,6 +15,7 @@ public class SageVariant implements GenomePosition{
     private final SageVariantTier tier;
     private final List<AltContext> tumorAltContexts;
 
+    private boolean synthetic;
     private int localPhaseSet;
 
     public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal,
@@ -36,6 +37,14 @@ public class SageVariant implements GenomePosition{
 
     public void localPhaseSet(int localPhaseSet) {
         this.localPhaseSet = localPhaseSet;
+    }
+
+    public boolean isSynthetic() {
+        return synthetic;
+    }
+
+    public void synthetic(final boolean synthetic) {
+        this.synthetic = synthetic;
     }
 
     public boolean isPassing() {

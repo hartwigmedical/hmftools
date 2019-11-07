@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -68,9 +70,9 @@ public class SnvSnvMergeTest {
         victim.flush();
 
         assertEquals(consumer.size(), 3);
-        assertVariant(3, "GA", "CC", consumer.get(0));
-        assertVariant(3, "G", "C", consumer.get(1));
-        assertVariant(4, "A", "C", consumer.get(2));
+        assertVariant(3, "GA", "CC", false, consumer.get(0));
+        assertVariant(3, "G", "C", true, consumer.get(1));
+        assertVariant(4, "A", "C", true, consumer.get(2));
     }
 
     @Test
@@ -83,8 +85,8 @@ public class SnvSnvMergeTest {
         victim.flush();
 
         assertEquals(consumer.size(), 2);
-        assertVariant(3, "G", "C", consumer.get(0));
-        assertVariant(4, "A", "C", consumer.get(1));
+        assertVariant(3, "G", "C", false, consumer.get(0));
+        assertVariant(4, "A", "C", false, consumer.get(1));
     }
 
     @Test
@@ -97,9 +99,9 @@ public class SnvSnvMergeTest {
         victim.flush();
 
         assertEquals(consumer.size(), 3);
-        assertVariant(3, "GAT", "CAC", consumer.get(0));
-        assertVariant(3, "G", "C", consumer.get(1));
-        assertVariant(5, "T", "C", consumer.get(2));
+        assertVariant(3, "GAT", "CAC", false, consumer.get(0));
+        assertVariant(3, "G", "C", true, consumer.get(1));
+        assertVariant(5, "T", "C", true, consumer.get(2));
     }
 
     @Test
@@ -115,10 +117,10 @@ public class SnvSnvMergeTest {
         victim.flush();
 
         assertEquals(consumer.size(), 4);
-        assertVariant(3, "GAT", "CAC", consumer.get(0));
-        assertVariant(3, "G", "C", consumer.get(1));
-        assertVariant(4, "A", "C", consumer.get(2));
-        assertVariant(5, "T", "C", consumer.get(3));
+        assertVariant(3, "GAT", "CAC", false, consumer.get(0));
+        assertVariant(3, "G", "C", true, consumer.get(1));
+        assertVariant(4, "A", "C", false, consumer.get(2));
+        assertVariant(5, "T", "C", true, consumer.get(3));
     }
 
     @Test
@@ -131,8 +133,8 @@ public class SnvSnvMergeTest {
         victim.flush();
 
         assertEquals(consumer.size(), 2);
-        assertVariant(3, "G", "C", consumer.get(0));
-        assertVariant(6, "A", "C", consumer.get(1));
+        assertVariant(3, "G", "C", false, consumer.get(0));
+        assertVariant(6, "A", "C", false, consumer.get(1));
     }
 
     @Test
@@ -148,15 +150,23 @@ public class SnvSnvMergeTest {
         victim.accept(createSnv("1", 7, altBases, 1));
         victim.flush();
 
-        assertEquals(7, consumer.size());
-        assertVariant(3, "GATAA", "CCCAC", consumer.get(0));
-
+        assertEquals(5, consumer.size());
+        assertVariant(3, "GATAA", "CCCAC", false, consumer.get(0));
+        assertVariant(3, "G", "C", true, consumer.get(1));
+        assertVariant(4, "A", "C",true , consumer.get(2));
+        assertVariant(5, "T", "C", true, consumer.get(3));
+        assertVariant(7, "A", "C", true, consumer.get(4));
     }
 
-    public void assertVariant(long position, String ref, String alt, SageVariant variant) {
+    private void assertVariant(long position, String ref, String alt, final boolean filtered, SageVariant variant) {
         assertEquals(position, variant.position());
         assertEquals(ref, variant.normal().ref());
         assertEquals(alt, variant.normal().alt());
+        if (filtered) {
+            assertFalse(variant.filters().isEmpty());
+        } else {
+            assertTrue(variant.filters().isEmpty());
+        }
     }
 
     @NotNull

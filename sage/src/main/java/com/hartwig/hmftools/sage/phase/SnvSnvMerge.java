@@ -35,6 +35,10 @@ class SnvSnvMerge implements Consumer<SageVariant> {
                     deque.add(i, mnv);
                     if (mnv.isPassing()) {
                         oldEntry.filters().add("merge");
+                        if (oldEntry.isSynthetic()) {
+                            deque.remove(i + 1);
+                        }
+                        i--;
                         newEntry.filters().add("merge");
                     }
                     i++;

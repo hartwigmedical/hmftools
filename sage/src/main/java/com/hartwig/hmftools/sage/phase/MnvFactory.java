@@ -40,6 +40,7 @@ class MnvFactory {
 
         SageVariant result = sageVariantFactory.create(normal, alts);
         result.localPhaseSet(left.localPhaseSet());
+        result.synthetic(true);
 
         return result;
 
