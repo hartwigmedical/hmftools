@@ -12,6 +12,8 @@ import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.context.TumorAltContextSupplier;
+import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,19 +29,21 @@ public class SagePipeline {
     private final SageConfig config;
     private final Executor executor;
     private final RefSequence refSequence;
+    private final SageVariantFactory variantFactory;
 
     public SagePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
-            final IndexedFastaSequenceFile refGenome) {
+            final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory) {
         this.region = region;
         this.config = config;
         this.executor = executor;
+        this.variantFactory = variantFactory;
         this.refSequence = new RefSequence(region, refGenome);
     }
 
     @NotNull
-    public CompletableFuture<List<SageEntry>> submit() {
+    public CompletableFuture<List<SageVariant>> submit() {
 
-        final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size());
+        final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
 

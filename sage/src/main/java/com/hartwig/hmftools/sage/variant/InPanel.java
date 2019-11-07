@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.variant;
 
 import java.util.List;
 import java.util.Map;
@@ -14,11 +14,11 @@ import com.hartwig.hmftools.sage.select.RegionSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-class SagePanel {
+class InPanel {
 
     private final Map<Chromosome, RegionSelector<GenomeRegion>> panelSelectorMap;
 
-    SagePanel(@NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions) {
+    InPanel(@NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions) {
         this.panelSelectorMap = Maps.newHashMap();
         for (Chromosome chromosome : panelRegions.keySet()) {
             List<GenomeRegion> regions = panelRegions.get(chromosome);

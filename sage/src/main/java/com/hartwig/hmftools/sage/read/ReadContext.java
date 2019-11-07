@@ -298,4 +298,10 @@ public class ReadContext {
     public byte[] readBases() {
         return readBases;
     }
+
+    @NotNull
+    public String alt(int length) {
+        return new String(readBases, readIndex, length);
+    }
+
 }

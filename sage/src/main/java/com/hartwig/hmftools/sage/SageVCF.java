@@ -4,18 +4,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.enrich.HotspotEnrichment;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.phase.PhasingQueue;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -55,15 +51,9 @@ public class SageVCF implements AutoCloseable {
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
     private final PhasingQueue phasingQueue;
-    private final SagePanel panel;
-    private final HotspotEnrichment hotspotEnrichment;
 
-    SageVCF(@NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots,
-            @NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions, @NotNull final IndexedFastaSequenceFile reference,
-            @NotNull final SageConfig config) {
-        this.panel = new SagePanel(panelRegions);
+    SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
         this.config = config;
-        this.hotspotEnrichment = new HotspotEnrichment(hotspots);
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, this::write);
@@ -74,7 +64,7 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    public void write(@NotNull final SageEntry entry) {
+    public void write(@NotNull final SageVariant entry) {
         final AltContext normal = entry.normal();
         if (normal.altSupport() <= config.maxNormalAltSupport()) {
             phasingQueue.accept(entry);
@@ -101,7 +91,7 @@ public class SageVCF implements AutoCloseable {
     }
 
     @NotNull
-    private VariantContext create(@NotNull final SageEntry entry) {
+    private VariantContext create(@NotNull final SageVariant entry) {
         final AltContext normal = entry.normal();
         final List<AltContext> tumorContexts = entry.tumorAltContexts();
 
@@ -122,11 +112,13 @@ public class SageVCF implements AutoCloseable {
                 .attribute("RC", normal.primaryReadContext().toString())
                 .attribute("RC_DIF", normal.primaryReadContext().readContext().distanceCigar())
                 .attribute("RC_DIS", normal.primaryReadContext().readContext().distance())
+                .attribute("TIER", entry.tier())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumor.primaryReadContext().vaf())
                 .computeEndFromAlleles(alleles, (int) normal.position())
                 .source("SAGE")
                 .genotypes(genotypes)
-                .alleles(alleles);
+                .alleles(alleles)
+                .filters(entry.filters());
 
         if (!firstTumor.primaryReadContext().readContext().microhomology().isEmpty()) {
             builder.attribute("RC_MH", firstTumor.primaryReadContext().readContext().microhomology());
@@ -143,16 +135,6 @@ public class SageVCF implements AutoCloseable {
 
         final VariantContext context = builder.make();
         context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
-        if (hotspotEnrichment.isOnHotspot(context)) {
-            filter(config.filter().softHotspotFilter(), entry).forEach(x -> context.getCommonInfo().addFilter(x));
-            context.getCommonInfo().putAttribute(TIER, "HOTSPOT");
-        } else if (panel.inPanel(normal)) {
-            filter(config.filter().softPanelFilter(), entry).forEach(x -> context.getCommonInfo().addFilter(x));
-            context.getCommonInfo().putAttribute(TIER, "PANEL");
-        } else {
-            filter(config.filter().softWideFilter(), entry).forEach(x -> context.getCommonInfo().addFilter(x));
-            context.getCommonInfo().putAttribute(TIER, "WIDE");
-        }
         return context;
     }
 
@@ -172,7 +154,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
         //        header.addMetaDataLine(new VCFFormatHeaderLine(SUBPRIME_QUALITY_READ_DEPTH,1, VCFHeaderLineType.Integer,"Subprime quality read depth"));
-
 
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT,
@@ -205,51 +186,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         return header;
-    }
-
-    @NotNull
-    private List<String> filter(@NotNull final SoftFilterConfig config, @NotNull final SageEntry entry) {
-        List<String> result = Lists.newArrayList();
-
-        final AltContext primaryTumor = entry.primaryTumor();
-        if (primaryTumor.primaryReadContext().quality() < config.minTumorQual()) {
-            result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
-        }
-
-        if (Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
-            result.add(SoftFilterConfig.MIN_TUMOR_VAF);
-        }
-
-        final AltContext normal = entry.normal();
-        if (normal.readDepth() < config.minGermlineDepth()) {
-            result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
-        }
-
-        if (Doubles.greaterThan(normal.primaryReadContext().vaf(), config.maxGermlineVaf())) {
-            result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
-        }
-
-        double tumorReadContextSupport = primaryTumor.primaryReadContext().support();
-        double germlineReadContextSupport = normal.primaryReadContext().support();
-        if (Doubles.positive(tumorReadContextSupport)) {
-            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
-            }
-        }
-
-        double tumorQual = primaryTumor.primaryReadContext().quality();
-        double germlineQual = normal.primaryReadContext().quality();
-        if (Doubles.positive(tumorQual)) {
-            if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);
-            }
-        }
-
-        if (result.isEmpty()) {
-            result.add(PASS);
-        }
-
-        return result;
     }
 
     @Override
