@@ -50,7 +50,7 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_QUALITY = "RC_QUAL";
     private static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Qual, BaseQual, MapQual, JitterPenalty]";
     private static final String READ_CONTEXT_AF_DESCRIPTION =
-            "Allelic frequency calculated from read countext counts as (Full + Partial + Realigned) / Coverage";
+            "Allelic frequency calculated from read context counts as (Full + Partial + Realigned) / Coverage";
 
     private static final String READ_CONTEXT_DISTANCE = "RC_DIS";
     private static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
@@ -173,9 +173,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
-        header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
-        //        header.addMetaDataLine(new VCFFormatHeaderLine(SUBPRIME_QUALITY_READ_DEPTH,1, VCFHeaderLineType.Integer,"Subprime quality read depth"));
-
         header.addMetaDataLine(new VCFInfoHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY,
                 1,
                 VCFHeaderLineType.Float,

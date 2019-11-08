@@ -107,11 +107,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
                 CigarTraversal.traverseCigar(record, handler);
 
-            } else {
-
-                processSubprime(record);
             }
-
         }
     }
 
@@ -194,19 +190,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     }
 
-    private void processSubprime(@NotNull final SAMRecord record) {
-        int refStart = record.getAlignmentStart();
-        int refEnd = record.getAlignmentEnd();
-
-        for (int refPosition = refStart; refPosition <= refEnd; refPosition++) {
-            if (inBounds(refPosition)) {
-                final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-                if (refContext != null) {
-                    refContext.subprimeRead(record.getMappingQuality());
-                }
-            }
-        }
-    }
 
     private boolean inBounds(final SAMRecord record) {
         return record.getEnd() >= bounds.start() && record.getStart() <= bounds.end();

@@ -24,7 +24,6 @@ public class RefContext implements GenomePosition {
     private int baseQuality;
     private int quality;
     private int refReads;
-    private int subprimeReadDepth;
 
     public RefContext(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -35,10 +34,6 @@ public class RefContext implements GenomePosition {
 
     public boolean isAltsEmpty() {
         return alts.isEmpty();
-    }
-
-    public void subprimeRead(int mapQuality) {
-        this.subprimeReadDepth++;
     }
 
     @NotNull
@@ -94,10 +89,6 @@ public class RefContext implements GenomePosition {
 
     public int readDepth() {
         return readDepth;
-    }
-
-    public int subprimeReadDepth() {
-        return subprimeReadDepth;
     }
 
     public String sample() {

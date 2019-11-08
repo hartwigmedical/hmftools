@@ -122,10 +122,6 @@ public class AltContext implements VariantHotspot {
         return refContext.readDepth();
     }
 
-    public int subprimeReadDepth() {
-        return refContext.subprimeReadDepth();
-    }
-
     @NotNull
     public String sample() {
         return refContext.sample();
