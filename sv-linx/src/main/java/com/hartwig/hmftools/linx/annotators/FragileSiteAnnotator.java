@@ -61,7 +61,7 @@ public class FragileSiteAnnotator
                 mFragileSites.add(genomeRegion);
             }
 
-            LOGGER.debug("loaded {} known fragile site records", mFragileSites.size());
+            LOGGER.info("loaded {} known fragile sites from file: {}", mFragileSites.size(), filename);
         }
         catch(IOException exception)
         {

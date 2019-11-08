@@ -76,12 +76,14 @@ public class KnownFusionData
             {
                 final String threeGenesFile = cmd.getOptionValue(PROMISCUOUS_THREE_CSV);
                 mPromiscuousThreeGenes.addAll(loadFile(threeGenesFile, 1));
+                LOGGER.info("loaded {} 3-prime promiscous genes from file: {}", mPromiscuousThreeGenes.size(), threeGenesFile);
             }
 
             if(cmd.hasOption(PROMISCUOUS_FIVE_CSV))
             {
                 final String fiveGenesFile = cmd.getOptionValue(PROMISCUOUS_FIVE_CSV);
                 mPromiscuousFiveGenes.addAll(loadFile(fiveGenesFile, 1));
+                LOGGER.info("loaded {} 5-prime promiscous genes from file: {}", mPromiscuousFiveGenes.size(), fiveGenesFile);
             }
 
             if(cmd.hasOption(FUSION_PAIRS_CSV))
@@ -89,6 +91,7 @@ public class KnownFusionData
                 final String knownPairsFile = cmd.getOptionValue(FUSION_PAIRS_CSV);
                 final List<String> knownPairs = loadFile(knownPairsFile, 2);
                 mKnownPairs.addAll(knownPairs.stream().map(x -> x.split(FILE_DELIMITER)).collect(Collectors.toList()));
+                LOGGER.info("loaded {} known fusion gene-pairs from file: {}", mKnownPairs.size(), knownPairsFile);
             }
         }
         catch(IOException e)

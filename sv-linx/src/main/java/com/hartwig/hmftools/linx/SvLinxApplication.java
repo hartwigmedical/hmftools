@@ -178,7 +178,7 @@ public class SvLinxApplication
 
             prefCounter.start();
 
-            List<StructuralVariantData> svRecords = sampleDataFromFile ?
+            final List<StructuralVariantData> svRecords = sampleDataFromFile ?
                     loadSampleSvDataFromFile(config.SvDataPath, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
 
             final List<SvVarData> svDataList = createSvData(svRecords);

@@ -93,7 +93,7 @@ public class LineElementAnnotator {
 //                        genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end());
             }
 
-            LOGGER.debug("loaded {} known line elements", mKnownLineElements.size());
+            LOGGER.info("loaded {} known line elements from file: {}", mKnownLineElements.size(), filename);
         }
         catch(IOException exception)
         {

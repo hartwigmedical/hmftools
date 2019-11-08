@@ -197,8 +197,6 @@ public class SvDataLoader
 
     public static final List<StructuralVariantData> loadSvDataFromVcf(final String vcfFile)
     {
-        LOGGER.info("loading SV data from vcf({})", vcfFile);
-
         final List<StructuralVariantData> svDataList = Lists.newArrayList();
 
         try
@@ -218,6 +216,8 @@ public class SvDataLoader
         {
             LOGGER.error("failed to load SVs from VCF: {}", e.toString());
         }
+
+        LOGGER.info("loaded {} SV data records from VCF file: {}", svDataList.size(), vcfFile);
 
         return svDataList;
     }
