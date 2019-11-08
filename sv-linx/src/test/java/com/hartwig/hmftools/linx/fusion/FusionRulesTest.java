@@ -192,6 +192,19 @@ public class FusionRulesTest
 
         assertTrue(checkFusionLogic(trans1, trans2, params) != null);
 
+        // exon to exon but both pre-coding
+        trans1 = new Transcript(gene1, transId1, transName1, 2, -1, 2, -1,
+                0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
+
+        trans2 = new Transcript(gene2, transId2, transName2, 2, -1, 2, -1,
+                0, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);
+
+        assertTrue(trans1.isExonic());
+        assertTrue(trans2.isExonic());
+        assertTrue(trans1.preCoding());
+        assertTrue(trans2.preCoding());
+        assertTrue(checkFusionLogic(trans1, trans2, params) != null);
+
         // valid intronic fusion
         trans1 = new Transcript(gene1, transId1, transName1, 2, 1, 3, 2,
                 10, getCodingBases(codingStart, codingEnd),4, true, 50, 250, codingStart, codingEnd);

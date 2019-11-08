@@ -305,7 +305,15 @@ public class FusionFinder
         else
         {
             // just check for a phasing match
-            phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
+            if(upstreamTrans.isExonic() && downstreamTrans.isExonic())
+            {
+                phaseMatched = (upstreamTrans.preCoding() && downstreamTrans.preCoding())
+                        || (upstreamTrans.postCoding() && downstreamTrans.postCoding());
+            }
+            else
+            {
+                phaseMatched = upstreamTrans.ExonUpstreamPhase == downstreamTrans.ExonDownstreamPhase;
+            }
 
             if(!phaseMatched && params.AllowExonSkipping && !upstreamTrans.gene().StableId.equals(downstreamTrans.gene().StableId))
             {
@@ -369,6 +377,9 @@ public class FusionFinder
 
         int upPhase = transUp.exonicBasePhase();
         int downPhase = transDown.exonicBasePhase();
+
+        if(upPhase == -1 && downPhase == -1)
+            return true;
 
         return ((upPhase + 1) % 3) == (downPhase % 3);
     }
