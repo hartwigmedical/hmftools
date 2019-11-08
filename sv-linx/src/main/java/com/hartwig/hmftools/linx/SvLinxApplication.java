@@ -15,12 +15,14 @@ import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.version.VersionInfo;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
@@ -52,6 +54,9 @@ public class SvLinxApplication
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
     {
+        final VersionInfo version = new VersionInfo("linx.version");
+        LOGGER.info("LINX version: {}", version.version());
+
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
@@ -253,6 +258,11 @@ public class SvLinxApplication
 
         if(driverGeneAnnotator != null)
             driverGeneAnnotator.close();
+
+        if(config.isSingleSample())
+        {
+            try { version.write(config.OutputDataPath); } catch(IOException e) {}
+        }
 
         LOGGER.info("SV analysis complete");
     }
