@@ -197,6 +197,8 @@ public class LoadEvidenceData {
                 actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
         List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
 
+        CheckEvidenceCnv.checkingForEvidenceInDriverCatalog(reportableGainLosses, evidencePerGeneCopyNumber, allEvidenceForCopyNumbers);
+
         LOGGER.info("Found {} evidence items for {} copy numbers.",
                 allEvidenceForCopyNumbers.size(),
                 evidencePerGeneCopyNumber.keySet().size());
