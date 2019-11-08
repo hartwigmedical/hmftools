@@ -642,6 +642,11 @@ Shown below is an example of a SS18-SSX1 fusion:
     - set intronic transcripts from LINE clusters to be non-disruptive
     - bug: only reconfigure chains for RECIP_INV_DUPs if can form positive TI
     - bug: determination of unique non-reported fusions was skipping first element
+- 1.6
+    - log filename and item count for all input reference files at INFO
+    - log and write version file
+    - exonic-exonic fusion were incorrectly calculating exact base phase
+    - skip fusions which duplicate the first exon since has no splice acceptor
  
     
     
