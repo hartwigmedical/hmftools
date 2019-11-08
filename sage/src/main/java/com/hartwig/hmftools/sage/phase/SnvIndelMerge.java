@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.sage.SageVCF;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +46,7 @@ class SnvIndelMerge implements Consumer<SageVariant> {
 
     private void removeSnvInIndel(@NotNull final SageVariant snv, @NotNull final SageVariant indel) {
         if (!snv.isSynthetic() && snv.normal().alt().equals(indel.normal().alt().substring(0, 1))) {
-            snv.filters().add("merge");
+            snv.filters().add(SageVCF.MERGE_FILTER);
         }
     }
 

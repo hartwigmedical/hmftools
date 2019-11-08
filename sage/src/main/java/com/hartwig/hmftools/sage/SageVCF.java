@@ -33,18 +33,34 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
 
-    private final static String SUBPRIME_QUALITY_READ_DEPTH = "SDP";
-    private final static String IMPROPER_PAIR_FLAG = "IPF";
+    public final static String PASS = "PASS";
+    public final static String MERGE_FILTER = "merge";
 
     private final static String READ_CONTEXT = "RC";
-    private final static String PASS = "PASS";
-    private final static String READ_CONTEXT_COUNT = "RCC";
+    private final static String READ_CONTEXT_DESCRIPTION = "Read context";
+    private final static String READ_CONTEXT_COUNT = "RC_CNT";
+    private final static String READ_CONTEXT_COUNT_DESCRIPTION =
+            "Read context counts [Full, Partial, Realigned, Shortened, Lengthened, Coverage]";
+    private static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
+    private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
+    private static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
+    private static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
+    private static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
+    private static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
+    private static final String READ_CONTEXT_QUALITY = "RC_QUAL";
+    private static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Qual, BaseQual, MapQual, JitterPenalty]";
+    private static final String READ_CONTEXT_AF_DESCRIPTION =
+            "Allelic frequency calculated from read countext counts as (Full + Partial + Realigned) / Coverage";
+
+    private static final String READ_CONTEXT_DISTANCE = "RC_DIS";
+    private static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
+    private static final String READ_CONTEXT_DIFFERENCE = "RC_DIF";
+    private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
+
     private final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
     private final static String PHASE = "LPS";
-
-    public static final String REPEAT_COUNT_FLAG = "RCREPC";
-    public static final String REPEAT_SEQUENCE_FLAG = "RCREPS";
+    private final static String PHASE_DESCRIPTION = "Local Phase Set";
 
     private final SageConfig config;
     private final VariantContextWriter writer;
@@ -83,19 +99,6 @@ public class SageVCF implements AutoCloseable {
     }
 
     @NotNull
-    private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
-        ReadContextCounter readContextCounter = evidence.primaryReadContext();
-
-        return new GenotypeBuilder(evidence.sample()).DP(readContextCounter.coverage())
-                .AD(new int[] { evidence.refSupport(), readContextCounter.support() })
-                //                .attribute("SDP", evidence.subprimeReadDepth())
-                .attribute("QUAL", readContextCounter.qual())
-                .attribute("RCC", readContextCounter.rcc())
-                .alleles(alleles)
-                .make();
-    }
-
-    @NotNull
     private VariantContext create(@NotNull final SageVariant entry) {
         final AltContext normal = entry.normal();
         final List<AltContext> tumorContexts = entry.tumorAltContexts();
@@ -112,13 +115,15 @@ public class SageVCF implements AutoCloseable {
         final List<Genotype> genotypes = tumorContexts.stream().map(x -> createGenotype(alleles, x)).collect(Collectors.toList());
         genotypes.add(0, normalGenotype);
 
+        final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
+
         final VariantContextBuilder builder = new VariantContextBuilder().chr(normal.chromosome())
                 .start(normal.position())
-                .attribute("RC", normal.primaryReadContext().toString())
-                .attribute("RC_DIF", normal.primaryReadContext().readContext().distanceCigar())
-                .attribute("RC_DIS", normal.primaryReadContext().readContext().distance())
-                .attribute("TIER", entry.tier())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumor.primaryReadContext().vaf())
+                .attribute(READ_CONTEXT, firstTumorCounter.toString())
+                .attribute(READ_CONTEXT_DIFFERENCE, firstTumorCounter.readContext().distanceCigar())
+                .attribute(READ_CONTEXT_DISTANCE, firstTumorCounter.readContext().distance())
+                .attribute(TIER, entry.tier())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumorCounter.vaf())
                 .computeEndFromAlleles(alleles, (int) normal.position())
                 .source("SAGE")
                 .genotypes(genotypes)
@@ -126,12 +131,12 @@ public class SageVCF implements AutoCloseable {
                 .filters(entry.filters());
 
         if (!firstTumor.primaryReadContext().readContext().microhomology().isEmpty()) {
-            builder.attribute("RC_MH", firstTumor.primaryReadContext().readContext().microhomology());
+            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, firstTumorCounter.readContext().microhomology());
         }
 
         if (firstTumor.primaryReadContext().readContext().repeatCount() > 0) {
-            builder.attribute("RC_REPC", firstTumor.primaryReadContext().readContext().repeatCount())
-                    .attribute("RC_REPS", firstTumor.primaryReadContext().readContext().repeat());
+            builder.attribute(READ_CONTEXT_REPEAT_COUNT, firstTumorCounter.readContext().repeatCount())
+                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, firstTumorCounter.readContext().repeat());
         }
 
         if (entry.localPhaseSet() > 0) {
@@ -139,17 +144,24 @@ public class SageVCF implements AutoCloseable {
         }
 
         final VariantContext context = builder.make();
-        context.getCommonInfo().setLog10PError(firstTumor.primaryReadContext().quality() / -10d);
+        context.getCommonInfo().setLog10PError(firstTumorCounter.quality() / -10d);
         if (context.isNotFiltered()) {
-            context.getCommonInfo().addFilter("PASS");
+            context.getCommonInfo().addFilter(PASS);
         }
 
         return context;
     }
 
-    private static double round(double number) {
-        double multiplier = Math.pow(10, 3);
-        return Math.round(number * multiplier) / multiplier;
+    @NotNull
+    private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
+        ReadContextCounter readContextCounter = evidence.primaryReadContext();
+
+        return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
+                .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
+                .attribute(READ_CONTEXT_QUALITY, readContextCounter.qual())
+                .attribute(READ_CONTEXT_COUNT, readContextCounter.rcc())
+                .alleles(alleles)
+                .make();
     }
 
     @NotNull
@@ -164,27 +176,42 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine((VCFConstants.ALLELE_FREQUENCY_KEY)));
         //        header.addMetaDataLine(new VCFFormatHeaderLine(SUBPRIME_QUALITY_READ_DEPTH,1, VCFHeaderLineType.Integer,"Subprime quality read depth"));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, "Read context"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT,
-                5,
-                VCFHeaderLineType.Integer,
-                "[Full, Partial, Realigned, Shortened, Lengthened]"));
-        //        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
-        //                3,
-        //                VCFHeaderLineType.Integer,
-        //                "[ImproperPairedRead, InconsistentChromosome, ExcessInferredSize]"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY,
+                1,
+                VCFHeaderLineType.Float,
+                READ_CONTEXT_AF_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine("QUAL", 4, VCFHeaderLineType.Integer, "[Qual, BaseQual, MapQual, JitterPenalty]"));
-        header.addMetaDataLine(new VCFFormatHeaderLine("DIST", 2, VCFHeaderLineType.Integer, "[AvgRecordDistance, AvgAlignmentDistance]"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIF", 1, VCFHeaderLineType.String, "Difference from ref"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RC_DIS", 1, VCFHeaderLineType.Integer, "Distance from ref"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RC_REPC", 1, VCFHeaderLineType.Integer, "Repeat count in read context"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RC_REPS", 1, VCFHeaderLineType.String, "Repeat sequence in read context"));
-        header.addMetaDataLine(new VCFInfoHeaderLine("RC_MH", 1, VCFHeaderLineType.String, "Microhomology in read context"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, "Local phase set"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
+                4,
+                VCFHeaderLineType.Integer,
+                READ_CONTEXT_QUALITY_DESCRIPTION));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DIFFERENCE,
+                1,
+                VCFHeaderLineType.String,
+                READ_CONTEXT_DIFFERENCE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DISTANCE,
+                1,
+                VCFHeaderLineType.Integer,
+                READ_CONTEXT_DISTANCE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_COUNT,
+                1,
+                VCFHeaderLineType.Integer,
+                READ_CONTEXT_REPEAT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_REPEAT_SEQUENCE,
+                1,
+                VCFHeaderLineType.String,
+                READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_MICRO_HOMOLOGY,
+                1,
+                VCFHeaderLineType.String,
+                READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine("merge", "Variant was merged into another variant"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_QUAL, "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_VAF, "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_GERMLINE_DEPTH, "Insufficient germline depth"));
@@ -192,7 +219,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_REL_QUAL, "Excess germline relative quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_REL_RCC,
                 "Excess germline relative read context count"));
-
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         return header;

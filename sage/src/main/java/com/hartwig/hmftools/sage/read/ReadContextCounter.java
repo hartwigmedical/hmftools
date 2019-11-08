@@ -87,7 +87,7 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public int[] rcc() {
-        return new int[] { full, partial, realigned, shortened, lengthened };
+        return new int[] { full, partial, realigned, shortened, lengthened, coverage };
     }
 
     public int[] rcq() {
