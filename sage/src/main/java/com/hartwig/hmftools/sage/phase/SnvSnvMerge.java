@@ -27,11 +27,11 @@ class SnvSnvMerge implements Consumer<SageVariant> {
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
         flush(newEntry);
-        if (newEntry.isPassing() && newEntry.localPhaseSet() > 0 && !newEntry.isIndel()) {
+        if (isEligibleWithAny(newEntry)) {
 
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);
-                if (oldEntry.isPassing() && oldEntry.localPhaseSet() == newEntry.localPhaseSet() && !newEntry.isIndel()) {
+                if (isEligibleWithLps(newEntry.localPhaseSet(), oldEntry)) {
                     SageVariant mnv = factory.createMNV(oldEntry, newEntry);
                     list.add(i, mnv);
                     if (mnv.isPassing()) {
@@ -67,6 +67,14 @@ class SnvSnvMerge implements Consumer<SageVariant> {
     public void flush() {
         list.forEach(consumer);
         list.clear();
+    }
+
+    private boolean isEligibleWithAny(@NotNull final SageVariant entry) {
+        return entry.isPassing() && entry.localPhaseSet() > 0 && !entry.isIndel();
+    }
+
+    private boolean isEligibleWithLps(int lps, @NotNull final SageVariant entry) {
+        return isEligibleWithAny(entry) && entry.localPhaseSet() == lps;
     }
 
 }
