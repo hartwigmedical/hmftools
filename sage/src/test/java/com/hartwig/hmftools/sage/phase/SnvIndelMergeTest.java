@@ -104,8 +104,15 @@ public class SnvIndelMergeTest {
     private SageVariant createIndel(@NotNull final String chromosome, long position, @NotNull final String altBases, int refLength,
             int altLength, int localPhaseSet) {
 
+        return createIndel(chromosome, position, REF_BASES, altBases, refLength, altLength, localPhaseSet);
+    }
+
+    @NotNull
+    static SageVariant createIndel(@NotNull final String chromosome, long position, @NotNull final String refBases,
+            @NotNull final String altBases, int refLength, int altLength, int localPhaseSet) {
+
         int readIndex = (int) position - 1;
-        final String ref = REF_BASES.substring(readIndex, readIndex + refLength);
+        final String ref = refBases.substring(readIndex, readIndex + refLength);
         final String alt = altBases.substring(readIndex, readIndex + altLength);
 
         VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();

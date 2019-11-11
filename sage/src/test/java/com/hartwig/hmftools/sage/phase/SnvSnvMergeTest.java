@@ -158,6 +158,20 @@ public class SnvSnvMergeTest {
         assertVariant(7, "A", "C", true, consumer.get(4));
     }
 
+    @Test
+    public void testLargeIndelBeforeSnv() {
+        byte[] altBases = Arrays.copyOf(refBases, refBases.length);
+        altBases[4 - 1] = (byte) 'C';
+        altBases[7 - 1] = (byte) 'C';
+
+        victim.accept(SnvIndelMergeTest.createIndel("1", 3, new String(refBases), new String(altBases), 10, 1, 0));
+        victim.accept(createSnv("1", 4, altBases, 1));
+        victim.accept(createSnv("1", 7, altBases, 1));
+        victim.flush();
+        assertEquals(3, consumer.size());
+
+    }
+
     static void assertVariant(long position, String ref, String alt, final boolean filtered, SageVariant variant) {
         assertEquals(position, variant.position());
         assertEquals(ref, variant.normal().ref());

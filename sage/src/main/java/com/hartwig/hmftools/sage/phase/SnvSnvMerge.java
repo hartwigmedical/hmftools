@@ -27,11 +27,11 @@ class SnvSnvMerge implements Consumer<SageVariant> {
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
         flush(newEntry);
-        if (isEligibleWithAny(newEntry)) {
+        if (isPassingPhasedSnv(newEntry)) {
 
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);
-                if (isEligibleWithLps(newEntry.localPhaseSet(), oldEntry)) {
+                if (isMnv(oldEntry, newEntry)) {
                     SageVariant mnv = factory.createMNV(oldEntry, newEntry);
                     list.add(i, mnv);
                     if (mnv.isPassing()) {
@@ -69,12 +69,14 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         list.clear();
     }
 
-    private boolean isEligibleWithAny(@NotNull final SageVariant entry) {
-        return entry.isPassing() && entry.localPhaseSet() > 0 && !entry.isIndel();
+    private boolean isPassingPhasedSnv(@NotNull final SageVariant newEntry) {
+        return newEntry.isPassing() && newEntry.localPhaseSet() > 0 && !newEntry.isIndel();
     }
 
-    private boolean isEligibleWithLps(int lps, @NotNull final SageVariant entry) {
-        return isEligibleWithAny(entry) && entry.localPhaseSet() == lps;
+    private boolean isMnv(@NotNull final SageVariant existingEntry, @NotNull final SageVariant newEntry) {
+        long existingEntryEndPosition = existingEntry.position() + existingEntry.normal().ref().length() - 1;
+        return isPassingPhasedSnv(existingEntry) && existingEntry.localPhaseSet() == newEntry.localPhaseSet()
+                && newEntry.position() - existingEntryEndPosition <= BUFFER;
     }
 
 }
