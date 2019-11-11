@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
+import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -32,11 +33,12 @@ class LocalPhaseSet implements Consumer<SageVariant> {
             final AltContext oldAltContext = oldEntry.primaryTumor();
             final ReadContext oldReadContext = oldAltContext.primaryReadContext().readContext();
             long distance = newAltContext.position() - oldAltContext.position();
+            int offset = offset(oldEntry.normal(), newEntry.normal());
 
             if (distance > 30 || distance < 0) {
                 iterator.remove();
                 consumer.accept(oldEntry);
-            } else if (oldReadContext.phased(newReadContext)) {
+            } else if (oldReadContext.phased(offset, newReadContext)) {
                 if (oldEntry.localPhaseSet() != 0) {
                     newEntry.localPhaseSet(oldEntry.localPhaseSet());
                 } else if (newEntry.localPhaseSet() != 0) {
@@ -55,6 +57,11 @@ class LocalPhaseSet implements Consumer<SageVariant> {
     public void flush() {
         deque.forEach(consumer);
         deque.clear();
+    }
+
+    static int offset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
+        return (int) (left.position() - right.position() + Math.max(0, left.ref().length() - left.alt().length()) - Math.max(0,
+                left.alt().length() - left.ref().length()));
     }
 
 }

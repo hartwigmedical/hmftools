@@ -101,8 +101,8 @@ public class ReadContext {
         return quality;
     }
 
-    public boolean phased(@NotNull final ReadContext other) {
-        int offset = position - other.position;
+    public boolean phased(int offset, @NotNull final ReadContext other) {
+
         int otherReadIndex = other.readIndex + offset;
 
         boolean centreMatch = centreMatch(otherReadIndex, other.readBases);
