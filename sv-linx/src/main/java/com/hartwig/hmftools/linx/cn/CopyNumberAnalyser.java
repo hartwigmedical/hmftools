@@ -166,7 +166,7 @@ public class CopyNumberAnalyser
 
                 mChrArmWriter = createBufferedWriter(outputFileName, false);
 
-                mChrArmWriter.write("SampleId,Chromosome,Ploidy,WholeChrLoh,LohP,LohQ,CentroCnP,CentroCnQ,TeloCnP,TeloCnQ");
+                mChrArmWriter.write("SampleId,IsMale,Chromosome,Ploidy,WholeChrLoh,LohP,LohQ,CentroCnP,CentroCnQ,TeloCnP,TeloCnQ");
                 mChrArmWriter.write(",AvgCnP,AvgCnQ,MedianCnP,MedianCnQ,MaxCnP,MaxCnQ,MinCnP,MinCnQ,SegCountP,SegCountQ");
                 mChrArmWriter.newLine();
             }
@@ -177,19 +177,25 @@ public class CopyNumberAnalyser
             final Map<String,List<SvCNData>> chrCnDataMap = mCnDataLoader.getChrCnDataMap();
 
             double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
+            boolean isMale = mCnDataLoader.getPurityContext().gender().toString().startsWith("MALE");
+
             final List<LohEvent> lohEvents = mCnDataLoader.getLohData();
 
             for(Map.Entry<String,List<SvCNData>> entry : chrCnDataMap.entrySet())
             {
                 final String chromosome = entry.getKey();
+
+                if(!isMale && chromosome.equals("Y"))
+                    continue;
+
                 final List<SvCNData> cnDataList = entry.getValue();
 
                 final CnArmStats[] armStats = calcArmStats(chromosome, cnDataList, lohEvents);
 
                 boolean hasChrLoh = lohEvents.stream().anyMatch(x -> x.Chromosome.equals(chromosome) && x.chromosomeLoss());
 
-                mChrArmWriter.write(String.format("%s,%s,%.2f,%s,%s,%s",
-                        sampleId, chromosome, samplePloidy,
+                mChrArmWriter.write(String.format("%s,%s,%s,%.2f,%s,%s,%s",
+                        sampleId, isMale, chromosome, samplePloidy,
                         hasChrLoh, armStats[P_ARM_INDEX].HasLOH, armStats[Q_ARM_INDEX].HasLOH));
 
                 mChrArmWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d",

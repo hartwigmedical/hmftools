@@ -183,7 +183,12 @@ public class DriverGeneAnnotator
             setSamplePloidy(purityContext.bestFit().ploidy());
 
         mDriverCatalog.clear();
-        mDriverCatalog.addAll(mDbAccess.readDriverCatalog(mSampleId));
+
+        // add records but filter out any previously added by Linx
+        mDriverCatalog.addAll(
+                mDbAccess.readDriverCatalog(mSampleId).stream()
+                .filter(x -> x.driver() != DriverType.HOM_DISRUPTION)
+                .collect(Collectors.toList()));
 
         LOGGER.debug("retrieved {} driver gene records", mDriverCatalog.size());
 
