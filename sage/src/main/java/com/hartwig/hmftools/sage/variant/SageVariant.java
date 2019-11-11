@@ -31,6 +31,14 @@ public class SageVariant implements GenomePosition {
         return normal.ref().length() != normal.alt().length();
     }
 
+    public boolean isInsert() {
+        return normal.ref().length() < normal.alt().length();
+    }
+
+    public boolean isDelete() {
+        return normal.ref().length() > normal.alt().length();
+    }
+
     public int localPhaseSet() {
         return localPhaseSet;
     }

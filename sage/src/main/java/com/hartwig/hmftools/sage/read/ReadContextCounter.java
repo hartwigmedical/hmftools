@@ -91,12 +91,12 @@ public class ReadContextCounter implements GenomePosition {
         return new int[] { full, partial, realigned, shortened, lengthened, coverage };
     }
 
-    public int[] rcq() {
-        return new int[] { improperPair };
-    }
-
     public int[] qual() {
         return new int[] { quality(), baseQuality, mapQuality, qualityJitterPenalty() };
+    }
+
+    public int improperPair() {
+        return improperPair;
     }
 
     @NotNull

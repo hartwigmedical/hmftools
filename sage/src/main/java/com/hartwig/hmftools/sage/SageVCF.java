@@ -35,6 +35,7 @@ public class SageVCF implements AutoCloseable {
 
     public final static String PASS = "PASS";
     public final static String MERGE_FILTER = "merge";
+    public final static String DEDUP_FILTER = "dedup";
 
     private final static String READ_CONTEXT = "RC";
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
@@ -56,6 +57,9 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
     private static final String READ_CONTEXT_DIFFERENCE = "RC_DIF";
     private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
+    private static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
+    private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
+
 
     private final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
@@ -160,6 +164,7 @@ public class SageVCF implements AutoCloseable {
                 .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
                 .attribute(READ_CONTEXT_QUALITY, readContextCounter.qual())
                 .attribute(READ_CONTEXT_COUNT, readContextCounter.rcc())
+                .attribute(READ_CONTEXT_IMPROPER_PAIR, readContextCounter.improperPair())
                 .alleles(alleles)
                 .make();
     }
@@ -179,6 +184,7 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
                 4,
                 VCFHeaderLineType.Integer,
