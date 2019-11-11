@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.read;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.sage.config.QualityConfig;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.Realigned;
 import com.hartwig.hmftools.sage.context.RealignedContext;
 
@@ -108,13 +109,14 @@ public class ReadContextCounter implements GenomePosition {
         return readContext.toString();
     }
 
-    public void accept(final SAMRecord record, final QualityConfig qualityConfig) {
+    public void accept(final SAMRecord record, final SageConfig sageConfig) {
+        final QualityConfig qualityConfig = sageConfig.qualityConfig();
 
         if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position()
                 && readContext.isComplete()) {
 
             boolean covered = false;
-            if (coverage < 1000) {
+            if (coverage < sageConfig.maxDepthCoverage()) {
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
                 if (readContext.isCentreCovered(readIndex, record.getReadBases())) {
                     covered = true;

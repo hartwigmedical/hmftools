@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
@@ -34,7 +33,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefContextConsumer refContextConsumer;
     private final PositionSelector<ReadContextCounter> consumerSelector;
     private final int minQuality;
-    private final QualityConfig qualityConfig;
+    private final SageConfig sageConfig;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
             @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
@@ -42,7 +41,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         this.bounds = bounds;
         this.candidates = candidates;
         this.bamFile = bamFile;
-        this.qualityConfig = config.qualityConfig();
+        this.sageConfig = config;
         refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
         consumerSelector = new PositionSelector<>(candidates.refContexts()
                 .stream()
@@ -76,7 +75,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         refContextConsumer.accept(samRecord);
 
         if (samRecord.getMappingQuality() >= minQuality) {
-            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord, qualityConfig));
+            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord, sageConfig));
         }
     }
 }
