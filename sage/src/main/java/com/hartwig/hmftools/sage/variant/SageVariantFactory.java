@@ -72,7 +72,7 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
 
-        if (Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
+        if (Doubles.lessThan(primaryTumor.primaryReadContext().readContextVaf(), config.minTumorVaf())) {
             result.add(SoftFilterConfig.MIN_TUMOR_VAF);
         }
 
@@ -80,7 +80,7 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
         }
 
-        if (Doubles.greaterThan(normal.primaryReadContext().vaf(), config.maxGermlineVaf())) {
+        if (Doubles.greaterThan(normal.supportVaf(), config.maxGermlineVaf())) {
             result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
         }
 

@@ -70,7 +70,7 @@ public class ReadContextCounter implements GenomePosition {
         return coverage;
     }
 
-    public double vaf() {
+    public double readContextVaf() {
         return coverage == 0 ? 0d : (double) support() / coverage;
     }
 

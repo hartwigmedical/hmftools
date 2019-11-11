@@ -127,6 +127,10 @@ public class AltContext implements VariantHotspot {
         return refContext.sample();
     }
 
+    public double supportVaf() {
+        return refContext.readDepth() == 0 ? 0d : (double) altReads / refContext.readDepth();
+    }
+
     @Override
     public boolean equals(@Nullable Object another) {
         if (this == another) {

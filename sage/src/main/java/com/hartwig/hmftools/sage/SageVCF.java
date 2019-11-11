@@ -95,7 +95,7 @@ public class SageVCF implements AutoCloseable {
         }
 
         final AltContext normal = entry.normal();
-        return normal.altSupport() > config.filter().hardMaxNormalAltSupport();
+        return normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
     }
 
     @NotNull
@@ -123,7 +123,7 @@ public class SageVCF implements AutoCloseable {
                 .attribute(READ_CONTEXT_DIFFERENCE, firstTumorCounter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, firstTumorCounter.readContext().distance())
                 .attribute(TIER, entry.tier())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumorCounter.vaf())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumorCounter.readContextVaf())
                 .computeEndFromAlleles(alleles, (int) normal.position())
                 .source("SAGE")
                 .genotypes(genotypes)

@@ -8,7 +8,7 @@ import com.hartwig.hmftools.sage.context.AltContext;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SageVariant implements GenomePosition{
+public class SageVariant implements GenomePosition {
 
     private final AltContext normal;
     private final Set<String> filters;
