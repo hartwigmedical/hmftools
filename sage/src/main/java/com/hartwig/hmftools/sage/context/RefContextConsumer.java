@@ -121,7 +121,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
+            if (refContext != null && refContext.readDepth() <= config.maxReadDepth()) {
                 if (tumor) {
                     refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refIndex, refBases));
                 } else {
@@ -141,7 +141,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
+            if (refContext != null && refContext.readDepth() <= config.maxReadDepth()) {
                 if (tumor) {
                     refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
                 } else {
@@ -172,7 +172,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final int baseQuality = record.getBaseQualities()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.readDepth() <= config.maxDepthCoverage()) {
+            if (refContext != null && refContext.readDepth() <= config.maxReadDepth()) {
 
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);

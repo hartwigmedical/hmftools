@@ -9,6 +9,7 @@ import com.hartwig.hmftools.sage.context.RealignedContext;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition {
@@ -35,8 +36,7 @@ public class ReadContextCounter implements GenomePosition {
         this.readContext = readContext;
     }
 
-    public ReadContextCounter(@NotNull final VariantHotspot variant,
-            @NotNull final ReadContextCounter left,
+    public ReadContextCounter(@NotNull final VariantHotspot variant, @NotNull final ReadContextCounter left,
             @NotNull final ReadContextCounter right) {
         this.variant = variant;
         this.readContext = left.readContext;
@@ -116,7 +116,7 @@ public class ReadContextCounter implements GenomePosition {
                 && readContext.isComplete()) {
 
             boolean covered = false;
-            if (coverage < sageConfig.maxDepthCoverage()) {
+            if (coverage < sageConfig.maxReadDepth()) {
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
                 if (readContext.isCentreCovered(readIndex, record.getReadBases())) {
                     covered = true;
@@ -136,7 +136,7 @@ public class ReadContextCounter implements GenomePosition {
                             incrementQualityScores(readIndex, record, qualityConfig);
                             break;
                     }
-                } else {
+                } else if (alignmentMismatches(record)) {
                     final RealignedContext context = new Realigned().realigned(readContext, record.getReadBases());
                     switch (context.type()) {
                         case EXACT:
@@ -200,6 +200,10 @@ public class ReadContextCounter implements GenomePosition {
         if (!record.getProperPairFlag()) {
             improperPair++;
         }
+    }
+
+    private boolean alignmentMismatches(@NotNull final SAMRecord record) {
+        return !(record.getCigar().numCigarElements() == 1 && record.getCigar().getCigarElement(0).getOperator().equals(CigarOperator.M));
     }
 
 }

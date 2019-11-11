@@ -98,7 +98,7 @@ public interface SageConfig {
 
     int minBaseQuality();
 
-    default int maxDepthCoverage() {
+    default int maxReadDepth() {
         return 1000;
     }
 
