@@ -69,6 +69,22 @@ public class LocalPhaseSetTest {
         assertEquals(-4, LocalPhaseSet.offset(left, right));
     }
 
+    @Test
+    public void testTwoInsertsAtSameLocation() {
+        VariantHotspot left = create(100, "A", "AAA");
+        VariantHotspot right = create(100, "A", "AA");
+        assertEquals(0, LocalPhaseSet.offset(left, right));
+        assertEquals(0, LocalPhaseSet.offset(right, left));
+    }
+
+    @Test
+    public void testTwoDeletesAtSameLocation() {
+        VariantHotspot left = create(100, "AAA", "A");
+        VariantHotspot right = create(100, "AA", "A");
+        assertEquals(0, LocalPhaseSet.offset(left, right));
+        assertEquals(0, LocalPhaseSet.offset(right, left));
+    }
+
     @NotNull
     private static VariantHotspot create(long position, String ref, String alt) {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").ref(ref).alt(alt).position(position).build();

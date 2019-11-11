@@ -60,7 +60,13 @@ class LocalPhaseSet implements Consumer<SageVariant> {
     }
 
     static int offset(@NotNull final VariantHotspot left, @NotNull final VariantHotspot right) {
-        return (int) (left.position() - right.position() + Math.max(0, left.ref().length() - left.alt().length()) - Math.max(0,
+
+        long positionOffset = left.position() - right.position();
+        if (positionOffset == 0) {
+            return 0;
+        }
+
+        return (int) (positionOffset + Math.max(0, left.ref().length() - left.alt().length()) - Math.max(0,
                 left.alt().length() - left.ref().length()));
     }
 
