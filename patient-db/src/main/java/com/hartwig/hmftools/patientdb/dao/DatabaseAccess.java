@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxSvData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,13 +48,13 @@ public class DatabaseAccess implements AutoCloseable {
     private static final String DEV_CATALOG = "hmfpatients_test";
 
     @NotNull
-    private final EcrfDAO ecrfDAO;
-    @NotNull
-    private final AmberDAO amberDAO;
-    @NotNull
     private final DSLContext context;
     @NotNull
     private final PurityDAO purityDAO;
+    @NotNull
+    private final EcrfDAO ecrfDAO;
+    @NotNull
+    private final AmberDAO amberDAO;
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
@@ -308,7 +309,7 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting metric data for sample: " + sample);
         metricDAO.deleteMetricForSample(sample);
 
-        LOGGER.info("Deleting chord_pilot data for sample: " + sample);
+        LOGGER.info("Deleting CHORD data for sample: " + sample);
         chordDAO.deleteChordForSample(sample);
 
         LOGGER.info("Deleting amber data for sample: " + sample);
@@ -325,6 +326,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting somatic variants for sample: " + sample);
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
+
+        LOGGER.info("Deleting germline variant data for sample: " + sample);
+        context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sample)).execute();
 
         LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
         structuralVariantFusionDAO.deleteAnnotationsForSample(sample);
