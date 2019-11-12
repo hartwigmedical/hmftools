@@ -101,6 +101,9 @@ C > TCAA
 If the two variants are phased, the SNV is superfluous, and is thus filtered with `dedup`. 
 
 
+### INDEL De-duplication
+
+
 
 ## Output
 
