@@ -56,15 +56,37 @@ Full and partial read context matches both contribute to the quality score. Real
 
 
 
-## Phasing
+## Phased Variants
 Two variants are considered phased if their read contexts are identical after adjusting for their relative position.
 This is demonstrated in the example below where two SNVs shared an identical sequence of bases.
 
 <pre>
 REF: CAACAATCGAACGATATAAATCTGAAA
-SNV: CAACAATCGA<b>T</b>CGATA<b>C</b>AAATC
-SNV:       TCGA<b>T</b>CGATA<b>c</b>AAATCTGAAA
+A>T: CAACAATCGA<b>T</b>CGATAAAATC
+T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 </pre>
 
 Similarly, SNVs and INDELs may be phased together.
+
+Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
+
+Phasing variants opens up a number of algorithmic possibilities including MNV detection and de-duplication as explained below.
+
+### MNV Detection
+
+If two SNVs are separated by no more than one base, they will be merged together to form a MNV.  
+For example, the following phased SNVs will me merged to give the resultant MNV `TCGA > CGGT`:
+<pre>
+REF: CAACAATCGATCGATATAAATCTGAA
+T>C: CAACAA<b>C</b>GGTTCGATATAAATC
+C>G:  AACAAC<b>G</b>GTTCGATATAAATCT
+A>T:    CAACGG<b>T</b>TCGATATAAATCTGA
+MNV: CAACAA<b>CG</b>G<b>T</b>TCGATATAAATC
+</pre>
+
+The smallest value of each of the SNV properties (ie ref support, alt support, read context full match etc) is used to construct the MNV.
+The merged SNVs are filtered with a flag of 'mnv'.
+
+## Output
+
 
