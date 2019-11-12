@@ -2,6 +2,11 @@
 # Somatic Alterations in Genome (SAGE)
 SAGE is a somatic SNV, MNV and small INDEL caller.
 
+## Candidate Detection
+
+
+
+
 
 ## Distinct Read Context
 
@@ -41,4 +46,25 @@ ALT:   GTCT<b>CAAAAACAAACAAACA    AT</b>AAAAAAC
 ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
 </pre>
 
-A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments. 
+A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
+
+TODO: explain sides/wings
+
+## Quality Score
+
+Full and partial read context matches both contribute to the quality score. Realigned matches do not. Lengthened and shortened realigned matches subtract from the score.
+
+
+
+## Phasing
+Two variants are considered phased if their read contexts are identical after adjusting for their relative position.
+This is demonstrated in the example below where two SNVs shared an identical sequence of bases.
+
+<pre>
+REF: CAACAATCGAACGATATAAATCTGAAA
+SNV: CAACAATCGA<b>T</b>CGATA<b>C</b>AAATC
+SNV:       TCGA<b>T</b>CGATA<b>c</b>AAATCTGAAA
+</pre>
+
+Similarly, SNVs and INDELs may be phased together.
+
