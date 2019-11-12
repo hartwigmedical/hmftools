@@ -44,7 +44,7 @@ public interface QualityConfig {
     }
 
     default int modifiedBaseQuality(int baseQuality, int distanceFromReadEdge) {
-        return Math.min(baseQuality, distanceFromReadEdge) - baseQualityFixedPenalty();
+        return Math.min(baseQuality - baseQualityFixedPenalty(), distanceFromReadEdge) ;
     }
 
     default double jitterPenalty(int repeatCount) {
