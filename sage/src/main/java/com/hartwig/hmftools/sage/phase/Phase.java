@@ -11,15 +11,15 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class Phase implements Consumer<SageVariant>, AutoCloseable {
     private final SnvSnvMerge mnvMerge;
-    private final SnvIndelMerge snvIndelMerge;
+    private final DedupSnv snvIndelMerge;
     private final LocalPhaseSet localPhaseSet;
-    private final DedupIndels dedupIndels;
+    private final DedupIndel dedupIndel;
 
     public Phase(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
             @NotNull final Consumer<SageVariant> consumer) {
         final MnvFactory mnvFactory = new MnvFactory(reference, sageVariantFactory);
-        dedupIndels = new DedupIndels(consumer);
-        snvIndelMerge = new SnvIndelMerge(dedupIndels);
+        dedupIndel = new DedupIndel(consumer);
+        snvIndelMerge = new DedupSnv(dedupIndel);
         mnvMerge = new SnvSnvMerge(snvIndelMerge, mnvFactory);
         localPhaseSet = new LocalPhaseSet(mnvMerge);
 
@@ -35,6 +35,6 @@ public class Phase implements Consumer<SageVariant>, AutoCloseable {
         localPhaseSet.flush();
         mnvMerge.flush();
         snvIndelMerge.flush();
-        dedupIndels.flush();
+        dedupIndel.flush();
     }
 }

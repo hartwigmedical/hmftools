@@ -17,17 +17,17 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SnvIndelMergeTest {
+public class DedupSnvTest {
 
     private static final String REF_BASES = "AAGATAAACCATGCAATTTGATATACGGACTTACACAACCATGATGCATTGATCGGACCC";
 
-    private SnvIndelMerge victim;
+    private DedupSnv victim;
     private SnvSnvMergeTest.SageVariantList consumer;
 
     @Before
     public void setup() {
         consumer = new SnvSnvMergeTest.SageVariantList();
-        victim = new SnvIndelMerge(consumer);
+        victim = new DedupSnv(consumer);
     }
 
     @Test

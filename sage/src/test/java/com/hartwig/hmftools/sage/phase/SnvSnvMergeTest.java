@@ -164,7 +164,7 @@ public class SnvSnvMergeTest {
         altBases[4 - 1] = (byte) 'C';
         altBases[7 - 1] = (byte) 'C';
 
-        victim.accept(SnvIndelMergeTest.createIndel("1", 3, new String(refBases), new String(altBases), 10, 1, 0));
+        victim.accept(DedupSnvTest.createIndel("1", 3, new String(refBases), new String(altBases), 10, 1, 0));
         victim.accept(createSnv("1", 4, altBases, 1));
         victim.accept(createSnv("1", 7, altBases, 1));
         victim.flush();

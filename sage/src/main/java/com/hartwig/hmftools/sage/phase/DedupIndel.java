@@ -11,12 +11,12 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DedupIndels implements Consumer<SageVariant> {
+public class DedupIndel implements Consumer<SageVariant> {
 
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> list = Lists.newArrayList();
 
-    public DedupIndels(final Consumer<SageVariant> consumer) {
+    public DedupIndel(final Consumer<SageVariant> consumer) {
         this.consumer = consumer;
     }
 
