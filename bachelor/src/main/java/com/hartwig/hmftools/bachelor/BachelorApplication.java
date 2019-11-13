@@ -4,20 +4,10 @@ import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.createCommandLine;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.createOptions;
 
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bachelor.types.BachelorConfig;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.bachelor.types.BatchRunData;
-import com.hartwig.hmftools.common.context.ProductionRunContextFactory;
-import com.hartwig.hmftools.common.context.RunContext;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

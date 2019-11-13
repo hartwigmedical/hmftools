@@ -37,7 +37,7 @@ public class GermlineVariantFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<GermlineVariant> dataList)
+    private static List<String> toLines(@NotNull final List<GermlineVariant> dataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -46,7 +46,7 @@ public class GermlineVariantFile
     }
 
     @NotNull
-    static List<GermlineVariant> fromLines(@NotNull List<String> lines)
+    private static List<GermlineVariant> fromLines(@NotNull List<String> lines)
     {
         return lines.stream()
                 .skip(1)
@@ -143,7 +143,7 @@ public class GermlineVariantFile
 
         return ImmutableGermlineVariant.builder()
                 .chromosome(values[index++])
-                .position(Long.valueOf(values[index++]))
+                .position(Long.parseLong(values[index++]))
                 .filter(values[index++])
                 .type(values[index++])
                 .ref(values[index++])
@@ -156,24 +156,24 @@ public class GermlineVariantFile
                 .codingEffect(CodingEffect.valueOf(values[index++]))
                 .microhomology(values[index++])
                 .repeatSequence(values[index++])
-                .repeatCount(Integer.valueOf(values[index++]))
-                .alleleReadCount(Integer.valueOf(values[index++]))
-                .totalReadCount(Integer.valueOf(values[index++]))
-                .adjustedVaf(Double.valueOf(values[index++]))
-                .adjustedCopyNumber(Double.valueOf(values[index++]))
+                .repeatCount(Integer.parseInt(values[index++]))
+                .alleleReadCount(Integer.parseInt(values[index++]))
+                .totalReadCount(Integer.parseInt(values[index++]))
+                .adjustedVaf(Double.parseDouble(values[index++]))
+                .adjustedCopyNumber(Double.parseDouble(values[index++]))
                 .trinucleotideContext(values[index++])
                 .hgvsProtein(values[index++])
                 .hgvsCoding(values[index++])
-                .biallelic(Boolean.valueOf(values[index++]))
-                .minorAllelePloidy(Double.valueOf(values[index++]))
+                .biallelic(Boolean.parseBoolean(values[index++]))
+                .minorAllelePloidy(Double.parseDouble(values[index++]))
                 .program(values[index++])
                 .variantId(values[index++])
                 .annotations(values[index++])
-                .phredScore(Integer.valueOf(values[index++]))
-                .isHomozygous(Boolean.valueOf(values[index++]))
+                .phredScore(Integer.parseInt(values[index++]))
+                .isHomozygous(Boolean.parseBoolean(values[index++]))
                 .matchType(values[index++])
                 .codonInfo(values[index++])
-                .clinvarMatch(Boolean.valueOf(values[index++]))
+                .clinvarMatch(Boolean.parseBoolean(values[index++]))
                 .clinvarSignificance(index < values.length ? values[index++] : "")
                 .clinvarSignificanceInfo(index < values.length ? values[index++] : "")
                 .build();

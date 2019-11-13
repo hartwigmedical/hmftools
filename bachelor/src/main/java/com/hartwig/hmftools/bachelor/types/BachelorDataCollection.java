@@ -44,7 +44,7 @@ public class BachelorDataCollection
 
             mFileReader.readLine(); // skip header
 
-            String line = null;
+            String line;
 
             while ((line = mFileReader.readLine()) != null)
             {

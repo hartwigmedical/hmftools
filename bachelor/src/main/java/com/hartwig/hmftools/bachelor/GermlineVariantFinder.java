@@ -76,9 +76,9 @@ public class GermlineVariantFinder
         initialiseGeneData();
     }
 
-    public final List<BachelorGermlineVariant> getVariants() { return mVariants; }
+    List<BachelorGermlineVariant> getVariants() { return mVariants; }
 
-    public boolean loadConfig(Map<String, Program> input)
+    boolean loadConfig(Map<String, Program> input)
     {
         if(input.values().isEmpty())
             return false;
@@ -202,12 +202,12 @@ public class GermlineVariantFinder
                 ref, alt, NONSENSE_OR_FRAMESHIFT, hgvsProtein, "", "", "", minCodon);
     }
 
-    public void addExternalFilters(final List<VariantFilter> allFilters)
+    void addExternalFilters(final List<VariantFilter> allFilters)
     {
         // split into white and black list based on the coding effect
         for(VariantFilter filter : allFilters)
         {
-            List<VariantFilter> filters = null;
+            List<VariantFilter> filters;
 
             if(filter.Effect == NONSENSE_OR_FRAMESHIFT || filter.Effect == CodingEffect.SPLICE)
             {
@@ -237,7 +237,7 @@ public class GermlineVariantFinder
 
     public String name() { return mName; }
 
-    public void processVcfFile(final String sampleId, final VCFFileReader reader, boolean usesIndex)
+    void processVcfFile(final String sampleId, final VCFFileReader reader, boolean usesIndex)
     {
         mVariants.clear();
 

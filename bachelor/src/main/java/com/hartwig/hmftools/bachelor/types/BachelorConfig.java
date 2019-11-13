@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.bachelor.types;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,9 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bachelor.BamCountReader;
 import com.hartwig.hmftools.bachelor.GermlineVcfParser;
 import com.hartwig.hmftools.bachelor.datamodel.Program;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -28,7 +23,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
+import org.jetbrains.annotations.Nullable;
 
 public class BachelorConfig
 {
@@ -184,7 +179,7 @@ public class BachelorConfig
         return parser.parse(options, args);
     }
 
-    @NotNull
+    @Nullable
     public static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd)
     {
         if(!cmd.hasOption(DB_URL))
@@ -204,5 +199,4 @@ public class BachelorConfig
             return null;
         }
     }
-
 }
