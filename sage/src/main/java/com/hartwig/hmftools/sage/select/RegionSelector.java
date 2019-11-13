@@ -18,6 +18,9 @@ public class RegionSelector<R extends GenomeRegion> {
 
     @NotNull
     public Optional<R> select(long position) {
+        if (regions.isEmpty()) {
+            return Optional.empty();
+        }
 
         R current = current();
         while (index > 0 && current.start() > position) {
