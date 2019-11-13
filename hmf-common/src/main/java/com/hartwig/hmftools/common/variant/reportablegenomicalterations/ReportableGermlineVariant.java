@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.reportablegenomicalterations;
+package com.hartwig.hmftools.common.variant.reportablegenomicalterations;
 
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 

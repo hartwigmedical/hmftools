@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.somaticvariant;
+package com.hartwig.hmftools.common.variant.somaticvariant;
 
 import java.util.List;
 

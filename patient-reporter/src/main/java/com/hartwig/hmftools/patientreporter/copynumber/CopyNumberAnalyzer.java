@@ -6,8 +6,6 @@ import java.util.Map;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.actionability.cnv.CheckEvidenceCnv;
-import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGainLoss;
-import com.hartwig.hmftools.common.reportablegenomicalterations.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -15,6 +13,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
+import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ExtractReportableGainsAndLosses;
+import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 
 import org.jetbrains.annotations.NotNull;

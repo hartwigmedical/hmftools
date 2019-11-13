@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.reportablegenomicalterations;
+package com.hartwig.hmftools.common.variant.reportablegenomicalterations;
 
 import java.util.List;
 

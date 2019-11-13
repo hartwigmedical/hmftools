@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.somaticvariant;
+package com.hartwig.hmftools.common.variant.somaticvariant;
 
 import java.util.List;
 import java.util.Set;
@@ -11,10 +11,10 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.OncoDrivers;
 import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
+import com.hartwig.hmftools.common.drivergene.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.drivergene.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -1,11 +1,11 @@
-package com.hartwig.hmftools.common.reportablegenomicalterations;
+package com.hartwig.hmftools.common.variant.reportablegenomicalterations;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.apache.logging.log4j.util.Strings;
