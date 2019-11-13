@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.gene;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
@@ -37,7 +38,10 @@ public class GenerateEnsemblDataCache
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        Configurator.setRootLevel(Level.DEBUG);
+        if(cmd.hasOption(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
 
         writeEnsemblDataFiles(cmd);
     }
@@ -198,6 +202,7 @@ public class GenerateEnsemblDataCache
     {
         final Options options = new Options();
         options.addOption(DATA_OUTPUT_DIR, true, "Directory to write Ensembl data files");
+        options.addOption(LOG_DEBUG, false, "Log in verbose mode");
         EnsemblDAO.addCmdLineArgs(options);
 
         return options;
