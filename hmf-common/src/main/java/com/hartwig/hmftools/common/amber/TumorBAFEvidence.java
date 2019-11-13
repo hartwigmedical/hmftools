@@ -6,11 +6,11 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -58,7 +58,6 @@ public class TumorBAFEvidence implements Callable<TumorBAFEvidence> {
 
     @Override
     public TumorBAFEvidence call() throws Exception {
-
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
             supplier.slice(reader, this::record);
         }

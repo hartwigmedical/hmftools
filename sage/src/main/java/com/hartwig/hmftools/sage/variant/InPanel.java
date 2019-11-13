@@ -6,10 +6,10 @@ import java.util.Optional;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.select.RegionSelector;
 
 import org.jetbrains.annotations.NotNull;

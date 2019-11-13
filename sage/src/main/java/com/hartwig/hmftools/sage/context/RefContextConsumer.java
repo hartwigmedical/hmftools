@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.sage.read.ReadContextFactory.createSNVContext
 
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;

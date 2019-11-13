@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.Optional;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.genome.slicing.Slicer;
+import com.hartwig.hmftools.common.genome.slicing.SlicerFactory;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVMerger;
 import com.hartwig.hmftools.strelka.mnv.ImmutableMNVValidator;
 import com.hartwig.hmftools.strelka.mnv.MNVDetector;

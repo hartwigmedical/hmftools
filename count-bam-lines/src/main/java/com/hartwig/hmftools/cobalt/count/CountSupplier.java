@@ -12,13 +12,13 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.CountBamLinesApplication;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFile;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltCountFactory;
 import com.hartwig.hmftools.common.cobalt.ReadCount;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

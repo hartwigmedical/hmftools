@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionBuilder;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -4,13 +4,13 @@ import java.util.Optional;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.gc.GCMedianReadCount;
-import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.region.GenomeRegionSelector;
-import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 

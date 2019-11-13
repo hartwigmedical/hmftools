@@ -3,17 +3,20 @@ package com.hartwig.hmftools.common.purple.purity;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SomaticPenaltyFactory {
+final class SomaticPenaltyFactory {
 
-    public static double penalty(@NotNull PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
+    private SomaticPenaltyFactory() {
+    }
+
+    static double penalty(@NotNull PurityAdjuster purityAdjuster, @NotNull Collection<FittedRegion> regions,
             @NotNull Collection<SomaticVariant> variants) {
         final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
 

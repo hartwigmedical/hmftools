@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

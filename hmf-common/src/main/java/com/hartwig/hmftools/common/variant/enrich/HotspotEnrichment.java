@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -20,7 +20,7 @@ public class HotspotEnrichment implements SomaticEnrichment {
 
     public static final int DISTANCE = 5;
     public static final String HOTSPOT_FLAG = "HOTSPOT";
-    public  static final String NEAR_HOTSPOT_FLAG = "NEAR_HOTSPOT";
+    public static final String NEAR_HOTSPOT_FLAG = "NEAR_HOTSPOT";
 
     private final Multimap<Chromosome, VariantHotspot> hotspots;
 
@@ -29,7 +29,7 @@ public class HotspotEnrichment implements SomaticEnrichment {
         return new HotspotEnrichment(VariantHotspotFile.read(hotspotsFile));
     }
 
-    public HotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {
+    HotspotEnrichment(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {
         this.hotspots = hotspots;
     }
 

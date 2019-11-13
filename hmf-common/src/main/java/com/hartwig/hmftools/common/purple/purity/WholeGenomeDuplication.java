@@ -3,8 +3,8 @@ package com.hartwig.hmftools.common.purple.purity;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 

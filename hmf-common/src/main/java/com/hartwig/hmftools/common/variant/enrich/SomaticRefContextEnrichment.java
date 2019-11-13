@@ -81,7 +81,6 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
     }
 
     private void addRepeatContext(@NotNull final VariantContext variant, final Pair<Integer, String> relativePositionAndRef) {
-
         final int relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
 
@@ -107,7 +106,6 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
                 variant.getCommonInfo()
                         .putAttribute(MICROHOMOLOGY_FLAG, Microhomology.microhomologyAtInsert(relativePosition, sequence, alt), true);
             }
-
         }
     }
 
@@ -175,5 +173,4 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
 
         return optionalPrior;
     }
-
 }

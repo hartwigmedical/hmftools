@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.select;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 

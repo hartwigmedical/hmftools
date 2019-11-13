@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.zipper;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 

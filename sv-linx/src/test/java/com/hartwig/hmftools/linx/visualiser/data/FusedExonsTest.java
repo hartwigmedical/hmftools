@@ -2,8 +2,8 @@ package com.hartwig.hmftools.linx.visualiser.data;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.junit.Test;
 

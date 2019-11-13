@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.sam;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 

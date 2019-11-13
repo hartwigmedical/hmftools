@@ -103,5 +103,4 @@ public class TumorContaminationModel {
 
         return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
     }
-
 }

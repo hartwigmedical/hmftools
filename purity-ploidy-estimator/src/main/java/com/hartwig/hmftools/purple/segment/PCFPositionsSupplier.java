@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.purple.segment;
 
-import static com.hartwig.hmftools.common.position.GenomePositions.union;
+import static com.hartwig.hmftools.common.genome.position.GenomePositions.union;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;

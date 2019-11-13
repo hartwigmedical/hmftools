@@ -8,12 +8,12 @@ import java.util.function.Function;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionSelector;
-import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
@@ -114,16 +114,15 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         return create(leg, legCopyNumber.leftCopyNumber(), legCopyNumber.rightCopyNumber());
     }
 
-
-    public StructuralVariantLegPloidy singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber, double rightCopyNumber) {
+    public StructuralVariantLegPloidy singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber,
+            double rightCopyNumber) {
         ModifiableStructuralVariantLegPloidy modiyable = create(leg, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber)).get();
         return modiyable.setAverageImpliedPloidy(modiyable.unweightedImpliedPloidy());
     }
 
-    @VisibleForTesting
     @NotNull
-    Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg, @NotNull Optional<Double> leftCopyNumber,
-            Optional<Double> rightCopyNumber) {
+    private Optional<ModifiableStructuralVariantLegPloidy> create(@NotNull final StructuralVariantLeg leg,
+            @NotNull Optional<Double> leftCopyNumber, Optional<Double> rightCopyNumber) {
         final Optional<Double> largerCopyNumber;
         final Optional<Double> smallerCopyNumber;
         if (leg.orientation() == 1) {

@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

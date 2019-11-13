@@ -4,10 +4,10 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegionSelector;
-import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +24,7 @@ public class HighConfidenceEnrichment implements VariantContextEnrichment {
     private final Consumer<VariantContext> consumer;
     private final GenomeRegionSelector<GenomeRegion> highConfidenceSelector;
 
-    public HighConfidenceEnrichment(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
+    HighConfidenceEnrichment(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,
             @NotNull final Consumer<VariantContext> consumer) {
         this.highConfidenceSelector = GenomeRegionSelectorFactory.create(highConfidenceRegions);
         this.consumer = consumer;

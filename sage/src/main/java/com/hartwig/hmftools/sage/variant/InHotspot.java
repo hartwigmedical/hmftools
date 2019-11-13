@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.sage.variant;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;

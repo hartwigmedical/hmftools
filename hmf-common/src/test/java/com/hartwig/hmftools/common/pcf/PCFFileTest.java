@@ -8,8 +8,8 @@ import java.util.List;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

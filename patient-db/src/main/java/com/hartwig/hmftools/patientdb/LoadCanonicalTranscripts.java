@@ -2,7 +2,7 @@ package com.hartwig.hmftools.patientdb;
 
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;

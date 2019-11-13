@@ -7,14 +7,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
 public class Highlights
 {
-
     private static final String HEADER = "SampleId";
     private static final String COMMENT = "#";
     private static final String DELIMITER = ",";

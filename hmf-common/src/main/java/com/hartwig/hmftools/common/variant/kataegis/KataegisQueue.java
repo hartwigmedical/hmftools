@@ -49,9 +49,7 @@ public class KataegisQueue {
     }
 
     private void processFirstContext() {
-
         if (!buffer.isEmpty()) {
-
             final VariantContext first = buffer.peekFirst();
             if (!candidate.test(first)) {
                 consumer.accept(buffer.pollFirst());
@@ -76,7 +74,6 @@ public class KataegisQueue {
                 }
             }
         }
-
     }
 
     @NotNull
@@ -100,5 +97,4 @@ public class KataegisQueue {
 
         return result;
     }
-
 }

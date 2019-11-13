@@ -3,10 +3,10 @@ package com.hartwig.hmftools.common.purple.segment;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.pcf.PCFPosition;
 import com.hartwig.hmftools.common.pcf.PCFSource;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

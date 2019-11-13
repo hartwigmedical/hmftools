@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser.data;
 
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 

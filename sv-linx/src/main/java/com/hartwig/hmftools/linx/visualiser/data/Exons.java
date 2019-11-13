@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.region.Strand;
+import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;

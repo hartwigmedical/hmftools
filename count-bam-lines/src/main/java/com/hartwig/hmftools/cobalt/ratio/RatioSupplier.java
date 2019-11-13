@@ -4,13 +4,13 @@ import java.io.IOException;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltCount;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFactory;
 import com.hartwig.hmftools.common.cobalt.ReadRatio;
-import com.hartwig.hmftools.common.gc.GCMedianReadCountFile;
-import com.hartwig.hmftools.common.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.gc.GCMedianReadCountFile;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

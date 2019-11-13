@@ -9,10 +9,10 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.window.Window;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.window.Window;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +25,9 @@ public final class PCFFile {
     private static final String RATIO_EXTENSION = ".cobalt.ratio.pcf";
     private static final String BAF_EXTENSION = ".amber.baf.pcf";
 
+    private PCFFile() {
+    }
+
     @NotNull
     public static String generateRatioFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + RATIO_EXTENSION;
@@ -36,9 +39,8 @@ public final class PCFFile {
     }
 
     @NotNull
-    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source, @NotNull final String filename)
-            throws IOException {
-
+    public static ListMultimap<Chromosome, PCFPosition> readPositions(int windowSize, @NotNull PCFSource source,
+            @NotNull final String filename) throws IOException {
         ListMultimap<Chromosome, PCFPosition> result = ArrayListMultimap.create();
         final Window window = new Window(windowSize);
         @Nullable
@@ -65,8 +67,8 @@ public final class PCFFile {
                         prevChromosome = chromosomeName;
                     }
 
-                    long start = window.start(Long.valueOf(values[3]));
-                    long end = window.start(Long.valueOf(values[4])) + windowSize;
+                    long start = window.start(Long.parseLong(values[3]));
+                    long end = window.start(Long.parseLong(values[4])) + windowSize;
                     if (builder != null) {
                         chromosomeResult.add(builder.setMaxPosition(start));
                     }
@@ -119,9 +121,8 @@ public final class PCFFile {
         String[] values = line.split(DELIMITER);
         return ImmutablePCFRegion.builder()
                 .chromosome(values[1])
-                .start(Long.valueOf(values[3]))
-                .end(Long.valueOf(values[4]) + windowSize - 1)
+                .start(Long.parseLong(values[3]))
+                .end(Long.parseLong(values[4]) + windowSize - 1)
                 .build();
     }
-
 }

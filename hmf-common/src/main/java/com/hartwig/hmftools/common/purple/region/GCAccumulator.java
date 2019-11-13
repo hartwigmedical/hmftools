@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.purple.region;
 
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.gc.GCProfile;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 class GCAccumulator implements Consumer<GCProfile> {
 

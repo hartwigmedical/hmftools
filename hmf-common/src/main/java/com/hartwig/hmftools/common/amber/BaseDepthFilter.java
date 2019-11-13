@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

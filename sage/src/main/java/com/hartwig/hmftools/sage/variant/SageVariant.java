@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.variant;
 import java.util.List;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 
 import org.jetbrains.annotations.NotNull;

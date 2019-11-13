@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.zipper;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 

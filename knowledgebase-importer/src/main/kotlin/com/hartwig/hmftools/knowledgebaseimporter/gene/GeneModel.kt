@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.knowledgebaseimporter.gene
 
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion
 import com.hartwig.hmftools.knowledgebaseimporter.knowledgebases.GenericMutation
 import org.apache.logging.log4j.LogManager
 

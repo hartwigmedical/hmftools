@@ -9,17 +9,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.chromosome.ChromosomeLengthFactory;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
-import com.hartwig.hmftools.common.refgenome.RefGenome;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.region.ImmutableHmfExonRegion;
-import com.hartwig.hmftools.common.region.ImmutableHmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
+import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

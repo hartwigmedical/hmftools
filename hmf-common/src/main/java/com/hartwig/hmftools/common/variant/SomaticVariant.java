@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;

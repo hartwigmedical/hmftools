@@ -7,11 +7,11 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +71,6 @@ public class TumorContaminationEvidence implements Callable<TumorContaminationEv
 
     @Override
     public TumorContaminationEvidence call() throws Exception {
-
         try (SamReader reader = samReaderFactory.open(new File(bamFile))) {
             supplier.slice(reader, this::record);
         }

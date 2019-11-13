@@ -12,15 +12,15 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Doubles;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public enum AmberBAFFile {
-    ;
+public final class AmberBAFFile {
+
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final Logger LOGGER = LogManager.getLogger(AmberBAFFile.class);
 
@@ -28,10 +28,15 @@ public enum AmberBAFFile {
     private static final String AMBER_EXTENSION = ".amber.baf.tsv";
     private static final String AMBER_EXTENSION_OLD = ".amber.baf";
 
+    private AmberBAFFile() {
+    }
+
+    @NotNull
     public static String generateAmberFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + AMBER_EXTENSION;
     }
 
+    @NotNull
     public static String generateAmberFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
         String filename = basePath + File.separator + sample + AMBER_EXTENSION;
         return (new File(filename).exists()) ? filename : basePath + File.separator + sample + AMBER_EXTENSION_OLD;
@@ -53,7 +58,7 @@ public enum AmberBAFFile {
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<AmberBAF> purity) {
+    private static List<String> toLines(@NotNull final List<AmberBAF> purity) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         purity.stream().map(AmberBAFFile::toString).forEach(lines::add);
@@ -75,7 +80,7 @@ public enum AmberBAFFile {
 
     @NotNull
     private static String toString(@NotNull final AmberBAF ratio) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
+        return new StringJoiner(DELIMITER).add(ratio.chromosome())
                 .add(String.valueOf(ratio.position()))
                 .add(FORMAT.format(ratio.tumorBAF()))
                 .add(FORMAT.format(ratio.tumorModifiedBAF()))
@@ -101,7 +106,6 @@ public enum AmberBAFFile {
         }
 
         return result;
-
     }
 
     @NotNull
@@ -109,14 +113,16 @@ public enum AmberBAFFile {
         String[] values = line.split(DELIMITER);
         ImmutableAmberBAF.Builder builder = ImmutableAmberBAF.builder()
                 .chromosome(values[0])
-                .position(Long.valueOf(values[1]))
-                .tumorBAF(Double.valueOf(values[2]))
+                .position(Long.parseLong(values[1]))
+                .tumorBAF(Double.parseDouble(values[2]))
                 .tumorDepth(0)
                 .normalBAF(0.5)
                 .normalDepth(0);
 
         if (values.length == 8) {
-            builder.tumorDepth(Integer.valueOf(values[4])).normalBAF(Double.valueOf(values[5])).normalDepth(Integer.valueOf(values[7]));
+            builder.tumorDepth(Integer.parseInt(values[4]))
+                    .normalBAF(Double.parseDouble(values[5]))
+                    .normalDepth(Integer.parseInt(values[7]));
         }
 
         return builder.build();

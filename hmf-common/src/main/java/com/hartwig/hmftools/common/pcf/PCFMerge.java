@@ -4,18 +4,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PCFMerge {
+final class PCFMerge {
 
     private static final Comparator<PCFPosition> COMPARE =
             Comparator.comparing((Function<PCFPosition, String>) GenomePosition::chromosome).thenComparingLong(GenomePosition::position);
 
+    private PCFMerge() {
+    }
+
     @NotNull
     static List<ModifiablePCFPosition> merge(@NotNull final List<ModifiablePCFPosition> positions) {
-
         positions.sort(COMPARE);
 
         int i = 0;
@@ -38,5 +40,4 @@ public class PCFMerge {
 
         return positions;
     }
-
 }
