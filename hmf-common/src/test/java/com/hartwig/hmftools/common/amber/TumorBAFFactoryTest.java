@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.amber;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.sam.SAMRecords;
-import com.hartwig.hmftools.common.sam.SAMRecordsTest;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.utils.sam.SAMRecordsTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

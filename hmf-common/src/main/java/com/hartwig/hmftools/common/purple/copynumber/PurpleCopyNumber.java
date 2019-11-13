@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.copynumber;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.immutables.value.Value;

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.io.FileWriterUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

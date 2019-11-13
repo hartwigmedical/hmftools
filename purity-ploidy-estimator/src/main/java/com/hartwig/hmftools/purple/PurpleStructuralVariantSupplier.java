@@ -17,11 +17,11 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.collection.Multimaps;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.enrich.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.common.variant.structural.CopyNumberEnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.structural.EnrichedStructuralVariant;

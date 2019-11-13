@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
@@ -38,19 +37,6 @@ public enum RefGenome {
     @NotNull
     public Map<Chromosome, Long> centromeres() {
         return centromeres;
-    }
-
-    @NotNull
-    public static Optional<RefGenome> fromLengths(@NotNull final Map<Chromosome, Long> length) {
-        if (length.equals(HG19.lengths())) {
-            return Optional.of(HG19);
-        }
-
-        if (length.equals(HG38.lengths())) {
-            return Optional.of(HG38);
-        }
-
-        return Optional.empty();
     }
 
     @NotNull

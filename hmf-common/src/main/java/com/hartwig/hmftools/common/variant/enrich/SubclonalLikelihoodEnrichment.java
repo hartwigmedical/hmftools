@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.variant.enrich;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.common.variant.clonality.SubclonalLikelihood;
 

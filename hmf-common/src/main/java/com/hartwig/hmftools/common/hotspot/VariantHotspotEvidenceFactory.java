@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.hotspot;
 
-import static com.hartwig.hmftools.common.sam.SAMRecords.basesDeletedAfterPosition;
-import static com.hartwig.hmftools.common.sam.SAMRecords.basesInsertedAfterPosition;
-import static com.hartwig.hmftools.common.sam.SAMRecords.containsDelete;
-import static com.hartwig.hmftools.common.sam.SAMRecords.containsInsert;
-import static com.hartwig.hmftools.common.sam.SAMRecords.getAvgBaseQuality;
-import static com.hartwig.hmftools.common.sam.SAMRecords.getBaseQuality;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesDeletedAfterPosition;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesInsertedAfterPosition;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsDelete;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsInsert;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getAvgBaseQuality;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getBaseQuality;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,12 +19,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.collection.Multimaps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.sam.SAMRecords;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;

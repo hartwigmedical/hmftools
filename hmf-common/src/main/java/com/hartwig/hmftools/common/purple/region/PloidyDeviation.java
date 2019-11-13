@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 

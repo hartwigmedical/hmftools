@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivergene.DriverGeneView;
+import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.Hotspot;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.strelka.mnv.scores;
 
-import static com.hartwig.hmftools.common.sam.SAMRecords.getBaseQuality;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getBaseQuality;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

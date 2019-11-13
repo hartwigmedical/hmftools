@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.metrics;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.io.path.PathPrefixSuffixFinder;
+import com.hartwig.hmftools.common.utils.io.path.PathPrefixSuffixFinder;
 
 import org.jetbrains.annotations.NotNull;
 

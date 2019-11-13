@@ -3,7 +3,7 @@ package com.hartwig.hmftools.amber;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
-import com.hartwig.hmftools.common.pcf.PCFFile;
+import com.hartwig.hmftools.common.math.pcf.PCFFile;
 import com.hartwig.hmftools.common.r.RExecutor;
 
 import org.jetbrains.annotations.NotNull;

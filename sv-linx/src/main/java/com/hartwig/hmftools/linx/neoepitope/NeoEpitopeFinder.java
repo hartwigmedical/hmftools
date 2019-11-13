@@ -3,14 +3,14 @@ package com.hartwig.hmftools.linx.neoepitope;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.isPotentiallyRelevantFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_SYMBOL;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertDnaCodonToAminoAcid;
-import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.isStopCodon;
+import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 

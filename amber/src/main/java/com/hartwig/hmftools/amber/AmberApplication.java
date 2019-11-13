@@ -2,7 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import static java.lang.Double.isFinite;
 
-import static com.hartwig.hmftools.common.collection.Multimaps.filterEntries;
+import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,8 +34,8 @@ import com.hartwig.hmftools.common.amber.TumorContamination;
 import com.hartwig.hmftools.common.amber.TumorContaminationEvidence;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.version.VersionInfo;
+import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 

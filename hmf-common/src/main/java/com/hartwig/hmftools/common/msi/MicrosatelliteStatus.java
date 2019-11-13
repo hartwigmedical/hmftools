@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.msi;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 
 public enum MicrosatelliteStatus {
     MSI,

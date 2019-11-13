@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ChromosomeLengthFile {
+public final class ChromosomeLengthFile {
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".chr.len";

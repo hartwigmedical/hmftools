@@ -8,8 +8,8 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,11 +41,11 @@ public final class PurpleQCFile {
     static PurpleQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
             return ImmutablePurpleQC.builder()
-                    .unsupportedSegments(Integer.valueOf(getValue(lines.get(5))))
-                    .ploidy(Double.valueOf(getValue(lines.get(6))))
+                    .unsupportedSegments(Integer.parseInt(getValue(lines.get(5))))
+                    .ploidy(Double.parseDouble(getValue(lines.get(6))))
                     .amberGender(Gender.valueOf(getValue(lines.get(7))))
                     .cobaltGender(Gender.valueOf(getValue(lines.get(8))))
-                    .deletedGenes(Integer.valueOf(getValue(lines.get(9))))
+                    .deletedGenes(Integer.parseInt(getValue(lines.get(9))))
                     .build();
         } catch (Exception e) {
             throw new MalformedFileException("Unable to parse purple qc file.");

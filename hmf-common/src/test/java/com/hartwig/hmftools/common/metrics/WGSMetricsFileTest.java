@@ -7,8 +7,8 @@ import static org.junit.Assert.assertNull;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.io.exception.EmptyFileException;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
+import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
+import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.junit.Test;
 

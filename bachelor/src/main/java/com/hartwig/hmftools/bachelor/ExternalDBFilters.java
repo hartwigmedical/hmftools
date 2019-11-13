@@ -3,8 +3,8 @@ package com.hartwig.hmftools.bachelor;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.CONFIG_XML;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.loadXML;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 

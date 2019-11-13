@@ -8,7 +8,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.io.reader.LineReader;
+import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 
 import org.jetbrains.annotations.NotNull;
 

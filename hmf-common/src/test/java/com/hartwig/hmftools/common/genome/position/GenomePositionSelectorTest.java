@@ -10,10 +10,10 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.collection.Multimaps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

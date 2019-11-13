@@ -1,15 +1,9 @@
 package com.hartwig.hmftools.linx.gene;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG38;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.refGenomeChromosome;
-
-import static org.ensembl.database.homo_sapiens_core.tables.CoordSystem.COORD_SYSTEM;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

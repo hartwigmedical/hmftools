@@ -7,7 +7,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
+import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 

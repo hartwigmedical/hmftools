@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.collection.Multimaps;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.hotspot.SAMSlicer;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
 
 import org.jetbrains.annotations.NotNull;
 

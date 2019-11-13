@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.actionability.cnv;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.jetbrains.annotations.NotNull;

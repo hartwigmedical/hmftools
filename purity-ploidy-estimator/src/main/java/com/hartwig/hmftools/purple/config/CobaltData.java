@@ -8,9 +8,9 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.pcf.PCFFile;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
-import com.hartwig.hmftools.common.pcf.PCFSource;
+import com.hartwig.hmftools.common.math.pcf.PCFFile;
+import com.hartwig.hmftools.common.math.pcf.PCFPosition;
+import com.hartwig.hmftools.common.math.pcf.PCFSource;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 
 import org.apache.commons.cli.ParseException;

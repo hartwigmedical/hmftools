@@ -3,7 +3,6 @@ package com.hartwig.hmftools.amber;
 import java.util.concurrent.Callable;
 
 import com.google.common.base.Strings;
-import com.hartwig.hmftools.common.numeric.Doubles;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

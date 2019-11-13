@@ -7,9 +7,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.pcf.ImmutablePCFPosition;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
-import com.hartwig.hmftools.common.pcf.PCFSource;
+import com.hartwig.hmftools.common.math.pcf.ImmutablePCFPosition;
+import com.hartwig.hmftools.common.math.pcf.PCFPosition;
+import com.hartwig.hmftools.common.math.pcf.PCFSource;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 

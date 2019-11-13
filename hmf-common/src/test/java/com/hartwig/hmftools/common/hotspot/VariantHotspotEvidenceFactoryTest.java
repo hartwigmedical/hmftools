@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.hotspot;
 
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.create;
 import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.isVariantPartOfLargerMNV;
-import static com.hartwig.hmftools.common.sam.SAMRecords.PHRED_OFFSET;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.PHRED_OFFSET;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,7 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 
-import com.hartwig.hmftools.common.sam.SAMRecordsTest;
+import com.hartwig.hmftools.common.utils.sam.SAMRecordsTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

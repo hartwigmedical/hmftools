@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.amber;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.sam.SAMRecords;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
 

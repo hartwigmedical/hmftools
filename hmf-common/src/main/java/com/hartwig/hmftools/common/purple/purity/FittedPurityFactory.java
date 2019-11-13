@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.greaterOrEqual;
-import static com.hartwig.hmftools.common.numeric.Doubles.lessOrEqual;
-import static com.hartwig.hmftools.common.numeric.Doubles.positiveOrZero;
+import static com.hartwig.hmftools.common.math.Doubles.greaterOrEqual;
+import static com.hartwig.hmftools.common.math.Doubles.lessOrEqual;
+import static com.hartwig.hmftools.common.math.Doubles.positiveOrZero;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -13,18 +13,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.collection.Downsample;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.math.Doubles;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.region.FittedRegionFactory;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.purple.region.ObservedRegion;
+import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;

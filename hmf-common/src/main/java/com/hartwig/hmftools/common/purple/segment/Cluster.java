@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
-import com.hartwig.hmftools.common.pcf.PCFSource;
+import com.hartwig.hmftools.common.math.pcf.PCFPosition;
+import com.hartwig.hmftools.common.math.pcf.PCFSource;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

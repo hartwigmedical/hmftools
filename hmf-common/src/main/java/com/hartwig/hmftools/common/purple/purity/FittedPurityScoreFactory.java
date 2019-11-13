@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.numeric.Doubles.greaterThan;
+import static com.hartwig.hmftools.common.math.Doubles.greaterThan;
 
 import java.util.Collection;
 import java.util.List;
