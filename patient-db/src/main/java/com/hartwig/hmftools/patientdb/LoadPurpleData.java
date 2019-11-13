@@ -59,7 +59,7 @@ public class LoadPurpleData {
         final List<DriverCatalog> driverCatalog = DriverCatalogFile.read(DriverCatalogFile.generateFilename(purplePath, tumorSample));
 
         final PurpleQC purpleQC = PurpleQCFile.read(PurpleQCFile.generateFilename(purplePath, tumorSample));
-        final List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.read(purplePath, tumorSample);
+        final List<FittedPurity> bestFitPerPurity = FittedPurityRangeFile.readBestFitPerPurity(purplePath, tumorSample);
 
         final String germlineCopyNumberFilename = PurpleCopyNumberFile.generateGermlineFilenameForReading(purplePath, tumorSample);
         final List<PurpleCopyNumber> germlineCopyNumbers = new File(germlineCopyNumberFilename).exists()

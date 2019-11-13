@@ -34,10 +34,16 @@ public final class FittedPurityRangeFile {
     }
 
     @NotNull
-    public static List<FittedPurity> read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+    public static List<FittedPurity> readAll(@NotNull final String basePath, @NotNull final String sample) throws IOException {
         final String filePath = generateFilenameForReading(basePath, sample);
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
+
+    @NotNull
+    public static List<FittedPurity> readBestFitPerPurity(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        return bestFitPerPurity(readAll(basePath, sample));
+    }
+
 
     public static void write(@NotNull final String basePath, @NotNull final String sample, @NotNull final List<FittedPurity> purity)
             throws IOException {
@@ -62,13 +68,11 @@ public final class FittedPurityRangeFile {
     @NotNull
     @VisibleForTesting
     static List<FittedPurity> fromLines(@NotNull final List<String> lines) {
-        final List<FittedPurity> all = lines.stream()
+        return lines.stream()
                 .filter(x -> !x.startsWith(COMMENT) && !x.startsWith("purity"))
                 .map(FittedPurityRangeFile::fromString)
                 .sorted()
                 .collect(toList());
-
-        return bestFitPerPurity(all);
     }
 
     @NotNull
@@ -89,7 +93,8 @@ public final class FittedPurityRangeFile {
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("purity")
+        return new StringJoiner(DELIMITER, "", "")
+                .add("purity")
                 .add("normFactor")
                 .add("score")
                 .add("diploidProportion")

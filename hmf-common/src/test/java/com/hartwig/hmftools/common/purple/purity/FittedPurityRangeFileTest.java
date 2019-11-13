@@ -8,12 +8,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FittedPurityRangeFileTest {
@@ -35,10 +35,8 @@ public class FittedPurityRangeFileTest {
     }
 
     @Test
-    @Ignore
     public void testInputAndOutput() {
-        // TODO Jon fix.
-        final List<FittedPurity> expected = create(5);
+        final List<FittedPurity> expected = create(5).stream().sorted().collect(Collectors.toList());
         final List<FittedPurity> victim = FittedPurityRangeFile.fromLines(FittedPurityRangeFile.toLines(expected));
 
         assertEquals(expected.size(), victim.size());
