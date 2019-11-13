@@ -1,4 +1,6 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.bachelor.types;
+
+import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

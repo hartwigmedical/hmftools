@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class PurityAdjustedSomaticVariantFactory  {
+public class PurityAdjustedSomaticVariantFactory {
 
     @NotNull
     private final PurityAdjuster purityAdjuster;
@@ -31,19 +31,20 @@ public class PurityAdjustedSomaticVariantFactory  {
     private final GenomeRegionSelector<PurpleCopyNumber> copyNumberSelector;
     @NotNull
     private final GenomeRegionSelector<FittedRegion> fittedRegionSelector;
+    @NotNull
     private final String tumorSample;
 
-
-    public PurityAdjustedSomaticVariantFactory(final String tumorSample, @NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers) {
+    public PurityAdjustedSomaticVariantFactory(@NotNull String tumorSample, @NotNull PurityAdjuster purityAdjuster,
+            @NotNull final List<PurpleCopyNumber> copyNumbers) {
         this(tumorSample, purityAdjuster, copyNumbers, Collections.emptyList());
     }
 
-    public PurityAdjustedSomaticVariantFactory(final String tumorSample, @NotNull PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
-            @NotNull final List<FittedRegion> fittedRegions) {
+    public PurityAdjustedSomaticVariantFactory(@NotNull String tumorSample, @NotNull PurityAdjuster purityAdjuster,
+            @NotNull final List<PurpleCopyNumber> copyNumbers, @NotNull final List<FittedRegion> fittedRegions) {
         this(tumorSample, purityAdjuster, Multimaps.fromRegions(copyNumbers), Multimaps.fromRegions(fittedRegions));
     }
 
-    private PurityAdjustedSomaticVariantFactory(final String tumorSample, @NotNull PurityAdjuster purityAdjuster,
+    private PurityAdjustedSomaticVariantFactory(@NotNull String tumorSample, @NotNull PurityAdjuster purityAdjuster,
             @NotNull final Multimap<Chromosome, PurpleCopyNumber> copyNumbers,
             @NotNull final Multimap<Chromosome, FittedRegion> fittedRegions) {
         this.tumorSample = tumorSample;
@@ -84,19 +85,19 @@ public class PurityAdjustedSomaticVariantFactory  {
 
     public void enrich(@NotNull final GenomePosition position, @NotNull final AllelicDepth depth,
             @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
-        copyNumberSelector.select(position).ifPresent(x -> purityAdjustment(x, depth, builder));
+        copyNumberSelector.select(position).ifPresent(x -> applyPurityAdjustment(x, depth, builder));
         fittedRegionSelector.select(position).ifPresent(x -> builder.germlineStatus(x.status()));
     }
 
-    private PurityAdjustedSomaticVariantBuilder purityAdjustment(@NotNull final PurpleCopyNumber purpleCopyNumber,
-            @NotNull final AllelicDepth depth, @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
+    private void applyPurityAdjustment(@NotNull final PurpleCopyNumber purpleCopyNumber, @NotNull final AllelicDepth depth,
+            @NotNull final PurityAdjustedSomaticVariantBuilder builder) {
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
         double vaf = purityAdjuster.purityAdjustedVAF(purpleCopyNumber.chromosome(), Math.max(0.001, copyNumber), depth.alleleFrequency());
         double ploidy = Math.max(0, vaf * copyNumber);
 
         boolean biallelic = Doubles.lessOrEqual(copyNumber, 0) || Doubles.greaterOrEqual(ploidy, copyNumber - 0.5);
 
-        return builder.adjustedCopyNumber(copyNumber)
+        builder.adjustedCopyNumber(copyNumber)
                 .adjustedVAF(vaf)
                 .ploidy(ploidy)
                 .biallelic(biallelic)

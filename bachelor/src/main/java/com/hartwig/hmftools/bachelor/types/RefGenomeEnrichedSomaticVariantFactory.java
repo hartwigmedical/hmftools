@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.common.variant;
-
-import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.Builder;
-import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.builder;
+package com.hartwig.hmftools.bachelor.types;
 
 import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.Microhomology;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 
@@ -41,16 +41,16 @@ public class RefGenomeEnrichedSomaticVariantFactory {
     }
 
     @NotNull
-    protected Builder enrich(@NotNull final SomaticVariant variant) {
-        final Builder builder = createBuilder(variant);
+    protected ImmutableEnrichedSomaticVariant.Builder enrich(@NotNull final SomaticVariant variant) {
+        final ImmutableEnrichedSomaticVariant.Builder builder = createBuilder(variant);
         addTrinucleotideContext(builder, variant, reference);
         addGenomeContext(builder, variant, reference);
         return builder;
     }
 
     @NotNull
-    private static Builder createBuilder(@NotNull final SomaticVariant variant) {
-        return builder().from(variant)
+    private static ImmutableEnrichedSomaticVariant.Builder createBuilder(@NotNull final SomaticVariant variant) {
+        return ImmutableEnrichedSomaticVariant.builder().from(variant)
                 .trinucleotideContext(Strings.EMPTY)
                 .microhomology(Strings.EMPTY)
                 .repeatCount(0)
@@ -58,8 +58,8 @@ public class RefGenomeEnrichedSomaticVariantFactory {
                 .highConfidenceRegion(false);
     }
 
-    private static void addGenomeContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
-            @NotNull IndexedFastaSequenceFile reference) {
+    private static void addGenomeContext(@NotNull final ImmutableEnrichedSomaticVariant.Builder builder,
+            @NotNull final SomaticVariant variant, @NotNull IndexedFastaSequenceFile reference) {
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(variant, reference);
         final Integer relativePosition = relativePositionAndRef.getFirst();
         final String sequence = relativePositionAndRef.getSecond();
@@ -129,8 +129,8 @@ public class RefGenomeEnrichedSomaticVariantFactory {
         return optionalPrior;
     }
 
-    private static void addTrinucleotideContext(@NotNull final Builder builder, @NotNull final SomaticVariant variant,
-            @NotNull IndexedFastaSequenceFile reference) {
+    private static void addTrinucleotideContext(@NotNull final ImmutableEnrichedSomaticVariant.Builder builder,
+            @NotNull final SomaticVariant variant, @NotNull IndexedFastaSequenceFile reference) {
         final int chromosomeLength = reference.getSequenceDictionary().getSequence(variant.chromosome()).getSequenceLength();
         if (variant.position() < chromosomeLength) {
             final ReferenceSequence sequence =

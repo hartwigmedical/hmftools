@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.variant;
+package com.hartwig.hmftools.bachelor.types;
 
-import static com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant.Builder;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -14,8 +14,7 @@ public class EnrichedSomaticVariantFactory extends RefGenomeEnrichedSomaticVaria
 
     @NotNull
     @Override
-    protected Builder enrich(@NotNull final SomaticVariant variant) {
+    protected ImmutableEnrichedSomaticVariant.Builder enrich(@NotNull final SomaticVariant variant) {
         return super.enrich(variant);
     }
-
 }

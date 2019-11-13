@@ -11,9 +11,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableEnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -36,13 +35,13 @@ class SomaticVariantDAO {
     }
 
     @NotNull
-    public final List<EnrichedSomaticVariant> read(@NotNull final String sample) {
-        List<EnrichedSomaticVariant> variants = Lists.newArrayList();
+    public final List<SomaticVariant> read(@NotNull final String sample) {
+        List<SomaticVariant> variants = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
-            variants.add(ImmutableEnrichedSomaticVariant.builder()
+            variants.add(ImmutableSomaticVariantImpl.builder()
                     .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
                     .position(record.getValue(SOMATICVARIANT.POSITION))
                     .filter(record.getValue(SOMATICVARIANT.FILTER))
@@ -188,7 +187,7 @@ class SomaticVariantDAO {
     }
 
     @NotNull
-    public final List<String> getSamplesList() {
+    final List<String> getSamplesList() {
         final Result<Record1<String>> result =
                 context.select(SOMATICVARIANT.SAMPLEID).from(SOMATICVARIANT).groupBy(SOMATICVARIANT.SAMPLEID).fetch();
 
