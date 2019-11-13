@@ -47,5 +47,4 @@ public class Centromeres {
             final long end) {
         map.put(chromosome, GenomeRegions.create(chromosome, start, end));
     }
-
 }

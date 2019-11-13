@@ -6,8 +6,10 @@ import com.hartwig.hmftools.common.region.BEDFileLoader;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum SlicerFactory {
-    ;
+public final class SlicerFactory {
+
+    private SlicerFactory() {
+    }
 
     @NotNull
     public static Slicer fromBedFile(@NotNull String bedFile) throws IOException {

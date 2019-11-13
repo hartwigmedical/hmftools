@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.utils;
 
-
 import java.util.List;
 
 import com.google.common.collect.Lists;

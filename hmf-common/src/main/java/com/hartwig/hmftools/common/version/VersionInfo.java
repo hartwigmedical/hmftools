@@ -48,6 +48,7 @@ public class VersionInfo {
     @NotNull
     private String readResource() throws IOException {
         InputStream in = VersionInfo.class.getClassLoader().getResourceAsStream(resource);
+        assert in != null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         return IOUtils.toString(reader);
     }
