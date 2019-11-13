@@ -53,7 +53,11 @@ public class AltContext implements VariantHotspot {
         if (newReadContext.isComplete()) {
             boolean readContextMatch = false;
             for (ReadContextCounter counter : interimReadContexts) {
-                readContextMatch |= counter.incrementCounters(newReadContext);
+                if (counter.incrementCounters(newReadContext)) {
+                    readContextMatch = true;
+                    break;
+                }
+
             }
 
             if (!readContextMatch) {
