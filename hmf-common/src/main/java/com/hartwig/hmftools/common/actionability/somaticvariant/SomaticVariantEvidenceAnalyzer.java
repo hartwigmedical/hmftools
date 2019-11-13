@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +60,7 @@ public class SomaticVariantEvidenceAnalyzer {
                     && variant.position() == actionableVariant.position() && variant.ref().equals(actionableVariant.ref()) && variant.alt()
                     .equals(actionableVariant.alt())) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableVariant(actionableVariant);
-                evidenceBuilder.event(eventStringAllVariants(variant));
+                evidenceBuilder.event(eventString(variant));
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableVariant.cancerType(), primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
@@ -73,7 +72,7 @@ public class SomaticVariantEvidenceAnalyzer {
                     && variant.chromosome().equals(actionableRange.chromosome()) && variant.position() >= actionableRange.start()
                     && variant.position() <= actionableRange.end()) {
                 ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableRange(actionableRange);
-                evidenceBuilder.event(eventStringAllVariants(variant));
+                evidenceBuilder.event(eventString(variant));
                 evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableRange.cancerType(), primaryTumorLocation));
 
                 evidenceItems.add(evidenceBuilder.build());
@@ -83,18 +82,10 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    private static String eventStringAllVariants(@NotNull ReportableVariant variant) {
+    private static String eventString(@NotNull ReportableVariant variant) {
         String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
                 ? variant.hgvsCodingImpact()
                 : variant.hgvsProteinImpact();
-        return variant.gene() + " " + description;
-    }
-
-    @NotNull
-    private static String eventString(@NotNull SomaticVariant variant) {
-        String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
-                ? variant.canonicalHgvsCodingImpact()
-                : variant.canonicalHgvsProteinImpact();
         return variant.gene() + " " + description;
     }
 
