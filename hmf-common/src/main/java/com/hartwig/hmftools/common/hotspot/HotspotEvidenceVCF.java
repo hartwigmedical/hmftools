@@ -110,8 +110,7 @@ public class HotspotEvidenceVCF {
     }
 
     @NotNull
-    VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
-
+    private VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
         final Allele ref = Allele.create(hotspotEvidence.ref(), true);
         final Allele alt = Allele.create(hotspotEvidence.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
@@ -197,5 +196,4 @@ public class HotspotEvidenceVCF {
 
         return header;
     }
-
 }

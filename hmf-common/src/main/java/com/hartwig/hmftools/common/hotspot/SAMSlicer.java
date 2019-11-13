@@ -28,7 +28,6 @@ public class SAMSlicer {
     }
 
     public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
-
         final Set<String> processed = Sets.newHashSet();
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
 
@@ -60,5 +59,4 @@ public class SAMSlicer {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
                 .isSecondaryOrSupplementary();
     }
-
 }

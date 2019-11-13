@@ -37,7 +37,6 @@ public class InframeIndelHotspots {
 
     @NotNull
     public Set<VariantHotspot> findInframeIndels(@NotNull final SamReader samReader) {
-
         final Set<VariantHotspot> indelsWithIncorrectRefs = Sets.newHashSet();
         samSlicer.slice(samReader, record -> indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record)));
 
@@ -50,7 +49,6 @@ public class InframeIndelHotspots {
 
     @NotNull
     private VariantHotspot correctRef(@NotNull final VariantHotspot hotspot) {
-
         final ReferenceSequence refSequence = hotspot.isSimpleInsert()
                 ? sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position())
                 : sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position() + hotspot.ref().length() - 1);
@@ -110,5 +108,4 @@ public class InframeIndelHotspots {
     private boolean isInCodingRegions(@NotNull final GenomePosition hotspot) {
         return codingRegions.get(HumanChromosome.fromString(hotspot.chromosome())).stream().anyMatch(x -> x.contains(hotspot));
     }
-
 }

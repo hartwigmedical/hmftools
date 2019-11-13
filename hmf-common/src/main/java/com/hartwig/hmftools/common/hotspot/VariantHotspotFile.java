@@ -64,7 +64,7 @@ public final class VariantHotspotFile {
         String[] values = line.split(DELIMITER);
         return ImmutableVariantHotspotImpl.builder()
                 .chromosome(values[0])
-                .position(Long.valueOf(values[1]))
+                .position(Long.parseLong(values[1]))
                 .ref(values[2])
                 .alt(values[3])
                 .build();
@@ -79,5 +79,4 @@ public final class VariantHotspotFile {
                 .alt(context.getAlternateAllele(0).getBaseString())
                 .build();
     }
-
 }
