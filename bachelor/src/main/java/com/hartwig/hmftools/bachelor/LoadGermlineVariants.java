@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_USER;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.SAMPLE;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
@@ -18,18 +17,17 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadGermlineVariants
 {
-    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
+    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
 
     private static final Logger LOGGER = LogManager.getLogger(LoadGermlineVariants.class);
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException
+    public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);

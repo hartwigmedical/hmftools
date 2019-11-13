@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.bachelor.types.BachelorConfig.BATCH_FILE;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.DB_URL;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.REF_GENOME;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.databaseAccess;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
@@ -22,8 +22,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bachelor.types.BachelorConfig;
-import com.hartwig.hmftools.bachelor.types.BachelorDataCollection;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
+import com.hartwig.hmftools.bachelor.types.EnrichedSomaticVariant;
+import com.hartwig.hmftools.bachelor.types.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.bachelor.types.GermlineVariant;
 import com.hartwig.hmftools.bachelor.types.GermlineVariantFile;
 import com.hartwig.hmftools.bachelor.types.ImmutableGermlineVariant;
@@ -33,8 +34,6 @@ import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
@@ -44,6 +43,7 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -53,7 +53,7 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class VariantEnricher
+class VariantEnricher
 {
     private final DatabaseAccess mDbAccess;
     private final BachelorConfig mConfig;
@@ -84,9 +84,7 @@ public class VariantEnricher
             {
                 LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
-
-                if(mBamCountReader != null)
-                    mBamCountReader.initialise(config.RefGenomeFile, mIndexedFastaSeqFile);
+                mBamCountReader.initialise(config.RefGenomeFile, mIndexedFastaSeqFile);
             }
             catch (IOException e)
             {
@@ -98,7 +96,7 @@ public class VariantEnricher
         mWriter = null;
     }
 
-    public void run(@Nullable List<BachelorGermlineVariant> bachRecords)
+    void run(@Nullable List<BachelorGermlineVariant> bachRecords)
     {
         mBachRecords = bachRecords;
 
@@ -111,7 +109,7 @@ public class VariantEnricher
         }
     }
 
-    private void processCurrentRecords(List<BachelorGermlineVariant> bachRecords)
+    private void processCurrentRecords(@Nullable List<BachelorGermlineVariant> bachRecords)
     {
         if(bachRecords.isEmpty() && !mConfig.IsBatchMode)
         {
@@ -145,7 +143,6 @@ public class VariantEnricher
                 }
             }
 
-            assert sampleRecords != null;
             sampleRecords.add(bachRecord);
         }
 
@@ -377,7 +374,7 @@ public class VariantEnricher
                 if(compareStr.equals(mergeStr1) || compareStr.equals(mergeStr2))
                 {
                     LOGGER.debug("Filtered var({}) indel {} with ref, alt and microHom equal",
-                            bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
+                            bachRecord.asString(), bachRecord.CodingEffect);
                     bachRecords.remove(index);
                     continue;
                 }
@@ -393,7 +390,7 @@ public class VariantEnricher
         germlineDAO.write(sampleId, germlineVariants);
     }
 
-    private final List<GermlineVariant> convert(final List<BachelorGermlineVariant> bachRecords)
+    private List<GermlineVariant> convert(final List<BachelorGermlineVariant> bachRecords)
     {
         final List<GermlineVariant> germlineVariants = Lists.newArrayList();
 
@@ -404,6 +401,9 @@ public class VariantEnricher
 
             final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
+            final String cosmicId = enrichedVariant.canonicalCosmicID();
+            final String dbsnpId = enrichedVariant.dbsnpID();
+
             germlineVariants.add(ImmutableGermlineVariant.builder()
                     .chromosome(bachRecord.Chromosome)
                     .position(bachRecord.Position)
@@ -412,8 +412,8 @@ public class VariantEnricher
                     .ref(enrichedVariant.ref())
                     .alts(enrichedVariant.alt())
                     .gene(bachRecord.Gene)
-                    .cosmicId(enrichedVariant.canonicalCosmicID() == null ? "" : enrichedVariant.canonicalCosmicID())
-                    .dbsnpId(enrichedVariant.dbsnpID() == null ? "" : enrichedVariant.dbsnpID())
+                    .cosmicId(cosmicId != null ? cosmicId : Strings.EMPTY)
+                    .dbsnpId(dbsnpId != null ? dbsnpId : Strings.EMPTY)
                     .effects(bachRecord.Effects)
                     .codingEffect(bachRecord.CodingEffect)
                     .transcriptId(bachRecord.TranscriptId)
@@ -475,12 +475,11 @@ public class VariantEnricher
         }
     }
 
-    public void close()
+    void close()
     {
         if(mConfig.IsBatchMode)
         {
             closeBufferedWriter(mWriter);
         }
     }
-
 }

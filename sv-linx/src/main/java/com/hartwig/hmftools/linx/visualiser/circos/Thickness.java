@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.linx.visualiser.data.Connector;
 
 import org.jetbrains.annotations.NotNull;

@@ -9,14 +9,14 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.window.Window;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.window.Window;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,9 +43,9 @@ class ClusterFactory {
         ListMultimap<Chromosome, Cluster> clusters = ArrayListMultimap.create();
         for (Chromosome chromosome : pcfPositions.keySet()) {
             final Collection<PCFPosition> chromosomePcfPositions = pcfPositions.get(chromosome);
-            final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Collections.EMPTY_LIST;
+            final List<CobaltRatio> chromosomeRatios = ratios.containsKey(chromosome) ? ratios.get(chromosome) : Lists.newArrayList();
             final Collection<SVSegment> chromosomeVariants =
-                    variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Collections.EMPTY_LIST;
+                    variantPositions.containsKey(chromosome) ? variantPositions.get(chromosome) : Lists.newArrayList();
             clusters.putAll(chromosome, cluster(chromosomeVariants, chromosomePcfPositions, chromosomeRatios));
         }
 

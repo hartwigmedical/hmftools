@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.io.reader.LineReader;
+import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 
 import org.jetbrains.annotations.NotNull;
 

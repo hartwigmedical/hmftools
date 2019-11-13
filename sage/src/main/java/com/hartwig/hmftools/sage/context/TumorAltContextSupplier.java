@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
 import com.hartwig.hmftools.sage.select.PositionSelector;
@@ -52,7 +52,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
     }
 
     private void processSecondPass(final SAMRecord samRecord) {
-        consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.primaryReadContext().accept(samRecord, config.qualityConfig()));
+        consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.primaryReadContext().accept(samRecord, config));
     }
 
     @Override
@@ -66,7 +66,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
 
-            new SimpleSamSlicer(0, Lists.newArrayList(bounds)).slice(tumorReader, this::processFirstPass);
+            new SimpleSamSlicer(config.minMapQuality(), Lists.newArrayList(bounds)).slice(tumorReader, this::processFirstPass);
 
             // Add all valid alt contexts
             for (final RefContext refContext : candidates.refContexts()) {

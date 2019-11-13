@@ -3,8 +3,8 @@ package com.hartwig.hmftools.patientreporter.copynumber;
 import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGainLoss;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

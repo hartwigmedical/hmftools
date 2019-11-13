@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.variant.filter;
 
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;

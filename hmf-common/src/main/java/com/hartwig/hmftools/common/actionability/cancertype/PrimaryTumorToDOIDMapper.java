@@ -32,7 +32,7 @@ class PrimaryTumorToDOIDMapper {
     private final Map<String, Set<String>> doidsPerPrimaryTumor;
 
     @NotNull
-    public static PrimaryTumorToDOIDMapper createFromResource() throws IOException {
+    static PrimaryTumorToDOIDMapper createFromResource() throws IOException {
         final CSVParser parser = CSVParser.parse(TUMOR_LOCATION_MAPPING_RESOURCE, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         Map<String, Set<String>> doidsPerPrimaryTumor = Maps.newHashMap();
         for (final CSVRecord record : parser) {
@@ -66,14 +66,14 @@ class PrimaryTumorToDOIDMapper {
     }
 
     @Nullable
-    public Set<String> findDoids(@NotNull String primaryTumorLocation) {
+    Set<String> findDoids(@NotNull String primaryTumorLocation) {
         if (primaryTumorLocation.trim().isEmpty()) {
             return null;
         }
 
         Set<String> doids = doidsPerPrimaryTumor.get(primaryTumorLocation);
         if (doids == null) {
-            LOGGER.warn("Could not resolve primary tumor location in DOID mapping: " + primaryTumorLocation);
+            LOGGER.warn("Could not resolve primary tumor location in DOID mapping: {}", primaryTumorLocation);
         }
         return doids;
     }

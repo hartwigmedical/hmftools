@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.amber.qc;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,6 @@ public abstract class AmberQC {
     private static final double CONTAMINATION_MAX_FAIL = 0.1;
 
     public AmberQCStatus status() {
-
         if (Doubles.greaterThan(meanBAF(), MEAN_BAF_MAX_FAIL) || Doubles.lessThan(meanBAF(), MEAN_BAF_MIN_FAIL)) {
             return AmberQCStatus.FAIL;
         }
@@ -42,5 +41,4 @@ public abstract class AmberQC {
     public abstract double meanBAF();
 
     public abstract double contamination();
-
 }

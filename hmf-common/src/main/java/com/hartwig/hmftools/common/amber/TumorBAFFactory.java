@@ -31,8 +31,7 @@ class TumorBAFFactory {
                 .setTumorAltSupport(0);
     }
 
-    @NotNull
-    public ModifiableTumorBAF addEvidence(@NotNull final ModifiableTumorBAF evidence, @NotNull final SAMRecord samRecord) {
+    void addEvidence(@NotNull final ModifiableTumorBAF evidence, @NotNull final SAMRecord samRecord) {
         int quality = getBaseQuality(evidence, samRecord);
         if (quality >= minBaseQuality) {
             evidence.setTumorReadDepth(evidence.tumorReadDepth() + 1);
@@ -52,6 +51,5 @@ class TumorBAFFactory {
                 }
             }
         }
-        return evidence;
     }
 }

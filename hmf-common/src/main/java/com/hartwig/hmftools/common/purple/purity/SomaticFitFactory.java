@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.purple.purity;
 import java.util.List;
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.apache.logging.log4j.LogManager;

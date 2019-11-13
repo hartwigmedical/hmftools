@@ -8,9 +8,9 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.numeric.Doubles;
 import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -27,7 +27,7 @@ class ExtendDiploidBAF {
     private static final long TINY_REGION_SIZE = 30;
     private static final double MIN_COPY_NUMBER_CHANGE = 0.5;
     private static final InferRegion INVALID_PAIR = new InferRegion(-1, -1, -1, -1);
-    private static Set<SegmentSupport> IGNORE_SUPPORT =
+    private static final Set<SegmentSupport> IGNORE_SUPPORT =
             EnumSet.of(SegmentSupport.CENTROMERE, SegmentSupport.TELOMERE, SegmentSupport.UNKNOWN);
 
     private final Map<Long, Long> simpleDupMap = Maps.newHashMap();
@@ -47,8 +47,7 @@ class ExtendDiploidBAF {
     }
 
     @NotNull
-    public List<CombinedRegion> extendBAF(@NotNull final List<CombinedRegion> regions) {
-
+    List<CombinedRegion> extendBAF(@NotNull final List<CombinedRegion> regions) {
         InferRegion inferRegion = nextRegion(false, regions);
         while (inferRegion.isValid()) {
             inferBetween(inferRegion, regions);
@@ -287,7 +286,6 @@ class ExtendDiploidBAF {
 
     @NotNull
     static InferRegion nextRegion(boolean crossCentromere, @NotNull final List<CombinedRegion> regions) {
-
         int leftSource = -1;
         boolean shouldInfer = false;
         int leftTarget = Integer.MAX_VALUE;
@@ -325,7 +323,6 @@ class ExtendDiploidBAF {
 
     private static boolean isSingleSmallRegionFlankedByLargeLOH(@NotNull final FittedRegion nearestSource,
             @NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
-
         long distance = nearestSource.start() > regions.get(inferRegion.leftTargetIndex).end() ? nearestSource.start() - regions.get(
                 inferRegion.leftTargetIndex).end() : regions.get(inferRegion.leftTargetIndex).start() - nearestSource.end();
 
@@ -374,7 +371,6 @@ class ExtendDiploidBAF {
 
     @VisibleForTesting
     boolean isSimpleDupSurroundedByLOH(@NotNull final InferRegion inferRegion, @NotNull final List<CombinedRegion> regions) {
-
         boolean isValidIndexes = inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && inferRegion.leftSourceIndex != -1
                 && inferRegion.rightSourceIndex != -1;
         if (!isValidIndexes) {

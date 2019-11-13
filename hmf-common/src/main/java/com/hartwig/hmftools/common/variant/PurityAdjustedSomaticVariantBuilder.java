@@ -67,5 +67,4 @@ public interface PurityAdjustedSomaticVariantBuilder {
             }
         };
     }
-
 }

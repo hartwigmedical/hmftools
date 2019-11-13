@@ -10,12 +10,15 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TumorContaminationFile {
+public final class TumorContaminationFile {
 
     private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "chr";
 
     private static final String AMBER_EXTENSION = ".amber.contamination.tsv";
+
+    private TumorContaminationFile() {
+    }
 
     public static String generateContaminationFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + AMBER_EXTENSION;
@@ -48,15 +51,15 @@ public class TumorContaminationFile {
 
         final BaseDepth template = ModifiableBaseDepth.create()
                 .setChromosome(values[0])
-                .setPosition(Long.valueOf(values[1]))
+                .setPosition(Long.parseLong(values[1]))
                 .setRef(BaseDepth.Base.valueOf(values[2]))
                 .setAlt(BaseDepth.Base.valueOf(values[3]))
                 .setIndelCount(0);
 
         final BaseDepth normalDepth =
-                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.valueOf(values[4])).setRefSupport(5).setAltSupport(6);
+                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.parseInt(values[4])).setRefSupport(5).setAltSupport(6);
         final BaseDepth tumorDepth =
-                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.valueOf(values[7])).setRefSupport(9).setAltSupport(9);
+                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.parseInt(values[7])).setRefSupport(9).setAltSupport(9);
 
         return ImmutableTumorContamination.builder().from(template).normal(normalDepth).tumor(tumorDepth).build();
     }
@@ -86,7 +89,7 @@ public class TumorContaminationFile {
 
     @NotNull
     private static String toString(@NotNull final TumorContamination ratio) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(ratio.chromosome()))
+        return new StringJoiner(DELIMITER).add(ratio.chromosome())
                 .add(String.valueOf(ratio.position()))
                 .add(String.valueOf(ratio.tumor().ref()))
                 .add(String.valueOf(ratio.tumor().alt()))
@@ -98,5 +101,4 @@ public class TumorContaminationFile {
                 .add(String.valueOf(ratio.tumor().altSupport()))
                 .toString();
     }
-
 }

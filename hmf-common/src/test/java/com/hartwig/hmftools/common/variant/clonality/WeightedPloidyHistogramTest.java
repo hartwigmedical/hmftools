@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -115,12 +115,12 @@ public class WeightedPloidyHistogramTest {
             String[] values = line.split("\t");
 
             ModifiableWeightedPloidy ploidy = ModifiableWeightedPloidy.create()
-                    .setPloidy(Double.valueOf(values[0]))
-                    .setAlleleReadCount(Integer.valueOf(values[1]))
-                    .setTotalReadCount(Integer.valueOf(values[2]))
+                    .setPloidy(Double.parseDouble(values[0]))
+                    .setAlleleReadCount(Integer.parseInt(values[1]))
+                    .setTotalReadCount(Integer.parseInt(values[2]))
                     .setWeight(1);
 
-            if (Doubles.lessThan(Double.valueOf(values[0]), 10)) {
+            if (Doubles.lessThan(Double.parseDouble(values[0]), 10)) {
                 result.add(ploidy);
             }
         }

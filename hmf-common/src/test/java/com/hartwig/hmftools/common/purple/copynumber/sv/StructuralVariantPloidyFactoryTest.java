@@ -18,14 +18,14 @@ import java.util.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gender.Gender;
-import com.hartwig.hmftools.common.region.GenomeRegionSelectorFactory;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.jetbrains.annotations.NotNull;
@@ -37,8 +37,11 @@ public class StructuralVariantPloidyFactoryTest {
     private static final int AVERAGE_READ_DEPTH = 100;
     private static final double AVERAGE_COPY_NUMBER = 2;
 
-    private static final StructuralVariantLegPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY =
-            new StructuralVariantLegPloidyFactory<>(AVERAGE_READ_DEPTH, AVERAGE_COPY_NUMBER, PURE, PurpleCopyNumber::averageTumorCopyNumber);
+    private static final StructuralVariantLegPloidyFactory<PurpleCopyNumber> PURE_PLOIDY_FACTORY = new StructuralVariantLegPloidyFactory<>(
+            AVERAGE_READ_DEPTH,
+            AVERAGE_COPY_NUMBER,
+            PURE,
+            PurpleCopyNumber::averageTumorCopyNumber);
 
     @Test
     public void testSingleValidLeg() {
@@ -84,8 +87,10 @@ public class StructuralVariantPloidyFactoryTest {
         final PurpleCopyNumber left = copyNumber(1001, 2000, -0.03);
         final PurpleCopyNumber right = copyNumber(2001, 3000, 0);
 
-        ModifiableStructuralVariantLegPloidy leftLegPloidy = PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).get();
-        ModifiableStructuralVariantLegPloidy rightLegPloidy = PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).get();
+        ModifiableStructuralVariantLegPloidy leftLegPloidy =
+                PURE_PLOIDY_FACTORY.create(positiveLeg, GenomeRegionSelectorFactory.create(singleton(left))).get();
+        ModifiableStructuralVariantLegPloidy rightLegPloidy =
+                PURE_PLOIDY_FACTORY.create(negativeLeg, GenomeRegionSelectorFactory.create(singleton(right))).get();
 
         assertFalse(leftLegPloidy.leftCopyNumber().isPresent());
         assertTrue(leftLegPloidy.rightCopyNumber().filter(Doubles::isZero).isPresent());
@@ -106,9 +111,10 @@ public class StructuralVariantPloidyFactoryTest {
     public void testInferPloidyFromReadDepth() {
         int multiplier = 3;
 
-        final StructuralVariantLeg leg = createLeg(1001, -1, 3.5/4, AVERAGE_READ_DEPTH * multiplier);
+        final StructuralVariantLeg leg = createLeg(1001, -1, 3.5 / 4, AVERAGE_READ_DEPTH * multiplier);
         final PurpleCopyNumber left = copyNumber(1, 1000, 3);
-        Optional<ModifiableStructuralVariantLegPloidy> result = PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(singleton(left)));
+        Optional<ModifiableStructuralVariantLegPloidy> result =
+                PURE_PLOIDY_FACTORY.create(leg, GenomeRegionSelectorFactory.create(singleton(left)));
         assertEquals(AVERAGE_COPY_NUMBER * multiplier, result.get().unweightedImpliedPloidy(), EPSILON);
     }
 

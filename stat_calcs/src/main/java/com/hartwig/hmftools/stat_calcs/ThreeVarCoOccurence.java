@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.stat_calcs;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.stat_calcs.SampleCategoryData.SAMPLE_CAT_1_INDEX;
 import static com.hartwig.hmftools.stat_calcs.SampleCategoryData.SAMPLE_CAT_2_INDEX;
 
@@ -14,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.io.FileWriterUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

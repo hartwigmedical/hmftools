@@ -47,9 +47,4 @@ public final class SomaticVariantTestBuilderFactory {
                 .subclonalLikelihood(0)
                 .mappability(0D);
     }
-
-    @NotNull
-    public static ImmutableEnrichedSomaticVariant.Builder createEnriched() {
-        return ImmutableEnrichedSomaticVariant.builder().from(create().build());
-    }
 }

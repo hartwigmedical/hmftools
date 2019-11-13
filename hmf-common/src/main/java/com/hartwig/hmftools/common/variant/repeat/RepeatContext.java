@@ -4,6 +4,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class RepeatContext {
+
     private final byte[] bases;
     private final int repeatIndex;
     private final int startIndex;
@@ -12,7 +13,8 @@ public class RepeatContext {
     private final int forwardCount;
     private final int backwardCount;
 
-    public RepeatContext(final byte[] bases, final int repeatIndex, final int startIndex, final int endIndex, final int length, int forwardCount, int backwardCount) {
+    public RepeatContext(final byte[] bases, final int repeatIndex, final int startIndex, final int endIndex, final int length,
+            int forwardCount, int backwardCount) {
         this.bases = bases;
         this.repeatIndex = repeatIndex;
         this.length = length;

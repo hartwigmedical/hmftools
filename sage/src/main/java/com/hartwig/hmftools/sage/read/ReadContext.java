@@ -25,10 +25,9 @@ public class ReadContext {
     private final int repeatCount;
     private final String microhomology;
 
-    ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+    public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases) {
-        assert (leftCentreIndex > 0);
-        assert (rightCentreIndex < readBases.length);
+        assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
         this.position = refPosition;
@@ -102,8 +101,8 @@ public class ReadContext {
         return quality;
     }
 
-    public boolean phased(@NotNull final ReadContext other) {
-        int offset = position - other.position;
+    public boolean phased(int offset, @NotNull final ReadContext other) {
+
         int otherReadIndex = other.readIndex + offset;
 
         boolean centreMatch = centreMatch(otherReadIndex, other.readBases);
@@ -298,4 +297,10 @@ public class ReadContext {
     public byte[] readBases() {
         return readBases;
     }
+
+    @NotNull
+    public String alt(int length) {
+        return new String(readBases, readIndex, length);
+    }
+
 }

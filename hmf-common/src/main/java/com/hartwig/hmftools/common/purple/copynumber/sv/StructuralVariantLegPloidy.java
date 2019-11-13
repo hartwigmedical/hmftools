@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import java.util.Optional;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
 import org.immutables.value.Value;

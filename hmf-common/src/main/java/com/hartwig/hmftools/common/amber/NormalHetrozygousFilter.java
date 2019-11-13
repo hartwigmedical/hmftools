@@ -34,5 +34,4 @@ public class NormalHetrozygousFilter implements Predicate<BaseDepth> {
     private static boolean between(int totalCount, int min, int max) {
         return totalCount >= min && totalCount <= max;
     }
-
 }

@@ -2,16 +2,16 @@ package com.hartwig.hmftools.linx.multibiopsy;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
+import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_PRIVATE;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_SHARED;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

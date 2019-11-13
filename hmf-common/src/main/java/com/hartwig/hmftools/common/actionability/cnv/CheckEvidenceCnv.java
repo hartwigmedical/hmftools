@@ -8,13 +8,14 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGainLoss;
+import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class CheckEvidenceCnv {
+
     private static final Logger LOGGER = LogManager.getLogger(CheckEvidenceCnv.class);
 
     private CheckEvidenceCnv() {

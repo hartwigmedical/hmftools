@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.EnrichedSomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
@@ -135,7 +135,7 @@ public class SigSnvLoader
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
             String sampleId = sampleIds.get(sampleIndex);
-            List<EnrichedSomaticVariant> variants = mDbAccess.readSomaticVariants(sampleId);
+            List<SomaticVariant> variants = mDbAccess.readSomaticVariants(sampleId);
 
             LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
@@ -165,11 +165,11 @@ public class SigSnvLoader
         }
     }
 
-    private void processSampleVariants(final String sampleId, List<EnrichedSomaticVariant> variants, int sampleIndex)
+    private void processSampleVariants(final String sampleId, List<SomaticVariant> variants, int sampleIndex)
     {
         double[][] sampleCounts = mSampleBucketCounts.getData();
 
-        for(final EnrichedSomaticVariant variant : variants)
+        for(final SomaticVariant variant : variants)
         {
             if(variant.isFiltered() || !variant.isSnp())
                 continue;

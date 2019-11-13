@@ -6,11 +6,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.position.GenomePositionSelector;
-import com.hartwig.hmftools.common.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
+import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -55,6 +55,6 @@ public class CobaltAccumulatorTest {
 
     @NotNull
     private static CobaltRatio ratio(long position) {
-        return PurpleDatamodelTest.cobalt(CHROMOSOME, position, (double) 1).build();
+        return PurpleDatamodelTest.cobalt(CHROMOSOME, position, 1).build();
     }
 }

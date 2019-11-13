@@ -46,7 +46,7 @@ public class GeneCopyNumberFileTest {
     }
 
     @NotNull
-    static ImmutableGeneCopyNumber.Builder createRandom(@NotNull Random random) {
+    private static ImmutableGeneCopyNumber.Builder createRandom(@NotNull Random random) {
         return ImmutableGeneCopyNumber.builder()
                 .chromosome(String.valueOf(random.nextInt(22)))
                 .start(random.nextLong())
@@ -80,7 +80,7 @@ public class GeneCopyNumberFileTest {
     }
     
     private static double nextDouble(@NotNull final Random random) {
-        return Math.round(random.nextDouble() * 10000) / 10000;
+        return Math.round(random.nextDouble() * 10000D) / 10000D;
     }
     
 

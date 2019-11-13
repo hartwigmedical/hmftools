@@ -9,14 +9,17 @@ import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.PurityAdjustedSomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class CircosFileWriter {
+
+    private CircosFileWriter() {
+    }
 
     public static <T extends GenomeRegion> void writeRegions(@NotNull final String filePath, @NotNull Collection<T> values,
             @NotNull ToDoubleFunction<T> valueExtractor) throws IOException {

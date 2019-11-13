@@ -7,12 +7,12 @@ import java.util.stream.Collectors;
 import com.google.common.base.Strings;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.sam.SAMRecords;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +37,6 @@ public class InframeIndelHotspots {
 
     @NotNull
     public Set<VariantHotspot> findInframeIndels(@NotNull final SamReader samReader) {
-
         final Set<VariantHotspot> indelsWithIncorrectRefs = Sets.newHashSet();
         samSlicer.slice(samReader, record -> indelsWithIncorrectRefs.addAll(findInframeIndelsWithIncorrectRefs(record)));
 
@@ -50,7 +49,6 @@ public class InframeIndelHotspots {
 
     @NotNull
     private VariantHotspot correctRef(@NotNull final VariantHotspot hotspot) {
-
         final ReferenceSequence refSequence = hotspot.isSimpleInsert()
                 ? sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position())
                 : sequenceFile.getSubsequenceAt(hotspot.chromosome(), hotspot.position(), hotspot.position() + hotspot.ref().length() - 1);
@@ -110,5 +108,4 @@ public class InframeIndelHotspots {
     private boolean isInCodingRegions(@NotNull final GenomePosition hotspot) {
         return codingRegions.get(HumanChromosome.fromString(hotspot.chromosome())).stream().anyMatch(x -> x.contains(hotspot));
     }
-
 }

@@ -6,8 +6,8 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.kde.KernelEstimator;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 
 import org.apache.logging.log4j.LogManager;

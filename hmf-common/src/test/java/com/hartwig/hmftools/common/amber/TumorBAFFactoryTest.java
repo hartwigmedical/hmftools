@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.amber;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.sam.SAMRecords;
-import com.hartwig.hmftools.common.sam.SAMRecordsTest;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
+import com.hartwig.hmftools.common.utils.sam.SAMRecordsTest;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -27,7 +27,8 @@ public class TumorBAFFactoryTest {
         assertEquals(1, victim.tumorReadDepth());
     }
 
-    private ModifiableTumorBAF createDefault(@NotNull final String chromosome, final long position) {
+    @NotNull
+    private static ModifiableTumorBAF createDefault(@NotNull final String chromosome, final long position) {
         final ModifiableBaseDepth normal = ModifiableBaseDepth.create()
                 .setChromosome(chromosome)
                 .setPosition(position)
@@ -39,5 +40,4 @@ public class TumorBAFFactoryTest {
                 .setIndelCount(0);
         return TumorBAFFactory.create(normal);
     }
-
 }

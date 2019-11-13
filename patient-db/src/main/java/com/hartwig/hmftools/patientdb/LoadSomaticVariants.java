@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.region.BEDFileLoader;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.enrich.CompoundEnrichment;

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.variant.enrich;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 

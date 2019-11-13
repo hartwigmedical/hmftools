@@ -99,7 +99,7 @@ public class ExtendNonDiploidTest {
         return region;
     }
 
-
+    @NotNull
     private static FittedRegion createFittedRegion(GermlineStatus status, SegmentSupport support) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000)
                 .depthWindowCount(1)
@@ -109,5 +109,4 @@ public class ExtendNonDiploidTest {
                 .support(support)
                 .build();
     }
-
 }

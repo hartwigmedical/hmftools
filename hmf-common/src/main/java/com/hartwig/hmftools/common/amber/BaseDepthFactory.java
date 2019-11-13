@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.amber;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.sam.SAMRecords;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,8 +33,7 @@ public class BaseDepthFactory {
                 .setReadDepth(0);
     }
 
-    @NotNull
-    public ModifiableBaseDepth addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord) {
+    void addEvidence(@NotNull final ModifiableBaseDepth evidence, @NotNull final SAMRecord samRecord) {
         int quality = getBaseQuality(evidence, samRecord);
         if (quality >= minBaseQuality) {
             evidence.setReadDepth(evidence.readDepth() + 1);
@@ -55,12 +54,9 @@ public class BaseDepthFactory {
                 }
             }
         }
-
-        return evidence;
     }
 
     static boolean indel(int bafPosition, int readPosition, @NotNull final SAMRecord samRecord) {
-
         if (samRecord.getAlignmentEnd() > bafPosition) {
 
             // Delete?
@@ -86,5 +82,4 @@ public class BaseDepthFactory {
 
         return 0;
     }
-
 }

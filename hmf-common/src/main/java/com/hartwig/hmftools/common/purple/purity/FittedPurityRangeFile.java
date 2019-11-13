@@ -13,7 +13,7 @@ import java.util.TreeSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -113,12 +113,12 @@ public final class FittedPurityRangeFile {
     private static FittedPurity fromString(@NotNull final String purity) {
         String[] values = purity.split(DELIMITER);
         return ImmutableFittedPurity.builder()
-                .purity(Double.valueOf(values[0]))
-                .normFactor(Double.valueOf(values[1]))
-                .score(Double.valueOf(values[2]))
-                .diploidProportion(Double.valueOf(values[3]))
-                .ploidy(Double.valueOf(values[4]))
-                .somaticPenalty(Double.valueOf(values[5]))
+                .purity(Double.parseDouble(values[0]))
+                .normFactor(Double.parseDouble(values[1]))
+                .score(Double.parseDouble(values[2]))
+                .diploidProportion(Double.parseDouble(values[3]))
+                .ploidy(Double.parseDouble(values[4]))
+                .somaticPenalty(Double.parseDouble(values[5]))
                 .build();
     }
 }

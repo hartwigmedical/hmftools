@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.slicing.Slicer;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.slicing.Slicer;
 import com.hartwig.hmftools.common.strelka.StrelkaAllelicDepth;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
 

@@ -23,7 +23,6 @@ public class AltContext implements VariantHotspot {
 
     private ReadContextCounter readContextCounter;
     private int altReads;
-    private int phase;
 
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
@@ -32,10 +31,14 @@ public class AltContext implements VariantHotspot {
         this.ref = hotspot.ref();
     }
 
-    AltContext(final RefContext refContext, final String ref, final String alt) {
+    public AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
+    }
+
+    public RefContext refContext() {
+        return refContext;
     }
 
     public void incrementAltRead() {
@@ -119,13 +122,13 @@ public class AltContext implements VariantHotspot {
         return refContext.readDepth();
     }
 
-    public int subprimeReadDepth() {
-        return refContext.subprimeReadDepth();
-    }
-
     @NotNull
     public String sample() {
         return refContext.sample();
+    }
+
+    public double supportVaf() {
+        return refContext.readDepth() == 0 ? 0d : (double) altReads / refContext.readDepth();
     }
 
     @Override
@@ -149,13 +152,5 @@ public class AltContext implements VariantHotspot {
         h += (h << 5) + chromosome().hashCode();
         h += (h << 5) + Longs.hashCode(position());
         return h;
-    }
-
-    public int phase() {
-        return phase;
-    }
-
-    public void phase(final int phase) {
-        this.phase = phase;
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.amber.AmberBAF;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

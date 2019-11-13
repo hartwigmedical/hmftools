@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.util.CollectionUtil;
 
 public class CircosExecution {
+
     private static final Logger LOGGER = LogManager.getLogger(CircosExecution.class);
 
     private final String executable;
@@ -21,8 +22,8 @@ public class CircosExecution {
     }
 
     @Nullable
-    public Integer generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile, @NotNull final String errorPath)
-            throws IOException, InterruptedException {
+    public Integer generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile,
+            @NotNull final String errorPath) throws IOException, InterruptedException {
         final File redirectErrorFile = new File(errorPath + File.separator + outputFile + ".error");
         final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");
 

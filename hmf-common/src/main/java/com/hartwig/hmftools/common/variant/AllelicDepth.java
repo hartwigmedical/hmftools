@@ -29,5 +29,4 @@ public interface AllelicDepth {
 
         return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();
     }
-
 }

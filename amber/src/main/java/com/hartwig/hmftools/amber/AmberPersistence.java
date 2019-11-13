@@ -17,8 +17,8 @@ import com.hartwig.hmftools.common.amber.TumorContaminationModel;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.version.VersionInfo;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

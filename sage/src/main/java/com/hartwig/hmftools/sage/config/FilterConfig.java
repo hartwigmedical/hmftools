@@ -27,11 +27,8 @@ public interface FilterConfig {
             .maxGermlineRelativeReadContextCount(1d)
             .build();
 
-    SoftFilterConfig DEFAULT_HOTSPOT_FILTER = ImmutableSoftFilterConfig.builder()
-            .from(NO_FILTER)
-            .minTumorQual(50)
-            .minTumorVaf(0.05)
-            .build();
+    SoftFilterConfig DEFAULT_HOTSPOT_FILTER =
+            ImmutableSoftFilterConfig.builder().from(NO_FILTER).minTumorQual(50).minTumorVaf(0.05).build();
 
     SoftFilterConfig DEFAULT_PANEL_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
@@ -57,6 +54,10 @@ public interface FilterConfig {
     int hardMinTumorQual();
 
     int hardMinTumorAltSupport();
+
+    default int hardMaxNormalAltSupport() {
+        return 3;
+    }
 
     @NotNull
     SoftFilterConfig softHotspotFilter();

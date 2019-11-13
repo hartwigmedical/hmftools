@@ -57,5 +57,4 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment 
             variant.getCommonInfo().putAttribute(REF_CONTEXT_FLAG, tri);
         }
     }
-
 }

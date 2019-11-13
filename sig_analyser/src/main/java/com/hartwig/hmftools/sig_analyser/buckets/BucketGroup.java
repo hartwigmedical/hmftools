@@ -3,8 +3,6 @@ package com.hartwig.hmftools.sig_analyser.buckets;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
-import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.capValue;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
@@ -18,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

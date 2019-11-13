@@ -46,7 +46,5 @@ public class PurityAdjusterTest {
         double actualTumorPloidy = victim.purityAdjustedPloidy(normalCopyNumber, normalPloidy, tumorCopyNumber, expectedFrequency);
 
         assertEquals(tumorPloidy, actualTumorPloidy, EPSILON);
-
     }
-
 }

@@ -14,15 +14,18 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
-import com.hartwig.hmftools.common.region.BEDFileLoader;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.ContigContext;
+import com.hartwig.hmftools.sage.phase.Phase;
+import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,6 +49,8 @@ public class SageApplication implements AutoCloseable {
     private final SageConfig config;
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
+    private final SageVariantFactory variantFactory;
+    private final Phase phase;
     private final SageVCF vcf;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
@@ -64,6 +69,7 @@ public class SageApplication implements AutoCloseable {
 
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(cmd);
+
 
         final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
         if (!config.panel().isEmpty()) {
@@ -87,7 +93,9 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        vcf = new SageVCF(hotspots, panel, refGenome, config);
+        variantFactory = new SageVariantFactory(config.filter(), hotspots, panel);
+        vcf = new SageVCF(refGenome, config);
+        phase = new Phase(refGenome, variantFactory, vcf::write);
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
@@ -95,22 +103,22 @@ public class SageApplication implements AutoCloseable {
         long timeStamp = System.currentTimeMillis();
         final List<ContigContext> contigContexts = Lists.newArrayList();
 
-        //        SAMSequenceDictionary dictionary = dictionary();
-        //        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
-        //            final String contig = samSequenceRecord.getSequenceName();
-        //            if (HumanChromosome.contains(contig)) {
-        //                int maxPosition = samSequenceRecord.getSequenceLength();
-        //                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
-        //            }
-        //        }
+        SAMSequenceDictionary dictionary = dictionary();
+//        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+//            final String contig = samSequenceRecord.getSequenceName();
+//            if (HumanChromosome.contains(contig)) {
+//                int maxPosition = samSequenceRecord.getSequenceLength();
+//                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
+//            }
+//        }
 
-        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+//                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
         //        contigContexts.add(runSingleRegion("17", 6133723, 6133723));
-        //        contigContexts.add(runSingleRegion("17", 6_200_165, 6200165));
-        //        contigContexts.add(runSingleRegion("17", 2888571, 2888571));
+        //                contigContexts.add(runSingleRegion("17", 2744451, 2744451));
+//                contigContexts.add(runSingleRegion("17", 3028422, 3028422));
         //        contigContexts.add(runSingleRegion("17", 19_465_877, 19465877));
-        //        contigContexts.add(runSingleRegion("17", 20077241, 20077241));
+//                contigContexts.add(runSingleRegion("17", 1743210, 1743211));
         //        contigContexts.add(runSingleRegion("17", 22_260_001, 23_262_000));
         //        contigContexts.add(runSingleRegion("17", 25_282_540, 34000000));
         //        contigContexts.add(runSingleRegion("17", 32_371_135, 32371135));
@@ -122,7 +130,7 @@ public class SageApplication implements AutoCloseable {
         //        contigContexts.add(runSingleRegion("17", 33000001, 34000000));
 
         for (final ContigContext contigContext : contigContexts) {
-            contigContext.write(vcf);
+            contigContext.write(phase);
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
@@ -163,15 +171,16 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private Future<List<SageEntry>> runRegion(@NotNull final String chromosome, int start, int end) {
+    private Future<List<SageVariant>> runRegion(@NotNull final String chromosome, int start, int end) {
         final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
-        final SagePipeline regionPipeline = new SagePipeline(region, config, executorService, refGenome);
+        final SagePipeline regionPipeline = new SagePipeline(region, config, executorService, refGenome, variantFactory);
         return regionPipeline.submit();
 
     }
 
     @Override
     public void close() throws IOException {
+        phase.close();
         vcf.close();
         refGenome.close();
         executorService.shutdown();

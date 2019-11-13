@@ -52,21 +52,6 @@ public class FusionEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<ActionableFusion> actionableFusionPairs() {
-        return fusionPairs;
-    }
-
-    @NotNull
-    public List<ActionablePromiscuous> actionablePromiscuousFive() {
-        return promiscuousFive;
-    }
-
-    @NotNull
-    public List<ActionablePromiscuous> actionablePromiscuousThree() {
-        return promiscuousThree;
-    }
-
-    @NotNull
     public List<EvidenceItem> evidenceForFusion(@NotNull ReportableGeneFusion geneFusion, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
@@ -120,15 +105,15 @@ public class FusionEvidenceAnalyzer {
 
     @NotNull
     private static ImmutableEvidenceItem.Builder fromActionableFusionsPromiscuous(
-            @NotNull ActionablePromiscuous actionablePromiscuousThree) {
+            @NotNull ActionablePromiscuous actionablePromiscuous) {
         return ImmutableEvidenceItem.builder()
-                .reference(actionablePromiscuousThree.reference())
-                .source(ActionabilitySource.fromString(actionablePromiscuousThree.source()))
-                .drug(actionablePromiscuousThree.drug())
-                .drugsType(actionablePromiscuousThree.drugsType())
-                .level(EvidenceLevel.fromString(actionablePromiscuousThree.level()))
-                .response(actionablePromiscuousThree.response())
-                .cancerType(actionablePromiscuousThree.cancerType())
+                .reference(actionablePromiscuous.reference())
+                .source(ActionabilitySource.fromString(actionablePromiscuous.source()))
+                .drug(actionablePromiscuous.drug())
+                .drugsType(actionablePromiscuous.drugsType())
+                .level(EvidenceLevel.fromString(actionablePromiscuous.level()))
+                .response(actionablePromiscuous.response())
+                .cancerType(actionablePromiscuous.cancerType())
                 .scope(EvidenceScope.SPECIFIC);
     }
 }

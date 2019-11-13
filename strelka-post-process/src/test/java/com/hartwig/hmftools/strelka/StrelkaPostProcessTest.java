@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.genome.slicing.Slicer;
+import com.hartwig.hmftools.common.genome.slicing.SlicerFactory;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -7,11 +7,11 @@ import static com.hartwig.hmftools.common.purple.region.GermlineStatus.HOM_DELET
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.NOISE;
 import static com.hartwig.hmftools.common.purple.region.GermlineStatus.UNKNOWN;
 
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.segment.PurpleSegment;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 

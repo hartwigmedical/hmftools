@@ -11,13 +11,15 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,9 +30,11 @@ public class SagePipelineData {
     private final Set<VariantHotspot> allHotspots = Sets.newHashSet();
     private final List<Map<VariantHotspot, AltContext>> altContextMap = new ArrayList<>();
     private final Map<Long, RefContext> normalMap = Maps.newHashMap();
+    private final SageVariantFactory variantFactory;
 
-    SagePipelineData(final String normalSample, final int tumorSampleSize) {
+    SagePipelineData(final String normalSample, final int tumorSampleSize, final SageVariantFactory variantFactory) {
         this.normalSample = normalSample;
+        this.variantFactory = variantFactory;
         for (int i = 0; i < tumorSampleSize; i++) {
             altContextMap.add(new HashMap<>());
         }
@@ -79,8 +83,8 @@ public class SagePipelineData {
     }
 
     @NotNull
-    public List<SageEntry> results() {
-        List<SageEntry> result = Lists.newArrayList();
+    public List<SageVariant> results() {
+        List<SageVariant> result = Lists.newArrayList();
 
         final Comparator<VariantHotspot> hotspotComparator = (o1, o2) -> {
             int standardCompare = o1.compareTo(o2);
@@ -120,7 +124,7 @@ public class SagePipelineData {
                 }
             }
 
-            result.add(new SageEntry(normalAltContext, tumorAltContexts));
+            result.add(variantFactory.create(normalAltContext, tumorAltContexts));
         }
 
         return result;

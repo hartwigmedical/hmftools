@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidenceType;
 import com.hartwig.hmftools.common.hotspot.HotspotEvidenceVCF;
@@ -21,8 +23,6 @@ import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory;
 import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
-import com.hartwig.hmftools.common.region.BEDFileLoader;
-import com.hartwig.hmftools.common.region.GenomeRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

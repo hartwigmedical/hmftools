@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -27,5 +27,4 @@ public class CobaltRatioFileTest {
         final List<CobaltRatio> hg19 = Lists.newArrayList(CobaltRatioFile.read(HG19_PATH).get(HumanChromosome._1));
         assertEquals(4, hg19.size());
     }
-
 }

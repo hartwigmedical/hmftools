@@ -23,7 +23,5 @@ public class PopulateUnknownTest {
         final PopulateUnknown victim = new PopulateUnknown(Gender.FEMALE);
         List<CombinedRegion> result = victim.populateUnknown(Lists.newArrayList(region1, region2, region3, region4));
         assertEquals(2, result.size());
-
     }
-
 }

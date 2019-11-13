@@ -20,19 +20,19 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegCopyNumberChangeFactory;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 
@@ -85,8 +85,8 @@ public class RecoverStructuralVariants implements Closeable {
 
     @VisibleForTesting
     @NotNull
-    List<VariantContext> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariant> currentVariants, @NotNull final Collection<VariantContext> recovered) throws IOException {
-
+    List<VariantContext> recoverFromUnbalancedVariants(@NotNull final List<StructuralVariant> currentVariants,
+            @NotNull final Collection<VariantContext> recovered) throws IOException {
         final StructuralVariantLegCopyNumberChangeFactory changeFactory =
                 new StructuralVariantLegCopyNumberChangeFactory(purityAdjuster, allCopyNumbers, currentVariants);
 
@@ -108,7 +108,6 @@ public class RecoverStructuralVariants implements Closeable {
                 double unexplainedCopyNumberChange = Math.max(0, expectedCopyNumberChange - copyNumberChange);
 
                 if (isUnbalanced(unexplainedCopyNumberChange, copyNumber) && !isCloseToRecoveredVariant(leg, recovered)) {
-
                     if (isStart) {
                         unbalancedStart = true;
                     } else {
@@ -190,7 +189,6 @@ public class RecoverStructuralVariants implements Closeable {
         return result;
     }
 
-    @VisibleForTesting
     private static <T extends GenomeRegion> int indexOf(long cnaPosition, @NotNull final List<T> regions) {
         assert (!regions.isEmpty());
         for (int i = 0; i < regions.size(); i++) {
@@ -228,7 +226,6 @@ public class RecoverStructuralVariants implements Closeable {
 
     @NotNull
     private VariantContext infer(@NotNull final StructuralVariantLeg leg) {
-
         // Note: Opposite orientation to leg!
         final Allele allele = leg.orientation() < 0 ? DECREASING_ALLELE : INCREASING_ALLELE;
         final Collection<Allele> alleles = Lists.newArrayList(REF_ALLELE, allele);

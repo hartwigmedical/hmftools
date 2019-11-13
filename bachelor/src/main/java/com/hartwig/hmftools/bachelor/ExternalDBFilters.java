@@ -3,8 +3,8 @@ package com.hartwig.hmftools.bachelor;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.CONFIG_XML;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.bachelor.types.BachelorConfig.loadXML;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONSENSE_OR_FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.CodingEffect.SPLICE;
 
@@ -100,7 +100,7 @@ public class ExternalDBFilters
 
     private static final int BACHELOR_FILTER_CSV_FIELD_COUNT = 13;
 
-    public static List<VariantFilter> loadExternalFilters(String filterFile)
+    static List<VariantFilter> loadExternalFilters(String filterFile)
     {
         List<VariantFilter> filters = Lists.newArrayList();
 
@@ -115,7 +115,7 @@ public class ExternalDBFilters
 
             file.readLine(); // skip header
 
-            String line = null;
+            String line;
 
             while ((line = file.readLine()) != null)
             {
@@ -220,7 +220,7 @@ public class ExternalDBFilters
         return clinvarSignificance.contains(CLINVAR_CONFLICTING);
     }
 
-    public static String stripTranscriptVersion(final String transcript)
+    static String stripTranscriptVersion(final String transcript)
     {
         // necessary since SnpEff adds the version id in HG38
         if(transcript.contains("."))

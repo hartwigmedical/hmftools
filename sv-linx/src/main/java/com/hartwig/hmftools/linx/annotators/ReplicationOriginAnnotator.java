@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.ReplicationOriginRegion;
+import com.hartwig.hmftools.common.genome.region.ReplicationOriginRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 import org.apache.logging.log4j.LogManager;

@@ -25,6 +25,5 @@ public class FormStatusTest {
         FormStatus merged3 = FormStatus.merge(status1, status2, status3);
         assertEquals(FormStatusState.VERIFIED, merged3.state());
         assertFalse(merged3.locked());
-
     }
 }

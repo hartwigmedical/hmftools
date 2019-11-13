@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.knowledgebaseimporter.knowledgebases
 
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion
 import com.hartwig.hmftools.knowledgebaseimporter.gene.GeneModel
 import com.hartwig.hmftools.knowledgebaseimporter.output.ActionableEvent
 import com.hartwig.hmftools.knowledgebaseimporter.output.GenomicRangeEvent

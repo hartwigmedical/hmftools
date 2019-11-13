@@ -18,9 +18,9 @@ public final class CopyNumberEvidenceAnalyzerFactory {
     }
 
     @NotNull
-    public static CopyNumberEvidenceAnalyzer loadFromFileCNVs(String fileCNVs) throws IOException {
+    public static CopyNumberEvidenceAnalyzer loadFromFileCNVs(String actionableCnvTsv) throws IOException {
         final List<ActionableCopyNumber> CNVs = Lists.newArrayList();
-        final List<String> lineCNVs = Files.readAllLines(new File(fileCNVs).toPath());
+        final List<String> lineCNVs = Files.readAllLines(new File(actionableCnvTsv).toPath());
 
         // Skip header line
         for (String line : lineCNVs.subList(1, lineCNVs.size())) {

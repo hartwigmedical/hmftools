@@ -8,8 +8,8 @@ import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.pcf.PCFFile;
 import com.hartwig.hmftools.common.r.RExecutor;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

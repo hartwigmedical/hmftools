@@ -18,7 +18,7 @@ public class NeoEpitopeEnrichment implements VariantContextEnrichment {
     public static final String UP_STREAM_AMINO_ACIDS = "NEO_AAU";
     public static final String DOWN_STREAM_AMINO_ACIDS = "NEO_AAD";
     public static final String NOVEL_STREAM_AMINO_ACIDS = "NEO_AAN";
-    public static final String NONESENE_MEDIATED_DECAY = "NEO_NMD";
+    public static final String NONSENSE_MEDIATED_DECAY = "NEO_NMD";
 
     private final IndexedFastaSequenceFile refGenome;
     private final CanonicalAnnotation canonicalAnnotationFactory;

@@ -23,7 +23,6 @@ public class ExtendDiploidBAFTest {
 
     @Test
     public void testDUPWithLOH() {
-
         final Map<Long, Long> dupMap = Maps.newHashMap();
         dupMap.put(1001L, 2001L);
         final ExtendDiploidBAF victim = new ExtendDiploidBAF(dupMap);
@@ -68,7 +67,6 @@ public class ExtendDiploidBAFTest {
         assertInferRegion(ExtendDiploidBAF.nextRegion(true, Lists.newArrayList(cr1, cr2, cr3, cr4, cr5)), -1, 0, 1, 2);
         assertInferRegion(ExtendDiploidBAF.nextRegion(false, Lists.newArrayList(cr1, cr2, cr3, cr4, cr5)), 2, 3, 3, 4);
         assertInferRegion(ExtendDiploidBAF.nextRegion(false, Lists.newArrayList(cr1, cr2, cr3, cr4)), 2, 3, 3, -1);
-
     }
 
     @Test
@@ -165,7 +163,6 @@ public class ExtendDiploidBAFTest {
         assertEquals(1.04, ExtendDiploidBAF.minorOrMajorMovedTargetPloidy(sourceLikeRight, left, right), EPSILON);
     }
 
-
     private void assertInferRegion(@NotNull final ExtendDiploidBAF.InferRegion victim, int expectedLeftSource, int expectedLeftTarget,
             int expectedRightTarget, int expectedRightSource) {
         assertEquals(expectedLeftSource, victim.leftSourceIndex);
@@ -199,5 +196,4 @@ public class ExtendDiploidBAFTest {
 
         return PurpleDatamodelTest.createDefaultFittedRegion("1", 1, 1000).tumorBAF(baf).tumorCopyNumber(copyNumber).build();
     }
-
 }

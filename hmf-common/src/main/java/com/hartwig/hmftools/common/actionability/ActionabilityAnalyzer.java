@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
@@ -18,7 +19,6 @@ import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEv
 import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 
 import org.jetbrains.annotations.NotNull;
@@ -26,14 +26,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class ActionabilityAnalyzer {
 
-    private static final String ACTIONABLE_VARIANT_FILE = "actionableVariants.tsv";
-    private static final String ACTIONABLE_RANGES_FILE = "actionableRanges.tsv";
-    private static final String ACTIONABLE_CNV_FILE = "actionableCNVs.tsv";
-    private static final String ACTIONABLE_FUSION_PAIR_FILE = "actionableFusionPairs.tsv";
-    private static final String ACTIONABLE_PROMISCUOUS_FIVE_FILE = "actionablePromiscuousFive.tsv";
-    private static final String ACTIONABLE_PROMISCUOUS_THREE_FILE = "actionablePromiscuousThree.tsv";
+    private static final String ACTIONABLE_VARIANT_TSV = "actionableVariants.tsv";
+    private static final String ACTIONABLE_RANGES_TSV = "actionableRanges.tsv";
+    private static final String ACTIONABLE_CNV_TSV = "actionableCNVs.tsv";
+    private static final String ACTIONABLE_FUSION_PAIR_TSV = "actionableFusionPairs.tsv";
+    private static final String ACTIONABLE_PROMISCUOUS_FIVE_TSV = "actionablePromiscuousFive.tsv";
+    private static final String ACTIONABLE_PROMISCUOUS_THREE_TSV = "actionablePromiscuousThree.tsv";
 
-    private static final String CANCER_TYPE_DOID_MAPPING_FILE = "knowledgebaseCancerTypes.tsv";
+    private static final String CANCER_TYPE_DOID_MAPPING_TSV = "knowledgebaseCancerTypes.tsv";
 
     @NotNull
     private final SomaticVariantEvidenceAnalyzer variantAnalyzer;
@@ -48,16 +48,16 @@ public class ActionabilityAnalyzer {
     public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebaseDirectory) throws IOException {
         String basePath = knowledgebaseDirectory + File.separator;
         SomaticVariantEvidenceAnalyzer variantAnalyzer =
-                SomaticVariantEvidenceAnalyzerFactory.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_FILE,
-                        basePath + ACTIONABLE_RANGES_FILE);
+                SomaticVariantEvidenceAnalyzerFactory.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_TSV,
+                        basePath + ACTIONABLE_RANGES_TSV);
 
-        CopyNumberEvidenceAnalyzer cnvAnalyzer = CopyNumberEvidenceAnalyzerFactory.loadFromFileCNVs(basePath + ACTIONABLE_CNV_FILE);
+        CopyNumberEvidenceAnalyzer cnvAnalyzer = CopyNumberEvidenceAnalyzerFactory.loadFromFileCNVs(basePath + ACTIONABLE_CNV_TSV);
 
-        FusionEvidenceAnalyzer fusionAnalyzer = FusionEvidenceAnalyzerFactory.loadFromFileFusions(basePath + ACTIONABLE_FUSION_PAIR_FILE,
-                basePath + ACTIONABLE_PROMISCUOUS_FIVE_FILE,
-                basePath + ACTIONABLE_PROMISCUOUS_THREE_FILE);
+        FusionEvidenceAnalyzer fusionAnalyzer = FusionEvidenceAnalyzerFactory.loadFromFileFusions(basePath + ACTIONABLE_FUSION_PAIR_TSV,
+                basePath + ACTIONABLE_PROMISCUOUS_FIVE_TSV,
+                basePath + ACTIONABLE_PROMISCUOUS_THREE_TSV);
 
-        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.createFromKnowledgeBase(basePath + CANCER_TYPE_DOID_MAPPING_FILE);
+        CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzer.createFromKnowledgeBase(basePath + CANCER_TYPE_DOID_MAPPING_TSV);
 
         return new ActionabilityAnalyzer(variantAnalyzer, cnvAnalyzer, fusionAnalyzer, cancerTypeAnalyzer);
     }
@@ -82,7 +82,8 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public FusionEvidenceAnalyzer fusionAnalyzer() {
+    @VisibleForTesting
+    FusionEvidenceAnalyzer fusionAnalyzer() {
         return fusionAnalyzer;
     }
 
@@ -96,7 +97,7 @@ public class ActionabilityAnalyzer {
                 .collect(Collectors.toList());
 
         for (ReportableVariant variant : variantsOnActionableGenes) {
-            evidencePerVariant.put(variant, variantAnalyzer.evidenceForAllVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
+            evidencePerVariant.put(variant, variantAnalyzer.evidenceForVariant(variant, primaryTumorLocation, cancerTypeAnalyzer));
         }
 
         return evidencePerVariant;

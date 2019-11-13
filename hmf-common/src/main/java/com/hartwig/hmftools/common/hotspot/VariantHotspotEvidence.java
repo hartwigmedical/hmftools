@@ -37,14 +37,6 @@ public interface VariantHotspotEvidence extends VariantHotspot {
 
     int readContextCountOther();
 
-    default int avgAltDistanceFromRecordStart() {
-        return altDistanceFromRecordStart() / altSupport();
-    }
-
-    default int avgAltMinDistanceFromAlignment() {
-        return altMinDistanceFromAlignment() / altSupport();
-    }
-
     default double vaf() {
         return readDepth() == 0 ? 0 : (double) altSupport() / readDepth();
     }

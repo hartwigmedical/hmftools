@@ -23,7 +23,6 @@ public final class RepeatContextFactory {
 
     @NotNull
     public static Optional<RepeatContext> repeats(int index, final byte[] readSequence) {
-
         final List<RepeatContext> repeatContexts = Lists.newArrayList();
 
         if (readSequence.length >= index) {

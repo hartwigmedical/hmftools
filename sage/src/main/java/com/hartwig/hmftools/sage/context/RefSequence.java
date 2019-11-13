@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.context;
 
 import java.util.Arrays;
 
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 

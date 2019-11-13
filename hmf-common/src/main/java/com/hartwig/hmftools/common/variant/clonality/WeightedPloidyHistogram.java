@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.variant.clonality;
 import java.util.Collection;
 import java.util.function.Function;
 
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 

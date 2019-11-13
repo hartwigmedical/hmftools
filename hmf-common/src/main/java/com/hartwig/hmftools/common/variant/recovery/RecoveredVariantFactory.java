@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
@@ -135,7 +135,7 @@ class RecoveredVariantFactory implements AutoCloseable {
             if (cipos.contains(",")) {
                 for (String s : cipos.split(",")) {
                     try {
-                        max = Math.max(max, 2 * Math.abs(Integer.valueOf(s)));
+                        max = Math.max(max, 2 * Math.abs(Integer.parseInt(s)));
                     } catch (Exception ignored) {
 
                     }

@@ -76,8 +76,8 @@ public class ReadContextTest {
         ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGATC".getBytes());
         ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 4, 4, 5, 4, "ATCTTGATCT".getBytes());
 
-        assertTrue(victim1.phased(victim2));
-        assertTrue(victim2.phased(victim1));
+        assertTrue(victim1.phased(-1, victim2));
+        assertTrue(victim2.phased(1, victim1));
     }
 
 }

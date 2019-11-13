@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.hotspot;
 
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

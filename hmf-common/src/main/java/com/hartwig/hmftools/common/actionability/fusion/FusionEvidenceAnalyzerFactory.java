@@ -18,15 +18,15 @@ public final class FusionEvidenceAnalyzerFactory {
     }
 
     @NotNull
-    public static FusionEvidenceAnalyzer loadFromFileFusions(@NotNull String fileFusionPairs, @NotNull String filePromiscuousFive,
-            @NotNull String filePromiscuousThree) throws IOException {
+    public static FusionEvidenceAnalyzer loadFromFileFusions(@NotNull String actionableFusionPairsTsv,
+            @NotNull String actionablePromiscuousFiveTsv, @NotNull String actionablePromiscuousThreeTsv) throws IOException {
         final List<ActionableFusion> fusionPairs = Lists.newArrayList();
         final List<ActionablePromiscuous> promiscuousFive = Lists.newArrayList();
         final List<ActionablePromiscuous> promiscuousThree = Lists.newArrayList();
 
-        final List<String> lineFusionPairs = Files.readAllLines(new File(fileFusionPairs).toPath());
-        final List<String> linePromiscuousFives = Files.readAllLines(new File(filePromiscuousFive).toPath());
-        final List<String> linePromiscuousThrees = Files.readAllLines(new File(filePromiscuousThree).toPath());
+        final List<String> lineFusionPairs = Files.readAllLines(new File(actionableFusionPairsTsv).toPath());
+        final List<String> linePromiscuousFives = Files.readAllLines(new File(actionablePromiscuousFiveTsv).toPath());
+        final List<String> linePromiscuousThrees = Files.readAllLines(new File(actionablePromiscuousThreeTsv).toPath());
 
         for (String lineFusionPair : lineFusionPairs.subList(1, lineFusionPairs.size())) {
             fusionPairs.add(fromLineFusionPairs(lineFusionPair));
@@ -44,21 +44,6 @@ public final class FusionEvidenceAnalyzerFactory {
     }
 
     @NotNull
-    private static ActionablePromiscuous fromLinePromiscuous(@NotNull String line) {
-        final String[] values = line.split(DELIMITER);
-        return ImmutableActionablePromiscuous.builder()
-                .gene(values[0])
-                .source(values[1])
-                .reference(values[2])
-                .drug(MultiDrugCurator.reformat(values[3]))
-                .drugsType(values[4])
-                .cancerType(values[5])
-                .level(values[7])
-                .response(values[10])
-                .build();
-    }
-
-    @NotNull
     private static ActionableFusion fromLineFusionPairs(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         return ImmutableActionableFusion.builder()
@@ -71,6 +56,21 @@ public final class FusionEvidenceAnalyzerFactory {
                 .cancerType(values[6])
                 .level(values[8])
                 .response(values[11])
+                .build();
+    }
+
+    @NotNull
+    private static ActionablePromiscuous fromLinePromiscuous(@NotNull String line) {
+        final String[] values = line.split(DELIMITER);
+        return ImmutableActionablePromiscuous.builder()
+                .gene(values[0])
+                .source(values[1])
+                .reference(values[2])
+                .drug(MultiDrugCurator.reformat(values[3]))
+                .drugsType(values[4])
+                .cancerType(values[5])
+                .level(values[7])
+                .response(values[10])
                 .build();
     }
 }

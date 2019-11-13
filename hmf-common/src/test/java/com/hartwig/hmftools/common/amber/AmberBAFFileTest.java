@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Test;
 
@@ -42,5 +42,4 @@ public class AmberBAFFileTest {
         final List<AmberBAF> hg38 = Lists.newArrayList(AmberBAFFile.read(HG38_PATH).get(HumanChromosome._1));
         assertEquals(6, hg38.size());
     }
-
 }

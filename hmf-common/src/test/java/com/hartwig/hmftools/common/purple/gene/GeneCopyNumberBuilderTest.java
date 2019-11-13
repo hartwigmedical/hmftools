@@ -4,13 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
 
+import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.ImmutableHmfExonRegion;
+import com.hartwig.hmftools.common.genome.region.ImmutableHmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.purple.PurpleDatamodelTest;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.region.HmfExonRegion;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.region.ImmutableHmfExonRegion;
-import com.hartwig.hmftools.common.region.ImmutableHmfTranscriptRegion;
-import com.hartwig.hmftools.common.region.Strand;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;

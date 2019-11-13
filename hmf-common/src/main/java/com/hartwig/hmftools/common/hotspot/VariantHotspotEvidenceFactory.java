@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.hotspot;
 
-import static com.hartwig.hmftools.common.sam.SAMRecords.basesDeletedAfterPosition;
-import static com.hartwig.hmftools.common.sam.SAMRecords.basesInsertedAfterPosition;
-import static com.hartwig.hmftools.common.sam.SAMRecords.containsDelete;
-import static com.hartwig.hmftools.common.sam.SAMRecords.containsInsert;
-import static com.hartwig.hmftools.common.sam.SAMRecords.getAvgBaseQuality;
-import static com.hartwig.hmftools.common.sam.SAMRecords.getBaseQuality;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesDeletedAfterPosition;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesInsertedAfterPosition;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsDelete;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.containsInsert;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getAvgBaseQuality;
+import static com.hartwig.hmftools.common.utils.sam.SAMRecords.getBaseQuality;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,12 +19,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.collect.Multimaps;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.region.GenomeRegions;
-import com.hartwig.hmftools.common.sam.SAMRecords;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -39,18 +39,17 @@ public class VariantHotspotEvidenceFactory {
     private static final int DEFAULT_TYPICAL_READ_LENGTH = 151;
 
     private final int minBaseQuality;
-    private final SAMSlicer samSlicer;
     private final Collection<VariantHotspot> hotspots;
+    private final SAMSlicer samSlicer;
 
     public VariantHotspotEvidenceFactory(int minMappingQuality, int minBaseQuality, @NotNull final Set<VariantHotspot> hotspots) {
         this.minBaseQuality = minBaseQuality;
         this.hotspots = hotspots;
-        samSlicer = new SAMSlicer(minMappingQuality, asRegions(hotspots));
+        this.samSlicer = new SAMSlicer(minMappingQuality, asRegions(hotspots));
     }
 
     @NotNull
     public List<VariantHotspotEvidence> evidence(@NotNull final IndexedFastaSequenceFile sequenceFile, @NotNull final SamReader samReader) {
-
         final Map<VariantHotspot, String> refSequenceMap = Maps.newHashMap();
         final Map<VariantHotspot, ModifiableVariantHotspotEvidence> evidenceMap = Maps.newHashMap();
         final ListMultimap<Chromosome, VariantHotspot> hotspotMap = Multimaps.fromPositions(hotspots);
@@ -176,7 +175,6 @@ public class VariantHotspotEvidenceFactory {
     @NotNull
     ModifiableVariantHotspotEvidence findEvidenceOfMNV(@NotNull final ModifiableVariantHotspotEvidence builder, int start,
             @NotNull final String refSequence, @NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
-
         int hotspotStartPosition = (int) hotspot.position();
         int hotspotLength = Math.max(hotspot.ref().length(), hotspot.alt().length());
 
@@ -226,7 +224,6 @@ public class VariantHotspotEvidenceFactory {
     @VisibleForTesting
     static boolean isVariantPartOfLargerMNV(int start, @NotNull final String refSequence, @NotNull final VariantHotspot hotspot,
             @NotNull final SAMRecord record) {
-
         int mvnLength = Math.max(hotspot.ref().length(), hotspot.alt().length());
         int hotspotStartPosition = (int) hotspot.position();
         int hotspotEndPosition = (int) hotspot.position() + mvnLength - 1;
@@ -313,13 +310,11 @@ public class VariantHotspotEvidenceFactory {
                 .setSubprimeReadDepth(0)
                 .setReadContext(Strings.EMPTY)
                 .setReadContextCount(0)
-                .setReadContextCountOther(0)
-                ;
+                .setReadContextCountOther(0);
     }
 
     @NotNull
-    private List<GenomeRegion> asRegions(@NotNull final Set<VariantHotspot> allHotspots) {
-
+    private static List<GenomeRegion> asRegions(@NotNull final Set<VariantHotspot> allHotspots) {
         final Map<String, GenomeRegions> builders = Maps.newHashMap();
         allHotspots.forEach(x -> builders.computeIfAbsent(x.chromosome(), key -> new GenomeRegions(key, DEFAULT_TYPICAL_READ_LENGTH))
                 .addPosition(x.position()));
@@ -330,5 +325,4 @@ public class VariantHotspotEvidenceFactory {
         Collections.sort(results);
         return results;
     }
-
 }

@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,6 @@ public class SAMSlicer {
     }
 
     public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
-
         final Set<String> processed = Sets.newHashSet();
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
 
@@ -60,5 +59,4 @@ public class SAMSlicer {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
                 .isSecondaryOrSupplementary();
     }
-
 }

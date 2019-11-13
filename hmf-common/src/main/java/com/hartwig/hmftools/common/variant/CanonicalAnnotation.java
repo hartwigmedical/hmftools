@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.region.CanonicalTranscriptFactory;
-import com.hartwig.hmftools.common.region.TranscriptRegion;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
+import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
@@ -39,7 +39,7 @@ public class CanonicalAnnotation {
     }
 
     @NotNull
-    public Optional<CosmicAnnotation> canonicalCosmicAnnotation(@NotNull final List<CosmicAnnotation> cosmicAnnotations) {
+    Optional<CosmicAnnotation> canonicalCosmicAnnotation(@NotNull final List<CosmicAnnotation> cosmicAnnotations) {
         return pickCanonicalFavourDriverGene(cosmicAnnotations);
     }
 
@@ -69,5 +69,4 @@ public class CanonicalAnnotation {
 
         return Optional.empty();
     }
-
 }

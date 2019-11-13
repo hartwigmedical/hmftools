@@ -18,33 +18,29 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class GermlineVcfParser
 {
-    private final GermlineVariantFinder mProgram;
+    private static final Logger LOGGER = LogManager.getLogger(GermlineVcfParser.class);
 
     private final BachelorConfig mConfig;
-
-    // config
+    private final GermlineVariantFinder mProgram;
     private final boolean mSkipIndexFile;
-    private final String mExternalFiltersFile;
-
-    private static final Logger LOGGER = LogManager.getLogger(GermlineVcfParser.class);
 
     GermlineVcfParser(final BachelorConfig config, final CommandLine cmd)
     {
         mConfig = config;
 
-        mExternalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
-        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
-
         mProgram = new GermlineVariantFinder();
+
+        mSkipIndexFile = cmd.hasOption(SKIP_INDEX_FILE);
 
         if(!mProgram.loadConfig(mConfig.ProgramConfigMap))
         {
             return;
         }
 
-        if(!mExternalFiltersFile.isEmpty())
+        final String externalFiltersFile = cmd.getOptionValue(EXTERNAL_FILTER_FILE, "");
+        if(!externalFiltersFile.isEmpty())
         {
-            mProgram.addExternalFilters(ExternalDBFilters.loadExternalFilters(mExternalFiltersFile));
+            mProgram.addExternalFilters(ExternalDBFilters.loadExternalFilters(externalFiltersFile));
         }
     }
 
@@ -57,9 +53,9 @@ public class GermlineVcfParser
         options.addOption(EXTERNAL_FILTER_FILE, true, "Optional: name of an external filter file");
     }
 
-    public List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
+    List<BachelorGermlineVariant> getBachelorRecords() { return mProgram.getVariants(); }
 
-    public boolean run(final String vcfFile, String sampleId, String singleSampleOutputDir)
+    boolean run(final String vcfFile, String sampleId, String singleSampleOutputDir)
     {
         if (mConfig.ProgramConfigMap.isEmpty())
         {

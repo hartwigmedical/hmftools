@@ -3,9 +3,9 @@ package com.hartwig.hmftools.common.purple.gene;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
-import com.hartwig.hmftools.common.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.zipper.RegionZipper;
+import com.hartwig.hmftools.common.utils.zipper.RegionZipper;
 
 import org.jetbrains.annotations.NotNull;
 

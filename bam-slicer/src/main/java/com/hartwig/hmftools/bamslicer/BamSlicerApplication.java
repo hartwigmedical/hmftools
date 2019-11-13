@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.region.GenomeRegion;
-import com.hartwig.hmftools.common.slicing.Slicer;
-import com.hartwig.hmftools.common.slicing.SlicerFactory;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.slicing.Slicer;
+import com.hartwig.hmftools.common.genome.slicing.SlicerFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -244,7 +244,7 @@ public class BamSlicerApplication {
         for (final Chunk chunk : chunks) {
             final long chunkEndBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
             final long extendedEndBlockAddress = chunkEndBlockAddress + BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
-            final long newChunkEnd = extendedEndBlockAddress > MAX_BLOCK_ADDRESS ? MAX_BLOCK_ADDRESS : extendedEndBlockAddress;
+            final long newChunkEnd = Math.min(extendedEndBlockAddress, MAX_BLOCK_ADDRESS);
             final long chunkEndVirtualPointer = newChunkEnd << 16;
             result.add(new Chunk(chunk.getChunkStart(), chunkEndVirtualPointer));
         }

@@ -2,13 +2,18 @@
 # Somatic Alterations in Genome (SAGE)
 SAGE is a somatic SNV, MNV and small INDEL caller.
 
+## Candidate Detection
+
+
+
+
 
 ## Distinct Read Context
 
-The read context is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not the ref genome). 
+The read context is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not ref sequence). 
 In this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
 
-For a SNV in a non-repeat sequence this will just be the single alternate base, 'A'. 
+For a SNV in a non-repeat sequence this will just be the single alternate base. 
 For a SNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAC'.
 
 A DEL will always include the bases on either side of the deleted sequence. 
@@ -17,12 +22,10 @@ If the deleted read sequence is part of a microhomology or repeat sequence, this
 An INSERT will always include the base to the left of the insert as well as the new sequence. 
 As with a DEL, the read context will be extended to include any repeats and/or microhomology.
 
+The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is  
+nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
 
-The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases is nominally left aligned at 
-position 7 as AAAAC > A but can equally be  represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
-Using a read context of `CAAAAACAAACAAACAAT` which spans the microhomology will match (shown bolded) every alt but not the ref:
-
-The ref and read sequences appear as:
+Using a (bolded) read context of `CAAAAACAAACAAACAAT` spanning the microhomology matches every alt but not the ref:
 
 <pre>
 REF:   GTCTCAAAAACAAACAAACAAACAATAAAAAAC 
@@ -43,15 +46,62 @@ ALT:   GTCT<b>CAAAAACAAACAAACA    AT</b>AAAAAAC
 ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
 </pre>
 
+A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
+
+TODO: explain sides/wings
+
+## Quality Score
+
+Full and partial read context matches both contribute to the quality score. Realigned matches do not. Lengthened and shortened realigned matches subtract from the score.
 
 
 
+## Phased Variants
+Two variants are considered phased if their read contexts are identical after adjusting for their relative position.
+This is demonstrated in the example below where two SNVs share an identical sequence of bases.
+
+<pre>
+REF: CAACAATCGAACGATATAAATCTGAAA
+A>T: CAACAATCGA<b>T</b>CGATAAAATC
+T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
+</pre>
+
+Similarly, SNVs and INDELs may be phased together.
+
+Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
+
+Phasing variants opens up a number of algorithmic possibilities including MNV detection and de-duplication as explained below.
+
+### MNV Detection
+
+If two SNVs are separated by no more than one base, they will be merged together to form a MNV.  
+For example, the following phased SNVs will me merged to give the resultant MNV `TCGA > CGGT`:
+<pre>
+REF: CAACAATCGATCGATATAAATCTGA
+T>C: CAACAA<b>C</b>GGTTCGATATAAATC
+C>G:  AACAAC<b>G</b>GTTCGATATAAATCT
+A>T:    CAACGG<b>T</b>TCGATATAAATCTGA
+
+MNV: CAACAA<b>CG</b>G<b>T</b>TCGATATAAATCTGA
+</pre>
+
+The smallest value of each of the SNV properties (ie ref support, alt support, read context full match etc) is used to construct the MNV.
+The merged SNVs are filtered with `merge`.
+
+### SNV De-duplication
+
+By convention, INDELs start one base to the left of the actual insert or delete. 
+If this base is also a SNV, this will result in 2 variants, 1 for the SNV and 1 for the INDEL, ie:
+
+```
+C > T
+C > TCAA
+```
+
+If the two variants are phased, the SNV is superfluous, and is thus filtered with `dedup`. 
 
 
-Ref | Alt | ReadContext | Repeat | Microhomology
------------- | -------------| -------------| -------------| -------------
- C | A | C | NA | NA
- C | A | TAAAAAC | Ax4 | NA
- CCGT | C | CT | NA | NA
- AAAAC | A | CAAAAACAAACAAACAAT | Ax5 | AAAC
- 
+
+## Output
+
+

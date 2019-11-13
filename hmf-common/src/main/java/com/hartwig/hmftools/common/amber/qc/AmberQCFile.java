@@ -7,16 +7,19 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
+import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AmberQCFile {
+public final class AmberQCFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".amber.qc";
+
+    private AmberQCFile() {
+    }
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
@@ -35,8 +38,8 @@ public class AmberQCFile {
     private static AmberQC fromLines(@NotNull final List<String> lines) throws MalformedFileException {
         try {
             return ImmutableAmberQC.builder()
-                    .meanBAF(Double.valueOf(getValue(lines.get(1))))
-                    .contamination(lines.size() > 2 ? Double.valueOf(getValue(lines.get(2))) : 0 )
+                    .meanBAF(Double.parseDouble(getValue(lines.get(1))))
+                    .contamination(lines.size() > 2 ? Double.parseDouble(getValue(lines.get(2))) : 0 )
                     .build();
         } catch (Exception e) {
             throw new MalformedFileException("Unable to parse amber qc file.");

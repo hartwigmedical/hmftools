@@ -10,11 +10,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.pcf.PCFPosition;
-import com.hartwig.hmftools.common.pcf.PCFSource;
-import com.hartwig.hmftools.common.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -71,8 +71,7 @@ public final class PurpleSegmentFactory {
     }
 
     @NotNull
-    @VisibleForTesting
-    static List<PurpleSegment> create(@NotNull final GenomePosition length, @NotNull final Collection<Cluster> clusters) {
+    private static List<PurpleSegment> create(@NotNull final GenomePosition length, @NotNull final Collection<Cluster> clusters) {
         final List<PurpleSegment> result = Lists.newArrayList();
         ModifiablePurpleSegment segment = create(length.chromosome()).setSupport(SegmentSupport.TELOMERE);
 
@@ -110,9 +109,9 @@ public final class PurpleSegmentFactory {
         return ModifiablePurpleSegment.create()
                 .setChromosome(chromosome)
                 .setRatioSupport(true)
-                .setStart((long) 1)
-                .setMinStart((long) 1)
-                .setMaxStart((long) 1)
+                .setStart(1)
+                .setMinStart(1)
+                .setMaxStart(1)
                 .setEnd(0)
                 .setSvCluster(false)
                 .setSupport(SegmentSupport.NONE);

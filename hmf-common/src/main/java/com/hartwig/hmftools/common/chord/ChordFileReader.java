@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import com.hartwig.hmftools.common.io.exception.EmptyFileException;
-import com.hartwig.hmftools.common.io.exception.MalformedFileException;
+import com.hartwig.hmftools.common.utils.io.exception.EmptyFileException;
+import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
 import org.jetbrains.annotations.NotNull;
 

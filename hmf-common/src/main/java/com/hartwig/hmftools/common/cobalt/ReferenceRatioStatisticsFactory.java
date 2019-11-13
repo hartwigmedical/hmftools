@@ -7,13 +7,16 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.google.common.collect.Multimap;
-import com.hartwig.hmftools.common.chromosome.Chromosome;
-import com.hartwig.hmftools.common.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.numeric.Doubles;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class ReferenceRatioStatisticsFactory {
+
+    private ReferenceRatioStatisticsFactory() {
+    }
 
     public static ReferenceRatioStatistics fromReferenceRatio(@NotNull final Multimap<Chromosome, ReadRatio> readRatios) {
         return fromRatio(readRatios, ReadRatio::ratio);

@@ -9,9 +9,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
-import com.hartwig.hmftools.common.numeric.Doubles;
-import com.hartwig.hmftools.common.position.GenomePosition;
-import com.hartwig.hmftools.common.position.GenomePositions;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.position.GenomePositions;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.jetbrains.annotations.NotNull;
@@ -110,8 +110,7 @@ public class HotspotEvidenceVCF {
     }
 
     @NotNull
-    VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
-
+    private VariantContext create(@NotNull final HotspotEvidence hotspotEvidence) {
         final Allele ref = Allele.create(hotspotEvidence.ref(), true);
         final Allele alt = Allele.create(hotspotEvidence.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
@@ -197,5 +196,4 @@ public class HotspotEvidenceVCF {
 
         return header;
     }
-
 }
