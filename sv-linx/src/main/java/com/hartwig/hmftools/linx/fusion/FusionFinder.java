@@ -67,15 +67,12 @@ public class FusionFinder
 
     private void initialise(@NotNull final CommandLine cmd)
     {
-        if(cmd.hasOption(FUSION_PAIRS_CSV) || cmd.hasOption(PROMISCUOUS_FIVE_CSV) || cmd.hasOption(PROMISCUOUS_THREE_CSV))
-        {
-            mKnownFusionData = new KnownFusionData();
+        mKnownFusionData = new KnownFusionData();
 
-            if(mKnownFusionData.loadFromFile(cmd))
-            {
-                LOGGER.debug("loaded known fusion data");
-                mHasValidConfigData = true;
-            }
+        if(mKnownFusionData.loadFromFile(cmd))
+        {
+            LOGGER.debug("loaded known fusion data");
+            mHasValidConfigData = true;
         }
     }
 
