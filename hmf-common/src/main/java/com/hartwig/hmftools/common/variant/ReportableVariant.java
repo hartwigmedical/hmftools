@@ -14,10 +14,10 @@ public abstract class ReportableVariant implements AllelicDepth {
     @NotNull
     public abstract String gene();
 
-    public abstract long position();
-
     @NotNull
     public abstract String chromosome();
+
+    public abstract long position();
 
     @NotNull
     public abstract String ref();

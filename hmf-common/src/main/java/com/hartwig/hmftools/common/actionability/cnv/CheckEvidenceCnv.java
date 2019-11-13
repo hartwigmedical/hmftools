@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class CheckEvidenceCnv {
+
     private static final Logger LOGGER = LogManager.getLogger(CheckEvidenceCnv.class);
 
     private CheckEvidenceCnv() {

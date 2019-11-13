@@ -10,6 +10,9 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
+// NOTE: PLEASE DO NOT DELETE THIS... CURRENTLY USED AS PART OF THE GENE PANEL PROCESS
+// TODO: Move this somewhere it can be run automatically, like into the knowledgebase perhaps?
+@SuppressWarnings("unused")
 public class ActionablePanelFile {
 
     private static final String DELIMITER = "\t";
@@ -43,7 +46,7 @@ public class ActionablePanelFile {
 
     @NotNull
     private static String toString(@NotNull final ActionablePanel panel) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(panel.gene()))
+        return new StringJoiner(DELIMITER).add(panel.gene())
                 .add(String.valueOf(panel.amplification()))
                 .add(String.valueOf(panel.deletion()))
                 .add(String.valueOf(panel.variant()))
@@ -54,5 +57,4 @@ public class ActionablePanelFile {
                 .add(panel.resistantSource().isEmpty() ? "NA" : panel.resistantSource())
                 .toString();
     }
-
 }

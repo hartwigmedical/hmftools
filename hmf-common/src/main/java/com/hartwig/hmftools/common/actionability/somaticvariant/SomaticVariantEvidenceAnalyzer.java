@@ -53,37 +53,7 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForSomaticVariant(@NotNull SomaticVariant variant, @Nullable String primaryTumorLocation,
-            @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
-        List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        for (ActionableSomaticVariant actionableVariant : actionableVariants) {
-            if (variant.gene().equals(actionableVariant.gene()) && variant.chromosome().equals(actionableVariant.chromosome())
-                    && variant.position() == actionableVariant.position() && variant.ref().equals(actionableVariant.ref()) && variant.alt()
-                    .equals(actionableVariant.alt())) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableVariant(actionableVariant);
-                evidenceBuilder.event(eventString(variant));
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableVariant.cancerType(), primaryTumorLocation));
-
-                evidenceItems.add(evidenceBuilder.build());
-            }
-        }
-
-        for (ActionableRange actionableRange : actionableRanges) {
-            if (CODING_EFFECTS.contains(variant.canonicalCodingEffect()) && variant.gene().equals(actionableRange.gene())
-                    && variant.chromosome().equals(actionableRange.chromosome()) && variant.position() >= actionableRange.start()
-                    && variant.position() <= actionableRange.end()) {
-                ImmutableEvidenceItem.Builder evidenceBuilder = fromActionableRange(actionableRange);
-                evidenceBuilder.event(eventString(variant));
-                evidenceBuilder.isOnLabel(cancerTypeAnalyzer.isCancerTypeMatch(actionableRange.cancerType(), primaryTumorLocation));
-
-                evidenceItems.add(evidenceBuilder.build());
-            }
-        }
-        return evidenceItems;
-    }
-
-    @NotNull
-    public List<EvidenceItem> evidenceForAllVariant(@NotNull ReportableVariant variant, @Nullable String primaryTumorLocation,
+    public List<EvidenceItem> evidenceForVariant(@NotNull ReportableVariant variant, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableSomaticVariant actionableVariant : actionableVariants) {

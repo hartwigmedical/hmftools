@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.actionability.util;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,9 +27,8 @@ public final class MultiDrugCurator {
 
     @NotNull
     private static List<String> sortedAndTrimmedParts(@NotNull String drug) {
-        List<String> drugParts = Arrays.asList(drug.split(Pattern.quote("+")));
         List<String> trimmedParts = Lists.newArrayList();
-        for (String part : drugParts) {
+        for (String part : drug.split(Pattern.quote("+"))) {
             trimmedParts.add(part.trim());
         }
         return trimmedParts.stream().sorted().collect(Collectors.toList());

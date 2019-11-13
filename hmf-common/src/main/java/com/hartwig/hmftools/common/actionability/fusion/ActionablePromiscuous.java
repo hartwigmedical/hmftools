@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ActionablePromiscuous implements Actionable {
+
     @NotNull
     public abstract String gene();
 }

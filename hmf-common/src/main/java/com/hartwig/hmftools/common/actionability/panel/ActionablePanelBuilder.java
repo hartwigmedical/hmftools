@@ -37,8 +37,7 @@ public class ActionablePanelBuilder {
         addDrup(drup);
     }
 
-    @NotNull
-    public ActionablePanelBuilder addCopyNumbers(@NotNull final CopyNumberEvidenceAnalyzer copyNumberEvidenceAnalyzer) {
+    private void addCopyNumbers(@NotNull CopyNumberEvidenceAnalyzer copyNumberEvidenceAnalyzer) {
         copyNumberEvidenceAnalyzer.actionableCopyNumbers().stream().filter(this::filterSource).forEach(x -> {
             final ImmutableActionablePanel.Builder builder = addActionable(x.gene(), x);
             if (x.type() == CopyNumberType.AMPLIFICATION) {
@@ -47,11 +46,9 @@ public class ActionablePanelBuilder {
                 builder.deletion(true);
             }
         });
-        return this;
     }
 
-    @NotNull
-    public ActionablePanelBuilder addVariants(@NotNull final SomaticVariantEvidenceAnalyzer variantEvidenceAnalyzer) {
+    private void addVariants(@NotNull SomaticVariantEvidenceAnalyzer variantEvidenceAnalyzer) {
         variantEvidenceAnalyzer.actionableRanges()
                 .stream()
                 .filter(this::filterSource)
@@ -60,13 +57,10 @@ public class ActionablePanelBuilder {
                 .stream()
                 .filter(this::filterSource)
                 .forEach(x -> addActionable(x.gene(), x).variant(true));
-        return this;
     }
 
-    @NotNull
-    public ActionablePanelBuilder addDrup(@NotNull final DrupActionabilityModel drup) {
+    private void addDrup(@NotNull DrupActionabilityModel drup) {
         drup.actionableGenes().forEach(this::addDrup);
-        return this;
     }
 
     @NotNull
@@ -75,7 +69,7 @@ public class ActionablePanelBuilder {
     }
 
     @NotNull
-    private ImmutableActionablePanel.Builder addActionable(@NotNull final String gene, @NotNull final Actionable actionable) {
+    private ImmutableActionablePanel.Builder addActionable(@NotNull String gene, @NotNull Actionable actionable) {
         final ImmutableActionablePanel.Builder builder = select(gene);
         final ActionablePanel current = builder.build();
 
@@ -96,19 +90,17 @@ public class ActionablePanelBuilder {
         return builder;
     }
 
-    @NotNull
-    private ActionablePanelBuilder addDrup(@NotNull final String gene) {
+    private void addDrup(@NotNull final String gene) {
         select(gene).drup(true);
-        return this;
     }
 
     @NotNull
-    private ImmutableActionablePanel.Builder select(@NotNull final String gene) {
+    private ImmutableActionablePanel.Builder select(@NotNull  String gene) {
         return result.computeIfAbsent(gene, this::create);
     }
 
     @NotNull
-    private ImmutableActionablePanel.Builder create(@NotNull final String gene) {
+    private ImmutableActionablePanel.Builder create(@NotNull String gene) {
         return ImmutableActionablePanel.builder()
                 .gene(gene)
                 .amplification(false)
@@ -121,8 +113,7 @@ public class ActionablePanelBuilder {
                 .resistantSource(Strings.EMPTY);
     }
 
-    private boolean filterSource(@NotNull final Actionable actionable) {
+    private boolean filterSource(@NotNull Actionable actionable) {
         return !EXCLUDE.contains(actionable.source());
     }
-
 }

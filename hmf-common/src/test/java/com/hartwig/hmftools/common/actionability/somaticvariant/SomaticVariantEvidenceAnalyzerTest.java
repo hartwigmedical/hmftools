@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.common.actionability.somaticvariant;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
-import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
+import com.hartwig.hmftools.common.variant.ReportableVariant;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -40,7 +38,7 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .start(10)
                 .end(1500)
                 .source("oncoKB")
-                .reference("NRAS Oncogenic Mutations")
+                .reference("BRAF Oncogenic Mutations")
                 .drug("Cetuximab")
                 .drugsType("EGFR mAb inhibitor")
                 .cancerType("Skin Melanoma")
@@ -53,42 +51,48 @@ public class SomaticVariantEvidenceAnalyzerTest {
 
         CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 
-        SomaticVariant variant = ImmutableSomaticVariantImpl.builder()
+        ReportableVariant variantWithNoCodingEffect = ImmutableReportableVariant.builder()
+                .gene("BRAF")
                 .chromosome("7")
                 .position(100)
                 .ref("C")
                 .alt("T")
-                .type(VariantType.UNDEFINED)
-                .filter(Strings.EMPTY)
-                .gene("BRAF")
-                .genesEffected(0)
-                .worstEffect(Strings.EMPTY)
-                .worstEffectTranscript(Strings.EMPTY)
-                .worstCodingEffect(CodingEffect.NONE)
                 .totalReadCount(0)
                 .alleleReadCount(0)
-                .canonicalEffect(Strings.EMPTY)
-                .canonicalCodingEffect(CodingEffect.UNDEFINED)
-                .canonicalHgvsCodingImpact(Strings.EMPTY)
-                .canonicalHgvsProteinImpact(Strings.EMPTY)
+                .gDNA(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.NONE)
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
                 .hotspot(Hotspot.NON_HOTSPOT)
-                .mappability(0D)
-                .recovered(false)
-                .adjustedCopyNumber(0D)
-                .adjustedVAF(0D)
-                .minorAllelePloidy(0D)
-                .germlineStatus(GermlineStatus.UNKNOWN)
-                .ploidy(0)
                 .biallelic(false)
-                .kataegis(Strings.EMPTY)
-                .trinucleotideContext(Strings.EMPTY)
-                .highConfidenceRegion(false)
-                .microhomology(Strings.EMPTY)
-                .repeatSequence(Strings.EMPTY)
-                .repeatCount(0)
-                .subclonalLikelihood(0)
+                .clonalLikelihood(1)
+                .totalPloidy(0D)
+                .allelePloidy(0D)
+                .notifyClinicalGeneticist(false)
                 .build();
 
-        assertTrue(analyzer.evidenceForSomaticVariant(variant, "Skin", cancerTypeAnalyzer).isEmpty());
+        assertEquals(0, analyzer.evidenceForVariant(variantWithNoCodingEffect, "Skin", cancerTypeAnalyzer).size());
+
+        ReportableVariant variantWithCodingEffect = ImmutableReportableVariant.builder()
+                .gene("BRAF")
+                .chromosome("7")
+                .position(100)
+                .ref("C")
+                .alt("T")
+                .totalReadCount(0)
+                .alleleReadCount(0)
+                .gDNA(Strings.EMPTY)
+                .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .hgvsCodingImpact(Strings.EMPTY)
+                .hgvsProteinImpact(Strings.EMPTY)
+                .hotspot(Hotspot.NON_HOTSPOT)
+                .biallelic(false)
+                .clonalLikelihood(1)
+                .totalPloidy(0D)
+                .allelePloidy(0D)
+                .notifyClinicalGeneticist(false)
+                .build();
+
+        assertEquals(1, analyzer.evidenceForVariant(variantWithCodingEffect, "Skin", cancerTypeAnalyzer).size());
     }
 }

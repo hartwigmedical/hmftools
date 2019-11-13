@@ -27,7 +27,7 @@ class CancerTypeToDOIDMapper {
     private final Map<String, Set<String>> doidsPerCancerType;
 
     @NotNull
-    public static CancerTypeToDOIDMapper createFromFile(@NotNull String knowledgebaseCancerTypesPath) throws IOException {
+    static CancerTypeToDOIDMapper createFromFile(@NotNull String knowledgebaseCancerTypesPath) throws IOException {
         final Map<String, Set<String>> cancerTypeMappings = Maps.newHashMap();
         final List<String> cancerTypeMappingLines = Files.readAllLines(new File(knowledgebaseCancerTypesPath).toPath());
 
@@ -66,10 +66,10 @@ class CancerTypeToDOIDMapper {
     }
 
     @Nullable
-    public Set<String> findDoids(@NotNull String cancerType) {
+    Set<String> findDoids(@NotNull String cancerType) {
         Set<String> doids = doidsPerCancerType.get(cancerType);
         if (doids == null) {
-            LOGGER.warn("Could not resolve cancer type in DOID mapping: " + cancerType);
+            LOGGER.warn("Could not resolve cancer type in DOID mapping: {}", cancerType);
         }
         return doids;
     }
