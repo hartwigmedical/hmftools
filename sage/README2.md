@@ -48,7 +48,7 @@ ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
 
 A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
 
-TODO: explain sides/wings
+TODO: explain flanks
 
 ## Quality Score
 
@@ -103,7 +103,9 @@ If the two variants are phased, the SNV is superfluous, and is thus filtered wit
 
 ### INDEL De-duplication
 
-
+While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate INDELs. 
+If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
+ 
 
 ## Output
 
