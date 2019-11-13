@@ -36,7 +36,7 @@ import htsjdk.samtools.util.IOUtil;
  * THE SOFTWARE.
  */
 
-public class RExecutor {
+public final class RExecutor {
 
     private static final String R_EXE = "Rscript";
     private static final Logger LOGGER = LogManager.getLogger(RExecutor.class);
@@ -49,7 +49,8 @@ public class RExecutor {
         return returnCode;
     }
 
-    public static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments) throws IOException, InterruptedException {
+    private static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments)
+            throws IOException, InterruptedException {
         final String[] command = new String[arguments.length + 2];
         command[0] = R_EXE;
         command[1] = scriptFile.getAbsolutePath();
@@ -61,7 +62,7 @@ public class RExecutor {
         LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
         if (result != 0) {
-            LOGGER.fatal("Error executing R script. Examine error file " +  errorFile.toString() + " for details.");
+            LOGGER.fatal("Error executing R script. Examine error file " + errorFile.toString() + " for details.");
         }
 
         return result;
