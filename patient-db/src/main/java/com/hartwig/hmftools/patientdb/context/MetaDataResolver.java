@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.context;
+package com.hartwig.hmftools.patientdb.context;
 
 import java.io.File;
 import java.io.FileNotFoundException;

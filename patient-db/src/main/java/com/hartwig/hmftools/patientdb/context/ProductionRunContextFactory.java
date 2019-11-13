@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.context;
+package com.hartwig.hmftools.patientdb.context;
 
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
