@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientreporter.variants.somatic;
+package com.hartwig.hmftools.common.genome.somaticvariant;
 
 import java.util.List;
 import java.util.Set;
@@ -64,7 +64,7 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
+    public static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
         return variant -> {
             if (variant.isFiltered()) {
                 return false;

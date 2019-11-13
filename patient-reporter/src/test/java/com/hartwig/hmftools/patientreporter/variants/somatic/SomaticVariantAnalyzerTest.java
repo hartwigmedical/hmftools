@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.somaticvariant.SomaticVariantAnalysis;
+import com.hartwig.hmftools.common.genome.somaticvariant.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;

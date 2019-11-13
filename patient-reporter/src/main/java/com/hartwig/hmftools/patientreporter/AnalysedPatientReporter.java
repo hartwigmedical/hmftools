@@ -42,8 +42,8 @@ import com.hartwig.hmftools.common.bachelor.BachelorFile;
 import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
 import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.reportablegenomicalterations.ReportableGermlineVariant;
-import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
-import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
+import com.hartwig.hmftools.common.genome.somaticvariant.SomaticVariantAnalysis;
+import com.hartwig.hmftools.common.genome.somaticvariant.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertionAnalyzer;
 

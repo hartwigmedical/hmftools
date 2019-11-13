@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.drivergene.DriverGeneView;
 import com.hartwig.hmftools.common.drivergene.DriverGeneViewFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.genome.somaticvariant.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
@@ -148,7 +150,9 @@ public class LoadEvidenceData {
         driverCatalog.addAll(TsgDrivers.drivers(passSomaticVariants, geneCopyNumbers));
 
         LOGGER.info("Merging all reportable somatic variants");
-        return AllReportableVariants.mergeAllSomaticVariants(passSomaticVariants, driverCatalog, driverGeneView);
+        List<SomaticVariant> variantsToReport = passSomaticVariants.stream().filter(SomaticVariantAnalyzer.includeFilter(driverGeneView)).collect(Collectors.toList());
+
+        return AllReportableVariants.mergeAllSomaticVariants(variantsToReport, driverCatalog, driverGeneView);
     }
 
     @NotNull
