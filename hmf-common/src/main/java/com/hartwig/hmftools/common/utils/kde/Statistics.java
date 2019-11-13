@@ -3,7 +3,7 @@
 // (powered by Fernflower decompiler)
 //
 
-package com.hartwig.hmftools.common.math.kde;
+package com.hartwig.hmftools.common.utils.kde;
 /**
  * Class implementing some distributions, tests, etc. The code is mostly adapted from the CERN
  * Jet Java libraries:

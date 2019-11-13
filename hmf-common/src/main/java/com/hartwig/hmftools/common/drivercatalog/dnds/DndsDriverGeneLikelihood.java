@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.dnds;
+package com.hartwig.hmftools.common.drivercatalog.dnds;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

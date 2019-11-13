@@ -4,10 +4,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihood;
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
-import com.hartwig.hmftools.common.dnds.DndsDriverImpactLikelihood;
-import com.hartwig.hmftools.common.dnds.ImmutableDndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
+import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsDriverImpactLikelihood;
 
 import org.junit.Before;
 import org.junit.Test;

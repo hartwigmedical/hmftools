@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.genome.gc;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

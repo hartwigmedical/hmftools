@@ -60,7 +60,6 @@ public class MicrosatelliteIndels implements Consumer<VariantContext> {
     }
 
     private static boolean isPassIndel(@NotNull final VariantContext context) {
-
         int altLength = alt(context).length();
         int refLength = context.getReference().getBaseString().length();
 

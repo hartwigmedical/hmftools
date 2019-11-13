@@ -3,8 +3,9 @@ package com.hartwig.hmftools.common.actionability.cnv;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +24,8 @@ public final class SignificantGeneCopyNumberFilter {
                 .collect(Collectors.toList());
     }
 
-    public static boolean isSignificant(double averageTumorPloidy, double copyNumber) {
+    @VisibleForTesting
+    static boolean isSignificant(double averageTumorPloidy, double copyNumber) {
         if (Doubles.lessOrEqual(copyNumber, ABS_LOSS)) {
             return true;
         }

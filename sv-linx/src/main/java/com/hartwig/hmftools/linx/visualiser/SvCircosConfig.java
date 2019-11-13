@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

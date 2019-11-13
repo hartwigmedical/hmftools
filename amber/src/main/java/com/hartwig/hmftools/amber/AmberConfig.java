@@ -2,7 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -180,7 +180,7 @@ public interface AmberConfig {
 
     static double defaultDoubleValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
         if (cmd.hasOption(opt)) {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
+            final double result = Double.parseDouble(cmd.getOptionValue(opt));
             if (!Doubles.equal(result, defaultValue)) {
                 LOGGER.info("Using non default value {} for parameter {}", result, opt);
             }
@@ -192,7 +192,7 @@ public interface AmberConfig {
 
     static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
         if (cmd.hasOption(opt)) {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            final int result = Integer.parseInt(cmd.getOptionValue(opt));
             if (result != defaultValue) {
                 LOGGER.info("Using non default value {} for parameter {}", result, opt);
             }
@@ -211,5 +211,4 @@ public interface AmberConfig {
         }
         return value;
     }
-
 }

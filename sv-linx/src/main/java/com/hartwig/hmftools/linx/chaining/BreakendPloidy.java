@@ -5,7 +5,7 @@ import static java.lang.Math.max;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 public class BreakendPloidy
 {

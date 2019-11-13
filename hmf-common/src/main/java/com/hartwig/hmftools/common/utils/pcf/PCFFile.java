@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.math.pcf;
+package com.hartwig.hmftools.common.utils.pcf;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.math.pcf;
+package com.hartwig.hmftools.common.utils.pcf;
 
 public enum PCFSource {
     REFERENCE_RATIO,

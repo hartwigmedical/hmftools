@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.dnds;
+package com.hartwig.hmftools.common.drivercatalog.dnds;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

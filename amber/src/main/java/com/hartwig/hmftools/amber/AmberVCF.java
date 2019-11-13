@@ -32,13 +32,13 @@ public class AmberVCF {
     private final String normalSample;
     private final VCFHeader header;
 
-    public AmberVCF(@NotNull final String normalSample) {
+    AmberVCF(@NotNull final String normalSample) {
         this.tumorSample = "";
         this.normalSample = normalSample;
         this.header = header(normalSample);
     }
 
-    public AmberVCF(boolean tumorOnly, @NotNull final String normalSample, @NotNull final String tumorSample) {
+    AmberVCF(boolean tumorOnly, @NotNull final String normalSample, @NotNull final String tumorSample) {
         this.tumorSample = tumorSample;
         this.normalSample = normalSample;
         this.header = tumorOnly ? header(tumorSample) : header(normalSample, tumorSample);
@@ -57,7 +57,7 @@ public class AmberVCF {
         writer.close();
     }
 
-    public void writeContamination(@NotNull final String filename, @NotNull final Collection<TumorContamination> evidence) {
+    void writeContamination(@NotNull final String filename, @NotNull final Collection<TumorContamination> evidence) {
         final List<TumorContamination> list = Lists.newArrayList(evidence);
         Collections.sort(list);
 
@@ -70,7 +70,7 @@ public class AmberVCF {
         writer.close();
     }
 
-    public void writeSNPCheck(@NotNull final String filename, @NotNull final List<BaseDepth> baseDepths) {
+    void writeSNPCheck(@NotNull final String filename, @NotNull final List<BaseDepth> baseDepths) {
         final List<BaseDepth> list = Lists.newArrayList(baseDepths);
         Collections.sort(list);
 
@@ -85,7 +85,6 @@ public class AmberVCF {
 
     @NotNull
     private VariantContext create(@NotNull final TumorBAF tumorBaf) {
-
         final Allele ref = Allele.create(tumorBaf.ref(), true);
         final Allele alt = Allele.create(tumorBaf.alt(), false);
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
@@ -141,7 +140,6 @@ public class AmberVCF {
 
     @NotNull
     private VariantContext create(@NotNull final BaseDepth snp) {
-
         final List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(snp.ref().toString(), true));
         alleles.add(Allele.create(snp.alt().toString(), false));
@@ -166,7 +164,6 @@ public class AmberVCF {
 
     @NotNull
     private static VCFHeader header(final String... samples) {
-
         VCFHeader header = new VCFHeader(Collections.emptySet(), Lists.newArrayList(samples));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
@@ -175,5 +172,4 @@ public class AmberVCF {
 
         return header;
     }
-
 }

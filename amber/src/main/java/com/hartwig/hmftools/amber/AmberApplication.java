@@ -34,7 +34,7 @@ import com.hartwig.hmftools.common.amber.TumorContamination;
 import com.hartwig.hmftools.common.amber.TumorContaminationEvidence;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.commons.cli.CommandLine;
@@ -51,6 +51,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class AmberApplication implements AutoCloseable {
+
     private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
 
     private final AmberConfig config;

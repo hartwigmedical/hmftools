@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.purple.copynumber.sv;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -63,27 +64,27 @@ class CopyNumberChange {
         }
     }
 
-    public double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
+    @VisibleForTesting
+    double copyNumberChange(@NotNull final StructuralVariantLegPloidy leg) {
         return isPositive(leg) ? downOffset + downScale * ploidy(leg) : upOffset + upScale * ploidy(leg);
     }
 
-    private boolean isPositive(StructuralVariantLegPloidy ploidy) {
+    private static boolean isPositive(StructuralVariantLegPloidy ploidy) {
         return ploidy.orientation() == 1;
     }
 
-    private double ploidy(StructuralVariantLegPloidy ploidy) {
+    private static double ploidy(StructuralVariantLegPloidy ploidy) {
         return Math.max(0, ploidy.averageImpliedPloidy());
     }
 
     static double copyNumberChangeSimple(@NotNull final StructuralVariantLegCopyNumber copyNumber) {
-
         double leftCopyNumber = copyNumber.leftCopyNumber().orElse(0D);
         double rightCopyNumber = copyNumber.rightCopyNumber().orElse(0D);
 
         return copyNumber.orientation() == 1 ? leftCopyNumber - rightCopyNumber : rightCopyNumber - leftCopyNumber;
     }
 
-    private double copyNumberDifference(@NotNull final StructuralVariantLegPloidy leg) {
+    private static double copyNumberDifference(@NotNull final StructuralVariantLegPloidy leg) {
         return leg.rightCopyNumber().orElse(0D) - leg.leftCopyNumber().orElse(0D);
     }
 }

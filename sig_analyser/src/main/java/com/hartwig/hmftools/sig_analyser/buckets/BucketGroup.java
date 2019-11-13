@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

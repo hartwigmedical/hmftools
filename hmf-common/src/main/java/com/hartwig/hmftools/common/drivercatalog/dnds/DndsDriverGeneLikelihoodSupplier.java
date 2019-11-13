@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.common.dnds;
+package com.hartwig.hmftools.common.drivercatalog.dnds;
 
-import static com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodFile.fromMultiImpactInputStream;
-import static com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodFile.fromSingleImpactInputStream;
+import static com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodFile.fromMultiImpactInputStream;
+import static com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodFile.fromSingleImpactInputStream;
 
 import java.io.InputStream;
 import java.util.Map;

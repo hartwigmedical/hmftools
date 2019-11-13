@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.region;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

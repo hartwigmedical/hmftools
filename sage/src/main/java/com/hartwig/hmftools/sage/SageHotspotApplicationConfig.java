@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

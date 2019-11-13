@@ -8,15 +8,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class AmberTaskCompletion {
+class AmberTaskCompletion {
 
-    private static final Logger LOGGER = LogManager.getLogger(AmberApplication.class);
+    private static final Logger LOGGER = LogManager.getLogger(AmberTaskCompletion.class);
 
     private int expected = 0;
     private int complete = 0;
     private double previousPercentComplete = 0;
 
-    public <T> Callable<T> task(@NotNull final Callable<T> callable) {
+    <T> Callable<T> task(@NotNull final Callable<T> callable) {
         expected++;
 
         return () -> {
@@ -32,7 +32,6 @@ public class AmberTaskCompletion {
             LOGGER.info("{}", complete(percentComplete));
             previousPercentComplete = percentComplete;
         }
-
     }
 
     @NotNull

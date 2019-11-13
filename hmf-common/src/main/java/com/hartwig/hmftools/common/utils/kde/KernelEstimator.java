@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.math.kde;
+package com.hartwig.hmftools.common.utils.kde;
 
 /*
  *    This program is free software; you can redistribute it and/or modify

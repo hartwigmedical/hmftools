@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
-import com.hartwig.hmftools.common.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.dnds;
+package com.hartwig.hmftools.common.drivercatalog.dnds;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

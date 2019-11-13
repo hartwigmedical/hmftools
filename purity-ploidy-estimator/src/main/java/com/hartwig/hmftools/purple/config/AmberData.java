@@ -8,11 +8,11 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.math.pcf.PCFFile;
-import com.hartwig.hmftools.common.math.pcf.PCFPosition;
-import com.hartwig.hmftools.common.math.pcf.PCFSource;
 import com.hartwig.hmftools.common.purple.baf.ExpectedBAF;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.utils.pcf.PCFFile;
+import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
+import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;

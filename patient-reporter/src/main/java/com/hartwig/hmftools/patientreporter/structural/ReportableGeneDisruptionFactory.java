@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 
 import org.apache.commons.lang3.tuple.Pair;

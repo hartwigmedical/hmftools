@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import static com.hartwig.hmftools.common.math.Doubles.lessOrEqual;
+import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.math.Doubles;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.jetbrains.annotations.NotNull;
