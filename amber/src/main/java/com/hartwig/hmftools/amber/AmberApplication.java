@@ -2,7 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import static java.lang.Double.isFinite;
 
-import static com.hartwig.hmftools.common.collect.Multimaps.filterEntries;
+import static com.hartwig.hmftools.common.collection.Multimaps.filterEntries;
 
 import java.io.File;
 import java.io.IOException;

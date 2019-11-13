@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.collect;
+package com.hartwig.hmftools.common.collection;
 
 import java.util.Collection;
 import java.util.function.Predicate;

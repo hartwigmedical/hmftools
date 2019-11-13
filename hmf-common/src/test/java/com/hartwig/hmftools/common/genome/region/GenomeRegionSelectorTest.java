@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.collection.Multimaps;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;

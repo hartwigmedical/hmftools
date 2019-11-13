@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.variant.enrich;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.collect.Multimaps;
+import com.hartwig.hmftools.common.collection.Multimaps;
 import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -63,16 +63,14 @@ public class HotspotEnrichmentTest {
     }
 
     @NotNull
-    final VariantContext createNonHotspotHG37(int start, @NotNull final String ref) {
-
+    private static VariantContext createNonHotspotHG37(int start, @NotNull final String ref) {
         final String line = "11\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tA\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
     }
 
     @NotNull
-    final VariantContext createNonHotspotHG38(int start, @NotNull final String ref) {
-
+    private static VariantContext createNonHotspotHG38(int start, @NotNull final String ref) {
         final String line = "chr11\t" + start + "\tCOSM123;COSM456\t" + ref
                 + "\tA\t.\tPASS\tCOSM2ENST=COSM123|GENE_TRANS1|c.1A>G|p.E1E|1,COSM456|GENE_TRANS2|c.2A>G|p.E2E|1\tGT:AD:DP\t0/1:73,17:91";
         return VariantContextFromString.decode(line);
