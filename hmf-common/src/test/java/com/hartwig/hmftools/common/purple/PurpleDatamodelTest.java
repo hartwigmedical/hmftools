@@ -229,8 +229,8 @@ public class PurpleDatamodelTest {
                 .rightCopyNumber(rightCopyNumber);
     }
 
-    public static VariantContext dummyContext() {
-
+    @NotNull
+    private static VariantContext dummyContext() {
         final Collection<Allele> alleles = Lists.newArrayList(Allele.create("N", true));
 
         return new VariantContextBuilder("purple", "2", 1, 1, alleles)

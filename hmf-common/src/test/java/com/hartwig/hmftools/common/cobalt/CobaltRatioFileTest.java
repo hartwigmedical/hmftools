@@ -27,5 +27,4 @@ public class CobaltRatioFileTest {
         final List<CobaltRatio> hg19 = Lists.newArrayList(CobaltRatioFile.read(HG19_PATH).get(HumanChromosome._1));
         assertEquals(4, hg19.size());
     }
-
 }

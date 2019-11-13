@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.actionability.cnv;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
@@ -55,6 +55,6 @@ public class CopyNumberEvidenceAnalyzerTest {
                 .end(2)
                 .build();
 
-           assertFalse(cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, 2D, "Breast", cancerTypeAnalyzer).isEmpty());
+        assertEquals(1, cnvAnalyzer.evidenceForCopyNumber(geneCopyNumber, 2D, "Breast", cancerTypeAnalyzer).size());
     }
 }

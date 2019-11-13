@@ -254,6 +254,7 @@ public class VariantHotspotEvidenceFactoryTest {
         assertEquals(indelSupport, victim.indelSupport());
     }
 
+    @NotNull
     private static String buildQualities(int... qualities) {
         final StringBuilder qualityString = new StringBuilder();
         for (final int quality : qualities) {
@@ -261,5 +262,4 @@ public class VariantHotspotEvidenceFactoryTest {
         }
         return qualityString.toString();
     }
-
 }

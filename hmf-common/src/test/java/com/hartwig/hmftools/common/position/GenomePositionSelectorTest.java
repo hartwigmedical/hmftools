@@ -65,7 +65,6 @@ public class GenomePositionSelectorTest {
 
     @Test
     public void testIdenticalPositionsInListSelector() {
-
         final GenomeRegion tinyRegion = GenomeRegions.create("1", 250, 250);
         final GenomePosition inTinyRegion = GenomePositions.create(tinyRegion.chromosome(), tinyRegion.start());
         final GenomePosition alsoInTinyRegion = GenomePositions.create(tinyRegion.chromosome(), tinyRegion.start());
@@ -122,6 +121,7 @@ public class GenomePositionSelectorTest {
     private void assertSelectExisting(@NotNull final GenomePositionSelector<GenomePosition> victim,
             @NotNull GenomePosition existingPosition) {
         Optional<GenomePosition> result = victim.select(existingPosition);
+        assert result.isPresent();
         assertEquals(result.get(), existingPosition);
     }
 

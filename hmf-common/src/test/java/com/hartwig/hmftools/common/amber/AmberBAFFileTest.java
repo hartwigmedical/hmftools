@@ -42,5 +42,4 @@ public class AmberBAFFileTest {
         final List<AmberBAF> hg38 = Lists.newArrayList(AmberBAFFile.read(HG38_PATH).get(HumanChromosome._1));
         assertEquals(6, hg38.size());
     }
-
 }

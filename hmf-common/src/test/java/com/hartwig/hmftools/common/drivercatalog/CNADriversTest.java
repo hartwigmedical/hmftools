@@ -35,7 +35,7 @@ public class CNADriversTest {
     }
 
     @NotNull
-    private ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull final String gene) {
+    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull final String gene) {
         return ImmutableGeneCopyNumber.builder()
                 .start(1)
                 .end(2)
@@ -57,5 +57,4 @@ public class CNADriversTest {
                 .transcriptVersion(0)
                 .minMinorAllelePloidy(0);
     }
-
 }

@@ -78,6 +78,6 @@ public class PurpleCopyNumberFileTest {
     }
 
     private static double nextDouble(@NotNull final Random random) {
-        return Math.round(random.nextDouble() * 10000) / 10000;
+        return Math.round(random.nextDouble() * 10000D) / 10000D;
     }
 }

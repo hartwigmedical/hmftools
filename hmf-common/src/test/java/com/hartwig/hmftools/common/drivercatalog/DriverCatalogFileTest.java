@@ -15,12 +15,13 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class DriverCatalogFileTest {
-    private static final String LINX_DRIVERS_CATALOG_TSV = Resources.getResource("drivercatalog/sample.drivers.catalog.tsv").getPath();
+
+    private static final String DRIVER_CATALOG_TSV = Resources.getResource("drivercatalog/sample.drivers.catalog.tsv").getPath();
     private static final double EPSILON = 1.0e-10;
 
     @Test
     public void canReadDriverCatalogFile() throws IOException {
-        List<DriverCatalog> driverCatalogs = DriverCatalogFile.read(LINX_DRIVERS_CATALOG_TSV);
+        List<DriverCatalog> driverCatalogs = DriverCatalogFile.read(DRIVER_CATALOG_TSV);
         assertEquals(3, driverCatalogs.size());
 
         DriverCatalog catalog1 = driverCatalogs.get(0);
@@ -113,6 +114,6 @@ public class DriverCatalogFileTest {
     }
 
     private static double nextDouble(@NotNull final Random random) {
-        return Double.valueOf(DriverCatalogFile.FORMAT.format(random.nextDouble()));
+        return Double.parseDouble(DriverCatalogFile.FORMAT.format(random.nextDouble()));
     }
 }

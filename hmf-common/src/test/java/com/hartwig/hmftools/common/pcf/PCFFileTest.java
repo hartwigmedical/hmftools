@@ -21,7 +21,6 @@ public class PCFFileTest {
 
     @Test
     public void testBafFile() throws IOException {
-
         final ListMultimap<Chromosome, PCFPosition> resultMap =
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf");
 
@@ -44,7 +43,6 @@ public class PCFFileTest {
 
     @Test
     public void testRatioFile() throws IOException {
-
         final ListMultimap<Chromosome, PCFPosition> resultMap =
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf");
 

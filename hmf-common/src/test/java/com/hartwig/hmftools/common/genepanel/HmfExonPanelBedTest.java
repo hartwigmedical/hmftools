@@ -28,7 +28,6 @@ public class HmfExonPanelBedTest {
         assertEquals(firstExon.end() + HmfExonPanelBed.EXTRA_BASES, region.end());
     }
 
-
     @Test
     @Ignore
     public void write19() throws IOException {
@@ -44,6 +43,4 @@ public class HmfExonPanelBedTest {
         HmfExonPanelBed.write38File(filename);
         BEDFileLoader.fromBedFile(filename);
     }
-
-
 }
