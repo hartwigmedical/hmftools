@@ -20,6 +20,9 @@ public final class CircosSNPWriter {
     private static final String GREY = "191,190,191";
     private static final String GREEN = "144,202,75";
 
+    private CircosSNPWriter() {
+    }
+
     public static void writePositions(@NotNull final String filePath, @NotNull Collection<PurityAdjustedSomaticVariant> values)
             throws IOException {
         writeCircosFile(filePath, values, CircosSNPWriter::transformPosition);

@@ -8,6 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Downsample {
 
+    private Downsample() {
+    }
+
     @NotNull
     public static <T> List<T> downsample(int maxEntries, @NotNull List<T> input) {
         if (input.size() <= maxEntries) {

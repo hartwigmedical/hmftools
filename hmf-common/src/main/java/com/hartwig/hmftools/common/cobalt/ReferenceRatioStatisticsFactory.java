@@ -15,6 +15,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ReferenceRatioStatisticsFactory {
 
+    private ReferenceRatioStatisticsFactory() {
+    }
+
     public static ReferenceRatioStatistics fromReferenceRatio(@NotNull final Multimap<Chromosome, ReadRatio> readRatios) {
         return fromRatio(readRatios, ReadRatio::ratio);
     }

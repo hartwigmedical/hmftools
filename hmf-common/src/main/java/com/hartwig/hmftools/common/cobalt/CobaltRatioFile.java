@@ -18,12 +18,15 @@ import com.hartwig.hmftools.common.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 
 public final class CobaltRatioFile {
+
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####");
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".cobalt.ratio.tsv";
-
     private static final String EXTENSION_OLD = ".cobalt";
+
+    private CobaltRatioFile() {
+    }
 
     @NotNull
     public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
@@ -73,7 +76,7 @@ public final class CobaltRatioFile {
 
     @NotNull
     private static String toString(@NotNull final CobaltRatio position) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(position.chromosome()))
+        return new StringJoiner(DELIMITER).add(position.chromosome())
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.referenceReadCount()))
                 .add(String.valueOf(position.tumorReadCount()))
@@ -95,20 +98,20 @@ public final class CobaltRatioFile {
     }
 
     @NotNull
-    static CobaltRatio fromLine(@NotNull final String ratioLine) {
+    private static CobaltRatio fromLine(@NotNull final String ratioLine) {
         final String[] values = ratioLine.split(DELIMITER);
 
         final String chromosome = values[0].trim();
-        final long position = Long.valueOf(values[1].trim());
+        final long position = Long.parseLong(values[1].trim());
 
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosome)
                 .position(position)
-                .referenceReadCount(Integer.valueOf(values[2].trim()))
-                .tumorReadCount(Integer.valueOf(values[3].trim()))
-                .referenceGCRatio(Double.valueOf(values[4].trim()))
-                .tumorGCRatio(Double.valueOf(values[5].trim()))
-                .referenceGCDiploidRatio(Double.valueOf(values[6].trim()))
+                .referenceReadCount(Integer.parseInt(values[2].trim()))
+                .tumorReadCount(Integer.parseInt(values[3].trim()))
+                .referenceGCRatio(Double.parseDouble(values[4].trim()))
+                .tumorGCRatio(Double.parseDouble(values[5].trim()))
+                .referenceGCDiploidRatio(Double.parseDouble(values[6].trim()))
                 .build();
     }
 }

@@ -10,6 +10,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CobaltRatioFactory {
 
+    private CobaltRatioFactory() {
+    }
+
     @NotNull
     public static Multimap<Chromosome, CobaltRatio> merge(@NotNull final Multimap<Chromosome, CobaltCount> counts,
             @NotNull final Multimap<Chromosome, ReadRatio> referenceGCRatio, @NotNull final Multimap<Chromosome, ReadRatio> tumorGCRatio,

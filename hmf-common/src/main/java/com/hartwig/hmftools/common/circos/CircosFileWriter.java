@@ -18,6 +18,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CircosFileWriter {
 
+    private CircosFileWriter() {
+    }
+
     public static <T extends GenomeRegion> void writeRegions(@NotNull final String filePath, @NotNull Collection<T> values,
             @NotNull ToDoubleFunction<T> valueExtractor) throws IOException {
         Function<T, String> toString = t -> transformRegion(valueExtractor, t);

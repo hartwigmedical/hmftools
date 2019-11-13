@@ -13,6 +13,7 @@ public interface ReferenceRatioStatistics {
     double TWO_X_CUTOFF = 0.65;
 
     double Y_MEDIAN_CUTOFF = 0.05;
+
     int Y_COUNT_CUTOFF = 1000;
 
     int xCount();
@@ -30,5 +31,4 @@ public interface ReferenceRatioStatistics {
     default boolean containsTwoXChromosomes() {
         return Doubles.greaterThan(xMedian(), TWO_X_CUTOFF);
     }
-
 }

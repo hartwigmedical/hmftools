@@ -16,6 +16,9 @@ import htsjdk.samtools.SAMSequenceRecord;
 
 public final class ChromosomeLengthFactory {
 
+    private ChromosomeLengthFactory() {
+    }
+
     @NotNull
     public static <T extends GenomePosition> Map<Chromosome, ChromosomeLength> create(int windowSize,
             @NotNull final ListMultimap<Chromosome, T> position) {
@@ -54,5 +57,4 @@ public final class ChromosomeLengthFactory {
 
         return results;
     }
-
 }

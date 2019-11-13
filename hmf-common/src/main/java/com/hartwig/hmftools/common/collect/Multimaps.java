@@ -14,6 +14,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Multimaps {
 
+    private Multimaps() {
+    }
+
     @NotNull
     public static <T extends GenomeRegion> ListMultimap<Chromosome, T> fromRegions(@NotNull final Collection<T> regions) {
         final ListMultimap<Chromosome, T> result = ArrayListMultimap.create();

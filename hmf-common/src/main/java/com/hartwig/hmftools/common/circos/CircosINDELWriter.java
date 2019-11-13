@@ -13,6 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CircosINDELWriter {
 
+    private CircosINDELWriter() {
+    }
+
     public static void writePositions(@NotNull final String filePath, @NotNull Collection<PurityAdjustedSomaticVariant> values)
             throws IOException {
         writeCircosFile(filePath, values, CircosINDELWriter::transformPosition);

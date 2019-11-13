@@ -13,6 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CircosLinkWriter {
 
+    private CircosLinkWriter() {
+    }
+
     public static void writeVariants(@NotNull final String filePath, @NotNull Collection<StructuralVariant> values) throws IOException {
         final Collection<String> lines = values.stream()
                 .filter(x -> x.end() != null)
