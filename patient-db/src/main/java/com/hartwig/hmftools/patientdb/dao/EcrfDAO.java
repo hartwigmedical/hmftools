@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CPCTECRF;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CPCTECRFDATAMODEL;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUPECRF;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRUPECRFDATAMODEL;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.ECRF;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.ECRFDATAMODEL;
 
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -28,7 +28,7 @@ class EcrfDAO {
     }
 
     void clearCpct() {
-        clear(ECRF.getName(), ECRFDATAMODEL.getName());
+        clear(CPCTECRF.getName(), CPCTECRFDATAMODEL.getName());
     }
 
     void clearDrup() {
@@ -88,11 +88,11 @@ class EcrfDAO {
 
     @NotNull
     private InsertValuesStep4 cpctDatamodelInserter() {
-        return context.insertInto(ECRFDATAMODEL,
-                ECRFDATAMODEL.FIELDNAME,
-                ECRFDATAMODEL.DESCRIPTION,
-                ECRFDATAMODEL.CODELIST,
-                ECRFDATAMODEL.RELEVANT);
+        return context.insertInto(CPCTECRFDATAMODEL,
+                CPCTECRFDATAMODEL.FIELDNAME,
+                CPCTECRFDATAMODEL.DESCRIPTION,
+                CPCTECRFDATAMODEL.CODELIST,
+                CPCTECRFDATAMODEL.RELEVANT);
     }
 
     @NotNull
@@ -106,21 +106,21 @@ class EcrfDAO {
 
     @NotNull
     private InsertValuesStep14 cpctInserter() {
-        return context.insertInto(ECRF,
-                ECRF.PATIENTID,
-                ECRF.STUDYEVENT,
-                ECRF.STUDYEVENTKEY,
-                ECRF.FORM,
-                ECRF.FORMKEY,
-                ECRF.ITEMGROUP,
-                ECRF.ITEMGROUPKEY,
-                ECRF.ITEM,
-                ECRF.ITEMVALUE,
-                ECRF.STATUS,
-                ECRF.LOCKED,
-                ECRF.SEQUENCED,
-                ECRF.FIELDNAME,
-                ECRF.RELEVANT);
+        return context.insertInto(CPCTECRF,
+                CPCTECRF.PATIENTID,
+                CPCTECRF.STUDYEVENT,
+                CPCTECRF.STUDYEVENTKEY,
+                CPCTECRF.FORM,
+                CPCTECRF.FORMKEY,
+                CPCTECRF.ITEMGROUP,
+                CPCTECRF.ITEMGROUPKEY,
+                CPCTECRF.ITEM,
+                CPCTECRF.ITEMVALUE,
+                CPCTECRF.STATUS,
+                CPCTECRF.LOCKED,
+                CPCTECRF.SEQUENCED,
+                CPCTECRF.FIELDNAME,
+                CPCTECRF.RELEVANT);
     }
 
     @NotNull

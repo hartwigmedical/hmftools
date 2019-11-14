@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS ecrf;
+DROP TABLE IF EXISTS ecrfDatamodel;
+
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -159,8 +162,8 @@ CREATE TABLE clinicalFindings
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS ecrf;
-CREATE TABLE ecrf
+DROP TABLE IF EXISTS cpctEcrf;
+CREATE TABLE cpctEcrf
 (   id int NOT NULL AUTO_INCREMENT,
     patientId varchar(20),
     studyEvent varchar(100),
@@ -190,22 +193,12 @@ CREATE TABLE ecrf
     INDEX(relevant)
 );
 
-DROP TABLE IF EXISTS ecrfDatamodel;
-CREATE TABLE ecrfDatamodel
+DROP TABLE IF EXISTS cpctEcrfDatamodel;
+CREATE TABLE cpctEcrfDatamodel
 (   fieldName varchar(100),
     description varchar(500),
     codeList varchar(3000),
     relevant varchar(5)
-);
-
-DROP TABLE IF EXISTS formsMetadata;
-CREATE TABLE formsMetadata
-(   id int NOT NULL,
-    tableName varchar(20),
-    form varchar(20),
-    status varchar(30),
-    locked varchar(5),
-    UNIQUE KEY (id, tableName, form)
 );
 
 DROP TABLE IF EXISTS drupEcrf;
@@ -243,6 +236,16 @@ CREATE TABLE drupEcrfDatamodel
     description varchar(500),
     codeList varchar(5000),
     relevant varchar(5)
+);
+
+DROP TABLE IF EXISTS formsMetadata;
+CREATE TABLE formsMetadata
+(   id int NOT NULL,
+    tableName varchar(20),
+    form varchar(20),
+    status varchar(30),
+    locked varchar(5),
+    UNIQUE KEY (id, tableName, form)
 );
 
 DROP TABLE if EXISTS metric;
