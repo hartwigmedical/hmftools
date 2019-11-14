@@ -174,7 +174,7 @@ public class StructuralVariantFactory {
                     insertedSequence = alleles.get(1).toString();
 
                     // remove the ref base from the start
-                    insertedSequence = insertedSequence.substring(1, insertedSequence.length());
+                    insertedSequence = insertedSequence.substring(1);
                 }
             }
         } else {
@@ -313,7 +313,7 @@ public class StructuralVariantFactory {
             qualityScore = somaticScore;
         }
 
-        builder = builder.id(context.getID())
+        builder.id(context.getID())
                 .recovered(context.hasAttribute(RECOVERED))
                 .recoveryMethod(context.getAttributeAsString(RECOVERY_METHOD, null))
                 .recoveryFilter(context.getAttributeAsStringList(RECOVERY_FILTER, "").stream().collect(Collectors.joining(",")))
@@ -333,7 +333,7 @@ public class StructuralVariantFactory {
                         .filter(s -> !Strings.isNullOrEmpty(s))
                         .collect(Collectors.joining(",")));
         if (context.hasAttribute(UNTEMPLATED_SEQUENCE_REPEAT_CLASS)) {
-            builder = builder.insertSequenceRepeatClass(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, ""))
+            builder.insertSequenceRepeatClass(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_CLASS, ""))
                     .insertSequenceRepeatType(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_TYPE, ""))
                     .insertSequenceRepeatOrientation(context.getAttributeAsString(UNTEMPLATED_SEQUENCE_REPEAT_ORIENTATION, "+").equals("+")
                             ? (byte) 1
@@ -407,8 +407,8 @@ public class StructuralVariantFactory {
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
-                builder = builder.normalVariantFragmentCount(var);
-                builder = builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
+                builder.normalVariantFragmentCount(var);
+                builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
         if (context.getGenotype(TUMOUR_GENOTYPE_ORDINAL) != null) {
@@ -420,8 +420,8 @@ public class StructuralVariantFactory {
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
-                builder = builder.tumorVariantFragmentCount(var);
-                builder = builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
+                builder.tumorVariantFragmentCount(var);
+                builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
         return builder;

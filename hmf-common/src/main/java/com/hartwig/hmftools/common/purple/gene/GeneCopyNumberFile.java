@@ -123,36 +123,36 @@ public final class GeneCopyNumberFile {
 
         final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                 .chromosome(values[0])
-                .start(Long.valueOf(values[1]))
-                .end(Long.valueOf(values[2]))
+                .start(Long.parseLong(values[1]))
+                .end(Long.parseLong(values[2]))
                 .gene(values[3])
-                .minCopyNumber(Double.valueOf(values[4]))
-                .maxCopyNumber(Double.valueOf(values[5]))
-                .somaticRegions(Integer.valueOf(values[7]))
-                .germlineHomRegions(Integer.valueOf(values[8]))
-                .germlineHet2HomRegions(Integer.valueOf(values[9]))
+                .minCopyNumber(Double.parseDouble(values[4]))
+                .maxCopyNumber(Double.parseDouble(values[5]))
+                .somaticRegions(Integer.parseInt(values[7]))
+                .germlineHomRegions(Integer.parseInt(values[8]))
+                .germlineHet2HomRegions(Integer.parseInt(values[9]))
                 .transcriptID(values[10])
-                .transcriptVersion(Integer.valueOf(values[11]))
+                .transcriptVersion(Integer.parseInt(values[11]))
                 .chromosomeBand(values[12]);
 
         builder.minRegions(0)
-                .minRegionStart(Long.valueOf(values[1]))
-                .minRegionEnd(Long.valueOf(values[2]))
+                .minRegionStart(Long.parseLong(values[1]))
+                .minRegionEnd(Long.parseLong(values[2]))
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minMinorAllelePloidy(0);
 
         if (values.length >= 19) {
-            builder.minRegions(Integer.valueOf(values[13]))
-                    .minRegionStart(Long.valueOf(values[14]))
-                    .minRegionEnd(Long.valueOf(values[15]))
+            builder.minRegions(Integer.parseInt(values[13]))
+                    .minRegionStart(Long.parseLong(values[14]))
+                    .minRegionEnd(Long.parseLong(values[15]))
                     .minRegionStartSupport(SegmentSupport.valueOf(values[16]))
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
 
-        builder.minMinorAllelePloidy(Double.valueOf(values[values.length - 1]));
+        builder.minMinorAllelePloidy(Double.parseDouble(values[values.length - 1]));
 
         return builder.build();
     }

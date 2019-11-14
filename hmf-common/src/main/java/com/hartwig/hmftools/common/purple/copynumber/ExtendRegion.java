@@ -78,5 +78,4 @@ abstract class ExtendRegion {
 
         return startIndex - targetIndex - 1;
     }
-
 }

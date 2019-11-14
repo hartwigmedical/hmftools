@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.variant.clonality.WeightedPloidyHistog
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -28,9 +27,8 @@ public class PealModelFactoryTest {
         victim.modelPeakHistogram(8.18, Lists.newArrayList(WeightedPloidyHistogramTest.create(8.18, 18, 55)));
     }
 
-
     @Ignore
-    public void testPeakModelling() throws IOException {
+    public void testPeakModelling() {
         long startTime = new Date().getTime();
         final WeightedPloidyHistogram victim = new WeightedPloidyHistogram(10, 0.01);
         List<ModifiableWeightedPloidy> ploidies = readResource("ploidies.tsv");
@@ -42,5 +40,4 @@ public class PealModelFactoryTest {
         List<PeakModel> result = factory.model(ploidies);
         System.out.println(new Date().getTime() - startTime);
     }
-
 }
