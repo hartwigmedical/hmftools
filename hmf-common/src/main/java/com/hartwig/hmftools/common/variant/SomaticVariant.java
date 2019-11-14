@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.variant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -10,13 +9,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface SomaticVariant extends GenomePosition, AllelicDepth {
-
-    @NotNull
-    String ref();
-
-    @NotNull
-    String alt();
+public interface SomaticVariant extends Variant {
 
     @NotNull
     VariantType type();
@@ -39,9 +32,6 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
     @NotNull
     List<CosmicAnnotation> cosmicAnnotations();
 
-    @NotNull
-    String gene();
-
     //TODO: Rename to genesAffected
     int genesEffected();
 
@@ -56,9 +46,6 @@ public interface SomaticVariant extends GenomePosition, AllelicDepth {
 
     @NotNull
     String canonicalEffect();
-
-    @NotNull
-    CodingEffect canonicalCodingEffect();
 
     @NotNull
     String canonicalHgvsCodingImpact();

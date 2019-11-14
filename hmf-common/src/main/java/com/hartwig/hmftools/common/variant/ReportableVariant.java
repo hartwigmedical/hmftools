@@ -9,23 +9,29 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ReportableVariant implements AllelicDepth {
+public abstract class ReportableVariant implements Variant {
 
     @NotNull
+    @Override
     public abstract String gene();
 
     @NotNull
+    @Override
     public abstract String chromosome();
 
+    @Override
     public abstract long position();
 
     @NotNull
+    @Override
     public abstract String ref();
 
     @NotNull
+    @Override
     public abstract String alt();
 
     @NotNull
+    @Override
     public abstract CodingEffect canonicalCodingEffect();
 
     @NotNull
