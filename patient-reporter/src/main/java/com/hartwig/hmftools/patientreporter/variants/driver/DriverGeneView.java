@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.patientreporter.variants.driver;
 
 import java.util.Set;
+
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

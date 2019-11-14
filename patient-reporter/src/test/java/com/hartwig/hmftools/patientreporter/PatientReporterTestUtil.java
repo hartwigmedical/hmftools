@@ -8,7 +8,7 @@ import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.common.drivercatalog.DriverGeneViewFactory;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;

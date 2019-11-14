@@ -7,7 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
-import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;

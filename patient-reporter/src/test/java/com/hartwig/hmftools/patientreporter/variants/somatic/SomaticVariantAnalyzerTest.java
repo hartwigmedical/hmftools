@@ -6,14 +6,12 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
-import com.hartwig.hmftools.common.variant.somaticvariant.SomaticVariantAnalysis;
-import com.hartwig.hmftools.common.variant.somaticvariant.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.jetbrains.annotations.NotNull;

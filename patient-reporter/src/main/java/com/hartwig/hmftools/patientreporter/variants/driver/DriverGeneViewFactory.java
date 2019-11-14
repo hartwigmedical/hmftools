@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.drivercatalog;
+package com.hartwig.hmftools.patientreporter.variants.driver;
 
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 

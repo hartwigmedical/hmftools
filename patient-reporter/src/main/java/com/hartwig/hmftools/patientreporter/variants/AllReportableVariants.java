@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.Hotspot;

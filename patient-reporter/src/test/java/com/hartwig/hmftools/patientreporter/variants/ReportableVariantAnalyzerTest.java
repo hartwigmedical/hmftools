@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.variants;
 
 import static com.hartwig.hmftools.patientreporter.PatientReporterTestUtil.testAnalysedReportData;
 
-import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermlineVariant;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -16,7 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModelTestFactory;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;

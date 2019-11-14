@@ -5,7 +5,7 @@ import java.io.IOException;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingFile;
 import com.hartwig.hmftools.patientreporter.variants.germline.GermlineReportingModel;
-import com.hartwig.hmftools.common.drivercatalog.DriverGeneViewFactory;
+import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneViewFactory;
 import com.hartwig.hmftools.patientreporter.summary.SummaryFile;
 import com.hartwig.hmftools.patientreporter.summary.SummaryModel;
 

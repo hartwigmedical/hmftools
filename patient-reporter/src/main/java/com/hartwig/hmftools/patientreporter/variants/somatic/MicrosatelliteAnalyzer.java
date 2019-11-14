@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.somaticvariant;
+package com.hartwig.hmftools.patientreporter.variants.somatic;
 
 import java.util.List;
 
