@@ -9,6 +9,7 @@ import org.apache.lucene.search.spell.SpellChecker;
 import org.jetbrains.annotations.NotNull;
 
 class SpellCheckerTokenFilter extends TokenFilter {
+
     private final SpellChecker spellChecker;
     private final CharTermAttribute charTermAttribute = addAttribute(CharTermAttribute.class);
 

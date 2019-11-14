@@ -238,8 +238,8 @@ public class PatientValidatorTest {
                         FormStatus.undefined())));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
-        assertTrue(findingsFields.get(0).equals(curationName));
+        List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
+        assertEquals(findingsFields.get(0), curationName);
     }
 
     @Test
@@ -253,8 +253,8 @@ public class PatientValidatorTest {
                         FormStatus.undefined())));
         assertEquals(1, findings.size());
         findings.stream().map(ValidationFinding::patientIdentifier).forEach(id -> assertEquals(PATIENT_IDENTIFIER, id));
-        final List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
-        assertTrue(findingsFields.get(0).equals(curationName));
+        List<String> findingsFields = findings.stream().map(ValidationFinding::level).collect(Collectors.toList());
+        assertEquals(findingsFields.get(0), curationName);
     }
 
     @Test
