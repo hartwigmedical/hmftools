@@ -94,8 +94,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         for (ReportableVariant variant : sortedVariants) {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
-            contentTable.addCell(TableUtil.createContentCell(variant.hgvsCodingImpact()));
-            contentTable.addCell(TableUtil.createContentCell(variant.hgvsProteinImpact()));
+            contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsCodingImpact()));
+            contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsProteinImpact()));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))

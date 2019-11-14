@@ -48,12 +48,6 @@ public interface SomaticVariant extends Variant {
     String canonicalEffect();
 
     @NotNull
-    String canonicalHgvsCodingImpact();
-
-    @NotNull
-    String canonicalHgvsProteinImpact();
-
-    @NotNull
     Hotspot hotspot();
 
     boolean recovered();

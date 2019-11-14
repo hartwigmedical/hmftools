@@ -22,7 +22,6 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -69,11 +68,6 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    public static SomaticVariantFactory passOnlyInstance(@NotNull VariantContextEnrichmentFactory factory) {
-        return new SomaticVariantFactory(new PassingVariantFilter(), new NoSomaticEnrichment(), factory);
-    }
-
-    @NotNull
     public static SomaticVariantFactory filteredInstance(@NotNull VariantContextFilter... filters) {
         final CompoundFilter filter = new CompoundFilter(true);
         filter.addAll(Arrays.asList(filters));
@@ -94,7 +88,7 @@ public class SomaticVariantFactory {
     private static final String MAPPABILITY_TAG = "MAPPABILITY";
     private static final String RECOVERED_FLAG = "RECOVERED";
 
-    public static final String PASS_FILTER = "PASS";
+    static final String PASS_FILTER = "PASS";
     private static final String NEAR_INDEL_PON_FILTER = "NEAR_INDEL_PON";
 
     @NotNull
@@ -116,7 +110,6 @@ public class SomaticVariantFactory {
         this.enrichment = enrichment;
         this.canonicalAnnotationFactory = new CanonicalAnnotation();
         this.variantContextEnrichmentFactory = variantContextEnrichmentFactory;
-
     }
 
     @NotNull
@@ -164,7 +157,6 @@ public class SomaticVariantFactory {
     }
 
     @NotNull
-    @VisibleForTesting
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
 
@@ -332,5 +324,4 @@ public class SomaticVariantFactory {
     private static String alt(@NotNull final VariantContext context) {
         return String.join(",", context.getAlternateAlleles().stream().map(Allele::toString).collect(Collectors.toList()));
     }
-
 }

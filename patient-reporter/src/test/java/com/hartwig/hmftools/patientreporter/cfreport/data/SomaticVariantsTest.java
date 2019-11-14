@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.patientreporter.PatientReporterTestFactory;
 
 import org.junit.Test;
 
@@ -22,9 +22,12 @@ public class SomaticVariantsTest {
 
     @Test
     public void sortCorrectlyOnCodon() {
-        ReportableVariant variant1 = PatientReporterTestFactory.createTestReportableVariantBuilder().hgvsCodingImpact("c.300T>A").build();
-        ReportableVariant variant2 = PatientReporterTestFactory.createTestReportableVariantBuilder().hgvsCodingImpact("c.4000T>A").build();
-        ReportableVariant variant3 = PatientReporterTestFactory.createTestReportableVariantBuilder().hgvsCodingImpact("c.500T>A").build();
+        ReportableVariant variant1 =
+                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.300T>A").build();
+        ReportableVariant variant2 =
+                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.4000T>A").build();
+        ReportableVariant variant3 =
+                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.500T>A").build();
 
         List<ReportableVariant> variants = Lists.newArrayList(variant1, variant2, variant3);
 

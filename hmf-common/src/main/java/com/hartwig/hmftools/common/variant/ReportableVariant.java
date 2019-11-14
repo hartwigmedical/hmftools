@@ -35,19 +35,21 @@ public abstract class ReportableVariant implements Variant {
     public abstract CodingEffect canonicalCodingEffect();
 
     @NotNull
-    public abstract String gDNA();
+    @Override
+    public abstract String canonicalHgvsCodingImpact();
 
     @NotNull
-    public abstract String hgvsCodingImpact();
-
-    @NotNull
-    public abstract String hgvsProteinImpact();
+    @Override
+    public abstract String canonicalHgvsProteinImpact();
 
     @Override
     public abstract int totalReadCount();
 
     @Override
     public abstract int alleleReadCount();
+
+    @NotNull
+    public abstract String gDNA();
 
     public abstract double totalPloidy();
 

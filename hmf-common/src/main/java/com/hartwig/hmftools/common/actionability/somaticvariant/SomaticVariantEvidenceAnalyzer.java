@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.Variant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +52,7 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<EvidenceItem> evidenceForVariant(@NotNull ReportableVariant variant, @Nullable String primaryTumorLocation,
+    public List<EvidenceItem> evidenceForVariant(@NotNull Variant variant, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
         for (ActionableSomaticVariant actionableVariant : actionableVariants) {
@@ -82,10 +82,10 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    private static String eventString(@NotNull ReportableVariant variant) {
+    private static String eventString(@NotNull Variant variant) {
         String description = variant.canonicalCodingEffect() == CodingEffect.SPLICE
-                ? variant.hgvsCodingImpact()
-                : variant.hgvsProteinImpact();
+                ? variant.canonicalHgvsCodingImpact()
+                : variant.canonicalHgvsProteinImpact();
         return variant.gene() + " " + description;
     }
 

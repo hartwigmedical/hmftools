@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.reportablegenomicalterations.AllReportableVariants;
 import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGermlineVariant;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
@@ -48,11 +49,12 @@ public final class ReportableVariantAnalyzer {
 
     @NotNull
     private static Map<ReportableVariant, List<EvidenceItem>> filterHighDriverLikelihood(
-            final Map<ReportableVariant, List<EvidenceItem>> evidenceForAllVariants) {
+            final Map<? extends Variant, List<EvidenceItem>> evidenceForAllVariants) {
         Map<ReportableVariant, List<EvidenceItem>> evidencePerHighDriverVariant = Maps.newHashMap();
-        for (Map.Entry<ReportableVariant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
-            if (DriverInterpretation.interpret(entry.getKey().driverLikelihood()) == DriverInterpretation.HIGH) {
-                evidencePerHighDriverVariant.put(entry.getKey(), entry.getValue());
+        for (Map.Entry<? extends Variant, List<EvidenceItem>> entry : evidenceForAllVariants.entrySet()) {
+            ReportableVariant variant = (ReportableVariant) entry.getKey();
+            if (DriverInterpretation.interpret(variant.driverLikelihood()) == DriverInterpretation.HIGH) {
+                evidencePerHighDriverVariant.put(variant, entry.getValue());
             }
         }
         return evidencePerHighDriverVariant;
