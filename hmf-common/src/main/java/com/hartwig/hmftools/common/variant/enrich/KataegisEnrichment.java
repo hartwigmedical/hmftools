@@ -21,7 +21,7 @@ public class KataegisEnrichment implements VariantContextEnrichment {
     private final KataegisQueue forwardDetector;
     private final KataegisQueue reverseDetector;
 
-    public KataegisEnrichment(@NotNull final Consumer<VariantContext> consumer) {
+    KataegisEnrichment(@NotNull final Consumer<VariantContext> consumer) {
         reverseDetector = new KataegisQueue("REV", KataegisEnrichment::isReverseCandidate, consumer);
         forwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, reverseDetector::accept);
     }
@@ -46,7 +46,6 @@ public class KataegisEnrichment implements VariantContextEnrichment {
     }
 
     private static boolean isForwardCandidate(@NotNull final VariantContext context) {
-
         final boolean altMatch =
                 context.getAlternateAlleles().stream().anyMatch(x -> x.getBaseString().equals("T") || x.getBaseString().equals("G"));
 
@@ -57,7 +56,6 @@ public class KataegisEnrichment implements VariantContextEnrichment {
     }
 
     private static boolean isReverseCandidate(@NotNull final VariantContext context) {
-
         final boolean altMatch =
                 context.getAlternateAlleles().stream().anyMatch(x -> x.getBaseString().equals("C") || x.getBaseString().equals("A"));
 
@@ -65,12 +63,10 @@ public class KataegisEnrichment implements VariantContextEnrichment {
         final boolean triMatch = triContext.endsWith("GA");
 
         return isNotFiltered(context) && triMatch && altMatch;
-
     }
 
     private static boolean isNotFiltered(@NotNull final VariantContext context) {
         final Set<String> filters = context.getFilters();
         return filters.isEmpty() || (filters.size() == 1 && filters.contains("PASS"));
     }
-
 }

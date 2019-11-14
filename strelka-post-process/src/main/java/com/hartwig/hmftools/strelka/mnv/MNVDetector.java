@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class MNVDetector {
+
     private static final int MNV_GAP_SIZE = 1;
 
     private MNVDetector() {

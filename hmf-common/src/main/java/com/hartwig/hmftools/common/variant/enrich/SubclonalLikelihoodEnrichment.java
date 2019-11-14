@@ -17,7 +17,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
 
     public static final String SUBCLONAL_LIKELIHOOD_FLAG = "SUBCL";
-    private static final String SUBCLONAL_LIKELIHOOD_FLAG_DESCIPTION = "Subclonal likelihood";
+    private static final String SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION = "Subclonal likelihood";
 
     private final double maxPloidy;
     private final Consumer<VariantContext> consumer;
@@ -53,8 +53,7 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
         template.addMetaDataLine(new VCFInfoHeaderLine(SUBCLONAL_LIKELIHOOD_FLAG,
                 1,
-                VCFHeaderLineType.Float,
-                SUBCLONAL_LIKELIHOOD_FLAG_DESCIPTION));
+                VCFHeaderLineType.Float, SUBCLONAL_LIKELIHOOD_FLAG_DESCRIPTION));
 
         return template;
     }

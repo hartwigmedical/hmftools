@@ -11,13 +11,15 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PeakModelFile {
+public final class PeakModelFile {
 
-    ;
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
     private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".purple.somatic.clonality.tsv";
+
+    private PeakModelFile() {
+    }
 
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
         return basePath + File.separator + sample + EXTENSION;
@@ -56,5 +58,4 @@ public class PeakModelFile {
                 .add(String.valueOf(ratio.isSubclonal()))
                 .toString();
     }
-
 }

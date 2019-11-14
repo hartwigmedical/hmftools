@@ -30,6 +30,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class MNVDetectorApplication {
+
     private static final Logger LOGGER = LogManager.getLogger(MNVDetectorApplication.class);
 
     private static final String INPUT_VCF = "v";

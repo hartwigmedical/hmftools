@@ -123,7 +123,7 @@ public class StrelkaPostProcessTest {
         final VariantContext snpVariant = VARIANTS.get(8);
         assertEquals(0.1, allelicFrequency(snpVariant), 0.001);
         assertEquals(20, qualityScore(snpVariant));
-        assertTrue(!hcBed.includes(variantGenomePosition(snpVariant)));
+        assertFalse(hcBed.includes(variantGenomePosition(snpVariant)));
         assertFalse(victim.test(snpVariant));
     }
 
@@ -132,7 +132,7 @@ public class StrelkaPostProcessTest {
         final VariantContext snpVariant = VARIANTS.get(9);
         assertEquals(0.11, allelicFrequency(snpVariant), 0.01);
         assertEquals(21, qualityScore(snpVariant));
-        assertTrue(!hcBed.includes(variantGenomePosition(snpVariant)));
+        assertFalse(hcBed.includes(variantGenomePosition(snpVariant)));
         assertTrue(victim.test(snpVariant));
     }
 
@@ -159,7 +159,7 @@ public class StrelkaPostProcessTest {
         final VariantContext indelVariant = VARIANTS.get(12);
         assertEquals(0.1, allelicFrequency(indelVariant), 0.001);
         assertEquals(20, qualityScore(indelVariant));
-        assertTrue(!hcBed.includes(variantGenomePosition(indelVariant)));
+        assertFalse(hcBed.includes(variantGenomePosition(indelVariant)));
         assertFalse(victim.test(indelVariant));
     }
 
@@ -168,7 +168,7 @@ public class StrelkaPostProcessTest {
         final VariantContext indelVariant = VARIANTS.get(13);
         assertEquals(0.11, allelicFrequency(indelVariant), 0.01);
         assertEquals(21, qualityScore(indelVariant));
-        assertTrue(!hcBed.includes(variantGenomePosition(indelVariant)));
+        assertFalse(hcBed.includes(variantGenomePosition(indelVariant)));
         assertTrue(victim.test(indelVariant));
     }
 
@@ -178,7 +178,7 @@ public class StrelkaPostProcessTest {
         assertEquals(0.1, allelicFrequency(indelVariant), 0.001);
         assertEquals(20, qualityScore(indelVariant));
         assertTrue(indelVariant.hasAttribute("HOTSPOT"));
-        assertTrue(!hcBed.includes(variantGenomePosition(indelVariant)));
+        assertFalse(hcBed.includes(variantGenomePosition(indelVariant)));
         assertTrue(victim.test(indelVariant));
     }
 }

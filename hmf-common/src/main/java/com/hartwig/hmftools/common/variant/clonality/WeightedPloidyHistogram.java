@@ -37,7 +37,7 @@ public class WeightedPloidyHistogram {
     }
 
     @NotNull
-    public double[] modelHistogram(@NotNull final Collection<? extends PeakModel> model) {
+    double[] modelHistogram(@NotNull final Collection<? extends PeakModel> model) {
         return histogram(model, PeakModel::bucket, PeakModel::bucketWeight);
     }
 
@@ -57,7 +57,7 @@ public class WeightedPloidyHistogram {
         return result;
     }
 
-    public double peakPloidy(int peakBinCount, @NotNull final Collection<? extends WeightedPloidy> ploidies) {
+    double peakPloidy(int peakBinCount, @NotNull final Collection<? extends WeightedPloidy> ploidies) {
         return peakPloidy(peakBinCount, histogram(ploidies));
     }
 
@@ -66,8 +66,7 @@ public class WeightedPloidyHistogram {
         return ploidy(peakBucket);
     }
 
-    public static int peakBucket(int bucketBuffer, @NotNull double[] histogram) {
-
+    static int peakBucket(int bucketBuffer, @NotNull double[] histogram) {
         int maxBucket = -1;
         double maxBucketWeight = 0;
 
@@ -88,5 +87,4 @@ public class WeightedPloidyHistogram {
 
         return maxBucket;
     }
-
 }

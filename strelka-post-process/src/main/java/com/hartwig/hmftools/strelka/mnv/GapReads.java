@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 abstract class GapReads {
+
     private static final Logger LOGGER = LogManager.getLogger(GapReads.class);
 
     abstract Map<Character, Integer> countPerBases();

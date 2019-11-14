@@ -6,9 +6,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantTestBuilderFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -51,46 +50,24 @@ public class VariantEvidenceAnalyzerTest {
 
         CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 
-        ReportableVariant variantWithNoCodingEffect = ImmutableReportableVariant.builder()
+        SomaticVariant variantWithNoCodingEffect = SomaticVariantTestBuilderFactory.create()
                 .gene("BRAF")
                 .chromosome("7")
                 .position(100)
-                .ref("C")
-                .alt("T")
-                .totalReadCount(0)
-                .alleleReadCount(0)
-                .gDNA(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.NONE)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .biallelic(false)
-                .clonalLikelihood(1)
-                .totalPloidy(0D)
-                .allelePloidy(0D)
-                .notifyClinicalGeneticist(false)
                 .build();
 
         assertEquals(0, analyzer.evidenceForVariant(variantWithNoCodingEffect, "Skin", cancerTypeAnalyzer).size());
 
-        ReportableVariant variantWithCodingEffect = ImmutableReportableVariant.builder()
+        SomaticVariant variantWithCodingEffect = SomaticVariantTestBuilderFactory.create()
                 .gene("BRAF")
                 .chromosome("7")
                 .position(100)
-                .ref("C")
-                .alt("T")
-                .totalReadCount(0)
-                .alleleReadCount(0)
-                .gDNA(Strings.EMPTY)
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
                 .canonicalHgvsCodingImpact(Strings.EMPTY)
                 .canonicalHgvsProteinImpact(Strings.EMPTY)
-                .hotspot(Hotspot.NON_HOTSPOT)
-                .biallelic(false)
-                .clonalLikelihood(1)
-                .totalPloidy(0D)
-                .allelePloidy(0D)
-                .notifyClinicalGeneticist(false)
                 .build();
 
         assertEquals(1, analyzer.evidenceForVariant(variantWithCodingEffect, "Skin", cancerTypeAnalyzer).size());

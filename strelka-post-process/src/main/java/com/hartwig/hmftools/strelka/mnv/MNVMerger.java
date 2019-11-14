@@ -31,6 +31,7 @@ import htsjdk.variant.vcf.VCFHeader;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVMerger {
+
     private static final Logger LOGGER = LogManager.getLogger(MNVMerger.class);
     private static final String MNV_SET_VALUE = "mnvs";
     private static final String MNV_SET_KEY = "set";

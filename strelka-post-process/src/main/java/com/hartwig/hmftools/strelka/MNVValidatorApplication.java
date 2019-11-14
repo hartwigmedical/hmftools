@@ -31,6 +31,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class MNVValidatorApplication {
+
     private static final Logger LOGGER = LogManager.getLogger(MNVValidatorApplication.class);
 
     private static final String INPUT_VCF = "v";

@@ -72,7 +72,6 @@ public final class RepeatContextFactory {
         }
     }
 
-    @VisibleForTesting
     public static int backwardRepeats(int index, int repeatLength, final byte[] readSequence) {
         for (int count = 1; ; count++) {
             if (!match(index, repeatLength, index - count * repeatLength, readSequence)) {
@@ -82,7 +81,7 @@ public final class RepeatContextFactory {
     }
 
     @VisibleForTesting
-    public static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
+    static boolean match(int repeatIndex, int repeatLength, int readIndex, byte[] readSequence) {
         return matchingBasesFromLeft(repeatIndex, repeatLength, readIndex, readSequence) == repeatLength;
     }
 
@@ -100,5 +99,4 @@ public final class RepeatContextFactory {
     private static boolean outOfBounds(int index, byte[] sequence) {
         return index < 0 || index >= sequence.length;
     }
-
 }

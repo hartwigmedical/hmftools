@@ -13,6 +13,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public final class TestUtils {
+
     @NotNull
     public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString) {
         final StringBuilder qualityString = new StringBuilder();

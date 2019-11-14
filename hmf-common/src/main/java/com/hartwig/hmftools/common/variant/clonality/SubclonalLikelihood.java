@@ -11,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 public class SubclonalLikelihood {
 
     private static final double MAX_PLOIDY = 2;
+
     private final double[] subclonalLikelihood;
     private final WeightedPloidyHistogram histogram;
 
     public SubclonalLikelihood(double binWidth, @NotNull final List<PeakModel> peakModel) {
-
         histogram = new WeightedPloidyHistogram(MAX_PLOIDY, binWidth);
         final List<PeakModel> validPeaks = peakModel.stream().filter(PeakModel::isValid).collect(toList());
         double[] clonalHistogram = histogram.modelHistogram(validPeaks.stream().filter(x -> !x.isSubclonal()).collect(toList()));
@@ -41,5 +41,4 @@ public class SubclonalLikelihood {
 
         return 0;
     }
-
 }

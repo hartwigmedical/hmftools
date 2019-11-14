@@ -14,11 +14,14 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class StrelkaAllelicDepth {
+public final class StrelkaAllelicDepth {
 
     private static final String TIR_FIELD = "TIR";
     private static final String TAR_FIELD = "TAR";
     private static final String SEPARATOR = ",";
+
+    private StrelkaAllelicDepth() {
+    }
 
     @NotNull
     public static VariantContext enrich(@NotNull final VariantContext context) {
@@ -42,6 +45,16 @@ public class StrelkaAllelicDepth {
         }
 
         return contextBuilder.genotypes(updatedGenotypes).make();
+    }
+
+    @NotNull
+    public static String snpAlleleKey(@NotNull final Allele allele) {
+        return allele.getBaseString() + "U";
+    }
+
+    @NotNull
+    public static String indelAlleleKey(@NotNull final Allele allele) {
+        return allele.isReference() ? TAR_FIELD : TIR_FIELD;
     }
 
     @NotNull
@@ -83,16 +96,5 @@ public class StrelkaAllelicDepth {
     private static boolean hasRequiredAttributes(@NotNull final Genotype tumorGenotype, @NotNull final List<Allele> alleles,
             @NotNull Function<Allele, String> alleleKey) {
         return alleles.stream().allMatch(x -> tumorGenotype.hasExtendedAttribute(alleleKey.apply(x)));
-    }
-
-    @NotNull
-    public static String snpAlleleKey(@NotNull final Allele allele) {
-        return allele.getBaseString() + "U";
-    }
-
-    @NotNull
-    public static String indelAlleleKey(@NotNull final Allele allele) {
-        return allele.isReference() ? TAR_FIELD : TIR_FIELD;
-
     }
 }

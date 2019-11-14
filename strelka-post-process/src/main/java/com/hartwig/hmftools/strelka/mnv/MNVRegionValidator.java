@@ -29,6 +29,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVRegionValidator {
+
     private static final int MIN_MAPPING_QUALITY = 10;
 
     @NotNull

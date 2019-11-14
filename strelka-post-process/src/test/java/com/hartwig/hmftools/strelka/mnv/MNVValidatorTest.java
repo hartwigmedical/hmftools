@@ -23,6 +23,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class MNVValidatorTest {
+
     private static final Logger LOGGER = LogManager.getLogger(MNVValidatorTest.class);
 
     private static final int GAP_SIZE = 1;
