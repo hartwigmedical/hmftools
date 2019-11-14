@@ -6,6 +6,7 @@ CREATE TABLE rna
 
 DROP TABLE IF EXISTS ecrf;
 DROP TABLE IF EXISTS ecrfDatamodel;
+DROP TABLE IF EXISTS sample;
 
 CREATE TABLE cpctEcrf
 (   id int NOT NULL AUTO_INCREMENT,
@@ -42,4 +43,17 @@ CREATE TABLE cpctEcrfDatamodel
     description varchar(500),
     codeList varchar(3000),
     relevant varchar(5)
+);
+
+CREATE TABLE sample
+(   sampleId varchar(255) NOT NULL,
+    patientId int NOT NULL,
+    setName varchar(255) NOT NULL,
+    arrivalDate DATE NOT NULL,
+    samplingDate DATE,
+    dnaNanograms int,
+    limsPrimaryTumor varchar(255),
+    pathologyTumorPercentage varchar(100),
+    PRIMARY KEY (sampleId),
+    FOREIGN KEY (patientId) REFERENCES patient(id)
 );

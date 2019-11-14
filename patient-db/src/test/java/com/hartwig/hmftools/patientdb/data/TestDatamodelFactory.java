@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class TestDatamodelFactory {
@@ -14,10 +15,11 @@ public final class TestDatamodelFactory {
     @NotNull
     public static ImmutableSampleData.Builder sampleBuilder(@NotNull LocalDate arrivalDate) {
         return ImmutableSampleData.builder()
-                .sequenced(false)
                 .sampleId("sample-" + arrivalDate.toString())
+                .setName(Strings.EMPTY)
+                .sequenced(false)
                 .arrivalDate(arrivalDate)
-                .tumorPercentage("N/A");
+                .pathologyTumorPercentage("N/A");
     }
 
     @NotNull

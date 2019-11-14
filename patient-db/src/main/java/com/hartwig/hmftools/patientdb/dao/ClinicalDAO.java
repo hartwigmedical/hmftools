@@ -87,18 +87,20 @@ class ClinicalDAO {
         context.insertInto(SAMPLE,
                 SAMPLE.SAMPLEID,
                 SAMPLE.PATIENTID,
+                SAMPLE.SETNAME,
                 SAMPLE.ARRIVALDATE,
                 SAMPLE.SAMPLINGDATE,
                 SAMPLE.DNANANOGRAMS,
                 SAMPLE.LIMSPRIMARYTUMOR,
-                SAMPLE.TUMORPERCENTAGE)
+                SAMPLE.PATHOLOGYTUMORPERCENTAGE)
                 .values(sample.sampleId(),
                         patientId,
+                        sample.setName(),
                         Utils.toSQLDate(sample.arrivalDate()),
                         Utils.toSQLDate(sample.samplingDate()),
                         sample.dnaNanograms(),
                         sample.limsPrimaryTumor(),
-                        sample.tumorPercentage())
+                        sample.pathologyTumorPercentage())
                 .execute();
     }
 

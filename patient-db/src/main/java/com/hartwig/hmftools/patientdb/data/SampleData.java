@@ -17,6 +17,9 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract boolean sequenced();
 
     @NotNull
+    public abstract String setName();
+
+    @NotNull
     public abstract LocalDate arrivalDate();
 
     @Nullable
@@ -29,7 +32,7 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract String limsPrimaryTumor();
 
     @NotNull
-    public abstract String tumorPercentage();
+    public abstract String pathologyTumorPercentage();
 
     @NotNull
     @Value.Derived

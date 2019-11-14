@@ -48,11 +48,12 @@ DROP TABLE IF EXISTS sample;
 CREATE TABLE sample
 (   sampleId varchar(255) NOT NULL,
     patientId int NOT NULL,
+    setName varchar(255) NOT NULL,
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
     dnaNanograms int,
     limsPrimaryTumor varchar(255),
-    tumorPercentage varchar(100),
+    pathologyTumorPercentage varchar(100),
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
