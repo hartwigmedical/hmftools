@@ -2,15 +2,37 @@
 # Somatic Alterations in Genome (SAGE)
 SAGE is a somatic SNV, MNV and small INDEL caller.
 
-## Candidate Detection
+
+# Algorithm
+
+SAGE parses the tumor bam twice. The first time to get a list of candidate variants and determine a unique read context of each variant. 
+The second pass counts the number of full, partial and realigned matches of the read context.
+
+Finally, SAGE parses the normal bam once to get germline statistics on the variants.  
+
+## Variant Support
+
+In the first pass of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs. 
+To find SNVs, SAGE compares the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome. 
+MNVs are not included at this stage, but are determined after phasing. Only records meeting the `min_map_quality` requirement are processed. 
+There is no base quality requirement. 
+
+The output of this stage is a set of candidate variants with counts of the ref support, alt support and read depth. 
+This corresponds to the AD and DP fields found in the final VCF. 
+Note these values do not contribute to the quality or VAF calculations. These are calculated in the next step. 
 
 
+## Read Context
+
+The read context is a sequence of bases comprised of a core flanked on either side by an additional 25 bases. 
+A read context must be complete to be eligible as the primary read context of a variant. 
+If a single flank is incomplete (such as when a variant is too close to a read edge), the read context can partially match with a complete read context.
+If both flanks are incomplete (such as when the majority of a read is in a repeat sequence), the read context cannot match with another read context.
 
 
+### Read Context Core
 
-## Distinct Read Context
-
-The read context is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not ref sequence). 
+The read context core is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not ref sequence). 
 In this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
 
 For a SNV in a non-repeat sequence this will just be the single alternate base. 
@@ -48,7 +70,18 @@ ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
 
 A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
 
-TODO: explain flanks
+### Read Context Counts
+
+Variant quality and VAF are determined using counts of the read context rather than the variant support.  
+
+Type  | Description
+---|---
+FULL | Core and both flanks match all match at same position. 
+PARTIAL  | Core and at least one flank match fully at same position. Remaining flank matches but is truncated.
+REALIGNED  | Core and both flanks match exactly but at a different position. 
+SHORTENED | Core and both flanks match with the removal of one repeat. Can be at same or realigned position.
+LENGTHENED | Core and both flanks match with the addition of one repeat. Can be at same or realigned position.
+
 
 ## Quality Score
 
