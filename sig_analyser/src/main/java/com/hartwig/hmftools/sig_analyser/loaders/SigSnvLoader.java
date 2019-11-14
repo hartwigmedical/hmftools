@@ -32,12 +32,21 @@ public class SigSnvLoader
     private DatabaseAccess mDbAccess;
     private boolean mApplySampleQC;
 
-    Map<String,Integer> mBucketStringToIndex;
+    final Map<String,Integer> mBucketStringToIndex;
     SigMatrix mSampleBucketCounts;
-    List<String> mSampleIds;
+    final List<String> mSampleIds;
 
-    private static int SNV_BUCKET_COUNT = 96;
-    private static String APPLY_SAMPLE_QC = "apply_sample_qc";
+    private Double mPloidyMin;
+    private Double mPloidyMax;
+    private Double mSubclonalLikelihoodMin;
+    private Double mSubclonalLikelihoodMax;
+
+    private static final int SNV_BUCKET_COUNT = 96;
+    private static final String APPLY_SAMPLE_QC = "apply_sample_qc";
+    private static final String SUBCLONAL_MIN = "subclonal_min";
+    private static final String SUBCLONAL_MAX = "subclonal_max";
+    private static final String PLOIDY_MAX = "ploidy_max";
+    private static final String PLOIDY_MIN = "ploidy_min";
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
 
@@ -48,11 +57,19 @@ public class SigSnvLoader
         mBucketStringToIndex = Maps.newHashMap();
         mSampleIds = Lists.newArrayList();
         mApplySampleQC = true;
+        mPloidyMin = null;
+        mPloidyMax = null;
+        mSubclonalLikelihoodMin = null;
+        mSubclonalLikelihoodMax = null;
     }
 
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(APPLY_SAMPLE_QC, false, "Check sample QC status etc");
+        options.addOption(SUBCLONAL_MAX, true, "Optional: subclonal max threshold");
+        options.addOption(SUBCLONAL_MIN, true, "Optional: subclonal min threshold");
+        options.addOption(PLOIDY_MAX, true, "Optional: ploidy max threshold");
+        options.addOption(PLOIDY_MIN, true, "Optional: ploidy min threshold");
     }
 
     public boolean initialise(final DatabaseAccess dbAccess, final CommandLine cmd)
@@ -63,9 +80,21 @@ public class SigSnvLoader
 
         mApplySampleQC = cmd.hasOption(APPLY_SAMPLE_QC);
 
+        if(cmd.hasOption(SUBCLONAL_MIN))
+            mSubclonalLikelihoodMin = Double.parseDouble(cmd.getOptionValue(SUBCLONAL_MIN, "0"));
+
+        if(cmd.hasOption(SUBCLONAL_MAX))
+            mSubclonalLikelihoodMax = Double.parseDouble(cmd.getOptionValue(SUBCLONAL_MAX, "0"));
+
+        if(cmd.hasOption(PLOIDY_MIN))
+            mPloidyMin = Double.parseDouble(cmd.getOptionValue(PLOIDY_MIN, "0"));
+
+        if(cmd.hasOption(PLOIDY_MAX))
+            mPloidyMax = Double.parseDouble(cmd.getOptionValue(PLOIDY_MAX, "0"));
+
         if(cmd.hasOption(SAMPLE_IDS))
         {
-            mSampleIds = Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";")).collect(Collectors.toList());
+            mSampleIds.addAll(Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";")).collect(Collectors.toList()));
         }
 
         buildBucketMap();
@@ -135,7 +164,7 @@ public class SigSnvLoader
         for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
         {
             String sampleId = sampleIds.get(sampleIndex);
-            List<SomaticVariant> variants = mDbAccess.readSomaticVariants(sampleId);
+            final List<SomaticVariant> variants = mDbAccess.readSomaticVariants(sampleId);
 
             LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
 
@@ -180,6 +209,19 @@ public class SigSnvLoader
             String rawContext = variant.trinucleotideContext();
 
             if(rawContext.contains("N"))
+                continue;
+
+            // check filters
+            if(mSubclonalLikelihoodMin != null && variant.subclonalLikelihood() < mSubclonalLikelihoodMin)
+                continue;
+
+            if(mSubclonalLikelihoodMax != null && variant.subclonalLikelihood() > mSubclonalLikelihoodMax)
+                continue;
+
+            if(mPloidyMin != null && variant.ploidy() < mPloidyMin)
+                continue;
+
+            if(mPloidyMax != null && variant.ploidy() > mPloidyMax)
                 continue;
 
             // convert base change to standard set and the context accordingly
