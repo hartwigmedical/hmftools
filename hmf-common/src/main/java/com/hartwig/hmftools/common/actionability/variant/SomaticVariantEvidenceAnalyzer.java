@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.actionability.somaticvariant;
+package com.hartwig.hmftools.common.actionability.variant;
 
 import java.util.List;
 import java.util.Set;

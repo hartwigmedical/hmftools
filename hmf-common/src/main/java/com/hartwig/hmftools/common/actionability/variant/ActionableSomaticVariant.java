@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.actionability.somaticvariant;
+package com.hartwig.hmftools.common.actionability.variant;
 
 import com.hartwig.hmftools.common.actionability.Actionable;
 

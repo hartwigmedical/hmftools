@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerF
 import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzer;
-import com.hartwig.hmftools.common.actionability.somaticvariant.SomaticVariantEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.common.actionability.variant.SomaticVariantEvidenceAnalyzer;
+import com.hartwig.hmftools.common.actionability.variant.SomaticVariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
