@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.bachelor;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.util.List;
 import java.util.Set;
@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ImmutableReportableGermlineVariant;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
 
 import org.jetbrains.annotations.NotNull;
 

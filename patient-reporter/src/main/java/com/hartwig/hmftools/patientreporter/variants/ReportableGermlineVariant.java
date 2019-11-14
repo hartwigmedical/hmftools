@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.common.variant.reportablegenomicalterations;
+package com.hartwig.hmftools.patientreporter.variants;
 
-import com.hartwig.hmftools.common.bachelor.GermlineVariant;
+
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

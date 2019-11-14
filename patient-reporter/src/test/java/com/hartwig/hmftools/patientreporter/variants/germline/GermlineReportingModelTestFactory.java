@@ -1,8 +1,7 @@
-package com.hartwig.hmftools.common.bachelor;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.common.bachelor.GermlineReportingModel;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.bachelor;
+package com.hartwig.hmftools.patientreporter.variants.germline;
 
 import java.io.File;
 import java.io.IOException;
