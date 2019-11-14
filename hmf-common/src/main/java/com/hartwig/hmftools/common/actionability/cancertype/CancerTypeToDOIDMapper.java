@@ -27,9 +27,9 @@ class CancerTypeToDOIDMapper {
     private final Map<String, Set<String>> doidsPerCancerType;
 
     @NotNull
-    static CancerTypeToDOIDMapper createFromFile(@NotNull String knowledgebaseCancerTypesPath) throws IOException {
+    static CancerTypeToDOIDMapper createFromFile(@NotNull String knowledgebaseCancerTypesTsv) throws IOException {
         final Map<String, Set<String>> cancerTypeMappings = Maps.newHashMap();
-        final List<String> cancerTypeMappingLines = Files.readAllLines(new File(knowledgebaseCancerTypesPath).toPath());
+        final List<String> cancerTypeMappingLines = Files.readAllLines(new File(knowledgebaseCancerTypesTsv).toPath());
 
         // Skip header line
         for (String cancerTypeMappingLine : cancerTypeMappingLines.subList(1, cancerTypeMappingLines.size())) {
