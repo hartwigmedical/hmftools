@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.actionability.cnv.CheckEvidenceCnv;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverGeneView;
 import com.hartwig.hmftools.common.drivercatalog.DriverGeneViewFactory;
@@ -25,8 +24,6 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.reportablegenomicalterations.AllReportableVariants;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ExtractReportableGainsAndLosses;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.somaticvariant.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
@@ -80,10 +77,10 @@ public class LoadEvidenceData {
         if (Utils.anyNull(sampleId,
                 knowledgebaseDirectory,
                 tumorLocationCsv,
+                purplePurityTsv,
                 somaticVariantVcf,
                 purpleGeneCnvTsv,
                 linxFusionTsv,
-                purplePurityTsv,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
                 cmd.getOptionValue(DB_URL))) {
@@ -104,21 +101,18 @@ public class LoadEvidenceData {
 
         double ploidy = extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = readGeneCopyNumbers(purpleGeneCnvTsv);
-        List<ReportableGainLoss> reportableGainLosses = ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, ploidy);
-        LOGGER.info("Extracted {} reportable gains and losses from {}", reportableGainLosses.size(), purpleGeneCnvTsv);
 
         List<SomaticVariant> passSomaticVariants = readSomaticVariants(sampleId, somaticVariantVcf);
         List<ReportableVariant> reportableVariants =
                 extractReportableVariants(passSomaticVariants, geneCopyNumbers, DriverGeneViewFactory.create());
         LOGGER.info("Extracted {} reportable somatic variants from {}", reportableVariants.size(), somaticVariantVcf);
 
-        List<EvidenceItem> combinedEvidence = createEvidenceOfAllFindings(actionabilityAnalyzer,
+        List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
                 reportableVariants,
                 geneCopyNumbers,
                 fusions,
-                ploidy,
-                reportableGainLosses);
+                ploidy);
 
         LOGGER.info("Writing evidence items into db");
         dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
@@ -150,7 +144,8 @@ public class LoadEvidenceData {
         driverCatalog.addAll(TsgDrivers.drivers(passSomaticVariants, geneCopyNumbers));
 
         LOGGER.info("Merging all reportable somatic variants");
-        List<SomaticVariant> variantsToReport = passSomaticVariants.stream().filter(SomaticVariantAnalyzer.includeFilter(driverGeneView)).collect(Collectors.toList());
+        List<SomaticVariant> variantsToReport =
+                passSomaticVariants.stream().filter(SomaticVariantAnalyzer.includeFilter(driverGeneView)).collect(Collectors.toList());
 
         return AllReportableVariants.mergeAllSomaticVariants(variantsToReport, driverCatalog, driverGeneView);
     }
@@ -189,41 +184,32 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static List<EvidenceItem> createEvidenceOfAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
+    private static List<EvidenceItem> createEvidenceForAllFindings(@NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @NotNull String patientPrimaryTumorLocation, @NotNull List<ReportableVariant> reportableVariants,
-            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> fusions, double ploidy,
-            @NotNull List<ReportableGainLoss> reportableGainLosses) {
+            @NotNull List<GeneCopyNumber> geneCopyNumbers, @NotNull List<ReportableGeneFusion> fusions, double ploidy) {
         LOGGER.info("Extracting all evidence");
-        Map<ReportableVariant, List<EvidenceItem>> evidencePerVariant =
-                actionabilityAnalyzer.evidenceForAllVariants(reportableVariants, patientPrimaryTumorLocation);
 
-        List<EvidenceItem> allEvidenceForVariants = extractAllEvidenceItems(evidencePerVariant);
-        LOGGER.info("Found {} evidence items for {} somatic variants.", allEvidenceForVariants.size(), reportableVariants.size());
+        List<EvidenceItem> evidenceForVariants =
+                toList(actionabilityAnalyzer.evidenceForAllVariants(reportableVariants, patientPrimaryTumorLocation));
+        LOGGER.info("Found {} evidence items for {} somatic variants.", evidenceForVariants.size(), reportableVariants.size());
 
-        Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
-                actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy);
-        List<EvidenceItem> allEvidenceForCopyNumbers = extractAllEvidenceItems(evidencePerGeneCopyNumber);
+        List<EvidenceItem> evidenceForCopyNumbers =
+                toList(actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy));
+        LOGGER.info("Found {} evidence items for {} copy numbers.", evidenceForCopyNumbers.size(), geneCopyNumbers.size());
 
-        CheckEvidenceCnv.checkingForEvidenceInDriverCatalog(reportableGainLosses, evidencePerGeneCopyNumber, allEvidenceForCopyNumbers);
-
-        LOGGER.info("Found {} evidence items for {} copy numbers.",
-                allEvidenceForCopyNumbers.size(),
-                evidencePerGeneCopyNumber.keySet().size());
-
-        Map<ReportableGeneFusion, List<EvidenceItem>> evidencePerFusion =
-                actionabilityAnalyzer.evidenceForFusions(fusions, patientPrimaryTumorLocation);
-        List<EvidenceItem> allEvidenceForGeneFusions = extractAllEvidenceItems(evidencePerFusion);
-        LOGGER.info("Found {} evidence items for {} gene fusions.", allEvidenceForGeneFusions.size(), fusions.size());
+        List<EvidenceItem> evidenceForGeneFusions =
+                toList(actionabilityAnalyzer.evidenceForFusions(fusions, patientPrimaryTumorLocation));
+        LOGGER.info("Found {} evidence items for {} gene fusions.", evidenceForGeneFusions.size(), fusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
-        combinedEvidence.addAll(allEvidenceForVariants);
-        combinedEvidence.addAll(allEvidenceForCopyNumbers);
-        combinedEvidence.addAll(allEvidenceForGeneFusions);
+        combinedEvidence.addAll(evidenceForVariants);
+        combinedEvidence.addAll(evidenceForCopyNumbers);
+        combinedEvidence.addAll(evidenceForGeneFusions);
         return combinedEvidence;
     }
 
     @NotNull
-    private static List<EvidenceItem> extractAllEvidenceItems(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+    private static List<EvidenceItem> toList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
         List<EvidenceItem> evidenceItemList = Lists.newArrayList();
         for (List<EvidenceItem> items : evidenceItemMap.values()) {
             evidenceItemList.addAll(items);
