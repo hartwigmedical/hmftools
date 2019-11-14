@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.phase;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;

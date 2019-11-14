@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.strelka;
+package com.hartwig.hmftools.common.variant.strelka;
 
 import java.util.List;
 import java.util.function.Function;

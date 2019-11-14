@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.hotspot.SAMSlicer;
+import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
 import org.jetbrains.annotations.NotNull;
 

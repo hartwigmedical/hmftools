@@ -7,8 +7,6 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.SomaticVariantDrivers;
-import com.hartwig.hmftools.common.msi.MicrosatelliteIndels;
-import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -16,6 +14,8 @@ import com.hartwig.hmftools.common.purple.region.FittedRegion;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentPurple;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.RefGenomeData;
 import com.hartwig.hmftools.purple.config.SomaticConfig;

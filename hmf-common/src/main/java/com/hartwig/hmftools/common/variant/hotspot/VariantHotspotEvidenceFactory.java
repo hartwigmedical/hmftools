@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.hotspot;
+package com.hartwig.hmftools.common.variant.hotspot;
 
 import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesDeletedAfterPosition;
 import static com.hartwig.hmftools.common.utils.sam.SAMRecords.basesInsertedAfterPosition;

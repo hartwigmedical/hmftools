@@ -5,14 +5,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.r.RExecutor;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.purple.config.ChartConfig;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.ConfigSupplier;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RCharts {
+class RCharts {
 
     private final ConfigSupplier configSupplier;
     private final CommonConfig commonConfig;
@@ -28,7 +28,6 @@ public class RCharts {
 
     @NotNull
     List<Future<Integer>> chartFutures() {
-
         final List<Future<Integer>> result = Lists.newArrayList();
 
         result.add(executorService.submit(() -> RExecutor.executeFromClasspath("r/copyNumberPlots.R",
@@ -45,5 +44,4 @@ public class RCharts {
 
         return result;
     }
-
 }

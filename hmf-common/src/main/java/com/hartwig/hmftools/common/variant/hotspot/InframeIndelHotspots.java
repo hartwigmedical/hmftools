@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.hotspot;
+package com.hartwig.hmftools.common.variant.hotspot;
 
 import java.util.Collection;
 import java.util.Set;

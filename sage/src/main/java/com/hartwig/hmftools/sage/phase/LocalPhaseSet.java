@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.variant.SageVariant;

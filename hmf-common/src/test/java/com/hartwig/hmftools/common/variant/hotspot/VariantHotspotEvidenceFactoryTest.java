@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.common.hotspot;
+package com.hartwig.hmftools.common.variant.hotspot;
 
-import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.create;
-import static com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory.isVariantPartOfLargerMNV;
 import static com.hartwig.hmftools.common.utils.sam.SAMRecords.PHRED_OFFSET;
+import static com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidenceFactory.create;
+import static com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidenceFactory.isVariantPartOfLargerMNV;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.Realigned;

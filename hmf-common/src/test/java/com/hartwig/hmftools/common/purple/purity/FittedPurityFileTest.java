@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Random;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

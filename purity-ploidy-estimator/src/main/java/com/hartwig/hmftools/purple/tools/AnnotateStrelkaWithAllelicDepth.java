@@ -2,7 +2,7 @@ package com.hartwig.hmftools.purple.tools;
 
 import java.io.File;
 
-import com.hartwig.hmftools.common.strelka.StrelkaAllelicDepth;
+import com.hartwig.hmftools.common.variant.strelka.StrelkaAllelicDepth;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.r;
+package com.hartwig.hmftools.common.utils.r;
 
 import java.io.File;
 import java.io.IOException;

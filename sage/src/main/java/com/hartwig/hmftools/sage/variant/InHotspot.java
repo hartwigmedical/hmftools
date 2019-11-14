@@ -6,7 +6,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 

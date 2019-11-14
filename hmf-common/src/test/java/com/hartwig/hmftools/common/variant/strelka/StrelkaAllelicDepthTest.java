@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.strelka;
+package com.hartwig.hmftools.common.variant.strelka;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

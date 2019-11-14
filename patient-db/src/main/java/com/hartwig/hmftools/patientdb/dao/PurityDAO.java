@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityScore;
@@ -19,6 +18,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,7 +75,7 @@ class PurityDAO {
     }
 
     @NotNull
-    public final List<String> getSamplesPassingQC(double minPurity) {
+    List<String> getSamplesPassingQC(double minPurity) {
         List<String> sampleIds = Lists.newArrayList();
 
         final Result<Record> result = context.select()
@@ -93,7 +93,7 @@ class PurityDAO {
     }
 
     @NotNull
-    public final List<String> getSampleIds() {
+    List<String> getSampleIds() {
         List<String> sampleIds = Lists.newArrayList();
 
         final Result<Record> result = context.select().from(PURITY).fetch();
@@ -180,7 +180,6 @@ class PurityDAO {
 
     private static void addPurity(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
             @NotNull FittedPurity purity) {
-        //noinspection unchecked
         inserter.values(sample,
                 DatabaseUtil.decimal(purity.purity()),
                 DatabaseUtil.decimal(purity.normFactor()),

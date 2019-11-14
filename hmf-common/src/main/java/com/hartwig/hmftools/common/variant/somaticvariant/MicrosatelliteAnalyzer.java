@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.variant.somaticvariant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.msi.MicrosatelliteIndels;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
 
 import org.jetbrains.annotations.NotNull;
 

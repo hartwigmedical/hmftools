@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import com.hartwig.hmftools.common.r.RExecutor;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 
 import org.apache.logging.log4j.LogManager;

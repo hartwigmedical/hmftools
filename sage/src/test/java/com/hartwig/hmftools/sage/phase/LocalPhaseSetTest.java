@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.phase;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
