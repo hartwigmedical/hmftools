@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzerF
 import com.hartwig.hmftools.common.actionability.cnv.SignificantGeneCopyNumberFilter;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.fusion.FusionEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.common.actionability.variant.SomaticVariantEvidenceAnalyzer;
-import com.hartwig.hmftools.common.actionability.variant.SomaticVariantEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer;
+import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -36,7 +36,7 @@ public class ActionabilityAnalyzer {
     private static final String CANCER_TYPE_DOID_MAPPING_TSV = "knowledgebaseCancerTypes.tsv";
 
     @NotNull
-    private final SomaticVariantEvidenceAnalyzer variantAnalyzer;
+    private final VariantEvidenceAnalyzer variantAnalyzer;
     @NotNull
     private final CopyNumberEvidenceAnalyzer copyNumberAnalyzer;
     @NotNull
@@ -47,8 +47,8 @@ public class ActionabilityAnalyzer {
     @NotNull
     public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebaseDirectory) throws IOException {
         String basePath = knowledgebaseDirectory + File.separator;
-        SomaticVariantEvidenceAnalyzer variantAnalyzer =
-                SomaticVariantEvidenceAnalyzerFactory.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_TSV,
+        VariantEvidenceAnalyzer variantAnalyzer =
+                VariantEvidenceAnalyzerFactory.loadFromFileVariantsAndFileRanges(basePath + ACTIONABLE_VARIANT_TSV,
                         basePath + ACTIONABLE_RANGES_TSV);
 
         CopyNumberEvidenceAnalyzer cnvAnalyzer = CopyNumberEvidenceAnalyzerFactory.loadFromFileCNVs(basePath + ACTIONABLE_CNV_TSV);
@@ -62,7 +62,7 @@ public class ActionabilityAnalyzer {
         return new ActionabilityAnalyzer(variantAnalyzer, cnvAnalyzer, fusionAnalyzer, cancerTypeAnalyzer);
     }
 
-    private ActionabilityAnalyzer(@NotNull final SomaticVariantEvidenceAnalyzer variantAnalyzer,
+    private ActionabilityAnalyzer(@NotNull final VariantEvidenceAnalyzer variantAnalyzer,
             @NotNull final CopyNumberEvidenceAnalyzer copyNumberAnalyzer, @NotNull final FusionEvidenceAnalyzer fusionAnalyzer,
             @NotNull final CancerTypeAnalyzer cancerTypeAnalyzer) {
         this.variantAnalyzer = variantAnalyzer;
@@ -72,7 +72,7 @@ public class ActionabilityAnalyzer {
     }
 
     @NotNull
-    public SomaticVariantEvidenceAnalyzer variantAnalyzer() {
+    public VariantEvidenceAnalyzer variantAnalyzer() {
         return variantAnalyzer;
     }
 

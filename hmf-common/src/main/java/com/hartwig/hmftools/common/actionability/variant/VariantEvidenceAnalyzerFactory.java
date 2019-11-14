@@ -10,17 +10,17 @@ import com.hartwig.hmftools.common.actionability.util.MultiDrugCurator;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SomaticVariantEvidenceAnalyzerFactory {
+public final class VariantEvidenceAnalyzerFactory {
 
     private static final String DELIMITER = "\t";
 
-    private SomaticVariantEvidenceAnalyzerFactory() {
+    private VariantEvidenceAnalyzerFactory() {
     }
 
     @NotNull
-    public static SomaticVariantEvidenceAnalyzer loadFromFileVariantsAndFileRanges(@NotNull String actionableVariantTsv,
+    public static VariantEvidenceAnalyzer loadFromFileVariantsAndFileRanges(@NotNull String actionableVariantTsv,
             @NotNull String actionableRangeTsv) throws IOException {
-        final List<ActionableSomaticVariant> variants = Lists.newArrayList();
+        final List<ActionableVariant> variants = Lists.newArrayList();
         final List<ActionableRange> ranges = Lists.newArrayList();
         final List<String> lineVariants = Files.readAllLines(new File(actionableVariantTsv).toPath());
         final List<String> lineRanges = Files.readAllLines(new File(actionableRangeTsv).toPath());
@@ -35,13 +35,13 @@ public final class SomaticVariantEvidenceAnalyzerFactory {
             ranges.add(fromLineRanges(lineRange));
         }
 
-        return new SomaticVariantEvidenceAnalyzer(variants, ranges);
+        return new VariantEvidenceAnalyzer(variants, ranges);
     }
 
     @NotNull
-    private static ActionableSomaticVariant fromLineVariants(@NotNull String line) {
+    private static ActionableVariant fromLineVariants(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        return ImmutableActionableSomaticVariant.builder()
+        return ImmutableActionableVariant.builder()
                 .gene(values[0])
                 .chromosome(values[1])
                 .position(Long.parseLong(values[2]))

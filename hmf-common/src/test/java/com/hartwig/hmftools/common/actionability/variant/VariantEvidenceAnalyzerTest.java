@@ -13,11 +13,11 @@ import com.hartwig.hmftools.common.variant.ReportableVariant;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class SomaticVariantEvidenceAnalyzerTest {
+public class VariantEvidenceAnalyzerTest {
 
     @Test
     public void actionabilityWorksVariants() {
-        ActionableSomaticVariant actionableSomaticVariant = ImmutableActionableSomaticVariant.builder()
+        ActionableVariant actionableVariant = ImmutableActionableVariant.builder()
                 .gene("BRAF")
                 .chromosome("X")
                 .position(1234)
@@ -46,8 +46,8 @@ public class SomaticVariantEvidenceAnalyzerTest {
                 .response("Resistant")
                 .build();
 
-        SomaticVariantEvidenceAnalyzer analyzer =
-                new SomaticVariantEvidenceAnalyzer(Lists.newArrayList(actionableSomaticVariant), Lists.newArrayList(actionableRange));
+        VariantEvidenceAnalyzer analyzer =
+                new VariantEvidenceAnalyzer(Lists.newArrayList(actionableVariant), Lists.newArrayList(actionableRange));
 
         CancerTypeAnalyzer cancerTypeAnalyzer = CancerTypeAnalyzerTestFactory.buildWithOneCancerTypeMapping("Skin Melanoma", "4159");
 

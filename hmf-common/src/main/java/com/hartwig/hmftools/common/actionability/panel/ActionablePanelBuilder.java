@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.actionability.cnv.CopyNumberEvidenceAnalyzer;
 import com.hartwig.hmftools.common.actionability.cnv.CopyNumberType;
 import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModel;
 import com.hartwig.hmftools.common.actionability.drup.DrupActionabilityModelFactory;
-import com.hartwig.hmftools.common.actionability.variant.SomaticVariantEvidenceAnalyzer;
+import com.hartwig.hmftools.common.actionability.variant.VariantEvidenceAnalyzer;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ public class ActionablePanelBuilder {
         });
     }
 
-    private void addVariants(@NotNull SomaticVariantEvidenceAnalyzer variantEvidenceAnalyzer) {
+    private void addVariants(@NotNull VariantEvidenceAnalyzer variantEvidenceAnalyzer) {
         variantEvidenceAnalyzer.actionableRanges()
                 .stream()
                 .filter(this::filterSource)

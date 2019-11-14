@@ -17,17 +17,17 @@ import com.hartwig.hmftools.common.variant.Variant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class SomaticVariantEvidenceAnalyzer {
+public class VariantEvidenceAnalyzer {
 
     private static final Set<CodingEffect> CODING_EFFECTS =
             Sets.newHashSet(CodingEffect.SPLICE, CodingEffect.NONSENSE_OR_FRAMESHIFT, CodingEffect.MISSENSE);
 
     @NotNull
-    private final List<ActionableSomaticVariant> actionableVariants;
+    private final List<ActionableVariant> actionableVariants;
     @NotNull
     private final List<ActionableRange> actionableRanges;
 
-    SomaticVariantEvidenceAnalyzer(@NotNull final List<ActionableSomaticVariant> actionableVariants,
+    VariantEvidenceAnalyzer(@NotNull final List<ActionableVariant> actionableVariants,
             @NotNull List<ActionableRange> actionableRanges) {
         this.actionableVariants = actionableVariants;
         this.actionableRanges = actionableRanges;
@@ -42,7 +42,7 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    public List<ActionableSomaticVariant> actionableVariants() {
+    public List<ActionableVariant> actionableVariants() {
         return actionableVariants;
     }
 
@@ -55,7 +55,7 @@ public class SomaticVariantEvidenceAnalyzer {
     public List<EvidenceItem> evidenceForVariant(@NotNull Variant variant, @Nullable String primaryTumorLocation,
             @NotNull CancerTypeAnalyzer cancerTypeAnalyzer) {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
-        for (ActionableSomaticVariant actionableVariant : actionableVariants) {
+        for (ActionableVariant actionableVariant : actionableVariants) {
             if (variant.gene().equals(actionableVariant.gene()) && variant.chromosome().equals(actionableVariant.chromosome())
                     && variant.position() == actionableVariant.position() && variant.ref().equals(actionableVariant.ref()) && variant.alt()
                     .equals(actionableVariant.alt())) {
@@ -90,7 +90,7 @@ public class SomaticVariantEvidenceAnalyzer {
     }
 
     @NotNull
-    private static ImmutableEvidenceItem.Builder fromActionableVariant(@NotNull ActionableSomaticVariant actionableVariant) {
+    private static ImmutableEvidenceItem.Builder fromActionableVariant(@NotNull ActionableVariant actionableVariant) {
         return ImmutableEvidenceItem.builder()
                 .reference(actionableVariant.reference())
                 .source(ActionabilitySource.fromString(actionableVariant.source()))
