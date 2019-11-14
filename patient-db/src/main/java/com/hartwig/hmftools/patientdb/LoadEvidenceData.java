@@ -85,8 +85,6 @@ public class LoadEvidenceData {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, sampleId);
-        LOGGER.info("Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);
-
         List<? extends Variant> passSomaticVariants = readPassSomaticVariants(sampleId, somaticVariantVcf);
         double ploidy = extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = readGeneCopyNumbers(purpleGeneCnvTsv);
@@ -105,10 +103,10 @@ public class LoadEvidenceData {
     }
 
     private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException {
-        LOGGER.info("Reading purple purity file {}", purplePurityTsv);
+        LOGGER.info("Reading purple purity from {}", purplePurityTsv);
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         double ploidy = purityContext.bestFit().ploidy();
-        LOGGER.info("Sample ploidy: {}", ploidy);
+        LOGGER.info(" Sample ploidy: {}", ploidy);
         return ploidy;
     }
 
@@ -117,7 +115,7 @@ public class LoadEvidenceData {
             throws IOException {
         LOGGER.info("Reading somatic variants from {}", somaticVariantVcf);
         List<? extends Variant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
-        LOGGER.info("Loaded {} PASS somatic variants from {}", passSomaticVariants.size(), somaticVariantVcf);
+        LOGGER.info(" Loaded {} PASS somatic variants", passSomaticVariants.size());
         return passSomaticVariants;
     }
 
@@ -125,7 +123,7 @@ public class LoadEvidenceData {
     private static List<GeneCopyNumber> readGeneCopyNumbers(@NotNull String purpleGeneCnvTsv) throws IOException {
         LOGGER.info("Reading gene copy numbers from {}", purpleGeneCnvTsv);
         List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
-        LOGGER.info("Loaded {} gene copy numbers from {}", geneCopyNumbers.size(), purpleGeneCnvTsv);
+        LOGGER.info(" Loaded {} gene copy numbers", geneCopyNumbers.size());
         return geneCopyNumbers;
     }
 
@@ -133,7 +131,7 @@ public class LoadEvidenceData {
     private static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
         LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
         List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
-        LOGGER.info("Loaded {} fusions from {}", fusions.size(), linxFusionTsv);
+        LOGGER.info(" Loaded {} fusions", fusions.size());
         return fusions;
     }
 
@@ -141,7 +139,7 @@ public class LoadEvidenceData {
     private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
         LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
-        LOGGER.info("Loaded tumor locations for {} patients from {}", patientTumorLocations.size(), tumorLocationCsv);
+        LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
@@ -150,6 +148,8 @@ public class LoadEvidenceData {
         if (patientTumorLocation != null) {
             patientPrimaryTumorLocation = patientTumorLocation.primaryTumorLocation();
         }
+
+        LOGGER.info(" Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);
 
         return patientPrimaryTumorLocation;
     }
@@ -162,15 +162,15 @@ public class LoadEvidenceData {
 
         List<EvidenceItem> evidenceForVariants =
                 toList(actionabilityAnalyzer.evidenceForAllVariants(variants, patientPrimaryTumorLocation));
-        LOGGER.info("Found {} evidence items for {} somatic variants.", evidenceForVariants.size(), variants.size());
+        LOGGER.info(" Found {} evidence items for {} somatic variants.", evidenceForVariants.size(), variants.size());
 
         List<EvidenceItem> evidenceForGeneCopyNumbers =
                 toList(actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy));
-        LOGGER.info("Found {} evidence items for {} copy numbers.", evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
+        LOGGER.info(" Found {} evidence items for {} copy numbers.", evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
 
         List<EvidenceItem> evidenceForGeneFusions =
                 toList(actionabilityAnalyzer.evidenceForFusions(geneFusions, patientPrimaryTumorLocation));
-        LOGGER.info("Found {} evidence items for {} gene fusions.", evidenceForGeneFusions.size(), geneFusions.size());
+        LOGGER.info(" Found {} evidence items for {} gene fusions.", evidenceForGeneFusions.size(), geneFusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
         combinedEvidence.addAll(evidenceForVariants);
