@@ -4,7 +4,9 @@ CREATE TABLE rna
     PRIMARY KEY (sampleId)
 );
 
-DROP TABLE IF EXISTS cpctEcrf;
+DROP TABLE IF EXISTS ecrf;
+DROP TABLE IF EXISTS ecrfDatamodel;
+
 CREATE TABLE cpctEcrf
 (   id int NOT NULL AUTO_INCREMENT,
     patientId varchar(20),
@@ -35,7 +37,6 @@ CREATE TABLE cpctEcrf
     INDEX(relevant)
 );
 
-DROP TABLE IF EXISTS cpctEcrfDatamodel;
 CREATE TABLE cpctEcrfDatamodel
 (   fieldName varchar(100),
     description varchar(500),
