@@ -64,7 +64,7 @@ public final class SomaticVariantAnalyzer {
     }
 
     @NotNull
-    public static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
+    private static Predicate<SomaticVariant> includeFilter(@NotNull DriverGeneView driverGeneView) {
         return variant -> {
             if (variant.isFiltered()) {
                 return false;

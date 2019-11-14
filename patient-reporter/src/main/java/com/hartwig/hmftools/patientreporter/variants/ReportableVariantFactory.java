@@ -16,31 +16,9 @@ import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class AllReportableVariants {
+final class ReportableVariantFactory {
 
-    private AllReportableVariants() {
-    }
-
-    @NotNull
-    public static List<ReportableVariant> mergeAllSomaticVariants(@NotNull List<SomaticVariant> somaticVariantsReport,
-            @NotNull List<DriverCatalog> driverCatalog, @NotNull DriverGeneView driverGeneView) {
-        List<ReportableVariant> allReportableVariants = Lists.newArrayList();
-        for (SomaticVariant variant : somaticVariantsReport) {
-            DriverCategory category = driverGeneView.category(variant.gene());
-            assert category != null;
-
-            DriverCatalog catalog = catalogEntryForVariant(driverCatalog, variant.gene());
-            Double driverLikelihood = null;
-            if (catalog != null) {
-                driverLikelihood = catalog.driverLikelihood();
-            }
-
-            allReportableVariants.add(fromSomaticVariant(variant).driverCategory(category)
-                    .driverLikelihood(driverLikelihood)
-                    .notifyClinicalGeneticist(false)
-                    .build());
-        }
-        return allReportableVariants;
+    private ReportableVariantFactory() {
     }
 
     @NotNull

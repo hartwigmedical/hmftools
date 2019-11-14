@@ -13,15 +13,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class CheckEvidenceCnv {
+final class CheckEvidenceCnv {
 
     private static final Logger LOGGER = LogManager.getLogger(CheckEvidenceCnv.class);
 
     private CheckEvidenceCnv() {
-
     }
 
-    public static void checkingForEvidenceInDriverCatalog(@NotNull List<ReportableGainLoss> reportableGainLosses,
+    static void checkingForEvidenceInDriverCatalog(@NotNull List<ReportableGainLoss> reportableGainLosses,
             Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber, @NotNull List<EvidenceItem> allEvidenceForCopyNumbers) {
         // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
         Set<String> reportableGenes = Sets.newHashSet();

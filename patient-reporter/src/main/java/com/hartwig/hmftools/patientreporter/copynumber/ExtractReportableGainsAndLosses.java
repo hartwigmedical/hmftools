@@ -11,14 +11,13 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class ExtractReportableGainsAndLosses {
+final class ExtractReportableGainsAndLosses {
 
     private ExtractReportableGainsAndLosses() {
-
     }
 
     @NotNull
-    public static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
+    static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
         CNADrivers copyNumberDriverModel = new CNADrivers();
         List<DriverCatalog> drivers = Lists.newArrayList();
         drivers.addAll(copyNumberDriverModel.amplifications(ploidy, geneCopyNumbers));

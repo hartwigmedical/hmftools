@@ -29,7 +29,7 @@ public final class ReportableVariantAnalyzer {
             @NotNull List<ReportableGermlineVariant> germlineVariantsToReport, @NotNull GermlineReportingModel germlineReportingModel,
             @NotNull LimsGermlineReportingChoice germlineReportingChoice, @NotNull ActionabilityAnalyzer actionabilityAnalyzer,
             @Nullable PatientTumorLocation patientTumorLocation) {
-        List<ReportableVariant> allReportableVariants = AllReportableVariants.mergeSomaticAndGermlineVariants(somaticVariantsReport,
+        List<ReportableVariant> allReportableVariants = ReportableVariantFactory.mergeSomaticAndGermlineVariants(somaticVariantsReport,
                 driverCatalog,
                 driverGeneView,
                 germlineVariantsToReport,

@@ -37,7 +37,7 @@ public final class BachelorFile {
     }
 
     @NotNull
-    public static GermlineVariant fromString(@NotNull String line) {
+    private static GermlineVariant fromString(@NotNull String line) {
         String[] values = line.split(DELIMITER);
 
         String program = values[24];
