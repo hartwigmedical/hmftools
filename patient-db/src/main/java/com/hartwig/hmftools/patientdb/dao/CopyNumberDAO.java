@@ -120,7 +120,6 @@ class CopyNumberDAO {
 
     private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
             @NotNull PurpleCopyNumber region) {
-        //noinspection unchecked
         inserter.values(sample,
                 region.chromosome(),
                 region.start(),
