@@ -31,12 +31,7 @@ class GeneCopyNumberDAO {
     }
 
     @NotNull
-    public final List<GeneCopyNumber> read(@NotNull final String sample) {
-        return read(sample, Lists.newArrayList());
-    }
-
-    @NotNull
-    public final List<GeneCopyNumber> read(@NotNull final String sample, @NotNull final List<String> genes) {
+    List<GeneCopyNumber> read(@NotNull final String sample, @NotNull final List<String> genes) {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
         final Result<Record> result = genes.isEmpty() ?
@@ -69,8 +64,6 @@ class GeneCopyNumberDAO {
         }
         return geneCopyNumbers;
     }
-
-
 
     void writeCopyNumber(@NotNull final String sample, @NotNull List<GeneCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());

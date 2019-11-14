@@ -30,9 +30,7 @@ import com.hartwig.hmftools.patientdb.data.TumorMarkerData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
-import org.jooq.Record1;
 
 class ClinicalDAO {
 
@@ -59,16 +57,6 @@ class ClinicalDAO {
         context.truncate(RANOMEASUREMENT).execute();
         context.truncate(FORMSMETADATA).execute();
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
-    }
-
-    @Nullable
-    public String readTumorLocationForSample(@NotNull String sample) {
-        final Record1 result = context.select(BASELINE.PRIMARYTUMORLOCATION)
-                .from(SAMPLE.leftJoin(BASELINE).on(SAMPLE.PATIENTID.eq(BASELINE.PATIENTID)))
-                .where(SAMPLE.SAMPLEID.eq(sample))
-                .fetchOne();
-
-        return result != null ? result.getValue(BASELINE.PRIMARYTUMORLOCATION) : null;
     }
 
     void writeFullClinicalData(@NotNull Patient patient) {
