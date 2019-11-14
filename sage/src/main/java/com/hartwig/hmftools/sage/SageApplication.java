@@ -39,6 +39,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -102,17 +103,17 @@ public class SageApplication implements AutoCloseable {
         long timeStamp = System.currentTimeMillis();
         final List<ContigContext> contigContexts = Lists.newArrayList();
 
-//        SAMSequenceDictionary dictionary = dictionary();
-//        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
-//            final String contig = samSequenceRecord.getSequenceName();
-//            if (HumanChromosome.contains(contig)) {
-//                int maxPosition = samSequenceRecord.getSequenceLength();
-//                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
-//            }
-//        }
+        SAMSequenceDictionary dictionary = dictionary();
+        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+            final String contig = samSequenceRecord.getSequenceName();
+            if (HumanChromosome.contains(contig)) {
+                int maxPosition = samSequenceRecord.getSequenceLength();
+                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
+            }
+        }
 
 //                                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-                                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+//                                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
         //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));
         //                        contigContexts.add(runSingleRegion("1", 696644, 696644));
         //                contigContexts.add(runSingleRegion("17", 3028422, 3028422));

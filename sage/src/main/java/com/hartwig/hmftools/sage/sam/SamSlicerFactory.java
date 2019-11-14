@@ -20,7 +20,7 @@ public class SamSlicerFactory {
 
     @NotNull
     public SamSlicer create(@NotNull final GenomeRegion slice) {
-        return fullSlice(slice);
+        return config.panelOnly() ? panelOnly(slice) : fullSlice(slice);
     }
 
     @NotNull
