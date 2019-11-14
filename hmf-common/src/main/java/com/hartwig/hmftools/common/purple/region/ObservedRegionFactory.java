@@ -83,7 +83,6 @@ public class ObservedRegionFactory {
 
     @NotNull
     static List<ObservedRegion> extendMinSupport(@NotNull final List<ModifiableEnrichedRegion> modifiables) {
-
         for (int i = 0; i < modifiables.size(); i++) {
             final ModifiableEnrichedRegion target = modifiables.get(i);
             if (target.support() == SegmentSupport.NONE && target.status() == GermlineStatus.DIPLOID) {

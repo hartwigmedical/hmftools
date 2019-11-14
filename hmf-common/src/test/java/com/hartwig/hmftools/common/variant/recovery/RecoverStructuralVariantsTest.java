@@ -28,7 +28,7 @@ public class RecoverStructuralVariantsTest {
 
     @Injectable
     private RecoveredVariantFactory recoveredVariantFactory;
-    private PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
+    private final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
 
     @Test
     public void testRecoverUnbalancedSingle() throws IOException {

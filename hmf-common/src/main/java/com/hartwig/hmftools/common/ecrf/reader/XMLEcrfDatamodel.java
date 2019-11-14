@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class XMLEcrfDatamodel {
+
     private static final String BIRTH_DATE_IDENTIFIER = "BIRTHDTC";
 
     @NotNull

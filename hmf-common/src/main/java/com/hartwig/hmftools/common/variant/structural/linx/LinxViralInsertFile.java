@@ -94,7 +94,7 @@ public class LinxViralInsertFile
 
         return new LinxViralInsertFile(
                 values[index++],
-                Integer.valueOf(values[index++]),
+                Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++]);
     }

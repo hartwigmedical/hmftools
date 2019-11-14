@@ -20,7 +20,7 @@ import htsjdk.samtools.SAMRecord;
 public class VariantHotspotEvidenceFactoryTest {
 
     private static final int MIN_BASE_QUALITY = 13;
-    private VariantHotspotEvidenceFactory victim = new VariantHotspotEvidenceFactory(0, MIN_BASE_QUALITY, Collections.emptySet());
+    private final VariantHotspotEvidenceFactory victim = new VariantHotspotEvidenceFactory(0, MIN_BASE_QUALITY, Collections.emptySet());
 
     private static final String MNV_REF_SEQUENCE = "GATACAA";
     private static final VariantHotspot MNV =
@@ -208,7 +208,6 @@ public class VariantHotspotEvidenceFactoryTest {
 
     @Test
     public void testIsPartOfLargerMNV() {
-
         assertFalse(isVariantPartOfLargerMNV(98, MNV_REF_SEQUENCE, MNV, buildSamRecord(98, "7M", "GATACAA")));
         assertFalse(isVariantPartOfLargerMNV(98, MNV_REF_SEQUENCE, MNV, buildSamRecord(98, "7M", "GACATAA")));
         assertFalse(isVariantPartOfLargerMNV(98, MNV_REF_SEQUENCE, MNV, buildSamRecord(97, "7M", "AGATACAAA")));

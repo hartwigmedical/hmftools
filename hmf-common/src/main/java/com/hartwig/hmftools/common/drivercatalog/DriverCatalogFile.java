@@ -40,19 +40,13 @@ public class DriverCatalogFile {
     }
 
     @NotNull
-     static List<DriverCatalog> fromLines(@NotNull final List<String> lines) {
-        final List<DriverCatalog> result = lines.stream()
-                .skip(1)
-                .map(x -> fromString(x))
-                .collect(Collectors.toList());
-
-        return result;
+    static List<DriverCatalog> fromLines(@NotNull final List<String> lines) {
+        return lines.stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "")
-                .add("chromosome")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
                 .add("chromosomeBand")
                 .add("gene")
                 .add("driver")
@@ -73,10 +67,9 @@ public class DriverCatalogFile {
 
     @NotNull
     private static String toString(@NotNull final DriverCatalog ratio) {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(ratio.chromosome()))
-                .add(String.valueOf(ratio.chromosomeBand()))
-                .add(String.valueOf(ratio.gene()))
+        return new StringJoiner(DELIMITER).add(ratio.chromosome())
+                .add(ratio.chromosomeBand())
+                .add(ratio.gene())
                 .add(String.valueOf(ratio.driver()))
                 .add(String.valueOf(ratio.category()))
                 .add(String.valueOf(ratio.likelihoodMethod()))

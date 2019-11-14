@@ -61,7 +61,7 @@ final class HmfExonPanelBed {
 
     @NotNull
     private static String asBed(@NotNull final String prefix, @NotNull final GenomeRegion region) {
-        return new StringJoiner(DELIMITER).add(prefix + String.valueOf(region.chromosome()))
+        return new StringJoiner(DELIMITER).add(prefix + region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
                 .toString();

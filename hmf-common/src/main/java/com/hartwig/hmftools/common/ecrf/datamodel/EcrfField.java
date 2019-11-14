@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public interface EcrfField {
+
     String OID_SEPARATOR = ".";
 
     List<String> IRRELEVANT_ITEM_GROUP_OIDS =

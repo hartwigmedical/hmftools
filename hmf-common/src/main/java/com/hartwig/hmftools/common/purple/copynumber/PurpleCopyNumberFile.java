@@ -15,18 +15,19 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum PurpleCopyNumberFile {
-    ;
+public final class PurpleCopyNumberFile {
 
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String DELIMITER = "\t";
-    private static final String COMMENT = "#";
 
     private static final String SOMATIC_EXTENSION = ".purple.cnv.somatic.tsv";
     private static final String GERMLINE_EXTENSION = ".purple.cnv.germline.tsv";
 
     private static final String SOMATIC_EXTENSION_OLD = ".purple.cnv";
     private static final String GERMLINE_EXTENSION_OLD = ".purple.germline.cnv";
+
+    private PurpleCopyNumberFile() {
+    }
 
     @NotNull
     public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample) {
@@ -100,7 +101,7 @@ public enum PurpleCopyNumberFile {
 
     @NotNull
     private static String toString(@NotNull final PurpleCopyNumber copyNumber) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(copyNumber.chromosome()))
+        return new StringJoiner(DELIMITER).add(copyNumber.chromosome())
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
                 .add(FORMAT.format(copyNumber.averageTumorCopyNumber()))
@@ -124,19 +125,19 @@ public enum PurpleCopyNumberFile {
         String[] values = copyNumber.split(DELIMITER);
         final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                 .chromosome(values[0])
-                .start(Long.valueOf(values[1]))
-                .end(Long.valueOf(values[2]))
-                .averageTumorCopyNumber(Double.valueOf(values[3]))
-                .bafCount(Integer.valueOf(values[4]))
-                .averageObservedBAF(Double.valueOf(values[5]))
-                .averageActualBAF(Double.valueOf(values[6]))
+                .start(Long.parseLong(values[1]))
+                .end(Long.parseLong(values[2]))
+                .averageTumorCopyNumber(Double.parseDouble(values[3]))
+                .bafCount(Integer.parseInt(values[4]))
+                .averageObservedBAF(Double.parseDouble(values[5]))
+                .averageActualBAF(Double.parseDouble(values[6]))
                 .segmentStartSupport(SegmentSupport.valueOf(values[7]))
                 .segmentEndSupport(SegmentSupport.valueOf(values[8]))
                 .method(CopyNumberMethod.valueOf(values[9]))
-                .depthWindowCount(Integer.valueOf(values[10]))
-                .gcContent(Double.valueOf(values[11]))
-                .minStart(Long.valueOf(values[12]))
-                .maxStart(Long.valueOf(values[13]));
+                .depthWindowCount(Integer.parseInt(values[10]))
+                .gcContent(Double.parseDouble(values[11]))
+                .minStart(Long.parseLong(values[12]))
+                .maxStart(Long.parseLong(values[13]));
 
         return builder.build();
     }

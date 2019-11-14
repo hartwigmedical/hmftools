@@ -16,7 +16,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class KataegisEnrichment implements VariantContextEnrichment {
 
     public static final String KATAEGIS_FLAG = "KT";
-    private static final String KATAEGIS_FLAG_DESCRITION = "Forward/reverse kataegis id";
+    private static final String KATAEGIS_FLAG_DESCRIPTION = "Forward/reverse kataegis id";
 
     private final KataegisQueue forwardDetector;
     private final KataegisQueue reverseDetector;
@@ -40,7 +40,7 @@ public class KataegisEnrichment implements VariantContextEnrichment {
     @NotNull
     @Override
     public VCFHeader enrichHeader(@NotNull final VCFHeader template) {
-        template.addMetaDataLine(new VCFInfoHeaderLine(KATAEGIS_FLAG, 1, VCFHeaderLineType.String, KATAEGIS_FLAG_DESCRITION));
+        template.addMetaDataLine(new VCFInfoHeaderLine(KATAEGIS_FLAG, 1, VCFHeaderLineType.String, KATAEGIS_FLAG_DESCRIPTION));
 
         return template;
     }

@@ -183,23 +183,23 @@ public class StructuralVariantFile
         int index = 0;
 
         final ImmutableStructuralVariantData.Builder builder = ImmutableStructuralVariantData.builder()
-                .id(Integer.valueOf(values[index++]))
+                .id(Integer.parseInt(values[index++]))
                 .startChromosome(values[index++])
                 .endChromosome(getStrValue(values[index++]))
-                .startPosition(Long.valueOf(values[index++]))
+                .startPosition(Long.parseLong(values[index++]))
                 .endPosition(getLongValue(values[index++]))
-                .startOrientation(Byte.valueOf(values[index++]))
+                .startOrientation(Byte.parseByte(values[index++]))
                 .endOrientation(getByteValue(values[index++]))
                 .startHomologySequence(values[index++])
                 .endHomologySequence(getStrValue(values[index++]))
-                .startAF(Double.valueOf(values[index++]))
+                .startAF(Double.parseDouble(values[index++]))
                 .endAF(getDoubleValue(values[index++]))
-                .ploidy(Double.valueOf(values[index++]))
-                .adjustedStartAF(Double.valueOf(values[index++]))
+                .ploidy(Double.parseDouble(values[index++]))
+                .adjustedStartAF(Double.parseDouble(values[index++]))
                 .adjustedEndAF(getDoubleValue(values[index++]))
-                .adjustedStartCopyNumber(Double.valueOf(values[index++]))
+                .adjustedStartCopyNumber(Double.parseDouble(values[index++]))
                 .adjustedEndCopyNumber(getDoubleValue(values[index++]))
-                .adjustedStartCopyNumberChange(Double.valueOf(values[index++]))
+                .adjustedStartCopyNumberChange(Double.parseDouble(values[index++]))
                 .adjustedEndCopyNumberChange(getDoubleValue(values[index++]))
                 .insertSequence(values[index++]);
 
@@ -210,29 +210,29 @@ public class StructuralVariantFile
 
         builder.type(type)
                 .filter(filterStr)
-                .imprecise(Boolean.valueOf(values[index++]))
-                .qualityScore(Double.valueOf(values[index++]))
+                .imprecise(Boolean.parseBoolean(values[index++]))
+                .qualityScore(Double.parseDouble(values[index++]))
                 .event(values[index++])
-                .startTumorVariantFragmentCount(Integer.valueOf(values[index++]))
-                .startTumorReferenceFragmentCount(Integer.valueOf(values[index++]))
-                .startNormalVariantFragmentCount(Integer.valueOf(values[index++]))
-                .startNormalReferenceFragmentCount(Integer.valueOf(values[index++]))
+                .startTumorVariantFragmentCount(Integer.parseInt(values[index++]))
+                .startTumorReferenceFragmentCount(Integer.parseInt(values[index++]))
+                .startNormalVariantFragmentCount(Integer.parseInt(values[index++]))
+                .startNormalReferenceFragmentCount(Integer.parseInt(values[index++]))
                 .endTumorVariantFragmentCount(getIntValue(values[index++]))
                 .endTumorReferenceFragmentCount(getIntValue(values[index++]))
                 .endNormalVariantFragmentCount(getIntValue(values[index++]))
                 .endNormalReferenceFragmentCount(getIntValue(values[index++]))
-                .startIntervalOffsetStart(Integer.valueOf(values[index++]))
-                .startIntervalOffsetEnd(Integer.valueOf(values[index++]))
+                .startIntervalOffsetStart(Integer.parseInt(values[index++]))
+                .startIntervalOffsetEnd(Integer.parseInt(values[index++]))
                 .endIntervalOffsetStart(getIntValue(values[index++]))
                 .endIntervalOffsetEnd(getIntValue(values[index++]))
-                .inexactHomologyOffsetStart(Integer.valueOf(values[index++]))
+                .inexactHomologyOffsetStart(Integer.parseInt(values[index++]))
                 .inexactHomologyOffsetEnd(getIntValue(values[index++]))
                 .startLinkedBy(values[index++])
                 .endLinkedBy(values[index++])
                 .vcfId(values[index++])
                 .startRefContext(values[index++])
                 .endRefContext(values[index++])
-                .recovered(Boolean.valueOf(values[index++]))
+                .recovered(Boolean.parseBoolean(values[index++]))
                 .recoveryMethod(values[index++])
                 .recoveryFilter(values[index++])
                 .insertSequenceAlignments(values[index++])
@@ -240,15 +240,15 @@ public class StructuralVariantFile
                 .insertSequenceRepeatType(values[index++])
                 .insertSequenceRepeatOrientation(getByteValue(values[index++]))
                 .insertSequenceRepeatCoverage(getDoubleValue(values[index++]))
-                .startAnchoringSupportDistance(Integer.valueOf(values[index++]))
+                .startAnchoringSupportDistance(Integer.parseInt(values[index++]))
                 .endAnchoringSupportDistance(getIntValue(values[index++]));
 
         return builder.build();
     }
 
     private static String getStrValue(final String value) { return value.equals("NULL") ? "" : value; }
-    private static double getDoubleValue(final String value) { return value.equals("NULL") ? 0 : Double.valueOf(value); }
-    private static int getIntValue(final String value) { return value.equals("NULL") ? 0 : Integer.valueOf(value); }
-    private static long getLongValue(final String value) { return value.equals("NULL") ? 0 : Long.valueOf(value); }
+    private static double getDoubleValue(final String value) { return value.equals("NULL") ? 0 : Double.parseDouble(value); }
+    private static int getIntValue(final String value) { return value.equals("NULL") ? 0 : Integer.parseInt(value); }
+    private static long getLongValue(final String value) { return value.equals("NULL") ? 0 : Long.parseLong(value); }
     private static byte getByteValue(final String value) { return value.equals("NULL") ? 0 : Byte.valueOf(value); }
 }

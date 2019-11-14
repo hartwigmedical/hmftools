@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 class ClusterFactory {
 
-    public final long windowSize;
+    private final long windowSize;
     private final Window window;
 
     ClusterFactory(final int windowSize) {
@@ -115,5 +115,4 @@ class ClusterFactory {
 
         return min;
     }
-
 }

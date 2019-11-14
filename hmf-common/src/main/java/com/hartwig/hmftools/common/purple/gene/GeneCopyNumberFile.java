@@ -84,19 +84,19 @@ public final class GeneCopyNumberFile {
     @NotNull
     private static String toString(@NotNull final GeneCopyNumber geneCopyNumber) {
 
-        return new StringJoiner(DELIMITER).add(String.valueOf(geneCopyNumber.chromosome()))
+        return new StringJoiner(DELIMITER).add(geneCopyNumber.chromosome())
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
-                .add(String.valueOf(geneCopyNumber.gene()))
+                .add(geneCopyNumber.gene())
                 .add(FORMAT.format(geneCopyNumber.minCopyNumber()))
                 .add(FORMAT.format(geneCopyNumber.maxCopyNumber()))
                 .add(String.valueOf(0))
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
-                .add(String.valueOf(geneCopyNumber.transcriptID()))
+                .add(geneCopyNumber.transcriptID())
                 .add(String.valueOf(geneCopyNumber.transcriptVersion()))
-                .add(String.valueOf(geneCopyNumber.chromosomeBand()))
+                .add(geneCopyNumber.chromosomeBand())
                 .add(String.valueOf(geneCopyNumber.minRegions()))
                 .add(String.valueOf(geneCopyNumber.minRegionStart()))
                 .add(String.valueOf(geneCopyNumber.minRegionEnd()))

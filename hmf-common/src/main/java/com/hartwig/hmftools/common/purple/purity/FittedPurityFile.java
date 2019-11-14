@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -22,14 +23,14 @@ public final class FittedPurityFile {
     private static final String EXTENSION_OLD = ".purple.purity";
 
     @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
-        String filename = basePath + File.separator + sample + EXTENSION;
-        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+    public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        return read(generateFilenameForReading(basePath, sample));
     }
 
     @NotNull
-    public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        return read(generateFilenameForReading(basePath, sample));
+    private static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
     }
 
     @NotNull
@@ -38,6 +39,7 @@ public final class FittedPurityFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static PurityContext fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder()
@@ -80,6 +82,7 @@ public final class FittedPurityFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static List<String> toLines(@NotNull final PurityContext context) {
         return Lists.newArrayList(header(), toString(context));
     }

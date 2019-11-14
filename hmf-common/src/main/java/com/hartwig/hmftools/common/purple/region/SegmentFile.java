@@ -62,7 +62,7 @@ public enum SegmentFile {
 
     @NotNull
     static String toString(@NotNull final FittedRegion copyNumber) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(copyNumber.chromosome()))
+        return new StringJoiner(DELIMITER).add(copyNumber.chromosome())
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
                 .add(String.valueOf(copyNumber.status()))

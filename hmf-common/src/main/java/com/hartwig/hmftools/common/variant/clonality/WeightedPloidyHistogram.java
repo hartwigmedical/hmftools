@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
-public class WeightedPloidyHistogram {
+class WeightedPloidyHistogram {
 
     private final double maxPloidy;
     private final double binWidth;
