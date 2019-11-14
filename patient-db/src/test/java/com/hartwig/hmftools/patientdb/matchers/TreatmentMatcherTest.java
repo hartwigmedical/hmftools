@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyTre
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -97,10 +96,10 @@ public class TreatmentMatcherTest {
         final List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_MAY_SEP2015);
         final List<BiopsyTreatmentData> matchedTreatments = assertedMatch(biopsies, treatments);
 
-        assertEquals(null, matchedTreatments.get(0).biopsyId());
+        assertNull(matchedTreatments.get(0).biopsyId());
     }
 
-    //    ---biopsy(jan)-start(feb)--- end (jul) --- biopt(sep) --- no treatment
+    //    ---biopsy(jan)-start(feb)--- end (jul) --- biopsy(sep) --- no treatment
     @Test
     public void twoBiopsyMatchToTreatmentAndNoTreatment() {
         final List<BiopsyData> biopsies = Lists.newArrayList(BIOPSY_JAN, BIOPSY_SEP);
@@ -163,7 +162,7 @@ public class TreatmentMatcherTest {
             @NotNull List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
-        assertTrue(treatments.size() == matchedTreatments.size());
+        assertEquals(treatments.size(), matchedTreatments.size());
         return matchedTreatments;
     }
 }

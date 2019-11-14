@@ -123,9 +123,9 @@ public class SigSnvLoader
         else
         {
             if(mApplySampleQC)
-                sampleIds = mDbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY);
+                sampleIds = mDbAccess.readPurpleSampleListPassingQC(MIN_SAMPLE_PURITY);
             else
-                sampleIds = mDbAccess.somaticVariantSampleList();
+                sampleIds = mDbAccess.readSomaticVariantSampleList();
         }
 
         mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, sampleIds.size());

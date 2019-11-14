@@ -54,6 +54,12 @@ CREATE TABLE sample
     FOREIGN KEY (patientId) REFERENCES patient(id)
 );
 
+DROP TABLE IF EXISTS rna;
+CREATE TABLE rna
+(   sampleId varchar(255) NOT NULL,
+    PRIMARY KEY (sampleId)
+);
+
 DROP TABLE IF EXISTS biopsy;
 CREATE TABLE biopsy
 (   id int NOT NULL,

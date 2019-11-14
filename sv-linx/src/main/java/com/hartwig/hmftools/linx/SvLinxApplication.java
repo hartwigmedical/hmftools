@@ -297,12 +297,12 @@ public class SvLinxApplication
 
     private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess, boolean filterQCPassOnly)
     {
-        final List<String> sampleIds = filterQCPassOnly ? dbAccess.getSamplesPassingQC(MIN_SAMPLE_PURITY) : dbAccess.getSampleIds();
+        final List<String> sampleIds = filterQCPassOnly ? dbAccess.readPurpleSampleListPassingQC(MIN_SAMPLE_PURITY) : dbAccess.readPurpleSampleList();
 
         if(!sampleIds.isEmpty())
             return sampleIds;
 
-        return dbAccess.structuralVariantSampleList("");
+        return dbAccess.readStructuralVariantSampleList("");
     }
 
     private static Options createBasicOptions()

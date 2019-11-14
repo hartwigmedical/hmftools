@@ -10,7 +10,6 @@ public class MatchResult<T> {
 
     @NotNull
     private final List<T> values;
-
     @NotNull
     private final List<ValidationFinding> findings;
 

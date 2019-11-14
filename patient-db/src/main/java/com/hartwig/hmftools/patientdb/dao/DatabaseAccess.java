@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxLink;
@@ -43,21 +42,28 @@ import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
 public class DatabaseAccess implements AutoCloseable {
+
     private static final Logger LOGGER = LogManager.getLogger(DatabaseAccess.class);
     private static final String DEV_CATALOG = "hmfpatients_test";
+
+    public static final double MIN_SAMPLE_PURITY = 0.195;
 
     @NotNull
     private final DSLContext context;
     @NotNull
-    private final PurityDAO purityDAO;
-    @NotNull
     private final EcrfDAO ecrfDAO;
+    @NotNull
+    private final ClinicalDAO clinicalDAO;
+    @NotNull
+    private final ValidationFindingDAO validationFindingsDAO;
+    @NotNull
+    private final RNADAO rnaDAO;
+    @NotNull
+    private final PurityDAO purityDAO;
     @NotNull
     private final AmberDAO amberDAO;
     @NotNull
     private final MetricDAO metricDAO;
-    @NotNull
-    private final ClinicalDAO clinicalDAO;
     @NotNull
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
@@ -73,8 +79,6 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final StructuralVariantFusionDAO structuralVariantFusionDAO;
     @NotNull
-    private final ValidationFindingDAO validationFindingsDAO;
-    @NotNull
     private final CanonicalTranscriptDAO canonicalTranscriptDAO;
     @NotNull
     private final ChordDAO chordDAO;
@@ -89,19 +93,20 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.debug("Connecting to database {}", catalog);
         this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
 
+        ecrfDAO = new EcrfDAO(context);
+        clinicalDAO = new ClinicalDAO(context);
+        validationFindingsDAO = new ValidationFindingDAO(context);
+        rnaDAO = new RNADAO(context);
         purityDAO = new PurityDAO(context);
         amberDAO = new AmberDAO(context);
+        metricDAO = new MetricDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
         structuralVariantDAO = new StructuralVariantDAO(context);
         structuralVariantClusterDAO = new StructuralVariantClusterDAO(context);
         structuralVariantFusionDAO = new StructuralVariantFusionDAO(context);
-        ecrfDAO = new EcrfDAO(context);
-        clinicalDAO = new ClinicalDAO(context);
-        validationFindingsDAO = new ValidationFindingDAO(context);
         canonicalTranscriptDAO = new CanonicalTranscriptDAO(context);
-        metricDAO = new MetricDAO(context);
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
@@ -112,6 +117,11 @@ public class DatabaseAccess implements AutoCloseable {
         return context;
     }
 
+    @Override
+    public void close() {
+        context.close();
+    }
+
     @Nullable
     private static Settings settings(@NotNull String catalog) {
         return !catalog.equals(DEV_CATALOG)
@@ -120,9 +130,54 @@ public class DatabaseAccess implements AutoCloseable {
                 : null;
     }
 
+    @NotNull
+    public final List<String> readPurpleSampleList() {
+        return purityDAO.getSampleIds();
+    }
+
+    @NotNull
+    public final List<String> readPurpleSampleListPassingQC(double minPurity) {
+        return purityDAO.getSamplesPassingQC(minPurity);
+    }
+
     @Nullable
-    public String readTumorLocation(@NotNull String sample) {
-        return clinicalDAO.readTumorLocationForSample(sample);
+    public PurityContext readPurityContext(@NotNull final String sampleId) {
+        return purityDAO.readPurityContext(sampleId);
+    }
+
+    @NotNull
+    public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
+        return copyNumberDAO.read(sample);
+    }
+
+    @NotNull
+    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample, @NotNull final List<String> genes) {
+        return geneCopyNumberDAO.read(sample, genes);
+    }
+
+    @NotNull
+    public List<String> readSomaticVariantSampleList() {
+        return somaticVariantDAO.getSamplesList();
+    }
+
+    @NotNull
+    public List<SomaticVariant> readSomaticVariants(@NotNull final String sample) {
+        return somaticVariantDAO.read(sample);
+    }
+
+    @NotNull
+    public List<String> readStructuralVariantSampleList(@NotNull final String sampleSearch) {
+        return structuralVariantDAO.getSamplesList(sampleSearch);
+    }
+
+    @NotNull
+    public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
+        return structuralVariantDAO.read(sample);
+    }
+
+    @NotNull
+    public final List<DriverCatalog> readDriverCatalog(@NotNull final String sample) {
+        return driverCatalogDAO.readDriverData(sample);
     }
 
     public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
@@ -137,23 +192,6 @@ public class DatabaseAccess implements AutoCloseable {
         purityDAO.write(sampleId, bestFitPerPurity);
     }
 
-    public static final double MIN_SAMPLE_PURITY = 0.195;
-
-    @NotNull
-    public final List<String> getSamplesPassingQC(double minPurity) {
-        return purityDAO.getSamplesPassingQC(minPurity);
-    }
-
-    @NotNull
-    public final List<String> getSampleIds() {
-        return purityDAO.getSampleIds();
-    }
-
-    @Nullable
-    public PurityContext readPurityContext(@NotNull final String sampleId) {
-        return purityDAO.readPurityContext(sampleId);
-    }
-
     public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
@@ -166,23 +204,8 @@ public class DatabaseAccess implements AutoCloseable {
         somaticVariantDAO.write(sampleId, variants);
     }
 
-    @NotNull
-    public List<String> somaticVariantSampleList() {
-        return somaticVariantDAO.getSamplesList();
-    }
-
     public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariantData> variants) {
         structuralVariantDAO.write(sampleId, variants);
-    }
-
-    @NotNull
-    public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
-        return structuralVariantDAO.read(sample);
-    }
-
-    @NotNull
-    public List<String> structuralVariantSampleList(@NotNull final String sampleSearch) {
-        return structuralVariantDAO.getSamplesList(sampleSearch);
     }
 
     public void writeGermlineCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
@@ -209,42 +232,12 @@ public class DatabaseAccess implements AutoCloseable {
         structuralVariantClusterDAO.writeViralInserts(sample, inserts);
     }
 
-    @NotNull
-    public List<SomaticVariant> readSomaticVariants(@NotNull final String sample) {
-        return somaticVariantDAO.read(sample);
-    }
-
-    @NotNull
-    public List<ReportableGeneFusion> readGeneFusions(@NotNull final String sample) {
-        return structuralVariantFusionDAO.readGeneFusions(sample);
-    }
-
-    @NotNull
-    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample) {
-        return geneCopyNumberDAO.read(sample);
-    }
-
-    @NotNull
-    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample, @NotNull final List<String> genes) {
-        return geneCopyNumberDAO.read(sample, genes);
-    }
-
     public void writeGeneCopynumberRegions(@NotNull final String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
     public void writeDriverCatalog(@NotNull final String sample, @NotNull List<DriverCatalog> driverCatalog) {
         driverCatalogDAO.write(sample, driverCatalog);
-    }
-
-    @NotNull
-    public final List<DriverCatalog> readDriverCatalog(@NotNull final String sample) {
-        return driverCatalogDAO.readDriverData(sample);
-    }
-
-    @NotNull
-    public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
-        return copyNumberDAO.read(sample);
     }
 
     public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
@@ -257,6 +250,10 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> items) {
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
+    }
+
+    public void writeRNA(@NotNull Set<String> samples) {
+        rnaDAO.write(samples);
     }
 
     public void clearCpctEcrf() {
@@ -345,11 +342,6 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO.deleteForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");
-    }
-
-    @Override
-    public void close() {
-        context.close();
     }
 }
 

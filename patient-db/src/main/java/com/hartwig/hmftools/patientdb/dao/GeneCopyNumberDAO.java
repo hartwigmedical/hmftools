@@ -106,7 +106,6 @@ class GeneCopyNumberDAO {
 
     private static void addCopynumberRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep21 inserter, @NotNull String sample,
             @NotNull GeneCopyNumber gene) {
-        //noinspection unchecked
         inserter.values(sample,
                 gene.chromosome(),
                 gene.start(),
