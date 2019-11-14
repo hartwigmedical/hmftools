@@ -69,7 +69,7 @@ public class LinxBreakendFile
                 .add("Biotype")
                 .add("ExonBasePhase")
                 .add("NextSpliceRank")
-                .add("NextSplicePHase")
+                .add("NextSplicePhase")
                 .add("NextSpliceDistance")
                 .add("TotalExonCount")
                 .toString();
@@ -108,25 +108,24 @@ public class LinxBreakendFile
         int index = 0;
 
         return ImmutableLinxBreakend.builder()
-                .id(Integer.valueOf(values[index++]))
-                .svId(Integer.valueOf(values[index++]))
-                .isStart(Boolean.valueOf(values[index++]))
+                .id(Integer.parseInt(values[index++]))
+                .svId(Integer.parseInt(values[index++]))
+                .isStart(Boolean.parseBoolean(values[index++]))
                 .gene(values[index++])
                 .transcriptId(values[index++])
-                .canonical(Boolean.valueOf(values[index++]))
-                .isUpstream(Boolean.valueOf(values[index++]))
-                .disruptive(Boolean.valueOf(values[index++]))
-                .reportedDisruption(Boolean.valueOf(values[index++]))
-                .undisruptedCopyNumber(Double.valueOf(values[index++]))
+                .canonical(Boolean.parseBoolean(values[index++]))
+                .isUpstream(Boolean.parseBoolean(values[index++]))
+                .disruptive(Boolean.parseBoolean(values[index++]))
+                .reportedDisruption(Boolean.parseBoolean(values[index++]))
+                .undisruptedCopyNumber(Double.parseDouble(values[index++]))
                 .regionType(values[index++])
                 .codingContext(values[index++])
                 .biotype(values[index++])
-                .exonBasePhase(Integer.valueOf(values[index++]))
-                .nextSpliceExonRank(Integer.valueOf(values[index++]))
-                .nextSpliceExonPhase(Integer.valueOf(values[index++]))
-                .nextSpliceDistance(Integer.valueOf(values[index++]))
-                .totalExonCount(Integer.valueOf(values[index++]))
+                .exonBasePhase(Integer.parseInt(values[index++]))
+                .nextSpliceExonRank(Integer.parseInt(values[index++]))
+                .nextSpliceExonPhase(Integer.parseInt(values[index++]))
+                .nextSpliceDistance(Integer.parseInt(values[index++]))
+                .totalExonCount(Integer.parseInt(values[index++]))
                 .build();
     }
-
 }

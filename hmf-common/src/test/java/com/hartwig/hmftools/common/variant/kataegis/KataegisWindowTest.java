@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class KategisWindowTest {
+public class KataegisWindowTest {
 
     @Test
     public void testAvgDistance() {
@@ -33,5 +33,4 @@ public class KategisWindowTest {
         }
         assertEquals(1001, window.averageDistance());
     }
-
 }

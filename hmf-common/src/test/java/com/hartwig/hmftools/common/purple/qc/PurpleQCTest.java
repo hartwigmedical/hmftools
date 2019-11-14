@@ -32,7 +32,7 @@ public class PurpleQCTest {
     }
 
     @Test
-    public void testDeletedGenest() {
+    public void testDeletedGenes() {
         assertEquals(PurpleQCStatus.PASS, create(280).status());
         assertEquals(PurpleQCStatus.FAIL_DELETED_GENES, create(281).status());
     }

@@ -135,7 +135,7 @@ public class GeneAnnotation {
         // return true if the gene has a transcript such that the breakend falls into its pre-gene region
         for(final Transcript trans : mTranscripts)
         {
-            // exclude if the position is interupted by another splice acceptor
+            // exclude if the position is interrupted by another splice acceptor
             if(!trans.isUpstream() && trans.hasNegativePrevSpliceAcceptorDistance())
                 continue;
 

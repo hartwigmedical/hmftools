@@ -57,7 +57,7 @@ public final class HospitalModelFactory {
 
         final Map<String, HospitalData> hospitalPerId = readFromHospitalCsv(hospitalCsvPath);
         final Map<String, HospitalSampleMapping> sampleHospitalMapping = readFromSampleHospitalMapping(sampleHospitalMappingCsv);
-        final Map<String, HospitalCore> hospitalCoreMap = readfromCoreHospitalMapping(hospitalCoreCsv);
+        final Map<String, HospitalCore> hospitalCoreMap = readFromCoreHospitalMapping(hospitalCoreCsv);
 
         return ImmutableHospitalModel.of(hospitalPerId, sampleHospitalMapping, hospitalCoreMap);
     }
@@ -68,7 +68,7 @@ public final class HospitalModelFactory {
     }
 
     @NotNull
-    private static Map<String, HospitalCore> readfromCoreHospitalMapping(@NotNull String hospitalCsv) throws IOException {
+    private static Map<String, HospitalCore> readFromCoreHospitalMapping(@NotNull String hospitalCsv) throws IOException {
         final Map<String, HospitalCore> hospitalCore = Maps.newHashMap();
 
         final List<String> lines = FileReader.build().readLines(new File(hospitalCsv).toPath());

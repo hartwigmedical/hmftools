@@ -70,7 +70,7 @@ public class VariantHotspotEvidenceFactoryTest {
     }
 
     @Test
-    public void testDelIsActualyInsert() {
+    public void testDelIsActuallyInsert() {
         final VariantHotspotEvidence evidence =
                 victim.findEvidenceOfDelete(create(DEL), DEL, SAMRecordsTest.buildSamRecord(98, "3M2I2M", "GATTTAC"));
         assertEvidence(evidence, 1, 0, 0, 0, 1);
@@ -177,7 +177,7 @@ public class VariantHotspotEvidenceFactoryTest {
     }
 
     @Test
-    public void testInsInMnvButRefHasInsufficentQuality() {
+    public void testInsInMnvButRefHasInsufficientQuality() {
         final VariantHotspotEvidence evidence =
                 createMNVEvidence(SAMRecordsTest.buildSamRecord(98, "4M1I3M", "GACATTAA", buildQualities(13, 13, 12, 13, 13, 13, 13, 13)));
         assertEvidence(evidence, 0, 0, 0, 0);
