@@ -108,7 +108,7 @@ public interface CobaltConfig {
 
     static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
         if (cmd.hasOption(opt)) {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            final int result = Integer.parseInt(cmd.getOptionValue(opt));
             if (result != defaultValue) {
                 LOGGER.info("Using non default value {} for parameter {}", result, opt);
             }

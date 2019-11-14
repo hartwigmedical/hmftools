@@ -33,6 +33,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class CountBamLinesApplication implements AutoCloseable {
+
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
     private final CobaltConfig config;
@@ -40,7 +41,6 @@ public class CountBamLinesApplication implements AutoCloseable {
     private final ExecutorService executorService;
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException {
-
         final Options options = CobaltConfig.createOptions();
         try (final CountBamLinesApplication application = new CountBamLinesApplication(options, args)) {
             application.run();
@@ -79,7 +79,6 @@ public class CountBamLinesApplication implements AutoCloseable {
     }
 
     private void run() throws IOException, ExecutionException, InterruptedException {
-
         LOGGER.info("Reading GC Profile");
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfilePath());
 

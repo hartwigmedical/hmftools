@@ -64,5 +64,4 @@ class GCRatioSupplier {
     GCMedianReadCount tumorGCMedianReadCount() {
         return tumorGCMedianReadCount;
     }
-
 }
