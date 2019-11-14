@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.actionability.cnv;
+package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.Collections;
 import java.util.List;
@@ -8,7 +8,6 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

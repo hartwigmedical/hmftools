@@ -3,7 +3,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;

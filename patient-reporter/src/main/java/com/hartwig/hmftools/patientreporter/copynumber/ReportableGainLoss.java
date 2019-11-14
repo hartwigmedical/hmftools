@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.reportablegenomicalterations;
+package com.hartwig.hmftools.patientreporter.copynumber;
 
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 
