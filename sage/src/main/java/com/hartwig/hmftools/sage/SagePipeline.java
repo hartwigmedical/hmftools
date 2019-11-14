@@ -12,6 +12,7 @@ import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.context.TumorAltContextSupplier;
+import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
@@ -30,13 +31,15 @@ public class SagePipeline {
     private final Executor executor;
     private final RefSequence refSequence;
     private final SageVariantFactory variantFactory;
+    private final SamSlicerFactory samSlicerFactory;
 
     public SagePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
-            final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory) {
+            final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory, final SamSlicerFactory samSlicerFactory) {
         this.region = region;
         this.config = config;
         this.executor = executor;
         this.variantFactory = variantFactory;
+        this.samSlicerFactory = samSlicerFactory;
         this.refSequence = new RefSequence(region, refGenome);
     }
 
@@ -53,7 +56,7 @@ public class SagePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence), executor);
+                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence, samSlicerFactory), executor);
 
             tumorFutures.add(candidateFuture);
         }
@@ -71,7 +74,7 @@ public class SagePipeline {
                     region,
                     config.referenceBam(),
                     refSequence,
-                    sagePipelineData.normalCandidates()).get();
+                    sagePipelineData.normalCandidates(), samSlicerFactory).get();
         });
 
         return normalFuture.thenApply(aVoid -> {

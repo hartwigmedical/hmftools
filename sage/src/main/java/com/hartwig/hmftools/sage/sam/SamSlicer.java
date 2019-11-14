@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.sam;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -15,13 +16,24 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
-public class SimpleSamSlicer {
+public class SamSlicer {
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
-    public SimpleSamSlicer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> slices) {
+    SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice) {
         this.minMappingQuality = minMappingQuality;
-        this.regions = slices;
+        this.regions = Collections.singletonList(slice);
+    }
+
+    SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice, @NotNull final List<GenomeRegion> panel) {
+        this.minMappingQuality = minMappingQuality;
+        this.regions = Lists.newArrayList();
+
+        for (final GenomeRegion panelRegion : panel) {
+            if (slice.chromosome().equals(panelRegion.chromosome()) && panelRegion.start() <= slice.end() && panelRegion.end() >= slice.start()) {
+                regions.add(panelRegion);
+            }
+        }
     }
 
     public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {

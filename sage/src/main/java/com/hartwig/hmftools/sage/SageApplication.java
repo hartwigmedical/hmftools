@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.ContigContext;
 import com.hartwig.hmftools.sage.phase.Phase;
+import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
@@ -53,6 +54,7 @@ public class SageApplication implements AutoCloseable {
     private final IndexedFastaSequenceFile refGenome;
     private final ListMultimap<Chromosome, VariantHotspot> hotspots;
     private final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
+    private final SamSlicerFactory samSlicerFactory;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = SageConfig.createOptions();
@@ -92,6 +94,7 @@ public class SageApplication implements AutoCloseable {
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         vcf = new SageVCF(refGenome, config);
         phase = new Phase(refGenome, new SageVariantFactory(config.filter(), hotspots, panel), vcf::write);
+        samSlicerFactory = new SamSlicerFactory(config, panel);
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
@@ -108,8 +111,8 @@ public class SageApplication implements AutoCloseable {
 //            }
 //        }
 
-                        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-        //                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+//                                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+                                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
         //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));
         //                        contigContexts.add(runSingleRegion("1", 696644, 696644));
         //                contigContexts.add(runSingleRegion("17", 3028422, 3028422));
@@ -123,7 +126,7 @@ public class SageApplication implements AutoCloseable {
         //        contigContexts.add(runSingleRegion("17", 47_414_327, 47414327));
         //        contigContexts.add(runSingleRegion("17", 55_639_513, 55639513));
         //        contigContexts.add(runSingleRegion("17", 72_558_371, 72558371));
-        //                contigContexts.add(runSingleRegion("17", 22163006, 25363006));
+        //                        contigContexts.add(runSingleRegion("17", 22163006, 25363006));
         //                contigContexts.add(runSingleRegion("4", 943940, 943950));
         //                contigContexts.add(runSingleRegion("5", 68706692, 68706892));
         //                contigContexts.add(runSingleRegion("1", 51486496, 51486496));
@@ -177,7 +180,7 @@ public class SageApplication implements AutoCloseable {
                 new SageVariantFactory(chromosome, config.filter(), hotspots.get(chromosome), panel.get(chromosome));
 
         final GenomeRegion region = GenomeRegions.create(contig, start, end);
-        final SagePipeline regionPipeline = new SagePipeline(region, config, executorService, refGenome, variantFactory);
+        final SagePipeline regionPipeline = new SagePipeline(region, config, executorService, refGenome, variantFactory, samSlicerFactory);
         return regionPipeline.submit();
 
     }

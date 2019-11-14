@@ -10,7 +10,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
+import com.hartwig.hmftools.sage.sam.SamSlicer;
+import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,14 +33,16 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
     private final PositionSelector<AltContext> consumerSelector;
     private final TumorRefContextCandidates candidates;
     private final RefContextConsumer refContextConsumer;
+    private final SamSlicerFactory samSlicerFactory;
 
     private final GenomeRegion bounds;
 
     public TumorAltContextSupplier(final SageConfig config, final String sample, @NotNull final GenomeRegion bounds,
-            @NotNull final String bamFile, @NotNull final RefSequence refGenome) {
+            @NotNull final String bamFile, @NotNull final RefSequence refGenome, @NotNull final SamSlicerFactory samSlicerFactory) {
         this.config = config;
         this.sample = sample;
         this.bamFile = bamFile;
+        this.samSlicerFactory = samSlicerFactory;
         this.consumerSelector = new PositionSelector<>(altContexts);
         this.candidates = new TumorRefContextCandidates(sample);
         this.bounds = bounds;
@@ -58,6 +61,8 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
     @Override
     public List<AltContext> get() {
 
+        final SamSlicer slicer = samSlicerFactory.create(bounds);
+
         if (bounds.start() == 1) {
             LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
         }
@@ -66,7 +71,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
 
-            new SimpleSamSlicer(config.minMapQuality(), Lists.newArrayList(bounds)).slice(tumorReader, this::processFirstPass);
+            slicer.slice(tumorReader, this::processFirstPass);
 
             // Add all valid alt contexts
             for (final RefContext refContext : candidates.refContexts()) {
@@ -78,7 +83,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
                 }
             }
 
-            new SimpleSamSlicer(config.minMapQuality(), Lists.newArrayList(bounds)).slice(tumorReader, this::processSecondPass);
+            slicer.slice(tumorReader, this::processSecondPass);
 
         } catch (IOException e) {
             throw new CompletionException(e);
