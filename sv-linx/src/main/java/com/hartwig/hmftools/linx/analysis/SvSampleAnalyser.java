@@ -46,6 +46,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
+import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxLink;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxSvData;
@@ -359,6 +361,9 @@ public class SvSampleAnalyser {
             LinxFusionFile.write(LinxFusionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxBreakendFile.write(LinxBreakendFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
             LinxDriverFile.write(LinxDriverFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+
+            ReportableDisruptionFile.write(ReportableDisruptionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
+            ReportableGeneFusionFile.write(ReportableGeneFusionFile.generateFilename(mConfig.OutputDataPath, sampleId), Lists.newArrayList());
         }
         catch (IOException e)
         {

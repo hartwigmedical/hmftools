@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
@@ -18,6 +19,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 
 import java.io.BufferedWriter;
@@ -48,6 +50,7 @@ public class CopyNumberAnalyser
     private boolean mWriteLohEvents;
     private boolean mWritePloidyCalcs;
     private boolean mWriteChrArmData;
+    private boolean mWriteCnSegmentStats;
 
     private final String mOutputPath;
     private final DatabaseAccess mDbAccess;
@@ -58,12 +61,14 @@ public class CopyNumberAnalyser
     private BufferedWriter mLohEventWriter;
     private BufferedWriter mPloidyCalcWriter;
     private BufferedWriter mChrArmWriter;
+    private BufferedWriter mCnSegmentWriter;
 
     private PerformanceCounter mPerfCounter;
 
     private static final String WRITE_LOH_TO_FILE = "write_loh_data";
     private static final String WRITE_PLOIDY_TO_FILE = "write_ploidy_data";
     private static final String WRITE_CHR_ARM_DATA = "write_chr_arm_data";
+    private static final String WRITE_CN_SEGMENT_DATA = "write_cn_segment_data";
 
     private static final Logger LOGGER = LogManager.getLogger(CopyNumberAnalyser.class);
 
@@ -84,6 +89,7 @@ public class CopyNumberAnalyser
         mLohEventWriter = null;
         mPloidyCalcWriter = null;
         mChrArmWriter = null;
+        mCnSegmentWriter = null;
     }
 
     public static void addCmdLineArgs(Options options)
@@ -93,9 +99,11 @@ public class CopyNumberAnalyser
         options.addOption(DB_PASS, true, "Database password");
         options.addOption(DB_URL, true, "Database URL");
         options.addOption(SAMPLE, true, "Sample(s) or CSV file with sample IDs");
-        options.addOption(WRITE_LOH_TO_FILE, false, "Write LOH events CSV");
+        options.addOption(WRITE_LOH_TO_FILE, false, "Write LOH events to CSV");
         options.addOption(WRITE_PLOIDY_TO_FILE, false, "Write adjusted ploidy to CSV");
-        options.addOption(WRITE_CHR_ARM_DATA, false, "Write adjusted ploidy to CSV");
+        options.addOption(WRITE_CHR_ARM_DATA, false, "Write chromosomal arm data");
+        options.addOption(WRITE_CN_SEGMENT_DATA, false, "Write CN segment data to CSV");
+        options.addOption(LOG_DEBUG, false, "Log verbose");
     }
 
     public boolean loadConfig(final CommandLine cmd)
@@ -108,6 +116,7 @@ public class CopyNumberAnalyser
         mWritePloidyCalcs = cmd.hasOption(WRITE_PLOIDY_TO_FILE);
         mWriteLohEvents = cmd.hasOption(WRITE_LOH_TO_FILE);
         mWriteChrArmData = cmd.hasOption(WRITE_CHR_ARM_DATA);
+        mWriteCnSegmentStats = cmd.hasOption(WRITE_CN_SEGMENT_DATA);
         return true;
     }
 
@@ -140,12 +149,100 @@ public class CopyNumberAnalyser
             if(mWriteChrArmData)
                 writeChrArmData(sampleId);
 
+            if(mWriteCnSegmentStats)
+                writeCnSegmentStats(sampleId);
+
             ++sampleCount;
 
             mPerfCounter.stop();
         }
 
         mPerfCounter.logStats();
+    }
+
+    private static final long CN_SEGMENT_WINDOW_SIZE = 3000000;
+
+    private void writeCnSegmentStats(final String sampleId)
+    {
+        try
+        {
+            if (mCnSegmentWriter == null)
+            {
+                String outputFileName = mOutputPath + "CN_ELEV_SEGMENTS.csv";
+
+                mCnSegmentWriter = createBufferedWriter(outputFileName, false);
+
+                mCnSegmentWriter.write("SampleId,IsMale,Chromosome,Ploidy,ElevSegCount");
+                mCnSegmentWriter.newLine();
+            }
+
+            final Map<String,List<SvCNData>> chrCnDataMap = mCnDataLoader.getChrCnDataMap();
+
+            double samplePloidy = mCnDataLoader.getPurityContext().bestFit().ploidy();
+            boolean isMale = mCnDataLoader.getPurityContext().gender().toString().startsWith("MALE");
+
+            LOGGER.debug("sample({}) ploidy({})", sampleId, formatPloidy(samplePloidy));
+
+            for(Map.Entry<String,List<SvCNData>> entry : chrCnDataMap.entrySet())
+            {
+                final String chromosome = entry.getKey();
+
+                if(!isMale && chromosome.equals("Y"))
+                    continue;
+
+                final List<SvCNData> cnDataList = entry.getValue();
+
+                long lastWindowStart = 0;
+                double cnWindowTotal = 0;
+                int elevatedCnWindows = 0;
+
+                for(final SvCNData cnData : cnDataList)
+                {
+                    if(cnData.EndPos - lastWindowStart < CN_SEGMENT_WINDOW_SIZE && !cnData.SegEnd.equals(TELOMERE.toString()))
+                    {
+                        cnWindowTotal += cnData.CopyNumber * cnData.length();
+                    }
+                    else
+                    {
+                        long segmentStartPos = cnData.StartPos;
+
+                        while(true)
+                        {
+                            // take each segment spanning the required window distance
+                            long segmentEndPos = min(cnData.EndPos, lastWindowStart + CN_SEGMENT_WINDOW_SIZE);
+                            cnWindowTotal += cnData.CopyNumber * (segmentEndPos - segmentStartPos);
+
+                            if(cnData.EndPos - lastWindowStart < CN_SEGMENT_WINDOW_SIZE)
+                                break;
+
+                            double avgCopyNumber = cnWindowTotal / CN_SEGMENT_WINDOW_SIZE;
+
+                            if (avgCopyNumber > samplePloidy && !copyNumbersEqual(avgCopyNumber, samplePloidy))
+                                ++elevatedCnWindows;
+
+                            LOGGER.debug("segment({}) windowStart({}) avgCN({}) elevatedWindows({})",
+                                    cnData.toString(), lastWindowStart, formatPloidy(avgCopyNumber), elevatedCnWindows);
+
+                            //if(cnData.EndPos <= segmentEndPos)
+                            //    break;
+
+                            cnWindowTotal = 0;
+                            lastWindowStart = segmentEndPos;
+                            segmentStartPos = lastWindowStart;
+                        }
+                    }
+                }
+
+                mCnSegmentWriter.write(String.format("%s,%s,%s,%.2f,%d",
+                        sampleId, isMale, chromosome, samplePloidy, elevatedCnWindows));
+
+                mCnSegmentWriter.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing to copy number segments outputFile: {}", e.toString());
+        }
     }
 
     private void writeChrArmData(final String sampleId)
@@ -448,6 +545,7 @@ public class CopyNumberAnalyser
         closeBufferedWriter(mLohEventWriter);
         closeBufferedWriter(mPloidyCalcWriter);
         closeBufferedWriter(mChrArmWriter);
+        closeBufferedWriter(mCnSegmentWriter);
     }
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException
