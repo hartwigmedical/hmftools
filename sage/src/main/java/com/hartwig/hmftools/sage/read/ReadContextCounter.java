@@ -136,7 +136,7 @@ public class ReadContextCounter implements GenomePosition {
                             incrementQualityScores(readIndex, record, qualityConfig);
                             break;
                     }
-                } else if (alignmentMismatches(record)) {
+                } else {
                     final RealignedContext context = new Realigned().realigned(readContext, record.getReadBases());
                     switch (context.type()) {
                         case EXACT:
