@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +15,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.ValidationStringency;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
@@ -46,14 +50,15 @@ public interface AmberConfig {
     String MAX_DEPTH_PERCENTAGE = "max_depth_percent";
     String MIN_HET_AF_PERCENTAGE = "min_het_af_percent";
     String MAX_HET_AF_PERCENTAGE = "max_het_af_percent";
+    String VALIDATION_STRINGENCY = "validation_stringency";
 
     String TUMOR_ONLY = "tumor_only";
     String TUMOR_ONLY_MIN_VAF = "tumor_only_min_vaf";
     String TUMOR_ONLY_MIN_SUPPORT = "tumor_only_min_support";
 
     @NotNull
-    static Options createOptions() {
-        final Options options = new Options();
+    static org.apache.commons.cli.Options createOptions() {
+        final org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
         options.addOption(TUMOR_ONLY, false, "Tumor only mode");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
@@ -76,6 +81,8 @@ public interface AmberConfig {
         options.addOption(TUMOR_ONLY_MIN_SUPPORT,
                 true,
                 "Min VAF in ref and alt in tumor only mode [" + DEFAULT_TUMOR_ONLY_MIN_SUPPORT + "]");
+        options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
+
         return options;
     }
 
@@ -120,6 +127,9 @@ public interface AmberConfig {
     @NotNull
     String tumor();
 
+    @NotNull
+    ValidationStringency validationStringency();
+
     default int typicalReadDepth() {
         return DEFAULT_TYPICAL_READ_DEPTH;
     }
@@ -153,6 +163,8 @@ public interface AmberConfig {
         final String missing = missingJoiner.toString();
         final String refGenomePath = cmd.getOptionValue(REF_GENOME, Strings.EMPTY);
 
+        final ValidationStringency validationStringency = Configs.defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
         }
@@ -175,32 +187,10 @@ public interface AmberConfig {
                 .outputDirectory(outputDirectory)
                 .normal(reference)
                 .tumor(tumor)
+                .validationStringency(validationStringency)
                 .build();
     }
 
-    static double defaultDoubleValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final double result = Double.parseDouble(cmd.getOptionValue(opt));
-            if (!Doubles.equal(result, defaultValue)) {
-                LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            }
-            return result;
-        }
-
-        return defaultValue;
-    }
-
-    static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final int result = Integer.parseInt(cmd.getOptionValue(opt));
-            if (result != defaultValue) {
-                LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            }
-            return result;
-        }
-
-        return defaultValue;
-    }
 
     @NotNull
     static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing) {

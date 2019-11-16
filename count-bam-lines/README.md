@@ -62,6 +62,7 @@ Argument | Default | Description
 threads | 4 | Number of threads to use
 min_quality | 10 | Min quality
 ref_genome | None | Path to the reference genome fasta file if using CRAM files
+validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
 
 ## Performance Characteristics
 Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
@@ -103,6 +104,8 @@ Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio |
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 
 ## Version History and Download Links
+- Upcoming
+  - Added `validation_stringency` parameter.
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.7)
   - Exit gracefully on exceptions
   - Changed file names and headers for better consistency with other HMF tools

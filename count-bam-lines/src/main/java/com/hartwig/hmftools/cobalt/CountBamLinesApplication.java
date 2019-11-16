@@ -75,7 +75,10 @@ public class CountBamLinesApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
 
-        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", config.threadCount(), config.windowSize(), config.minMappingQuality());
+        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}",
+                config.threadCount(),
+                config.windowSize(),
+                config.minMappingQuality());
     }
 
     private void run() throws IOException, ExecutionException, InterruptedException {
@@ -104,7 +107,7 @@ public class CountBamLinesApplication implements AutoCloseable {
 
     @NotNull
     private static SamReaderFactory readerFactory(@NotNull final CobaltConfig config) {
-        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.validationStringency());
         if (!config.refGenomePath().isEmpty()) {
             return readerFactory.referenceSource(new ReferenceSource(new File(config.refGenomePath())));
         }

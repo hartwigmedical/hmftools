@@ -60,6 +60,7 @@ max_depth_percent | 1.5 | Only include reference sites with read depth within ma
 min_het_af_percent | 0.4 | Minimum allelic frequency to be considered heterozygous
 max_het_af_percent | 0.65 | Maximum allelic frequency to be considered heterozygous
 ref_genome | NA | Path to the reference genome fasta file. Required only when using CRAM files.
+validation_stringency | STRICT | SAM validation strategy: STRICT, SILENT, LENIENT
 
 ### Example Usage
 
@@ -136,7 +137,8 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
  
 # Version History and Download Links
 To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
-
+- Upcoming
+  - Added `validation_stringency` parameter.
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.0)
   - Support for `tumor_only` mode
   - Replaced input bed file with VCF file and will match only on specified target allele. Any entries with SNPCHECK info flags will be used for sample matching locations. 

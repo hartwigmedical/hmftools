@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.cobalt;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultEnumValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+
 import java.util.StringJoiner;
 
 import org.apache.commons.cli.CommandLine;
@@ -10,6 +13,8 @@ import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import htsjdk.samtools.ValidationStringency;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
@@ -28,6 +33,7 @@ public interface CobaltConfig {
     String OUTPUT_DIR = "output_dir";
     String GC_PROFILE = "gc_profile";
     String MIN_MAPPING_QUALITY = "min_quality";
+    String VALIDATION_STRINGENCY = "validation_stringency";
 
     @NotNull
     static Options createOptions() {
@@ -41,6 +47,7 @@ public interface CobaltConfig {
         options.addOption(MIN_MAPPING_QUALITY, true, "Min quality [" + DEFAULT_MIN_MAPPING_QUALITY + "]");
         options.addOption(GC_PROFILE, true, "Location of GC Profile");
         options.addOption(REF_GENOME, true, "Path to reference genome fasta file if using CRAM files");
+        options.addOption(VALIDATION_STRINGENCY, true, "SAM validation strategy: STRICT, SILENT, LENIENT [STRICT]");
 
         return options;
     }
@@ -70,6 +77,9 @@ public interface CobaltConfig {
     @NotNull
     String tumor();
 
+    @NotNull
+    ValidationStringency validationStringency();
+
     default int windowSize() {
         return 1000;
     }
@@ -89,6 +99,8 @@ public interface CobaltConfig {
         final String tumor = parameter(cmd, TUMOR, missingJoiner);
         final String missing = missingJoiner.toString();
 
+        final ValidationStringency validationStringency = defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
         }
@@ -103,20 +115,10 @@ public interface CobaltConfig {
                 .outputDirectory(outputDirectory)
                 .reference(normal)
                 .tumor(tumor)
+                .validationStringency(validationStringency)
                 .build();
     }
 
-    static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final int result = Integer.parseInt(cmd.getOptionValue(opt));
-            if (result != defaultValue) {
-                LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            }
-            return result;
-        }
-
-        return defaultValue;
-    }
 
     @NotNull
     static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing) {
