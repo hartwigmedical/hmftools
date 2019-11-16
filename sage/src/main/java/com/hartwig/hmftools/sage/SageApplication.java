@@ -39,7 +39,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -96,6 +95,7 @@ public class SageApplication implements AutoCloseable {
         vcf = new SageVCF(refGenome, config);
         phase = new Phase(refGenome, new SageVariantFactory(config.filter(), hotspots, panel), vcf::write);
         samSlicerFactory = new SamSlicerFactory(config, panel);
+        LOGGER.info("Writing to file {}" , config.outputFile());
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
@@ -103,17 +103,17 @@ public class SageApplication implements AutoCloseable {
         long timeStamp = System.currentTimeMillis();
         final List<ContigContext> contigContexts = Lists.newArrayList();
 
-        SAMSequenceDictionary dictionary = dictionary();
-        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
-            final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig)) {
-                int maxPosition = samSequenceRecord.getSequenceLength();
-                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
-            }
-        }
+//        SAMSequenceDictionary dictionary = dictionary();
+//        for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+//            final String contig = samSequenceRecord.getSequenceName();
+//            if (HumanChromosome.contains(contig)) {
+//                int maxPosition = samSequenceRecord.getSequenceLength();
+//                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
+//            }
+//        }
 
-//                                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-//                                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+//                                        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+//                                        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
         //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));
         //                        contigContexts.add(runSingleRegion("1", 696644, 696644));
         //                contigContexts.add(runSingleRegion("17", 3028422, 3028422));
@@ -131,7 +131,10 @@ public class SageApplication implements AutoCloseable {
         //                contigContexts.add(runSingleRegion("4", 943940, 943950));
         //                contigContexts.add(runSingleRegion("5", 68706692, 68706892));
         //                contigContexts.add(runSingleRegion("1", 51486496, 51486496));
-        //                contigContexts.add(runSingleRegion("1", 52197586, 52197586));
+        //                        contigContexts.add(runSingleRegion("22", 29453442, 29453442));
+//                                contigContexts.add(runSingleRegion("17", 22_200_000, 22_300_000));
+                                contigContexts.add(runSingleRegion("10", 42350000, 42450000));
+//                                contigContexts.add(runSingleRegion("4", 49000000, 50000000));
 
         for (final ContigContext contigContext : contigContexts) {
             contigContext.write(phase);

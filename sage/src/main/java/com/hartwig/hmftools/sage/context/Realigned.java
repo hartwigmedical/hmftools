@@ -17,8 +17,40 @@ public class Realigned {
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
     @NotNull
-    public RealignedContext realigned(@NotNull final ReadContext readContext, final byte[] otherBases) {
+    public RealignedContext realignedInEntireRecord(@NotNull final ReadContext readContext, final byte[] otherBases) {
         return realigned(readContext.leftFlankStartIndex(), readContext.rightFlankEndIndex(), readContext.readBases(), otherBases);
+    }
+
+    @NotNull
+    public RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases) {
+        return realigned(readContext.leftFlankStartIndex(), readContext.rightFlankEndIndex(), readContext.readBases(), otherBaseIndex, otherBases, MAX_REPEAT_SIZE);
+    }
+
+    @NotNull
+    private RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases,  final int otherBaseIndex, final byte[] otherBases, int maxDistance) {
+
+        RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndex, otherBases);
+        if (context.type() != RealignedType.NONE) {
+            return context;
+        }
+
+        int exactLength = baseEndIndex - baseStartIndex + 1;
+
+        for (int i = otherBaseIndex + 1; i <= Math.min(otherBaseIndex + maxDistance, otherBases.length - exactLength + MAX_REPEAT_SIZE); i++) {
+            context = realigned(baseStartIndex, baseEndIndex, bases, i, otherBases);
+            if (context.type() != RealignedType.NONE) {
+                return context;
+            }
+        }
+
+        for (int i = otherBaseIndex - 1; i >= Math.max(otherBaseIndex - maxDistance, 0); i--) {
+            context = realigned(baseStartIndex, baseEndIndex, bases, i, otherBases);
+            if (context.type() != RealignedType.NONE) {
+                return context;
+            }
+        }
+
+        return NONE;
     }
 
     @NotNull

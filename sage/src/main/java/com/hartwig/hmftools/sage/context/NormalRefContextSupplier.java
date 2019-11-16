@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 
@@ -30,13 +29,14 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefContextCandidates candidates;
     private final String bamFile;
     private final RefContextConsumer refContextConsumer;
-    private final PositionSelector<ReadContextCounter> consumerSelector;
+    private final PositionSelector<AltContext> consumerSelector;
     private final int minQuality;
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates, @NotNull final SamSlicerFactory samSlicerFactory) {
+            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates,
+            @NotNull final SamSlicerFactory samSlicerFactory) {
         this.minQuality = config.minMapQuality();
         this.bounds = bounds;
         this.candidates = candidates;
@@ -44,11 +44,8 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
         refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
-        consumerSelector = new PositionSelector<>(candidates.refContexts()
-                .stream()
-                .flatMap(x -> x.alts().stream())
-                .map(AltContext::primaryReadContext)
-                .collect(Collectors.toList()));
+        consumerSelector =
+                new PositionSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
     }
 
@@ -66,17 +63,14 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         return candidates.refContexts();
     }
 
-    @NotNull
-    public List<RefContext> refContexts() {
-        return candidates.refContexts();
-    }
-
     @Override
     public void accept(final SAMRecord samRecord) {
         refContextConsumer.accept(samRecord);
 
         if (samRecord.getMappingQuality() >= minQuality) {
-            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord, sageConfig));
+            consumerSelector.select(samRecord.getAlignmentStart(),
+                    samRecord.getAlignmentEnd(),
+                    x -> x.primaryReadContext().accept(x.readDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
         }
     }
 }

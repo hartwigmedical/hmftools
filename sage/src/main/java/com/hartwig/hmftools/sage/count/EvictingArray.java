@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.count;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.jetbrains.annotations.NotNull;
+
 public class EvictingArray<T> {
 
     private final Object[] elements;
@@ -18,7 +20,7 @@ public class EvictingArray<T> {
         this.elements = new Object[this.capacity];
     }
 
-    public T computeIfAbsent(long position, Function<Long, T> supplier) {
+    public T computeIfAbsent(long position, @NotNull final Function<Long, T> supplier) {
         if (minPosition == 0) {
             minPosition = (int) position - capacity + 1;
         }

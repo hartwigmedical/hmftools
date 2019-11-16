@@ -109,7 +109,7 @@ public class ReadContextCounter implements GenomePosition {
         return readContext.toString();
     }
 
-    public void accept(final SAMRecord record, final SageConfig sageConfig) {
+    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig) {
         final QualityConfig qualityConfig = sageConfig.qualityConfig();
 
         if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position()
@@ -136,8 +136,11 @@ public class ReadContextCounter implements GenomePosition {
                             incrementQualityScores(readIndex, record, qualityConfig);
                             break;
                     }
-                } else {
-                    final RealignedContext context = new Realigned().realigned(readContext, record.getReadBases());
+                } else if (realign) {
+                    final RealignedContext context =
+                            variant.isSNV() && record.getCigar().getCigarElements().size() == 1
+                                    ? new Realigned().realignedAroundIndex(readContext, readIndex, record.getReadBases())
+                                    : new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
                     switch (context.type()) {
                         case EXACT:
                             realigned++;

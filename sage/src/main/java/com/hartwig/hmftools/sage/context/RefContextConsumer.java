@@ -22,7 +22,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer.class);
 
-
     /*
 
     bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' GIABvsSELFv004.sage.vcf.gz -O z -o GIABvsSELFv004.sage.filtered.vcf.gz
@@ -55,17 +54,15 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     */
 
-    private static final String DISTANCE_FROM_REF_TAG = "NM";
+    private final boolean tumor;
     private final int minQuality;
-
+    private final SageConfig config;
     private final GenomeRegion bounds;
     private final RefSequence refGenome;
     private final RefContextCandidates candidates;
-    private final boolean tumor;
-    private final SageConfig config;
 
-    public RefContextConsumer(boolean tumor, final SageConfig config, @NotNull final GenomeRegion bounds,
-            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
+    RefContextConsumer(boolean tumor, final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final RefSequence refGenome,
+            @NotNull final RefContextCandidates candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
         this.minQuality = config.minMapQuality();
@@ -83,7 +80,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             int alignmentStart = record.getAlignmentStart();
             int alignmentEnd = record.getAlignmentEnd();
 
-            if (record.getMappingQuality() >= minQuality) {
+            if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
                 final byte[] refBases = refGenome.alignment(alignmentStart, alignmentEnd);
                 final CigarHandler handler = new CigarHandler() {
                     @Override
@@ -121,7 +118,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.readDepth() <= config.maxReadDepth()) {
+            if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
                 if (tumor) {
                     refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refIndex, refBases));
                 } else {
@@ -141,7 +138,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.readDepth() <= config.maxReadDepth()) {
+            if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
                 if (tumor) {
                     refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
                 } else {
@@ -172,8 +169,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final int baseQuality = record.getBaseQualities()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.readDepth() <= config.maxReadDepth()) {
-
+            if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (tumor) {
@@ -190,13 +186,23 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     }
 
-
     private boolean inBounds(final SAMRecord record) {
         return record.getEnd() >= bounds.start() && record.getStart() <= bounds.end();
     }
 
     private boolean inBounds(final long position) {
         return position >= bounds.start() && position <= bounds.end();
+    }
+
+    private boolean reachedDepthLimit(@NotNull final SAMRecord record) {
+        int alignmentStart = record.getAlignmentStart();
+        int alignmentEnd = record.getAlignmentEnd();
+
+        RefContext startRefContext = candidates.refContext(bounds.chromosome(), alignmentStart);
+        RefContext endRefContext = candidates.refContext(bounds.chromosome(), alignmentEnd);
+
+        return startRefContext != null && endRefContext != null && startRefContext.readDepth() >= config.maxReadDepth()
+                && endRefContext.readDepth() >= config.maxReadDepth();
     }
 
 }

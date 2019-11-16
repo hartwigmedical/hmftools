@@ -55,7 +55,9 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
     }
 
     private void processSecondPass(final SAMRecord samRecord) {
-        consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.primaryReadContext().accept(samRecord, config));
+        consumerSelector.select(samRecord.getAlignmentStart(),
+                samRecord.getAlignmentEnd(),
+                x -> x.primaryReadContext().accept(x.readDepth() < config.maxReadDepth(), samRecord, config));
     }
 
     @Override
