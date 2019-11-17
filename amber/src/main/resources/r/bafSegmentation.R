@@ -4,7 +4,7 @@ bafFile <- args[1]
 pcfFile   <- args[2]
 
 library(copynumber)
-baf <- read.table(bafFile, header=TRUE)
+baf <- read.table(bafFile, header=TRUE, stringsAsFactors = T)
 chromosomeLevels = levels(baf$chromosome)
 chromosomePrefix = ""
 if (any(grepl("chr", chromosomeLevels, ignore.case = T))) {
