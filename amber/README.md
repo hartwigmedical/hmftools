@@ -139,6 +139,7 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
 To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
 - Upcoming
   - Added `validation_stringency` parameter.
+  - Added explicit `stringsAsFactors = T` to R script
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.0)
   - Support for `tumor_only` mode
   - Replaced input bed file with VCF file and will match only on specified target allele. Any entries with SNPCHECK info flags will be used for sample matching locations. 

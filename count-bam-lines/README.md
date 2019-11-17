@@ -106,6 +106,7 @@ TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regi
 ## Version History and Download Links
 - Upcoming
   - Added `validation_stringency` parameter.
+  - Added explicit `stringsAsFactors = T` to R script
 - [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.7)
   - Exit gracefully on exceptions
   - Changed file names and headers for better consistency with other HMF tools
