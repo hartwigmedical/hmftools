@@ -69,15 +69,12 @@ public class SomaticStream {
         return drivers.build(geneCopyNumbers);
     }
 
-
     public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> somaticPeaks) throws IOException {
-
         final Consumer<VariantContext> driverConsumer =
                 x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(drivers::add);
 
         if (enabled) {
-
             try (IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomeData.refGenome()));
                     VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false);
                     VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
@@ -111,5 +108,4 @@ public class SomaticStream {
             }
         }
     }
-
 }
