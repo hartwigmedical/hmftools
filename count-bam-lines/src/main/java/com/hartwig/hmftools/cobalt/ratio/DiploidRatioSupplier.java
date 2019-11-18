@@ -20,7 +20,6 @@ class DiploidRatioSupplier {
     private final ListMultimap<Chromosome, ReadRatio> result = ArrayListMultimap.create();
 
     DiploidRatioSupplier(@NotNull final ListMultimap<Chromosome, ReadRatio> normalRatios) {
-
         final ReferenceRatioStatistics stats = ReferenceRatioStatisticsFactory.fromReferenceRatio(normalRatios);
 
         for (Chromosome chromosome : normalRatios.keySet()) {

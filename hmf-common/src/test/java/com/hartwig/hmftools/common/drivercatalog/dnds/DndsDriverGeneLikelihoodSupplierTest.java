@@ -32,7 +32,6 @@ public class DndsDriverGeneLikelihoodSupplierTest {
 
     @Test
     public void testReadTSGGenes() {
-
         final DndsDriverGeneLikelihood gene = tsg.get("ACVR1B");
         final DndsDriverImpactLikelihood missense = gene.missense();
 

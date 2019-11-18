@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS ecrf;
+DROP TABLE IF EXISTS ecrfDatamodel;
+
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
@@ -45,13 +48,20 @@ DROP TABLE IF EXISTS sample;
 CREATE TABLE sample
 (   sampleId varchar(255) NOT NULL,
     patientId int NOT NULL,
+    setName varchar(255) NOT NULL,
     arrivalDate DATE NOT NULL,
     samplingDate DATE,
     dnaNanograms int,
     limsPrimaryTumor varchar(255),
-    tumorPercentage varchar(100),
+    pathologyTumorPercentage varchar(100),
     PRIMARY KEY (sampleId),
     FOREIGN KEY (patientId) REFERENCES patient(id)
+);
+
+DROP TABLE IF EXISTS rna;
+CREATE TABLE rna
+(   sampleId varchar(255) NOT NULL,
+    PRIMARY KEY (sampleId)
 );
 
 DROP TABLE IF EXISTS biopsy;
@@ -153,8 +163,8 @@ CREATE TABLE clinicalFindings
     PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS ecrf;
-CREATE TABLE ecrf
+DROP TABLE IF EXISTS cpctEcrf;
+CREATE TABLE cpctEcrf
 (   id int NOT NULL AUTO_INCREMENT,
     patientId varchar(20),
     studyEvent varchar(100),
@@ -184,22 +194,12 @@ CREATE TABLE ecrf
     INDEX(relevant)
 );
 
-DROP TABLE IF EXISTS ecrfDatamodel;
-CREATE TABLE ecrfDatamodel
+DROP TABLE IF EXISTS cpctEcrfDatamodel;
+CREATE TABLE cpctEcrfDatamodel
 (   fieldName varchar(100),
     description varchar(500),
     codeList varchar(3000),
     relevant varchar(5)
-);
-
-DROP TABLE IF EXISTS formsMetadata;
-CREATE TABLE formsMetadata
-(   id int NOT NULL,
-    tableName varchar(20),
-    form varchar(20),
-    status varchar(30),
-    locked varchar(5),
-    UNIQUE KEY (id, tableName, form)
 );
 
 DROP TABLE IF EXISTS drupEcrf;
@@ -237,6 +237,16 @@ CREATE TABLE drupEcrfDatamodel
     description varchar(500),
     codeList varchar(5000),
     relevant varchar(5)
+);
+
+DROP TABLE IF EXISTS formsMetadata;
+CREATE TABLE formsMetadata
+(   id int NOT NULL,
+    tableName varchar(20),
+    form varchar(20),
+    status varchar(30),
+    locked varchar(5),
+    UNIQUE KEY (id, tableName, form)
 );
 
 DROP TABLE if EXISTS metric;

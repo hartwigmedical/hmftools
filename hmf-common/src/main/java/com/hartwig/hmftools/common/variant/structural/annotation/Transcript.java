@@ -198,7 +198,7 @@ public class Transcript {
         return mCodingType.equals(TRANS_CODING_TYPE_NON_CODING);
     }
 
-    private final String calcRegionType()
+    private String calcRegionType()
     {
         if(isIntronic())
             return TRANS_REGION_TYPE_INTRONIC;
@@ -225,7 +225,7 @@ public class Transcript {
         return isUpstream() ? ExonUpstreamPhase : ExonDownstreamPhase;
     }
 
-    private final String calcCodingType()
+    private String calcCodingType()
     {
         if(CodingStart == null || CodingEnd == null || mTotalCodingBases == 0)
         {

@@ -27,7 +27,7 @@ public class VersionInfo {
     }
 
     @NotNull
-    public String value(@NotNull final String key, @NotNull final String defaultValue) {
+    private String value(@NotNull final String key, @NotNull final String defaultValue) {
         try {
             for (String entry : readResource().split("\n")) {
                 if (entry.startsWith(key)) {

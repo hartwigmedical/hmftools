@@ -51,7 +51,6 @@ public class PeakModelFactory {
         double initialWeight = positiveWeight(weightedPloidies);
 
         for (int i = 0; i < MAX_ITERATIONS; i++) {
-
             // Calculate peak
             double peak = preciseHistogramFactory.peakPloidy(PEAK_BIN_COUNT, weightedPloidies);
             double offset = offset(peak);
@@ -141,7 +140,6 @@ public class PeakModelFactory {
                         .setIsSubclonal(true)
                         .setIsValid(true));
             }
-
         }
 
         return result;
@@ -164,7 +162,6 @@ public class PeakModelFactory {
 
     @VisibleForTesting
     double[] modelPeakHistogram(double peak, @NotNull final List<WeightedPloidy> peakPloidies) {
-
         double offset = offset(peak);
 
         int maxBucket = bucket(maxPloidy);
@@ -197,7 +194,6 @@ public class PeakModelFactory {
     }
 
     private double likelihood(double ploidy, double[] scalingFactor, @NotNull List<WeightedPloidy> ploidies) {
-
         double result = 0;
         for (int i = 0; i < scalingFactor.length; i++) {
             result += scalingFactor[i] * ploidyLikelihood(ploidy, ploidies.get(i));
@@ -207,7 +203,6 @@ public class PeakModelFactory {
     }
 
     private double[] scalingFactor(double ploidy, @NotNull List<WeightedPloidy> ploidies) {
-
         double[] result = new double[ploidies.size()];
         for (int i = 0; i < ploidies.size(); i++) {
             result[i] = ploidies.get(i).weight() / ploidyLikelihood(ploidy, ploidies.get(i));
@@ -217,7 +212,6 @@ public class PeakModelFactory {
     }
 
     double ploidyLikelihood(double ploidy, @NotNull final WeightedPloidy weighted) {
-
         final String binomialKey = weighted.alleleReadCount() + ":" + weighted.totalReadCount();
         final BinomialDistribution binomialDistribution = binomialDistributionMap.computeIfAbsent(binomialKey,
                 s -> new BinomialDistribution(weighted.totalReadCount(), weighted.alleleFrequency()));
@@ -251,5 +245,4 @@ public class PeakModelFactory {
 
         return ploidies.stream().mapToDouble(WeightedPloidy::weight).sum() / count;
     }
-
 }

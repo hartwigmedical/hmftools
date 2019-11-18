@@ -25,12 +25,10 @@ import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.ImmutableReportableVariant;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ImmutableReportableGainLoss;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReport;
@@ -39,6 +37,8 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailStudy;
 import com.hartwig.hmftools.patientreporter.structural.ImmutableReportableGeneDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ImmutableViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 
@@ -537,11 +537,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("T")
                 .alt("A")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .canonicalHgvsCodingImpact("c.1799T>A")
+                .canonicalHgvsProteinImpact("p.Val600Glu")
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("7:140453136")
-                .hgvsCodingImpact("c.1799T>A")
-                .hgvsProteinImpact("p.Val600Glu")
                 .alleleReadCount(154)
                 .totalReadCount(225)
                 .allelePloidy(4.1)
@@ -559,11 +559,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("CCG")
                 .alt("C")
                 .canonicalCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .canonicalHgvsCodingImpact("c.203_204delCG")
+                .canonicalHgvsProteinImpact("p.Ala68fs")
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("9:21971153")
-                .hgvsCodingImpact("c.203_204delCG")
-                .hgvsProteinImpact("p.Ala68fs")
                 .alleleReadCount(95)
                 .totalReadCount(95)
                 .allelePloidy(2D)
@@ -581,11 +581,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("GG")
                 .alt("AA")
                 .canonicalCodingEffect(CodingEffect.NONE)
+                .canonicalHgvsCodingImpact("c.-125_-124delCCinsTT")
+                .canonicalHgvsProteinImpact(Strings.EMPTY)
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("5:1295228")
-                .hgvsCodingImpact("c.-125_-124delCCinsTT")
-                .hgvsProteinImpact(Strings.EMPTY)
                 .alleleReadCount(49)
                 .totalReadCount(49)
                 .allelePloidy(2D)
@@ -603,11 +603,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("C")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .canonicalHgvsCodingImpact("c.2153C>T")
+                .canonicalHgvsProteinImpact("p.Pro718Leu")
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.ONCO)
                 .gDNA("2:198266779")
-                .hgvsCodingImpact("c.2153C>T")
-                .hgvsProteinImpact("p.Pro718Leu")
                 .alleleReadCount(76)
                 .totalReadCount(115)
                 .allelePloidy(2D)
@@ -625,11 +625,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .canonicalHgvsCodingImpact("c.1497G>T")
+                .canonicalHgvsProteinImpact("p.Met499Ile")
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
-                .hgvsCodingImpact("c.1497G>T")
-                .hgvsProteinImpact("p.Met499Ile")
                 .alleleReadCount(52)
                 .totalReadCount(119)
                 .allelePloidy(1.8)
@@ -652,11 +652,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .canonicalHgvsCodingImpact("c.1497G>T")
+                .canonicalHgvsProteinImpact("p.Met499Ile")
                 .notifyClinicalGeneticist(false)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:189604330")
-                .hgvsCodingImpact("c.1497G>T")
-                .hgvsProteinImpact("p.Met499Ile")
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .allelePloidy(2.1)
@@ -674,11 +674,11 @@ public final class ExampleAnalysisTestFactory {
                 .ref("G")
                 .alt("T")
                 .canonicalCodingEffect(CodingEffect.MISSENSE)
+                .canonicalHgvsCodingImpact("c.1497G>T")
+                .canonicalHgvsProteinImpact("p.Met499Ile")
                 .notifyClinicalGeneticist(true)
                 .driverCategory(DriverCategory.TSG)
                 .gDNA("3:81627197")
-                .hgvsCodingImpact("c.1497G>T")
-                .hgvsProteinImpact("p.Met499Ile")
                 .alleleReadCount(48)
                 .totalReadCount(103)
                 .allelePloidy(1.3)

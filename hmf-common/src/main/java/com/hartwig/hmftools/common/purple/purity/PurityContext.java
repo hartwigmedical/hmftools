@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple.purity;
 
-import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.immutables.value.Value;
 

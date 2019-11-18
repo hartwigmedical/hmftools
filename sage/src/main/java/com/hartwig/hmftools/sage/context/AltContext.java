@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
@@ -53,7 +53,11 @@ public class AltContext implements VariantHotspot {
         if (newReadContext.isComplete()) {
             boolean readContextMatch = false;
             for (ReadContextCounter counter : interimReadContexts) {
-                readContextMatch |= counter.incrementCounters(newReadContext);
+                if (counter.incrementCounters(newReadContext)) {
+                    readContextMatch = true;
+                    break;
+                }
+
             }
 
             if (!readContextMatch) {

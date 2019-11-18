@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.ecrf.reader;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -130,18 +132,16 @@ public class XMLPatientReaderTest {
         assertEquals(2, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).size());
         assertEquals(1, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 0).itemGroupsPerOID().get(itemGroupOID).size());
-        assertEquals(true, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
+        assertTrue(patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 0).itemGroupsPerOID().get(itemGroupOID).get(0).isEmpty());
-        assertEquals(true,
-                patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(0).isEmpty());
+        assertTrue(patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(0).isEmpty());
         assertEquals(2, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 1).itemGroupsPerOID().get(itemGroupOID).size());
-        assertEquals(true, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
+        assertTrue(patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 1).itemGroupsPerOID().get(itemGroupOID).get(0).isEmpty());
-        assertEquals(false, patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
+        assertFalse(patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(
                 1).itemGroupsPerOID().get(itemGroupOID).get(1).isEmpty());
-        assertEquals(false,
-                patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(1).isEmpty());
+        assertFalse(patients.get(2).studyEventsPerOID().get(studyOID).get(0).formsPerOID().get(formOID).get(1).isEmpty());
         // @formatter:on
     }
 

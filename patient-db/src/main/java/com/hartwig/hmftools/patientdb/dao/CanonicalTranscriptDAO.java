@@ -56,7 +56,6 @@ class CanonicalTranscriptDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull final String assembly,
             @NotNull CanonicalTranscript transcript) {
-        //noinspection unchecked
         inserter.values(assembly,
                 transcript.gene(),
                 transcript.geneID(),

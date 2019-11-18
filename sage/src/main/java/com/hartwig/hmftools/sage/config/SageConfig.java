@@ -31,6 +31,7 @@ public interface SageConfig {
     String MIN_MAP_QUALITY = "min_map_quality";
     String MIN_BASE_QUALITY = "min_base_quality";
     String PANEL = "panel";
+    String PANEL_ONLY = "panel_only";
     String HOTSPOTS = "hotspots";
 
     int DEFAULT_THREADS = 2;
@@ -51,6 +52,7 @@ public interface SageConfig {
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
 
         options.addOption(PANEL, true, "Panel");
+        options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(HOTSPOTS, true, "Hotspots");
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
@@ -80,6 +82,8 @@ public interface SageConfig {
 
     @NotNull
     String panel();
+
+    boolean panelOnly();
 
     @NotNull
     String hotspots();
@@ -133,6 +137,7 @@ public interface SageConfig {
                 .panel(cmd.getOptionValue(PANEL, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
+                .panelOnly(cmd.hasOption(PANEL_ONLY))
                 .build();
 
     }

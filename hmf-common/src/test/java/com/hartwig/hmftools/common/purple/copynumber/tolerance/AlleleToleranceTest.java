@@ -15,7 +15,7 @@ import org.junit.Test;
 
 public class AlleleToleranceTest {
 
-    AlleleTolerance victim;
+    private AlleleTolerance victim;
 
     @Before
     public void setup() {
@@ -58,18 +58,18 @@ public class AlleleToleranceTest {
         assertEquals(6, AlleleTolerance.relativeCopyNumberChange(2.5, -0.5), 0.01);
     }
 
-    private FittedRegion createBafRegion(int bafCount, double tumorBaf, double observervedBaf) {
+    private static FittedRegion createBafRegion(int bafCount, double tumorBaf, double observedBaf) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", 100, 200)
                 .bafCount(bafCount)
                 .tumorBAF(tumorBaf)
-                .observedBAF(observervedBaf)
-                .tumorCopyNumber((double) 2)
-                .refNormalisedCopyNumber((double) 2)
+                .observedBAF(observedBaf)
+                .tumorCopyNumber(2)
+                .refNormalisedCopyNumber(2)
                 .depthWindowCount(100)
                 .build();
     }
 
-    private FittedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber) {
+    private static FittedRegion createCopyNumberRegion(int depthWindowCount, double copyNumber, double refCopyNumber) {
         return PurpleDatamodelTest.createDefaultFittedRegion("1", 100, 200)
                 .bafCount(0)
                 .tumorCopyNumber(copyNumber)

@@ -2,8 +2,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.ReportableVariant;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGainLoss;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -15,8 +13,10 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.data.HomozygousDisruptions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
+import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
@@ -94,8 +94,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         for (ReportableVariant variant : sortedVariants) {
             contentTable.addCell(TableUtil.createContentCell(SomaticVariants.geneDisplayString(variant)));
             contentTable.addCell(TableUtil.createContentCell(variant.gDNA()));
-            contentTable.addCell(TableUtil.createContentCell(variant.hgvsCodingImpact()));
-            contentTable.addCell(TableUtil.createContentCell(variant.hgvsProteinImpact()));
+            contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsCodingImpact()));
+            contentTable.addCell(TableUtil.createContentCell(variant.canonicalHgvsProteinImpact()));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(
                     variant.alleleReadCount() + " / ").setFont(ReportResources.fontBold())
                     .add(new Text(String.valueOf(variant.totalReadCount())).setFont(ReportResources.fontRegular()))

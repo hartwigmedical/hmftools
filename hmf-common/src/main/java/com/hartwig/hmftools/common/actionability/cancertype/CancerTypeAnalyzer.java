@@ -17,8 +17,8 @@ public class CancerTypeAnalyzer {
     private final PrimaryTumorToDOIDMapper primaryTumorToDOIDMapper;
 
     @NotNull
-    public static CancerTypeAnalyzer createFromKnowledgeBase(@NotNull String knowledgebaseCancerTypesPath) throws IOException {
-        return new CancerTypeAnalyzer(CancerTypeToDOIDMapper.createFromFile(knowledgebaseCancerTypesPath),
+    public static CancerTypeAnalyzer createFromKnowledgeBase(@NotNull String knowledgebaseCancerTypesTsv) throws IOException {
+        return new CancerTypeAnalyzer(CancerTypeToDOIDMapper.createFromFile(knowledgebaseCancerTypesTsv),
                 PrimaryTumorToDOIDMapper.createFromResource());
     }
 

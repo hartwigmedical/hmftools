@@ -11,7 +11,7 @@ final class Extend {
         return breakForCentromereStart(target, neighbour) || breakForStructuralVariant(target, neighbour);
     }
 
-    static boolean breakForCentromereStart(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
+    private static boolean breakForCentromereStart(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.start() < neighbour.start()) {
             return neighbour.support() == SegmentSupport.CENTROMERE;
         }
@@ -19,7 +19,7 @@ final class Extend {
         return target.region().support() == SegmentSupport.CENTROMERE;
     }
 
-    static boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
+    private static boolean breakForStructuralVariant(@NotNull final CombinedRegion target, @NotNull final FittedRegion neighbour) {
         if (target.start() < neighbour.start()) {
             return neighbour.support().isSV();
         }

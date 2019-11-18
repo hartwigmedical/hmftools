@@ -11,7 +11,7 @@ class ExtendStructuralVariant extends ExtendRegion {
         return new ExtendStructuralVariant().extend(regions);
     }
 
-    ExtendStructuralVariant() {
+    private ExtendStructuralVariant() {
         super(CopyNumberMethod.STRUCTURAL_VARIANT);
     }
 

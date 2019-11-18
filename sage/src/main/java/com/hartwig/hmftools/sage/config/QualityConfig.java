@@ -21,7 +21,7 @@ public interface QualityConfig {
     double DEFAULT_JITTER_PENALTY = 0.25;
     int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
-    int DEFAULT_MAP_QUAL_FIXED_PENALTY = 12;
+    int DEFAULT_MAP_QUAL_FIXED_PENALTY = 24;
     int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     int DEFAULT_MAP_QUAL_DISTANCE_FROM_REF = 5;
 
@@ -44,7 +44,7 @@ public interface QualityConfig {
     }
 
     default int modifiedBaseQuality(int baseQuality, int distanceFromReadEdge) {
-        return Math.min(baseQuality - baseQualityFixedPenalty(), distanceFromReadEdge) ;
+        return Math.min(baseQuality , distanceFromReadEdge) - baseQualityFixedPenalty();
     }
 
     default double jitterPenalty(int repeatCount) {

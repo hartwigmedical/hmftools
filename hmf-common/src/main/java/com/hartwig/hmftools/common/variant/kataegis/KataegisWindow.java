@@ -10,14 +10,14 @@ public class KataegisWindow {
     private long end;
     private int count;
 
-    public KataegisWindow(final VariantContext context) {
+    KataegisWindow(final VariantContext context) {
         this.contig = context.getContig();
         this.start = context.getStart();
         this.end = this.start;
         this.count = 0;
     }
 
-    public KataegisWindow(final KataegisWindow window) {
+    KataegisWindow(final KataegisWindow window) {
         this.contig = window.contig;
         this.start = window.start;
         this.end = window.end;
@@ -37,11 +37,11 @@ public class KataegisWindow {
         return end;
     }
 
-    public boolean isViable(int minCount, long maxAverageDistance) {
+    boolean isViable(int minCount, long maxAverageDistance) {
         return count() >= minCount && averageDistance() <= maxAverageDistance;
     }
 
-    public long averageDistance() {
+    long averageDistance() {
         return count == 0 || count == 1 ? 0 : Math.round(1d * (end - start) / (count - 1));
     }
 }

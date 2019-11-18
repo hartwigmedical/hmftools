@@ -3,31 +3,39 @@ package com.hartwig.hmftools.sage.variant;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 
 import org.jetbrains.annotations.NotNull;
 
+@NotThreadSafe
 public class SageVariantFactory {
 
     private final InPanel inPanel;
     private final FilterConfig config;
     private final InHotspot inHotspot;
 
+    public SageVariantFactory(@NotNull final Chromosome chromosome, @NotNull final FilterConfig config, @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions) {
+        this.config = config;
+        this.inPanel = new InPanel(chromosome, panelRegions);
+        this.inHotspot = new InHotspot(chromosome, hotspots);
+    }
+
     public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots,
             @NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions) {
-
         this.config = config;
         this.inPanel = new InPanel(panelRegions);
         this.inHotspot = new InHotspot(hotspots);
-
     }
 
     @NotNull

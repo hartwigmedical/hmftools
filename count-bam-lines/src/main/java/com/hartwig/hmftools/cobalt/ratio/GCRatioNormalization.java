@@ -62,7 +62,7 @@ class GCRatioNormalization {
         return ImmutableReadRatio.builder().from(readCount).ratio(ratio).build();
     }
 
-    private class ReadCountWithGCContent implements GenomePosition {
+    private static class ReadCountWithGCContent implements GenomePosition {
 
         private final GCProfile gcProfile;
         private final int readCount;

@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 
 import org.jetbrains.annotations.NotNull;
 

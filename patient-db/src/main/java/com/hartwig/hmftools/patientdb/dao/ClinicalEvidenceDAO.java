@@ -48,7 +48,6 @@ class ClinicalEvidenceDAO {
 
     private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep11 inserter,
             @NotNull Timestamp timestamp) {
-        //noinspection unchecked
         inserter.values(sample,
                 timestamp,
                 evidenceItem.event(),

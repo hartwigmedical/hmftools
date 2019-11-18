@@ -6,10 +6,10 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.bachelor.types.BachelorGermlineVariant;
-import com.hartwig.hmftools.common.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
-import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidence;
-import com.hartwig.hmftools.common.hotspot.VariantHotspotEvidenceFactory;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidence;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotEvidenceFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

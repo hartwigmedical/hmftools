@@ -38,6 +38,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class StrelkaPostProcessApplication {
+
     private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcessApplication.class);
 
     private static final String HIGH_CONFIDENCE_BED = "hc_bed";

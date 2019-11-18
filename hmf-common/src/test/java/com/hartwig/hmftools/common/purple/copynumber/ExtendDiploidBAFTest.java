@@ -122,7 +122,7 @@ public class ExtendDiploidBAFTest {
     }
 
     @Test
-    public void testMinorOrMajorMovedTargetPloidyWithCommonMakor() {
+    public void testMinorOrMajorMovedTargetPloidyWithCommonMajor() {
         final FittedRegion left = create(1.01, 2.01);
         final FittedRegion right = create(0.02, 2.02);
         final FittedRegion sourceLikeLeft = create(1.03, 2.03);

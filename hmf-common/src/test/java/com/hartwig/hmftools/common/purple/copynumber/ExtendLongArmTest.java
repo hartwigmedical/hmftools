@@ -121,7 +121,7 @@ public class ExtendLongArmTest {
     }
 
     @NotNull
-    static CombinedRegion createCombinedRegion(String chromosome, long start, long end, double copyNumber, double baf,
+    private static CombinedRegion createCombinedRegion(String chromosome, long start, long end, double copyNumber, double baf,
             SegmentSupport support) {
         final FittedRegion region = PurpleDatamodelTest.createDefaultFittedRegion(chromosome, start, end)
                 .tumorCopyNumber(copyNumber)

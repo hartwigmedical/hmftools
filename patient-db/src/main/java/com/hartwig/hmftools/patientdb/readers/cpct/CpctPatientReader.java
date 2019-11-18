@@ -27,6 +27,7 @@ import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
 import org.jetbrains.annotations.NotNull;
 
 public class CpctPatientReader implements EcrfPatientReader {
+
     @NotNull
     private final BaselineReader baselineReader;
     @NotNull

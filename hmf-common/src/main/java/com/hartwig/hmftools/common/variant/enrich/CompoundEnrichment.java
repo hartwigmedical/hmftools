@@ -14,11 +14,6 @@ public class CompoundEnrichment extends ArrayList<SomaticEnrichment> implements 
         super();
     }
 
-    public CompoundEnrichment(@NotNull SomaticEnrichment initialEnrichment) {
-        super();
-        add(initialEnrichment);
-    }
-
     @NotNull
     @Override
     public ImmutableSomaticVariantImpl.Builder enrich(@NotNull final ImmutableSomaticVariantImpl.Builder builder,

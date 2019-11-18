@@ -75,42 +75,45 @@ public final class LoadClinicalData {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (checkInputs(cmd)) {
-            LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
-            final DatabaseAccess dbWriter = createDbWriter(cmd);
-
-            LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
-            final List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
-            final Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
-            final Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
-
-            LOGGER.info(" Loaded sequence runs for {} patient IDs ({} samples)",
-                    sequencedPatientIds.size(),
-                    toUniqueSampleIds(sequencedSamplesPerPatient).size());
-
-            LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
-            final Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
-            final Map<String, List<SampleData>> sampleDataPerPatient = extractAllSamplesFromLims(lims, sequencedSamplesPerPatient);
-            LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",
-                    sampleDataPerPatient.keySet().size(),
-                    countValues(sampleDataPerPatient));
-
-            final EcrfModels ecrfModels = loadEcrfModels(cmd);
-
-            if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
-                writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
-            }
-
-            writeClinicalData(dbWriter,
-                    sequencedPatientIds,
-                    sampleDataPerPatient,
-                    ecrfModels,
-                    cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                    Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)));
-        } else {
+        if (!checkInputs(cmd)) {
             final HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
+            System.exit(1);
         }
+
+        LOGGER.info("Connecting to database {}", cmd.getOptionValue(DB_URL));
+        final DatabaseAccess dbWriter = createDbWriter(cmd);
+
+        LOGGER.info("Loading sequence runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
+        final List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
+        final Map<String, List<String>> sequencedSamplesPerPatient = extractSequencedSamplesFromRunContexts(runContexts);
+        final Map<String, String> sampleToSetNameMap = extractSampleToSetNameMap(runContexts);
+        final Set<String> sequencedPatientIds = sequencedSamplesPerPatient.keySet();
+
+        LOGGER.info(" Loaded sequence runs for {} patient IDs ({} samples)",
+                sequencedPatientIds.size(),
+                toUniqueSampleIds(sequencedSamplesPerPatient).size());
+
+        LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
+        final Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
+        final Map<String, List<SampleData>> sampleDataPerPatient =
+                extractAllSamplesFromLims(lims, sampleToSetNameMap, sequencedSamplesPerPatient);
+        LOGGER.info(" Loaded samples for {} patient IDs ({} samples)",
+                sampleDataPerPatient.keySet().size(),
+                countValues(sampleDataPerPatient));
+
+        final EcrfModels ecrfModels = loadEcrfModels(cmd);
+
+        if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
+            writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
+        }
+
+        writeClinicalData(dbWriter,
+                sequencedPatientIds,
+                sampleDataPerPatient,
+                ecrfModels,
+                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
+                Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)));
     }
 
     @NotNull
@@ -119,6 +122,18 @@ public final class LoadClinicalData {
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;
+    }
+
+    @NotNull
+    private static Map<String, String> extractSampleToSetNameMap(@NotNull List<RunContext> runContexts) {
+        Map<String, String> sampleToSetNameMap = Maps.newHashMap();
+        for (RunContext runContext : runContexts) {
+            if (sampleToSetNameMap.containsKey(runContext.tumorSample())) {
+                LOGGER.warn("Duplicate sample ID found in run contexts: {}", runContext.tumorSample());
+            }
+            sampleToSetNameMap.put(runContext.tumorSample(), runContext.setName());
+        }
+        return sampleToSetNameMap;
     }
 
     @NotNull
@@ -140,8 +155,9 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, List<SampleData>> extractAllSamplesFromLims(@NotNull Lims lims,
+            @NotNull Map<String, String> sampleToSetNameMap,
             @NotNull Map<String, List<String>> sequencedSamplesPerPatient) {
-        LimsSampleReader sampleReader = new LimsSampleReader(lims, toUniqueSampleIds(sequencedSamplesPerPatient));
+        LimsSampleReader sampleReader = new LimsSampleReader(lims, sampleToSetNameMap, toUniqueSampleIds(sequencedSamplesPerPatient));
 
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
@@ -176,7 +192,7 @@ public final class LoadClinicalData {
                 if (!sampleIdExistsInSampleDataList(samples, sampleId)) {
                     LOGGER.info(" Creating sample data for {}. This sample is not found in LIMS even though it has been sequenced!",
                             sampleId);
-                    SampleData sampleData = sampleReader.readWithoutBarcode(sampleId);
+                    SampleData sampleData = sampleReader.readSequencedSampleWithoutBarcode(sampleId);
                     if (sampleData != null) {
                         samples.add(sampleData);
                     }

@@ -31,7 +31,7 @@ public class HmfExonPanelBedTest {
     @Test
     @Ignore
     public void write19() throws IOException {
-        String filename = "/Users/jon/hmf/resources/ExonPanel.hg19.bed";
+        String filename = "/Users/jon/hmf/resources/ActionableExonPanel.hg19.bed";
         HmfExonPanelBed.write19File(filename);
         BEDFileLoader.fromBedFile(filename);
     }
@@ -39,7 +39,7 @@ public class HmfExonPanelBedTest {
     @Test
     @Ignore
     public void write38() throws IOException {
-        String filename = "/Users/jon/hmf/resources/ExonPanel.hg38.bed";
+        String filename = "/Users/jon/hmf/resources/ActionableExonPanel.hg38.bed";
         HmfExonPanelBed.write38File(filename);
         BEDFileLoader.fromBedFile(filename);
     }

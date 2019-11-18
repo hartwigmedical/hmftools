@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
 class ValidationFindingDAO {
+
     @NotNull
     private final DSLContext context;
 

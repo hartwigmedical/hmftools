@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
@@ -185,7 +184,6 @@ class RecoveredVariantFactory implements AutoCloseable {
     @NotNull
     private List<VariantContext> findVariants(@NotNull final String chromosome, final long lowerBound, final long upperBound)
             throws IOException {
-
         return reader.query(chromosome, (int) lowerBound, (int) upperBound)
                 .stream()
                 .filter(RecoveredVariantFactory::isAppropriatelyFiltered)
@@ -201,7 +199,6 @@ class RecoveredVariantFactory implements AutoCloseable {
     @NotNull
     private VariantContext findMate(@NotNull final String id, @NotNull final String chromosome, final long min, final long max)
             throws IOException {
-
         return reader.query(chromosome, (int) min, (int) max)
                 .stream()
                 .filter(x -> x.getID().equals(id))
@@ -237,18 +234,6 @@ class RecoveredVariantFactory implements AutoCloseable {
     @Nullable
     private static Long matePosition(@Nullable String mate) {
         return mate == null || !mate.contains(":") ? null : Long.valueOf(mate.split(":")[1]);
-    }
-
-    @VisibleForTesting
-    private static <T extends GenomeRegion> int indexOf(long cnaPosition, @NotNull final List<T> regions) {
-        assert (!regions.isEmpty());
-        for (int i = 0; i < regions.size(); i++) {
-            if (regions.get(i).start() == cnaPosition) {
-                return i;
-            }
-        }
-
-        return -1;
     }
 
     @Override

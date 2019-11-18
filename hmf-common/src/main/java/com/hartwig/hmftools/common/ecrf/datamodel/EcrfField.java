@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public interface EcrfField {
+
     String OID_SEPARATOR = ".";
 
     List<String> IRRELEVANT_ITEM_GROUP_OIDS =
@@ -32,7 +33,7 @@ public interface EcrfField {
     }
 
     default boolean isRelevant() {
-        String parts[] = name().split("\\" + OID_SEPARATOR);
+        String[] parts = name().split("\\" + OID_SEPARATOR);
         String itemGroup = parts[2];
         String item = parts[3];
         return !(IRRELEVANT_ITEM_GROUP_OIDS.contains(itemGroup) || IRRELEVANT_ITEM_OIDS.contains(item) || item.contains(

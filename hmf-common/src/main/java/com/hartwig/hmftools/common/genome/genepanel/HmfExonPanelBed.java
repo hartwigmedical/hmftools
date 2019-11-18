@@ -24,14 +24,11 @@ final class HmfExonPanelBed {
     private static final String DELIMITER = "\t";
     static final int EXTRA_BASES = 2;
 
-    private HmfExonPanelBed() {
-    }
-
-    static void write19File(@NotNull final String filename) throws IOException {
+    public static void write19File(@NotNull final String filename) throws IOException {
         writeBedFile(filename, Strings.EMPTY, createRegions(HmfGenePanelSupplier.allGeneList37()));
     }
 
-    static void write38File(@NotNull final String filename) throws IOException {
+    public static void write38File(@NotNull final String filename) throws IOException {
         writeBedFile(filename, "chr", createRegions(HmfGenePanelSupplier.allGeneList38()));
     }
 
@@ -69,4 +66,5 @@ final class HmfExonPanelBed {
                 .add(String.valueOf(region.end()))
                 .toString();
     }
+
 }

@@ -28,5 +28,4 @@ public abstract class CosmicAnnotation implements TranscriptAnnotation {
     public abstract String hgvsProtein();
 
     public abstract int count();
-
 }

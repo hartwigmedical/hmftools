@@ -84,19 +84,19 @@ public final class GeneCopyNumberFile {
     @NotNull
     private static String toString(@NotNull final GeneCopyNumber geneCopyNumber) {
 
-        return new StringJoiner(DELIMITER).add(String.valueOf(geneCopyNumber.chromosome()))
+        return new StringJoiner(DELIMITER).add(geneCopyNumber.chromosome())
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
-                .add(String.valueOf(geneCopyNumber.gene()))
+                .add(geneCopyNumber.gene())
                 .add(FORMAT.format(geneCopyNumber.minCopyNumber()))
                 .add(FORMAT.format(geneCopyNumber.maxCopyNumber()))
                 .add(String.valueOf(0))
                 .add(String.valueOf(geneCopyNumber.somaticRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHomRegions()))
                 .add(String.valueOf(geneCopyNumber.germlineHet2HomRegions()))
-                .add(String.valueOf(geneCopyNumber.transcriptID()))
+                .add(geneCopyNumber.transcriptID())
                 .add(String.valueOf(geneCopyNumber.transcriptVersion()))
-                .add(String.valueOf(geneCopyNumber.chromosomeBand()))
+                .add(geneCopyNumber.chromosomeBand())
                 .add(String.valueOf(geneCopyNumber.minRegions()))
                 .add(String.valueOf(geneCopyNumber.minRegionStart()))
                 .add(String.valueOf(geneCopyNumber.minRegionEnd()))
@@ -123,36 +123,36 @@ public final class GeneCopyNumberFile {
 
         final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                 .chromosome(values[0])
-                .start(Long.valueOf(values[1]))
-                .end(Long.valueOf(values[2]))
+                .start(Long.parseLong(values[1]))
+                .end(Long.parseLong(values[2]))
                 .gene(values[3])
-                .minCopyNumber(Double.valueOf(values[4]))
-                .maxCopyNumber(Double.valueOf(values[5]))
-                .somaticRegions(Integer.valueOf(values[7]))
-                .germlineHomRegions(Integer.valueOf(values[8]))
-                .germlineHet2HomRegions(Integer.valueOf(values[9]))
+                .minCopyNumber(Double.parseDouble(values[4]))
+                .maxCopyNumber(Double.parseDouble(values[5]))
+                .somaticRegions(Integer.parseInt(values[7]))
+                .germlineHomRegions(Integer.parseInt(values[8]))
+                .germlineHet2HomRegions(Integer.parseInt(values[9]))
                 .transcriptID(values[10])
-                .transcriptVersion(Integer.valueOf(values[11]))
+                .transcriptVersion(Integer.parseInt(values[11]))
                 .chromosomeBand(values[12]);
 
         builder.minRegions(0)
-                .minRegionStart(Long.valueOf(values[1]))
-                .minRegionEnd(Long.valueOf(values[2]))
+                .minRegionStart(Long.parseLong(values[1]))
+                .minRegionEnd(Long.parseLong(values[2]))
                 .minRegionMethod(CopyNumberMethod.UNKNOWN)
                 .minRegionStartSupport(SegmentSupport.NONE)
                 .minRegionEndSupport(SegmentSupport.NONE)
                 .minMinorAllelePloidy(0);
 
         if (values.length >= 19) {
-            builder.minRegions(Integer.valueOf(values[13]))
-                    .minRegionStart(Long.valueOf(values[14]))
-                    .minRegionEnd(Long.valueOf(values[15]))
+            builder.minRegions(Integer.parseInt(values[13]))
+                    .minRegionStart(Long.parseLong(values[14]))
+                    .minRegionEnd(Long.parseLong(values[15]))
                     .minRegionStartSupport(SegmentSupport.valueOf(values[16]))
                     .minRegionEndSupport(SegmentSupport.valueOf(values[17]))
                     .minRegionMethod(CopyNumberMethod.valueOf(values[18]));
         }
 
-        builder.minMinorAllelePloidy(Double.valueOf(values[values.length - 1]));
+        builder.minMinorAllelePloidy(Double.parseDouble(values[values.length - 1]));
 
         return builder.build();
     }

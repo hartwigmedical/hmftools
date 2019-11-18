@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class VariantScore {
+
     public abstract ReadType type();
 
     public abstract int score();
@@ -23,7 +24,7 @@ public abstract class VariantScore {
     }
 
     private static int avgQuality(@NotNull final String baseQualities) {
-        return (int) Math.floor(totalQuality(baseQualities) / baseQualities.length());
+        return (int) Math.floor(totalQuality(baseQualities) / (double) baseQualities.length());
     }
 
     private static int totalQuality(@NotNull final String baseQualities) {

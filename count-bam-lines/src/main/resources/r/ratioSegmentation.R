@@ -5,7 +5,7 @@ column <- args[2]
 pcfFile <- args[3]
 
 library(copynumber)
-ratio <- read.table(ratioFile, header = TRUE)
+ratio <- read.table(ratioFile, header = TRUE, stringsAsFactors = T)
 
 chromosomeLevels = levels(ratio$chromosome)
 chromosomePrefix = ""

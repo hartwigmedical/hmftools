@@ -14,6 +14,7 @@ import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomoz
 import org.junit.Test;
 
 public class HomozygousDisruptionAnalyzerTest {
+
     private static final String LINX_DRIVERS_CATALOG_TSV = Resources.getResource("test_run/linx/sample.drivers.catalog.tsv").getPath();
 
     @Test

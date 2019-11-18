@@ -18,6 +18,11 @@ class InPanel {
 
     private final Map<Chromosome, RegionSelector<GenomeRegion>> panelSelectorMap;
 
+    InPanel(@NotNull final Chromosome chromosome, @NotNull final List<GenomeRegion> regions) {
+        this.panelSelectorMap = Maps.newHashMap();
+        panelSelectorMap.put(chromosome, new RegionSelector<>(regions));
+    }
+
     InPanel(@NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions) {
         this.panelSelectorMap = Maps.newHashMap();
         for (Chromosome chromosome : panelRegions.keySet()) {

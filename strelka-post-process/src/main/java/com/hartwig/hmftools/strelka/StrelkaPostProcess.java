@@ -6,8 +6,8 @@ import java.util.function.Function;
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.slicing.Slicer;
-import com.hartwig.hmftools.common.strelka.StrelkaAllelicDepth;
 import com.hartwig.hmftools.common.variant.filter.HotspotFilter;
+import com.hartwig.hmftools.common.variant.strelka.StrelkaAllelicDepth;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +21,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 final class StrelkaPostProcess implements VariantContextFilter {
+
     private static final Logger LOGGER = LogManager.getLogger(StrelkaPostProcess.class);
 
     private static final String SNP_QUAL_FIELD = "QSS_NT";

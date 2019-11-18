@@ -8,11 +8,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.sam.SimpleSamSlicer;
+import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.apache.logging.log4j.LogManager;
@@ -31,23 +29,23 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefContextCandidates candidates;
     private final String bamFile;
     private final RefContextConsumer refContextConsumer;
-    private final PositionSelector<ReadContextCounter> consumerSelector;
+    private final PositionSelector<AltContext> consumerSelector;
     private final int minQuality;
     private final SageConfig sageConfig;
+    private final SamSlicerFactory samSlicerFactory;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
+            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates,
+            @NotNull final SamSlicerFactory samSlicerFactory) {
         this.minQuality = config.minMapQuality();
         this.bounds = bounds;
         this.candidates = candidates;
         this.bamFile = bamFile;
         this.sageConfig = config;
+        this.samSlicerFactory = samSlicerFactory;
         refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
-        consumerSelector = new PositionSelector<>(candidates.refContexts()
-                .stream()
-                .flatMap(x -> x.alts().stream())
-                .map(AltContext::primaryReadContext)
-                .collect(Collectors.toList()));
+        consumerSelector =
+                new PositionSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
     }
 
@@ -57,16 +55,11 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         LOGGER.info("Normal candidates position {}:{}", bounds.chromosome(), bounds.start());
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
-            new SimpleSamSlicer(0, Lists.newArrayList(bounds)).slice(tumorReader, this);
+            samSlicerFactory.create(bounds).slice(tumorReader, this);
         } catch (IOException e) {
             throw new CompletionException(e);
         }
 
-        return candidates.refContexts();
-    }
-
-    @NotNull
-    public List<RefContext> refContexts() {
         return candidates.refContexts();
     }
 
@@ -75,7 +68,9 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         refContextConsumer.accept(samRecord);
 
         if (samRecord.getMappingQuality() >= minQuality) {
-            consumerSelector.select(samRecord.getAlignmentStart(), samRecord.getAlignmentEnd(), x -> x.accept(samRecord, sageConfig));
+            consumerSelector.select(samRecord.getAlignmentStart(),
+                    samRecord.getAlignmentEnd(),
+                    x -> x.primaryReadContext().accept(x.readDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
         }
     }
 }

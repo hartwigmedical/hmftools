@@ -73,9 +73,9 @@ final class DndsDriverGeneLikelihoodFile {
     @NotNull
     private static DndsDriverImpactLikelihood fromString(int offset, @NotNull final String[] values) {
         return ImmutableDndsDriverImpactLikelihood.builder()
-                .dndsLikelihood(Double.valueOf(values[offset++]))
-                .pDriver(Double.valueOf(values[offset++]))
-                .pVariantNonDriverFactor(Double.valueOf(values[offset]))
+                .dndsLikelihood(Double.parseDouble(values[offset++]))
+                .pDriver(Double.parseDouble(values[offset++]))
+                .pVariantNonDriverFactor(Double.parseDouble(values[offset]))
                 .build();
     }
 

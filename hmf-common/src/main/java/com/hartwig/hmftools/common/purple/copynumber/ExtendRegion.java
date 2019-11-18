@@ -14,7 +14,6 @@ abstract class ExtendRegion {
 
     @NotNull
     public List<CombinedRegion> extend(@NotNull final List<CombinedRegion> regions) {
-
         for (int i = 0; i < regions.size(); i++) {
 
             CombinedRegion region = regions.get(i);
@@ -78,5 +77,4 @@ abstract class ExtendRegion {
 
         return startIndex - targetIndex - 1;
     }
-
 }

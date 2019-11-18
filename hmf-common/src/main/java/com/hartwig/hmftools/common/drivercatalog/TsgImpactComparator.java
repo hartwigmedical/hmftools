@@ -9,7 +9,7 @@ import java.util.Comparator;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
-public class TsgImpactComparator implements Comparator<SomaticVariant> {
+class TsgImpactComparator implements Comparator<SomaticVariant> {
 
     @Override
     public int compare(final SomaticVariant o1, final SomaticVariant o2) {

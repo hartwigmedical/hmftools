@@ -40,20 +40,13 @@ public class DriverCatalogFile {
     }
 
     @NotNull
-     static List<DriverCatalog> fromLines(@NotNull final List<String> lines) {
-
-        final List<DriverCatalog> result = lines.stream()
-                .skip(1)
-                .map(x -> fromString(x))
-                .collect(Collectors.toList());
-
-        return result;
+    static List<DriverCatalog> fromLines(@NotNull final List<String> lines) {
+        return lines.stream().skip(1).map(x -> fromString(x)).collect(Collectors.toList());
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "")
-                .add("chromosome")
+        return new StringJoiner(DELIMITER, "", "").add("chromosome")
                 .add("chromosomeBand")
                 .add("gene")
                 .add("driver")
@@ -74,10 +67,9 @@ public class DriverCatalogFile {
 
     @NotNull
     private static String toString(@NotNull final DriverCatalog ratio) {
-        return new StringJoiner(DELIMITER)
-                .add(String.valueOf(ratio.chromosome()))
-                .add(String.valueOf(ratio.chromosomeBand()))
-                .add(String.valueOf(ratio.gene()))
+        return new StringJoiner(DELIMITER).add(ratio.chromosome())
+                .add(ratio.chromosomeBand())
+                .add(ratio.gene())
                 .add(String.valueOf(ratio.driver()))
                 .add(String.valueOf(ratio.category()))
                 .add(String.valueOf(ratio.likelihoodMethod()))
@@ -104,16 +96,16 @@ public class DriverCatalogFile {
                 .driver(DriverType.valueOf(values[3]))
                 .category(DriverCategory.valueOf(values[4]))
                 .likelihoodMethod(LikelihoodMethod.valueOf(values[5]))
-                .driverLikelihood(Double.valueOf(values[6]))
-                .dndsLikelihood(Double.valueOf(values[7]))
-                .missense(Long.valueOf(values[8]))
-                .nonsense(Long.valueOf(values[9]))
-                .splice(Long.valueOf(values[10]))
-                .inframe(Long.valueOf(values[11]))
-                .frameshift(Long.valueOf(values[12]))
-                .biallelic(Boolean.valueOf(values[13]))
-                .minCopyNumber(Double.valueOf(values[14]))
-                .maxCopyNumber(Double.valueOf(values[15]));
+                .driverLikelihood(Double.parseDouble(values[6]))
+                .dndsLikelihood(Double.parseDouble(values[7]))
+                .missense(Long.parseLong(values[8]))
+                .nonsense(Long.parseLong(values[9]))
+                .splice(Long.parseLong(values[10]))
+                .inframe(Long.parseLong(values[11]))
+                .frameshift(Long.parseLong(values[12]))
+                .biallelic(Boolean.parseBoolean(values[13]))
+                .minCopyNumber(Double.parseDouble(values[14]))
+                .maxCopyNumber(Double.parseDouble(values[15]));
 
         return builder.build();
     }

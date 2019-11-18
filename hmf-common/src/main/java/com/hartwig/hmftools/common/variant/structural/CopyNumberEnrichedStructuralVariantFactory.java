@@ -70,7 +70,7 @@ public final class CopyNumberEnrichedStructuralVariantFactory {
                     endBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(endPloidy)));
                 }
             } else {
-                // Can't always get plodies (if no vaf for example) but we can still get copy number info
+                // Can't always get ploidies (if no vaf for example) but we can still get copy number info
                 final StructuralVariantLegCopyNumber startCopyNumber = copyNumberFactory.create(variant.start(), copyNumbers);
                 startBuilder.adjustedCopyNumber((startCopyNumber.adjustedCopyNumber()));
                 startBuilder.adjustedCopyNumberChange((changeFactory.copyNumberChange(startCopyNumber)));

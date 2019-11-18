@@ -113,7 +113,7 @@ class ExtendDiploidBAF {
             secondarySource = regions.get(inferRegion.leftSourceIndex).region();
         }
 
-        if (minCopyNumberLessThanSourceMajorAllelePloidys(inferRegion, regions)) {
+        if (minCopyNumberLessThanSourceMajorAllelePloidies(inferRegion, regions)) {
             return primarySource.minorAllelePloidy();
         }
 
@@ -347,7 +347,7 @@ class ExtendDiploidBAF {
         return inferRegion.leftTargetIndex == inferRegion.rightTargetIndex && regions.get(inferRegion.leftTargetIndex).bases() <= maxSize;
     }
 
-    private static boolean minCopyNumberLessThanSourceMajorAllelePloidys(@NotNull InferRegion inferRegion,
+    private static boolean minCopyNumberLessThanSourceMajorAllelePloidies(@NotNull InferRegion inferRegion,
             @NotNull final List<CombinedRegion> regions) {
         assert (inferRegion.isRightValid());
         assert (inferRegion.isLeftValid());

@@ -21,6 +21,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MNVScore {
+
     private static final double MNV_SCORE_THRESHOLD = 0.8;
 
     @NotNull

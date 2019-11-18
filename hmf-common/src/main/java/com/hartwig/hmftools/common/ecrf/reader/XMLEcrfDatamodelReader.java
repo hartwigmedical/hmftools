@@ -142,7 +142,7 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
         while (!isCodeListEnd(reader)) {
             next(reader);
             if (isCodeListItem(reader)) {
-                int index = Integer.valueOf(reader.getAttributeValue("", CODE_LIST_ITEM_VALUE_ATTRIBUTE));
+                int index = Integer.parseInt(reader.getAttributeValue("", CODE_LIST_ITEM_VALUE_ATTRIBUTE));
                 while (!isCodeListItemContent(reader)) {
                     next(reader);
                 }

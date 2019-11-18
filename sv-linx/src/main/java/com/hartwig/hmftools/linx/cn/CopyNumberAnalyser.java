@@ -122,7 +122,7 @@ public class CopyNumberAnalyser
 
     public void runAnalysis()
     {
-        final List<String> samplesList = mSampleIds.isEmpty() ? mDbAccess.getSampleIds() : mSampleIds;
+        final List<String> samplesList = mSampleIds.isEmpty() ? mDbAccess.readPurpleSampleList() : mSampleIds;
 
         int sampleCount = 0;
         for (final String sampleId : samplesList)

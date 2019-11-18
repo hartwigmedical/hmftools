@@ -7,9 +7,10 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.gender.Gender;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,14 +23,14 @@ public final class FittedPurityFile {
     private static final String EXTENSION_OLD = ".purple.purity";
 
     @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
-        String filename = basePath + File.separator + sample + EXTENSION;
-        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
+    public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
+        return read(generateFilenameForReading(basePath, sample));
     }
 
     @NotNull
-    public static PurityContext read(@NotNull final String basePath, @NotNull final String sample) throws IOException {
-        return read(generateFilenameForReading(basePath, sample));
+    private static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample) {
+        String filename = basePath + File.separator + sample + EXTENSION;
+        return (new File(filename).exists()) ? filename : basePath + File.separator + sample + EXTENSION_OLD;
     }
 
     @NotNull
@@ -38,6 +39,7 @@ public final class FittedPurityFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static PurityContext fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder()
@@ -52,11 +54,11 @@ public final class FittedPurityFile {
                 .wholeGenomeDuplication(false);
 
         if (values.length > 16) {
-            builder.wholeGenomeDuplication(Boolean.valueOf(values[16]));
+            builder.wholeGenomeDuplication(Boolean.parseBoolean(values[16]));
         }
 
         if (values.length > 18) {
-            builder.microsatelliteIndelsPerMb(Double.valueOf(values[17]));
+            builder.microsatelliteIndelsPerMb(Double.parseDouble(values[17]));
             builder.microsatelliteStatus(MicrosatelliteStatus.valueOf(values[18]));
         }
 
@@ -80,6 +82,7 @@ public final class FittedPurityFile {
     }
 
     @NotNull
+    @VisibleForTesting
     static List<String> toLines(@NotNull final PurityContext context) {
         return Lists.newArrayList(header(), toString(context));
     }
@@ -137,15 +140,15 @@ public final class FittedPurityFile {
     @NotNull
     private static FittedPurity bestFit(@NotNull final String[] values) {
         final ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder()
-                .purity(Double.valueOf(values[0]))
-                .normFactor(Double.valueOf(values[1]))
-                .score(Double.valueOf(values[2]))
-                .diploidProportion(Double.valueOf(values[3]))
-                .ploidy(Double.valueOf(values[4]))
+                .purity(Double.parseDouble(values[0]))
+                .normFactor(Double.parseDouble(values[1]))
+                .score(Double.parseDouble(values[2]))
+                .diploidProportion(Double.parseDouble(values[3]))
+                .ploidy(Double.parseDouble(values[4]))
                 .somaticPenalty(0);
 
         if (values.length > 15) {
-            builder.somaticPenalty(Double.valueOf(values[15]));
+            builder.somaticPenalty(Double.parseDouble(values[15]));
         }
 
         return builder.build();
@@ -164,16 +167,16 @@ public final class FittedPurityFile {
     @NotNull
     private static FittedPurityScore score(@NotNull final String[] values) {
         return ImmutableFittedPurityScore.builder()
-                .minPurity(Double.valueOf(values[8]))
-                .maxPurity(Double.valueOf(values[9]))
-                .minPloidy(Double.valueOf(values[10]))
-                .maxPloidy(Double.valueOf(values[11]))
-                .minDiploidProportion(Double.valueOf(values[12]))
-                .maxDiploidProportion(Double.valueOf(values[13]))
+                .minPurity(Double.parseDouble(values[8]))
+                .maxPurity(Double.parseDouble(values[9]))
+                .minPloidy(Double.parseDouble(values[10]))
+                .maxPloidy(Double.parseDouble(values[11]))
+                .minDiploidProportion(Double.parseDouble(values[12]))
+                .maxDiploidProportion(Double.parseDouble(values[13]))
                 .build();
     }
 
     private static double polyClonalProportion(@NotNull final String[] values) {
-        return Double.valueOf(values[7]);
+        return Double.parseDouble(values[7]);
     }
 }

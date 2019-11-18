@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleQCFactory {
 
-    private static EnumSet<SegmentSupport> INTERNAL = EnumSet.of(NONE, CENTROMERE, TELOMERE, INF);
+    private static final EnumSet<SegmentSupport> INTERNAL = EnumSet.of(NONE, CENTROMERE, TELOMERE, INF);
 
     private PurpleQCFactory() {
     }
@@ -50,5 +50,4 @@ public final class PurpleQCFactory {
     private static boolean isStructuralVariantBreak(@NotNull PurpleCopyNumber copyNumber) {
         return !INTERNAL.contains(copyNumber.segmentStartSupport());
     }
-
 }

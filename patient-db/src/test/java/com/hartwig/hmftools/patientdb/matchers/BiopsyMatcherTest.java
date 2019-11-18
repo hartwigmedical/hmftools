@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.biopsyBui
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
@@ -220,10 +221,10 @@ public class BiopsyMatcherTest {
             @Nullable String... expectedSampleIds) {
         final List<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples("patient", sequencedBiopsies, clinicalBiopsies).values();
-        assertTrue(clinicalBiopsies.size() == matchedBiopsies.size());
+        assertEquals(clinicalBiopsies.size(), matchedBiopsies.size());
 
         if (expectedSampleIds == null) {
-            assertEquals(null, matchedBiopsies.get(0).sampleId());
+            assertNull(matchedBiopsies.get(0).sampleId());
         } else {
             Collections.sort(matchedBiopsies);
             for (int i = 0; i < expectedSampleIds.length; i++) {

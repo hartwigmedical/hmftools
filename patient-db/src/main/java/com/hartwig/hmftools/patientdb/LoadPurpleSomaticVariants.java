@@ -36,11 +36,11 @@ public class LoadPurpleSomaticVariants {
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         final String tumorSample = cmd.getOptionValue(SAMPLE);
-        final String vcfPath = cmd.getOptionValue(SOMATIC_VCF);
+        final String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
-        LOGGER.info("Reading data from {}", vcfPath);
+        LOGGER.info("Reading data from {}", somaticVcf);
         final SomaticVariantFactory factory = SomaticVariantFactory.unfilteredInstance();
-        final List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, vcfPath);
+        final List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, somaticVcf);
 
         LOGGER.info("Persisting to db");
         dbAccess.writeSomaticVariants(cmd.getOptionValue(ALIAS, tumorSample), variants);

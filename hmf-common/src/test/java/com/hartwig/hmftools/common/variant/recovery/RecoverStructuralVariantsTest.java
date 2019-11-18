@@ -28,7 +28,7 @@ public class RecoverStructuralVariantsTest {
 
     @Injectable
     private RecoveredVariantFactory recoveredVariantFactory;
-    private PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
+    private final PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 1, 0.68);
 
     @Test
     public void testRecoverUnbalancedSingle() throws IOException {
@@ -125,13 +125,11 @@ public class RecoverStructuralVariantsTest {
 
     @NotNull
     private static StructuralVariant createDel() {
-        return PurpleDatamodelTest.createStructuralVariant("1", (long) 10000, "1", (long) 20000, StructuralVariantType.DEL, 0.9, 0.9)
-                .build();
+        return PurpleDatamodelTest.createStructuralVariant("1", 10000, "1", 20000, StructuralVariantType.DEL, 0.9, 0.9).build();
     }
 
     @NotNull
     private static PurpleCopyNumber create(final long start, final long end, final double copyNumber, int depthWindowCount) {
         return PurpleDatamodelTest.createCopyNumber("1", start, end, copyNumber).depthWindowCount(depthWindowCount).build();
     }
-
 }

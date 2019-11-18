@@ -121,9 +121,7 @@ public class AmberApplication implements AutoCloseable {
     }
 
     private void runNormalMode() throws InterruptedException, ExecutionException, IOException {
-        final SamReaderFactory readerFactory = config.refGenomePath().isEmpty()
-                ? SamReaderFactory.make()
-                : SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
+        final SamReaderFactory readerFactory = readerFactory(config);
 
         final ListMultimap<Chromosome, BaseDepth> unfilteredNormal = normalDepth(readerFactory, sites);
 
@@ -150,9 +148,7 @@ public class AmberApplication implements AutoCloseable {
     }
 
     private void runTumorOnly() throws InterruptedException, ExecutionException, IOException {
-        final SamReaderFactory readerFactory = config.refGenomePath().isEmpty()
-                ? SamReaderFactory.make()
-                : SamReaderFactory.make().referenceSource(new ReferenceSource(new File(config.refGenomePath())));
+        final SamReaderFactory readerFactory = readerFactory(config);
 
         final ListMultimap<Chromosome, BaseDepth> allNormal = emptyNormalHetSites(sites);
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, allNormal);
@@ -291,6 +287,15 @@ public class AmberApplication implements AutoCloseable {
             result.add(chromosomeBAFEvidenceFuture.get());
         }
         return result;
+    }
+
+    @NotNull
+    private static SamReaderFactory readerFactory(@NotNull final AmberConfig config) {
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.validationStringency());
+        if (!config.refGenomePath().isEmpty()) {
+            return readerFactory.referenceSource(new ReferenceSource(new File(config.refGenomePath())));
+        }
+        return readerFactory;
     }
 
     @Override

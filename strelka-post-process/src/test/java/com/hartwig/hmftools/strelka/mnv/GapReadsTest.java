@@ -17,5 +17,4 @@ public class GapReadsTest {
         final GapReads multiNSingleA = GapReads.addRead(multiN, 'A');
         assertEquals((Character) 'A', multiNSingleA.mostFrequentRead());
     }
-
 }

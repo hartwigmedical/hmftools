@@ -33,6 +33,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class CountBamLinesApplication implements AutoCloseable {
+
     private static final Logger LOGGER = LogManager.getLogger(CountBamLinesApplication.class);
 
     private final CobaltConfig config;
@@ -40,7 +41,6 @@ public class CountBamLinesApplication implements AutoCloseable {
     private final ExecutorService executorService;
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException {
-
         final Options options = CobaltConfig.createOptions();
         try (final CountBamLinesApplication application = new CountBamLinesApplication(options, args)) {
             application.run();
@@ -75,11 +75,13 @@ public class CountBamLinesApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
         executorService = Executors.newFixedThreadPool(config.threadCount(), namedThreadFactory);
 
-        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}", config.threadCount(), config.windowSize(), config.minMappingQuality());
+        LOGGER.info("Thread Count: {}, Window Size: {}, Min Quality {}",
+                config.threadCount(),
+                config.windowSize(),
+                config.minMappingQuality());
     }
 
     private void run() throws IOException, ExecutionException, InterruptedException {
-
         LOGGER.info("Reading GC Profile");
         final Multimap<Chromosome, GCProfile> gcProfiles = GCProfileFactory.loadGCContent(config.windowSize(), config.gcProfilePath());
 
@@ -105,7 +107,7 @@ public class CountBamLinesApplication implements AutoCloseable {
 
     @NotNull
     private static SamReaderFactory readerFactory(@NotNull final CobaltConfig config) {
-        final SamReaderFactory readerFactory = SamReaderFactory.make();
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.validationStringency());
         if (!config.refGenomePath().isEmpty()) {
             return readerFactory.referenceSource(new ReferenceSource(new File(config.refGenomePath())));
         }

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 abstract class SearchToken {
+
     @NotNull
     abstract String term();
 

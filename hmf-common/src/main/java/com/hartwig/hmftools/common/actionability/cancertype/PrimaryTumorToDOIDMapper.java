@@ -22,7 +22,7 @@ class PrimaryTumorToDOIDMapper {
 
     private static final Logger LOGGER = LogManager.getLogger(PrimaryTumorToDOIDMapper.class);
 
-    private static final InputStream TUMOR_LOCATION_MAPPING_RESOURCE =
+    private static final InputStream TUMOR_LOCATION_MAPPING_CSV =
             PrimaryTumorToDOIDMapper.class.getResourceAsStream("/actionability/primary_tumor_locations_mapping.csv");
 
     private static final String DOID_SEPARATOR = ";";
@@ -33,7 +33,7 @@ class PrimaryTumorToDOIDMapper {
 
     @NotNull
     static PrimaryTumorToDOIDMapper createFromResource() throws IOException {
-        final CSVParser parser = CSVParser.parse(TUMOR_LOCATION_MAPPING_RESOURCE, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        final CSVParser parser = CSVParser.parse(TUMOR_LOCATION_MAPPING_CSV, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         Map<String, Set<String>> doidsPerPrimaryTumor = Maps.newHashMap();
         for (final CSVRecord record : parser) {
             final String primaryTumorLocation = record.get("primaryTumorLocation");

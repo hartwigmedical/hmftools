@@ -16,6 +16,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PotentialMNV {
+
     abstract String chromosome();
 
     abstract int start();

@@ -7,6 +7,9 @@ import org.jooq.TableField;
 
 final public class DatabaseUtil {
 
+    private DatabaseUtil() {
+    }
+
     @Nullable
     public static Double decimal(@Nullable Double number) {
         return number == null ? null : decimal(number.doubleValue());
@@ -22,7 +25,7 @@ final public class DatabaseUtil {
     }
 
     @NotNull
-    public static String checkStringLength(@NotNull String str, @NotNull TableField<?, String> field) {
+    static String checkStringLength(@NotNull String str, @NotNull TableField<?, String> field) {
         int maxLength = field.getDataType().length();
         return str.length() > maxLength ? str.substring(0, maxLength) : str;
     }
@@ -43,5 +46,4 @@ final public class DatabaseUtil {
     public static String getValueNotNull(@Nullable String value) {
         return value != null ? value : Strings.EMPTY;
     }
-
 }

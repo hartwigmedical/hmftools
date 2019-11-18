@@ -9,7 +9,6 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HospitalModelTest {

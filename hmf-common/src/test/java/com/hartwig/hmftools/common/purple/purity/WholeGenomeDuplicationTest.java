@@ -50,8 +50,8 @@ public class WholeGenomeDuplicationTest {
         }
         assertFalse(wholeGenomeDuplication(copyNumbers));
 
-        copyNumbers.add(create(String.valueOf("X"), MIN_AVERAGE_PLOIDY, 1));
-        copyNumbers.add(create(String.valueOf("Y"), MIN_AVERAGE_PLOIDY, 1));
+        copyNumbers.add(create("X", MIN_AVERAGE_PLOIDY, 1));
+        copyNumbers.add(create("Y", MIN_AVERAGE_PLOIDY, 1));
         assertFalse(wholeGenomeDuplication(copyNumbers));
 
         copyNumbers.add(create(String.valueOf(MIN_DUPLICATED_AUTOSOMES), MIN_AVERAGE_PLOIDY, 1));

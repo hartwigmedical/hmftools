@@ -16,6 +16,7 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SamRecordScoring {
+
     private SamRecordScoring() {
     }
 

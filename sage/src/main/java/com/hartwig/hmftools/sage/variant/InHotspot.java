@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.sage.variant;
 
+import java.util.List;
+
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.hotspot.VariantHotspot;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -11,6 +14,11 @@ class InHotspot {
 
     private static final int DISTANCE = 5;
     private final Multimap<Chromosome, VariantHotspot> hotspots;
+
+    InHotspot(@NotNull final Chromosome chromosome,@NotNull final List<VariantHotspot> hotspots) {
+        this.hotspots = ArrayListMultimap.create();
+        this.hotspots.putAll(chromosome, hotspots);
+    }
 
     InHotspot(@NotNull final Multimap<Chromosome, VariantHotspot> hotspots) {
         this.hotspots = hotspots;

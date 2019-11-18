@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.visualiser.circos;
 import java.io.File;
 import java.io.IOException;
 
-import com.hartwig.hmftools.common.r.RExecutor;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.linx.visualiser.SvCircosConfig;
 
 import org.apache.logging.log4j.LogManager;

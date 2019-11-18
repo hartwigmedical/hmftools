@@ -10,9 +10,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
-import com.hartwig.hmftools.common.bachelor.BachelorFile;
-import com.hartwig.hmftools.common.bachelor.FilterGermlineVariants;
-import com.hartwig.hmftools.common.bachelor.GermlineVariant;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -24,12 +21,8 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
-import com.hartwig.hmftools.common.variant.ReportableVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
-import com.hartwig.hmftools.common.variant.reportablegenomicalterations.ReportableGermlineVariant;
-import com.hartwig.hmftools.common.variant.somaticvariant.SomaticVariantAnalysis;
-import com.hartwig.hmftools.common.variant.somaticvariant.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruption;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -43,7 +36,14 @@ import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomoz
 import com.hartwig.hmftools.patientreporter.structural.SvAnalysis;
 import com.hartwig.hmftools.patientreporter.structural.SvAnalyzer;
 import com.hartwig.hmftools.patientreporter.variants.ReportVariantAnalysis;
+import com.hartwig.hmftools.patientreporter.variants.ReportableGermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.ReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.ReportableVariantAnalyzer;
+import com.hartwig.hmftools.patientreporter.variants.germline.BachelorFile;
+import com.hartwig.hmftools.patientreporter.variants.germline.FilterGermlineVariants;
+import com.hartwig.hmftools.patientreporter.variants.germline.GermlineVariant;
+import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalysis;
+import com.hartwig.hmftools.patientreporter.variants.somatic.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertion;
 import com.hartwig.hmftools.patientreporter.viralInsertion.ViralInsertionAnalyzer;
 
