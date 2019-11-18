@@ -84,7 +84,7 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MIN_TUMOR_VAF);
         }
 
-        if (normal.readDepth() < config.minGermlineDepth()) {
+        if (normal.primaryReadContext().coverage() < config.minGermlineReadContextCoverage()) {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
         }
 
