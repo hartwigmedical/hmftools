@@ -16,12 +16,12 @@ final class NearPonFilteredIndel {
     private NearPonFilteredIndel() {
     }
 
-    public static boolean isPonFilteredIndel(@NotNull final VariantContext variant) {
+    static boolean isPonFilteredIndel(@NotNull final VariantContext variant) {
         final Set<String> filters = variant.getFilters();
         return variant.isIndel() && (filters.contains(SOMATIC_FLAG) || filters.contains(GERMLINE_FLAG));
     }
 
-    public static boolean isNearPonFilteredIndel(final int index, @NotNull final List<VariantContext> contexts) {
+    static boolean isNearPonFilteredIndel(final int index, @NotNull final List<VariantContext> contexts) {
         final VariantContext subject = contexts.get(index);
         if (!subject.isIndel() || subject.isFiltered()) {
             return false;
@@ -55,5 +55,4 @@ final class NearPonFilteredIndel {
 
         return false;
     }
-
 }

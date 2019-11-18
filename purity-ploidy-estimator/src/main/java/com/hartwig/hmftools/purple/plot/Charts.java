@@ -68,5 +68,4 @@ public class Charts {
             throw new IOException("Unable to create chart directory " + dir);
         }
     }
-
 }
