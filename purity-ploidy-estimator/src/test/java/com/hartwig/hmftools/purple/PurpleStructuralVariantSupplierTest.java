@@ -14,7 +14,7 @@ public class PurpleStructuralVariantSupplierTest {
 
     @Test
     public void testDummySupplierInstantiatesSuccessfully() {
-        final PurpleStructuralVariantSupplier victim = new PurpleStructuralVariantSupplier();
+        new PurpleStructuralVariantSupplier();
     }
 
     @Test
@@ -25,5 +25,4 @@ public class PurpleStructuralVariantSupplierTest {
         assertEquals("BBBBB", victim.getGenotypeSamples().get(0));
         assertEquals("AAAAA", victim.getGenotypeSamples().get(1));
     }
-
 }

@@ -38,7 +38,7 @@ public class SomaticStream {
     private final RefGenomeData refGenomeData;
     private final String inputVCF;
     private final String outputVCF;
-    private boolean enabled;
+    private final boolean enabled;
     private final MicrosatelliteIndels microsatelliteIndels;
     private final SomaticVariantDrivers drivers;
     private final SomaticVariantFactory somaticVariantFactory;
