@@ -5,12 +5,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.SagePipelineData;
-import com.hartwig.hmftools.sage.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomePipeline implements Consumer<CompletableFuture<SagePipelineData>> {
+public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageVariant>>> {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
 
@@ -28,7 +27,8 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<SagePipeli
     private final SageConfig config;
     private final IndexedFastaSequenceFile reference;
     private final SageVariantFactory sageVariantFactory;
-    private final List<CompletableFuture<SagePipelineData>> regions = Lists.newArrayList();
+    private final List<VariantContext> variantContexts = Lists.newArrayList();
+    private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory) {
@@ -38,41 +38,49 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<SagePipeli
         this.sageVariantFactory = sageVariantFactory;
     }
 
+    @NotNull
+    public String chromosome() {
+        return chromosome;
+    }
+
     @Override
-    public void accept(final CompletableFuture<SagePipelineData> regionData) {
+    public void accept(final CompletableFuture<List<SageVariant>> regionData) {
         regions.add(regionData);
     }
 
     @NotNull
-    public CompletableFuture<List<VariantContext>> submit() {
+    public List<VariantContext> variantContexts() {
+        return variantContexts;
+    }
+
+    @NotNull
+    public CompletableFuture<ChromosomePipeline> submit() {
 
         final CompletableFuture<Void> doneChromosome = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
-        return doneChromosome.thenApply((Void aVoid) -> {
+        return doneChromosome.thenApply((aVoid) -> {
 
             LOGGER.info("Phasing chromosome {}", chromosome);
 
-            final List<VariantContext> variantContexts = Lists.newArrayList();
             final Consumer<SageVariant> phasedConsumer = variant -> {
-                if (shouldWrite(variant)) {
+                if (include(variant)) {
                     final VariantContext context = SageVariantContextFactory.create(variant);
                     variantContexts.add(context);
                 }
             };
 
             final Phase phase = new Phase(reference, sageVariantFactory, phasedConsumer);
-            for (CompletableFuture<SagePipelineData> region : regions) {
-                for (SageVariant sageVariant : region.join().results()) {
+            for (CompletableFuture<List<SageVariant>> region : regions) {
+                for (SageVariant sageVariant : region.join()) {
                     phase.accept(sageVariant);
                 }
             }
 
-            phase.close(); //TODO: Rename to flush
-
-            return variantContexts;
+            phase.flush();
+            return this;
         });
     }
 
-    private boolean shouldWrite(@NotNull final SageVariant entry) {
+    private boolean include(@NotNull final SageVariant entry) {
         if (entry.isPassing()) {
             return true;
         }

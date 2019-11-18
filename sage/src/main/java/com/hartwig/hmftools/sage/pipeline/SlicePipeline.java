@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.pipeline;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -22,9 +22,9 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SagePipeline {
+public class SlicePipeline {
 
-    private static final Logger LOGGER = LogManager.getLogger(SagePipeline.class);
+    private static final Logger LOGGER = LogManager.getLogger(SlicePipeline.class);
 
     private final GenomeRegion region;
     private final SageConfig config;
@@ -33,7 +33,7 @@ public class SagePipeline {
     private final SageVariantFactory variantFactory;
     private final SamSlicerFactory samSlicerFactory;
 
-    public SagePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
+    public SlicePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
             final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory, final SamSlicerFactory samSlicerFactory) {
         this.region = region;
         this.config = config;
@@ -46,7 +46,7 @@ public class SagePipeline {
     @NotNull
     public CompletableFuture<List<SageVariant>> submit() {
 
-        final SagePipelineData sagePipelineData = new SagePipelineData(config.reference(), config.tumor().size(), variantFactory);
+        final SlicePipelineData slicePipelineData = new SlicePipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
 
@@ -67,21 +67,21 @@ public class SagePipeline {
 
             for (int i = 0; i < tumorFutures.size(); i++) {
                 CompletableFuture<List<AltContext>> future = tumorFutures.get(i);
-                sagePipelineData.addTumor(i, future.join());
+                slicePipelineData.addTumor(i, future.join());
             }
 
             return new NormalRefContextSupplier(config,
                     region,
                     config.referenceBam(),
                     refSequence,
-                    sagePipelineData.normalCandidates(), samSlicerFactory).get();
+                    slicePipelineData.normalCandidates(), samSlicerFactory).get();
         });
 
         return normalFuture.thenApply(aVoid -> {
 
-            sagePipelineData.addNormal(normalFuture.join());
+            slicePipelineData.addNormal(normalFuture.join());
 
-            return sagePipelineData.results();
+            return slicePipelineData.results();
         });
     }
 }

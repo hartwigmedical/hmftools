@@ -9,6 +9,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -68,18 +69,23 @@ public class SageVCF implements AutoCloseable {
         this.config = config;
 
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        refContextEnrichment = new SomaticRefContextEnrichment(reference, this::write);
+        refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
         writer.writeHeader(header);
     }
 
+    @Deprecated
     public void write(@NotNull final SageVariant entry) {
         if (shouldWrite(entry)) {
             refContextEnrichment.accept(SageVariantContextFactory.create(entry));
         }
     }
 
-    private void write(@NotNull final VariantContext context) {
+    public void write(@NotNull final VariantContext context) {
+        refContextEnrichment.accept(context);
+    }
+
+    private void writeToFile(@NotNull final VariantContext context) {
         writer.add(context);
     }
 
