@@ -119,13 +119,13 @@ To generate these 4 data files, first run LINX with these command line options:
 
 ```
 java -cp sv-linx.jar com.hartwig.hmftools.linx.gene.GenerateEnsemblDataCache
-    -ensembl_db [db_url] -ensembl_user [username] -ensembl_pass [password] 
-    -output_dir /path_to_write_data_files/ 
+    -ensembl_db [see below] -ensembl_user "anonymous" -ensembl_pass "" 
+    -output_dir /path_to_write_data_files/ -ref_genome_version [37 or 38]
 ```
 
 Ensembl database URLs for 37 & 38 are:
 - mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_89_37
-- mysql://ensembldb.ensembl.org:3337/homo_sapiens_core_92_38
+- mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_98_38
 
 By default LINX will use HG37, but this can be overridden using the ref_genome_version config described above.
 
