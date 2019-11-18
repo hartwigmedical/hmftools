@@ -26,18 +26,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class SigAnalyser
 {
+    public static final String GENERIC_INPUT_FILE = "gen_input_file";
+    public static final String SAMPLE_IDS = "sample_ids";
+    public static final String LOG_DEBUG = "log_debug";
+
+    public static final String OUTPUT_DIR = "output_dir";
+    public static final String OUTPUT_FILE_ID = "output_file_id";
+
     private static final String RUN_CSS = "run_cosine_sim";
     private static final String RUN_NMF = "run_nmf";
     private static final String RUN_BA = "run_buckets";
     private static final String RUN_SAMPLE_SIM = "run_sim";
     private static final String LOAD_SNVS = "load_snvs";
-
-    private static final String GENERIC_INPUT_FILE = "gen_input_file";
-    public static final String SAMPLE_IDS = "sample_ids";
-    private static final String LOG_DEBUG = "log_debug";
-
-    public static final String OUTPUT_DIR = "output_dir";
-    public static final String OUTPUT_FILE_ID = "output_file_id";
 
     private static final Logger LOGGER = LogManager.getLogger(SigAnalyser.class);
 
@@ -83,11 +83,10 @@ public class SigAnalyser
 
         LOGGER.info("starting signature analyser");
 
-        GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(GENERIC_INPUT_FILE));
+        final GenericDataCollection collection = GenericDataLoader.loadFile(cmd.getOptionValue(GENERIC_INPUT_FILE));
 
         if(cmd.hasOption(RUN_CSS))
         {
-
             CosineSim cosineSim = new CosineSim(cmd.getOptionValue(OUTPUT_DIR));
             cosineSim.calcCosineSimilarities(collection.getFieldNames(), collection.getData(), 0.8);
         }
@@ -117,7 +116,6 @@ public class SigAnalyser
         {
             SampleSimulator sampleSimulator = new SampleSimulator();
             sampleSimulator.initialise(cmd);
-            // sampleSimulator.runTests();
             sampleSimulator.run();
         }
 
@@ -132,7 +130,7 @@ public class SigAnalyser
     private static Options createBasicOptions()
     {
         Options options = new Options();
-        options.addOption(GENERIC_INPUT_FILE, true, "Path to the main input file.");
+        options.addOption(GENERIC_INPUT_FILE, true, "Path to the main input file");
         options.addOption(OUTPUT_DIR, true, "Path to output files");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
 
@@ -143,9 +141,9 @@ public class SigAnalyser
         options.addOption(LOAD_SNVS, false, "Create sample bucket counts for SNVs from DB");
         options.addOption(SAMPLE_IDS, true, "Optional: restrict to sample list");
 
-        options.addOption(DB_USER, true, "Database user name.");
-        options.addOption(DB_PASS, true, "Database password.");
-        options.addOption(DB_URL, true, "Database url.");
+        options.addOption(DB_USER, true, "Database user name");
+        options.addOption(DB_PASS, true, "Database password");
+        options.addOption(DB_URL, true, "Database url");
 
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
@@ -153,7 +151,8 @@ public class SigAnalyser
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }

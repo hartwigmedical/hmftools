@@ -23,8 +23,6 @@ import org.apache.logging.log4j.Logger;
 
 public class CosineSim {
 
-    private static final Logger LOGGER = LogManager.getLogger(CosineSim.class);
-
     private String mOutputDir;
 
     public static int CSSR_I1 = 0;
@@ -32,6 +30,8 @@ public class CosineSim {
     public static int CSSR_VAL = 2;
 
     private static double MIN_VALUE = 1e-10;
+
+    private static final Logger LOGGER = LogManager.getLogger(CosineSim.class);
 
     public CosineSim(final String outputDir)
     {

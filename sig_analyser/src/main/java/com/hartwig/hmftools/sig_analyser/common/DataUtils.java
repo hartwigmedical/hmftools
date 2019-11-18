@@ -124,6 +124,23 @@ public class DataUtils {
         }
     }
 
+    public static void copyMatrix(final double[][] source, final double[][] dest)
+    {
+        if(source.length != dest.length)
+            return;
+
+        int rows = source.length;
+        int cols = source[0].length;
+
+        for(int i = 0; i < rows; ++i)
+        {
+            for (int j = 0; j < cols; ++j)
+            {
+                dest[i][j] = source[i][j];
+            }
+        }
+    }
+
     public static void addVector(final double[] source, double[] dest)
     {
         if(source.length != dest.length)
@@ -547,8 +564,21 @@ public class DataUtils {
         return createBufferedWriter(outputFileName, false);
     }
 
-    public static void writeMatrixData(BufferedWriter writer, final SigMatrix matrix, boolean asInt) throws IOException
+    public static void writeMatrixData(
+            final BufferedWriter writer, final List<String> headers, final SigMatrix matrix, boolean asInt) throws IOException
     {
+        if(headers != null)
+        {
+            int i = 0;
+            for (; i < headers.size() - 1; ++i)
+            {
+                writer.write(String.format("%s,", headers.get(i)));
+            }
+            writer.write(String.format("%s", headers.get(i)));
+
+            writer.newLine();
+        }
+
         final double[][] sigData = matrix.getData();
 
         for(int i = 0; i < matrix.Rows; ++i)
@@ -566,7 +596,12 @@ public class DataUtils {
 
             writer.newLine();
         }
+
     }
 
+    public static void writeMatrixData(final BufferedWriter writer, final SigMatrix matrix, boolean asInt) throws IOException
+    {
+        writeMatrixData(writer, null, matrix, asInt);
+    }
 
 }

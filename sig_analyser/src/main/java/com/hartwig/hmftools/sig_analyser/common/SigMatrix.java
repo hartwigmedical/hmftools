@@ -44,10 +44,10 @@ public class SigMatrix
         if(mDataTrans == null)
             mDataTrans = new double[Cols][Rows];
 
-        for(int i = 0; i < Rows; ++i) {
-
-            for (int j = 0; j < Cols; ++j) {
-
+        for(int i = 0; i < Rows; ++i)
+        {
+            for (int j = 0; j < Cols; ++j)
+            {
                 mDataTrans[j][i] = mData[i][j];
             }
         }
@@ -59,8 +59,8 @@ public class SigMatrix
     {
         for(int i = 0; i < Rows; ++i) {
 
-            for (int j = 0; j < Cols; ++j) {
-
+            for (int j = 0; j < Cols; ++j)
+            {
                 mData[i][j] = otherData[i][j];
             }
         }

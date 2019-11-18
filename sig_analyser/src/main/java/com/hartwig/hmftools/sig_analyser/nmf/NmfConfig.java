@@ -121,4 +121,24 @@ public class NmfConfig {
 
         LogVerbose = cmd.hasOption(NMF_LOG_VERBOSE);
     }
+
+    public NmfConfig(double exitLevel, int maxIterations)
+    {
+        ExitLevel = exitLevel;
+        MaxIterations = maxIterations;
+
+        RunCount = 0;
+        SigCount = 0;
+        FitOnly = true;
+        UseRefSigs = true;
+        LogVerbose = false;
+        SigFloatRate = 0;
+        SigExpansionCount = 0;
+        FitRestrictToContribs = false;
+        RefContribFilename = "";
+        RefSigFilename = "";
+        Model = NmfModelMethod.STANDARD;
+        ApplyPcawgRules = false;
+    }
+
 }
