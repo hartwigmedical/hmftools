@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class CFReportWriterTest {
 
-    private static final boolean WRITE_TO_PDF = false;
+    private static final boolean WRITE_TO_PDF = true;
     private static final boolean TIMESTAMP_FILES = false;
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -74,15 +74,6 @@ public class CFReportWriterTest {
 
         CFReportWriter writer = new CFReportWriter(WRITE_TO_PDF);
         writer.writeAnalysedPatientReport(patientReport, testReportFilePath("hmf_below_detection_limit_sequence_report.pdf"));
-    }
-
-    @Test
-    public void canGenerateLowTumorPercentageReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T",
-                "10%",
-                null,
-                QCFailReason.LOW_TUMOR_PERCENTAGE,
-                testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
     }
 
     @Test
