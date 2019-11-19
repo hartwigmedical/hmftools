@@ -103,6 +103,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         }
 
         return entry.primaryTumor().primaryReadContext().quality() >= 30;
+//        return true;
     }
 
 }

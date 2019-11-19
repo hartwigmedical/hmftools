@@ -8,10 +8,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.AltContextSupplier;
 import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.context.TumorAltContextSupplier;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -22,9 +22,9 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SlicePipeline {
+public class SomaticPipeline {
 
-    private static final Logger LOGGER = LogManager.getLogger(SlicePipeline.class);
+    private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
 
     private final GenomeRegion region;
     private final SageConfig config;
@@ -33,7 +33,7 @@ public class SlicePipeline {
     private final SageVariantFactory variantFactory;
     private final SamSlicerFactory samSlicerFactory;
 
-    public SlicePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
+    public SomaticPipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
             final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory, final SamSlicerFactory samSlicerFactory) {
         this.region = region;
         this.config = config;
@@ -46,7 +46,7 @@ public class SlicePipeline {
     @NotNull
     public CompletableFuture<List<SageVariant>> submit() {
 
-        final SlicePipelineData slicePipelineData = new SlicePipelineData(config.reference(), config.tumor().size(), variantFactory);
+        final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
 
@@ -56,7 +56,7 @@ public class SlicePipeline {
             final String bam = bams.get(i);
 
             CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new TumorAltContextSupplier(config, sample, region, bam, refSequence, samSlicerFactory), executor);
+                    CompletableFuture.supplyAsync(new AltContextSupplier(config, sample, region, bam, refSequence, samSlicerFactory), executor);
 
             tumorFutures.add(candidateFuture);
         }
@@ -67,21 +67,21 @@ public class SlicePipeline {
 
             for (int i = 0; i < tumorFutures.size(); i++) {
                 CompletableFuture<List<AltContext>> future = tumorFutures.get(i);
-                slicePipelineData.addTumor(i, future.join());
+                somaticPipelineData.addTumor(i, future.join());
             }
 
             return new NormalRefContextSupplier(config,
                     region,
                     config.referenceBam(),
                     refSequence,
-                    slicePipelineData.normalCandidates(), samSlicerFactory).get();
+                    somaticPipelineData.normalCandidates(), samSlicerFactory).get();
         });
 
         return normalFuture.thenApply(aVoid -> {
 
-            slicePipelineData.addNormal(normalFuture.join());
+            somaticPipelineData.addNormal(normalFuture.join());
 
-            return slicePipelineData.results();
+            return somaticPipelineData.results();
         });
     }
 }

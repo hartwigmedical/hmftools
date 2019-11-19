@@ -22,22 +22,21 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
+public class AltContextSupplier implements Supplier<List<AltContext>> {
 
-    private static final Logger LOGGER = LogManager.getLogger(TumorAltContextSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(AltContextSupplier.class);
 
     private final String sample;
-    private final SageConfig config;
     private final String bamFile;
-    private final List<AltContext> altContexts = Lists.newArrayList();
-    private final PositionSelector<AltContext> consumerSelector;
+    private final SageConfig config;
+    private final GenomeRegion bounds;
+    private final SamSlicerFactory samSlicerFactory;
     private final TumorRefContextCandidates candidates;
     private final RefContextConsumer refContextConsumer;
-    private final SamSlicerFactory samSlicerFactory;
+    private final PositionSelector<AltContext> consumerSelector;
+    private final List<AltContext> altContexts = Lists.newArrayList();
 
-    private final GenomeRegion bounds;
-
-    public TumorAltContextSupplier(final SageConfig config, final String sample, @NotNull final GenomeRegion bounds,
+    public AltContextSupplier(@NotNull final SageConfig config, @NotNull final String sample, @NotNull final GenomeRegion bounds,
             @NotNull final String bamFile, @NotNull final RefSequence refGenome, @NotNull final SamSlicerFactory samSlicerFactory) {
         this.config = config;
         this.sample = sample;
@@ -69,7 +68,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
             LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
         }
 
-        LOGGER.info("Tumor candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
+        LOGGER.info("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
 
