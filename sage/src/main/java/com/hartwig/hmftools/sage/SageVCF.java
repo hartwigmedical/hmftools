@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage;
 
+import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -7,17 +10,17 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
@@ -60,16 +63,13 @@ public class SageVCF implements AutoCloseable {
     public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
 
-    private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
 
     SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
-        this.config = config;
-
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
-                .modifyOption(Options.INDEX_ON_THE_FLY, !config.unsortedOutput())
-                .modifyOption(Options.USE_ASYNC_IO, config.unsortedOutput())
+                .modifyOption(Options.INDEX_ON_THE_FLY, true)
+                .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
@@ -78,10 +78,11 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    @Deprecated
-    public void write(@NotNull final SageVariant entry) {
-        if (shouldWrite(entry)) {
-            refContextEnrichment.accept(SageVariantContextFactory.create(entry));
+    public void addVCF(@NotNull final String filename) throws IOException {
+        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(filename, new VCFCodec(), false)) {
+            for (VariantContext context : reader.iterator()) {
+                refContextEnrichment.accept(context);
+            }
         }
     }
 
@@ -93,21 +94,8 @@ public class SageVCF implements AutoCloseable {
         writer.add(context);
     }
 
-    private boolean shouldWrite(@NotNull final SageVariant entry) {
-        if (entry.isPassing()) {
-            return true;
-        }
-
-        if (config.filter().hardFilter()) {
-            return false;
-        }
-
-        final AltContext normal = entry.normal();
-        return normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
-    }
-
     @NotNull
-    private static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
+    public static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
         final List<String> allSamples = Lists.newArrayList(normalSample);
         allSamples.addAll(tumorSamples);
 

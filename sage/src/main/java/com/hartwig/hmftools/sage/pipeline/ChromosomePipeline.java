@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.SageVCF;
+import com.hartwig.hmftools.sage.SageChromosomeVCF;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.phase.Phase;
@@ -26,25 +28,28 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
 
     private final String chromosome;
     private final SageConfig config;
+    private final SageChromosomeVCF sageVCF;
     private final IndexedFastaSequenceFile reference;
     private final SageVariantFactory sageVariantFactory;
-    private final List<VariantContext> variantContexts = Lists.newArrayList();
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
-    private final SageVCF sageVCF;
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
-            @NotNull final SageVCF sageVCF) {
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.reference = reference;
         this.sageVariantFactory = sageVariantFactory;
-        this.sageVCF = sageVCF;
+        this.sageVCF = new SageChromosomeVCF(chromosome, config);
     }
 
     @NotNull
     public String chromosome() {
         return chromosome;
+    }
+
+    @NotNull
+    public String vcfFilename() {
+        return sageVCF.filename();
     }
 
     @Override
@@ -53,23 +58,12 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
     }
 
     @NotNull
-    public List<VariantContext> variantContexts() {
-        return variantContexts;
-    }
-
-    @NotNull
     public CompletableFuture<ChromosomePipeline> submit() {
 
         final Consumer<SageVariant> phasedConsumer = variant -> {
             if (include(variant)) {
                 final VariantContext context = SageVariantContextFactory.create(variant);
-                if (config.unsortedOutput()) {
-                    sageVCF.write(context);
-                } else {
-                    variantContexts.add(context);
-
-                }
-
+                sageVCF.write(context);
             }
         };
         final Phase phase = new Phase(reference, sageVariantFactory, phasedConsumer);
@@ -86,7 +80,9 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
 
         return done.thenApply(aVoid -> {
             phase.flush();
+            sageVCF.close();
             LOGGER.info("Finished processing chromosome {}", chromosome);
+            new File(vcfFilename()).deleteOnExit();
             return ChromosomePipeline.this;
         });
 
@@ -102,7 +98,11 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         }
 
         final AltContext normal = entry.normal();
-        return normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
+        if  (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+            return false;
+        }
+
+        return entry.primaryTumor().primaryReadContext().quality() >= 30;
     }
 
 }
