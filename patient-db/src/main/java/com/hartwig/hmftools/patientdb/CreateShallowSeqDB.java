@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -53,7 +52,9 @@ public class CreateShallowSeqDB {
             } else {
                 purity = String.valueOf(purityContext.bestFit().purity());
             }
-            String outputStringForFile = cmd.getOptionValue(PURPLE_QC_FILE) + purity;
+            String outputStringForFile = cmd.getOptionValue(PURPLE_QC_FILE) + "," + purity;
+
+            //TODO: check if sample already exist in file and remove from file
             appendToTsv(cmd.getOptionValue(SHALLOW_SEQ_CSV), outputStringForFile);
 
         } else {
