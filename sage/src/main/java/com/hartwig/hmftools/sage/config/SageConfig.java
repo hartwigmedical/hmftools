@@ -99,7 +99,7 @@ public interface SageConfig {
     boolean unsortedOutput();
 
     default int regionSliceSize() {
-        return 1_000_000;
+        return 500_000;
     }
 
     int minMapQuality();

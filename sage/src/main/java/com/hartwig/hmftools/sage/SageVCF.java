@@ -70,9 +70,11 @@ public class SageVCF implements AutoCloseable {
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
                 .modifyOption(Options.INDEX_ON_THE_FLY, !config.unsortedOutput())
                 .modifyOption(Options.USE_ASYNC_IO, config.unsortedOutput())
+                .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
+        header.setSequenceDictionary(reference.getSequenceDictionary());
         writer.writeHeader(header);
     }
 
