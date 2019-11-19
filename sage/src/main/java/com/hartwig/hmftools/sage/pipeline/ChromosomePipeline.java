@@ -56,28 +56,30 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
     @NotNull
     public CompletableFuture<ChromosomePipeline> submit() {
 
-        final CompletableFuture<Void> doneChromosome = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
-        return doneChromosome.thenApply((aVoid) -> {
-
-            LOGGER.info("Phasing chromosome {}", chromosome);
-
-            final Consumer<SageVariant> phasedConsumer = variant -> {
-                if (include(variant)) {
-                    final VariantContext context = SageVariantContextFactory.create(variant);
-                    variantContexts.add(context);
-                }
-            };
-
-            final Phase phase = new Phase(reference, sageVariantFactory, phasedConsumer);
-            for (CompletableFuture<List<SageVariant>> region : regions) {
-                for (SageVariant sageVariant : region.join()) {
-                    phase.accept(sageVariant);
-                }
+        final Consumer<SageVariant> phasedConsumer = variant -> {
+            if (include(variant)) {
+                final VariantContext context = SageVariantContextFactory.create(variant);
+                variantContexts.add(context);
             }
+        };
+        final Phase phase = new Phase(reference, sageVariantFactory, phasedConsumer);
 
+        // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
+        // It is not necessary to wait for the entire chromosome to be finished to start.
+        CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
+        for (final CompletableFuture<List<SageVariant>> region : regions) {
+            done = done.thenCombine(region, (aVoid, sageVariants) -> {
+                sageVariants.forEach(phase);
+                return null;
+            });
+        }
+
+        return done.thenApply(aVoid -> {
             phase.flush();
-            return this;
+            LOGGER.info("Finished processing chromosome {}", chromosome);
+            return ChromosomePipeline.this;
         });
+
     }
 
     private boolean include(@NotNull final SageVariant entry) {
