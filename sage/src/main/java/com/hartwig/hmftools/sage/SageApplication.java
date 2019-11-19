@@ -113,8 +113,9 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+//                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+//                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+//        contigContexts.add(runChromosome("15", config.regionSliceSize(), dictionary().getSequence("15").getSequenceLength()));
         //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));
         //                        contigContexts.add(runSingleRegion("1", 696644, 696644));
         //                contigContexts.add(runSingleRegion("17", 3028422, 3028422));
@@ -139,10 +140,10 @@ public class SageApplication implements AutoCloseable {
 
         for (Future<ChromosomePipeline> contigContext : contigContexts) {
             final ChromosomePipeline chromosomePipeline = contigContext.get();
-            LOGGER.info("Writing chromosome {} ", chromosomePipeline.chromosome());
             for (VariantContext context : chromosomePipeline.variantContexts()) {
                 vcf.write(context);
             }
+            LOGGER.info("Finished writing chromosome  {} ", chromosomePipeline.chromosome());
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
@@ -161,7 +162,7 @@ public class SageApplication implements AutoCloseable {
         final Chromosome chromosome = HumanChromosome.fromString(contig);
         final SageVariantFactory variantFactory =
                 new SageVariantFactory(chromosome, config.filter(), hotspots.get(chromosome), panel.get(chromosome));
-        final ChromosomePipeline chromosomePipeline = new ChromosomePipeline(contig, config, refGenome, variantFactory);
+        final ChromosomePipeline chromosomePipeline = new ChromosomePipeline(contig, config, refGenome, variantFactory, vcf);
         for (int i = 0; ; i++) {
             int start = 1 + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize, maxPosition);
@@ -180,7 +181,7 @@ public class SageApplication implements AutoCloseable {
         final Chromosome chromosome = HumanChromosome.fromString(contig);
         final SageVariantFactory variantFactory =
                 new SageVariantFactory(chromosome, config.filter(), hotspots.get(chromosome), panel.get(chromosome));
-        final ChromosomePipeline chromosomePipeline = new ChromosomePipeline(contig, config, refGenome, variantFactory);
+        final ChromosomePipeline chromosomePipeline = new ChromosomePipeline(contig, config, refGenome, variantFactory, vcf);
 
         chromosomePipeline.accept(runRegion(contig, start, end));
         return chromosomePipeline.submit();

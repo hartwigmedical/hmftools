@@ -33,6 +33,7 @@ public interface SageConfig {
     String PANEL = "panel";
     String PANEL_ONLY = "panel_only";
     String HOTSPOTS = "hotspots";
+    String UNSORTED_OUTPUT = "unsorted";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
@@ -51,6 +52,7 @@ public interface SageConfig {
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
 
+        options.addOption(UNSORTED_OUTPUT, false, "Output is unsorted");
         options.addOption(PANEL, true, "Panel");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(HOTSPOTS, true, "Hotspots");
@@ -93,6 +95,8 @@ public interface SageConfig {
 
     @NotNull
     QualityConfig qualityConfig();
+
+    boolean unsortedOutput();
 
     default int regionSliceSize() {
         return 1_000_000;
@@ -138,8 +142,8 @@ public interface SageConfig {
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
                 .panelOnly(cmd.hasOption(PANEL_ONLY))
+                .unsortedOutput(cmd.hasOption(UNSORTED_OUTPUT))
                 .build();
-
     }
 
     @NotNull

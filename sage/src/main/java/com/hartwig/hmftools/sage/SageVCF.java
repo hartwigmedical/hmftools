@@ -55,7 +55,6 @@ public class SageVCF implements AutoCloseable {
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
 
-
     public final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
     public final static String PHASE = "LPS";
@@ -68,7 +67,10 @@ public class SageVCF implements AutoCloseable {
     SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
         this.config = config;
 
-        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
+        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+                .modifyOption(Options.INDEX_ON_THE_FLY, !config.unsortedOutput())
+                .modifyOption(Options.USE_ASYNC_IO, config.unsortedOutput())
+                .build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
         writer.writeHeader(header);
@@ -102,7 +104,6 @@ public class SageVCF implements AutoCloseable {
         return normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
     }
 
-
     @NotNull
     private static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
         final List<String> allSamples = Lists.newArrayList(normalSample);
@@ -118,7 +119,10 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
+                1,
+                VCFHeaderLineType.Integer,
+                READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
                 4,
                 VCFHeaderLineType.Integer,
