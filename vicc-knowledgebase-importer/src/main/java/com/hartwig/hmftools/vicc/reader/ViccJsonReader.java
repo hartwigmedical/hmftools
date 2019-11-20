@@ -48,13 +48,6 @@ public final class ViccJsonReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
-    private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(4, 5, 6, 7, 8, 9, 10, 11);
-    private static final List<Integer> EXPECTED_FEATURES_ELEMENT_SIZES = Lists.newArrayList(2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16);
-    private static final List<Integer> EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES = Lists.newArrayList(4, 5);
-    private static final List<Integer> EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES = Lists.newArrayList(3);
-
-    private static final List<Integer> EXPECTED_EVIDENCE_ELEMENT_SIZES = Lists.newArrayList(3);
     private static final List<Integer> EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES = Lists.newArrayList(1);
     private static final List<Integer> EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES = Lists.newArrayList(1, 2);
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
@@ -133,46 +126,64 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<Feature> createFeatures(@NotNull JsonArray arrayFeatures) {
-        List<Feature> featureList = Lists.newArrayList();
+    private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifierArray) {
+        List<GeneIdentifier> geneIdentifierList = Lists.newArrayList();
 
-        for (JsonElement elementFeature : arrayFeatures) {
-            JsonObject objectFeatures = elementFeature.getAsJsonObject();
-            Set<String> keysFeatures = objectFeatures.keySet();
-            if (!EXPECTED_FEATURES_ELEMENT_SIZES.contains(keysFeatures.size())) {
-                LOGGER.warn("Found " + keysFeatures.size() + " in feature rather than the expected " + EXPECTED_FEATURES_ELEMENT_SIZES);
-                LOGGER.warn(keysFeatures);
-            }
+        for (JsonElement geneIdentifierElement : geneIdentifierArray) {
+            JsonObject geneIdentifierObject = geneIdentifierElement.getAsJsonObject();
+            ViccDatamodelCheckerFactory.geneIdentifierDatamodelChecker().check(geneIdentifierObject);
+
+            geneIdentifierList.add(ImmutableGeneIdentifier.builder()
+                    .symbol(geneIdentifierObject.getAsJsonPrimitive("symbol").getAsString())
+                    .entrezId(geneIdentifierObject.getAsJsonPrimitive("entrez_id").getAsString())
+                    .ensemblGeneId(!geneIdentifierObject.get("ensembl_gene_id").isJsonNull() ? geneIdentifierObject.getAsJsonPrimitive(
+                            "ensembl_gene_id").getAsString() : null)
+                    .build());
+        }
+
+        return geneIdentifierList;
+    }
+
+    @NotNull
+    private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
+        List<Feature> featureList = Lists.newArrayList();
+        ViccDatamodelChecker featureDatamodelChecker = ViccDatamodelCheckerFactory.featureDatamodelChecker();
+
+        for (JsonElement featureElement : featureArray) {
+            JsonObject featureObject = featureElement.getAsJsonObject();
+            featureDatamodelChecker.check(featureObject);
 
             featureList.add(ImmutableFeature.builder()
-                    .name(objectFeatures.has("name") ? objectFeatures.getAsJsonPrimitive("name").getAsString() : null)
-                    .biomarkerType(objectFeatures.has("biomarker_type")
-                            ? objectFeatures.getAsJsonPrimitive("biomarker_type").getAsString()
+                    .name(featureObject.has("name") ? featureObject.getAsJsonPrimitive("name").getAsString() : null)
+                    .biomarkerType(featureObject.has("biomarker_type")
+                            ? featureObject.getAsJsonPrimitive("biomarker_type").getAsString()
                             : null)
-                    .referenceName(objectFeatures.has("referenceName")
-                            ? objectFeatures.getAsJsonPrimitive("referenceName").getAsString()
+                    .referenceName(featureObject.has("referenceName")
+                            ? featureObject.getAsJsonPrimitive("referenceName").getAsString()
                             : null)
-                    .chromosome(objectFeatures.has("chromosome") ? objectFeatures.getAsJsonPrimitive("chromosome").getAsString() : null)
-                    .start(objectFeatures.has("start") && !objectFeatures.get("start").isJsonNull() ? objectFeatures.getAsJsonPrimitive(
-                            "start").getAsString() : null)
-                    .end(objectFeatures.has("end") && !objectFeatures.get("end").isJsonNull() ? objectFeatures.getAsJsonPrimitive("end")
+                    .chromosome(featureObject.has("chromosome") ? featureObject.getAsJsonPrimitive("chromosome").getAsString() : null)
+                    .start(featureObject.has("start") && !featureObject.get("start").isJsonNull()
+                            ? featureObject.getAsJsonPrimitive("start").getAsString()
+                            : null)
+                    .end(featureObject.has("end") && !featureObject.get("end").isJsonNull() ? featureObject.getAsJsonPrimitive("end")
                             .getAsString() : null)
-                    .ref(objectFeatures.has("ref") && !objectFeatures.get("ref").isJsonNull() ? objectFeatures.getAsJsonPrimitive("ref")
+                    .ref(featureObject.has("ref") && !featureObject.get("ref").isJsonNull() ? featureObject.getAsJsonPrimitive("ref")
                             .getAsString() : null)
-                    .alt(objectFeatures.has("alt") && !objectFeatures.get("alt").isJsonNull() ? objectFeatures.getAsJsonPrimitive("alt")
+                    .alt(featureObject.has("alt") && !featureObject.get("alt").isJsonNull() ? featureObject.getAsJsonPrimitive("alt")
                             .getAsString() : null)
                     .provenance(Lists.newArrayList())
-                    .provenanceRule(objectFeatures.has("provenance_rule") ? objectFeatures.getAsJsonPrimitive("provenance_rule")
-                            .getAsString() : null)
-                    .geneSymbol(objectFeatures.has("geneSymbol") && !objectFeatures.get("geneSymbol").isJsonNull()
-                            ? objectFeatures.getAsJsonPrimitive("geneSymbol").getAsString()
+                    .provenanceRule(featureObject.has("provenance_rule")
+                            ? featureObject.getAsJsonPrimitive("provenance_rule").getAsString()
                             : null)
-                    .synonyms(objectFeatures.has("synonyms") ? jsonArrayToStringList(objectFeatures.getAsJsonArray("synonyms")) : null)
-                    .entrezId(objectFeatures.has("entrez_id") ? objectFeatures.getAsJsonPrimitive("entrez_id").getAsString() : null)
-                    .sequenceOntology(objectFeatures.has("sequence_ontology") ? createSequenceOntology(objectFeatures.getAsJsonObject(
+                    .geneSymbol(featureObject.has("geneSymbol") && !featureObject.get("geneSymbol").isJsonNull()
+                            ? featureObject.getAsJsonPrimitive("geneSymbol").getAsString()
+                            : null)
+                    .synonyms(featureObject.has("synonyms") ? jsonArrayToStringList(featureObject.getAsJsonArray("synonyms")) : null)
+                    .entrezId(featureObject.has("entrez_id") ? featureObject.getAsJsonPrimitive("entrez_id").getAsString() : null)
+                    .sequenceOntology(featureObject.has("sequence_ontology") ? createSequenceOntology(featureObject.getAsJsonObject(
                             "sequence_ontology")) : null)
-                    .links(objectFeatures.has("links") ? jsonArrayToStringList(objectFeatures.getAsJsonArray("links")) : null)
-                    .description(objectFeatures.has("description") ? objectFeatures.getAsJsonPrimitive("description").getAsString() : null)
+                    .links(featureObject.has("links") ? jsonArrayToStringList(featureObject.getAsJsonArray("links")) : null)
+                    .description(featureObject.has("description") ? featureObject.getAsJsonPrimitive("description").getAsString() : null)
                     .build());
         }
 
@@ -181,13 +192,7 @@ public final class ViccJsonReader {
 
     @NotNull
     private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
-        Set<String> keysSequenceOntology = objectSequenceOntology.keySet();
-        if (!EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES.contains(keysSequenceOntology.size())) {
-            LOGGER.warn("Found {} in sequence ontology rather than the expected {}",
-                    keysSequenceOntology.size(),
-                    EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES);
-            LOGGER.warn(keysSequenceOntology);
-        }
+        ViccDatamodelCheckerFactory.sequenceOntologyDatamodelChecker().check(objectSequenceOntology);
 
         return ImmutableSequenceOntology.builder()
                 .hierarchy(objectSequenceOntology.has("hierarchy")
@@ -201,48 +206,8 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifiers) {
-        List<GeneIdentifier> listGeneIdentifiers = Lists.newArrayList();
-
-        for (JsonElement elementGeneIdentifier : geneIdentifiers) {
-            Set<String> keysGeneIdentifier = elementGeneIdentifier.getAsJsonObject().keySet();
-            if (!EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
-                LOGGER.warn("Found {} in gene identifiers rather than the expected {}",
-                        keysGeneIdentifier.size(),
-                        EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES);
-                LOGGER.warn(keysGeneIdentifier);
-            }
-            listGeneIdentifiers.add(toGeneIdentifier(elementGeneIdentifier.getAsJsonObject()));
-        }
-        return listGeneIdentifiers;
-    }
-
-    @NotNull
-    private static GeneIdentifier toGeneIdentifier(@NotNull JsonObject geneIdentifierObject) {
-        Set<String> keysGeneIdentifier = geneIdentifierObject.keySet();
-        if (!EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
-            LOGGER.warn("Found {} in gene identifier rather than the expected {}",
-                    keysGeneIdentifier.size(),
-                    EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES);
-            LOGGER.warn(keysGeneIdentifier);
-        }
-
-        return ImmutableGeneIdentifier.builder()
-                .symbol(geneIdentifierObject.getAsJsonPrimitive("symbol").getAsString())
-                .entrezId(geneIdentifierObject.getAsJsonPrimitive("entrez_id").getAsString())
-                .ensemblGeneId(!geneIdentifierObject.get("ensembl_gene_id").isJsonNull() ? geneIdentifierObject.getAsJsonPrimitive(
-                        "ensembl_gene_id").getAsString() : null)
-                .build();
-    }
-
-    @NotNull
     private static Association createAssociation(@NotNull JsonObject associationObject) {
-        Set<String> keysAssociation = associationObject.keySet();
-
-        if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
-            LOGGER.warn("Found {} in association rather than the expected {}", keysAssociation.size(), EXPECTED_ASSOCIATION_ELEMENT_SIZES);
-            LOGGER.warn(keysAssociation);
-        }
+        ViccDatamodelCheckerFactory.associationDatamodelChecker().check(associationObject);
 
         return ImmutableAssociation.builder()
                 .variantName(associationObject.has("variant_name") && associationObject.get("variant_name").isJsonArray()
@@ -273,6 +238,51 @@ public final class ViccJsonReader {
                         ? createEnvironmentalContexts(associationObject.getAsJsonArray("environmentalContexts"))
                         : null)
                 .oncogenic(associationObject.has("oncogenic") ? associationObject.getAsJsonPrimitive("oncogenic").getAsString() : null)
+                .build();
+    }
+
+    @NotNull
+    private static List<Evidence> createEvidence(@NotNull JsonArray evidenceArray) {
+        List<Evidence> evidenceList = Lists.newArrayList();
+        ViccDatamodelChecker evidenceChecker = ViccDatamodelCheckerFactory.evidenceDatamodelChecker();
+
+        for (JsonElement evidenceElement : evidenceArray) {
+            JsonObject evidenceObject = evidenceElement.getAsJsonObject();
+            evidenceChecker.check(evidenceObject);
+            evidenceList.add(ImmutableEvidence.builder()
+                    .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
+                    .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
+                    .description(!evidenceObject.get("description").isJsonNull() ? evidenceObject.getAsJsonPrimitive("description")
+                            .getAsString() : null)
+                    .build());
+        }
+        return evidenceList;
+    }
+
+    @NotNull
+    private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
+        if (!EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES.contains(evidenceTypeObject.keySet().size())) {
+            LOGGER.warn("Found {} in evidence type rather than the expected {}",
+                    evidenceTypeObject.keySet().size(),
+                    EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
+            LOGGER.warn(evidenceTypeObject.keySet());
+        }
+        return ImmutableEvidenceType.builder()
+                .sourceName(evidenceTypeObject.getAsJsonPrimitive("sourceName").getAsString())
+                .id(evidenceTypeObject.has("id") ? evidenceTypeObject.getAsJsonPrimitive("id").getAsString() : null)
+                .build();
+    }
+
+    @NotNull
+    private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
+        if (!EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES.contains(evidenceInfoObject.keySet().size())) {
+            LOGGER.warn("Found {} in evidence info rather than the expected {}",
+                    evidenceInfoObject.keySet().size(),
+                    EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
+            LOGGER.warn(evidenceInfoObject.keySet());
+        }
+        return ImmutableEvidenceInfo.builder()
+                .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
                 .build();
     }
 
@@ -335,55 +345,6 @@ public final class ViccJsonReader {
                         ? environmentContextObject.getAsJsonPrimitive("subclass").getAsString()
                         : null)
                 .superClass(environmentContextObject.getAsJsonPrimitive("superclass").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static List<Evidence> createEvidence(@NotNull JsonArray evidenceArray) {
-        List<Evidence> listEvidence = Lists.newArrayList();
-
-        for (JsonElement evidenceElement : evidenceArray) {
-            JsonObject evidenceObject = evidenceElement.getAsJsonObject();
-            Set<String> keysEvidence = evidenceObject.keySet();
-            if (!EXPECTED_EVIDENCE_ELEMENT_SIZES.contains(keysEvidence.size())) {
-                LOGGER.warn("Found {} in evidence rather than the expected {}", keysEvidence.size(), EXPECTED_EVIDENCE_ELEMENT_SIZES);
-                LOGGER.warn(keysEvidence);
-            }
-
-            listEvidence.add(ImmutableEvidence.builder()
-                    .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
-                    .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
-                    .description(!evidenceObject.get("description").isJsonNull() ? evidenceObject.getAsJsonPrimitive("description")
-                            .getAsString() : null)
-                    .build());
-        }
-        return listEvidence;
-    }
-
-    @NotNull
-    private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
-        if (!EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES.contains(evidenceTypeObject.keySet().size())) {
-            LOGGER.warn("Found {} in evidence type rather than the expected {}",
-                    evidenceTypeObject.keySet().size(),
-                    EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
-            LOGGER.warn(evidenceTypeObject.keySet());
-        }
-        return ImmutableEvidenceType.builder()
-                .sourceName(evidenceTypeObject.getAsJsonPrimitive("sourceName").getAsString())
-                .id(evidenceTypeObject.has("id") ? evidenceTypeObject.getAsJsonPrimitive("id").getAsString() : null)
-                .build();
-    }
-
-    @NotNull
-    private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
-        if (!EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES.contains(evidenceInfoObject.keySet().size())) {
-            LOGGER.warn("Found {} in evidence info rather than the expected {}",
-                    evidenceInfoObject.keySet().size(),
-                    EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
-            LOGGER.warn(evidenceInfoObject.keySet());
-        }
-        return ImmutableEvidenceInfo.builder()
-                .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
                 .build();
     }
 
