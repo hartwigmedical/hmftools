@@ -86,7 +86,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.vicc.ViccJsonToSQLImporter
+                            <mainClass>com.hartwig.hmftools.vicc.ViccJsonSQLImporter
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>

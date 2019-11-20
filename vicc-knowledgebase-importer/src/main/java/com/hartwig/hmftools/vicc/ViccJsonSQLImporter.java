@@ -27,10 +27,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class ViccJsonToSQLImporter {
-    private static final Logger LOGGER = LogManager.getLogger(ViccJsonToSQLImporter.class);
+public class ViccJsonSQLImporter {
 
-    private static final String VICC_FILE = "vicc_file";
+    private static final Logger LOGGER = LogManager.getLogger(ViccJsonSQLImporter.class);
+
+    private static final String VICC_JSON = "vicc_json";
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -43,7 +44,7 @@ public class ViccJsonToSQLImporter {
         final CommandLine cmd = createCommandLine(args, options);
 
         if (validInput(cmd)) {
-            List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(cmd.getOptionValue(VICC_FILE));
+            List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(cmd.getOptionValue(VICC_JSON));
             analyzeViccEntries(viccEntries);
 
             LOGGER.info("DONE!");
@@ -66,14 +67,9 @@ public class ViccJsonToSQLImporter {
     }
 
     private static boolean validInput(@NotNull CommandLine cmd) {
-        return fileExists(cmd);
-    }
-
-    private static boolean fileExists(@NotNull CommandLine cmd) {
-        String value = cmd.getOptionValue(VICC_FILE);
-
-        if (value == null || !pathExists(value)) {
-            LOGGER.warn(VICC_FILE + " has to be an existing file: " + value);
+        String viccJsonPath = cmd.getOptionValue(VICC_JSON);
+        if (viccJsonPath == null || !pathExists(viccJsonPath)) {
+            LOGGER.warn(VICC_JSON + " has to be an existing file: " + viccJsonPath);
             return false;
         }
 
@@ -87,7 +83,7 @@ public class ViccJsonToSQLImporter {
     @NotNull
     private static Options createOptions() {
         final Options options = new Options();
-        options.addOption(VICC_FILE, true, "Path towards the vicc file ");
+        options.addOption(VICC_JSON, true, "Path towards the vicc json input ");
 
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
