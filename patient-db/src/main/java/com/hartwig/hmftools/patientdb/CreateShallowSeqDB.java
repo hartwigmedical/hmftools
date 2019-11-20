@@ -56,7 +56,7 @@ public class CreateShallowSeqDB {
 
         extraxtPurpleFromSample(runContexts, cmd.getOptionValue(SHALLOW_SEQ_CSV), cmd.getOptionValue(RUNS_DIRECTORY));
 
-        LOGGER.info("Shallow seq DB is complete");
+        LOGGER.info("Shallow seq DB is complete!");
     }
 
     @NotNull
@@ -84,19 +84,21 @@ public class CreateShallowSeqDB {
             String setName = path + "/" + runInfo.setName();
             String sampleBarcode = runInfo.tumorBarcodeSample();
             LOGGER.info("setName: " + setName);
-            String purple_purity_tsv = Strings.EMPTY;
-            String purple_qc_file = Strings.EMPTY;
+            String purple_purity_tsv_ext = Strings.EMPTY;
+            String purple_qc_file_ext = Strings.EMPTY;
             File checkPipelineVersionFile = new File(setName + "/pipeline.version");
             if (checkPipelineVersionFile.exists()) {
-                purple_purity_tsv = ".purple.purity.tsv";
-                purple_qc_file = ".purple.qc";
+                purple_purity_tsv_ext = ".purple.purity.tsv";
+                purple_qc_file_ext = ".purple.qc";
             } else {
-                purple_purity_tsv = ".purple.purity";
-                purple_qc_file = ".purple.qc";
+                purple_purity_tsv_ext = ".purple.purity";
+                purple_qc_file_ext = ".purple.qc";
             }
+            String purple_purity_tsv = setName + PURPLE_DIR + tumorSample + purple_purity_tsv_ext;
+            String purple_qc_file = setName + PURPLE_DIR + tumorSample + purple_qc_file_ext;
 
-            PurityContext purityContext = FittedPurityFile.read(setName + PURPLE_DIR + tumorSample + purple_purity_tsv);
-            PurpleQC purpleQC = PurpleQCFile.read(setName + PURPLE_DIR + tumorSample + purple_qc_file);
+            PurityContext purityContext = FittedPurityFile.read(purple_purity_tsv);
+            PurpleQC purpleQC = PurpleQCFile.read(purple_qc_file);
 
             boolean QCstatus = purpleQC.status() == PurpleQCStatus.PASS;
             boolean status = purityContext.status() != FittedPurityStatus.NO_TUMOR;

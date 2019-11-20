@@ -73,6 +73,7 @@ final class MetaDataResolver {
         String refSample = fieldValue(json, REF_SAMPLE_FIELD_P4);
         String tumorSample = fieldValue(json, TUMOR_SAMPLE_FIELD_P4);
         String setName = fieldValue(json, SET_NAME_FIELD_P4);
+        String tumorBarcodeSample = Strings.EMPTY;
 
         if (refSample == null) {
             LOGGER.warn("Could not find " + REF_SAMPLE_FIELD_P4 + " in metadata file!");
@@ -82,7 +83,7 @@ final class MetaDataResolver {
             return null;
         }
 
-        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), "");
+        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);
     }
 
     @Nullable
