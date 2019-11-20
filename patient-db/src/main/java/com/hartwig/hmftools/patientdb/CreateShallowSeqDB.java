@@ -6,22 +6,28 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.ImmutableLimsShallowSeqData;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
+import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
+import com.hartwig.hmftools.common.lims.LimsShallowSeqData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class CreateShallowSeqDB {
@@ -30,46 +36,87 @@ public class CreateShallowSeqDB {
 
     private static final String RUNS_DIRECTORY = "runs_dir";
 
-    private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
-    private static final String PURPLE_QC_FILE = "purple_qc_file";
-
     private static final String SHALLOW_SEQ_CSV = "shallow_seq_csv";
 
     private static final String PURPLE_DIR = "/purple/";
+    private static final String DELIMITER = ",";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
+        if (!checkInputs(cmd)) {
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("shallow seq db ", options);
+            System.exit(1);
+        }
+
         LOGGER.info("Loading shallow seq runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         final List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
 
-        extraxtPurpleFromSample(runContexts,
-                cmd.getOptionValue(PURPLE_PURITY_TSV),
-                cmd.getOptionValue(PURPLE_QC_FILE),
-                cmd.getOptionValue(SHALLOW_SEQ_CSV));
+        extraxtPurpleFromSample(runContexts, cmd.getOptionValue(SHALLOW_SEQ_CSV), cmd.getOptionValue(RUNS_DIRECTORY));
 
-        LOGGER.info("Complete");
+        LOGGER.info("Shallow seq DB is complete");
     }
 
     @NotNull
-    private static void extraxtPurpleFromSample(@NotNull List<RunContext> runContexts, @NotNull String purplePurityTsv,
-            @NotNull String purpleQCTsv, @NotNull String shallowSeqOutputCsv) throws IOException {
+    private static List<LimsShallowSeqData> read(@NotNull String shallowSeqCsv) throws IOException {
+        List<String> linesShallowDB = LineReader.build().readLines(new File(shallowSeqCsv).toPath(), line -> line.length() > 0);
+        List<LimsShallowSeqData> shallowSeqDataList = Lists.newArrayList();
+        for (String line : linesShallowDB.subList(1, linesShallowDB.size())) {
+            String[] values = line.split(DELIMITER);
+
+            shallowSeqDataList.add(ImmutableLimsShallowSeqData.builder()
+                    .sampleBarcode(values[0])
+                    .sampleId(values[1])
+                    .purityShallowSeq(values[2])
+                    .hasReliableQuality(Boolean.parseBoolean(values[3]))
+                    .hasReliablePurity(Boolean.parseBoolean(values[4]))
+                    .build());
+        }
+        return shallowSeqDataList;
+    }
+
+    private static void extraxtPurpleFromSample(@NotNull List<RunContext> runContexts, @NotNull String shallowSeqOutputCsv,
+            @NotNull String path) throws IOException {
         for (RunContext runInfo : runContexts) {
             String tumorSample = runInfo.tumorSample();
-            String setName = runInfo.setName();
-            String sampleBarcode = "";
+            String setName = path + "/" + runInfo.setName();
+            String sampleBarcode = runInfo.tumorBarcodeSample();
+            LOGGER.info("setName: " + setName);
+            String purple_purity_tsv = Strings.EMPTY;
+            String purple_qc_file = Strings.EMPTY;
+            File checkPipelineVersionFile = new File(setName + "/pipeline.version");
+            if (checkPipelineVersionFile.exists()) {
+                purple_purity_tsv = ".purple.purity.tsv";
+                purple_qc_file = ".purple.qc";
+            } else {
+                purple_purity_tsv = ".purple.purity";
+                purple_qc_file = ".purple.qc";
+            }
 
-            PurityContext purityContext = FittedPurityFile.read(setName + PURPLE_DIR + tumorSample + purplePurityTsv);
-            PurpleQC purpleQC = PurpleQCFile.read(setName + PURPLE_DIR + tumorSample + purpleQCTsv);
+            PurityContext purityContext = FittedPurityFile.read(setName + PURPLE_DIR + tumorSample + purple_purity_tsv);
+            PurpleQC purpleQC = PurpleQCFile.read(setName + PURPLE_DIR + tumorSample + purple_qc_file);
 
             boolean QCstatus = purpleQC.status() == PurpleQCStatus.PASS;
             boolean status = purityContext.status() != FittedPurityStatus.NO_TUMOR;
             double purity = purityContext.bestFit().purity();
 
-            String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status;
-            appendToTsv(shallowSeqOutputCsv, outputStringForFile);
+            List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
 
+            LOGGER.info("purple_purity_tsv: " + purple_purity_tsv);
+            LOGGER.info("purple_qc_file: " + purple_qc_file);
+            LOGGER.info("sampleBarcode: " + sampleBarcode);
+            for (LimsShallowSeqData sample : shallowSeqData) {
+                LOGGER.info("sample.sampleBarcode(): " + sample.sampleBarcode());
+                if (sample.sampleBarcode().equals(sampleBarcode)) {
+                    LOGGER.warn("Sample barcode are already present in file. Skipping " + sampleBarcode + "for writing to shallow seq db!");
+                } else {
+                    String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status;
+                    appendToTsv(shallowSeqOutputCsv, outputStringForFile);
+                    LOGGER.info("Sample " + sampleBarcode + " is added to shallow seq db!");
+                }
+            }
         }
     }
 
@@ -82,9 +129,28 @@ public class CreateShallowSeqDB {
     }
 
     private static void appendToTsv(@NotNull String shallowSeqCsv, @NotNull String stringToAppend) throws IOException {
+        LOGGER.info("shallowSeqCsv: " + shallowSeqCsv);
         BufferedWriter writer = new BufferedWriter(new FileWriter(shallowSeqCsv, true));
         writer.write(stringToAppend);
         writer.close();
+    }
+
+    private static boolean checkInputs(@NotNull CommandLine cmd) {
+        final String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
+
+        boolean allParamsPresent = !Utils.anyNull(runsDirectory, cmd.getOptionValue(SHALLOW_SEQ_CSV));
+
+        boolean validRunDirectories = true;
+        if (allParamsPresent) {
+            final File runDirectoryDb = new File(runsDirectory);
+
+            if (!runDirectoryDb.exists() || !runDirectoryDb.isDirectory()) {
+                validRunDirectories = false;
+                LOGGER.warn("shallow seq {} does not exist or is not a directory", runDirectoryDb);
+            }
+        }
+
+        return validRunDirectories && allParamsPresent;
     }
 
     @NotNull
@@ -98,9 +164,6 @@ public class CreateShallowSeqDB {
         final Options options = new Options();
 
         options.addOption(RUNS_DIRECTORY, true, "Path towards the folder containing all shallow seq runs .");
-
-        options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
-        options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");
 
         options.addOption(SHALLOW_SEQ_CSV, true, "Path towards output file for the shallow seq db CSV.");
 

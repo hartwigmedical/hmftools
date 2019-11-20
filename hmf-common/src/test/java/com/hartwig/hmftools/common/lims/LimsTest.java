@@ -61,8 +61,13 @@ public class LimsTest {
         LimsJsonSubmissionData submissionData =
                 ImmutableLimsJsonSubmissionData.builder().submission(SUBMISSION).projectName(projectName).build();
 
-        LimsShallowSeqData shallowSeqData =
-                ImmutableLimsShallowSeqData.builder().sampleId(TUMOR_SAMPLE_ID).purityShallowSeq(purityShallowSeq).build();
+        LimsShallowSeqData shallowSeqData = ImmutableLimsShallowSeqData.builder()
+                .sampleBarcode(TUMOR_SAMPLE_BARCODE)
+                .sampleId(TUMOR_SAMPLE_ID)
+                .purityShallowSeq(purityShallowSeq)
+                .hasReliablePurity(true)
+                .hasReliableQuality(true)
+                .build();
 
         Lims lims = buildFullTestLims(sampleData, submissionData, shallowSeqData);
 
@@ -255,7 +260,8 @@ public class LimsTest {
         Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        shallowSeqDataPerSample.put(sampleData.sampleId(), ImmutableLimsShallowSeqData.of(sampleData.sampleId(), shallowSeqPurity));
+        shallowSeqDataPerSample.put(sampleData.sampleId(),
+                ImmutableLimsShallowSeqData.of("FR123", sampleData.sampleId(), shallowSeqPurity, true, true));
 
         return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }

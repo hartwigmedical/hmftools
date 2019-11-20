@@ -63,11 +63,17 @@ public final class LimsFactory {
     @VisibleForTesting
     static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
         final Map<String, LimsShallowSeqData> shallowSeqPerSample = Maps.newHashMap();
-        final List<String> lines = com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
+        final List<String> lines =
+                com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
         for (final String line : lines) {
-            final String[] parts = line.split(FIELD_SEPARATOR, 2);
-            if (parts.length == 2) {
-                shallowSeqPerSample.put(parts[0], ImmutableLimsShallowSeqData.of(parts[0], parts[1]));
+            final String[] parts = line.split(FIELD_SEPARATOR, 6);
+            if (parts.length == 6) {
+                shallowSeqPerSample.put(parts[0],
+                        ImmutableLimsShallowSeqData.of(parts[0],
+                                parts[1],
+                                parts[2],
+                                Boolean.parseBoolean(parts[3]),
+                                Boolean.parseBoolean(parts[4])));
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
             }

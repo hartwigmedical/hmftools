@@ -27,11 +27,14 @@ final class MetaDataResolver {
 
     private static final String REF_SAMPLE_FIELD_P5 = "reference";
     private static final String TUMOR_SAMPLE_FIELD_P5 = "tumor";
+    private static final String BARCODE_TUMOR_SAMPLE_FIELD_P5 = "sampleId";
 
     private static final String SET_NAME_FIELD_P4 = "set_name";
     private static final String SET_NAME_FIELD_P5 = "runName";
 
     private static final String NO_TUMOR_SAMPLE = "NA";
+    private static final String BARCODE_START = "FR";
+
 
     private static final Gson GSON = new GsonBuilder().create();
 
@@ -79,7 +82,7 @@ final class MetaDataResolver {
             return null;
         }
 
-        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample));
+        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), "");
     }
 
     @Nullable
@@ -88,6 +91,7 @@ final class MetaDataResolver {
 
         String refSample = sampleIdP5(json, REF_SAMPLE_FIELD_P5);
         String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_FIELD_P5);
+        String tumorBarcodeSample = sampleBarcodeIdP5(json);
         String setName = fieldValue(json, SET_NAME_FIELD_P5);
 
         if (refSample == null) {
@@ -96,9 +100,11 @@ final class MetaDataResolver {
         } else if (setName == null) {
             LOGGER.warn("Could not find " + SET_NAME_FIELD_P5 + " in metadata file!");
             return null;
+        } else if (tumorBarcodeSample == null) {
+            LOGGER.warn("Could not find " + BARCODE_TUMOR_SAMPLE_FIELD_P5 + " in metadata file!");
+            return null;
         }
-
-        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample));
+        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);
     }
 
     @NotNull
@@ -117,5 +123,12 @@ final class MetaDataResolver {
         final JsonElement element = object.get(fieldName);
         JsonElement sampleId = element.getAsJsonObject().get("sampleName");
         return sampleId != null && !(sampleId instanceof JsonNull) ? sampleId.getAsString() : null;
+    }
+
+    @Nullable
+    private static String sampleBarcodeIdP5(@NotNull final JsonObject object) {
+        final JsonElement element = object.get(TUMOR_SAMPLE_FIELD_P5);
+        JsonElement sampleBarcodeId = element.getAsJsonObject().get("sampleId");
+        return sampleBarcodeId != null && !(sampleBarcodeId instanceof JsonNull) ? sampleBarcodeId.getAsString() : null;
     }
 }

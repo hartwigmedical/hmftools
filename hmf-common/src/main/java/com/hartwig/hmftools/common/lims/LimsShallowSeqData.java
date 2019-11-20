@@ -7,11 +7,18 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-abstract class LimsShallowSeqData {
+public abstract class LimsShallowSeqData {
 
     @NotNull
-    abstract String sampleId();
+    public abstract String sampleBarcode();
 
     @NotNull
-    abstract String purityShallowSeq();
+    public abstract String sampleId();
+
+    @NotNull
+    public abstract String purityShallowSeq();
+
+    public abstract boolean hasReliablePurity();
+
+    public abstract boolean hasReliableQuality();
 }

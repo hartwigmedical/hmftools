@@ -15,4 +15,7 @@ public interface RunContext {
 
     @NotNull
     String tumorSample();
+
+    @NotNull
+    String tumorBarcodeSample();
 }
