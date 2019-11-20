@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.linx.cn;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
@@ -21,6 +24,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomeLength;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -168,11 +174,12 @@ public class CopyNumberAnalyser
         {
             if (mCnSegmentWriter == null)
             {
-                String outputFileName = mOutputPath + "CN_ELEV_SEGMENTS.csv";
+                String outputFileName = mOutputPath + "CN_CHANGE_SEGMENTS.csv";
 
                 mCnSegmentWriter = createBufferedWriter(outputFileName, false);
 
-                mCnSegmentWriter.write("SampleId,IsMale,Chromosome,Ploidy,ElevSegCount");
+                mCnSegmentWriter.write("SampleId,IsMale,Chromosome,CnChange,Frequency");
+                // mCnSegmentWriter.write("SampleId,IsMale,Chromosome,Ploidy,ElevSegCount");
                 mCnSegmentWriter.newLine();
             }
 
@@ -183,15 +190,90 @@ public class CopyNumberAnalyser
 
             LOGGER.debug("sample({}) ploidy({})", sampleId, formatPloidy(samplePloidy));
 
-            for(Map.Entry<String,List<SvCNData>> entry : chrCnDataMap.entrySet())
+            for(HumanChromosome chrEntry : HumanChromosome.values())
             {
-                final String chromosome = entry.getKey();
+                final String chromosome = chrEntry.toString();
+                final List<SvCNData> cnDataList = chrCnDataMap.get(chromosome);
 
                 if(!isMale && chromosome.equals("Y"))
                     continue;
 
-                final List<SvCNData> cnDataList = entry.getValue();
+                if(cnDataList.isEmpty())
+                {
+                    // account for no segments with CN change
+                    long chromosomeLength = getChromosomeLength(chromosome);
+                    int windowCount = (int)(chromosomeLength/CN_SEGMENT_WINDOW_SIZE);
 
+                    mCnSegmentWriter.write(String.format("%s,%s,%s,%d,%d",
+                            sampleId, isMale, chromosome, 0, windowCount));
+                    mCnSegmentWriter.newLine();
+
+                    continue;
+                }
+
+                final Map<Integer,Integer> cnFrequency = Maps.newHashMap();
+                cnFrequency.put(0, 0);
+
+                long windowStartPos = 0;
+                long windowEndPos = windowStartPos + CN_SEGMENT_WINDOW_SIZE;
+
+                // account for first and last segments
+                final SvCNData firstSegment = cnDataList.get(0);
+                double prevCopyNumber = cnDataList.get(0).CopyNumber;
+
+                for(int i = 1; i < cnDataList.size(); ++i)
+                {
+                    final SvCNData cnData = cnDataList.get(i);
+
+                    if(cnData.StartPos < windowEndPos)
+                        continue;
+
+                    windowEndPos = (long)floor(cnData.StartPos/(double)CN_SEGMENT_WINDOW_SIZE)*CN_SEGMENT_WINDOW_SIZE;
+
+                    // account for the distance out the telomere for the last segment
+                    int skippedWindowCount = (int)((windowEndPos - windowStartPos) / CN_SEGMENT_WINDOW_SIZE);
+
+                    if(!copyNumbersEqual(prevCopyNumber, cnData.CopyNumber))
+                    {
+                        double cnChange = abs(prevCopyNumber - cnData.CopyNumber);
+                        int cnChangeInt = (int)max(round(cnChange), 1);
+
+                        if(cnFrequency.containsKey(cnChangeInt))
+                            cnFrequency.put(cnChangeInt, cnFrequency.get(cnChangeInt) + 1);
+                        else
+                            cnFrequency.put(cnChangeInt, 1);
+
+                        --skippedWindowCount;
+                    }
+
+                    // account for segments without change
+                    if(skippedWindowCount > 0)
+                    {
+                        cnFrequency.put(0, cnFrequency.get(0) + skippedWindowCount);
+                    }
+
+                    windowStartPos = windowEndPos;
+                    windowEndPos = windowStartPos + CN_SEGMENT_WINDOW_SIZE;
+                    prevCopyNumber = cnData.CopyNumber;
+                }
+
+                // account for the last segment out to the telomere
+                final SvCNData lastSegment = cnDataList.get(cnDataList.size() - 1);
+                int skippedWindowCount = (int)((lastSegment.EndPos - lastSegment.StartPos) / CN_SEGMENT_WINDOW_SIZE);
+
+                if(skippedWindowCount > 0)
+                    cnFrequency.put(0, cnFrequency.get(0) + skippedWindowCount);
+
+
+                for(Map.Entry<Integer,Integer> cnCntry : cnFrequency.entrySet())
+                {
+                    mCnSegmentWriter.write(String.format("%s,%s,%s,%d,%d",
+                            sampleId, isMale, chromosome, cnCntry.getKey(), cnCntry.getValue()));
+                    mCnSegmentWriter.newLine();
+                }
+
+
+                /*
                 long lastWindowStart = 0;
                 double cnWindowTotal = 0;
                 int elevatedCnWindows = 0;
@@ -235,6 +317,7 @@ public class CopyNumberAnalyser
 
                 mCnSegmentWriter.write(String.format("%s,%s,%s,%.2f,%d",
                         sampleId, isMale, chromosome, samplePloidy, elevatedCnWindows));
+                */
 
                 mCnSegmentWriter.newLine();
             }
