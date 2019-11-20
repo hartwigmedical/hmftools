@@ -18,6 +18,22 @@ public final class BachelorFile {
 
     private static final String DELIMITER = "\t";
 
+    private static final String CHROMOSOME_COLUMN = "chromosome";
+    private static final String POSITION_COLUMN = "position";
+    private static final String FILTER_COLUMN = "filter";
+    private static final String REF_COLUMN = "ref";
+    private static final String ALT_COLUMN = "alts";
+    private static final String GENE_COLUMN = "gene";
+    private static final String CODING_EFFECT_COLUMN = "codingEffect";
+    private static final String ALLELE_READ_COLUMN = "alleleReadCount";
+    private static final String TOTAL_READ_COLUMN = "totalReadCount";
+    private static final String ADJUSTED_VAF_COLUMN = "adjustedVaf";
+    private static final String ADJUSTED_COPY_NUMBER_COLUMN = "adjustedCopyNumber";
+    private static final String HGVS_PROTEIN_COLUMN = "hgvsProtein";
+    private static final String HGVS_CODING_COLUMN = "hgvsCoding";
+    private static final String BIALLELIC_COLUMN = "biallelic";
+    private static final String PROGRAM_COLUMN = "program";
+
     private BachelorFile() {
     }
 
@@ -29,39 +45,50 @@ public final class BachelorFile {
     @NotNull
     private static List<GermlineVariant> fromLines(@NotNull List<String> lines) {
         List<GermlineVariant> germlineVariants = Lists.newArrayList();
+        String[] headers = lines.get(0).split(DELIMITER);
         // Skip header line
         for (String line : lines.subList(1, lines.size())) {
-            germlineVariants.add(fromString(line));
+            germlineVariants.add(fromString(headers, line));
         }
         return germlineVariants;
     }
 
     @NotNull
-    private static GermlineVariant fromString(@NotNull String line) {
+    private static GermlineVariant fromString(@NotNull String[] headers, @NotNull String line) {
         String[] values = line.split(DELIMITER);
 
-        String program = values[24];
+        String program = values[findIndexForValue(headers, PROGRAM_COLUMN)];
         if (!program.equalsIgnoreCase("HMF")) {
             LOGGER.warn("Unexpected bachelor program found: {}", program);
         }
 
-        String filter = values[2].trim();
+        String filter = values[findIndexForValue(headers, FILTER_COLUMN)].trim();
 
         return ImmutableGermlineVariant.builder()
                 .passFilter(filter.equalsIgnoreCase("PASS"))
-                .gene(values[6].trim())
-                .ref(values[4].trim())
-                .alt(values[5].trim())
-                .codingEffect(CodingEffect.valueOf(values[11].trim()))
-                .chromosome(values[0].trim())
-                .position(Integer.parseInt(values[1].trim()))
-                .hgvsCodingImpact(values[21].trim())
-                .hgvsProteinImpact(values[20].trim())
-                .totalReadCount(Integer.parseInt(values[16]))
-                .alleleReadCount(Integer.parseInt(values[15]))
-                .adjustedVAF(Double.parseDouble(values[17].trim()))
-                .adjustedCopyNumber(Double.parseDouble(values[18].trim()))
-                .biallelic(Boolean.parseBoolean(values[22].trim()))
+                .chromosome(values[findIndexForValue(headers, CHROMOSOME_COLUMN)].trim())
+                .position(Integer.parseInt(values[findIndexForValue(headers, POSITION_COLUMN)].trim()))
+                .ref(values[findIndexForValue(headers, REF_COLUMN)].trim())
+                .alt(values[findIndexForValue(headers, ALT_COLUMN)].trim())
+                .gene(values[findIndexForValue(headers, GENE_COLUMN)].trim())
+                .codingEffect(CodingEffect.valueOf(values[findIndexForValue(headers, CODING_EFFECT_COLUMN)].trim()))
+                .hgvsCodingImpact(values[findIndexForValue(headers, HGVS_CODING_COLUMN)].trim())
+                .hgvsProteinImpact(values[findIndexForValue(headers, HGVS_PROTEIN_COLUMN)].trim())
+                .totalReadCount(Integer.parseInt(values[findIndexForValue(headers, TOTAL_READ_COLUMN)]))
+                .alleleReadCount(Integer.parseInt(values[findIndexForValue(headers, ALLELE_READ_COLUMN)]))
+                .adjustedVAF(Double.parseDouble(values[findIndexForValue(headers, ADJUSTED_VAF_COLUMN)].trim()))
+                .adjustedCopyNumber(Double.parseDouble(values[findIndexForValue(headers, ADJUSTED_COPY_NUMBER_COLUMN)].trim()))
+                .biallelic(Boolean.parseBoolean(values[findIndexForValue(headers, BIALLELIC_COLUMN)].trim()))
                 .build();
+    }
+
+    private static int findIndexForValue(@NotNull String[] headers, @NotNull String value) {
+        for (int i = 0; i < headers.length; i++) {
+            if (headers[i].equals(value)) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException(String.format("Value %s not found in headers of BachelorFile!", value));
     }
 }
