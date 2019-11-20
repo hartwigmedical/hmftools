@@ -23,7 +23,7 @@ import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SomaticPipelineData {
+class SomaticPipelineData {
 
     private final String normalSample;
 

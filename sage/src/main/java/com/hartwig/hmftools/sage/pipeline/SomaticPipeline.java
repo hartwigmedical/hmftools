@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -22,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class SomaticPipeline {
+public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVariant>>> {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
 
@@ -41,6 +42,11 @@ public class SomaticPipeline {
         this.variantFactory = variantFactory;
         this.samSlicerFactory = samSlicerFactory;
         this.refSequence = new RefSequence(region, refGenome);
+    }
+
+    @Override
+    public CompletableFuture<List<SageVariant>> get() {
+        return submit();
     }
 
     @NotNull
@@ -84,4 +90,6 @@ public class SomaticPipeline {
             return somaticPipelineData.results();
         });
     }
+
+
 }
