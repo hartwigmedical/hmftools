@@ -102,4 +102,33 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", true);
         return new ViccDatamodelChecker("Evidence", map);
     }
+
+    @NotNull
+    static ViccDatamodelChecker evidenceInfoDatamodelChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("publications", true);
+        return new ViccDatamodelChecker("EvidenceInfo", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker evidenceTypeDatamodelChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("sourceName", true);
+        map.put("id", false);
+        return new ViccDatamodelChecker("EvidenceType", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker environmentalContextDatamodelChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("term", false);
+        map.put("description", true);
+        map.put("taxonomy", false);
+        map.put("source", false);
+        map.put("usan_stem", false);
+        map.put("approved_countries", false);
+        map.put("toxicity", false);
+        map.put("id", false);
+        return new ViccDatamodelChecker("EnvironmentalContext", map);
+    }
 }

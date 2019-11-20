@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringLi
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -48,13 +47,10 @@ public final class ViccJsonReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
-    private static final List<Integer> EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES = Lists.newArrayList(1);
-    private static final List<Integer> EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES = Lists.newArrayList(1, 2);
     private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
     private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
 
     private static final List<Integer> EXPECTED_TAXONOMY = Lists.newArrayList(4, 5);
-    private static final List<Integer> EXPECTED_ENVIRONMENT_CONTEXT = Lists.newArrayList(2, 4, 5, 6, 7, 8);
 
     private ViccJsonReader() {
     }
@@ -244,11 +240,12 @@ public final class ViccJsonReader {
     @NotNull
     private static List<Evidence> createEvidence(@NotNull JsonArray evidenceArray) {
         List<Evidence> evidenceList = Lists.newArrayList();
-        ViccDatamodelChecker evidenceChecker = ViccDatamodelCheckerFactory.evidenceDatamodelChecker();
+        ViccDatamodelChecker evidenceDatamodelChecker = ViccDatamodelCheckerFactory.evidenceDatamodelChecker();
 
         for (JsonElement evidenceElement : evidenceArray) {
             JsonObject evidenceObject = evidenceElement.getAsJsonObject();
-            evidenceChecker.check(evidenceObject);
+            evidenceDatamodelChecker.check(evidenceObject);
+
             evidenceList.add(ImmutableEvidence.builder()
                     .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
                     .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
@@ -260,13 +257,18 @@ public final class ViccJsonReader {
     }
 
     @NotNull
+    private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
+        ViccDatamodelCheckerFactory.evidenceInfoDatamodelChecker().check(evidenceInfoObject);
+
+        return ImmutableEvidenceInfo.builder()
+                .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
+                .build();
+    }
+
+    @NotNull
     private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
-        if (!EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES.contains(evidenceTypeObject.keySet().size())) {
-            LOGGER.warn("Found {} in evidence type rather than the expected {}",
-                    evidenceTypeObject.keySet().size(),
-                    EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
-            LOGGER.warn(evidenceTypeObject.keySet());
-        }
+        ViccDatamodelCheckerFactory.evidenceTypeDatamodelChecker().check(evidenceTypeObject);
+
         return ImmutableEvidenceType.builder()
                 .sourceName(evidenceTypeObject.getAsJsonPrimitive("sourceName").getAsString())
                 .id(evidenceTypeObject.has("id") ? evidenceTypeObject.getAsJsonPrimitive("id").getAsString() : null)
@@ -274,60 +276,36 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
-        if (!EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES.contains(evidenceInfoObject.keySet().size())) {
-            LOGGER.warn("Found {} in evidence info rather than the expected {}",
-                    evidenceInfoObject.keySet().size(),
-                    EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
-            LOGGER.warn(evidenceInfoObject.keySet());
-        }
-        return ImmutableEvidenceInfo.builder()
-                .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
-                .build();
-    }
+    private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonArray environmentalContextArray) {
+        List<EnvironmentalContext> environmentalContextList = Lists.newArrayList();
+        ViccDatamodelChecker environmentalContextDatamodelChecker = ViccDatamodelCheckerFactory.environmentalContextDatamodelChecker();
 
-    @NotNull
-    private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonArray arrayEnvironmentalContexts) {
-        List<EnvironmentalContext> environmentalContexts = Lists.newArrayList();
+        for (JsonElement environmentalContextElement : environmentalContextArray) {
+            JsonObject environmentalContextObject = environmentalContextElement.getAsJsonObject();
+            environmentalContextDatamodelChecker.check(environmentalContextObject);
 
-        for (JsonElement elementEnvironmentContext : arrayEnvironmentalContexts) {
-            JsonObject environmentContextObject = elementEnvironmentContext.getAsJsonObject();
-            Set<String> keysEnvironmentContext = environmentContextObject.keySet();
-
-            if (!EXPECTED_ENVIRONMENT_CONTEXT.contains(keysEnvironmentContext.size())) {
-                LOGGER.warn("Found {} in environmental context rather than the expected {}",
-                        keysEnvironmentContext.size(),
-                        EXPECTED_ENVIRONMENT_CONTEXT);
-                LOGGER.warn(keysEnvironmentContext);
-            }
-
-            List<String> approvedCountries = Lists.newArrayList();
-            if (environmentContextObject.has("approved_countries")) {
-                for (JsonElement approvedCountriesElement : environmentContextObject.getAsJsonArray("approved_countries")) {
-                    approvedCountries.add(approvedCountriesElement.getAsString());
-                }
-            }
-
-            environmentalContexts.add(ImmutableEnvironmentalContext.builder()
-                    .term(environmentContextObject.has("term") ? environmentContextObject.getAsJsonPrimitive("term").getAsString() : null)
-                    .description(environmentContextObject.getAsJsonPrimitive("description").getAsString())
-                    .taxonomy(environmentContextObject.has("taxonomy")
-                            ? createTaxonomy(environmentContextObject.getAsJsonObject("taxonomy"))
+            environmentalContextList.add(ImmutableEnvironmentalContext.builder()
+                    .term(environmentalContextObject.has("term")
+                            ? environmentalContextObject.getAsJsonPrimitive("term").getAsString()
                             : null)
-                    .source(environmentContextObject.has("source")
-                            ? environmentContextObject.getAsJsonPrimitive("source").getAsString()
+                    .description(environmentalContextObject.getAsJsonPrimitive("description").getAsString())
+                    .taxonomy(environmentalContextObject.has("taxonomy") ? createTaxonomy(environmentalContextObject.getAsJsonObject(
+                            "taxonomy")) : null)
+                    .source(environmentalContextObject.has("source")
+                            ? environmentalContextObject.getAsJsonPrimitive("source").getAsString()
                             : null)
-                    .usanStem(environmentContextObject.has("usan_stem") ? environmentContextObject.getAsJsonPrimitive("usan_stem")
+                    .usanStem(environmentalContextObject.has("usan_stem") ? environmentalContextObject.getAsJsonPrimitive("usan_stem")
                             .getAsString() : null)
-                    .approvedCountries(approvedCountries)
-                    .toxicity(environmentContextObject.has("toxicity") ? environmentContextObject.getAsJsonPrimitive("toxicity")
+                    .approvedCountries(environmentalContextObject.has("approved_countries") ? jsonArrayToStringList(
+                            environmentalContextObject.getAsJsonArray("approved_countries")) : Lists.newArrayList())
+                    .toxicity(environmentalContextObject.has("toxicity") ? environmentalContextObject.getAsJsonPrimitive("toxicity")
                             .getAsString() : null)
-                    .id(environmentContextObject.has("id") && !environmentContextObject.get("id").isJsonNull()
-                            ? environmentContextObject.getAsJsonPrimitive("id").getAsString()
+                    .id(environmentalContextObject.has("id") && !environmentalContextObject.get("id").isJsonNull()
+                            ? environmentalContextObject.getAsJsonPrimitive("id").getAsString()
                             : null)
                     .build());
         }
-        return environmentalContexts;
+        return environmentalContextList;
     }
 
     @NotNull
