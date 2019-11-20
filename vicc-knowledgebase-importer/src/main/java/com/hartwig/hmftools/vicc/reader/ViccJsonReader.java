@@ -68,18 +68,21 @@ public final class ViccJsonReader {
     private ViccJsonReader() {
     }
 
+    @NotNull
     public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {
+        List<ViccEntry> entries = Lists.newArrayList();
+        LOGGER.info("Reading VICC knowledgebase from {}", jsonPath);
+
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(jsonPath));
         reader.setLenient(true);
-        List<ViccEntry> entries = Lists.newArrayList();
-        LOGGER.info("Reading VICC knowledgebase from " + jsonPath);
 
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
             if (!EXPECTED_VICC_ENTRY_SIZES.contains(viccEntryObject.size())) {
-                LOGGER.warn("Found " + viccEntryObject.size() + " elements in a vicc entry rather than the expected "
-                        + EXPECTED_VICC_ENTRY_SIZES);
+                LOGGER.warn("Found {} elements in a vicc entry rather than the expected {}",
+                        viccEntryObject.size(),
+                        EXPECTED_VICC_ENTRY_SIZES);
                 LOGGER.warn(viccEntryObject);
             }
 
@@ -242,8 +245,8 @@ public final class ViccJsonReader {
         Set<String> keysAssociation = associationObject.keySet();
 
         if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
-            LOGGER.warn("Found " + keysAssociation.size() + " in association rather than the expected "
-                    + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
+            LOGGER.warn(
+                    "Found " + keysAssociation.size() + " in association rather than the expected " + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
             LOGGER.warn(keysAssociation);
         }
 

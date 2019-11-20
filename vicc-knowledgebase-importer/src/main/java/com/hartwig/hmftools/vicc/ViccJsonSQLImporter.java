@@ -38,32 +38,29 @@ public class ViccJsonSQLImporter {
     private static final String DB_URL = "db_url";
 
     public static void main(final String... args) throws ParseException, IOException, SQLException {
-        LOGGER.info("Attempting to load up the VICC json all file into a sql database");
-
+        LOGGER.info("Running VICC Knowledgebase Importer");
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
-        if (validInput(cmd)) {
-            List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(cmd.getOptionValue(VICC_JSON));
-            analyzeViccEntries(viccEntries);
-
-            LOGGER.info("DONE!");
-            ViccDAO viccDAO = ViccDAO.connectToViccDAO(cmd.getOptionValue(DB_USER),
-                    cmd.getOptionValue(DB_PASS),
-                    "jdbc:" + cmd.getOptionValue(DB_URL));
-            viccDAO.deleteAll();
-            int count = 0;
-            for (ViccEntry viccEntry : viccEntries) {
-                viccDAO.writeViccEntry(viccEntry);
-                count++;
-                if (count % 1000 == 0) {
-                    LOGGER.info("Completed inserting " + count + " VICC entries into VICC db");
-                }
-            }
-            LOGGER.info("DONE" + viccEntries.size());
-        } else {
+        if (!validInput(cmd)) {
             printUsageAndExit(options);
         }
+
+        LOGGER.info("Loading up the VICC json file into memory");
+        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(cmd.getOptionValue(VICC_JSON));
+        analyzeViccEntries(viccEntries);
+
+        ViccDAO viccDAO = connect(cmd);
+        viccDAO.deleteAll();
+        int count = 0;
+        for (ViccEntry viccEntry : viccEntries) {
+            viccDAO.writeViccEntry(viccEntry);
+            count++;
+            if (count % 1000 == 0) {
+                LOGGER.info(" Completed inserting {} VICC entries into VICC db", count);
+            }
+        }
+        LOGGER.info("Done inserting {} entries into VICC db", viccEntries.size());
     }
 
     private static boolean validInput(@NotNull CommandLine cmd) {
@@ -78,6 +75,11 @@ public class ViccJsonSQLImporter {
 
     private static boolean pathExists(@NotNull String path) {
         return Files.exists(new File(path).toPath());
+    }
+
+    @NotNull
+    private static ViccDAO connect(@NotNull CommandLine cmd) throws SQLException {
+        return ViccDAO.connectToViccDAO(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), "jdbc:" + cmd.getOptionValue(DB_URL));
     }
 
     @NotNull
