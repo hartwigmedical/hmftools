@@ -60,7 +60,7 @@ public class ReportingDbTest {
             ReportingDb.addSequenceReportToReportingDb(reportDatesTsv.getPath(), ExampleAnalysisTestFactory.buildCOLO829());
 
             ReportingDb.addQCFailReportToReportingDb(reportDatesTsv.getPath(),
-                    ExampleAnalysisTestFactory.buildQCFailReport("LowTumorSample", QCFailReason.LOW_TUMOR_PERCENTAGE));
+                    ExampleAnalysisTestFactory.buildQCFailReport("LowMoleculairTumorSample", QCFailReason.SHALLOW_SEQ_LOW_PURITY));
         }
     }
 }
