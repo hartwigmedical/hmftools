@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.variant;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +37,15 @@ public class SageVariantFactory {
         this.config = config;
         this.inPanel = new InPanel(panelRegions);
         this.inHotspot = new InHotspot(hotspots);
+    }
+
+    @NotNull
+    public SageVariant create(@NotNull final AltContext normal) {
+
+        final SageVariantTier tier = tier(normal);
+        final Set<String> filters = Collections.emptySet();
+
+        return new SageVariant(tier, filters, normal, Collections.emptyList());
     }
 
     @NotNull
@@ -110,5 +120,6 @@ public class SageVariantFactory {
 
         return result;
     }
+
 
 }

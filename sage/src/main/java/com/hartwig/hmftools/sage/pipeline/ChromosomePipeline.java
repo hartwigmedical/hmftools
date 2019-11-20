@@ -31,14 +31,17 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
     private final SageChromosomeVCF sageVCF;
     private final IndexedFastaSequenceFile reference;
     private final SageVariantFactory sageVariantFactory;
+    private final SageVariantContextFactory sageVariantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory) throws IOException {
+            @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
+            @NotNull final SageVariantContextFactory sageVariantContextFactory) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.reference = reference;
         this.sageVariantFactory = sageVariantFactory;
+        this.sageVariantContextFactory = sageVariantContextFactory;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
     }
 
@@ -62,7 +65,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
 
         final Consumer<SageVariant> phasedConsumer = variant -> {
             if (include(variant)) {
-                final VariantContext context = SageVariantContextFactory.create(variant);
+                final VariantContext context = sageVariantContextFactory.create(variant);
                 sageVCF.write(context);
             }
         };
@@ -98,12 +101,12 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         }
 
         final AltContext normal = entry.normal();
-        if  (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+        if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }
 
         return entry.primaryTumor().primaryReadContext().quality() >= 30;
-//        return true;
+        //        return true;
     }
 
 }
