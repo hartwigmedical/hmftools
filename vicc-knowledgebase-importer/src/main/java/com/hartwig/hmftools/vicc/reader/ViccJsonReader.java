@@ -45,10 +45,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccJsonReader {
-    private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
-    // SAGE records hold 8 field (no "feature names") while all other knowledgebases hold 9 records.
-    private static final List<Integer> EXPECTED_VICC_ENTRY_SIZES = Lists.newArrayList(8, 9);
+    private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
     private static final List<Integer> EXPECTED_ASSOCIATION_ELEMENT_SIZES = Lists.newArrayList(4, 5, 6, 7, 8, 9, 10, 11);
     private static final List<Integer> EXPECTED_FEATURES_ELEMENT_SIZES = Lists.newArrayList(2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16);
@@ -79,18 +77,14 @@ public final class ViccJsonReader {
 
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            if (!EXPECTED_VICC_ENTRY_SIZES.contains(viccEntryObject.size())) {
-                LOGGER.warn("Found {} elements in a vicc entry rather than the expected {}",
-                        viccEntryObject.size(),
-                        EXPECTED_VICC_ENTRY_SIZES);
-                LOGGER.warn(viccEntryObject);
-            }
+            ViccDatamodelCheckerFactory.viccEntryDatamodelChecker().check(viccEntryObject);
 
             ImmutableViccEntry.Builder viccEntryBuilder = ImmutableViccEntry.builder();
             viccEntryBuilder.source(viccEntryObject.getAsJsonPrimitive("source").getAsString());
             viccEntryBuilder.genes(jsonArrayToStringList(viccEntryObject.getAsJsonArray("genes")));
-            viccEntryBuilder.geneIdentifiers(createGeneIdentifiers(viccEntryObject));
+            viccEntryBuilder.geneIdentifiers(createGeneIdentifiers(viccEntryObject.getAsJsonArray("gene_identifiers")));
 
+            // SAGE records have no "feature names" while all other knowledgebases do have it.
             if (viccEntryObject.has("feature_names")) {
                 JsonElement featureNames = viccEntryObject.get("feature_names");
                 if (featureNames.isJsonArray()) {
@@ -100,7 +94,7 @@ public final class ViccJsonReader {
                 }
             }
 
-            viccEntryBuilder.features(createFeatures(viccEntryObject));
+            viccEntryBuilder.features(createFeatures(viccEntryObject.getAsJsonArray("features")));
             viccEntryBuilder.association(createAssociation(viccEntryObject.getAsJsonObject("association")));
             viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
             viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
@@ -139,8 +133,7 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<Feature> createFeatures(@NotNull JsonObject viccEntryObject) {
-        JsonArray arrayFeatures = viccEntryObject.getAsJsonArray("features");
+    private static List<Feature> createFeatures(@NotNull JsonArray arrayFeatures) {
         List<Feature> featureList = Lists.newArrayList();
 
         for (JsonElement elementFeature : arrayFeatures) {
@@ -208,8 +201,7 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonObject viccEntryObject) {
-        JsonArray geneIdentifiers = viccEntryObject.getAsJsonArray("gene_identifiers");
+    private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifiers) {
         List<GeneIdentifier> listGeneIdentifiers = Lists.newArrayList();
 
         for (JsonElement elementGeneIdentifier : geneIdentifiers) {
