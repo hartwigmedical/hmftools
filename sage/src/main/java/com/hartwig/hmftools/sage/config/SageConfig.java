@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +34,7 @@ public interface SageConfig {
     String MIN_BASE_QUALITY = "min_base_quality";
     String PANEL = "panel";
     String PANEL_ONLY = "panel_only";
+    String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
 
     int DEFAULT_THREADS = 2;
@@ -53,6 +56,7 @@ public interface SageConfig {
 
         options.addOption(PANEL, true, "Panel");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
+        options.addOption(GERMLINE_ONLY, false, "Germline only mode");
         options.addOption(HOTSPOTS, true, "Hotspots");
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
@@ -84,6 +88,8 @@ public interface SageConfig {
     String panel();
 
     boolean panelOnly();
+
+    boolean germlineOnly();
 
     @NotNull
     String hotspots();
@@ -117,7 +123,7 @@ public interface SageConfig {
         tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
 
         final List<String> tumorBamList = Lists.newArrayList();
-        tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM).split(",")));
+        tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
 
         if (tumorList.size() != tumorBamList.size()) {
             throw new ParseException("TODO");
@@ -138,32 +144,7 @@ public interface SageConfig {
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
                 .panelOnly(cmd.hasOption(PANEL_ONLY))
+                .germlineOnly(cmd.hasOption(GERMLINE_ONLY))
                 .build();
     }
-
-    @NotNull
-    static String defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, @NotNull final String defaultValue) {
-        return cmd.hasOption(opt) ? cmd.getOptionValue(opt) : defaultValue;
-    }
-
-    static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
-            LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            return result;
-        }
-
-        return defaultValue;
-    }
-
-    static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
-        if (cmd.hasOption(opt)) {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
-            LOGGER.info("Using non default value {} for parameter {}", result, opt);
-            return result;
-        }
-
-        return defaultValue;
-    }
-
 }

@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +46,7 @@ public interface QualityConfig {
     }
 
     default int modifiedBaseQuality(int baseQuality, int distanceFromReadEdge) {
-        return Math.min(baseQuality , distanceFromReadEdge) - baseQualityFixedPenalty();
+        return Math.min(baseQuality, distanceFromReadEdge) - baseQualityFixedPenalty();
     }
 
     default double jitterPenalty(int repeatCount) {
@@ -55,26 +57,39 @@ public interface QualityConfig {
     static Options createOptions() {
         final Options options = new Options();
 
-        options.addOption(JITTER_PENALTY, true, "Penalty to apply to qual score when read context matches with jitter [" + DEFAULT_JITTER_PENALTY + "]");
-        options.addOption(JITTER_MIN_REPEAT_COUNT, true, "Minimum repeat count before applying jitter penalty [" + DEFAULT_JITTER_MIN_REPEAT_COUNT + "]");
-        options.addOption(BASE_QUAL_FIXED_PENALTY, true, "Fixed penalty to apply to base quality [" + DEFAULT_BASE_QUAL_FIXED_PENALTY + "]");
+        options.addOption(JITTER_PENALTY,
+                true,
+                "Penalty to apply to qual score when read context matches with jitter [" + DEFAULT_JITTER_PENALTY + "]");
+        options.addOption(JITTER_MIN_REPEAT_COUNT,
+                true,
+                "Minimum repeat count before applying jitter penalty [" + DEFAULT_JITTER_MIN_REPEAT_COUNT + "]");
+        options.addOption(BASE_QUAL_FIXED_PENALTY,
+                true,
+                "Fixed penalty to apply to base quality [" + DEFAULT_BASE_QUAL_FIXED_PENALTY + "]");
         options.addOption(MAP_QUAL_FIXED_PENALTY, true, "Fixed penalty to apply to map quality [" + DEFAULT_MAP_QUAL_FIXED_PENALTY + "]");
-        options.addOption(MAP_QUAL_IMPROPER_PAIR_PENALTY, true, "Penalty to apply to map qual when SAM record does not have the ProperPair flag [" + DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY + "]");
-        options.addOption(MAP_QUAL_DISTANCE_FROM_REF, true, "Penalty to apply to map qual for additional distance from ref [" + DEFAULT_MAP_QUAL_DISTANCE_FROM_REF + "]");
+        options.addOption(MAP_QUAL_IMPROPER_PAIR_PENALTY,
+                true,
+                "Penalty to apply to map qual when SAM record does not have the ProperPair flag [" + DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY
+                        + "]");
+        options.addOption(MAP_QUAL_DISTANCE_FROM_REF,
+                true,
+                "Penalty to apply to map qual for additional distance from ref [" + DEFAULT_MAP_QUAL_DISTANCE_FROM_REF + "]");
 
         return options;
     }
 
     @NotNull
-    static QualityConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
+    static QualityConfig createConfig(@NotNull final CommandLine cmd) {
 
         return ImmutableQualityConfig.builder()
-                .jitterPenalty(SageConfig.defaultValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY))
-                .jitterMinRepeatCount(SageConfig.defaultIntValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT))
-                .baseQualityFixedPenalty(SageConfig.defaultIntValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
-                .mapQualityFixedPenalty(SageConfig.defaultIntValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
-                .mapQualityAdditionalDistanceFromRefPenalty(SageConfig.defaultIntValue(cmd, MAP_QUAL_DISTANCE_FROM_REF, DEFAULT_MAP_QUAL_DISTANCE_FROM_REF))
-                .mapQualityImproperPairPenalty(SageConfig.defaultIntValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
+                .jitterPenalty(defaultDoubleValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY))
+                .jitterMinRepeatCount(defaultIntValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT))
+                .baseQualityFixedPenalty(defaultIntValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
+                .mapQualityFixedPenalty(defaultIntValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
+                .mapQualityAdditionalDistanceFromRefPenalty(defaultIntValue(cmd,
+                        MAP_QUAL_DISTANCE_FROM_REF,
+                        DEFAULT_MAP_QUAL_DISTANCE_FROM_REF))
+                .mapQualityImproperPairPenalty(defaultIntValue(cmd, MAP_QUAL_IMPROPER_PAIR_PENALTY, DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY))
                 .build();
 
     }

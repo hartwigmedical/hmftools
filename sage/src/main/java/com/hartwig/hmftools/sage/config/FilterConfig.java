@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -90,8 +92,8 @@ public interface FilterConfig {
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
                 .hardFilter(cmd.hasOption(HARD_FILTER))
-                .hardMinTumorQual(SageConfig.defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
-                .hardMinTumorAltSupport(SageConfig.defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
+                .hardMinTumorAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
                 .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
                 .softWideFilter(SoftFilterConfig.createConfig(cmd, "wide", DEFAULT_WIDE_FILTER))

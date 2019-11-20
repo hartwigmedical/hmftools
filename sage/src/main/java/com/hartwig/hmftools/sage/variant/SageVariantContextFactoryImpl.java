@@ -34,7 +34,7 @@ import htsjdk.variant.vcf.VCFConstants;
 public class SageVariantContextFactoryImpl {
 
     @NotNull
-    public static VariantContext normalOnly(@NotNull final SageVariant entry) {
+    public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
         final AltContext normal = entry.normal();
 
         final List<Allele> alleles = createAlleles(normal);

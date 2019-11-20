@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.variant;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -25,8 +24,8 @@ public class SageVariantFactory {
     private final FilterConfig config;
     private final InHotspot inHotspot;
 
-    public SageVariantFactory(@NotNull final Chromosome chromosome, @NotNull final FilterConfig config, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions) {
+    public SageVariantFactory(@NotNull final Chromosome chromosome, @NotNull final FilterConfig config,
+            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions) {
         this.config = config;
         this.inPanel = new InPanel(chromosome, panelRegions);
         this.inHotspot = new InHotspot(chromosome, hotspots);
@@ -40,20 +39,11 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant create(@NotNull final AltContext normal) {
-
-        final SageVariantTier tier = tier(normal);
-        final Set<String> filters = Collections.emptySet();
-
-        return new SageVariant(tier, filters, normal, Collections.emptyList());
-    }
-
-    @NotNull
     public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
 
         final SageVariantTier tier = tier(normal);
         final SoftFilterConfig softConfig = softConfig(tier);
-        final Set<String> filters = filters(softConfig, normal, tumorAltContexts.get(0));
+        final Set<String> filters = tumorAltContexts.isEmpty() ? Sets.newHashSet() : filters(softConfig, normal, tumorAltContexts.get(0));
 
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
@@ -120,6 +110,5 @@ public class SageVariantFactory {
 
         return result;
     }
-
 
 }

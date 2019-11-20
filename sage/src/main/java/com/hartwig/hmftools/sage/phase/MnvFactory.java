@@ -10,11 +10,15 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class MnvFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(MnvFactory.class);
 
     @NotNull
     private final IndexedFastaSequenceFile reference;
@@ -49,7 +53,7 @@ class MnvFactory {
     @NotNull
     private AltContext merge(@NotNull final VariantHotspot variant, @NotNull final AltContext left, @NotNull final AltContext right) {
         final ReadContextCounter counter = new ReadContextCounter(variant, left.primaryReadContext(), right.primaryReadContext());
-        final AltContext result = new AltContext(left.refContext(),  variant.ref(), variant.alt());
+        final AltContext result = new AltContext(left.refContext(), variant.ref(), variant.alt());
         result.setPrimaryReadContext(counter);
 
         return result;
@@ -57,12 +61,18 @@ class MnvFactory {
 
     @NotNull
     private VariantHotspot createMnv(@NotNull final AltContext left, @NotNull final AltContext right) {
-        int length = (int) (right.position() - left.position() + 1);
+        int mnvLength = (int) (right.position() - left.position() + 1);
+        int additionalLength = mnvLength - left.alt().length();
 
-        final String alt = left.primaryReadContext().readContext().alt(length);
-        final String ref = reference.getSubsequenceAt(left.chromosome(), left.position(), right.position()).getBaseString();
+        try {
+            final String alt = left.alt() + right.primaryReadContext().readContext().mnvAdditionalAlt(additionalLength);
+            final String ref = reference.getSubsequenceAt(left.chromosome(), left.position(), right.position()).getBaseString();
+            return ImmutableVariantHotspotImpl.builder().from(left).ref(ref).alt(alt).build();
+        } catch (Exception e) {
+            LOGGER.error("Unable to merge {}:{} with {}", left.chromosome(), left.position(), right.position());
+            throw e;
+        }
 
-        return ImmutableVariantHotspotImpl.builder().from(left).ref(ref).alt(alt).build();
     }
 
 }

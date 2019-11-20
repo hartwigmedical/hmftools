@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -21,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class GermlinePipeline implements Supplier<CompletableFuture<List<SageVariant>>> {
+class GermlinePipeline implements Supplier<CompletableFuture<List<SageVariant>>> {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlinePipeline.class);
 
@@ -32,7 +33,7 @@ public class GermlinePipeline implements Supplier<CompletableFuture<List<SageVar
     private final SageVariantFactory variantFactory;
     private final SamSlicerFactory samSlicerFactory;
 
-    public GermlinePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
+    GermlinePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
             final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory, final SamSlicerFactory samSlicerFactory) {
         this.region = region;
         this.config = config;
@@ -52,7 +53,10 @@ public class GermlinePipeline implements Supplier<CompletableFuture<List<SageVar
                 refSequence,
                 samSlicerFactory), executor);
 
-        return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
+        return candidates.thenApply(aVoid -> candidates.join()
+                .stream()
+                .map(x -> variantFactory.create(x, Collections.emptyList()))
+                .collect(Collectors.toList()));
     }
 
     @Override

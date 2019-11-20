@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
+import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -46,13 +49,13 @@ public interface SoftFilterConfig {
 
     @NotNull
     static SoftFilterConfig createConfig(@NotNull final CommandLine cmd, @NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue) throws ParseException {
-        final int minTumorQual = SageConfig.defaultIntValue(cmd, prefix + "_" + MIN_TUMOR_QUAL, defaultValue.minTumorQual());
-        final double minTumorVaf = SageConfig.defaultValue(cmd, prefix + "_" + MIN_TUMOR_VAF, defaultValue.minTumorVaf());
-        final int minGermlineDepth = SageConfig.defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH, defaultValue.minGermlineReadContextCoverage());
+        final int minTumorQual = defaultIntValue(cmd, prefix + "_" + MIN_TUMOR_QUAL, defaultValue.minTumorQual());
+        final double minTumorVaf = defaultDoubleValue(cmd, prefix + "_" + MIN_TUMOR_VAF, defaultValue.minTumorVaf());
+        final int minGermlineDepth = defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH, defaultValue.minGermlineReadContextCoverage());
 
-        final double maxGermlineVaf = SageConfig.defaultValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
-        final double maxGermlineRelativeQual = SageConfig.defaultValue(cmd, prefix + "_" + MAX_GERMLINE_REL_QUAL, defaultValue.maxGermlineRelativeQual());
-        final double maxGermlineRelativeReadContextCount = SageConfig.defaultValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RCC, defaultValue.maxGermlineRelativeReadContextCount());
+        final double maxGermlineVaf = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
+        final double maxGermlineRelativeQual = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_QUAL, defaultValue.maxGermlineRelativeQual());
+        final double maxGermlineRelativeReadContextCount = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RCC, defaultValue.maxGermlineRelativeReadContextCount());
 
         return ImmutableSoftFilterConfig.builder()
                 .minTumorQual(minTumorQual)

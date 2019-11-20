@@ -15,60 +15,60 @@ vcf_data_frame<- function(vcf) {
     normalAD = unlist(lapply(vcf.ad[ ,1], paste0, collapse=","))
     tumorAD = unlist(lapply(vcf.ad[ ,2], paste0, collapse=","))
 
-    normalQual = vcf.geno$QUAL[ ,1, ]
-    tumorQual = vcf.geno$QUAL[ ,2, ]
-
-    normalRCC = vcf.geno$RCC[ ,1, ]
-    tumorRCC = vcf.geno$RCC[ ,2, ]
-
-    normalRCQ = vcf.geno$RCQ[ ,1, ]
-    tumorRCQ = vcf.geno$RCQ[ ,2, ]
+    tumorIPC = vcf.geno$RC_IPC[ ,2]
+  
+    normalQual = vcf.geno$RC_QUAL[ ,1, ]
+    tumorQual = vcf.geno$RC_QUAL[ ,2, ]
+    
+    normalRCC = vcf.geno$RC_CNT[ ,1, ]
+    tumorRCC = vcf.geno$RC_CNT[ ,2, ]
 
     vcf.df = data.frame(
-    chromosome = seqnames(vcf),
-    pos = start(vcf),
-    ref = as.character(ref(vcf)),
-    alt = as.character(vcf.alt),
-    preStrelka = vcf.info$PRE_STRELKA,
-    postStrelka = vcf.info$POST_STRELKA,
-    strelkaFilter = vcf.fixed$FILTER,
-    mappability = vcf.info$MAPPABILITY,
-    germlinePonCount = vcf.info$GERMLINE_PON_COUNT,
-    somaticPonCount = vcf.info$SOMATIC_PON_COUNT,
-    normalAD = normalAD,
-    tumorAD = tumorAD,
-    normalQual = normalQual[, 1],
-    normalBaseQual = normalQual[, 2],
-    normalMapQual = normalQual[, 3],
-    tumorQual = tumorQual[, 1],
-    tumorBaseQual = tumorQual[, 2],
-    tumorMapQual = tumorQual[, 3],
-    normalRCCFull = normalRCC[, 1],
-    normalRCCPartial = normalRCC[, 2],
-    normalRCCRealigned = normalRCC[, 3],
-    tumorRCCFull = tumorRCC[, 1],
-    tumorRCCPartial = tumorRCC[, 2],
-    tumorRCCRealigned = tumorRCC[, 3],
-    tumorRCCShortened = tumorRCC[, 4],
-    tumorRCCLengthened = tumorRCC[, 5],
-    tumorDistanceFromRef = vcf.info$RDIS,
-    tumorDiffFromRef = vcf.info$RDIF,
-    microhomology = vcf.info$MH,
-    normalSubprimeDepth = vcf.geno$SDP[, 1],
-    tumorSubprimeDepth = vcf.geno$SDP[, 2],
-    readContext = vcf.info$RC,
-    refContext = vcf.info$TNC,
-    repeatSequence = vcf.info$REP_S,
-    repeatCount = vcf.info$REP_C,
-    highConfidence = vcf.info$HC,
-    tumorRCImproperPair = tumorRCQ[, 1],
-    tumorRCInconsistentChromosome = tumorRCQ[, 2],
-    tumorRCExcesssiveSize = tumorRCQ[, 3],
-    normalRCImproperPair = normalRCQ[, 1],
-    normalRCInconsistentChromosome = normalRCQ[, 2],
-    normalRCExcesssiveSize = normalRCQ[, 3],
-    stringsAsFactors = F)
-
+      chromosome = seqnames(vcf),
+      pos = start(vcf),
+      ref = as.character(ref(vcf)), 
+      alt = as.character(vcf.alt),
+      filter = vcf.fixed$FILTER,
+    
+      tier = vcf.info$TIER,
+      normalAD = normalAD,
+      normalDP = vcf.geno$DP[, 1],
+      tumorAD = tumorAD,
+      tumorDP = vcf.geno$DP[, 2],
+      tumorAF = vcf.info$AF,
+      #normalQual = vcf.qual
+      normalQual = normalQual[, 1],
+      normalBaseQual = normalQual[, 2],
+      normalMapQual = normalQual[, 3],
+      tumorQual = vcf.qual,
+      tumorBaseQual = tumorQual[, 2],
+      tumorMapQual = tumorQual[, 3],
+      jitterPenalty = tumorQual[, 4],
+      normalRCCFull = normalRCC[, 1],
+      normalRCCPartial = normalRCC[, 2],
+      normalRCCRealigned = normalRCC[, 3],
+      normalRCCCoverage = normalRCC[, 6],
+      tumorRCCFull = tumorRCC[, 1],
+      tumorRCCPartial = tumorRCC[, 2],
+      tumorRCCRealigned = tumorRCC[, 3],
+      tumorRCCShortened = tumorRCC[, 4],
+      tumorRCCLengthened = tumorRCC[, 5],
+      tumorRCCCoverage = tumorRCC[, 6],
+      tumorDistanceFromRef = vcf.info$RC_DIS,
+      tumorDiffFromRef = vcf.info$RC_DIF,
+      microhomology = vcf.info$MH,
+      readContextMicrohomology = vcf.info$RC_MH,
+      readContext = vcf.info$RC,
+      refContext = vcf.info$TNC, 
+      repeatSequence = vcf.info$REP_S,
+      readContextRepeatSequence = vcf.info$RC_REPS,
+      repeatCount = vcf.info$REP_C,
+      readContextRepeatCount = vcf.info$RC_REPC,
+      phase = vcf.info$LPS,
+      tumorImproperPairCount = tumorIPC,
+      #jitterPenalty = vcf.info$JITTER,
+      stringsAsFactors = F)
+    
     vcf.df[is.na(vcf.df)] <- 0
 
     vcf.df = vcf.df %>%
@@ -84,3 +84,15 @@ vcf_data_frame<- function(vcf) {
 
     return (vcf.df)
 }
+
+
+sagePanelResult = data.frame()
+for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/")) {
+  cat (file, "\n")
+  vcf = readVcf(paste0("~/hmf/analysis/sagePanel/", file))
+  vcfDF = vcf_data_frame(vcf) %>% mutate(sample = substr(file,1, 13))    
+  sagePanelResult = bind_rows(sagePanelResult, vcfDF)
+}
+
+save(sagePanelResult, "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
+
