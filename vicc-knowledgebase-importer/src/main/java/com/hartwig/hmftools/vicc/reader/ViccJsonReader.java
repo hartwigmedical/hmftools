@@ -190,8 +190,9 @@ public final class ViccJsonReader {
     private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
         Set<String> keysSequenceOntology = objectSequenceOntology.keySet();
         if (!EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES.contains(keysSequenceOntology.size())) {
-            LOGGER.warn("Found " + keysSequenceOntology.size() + " in sequence ontology rather than the expected "
-                    + EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in sequence ontology rather than the expected {}",
+                    keysSequenceOntology.size(),
+                    EXPECTED_SEQUENCE_ONTOLOGY_ELEMENT_SIZES);
             LOGGER.warn(keysSequenceOntology);
         }
 
@@ -214,8 +215,9 @@ public final class ViccJsonReader {
         for (JsonElement elementGeneIdentifier : geneIdentifiers) {
             Set<String> keysGeneIdentifier = elementGeneIdentifier.getAsJsonObject().keySet();
             if (!EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
-                LOGGER.warn("Found " + keysGeneIdentifier.size() + " in gene identifiers rather than the expected "
-                        + EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in gene identifiers rather than the expected {}",
+                        keysGeneIdentifier.size(),
+                        EXPECTED_GENE_IDENTIFIERS_ELEMENT_SIZES);
                 LOGGER.warn(keysGeneIdentifier);
             }
             listGeneIdentifiers.add(toGeneIdentifier(elementGeneIdentifier.getAsJsonObject()));
@@ -227,8 +229,9 @@ public final class ViccJsonReader {
     private static GeneIdentifier toGeneIdentifier(@NotNull JsonObject geneIdentifierObject) {
         Set<String> keysGeneIdentifier = geneIdentifierObject.keySet();
         if (!EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES.contains(keysGeneIdentifier.size())) {
-            LOGGER.warn("Found " + keysGeneIdentifier.size() + " in gene identifier rather than the expected "
-                    + EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in gene identifier rather than the expected {}",
+                    keysGeneIdentifier.size(),
+                    EXPECTED_GENE_IDENTIFIER_ELEMENT_SIZES);
             LOGGER.warn(keysGeneIdentifier);
         }
 
@@ -245,8 +248,7 @@ public final class ViccJsonReader {
         Set<String> keysAssociation = associationObject.keySet();
 
         if (!EXPECTED_ASSOCIATION_ELEMENT_SIZES.contains(keysAssociation.size())) {
-            LOGGER.warn(
-                    "Found " + keysAssociation.size() + " in association rather than the expected " + EXPECTED_ASSOCIATION_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in association rather than the expected {}", keysAssociation.size(), EXPECTED_ASSOCIATION_ELEMENT_SIZES);
             LOGGER.warn(keysAssociation);
         }
 
@@ -291,8 +293,9 @@ public final class ViccJsonReader {
             Set<String> keysEnvironmentContext = environmentContextObject.keySet();
 
             if (!EXPECTED_ENVIRONMENT_CONTEXT.contains(keysEnvironmentContext.size())) {
-                LOGGER.warn("Found " + keysEnvironmentContext.size() + " in environmental context rather than the expected "
-                        + EXPECTED_ENVIRONMENT_CONTEXT);
+                LOGGER.warn("Found {} in environmental context rather than the expected {}",
+                        keysEnvironmentContext.size(),
+                        EXPECTED_ENVIRONMENT_CONTEXT);
                 LOGGER.warn(keysEnvironmentContext);
             }
 
@@ -328,7 +331,7 @@ public final class ViccJsonReader {
     @NotNull
     private static Taxonomy createTaxonomy(@NotNull JsonObject environmentContextObject) {
         if (!EXPECTED_TAXONOMY.contains(environmentContextObject.keySet().size())) {
-            LOGGER.warn("Found " + environmentContextObject.keySet().size() + " in taxonomy rather than the expected " + EXPECTED_TAXONOMY);
+            LOGGER.warn("Found {} in taxonomy rather than the expected {}", environmentContextObject.keySet().size(), EXPECTED_TAXONOMY);
             LOGGER.warn(environmentContextObject.keySet());
         }
 
@@ -351,7 +354,7 @@ public final class ViccJsonReader {
             JsonObject evidenceObject = evidenceElement.getAsJsonObject();
             Set<String> keysEvidence = evidenceObject.keySet();
             if (!EXPECTED_EVIDENCE_ELEMENT_SIZES.contains(keysEvidence.size())) {
-                LOGGER.warn("Found " + keysEvidence.size() + " in evidence rather than the expected " + EXPECTED_EVIDENCE_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in evidence rather than the expected {}", keysEvidence.size(), EXPECTED_EVIDENCE_ELEMENT_SIZES);
                 LOGGER.warn(keysEvidence);
             }
 
@@ -368,8 +371,9 @@ public final class ViccJsonReader {
     @NotNull
     private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
         if (!EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES.contains(evidenceTypeObject.keySet().size())) {
-            LOGGER.warn("Found " + evidenceTypeObject.keySet().size() + " in evidence type rather than the expected "
-                    + EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in evidence type rather than the expected {}",
+                    evidenceTypeObject.keySet().size(),
+                    EXPECTED_EVIDENCE_TYPE_ELEMENT_SIZES);
             LOGGER.warn(evidenceTypeObject.keySet());
         }
         return ImmutableEvidenceType.builder()
@@ -381,8 +385,9 @@ public final class ViccJsonReader {
     @NotNull
     private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
         if (!EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES.contains(evidenceInfoObject.keySet().size())) {
-            LOGGER.warn("Found " + evidenceInfoObject.keySet().size() + " in evidence info rather than the expected "
-                    + EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in evidence info rather than the expected {}",
+                    evidenceInfoObject.keySet().size(),
+                    EXPECTED_EVIDENCE_INFO_ELEMENT_SIZES);
             LOGGER.warn(evidenceInfoObject.keySet());
         }
         return ImmutableEvidenceInfo.builder()
@@ -393,8 +398,9 @@ public final class ViccJsonReader {
     @NotNull
     private static Phenotype createPhenotype(@NotNull JsonObject phenotypeObject) {
         if (!EXPECTED_PHENOTYPE_ELEMENT_SIZES.contains(phenotypeObject.keySet().size())) {
-            LOGGER.warn("Found " + phenotypeObject.keySet().size() + " in phenotype rather than the expected "
-                    + EXPECTED_PHENOTYPE_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in phenotype rather than the expected {}",
+                    phenotypeObject.keySet().size(),
+                    EXPECTED_PHENOTYPE_ELEMENT_SIZES);
             LOGGER.warn(phenotypeObject.keySet());
         }
         return ImmutablePhenotype.builder()
@@ -408,8 +414,9 @@ public final class ViccJsonReader {
     @NotNull
     private static PhenotypeType createPhenotypeType(JsonObject phenotypeTypeObject) {
         if (!EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES.contains(phenotypeTypeObject.keySet().size())) {
-            LOGGER.warn("Found " + phenotypeTypeObject.keySet().size() + " in phenotype type rather than the expected "
-                    + EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in phenotype type rather than the expected {}",
+                    phenotypeTypeObject.keySet().size(),
+                    EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES);
             LOGGER.warn(phenotypeTypeObject.keySet());
         }
         return ImmutablePhenotypeType.builder()

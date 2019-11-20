@@ -173,16 +173,16 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBVARIANTCLINICAL.ID);
 
-            OncoKbConsequence consequenceaClinical = oncokbClinical.oncokbVariant().oncoKbConsequence();
+            OncoKbConsequence consequenceClinical = oncokbClinical.oncokbVariant().oncoKbConsequence();
 
             context.insertInto(ONCOKBCONSEQUENCESCLINICAL,
                     ONCOKBCONSEQUENCESCLINICAL.TERM,
                     ONCOKBCONSEQUENCESCLINICAL.DESCRIPTION,
                     ONCOKBCONSEQUENCESCLINICAL.ISGENERALLYTRUNCATING,
                     ONCOKBCONSEQUENCESCLINICAL.ONCOKBVARIANTCLINICALID)
-                    .values(consequenceaClinical.term(),
-                            consequenceaClinical.description(),
-                            consequenceaClinical.isGenerallyTruncating(),
+                    .values(consequenceClinical.term(),
+                            consequenceClinical.description(),
+                            consequenceClinical.isGenerallyTruncating(),
                             idClinicalVariant)
                     .execute();
 

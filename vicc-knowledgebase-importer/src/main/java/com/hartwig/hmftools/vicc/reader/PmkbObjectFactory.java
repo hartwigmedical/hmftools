@@ -39,7 +39,7 @@ final class PmkbObjectFactory {
     static Pmkb create(@NotNull JsonObject objectPmkb) {
         Set<String> keysPmkb = objectPmkb.keySet();
         if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
-            LOGGER.warn("Found " + keysPmkb.size() + " in pmkb rather than the expected " + EXPECTED_PMKB_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in pmkb rather than the expected {}", keysPmkb.size(), EXPECTED_PMKB_ELEMENT_SIZES);
             LOGGER.warn(keysPmkb);
         }
 
@@ -54,7 +54,7 @@ final class PmkbObjectFactory {
     private static List<PmkbTumor> createTumor(@NotNull JsonObject tumor) {
         Set<String> keysTumor = tumor.keySet();
         if (!EXPECTED_PMKB_TUMOR_ELEMENT_SIZES.contains(keysTumor.size())) {
-            LOGGER.warn("Found " + keysTumor.size() + " in pmkb tumor rather than the expected " + EXPECTED_PMKB_TUMOR_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in pmkb tumor rather than the expected {}", keysTumor.size(), EXPECTED_PMKB_TUMOR_ELEMENT_SIZES);
             LOGGER.warn(keysTumor);
         }
 
@@ -69,13 +69,11 @@ final class PmkbObjectFactory {
 
     @NotNull
     private static List<PmkbTissue> createTissue(@NotNull JsonArray tissues) {
-
         List<PmkbTissue> listTissue = Lists.newArrayList();
         for (JsonElement tissue : tissues) {
             Set<String> keysTissue = tissue.getAsJsonObject().keySet();
             if (!EXPECTED_PMKB_TISSUE_ELEMENT_SIZES.contains(keysTissue.size())) {
-                LOGGER.warn(
-                        "Found " + keysTissue.size() + " in pmkb tissue rather than the expected " + EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in pmkb tissue rather than the expected {}", keysTissue.size(), EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
                 LOGGER.warn(keysTissue);
             }
             listTissue.add(ImmutablePmkbTissue.builder()
@@ -90,9 +88,10 @@ final class PmkbObjectFactory {
     private static List<PmkbVariant> createVariantPmkb(@NotNull JsonObject variant) {
         Set<String> keysVariant = variant.keySet();
         if (!EXPECTED_PMKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
-            LOGGER.warn("Found " + keysVariant.size() + " in pmkb variant rather than the expected " + EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in pmkb variant rather than the expected {}", keysVariant.size(), EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
             LOGGER.warn(keysVariant);
         }
+
         return Lists.newArrayList(ImmutablePmkbVariant.builder()
                 .aminoAcidChange(variant.get("amino_acid_change").isJsonNull() ? null : variant.get("amino_acid_change").getAsString())
                 .germline(variant.get("germline").isJsonNull() ? null : variant.get("germline").getAsString())
@@ -124,10 +123,10 @@ final class PmkbObjectFactory {
     private static List<PmkbGene> createGene(@NotNull JsonObject variant) {
         JsonObject gene = variant.getAsJsonObject("gene");
 
-        Set<String> keysgene = gene.keySet();
-        if (!EXPECTED_PMKB_GENE_ELEMENT_SIZES.contains(keysgene.size())) {
-            LOGGER.warn("Found " + keysgene.size() + " in pmkb gene rather than the expected " + EXPECTED_PMKB_GENE_ELEMENT_SIZES);
-            LOGGER.warn(keysgene);
+        Set<String> keysGene = gene.keySet();
+        if (!EXPECTED_PMKB_GENE_ELEMENT_SIZES.contains(keysGene.size())) {
+            LOGGER.warn("Found {} in pmkb gene rather than the expected {}", keysGene.size(), EXPECTED_PMKB_GENE_ELEMENT_SIZES);
+            LOGGER.warn(keysGene);
         }
 
         List<PmkbGene> listGene = Lists.newArrayList();

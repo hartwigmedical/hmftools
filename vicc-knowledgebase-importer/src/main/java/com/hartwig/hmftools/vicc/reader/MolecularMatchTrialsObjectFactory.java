@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.reader;
 
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -53,8 +53,9 @@ final class MolecularMatchTrialsObjectFactory {
     static MolecularMatchTrials create(@NotNull JsonObject objectMolecularMatchTrials) {
         Set<String> keysMolecularMatchTrials = objectMolecularMatchTrials.keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES.contains(keysMolecularMatchTrials.size())) {
-            LOGGER.warn("Found " + keysMolecularMatchTrials.size() + " in molecular match trials rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in molecular match trials rather than the expected {}",
+                    keysMolecularMatchTrials.size(),
+                    EXPECTED_MOLECULARMATCH_TRAILS_ELEMENT_SIZES);
             LOGGER.warn(keysMolecularMatchTrials);
         }
 
@@ -66,7 +67,7 @@ final class MolecularMatchTrialsObjectFactory {
                 .title(objectMolecularMatchTrials.getAsJsonPrimitive("title").getAsString())
                 .molecularAlterations(jsonArrayToStringList(objectMolecularMatchTrials.getAsJsonArray("molecularAlterations")))
                 .score(objectMolecularMatchTrials.getAsJsonPrimitive("_score").getAsString())
-                .intervation(createMolecularMatchTrialsIntervations(objectMolecularMatchTrials.getAsJsonArray("interventions")))
+                .intervation(createMolecularMatchTrialsInterventions(objectMolecularMatchTrials.getAsJsonArray("interventions")))
                 .locations(createMolecularMatchTrialsLocations(objectMolecularMatchTrials.getAsJsonArray("locations")))
                 .briefTitle(objectMolecularMatchTrials.get("briefTitle").isJsonNull()
                         ? null
@@ -88,8 +89,9 @@ final class MolecularMatchTrialsObjectFactory {
         for (JsonElement location : arrayLocations) {
             Set<String> keysLocation = location.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES.contains(keysLocation.size())) {
-                LOGGER.warn("Found " + keysLocation.size() + " in molecular match trials locations rather than the expected"
-                        + EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in molecular match trials locations rather than the expected {}",
+                        keysLocation.size(),
+                        EXPECTED_MOLECULARMATCH_TRAILS_LOCATIONS_ELEMENT_SIZES);
                 LOGGER.warn(keysLocation);
             }
 
@@ -172,41 +174,42 @@ final class MolecularMatchTrialsObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchTrialsIntervation> createMolecularMatchTrialsIntervations(@NotNull JsonArray intervationsArray) {
-        List<MolecularMatchTrialsIntervation> molecularMatchTrialsIntervationList = Lists.newArrayList();
-        for (JsonElement intervation : intervationsArray) {
-            Set<String> keysClinical = intervation.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES.contains(keysClinical.size())) {
-                LOGGER.warn("Found " + keysClinical.size() + " in molecular match trials intervation rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES);
-                LOGGER.warn(keysClinical);
+    private static List<MolecularMatchTrialsIntervation> createMolecularMatchTrialsInterventions(@NotNull JsonArray interventionsArray) {
+        List<MolecularMatchTrialsIntervation> molecularMatchTrialsInterventionList = Lists.newArrayList();
+        for (JsonElement intervention : interventionsArray) {
+            Set<String> keysIntervention = intervention.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES.contains(keysIntervention.size())) {
+                LOGGER.warn("Found {} in molecular match trials intervention rather than the expected {}",
+                        keysIntervention.size(),
+                        EXPECTED_MOLECULARMATCH_TRAILS_INTERVATIONS_ELEMENT_SIZES);
+                LOGGER.warn(keysIntervention);
             }
 
-            molecularMatchTrialsIntervationList.add(ImmutableMolecularMatchTrialsIntervation.builder()
-                    .intervention_name(!intervation.getAsJsonObject().has("intervention_name")
+            molecularMatchTrialsInterventionList.add(ImmutableMolecularMatchTrialsIntervation.builder()
+                    .intervention_name(!intervention.getAsJsonObject().has("intervention_name")
                             ? null
-                            : intervation.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
-                    .other_name(!intervation.getAsJsonObject().has("other_name")
+                            : intervention.getAsJsonObject().getAsJsonPrimitive("intervention_name").getAsString())
+                    .other_name(!intervention.getAsJsonObject().has("other_name")
                             ? null
-                            : otherNameMolecularMatchTrials(intervation.getAsJsonObject()))
-                    .description(!intervation.getAsJsonObject().has("description")
+                            : otherNameMolecularMatchTrials(intervention.getAsJsonObject()))
+                    .description(!intervention.getAsJsonObject().has("description")
                             ? null
-                            : intervation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .arm_group_label(!intervation.getAsJsonObject().has("arm_group_label")
+                            : intervention.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .arm_group_label(!intervention.getAsJsonObject().has("arm_group_label")
                             ? null
-                            : armGroupLabelMolecularMatchTrials(intervation.getAsJsonObject()))
-                    .intervention_type(!intervation.getAsJsonObject().has("intervention_type")
+                            : armGroupLabelMolecularMatchTrials(intervention.getAsJsonObject()))
+                    .intervention_type(!intervention.getAsJsonObject().has("intervention_type")
                             ? null
-                            : intervation.getAsJsonObject().getAsJsonPrimitive("intervention_type").getAsString())
+                            : intervention.getAsJsonObject().getAsJsonPrimitive("intervention_type").getAsString())
                     .build());
         }
-        return molecularMatchTrialsIntervationList;
+        return molecularMatchTrialsInterventionList;
     }
 
     @NotNull
     private static Iterable<String> otherNameMolecularMatchTrials(@NotNull JsonObject otherNameObject) {
         if (otherNameObject.get("other_name").isJsonPrimitive()) {
-            return Arrays.asList(otherNameObject.getAsJsonPrimitive("other_name").getAsString());
+            return Collections.singletonList(otherNameObject.getAsJsonPrimitive("other_name").getAsString());
         } else {
             return jsonArrayToStringList(otherNameObject.getAsJsonArray("other_name"));
         }
@@ -217,7 +220,7 @@ final class MolecularMatchTrialsObjectFactory {
         if (armGroupLabel.get("arm_group_label").isJsonArray()) {
             return jsonArrayToStringList(armGroupLabel.getAsJsonArray("arm_group_label"));
         } else if (armGroupLabel.get("arm_group_label").isJsonPrimitive()) {
-            return Arrays.asList(armGroupLabel.getAsJsonPrimitive("arm_group_label").getAsString());
+            return Collections.singletonList(armGroupLabel.getAsJsonPrimitive("arm_group_label").getAsString());
         } else {
             return Lists.newArrayList();
         }
@@ -227,10 +230,12 @@ final class MolecularMatchTrialsObjectFactory {
     private static MolecularMatchTrialsOverallContact createMolecularMatchTrialsOverallContact(@NotNull JsonObject overallContactObject) {
         Set<String> keysOverallContact = overallContactObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES.contains(keysOverallContact.size())) {
-            LOGGER.warn("Found " + keysOverallContact.size() + " in molecular match trials overall contact rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in molecular match trials overall contact rather than the expected {}",
+                    keysOverallContact.size(),
+                    EXPECTED_MOLECULARMATCH_TRAILS_OVERALL_CONTACT_ELEMENT_SIZES);
             LOGGER.warn(keysOverallContact);
         }
+
         return ImmutableMolecularMatchTrialsOverallContact.builder()
                 .phone(!overallContactObject.has("phone") || overallContactObject.get("phone").isJsonNull()
                         ? null
@@ -257,12 +262,14 @@ final class MolecularMatchTrialsObjectFactory {
 
     @NotNull
     private static MolecularMatchTrialsGeo createMolecularMatchTrialsGeo(@NotNull JsonObject geoObject) {
-        Set<String> keySGeo = geoObject.getAsJsonObject().keySet();
-        if (!EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES.contains(keySGeo.size())) {
-            LOGGER.warn("Found " + keySGeo.size() + " in molecular match trials geo rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES);
-            LOGGER.warn(keySGeo);
+        Set<String> keysGeo = geoObject.getAsJsonObject().keySet();
+        if (!EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES.contains(keysGeo.size())) {
+            LOGGER.warn("Found {} in molecular match trials geo rather than the expected {}",
+                    keysGeo.size(),
+                    EXPECTED_MOLECULARMATCH_TRAILS_GEO_ELEMENT_SIZES);
+            LOGGER.warn(keysGeo);
         }
+
         return ImmutableMolecularMatchTrialsGeo.builder()
                 .lat(geoObject.getAsJsonPrimitive("lat").getAsString())
                 .lon(geoObject.getAsJsonPrimitive("lon").getAsString())
@@ -273,10 +280,12 @@ final class MolecularMatchTrialsObjectFactory {
     private static MolecularMatchTrialsLocation createMolecularMatchTrialsLocation(@NotNull JsonObject locationObject) {
         Set<String> keysLocation = locationObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES.contains(keysLocation.size())) {
-            LOGGER.warn("Found " + keysLocation.size() + " in molecular match trials location rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in molecular match trials location rather than the expected {}",
+                    keysLocation.size(),
+                    EXPECTED_MOLECULARMATCH_TRAILS_LOCATION_ELEMENT_SIZES);
             LOGGER.warn(keysLocation);
         }
+
         return ImmutableMolecularMatchTrialsLocation.builder()
                 .type(locationObject.getAsJsonPrimitive("type").getAsString())
                 .coordinates(jsonArrayToStringList(locationObject.getAsJsonArray("coordinates")))
@@ -287,10 +296,12 @@ final class MolecularMatchTrialsObjectFactory {
     private static MolecularMatchTrialsContact createMolecularMatchTrialsContact(@NotNull JsonObject contactObject) {
         Set<String> keysContact = contactObject.getAsJsonObject().keySet();
         if (!EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES.contains(keysContact.size())) {
-            LOGGER.warn("Found " + keysContact.size() + " in molecular match trials contact rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in molecular match trials contact rather than the expected {}",
+                    keysContact.size(),
+                    EXPECTED_MOLECULARMATCH_TRAILS_CONTACT_ELEMENT_SIZES);
             LOGGER.warn(keysContact);
         }
+
         return ImmutableMolecularMatchTrialsContact.builder()
                 .phone(!contactObject.has("phone") ? null : contactObject.getAsJsonPrimitive("phone").getAsString())
                 .name(!contactObject.has("name") ? null : contactObject.getAsJsonPrimitive("name").getAsString())
@@ -304,10 +315,12 @@ final class MolecularMatchTrialsObjectFactory {
         for (JsonElement tag : arrayTags) {
             Set<String> keysTags = tag.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES.contains(keysTags.size())) {
-                LOGGER.warn("Found " + keysTags.size() + " ein molecular match trials tags rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in molecular match trials tags rather than the expected {}",
+                        keysTags.size(),
+                        EXPECTED_MOLECULARMATCH_TRAILS_TAGS_ELEMENT_SIZES);
                 LOGGER.warn(keysTags);
             }
+
             tagsList.add(ImmutableMolecularMatchTrialsTags.builder()
                     .facet(tag.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
                     .compositeKey(tag.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
@@ -332,6 +345,7 @@ final class MolecularMatchTrialsObjectFactory {
                             : tag.getAsJsonObject().getAsJsonPrimitive("manualPriority").getAsString())
                     .build());
         }
+
         return tagsList;
     }
 }

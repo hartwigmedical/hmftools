@@ -90,7 +90,7 @@ final class CivicObjectFactory {
     static Civic create(@NotNull JsonObject objectCivic) {
         Set<String> keysCivic = objectCivic.keySet();
         if (!EXPECTED_CIVIC_ELEMENT_SIZES.contains(keysCivic.size())) {
-            LOGGER.warn("Found " + keysCivic.size() + " in civic rather than the expected " + EXPECTED_CIVIC_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in civic rather than the expected {}", keysCivic.size(), EXPECTED_CIVIC_ELEMENT_SIZES);
             LOGGER.warn(keysCivic);
         }
 
@@ -109,10 +109,10 @@ final class CivicObjectFactory {
                 .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull()
                         ? null
                         : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
-                .provisional_values(createCivicDesription(objectCivic.getAsJsonObject("provisional_values")))
+                .provisional_values(createCivicDescription(objectCivic.getAsJsonObject("provisional_values")))
                 .geneId(objectCivic.getAsJsonPrimitive("gene_id").getAsString())
                 .name(objectCivic.getAsJsonPrimitive("name").getAsString())
-                .evidenceItem(createEvidenceitems(objectCivic.getAsJsonArray("evidence_items")))
+                .evidenceItem(createEvidenceItems(objectCivic.getAsJsonArray("evidence_items")))
                 .sources(createCivicSource(objectCivic.getAsJsonArray("sources")))
                 .entrezId(objectCivic.getAsJsonPrimitive("entrez_id").getAsString())
                 .assertions(jsonArrayToStringList(objectCivic.getAsJsonArray("assertions")))
@@ -131,9 +131,10 @@ final class CivicObjectFactory {
         for (JsonElement source : arraySource) {
             Set<String> keysSource = source.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_SOURCE_SIZES.contains(keysSource.size())) {
-                LOGGER.warn("Found " + keysSource.size() + " in civic source rather than the expected " + EXPECTED_CIVIC_SOURCE_SIZES);
+                LOGGER.warn("Found {} in civic source rather than the expected {}", keysSource.size(), EXPECTED_CIVIC_SOURCE_SIZES);
                 LOGGER.warn(keysSource);
             }
+
             sourceList.add(ImmutableCivicSource.builder()
                     .status(source.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
                     .openAccess(source.getAsJsonObject().get("open_access").isJsonNull()
@@ -168,18 +169,20 @@ final class CivicObjectFactory {
     private static CivicError createCivicError(@NotNull JsonObject objectError) {
         Set<String> keysError = objectError.getAsJsonObject().keySet();
         if (!EXPECTED_CIVIC_ERROR_SIZES.contains(keysError.size())) {
-            LOGGER.warn("Found " + keysError.size() + " in civic error rather than the expected " + EXPECTED_CIVIC_ERROR_SIZES);
+            LOGGER.warn("Found {} in civic error rather than the expected {}", keysError.size(), EXPECTED_CIVIC_ERROR_SIZES);
             LOGGER.warn(keysError);
         }
+
         return ImmutableCivicError.builder().build();
     }
 
     @NotNull
-    private static CivicDescription createCivicDesription(@NotNull JsonObject objectProvisionalValues) {
+    private static CivicDescription createCivicDescription(@NotNull JsonObject objectProvisionalValues) {
         Set<String> keysProvisionalValues = objectProvisionalValues.getAsJsonObject().keySet();
         if (!EXPECTED_CIVIC_PROVISIONALVALUES_SIZES.contains(keysProvisionalValues.size())) {
-            LOGGER.warn("Found " + keysProvisionalValues.size() + " in civic provisional values rather than the expected "
-                    + EXPECTED_CIVIC_PROVISIONALVALUES_SIZES);
+            LOGGER.warn("Found {} in civic provisional values rather than the expected {}",
+                    keysProvisionalValues.size(),
+                    EXPECTED_CIVIC_PROVISIONALVALUES_SIZES);
             LOGGER.warn(keysProvisionalValues);
         }
 
@@ -188,8 +191,9 @@ final class CivicObjectFactory {
         if (description != null) {
             Set<String> keysDescription = description.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_DESCRIPTION_SIZES.contains(keysDescription.size())) {
-                LOGGER.warn("Found " + keysDescription.size() + " in civic description rather than the expected "
-                        + EXPECTED_CIVIC_DESCRIPTION_SIZES);
+                LOGGER.warn("Found {} in civic description rather than the expected {}",
+                        keysDescription.size(),
+                        EXPECTED_CIVIC_DESCRIPTION_SIZES);
                 LOGGER.warn(keysDescription);
             }
             return ImmutableCivicDescription.builder()
@@ -211,10 +215,12 @@ final class CivicObjectFactory {
         for (JsonElement variantGroup : arrayVariantsGroup) {
             Set<String> keysVariantGroup = variantGroup.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTGROUPS_SIZES.contains(keysVariantGroup.size())) {
-                LOGGER.warn("Found " + keysVariantGroup.size() + " in civic variant groups rather than the expected "
-                        + EXPECTED_CIVIC_VARIANTGROUPS_SIZES);
+                LOGGER.warn("Found {} in civic variant groups rather than the expected {}",
+                        keysVariantGroup.size(),
+                        EXPECTED_CIVIC_VARIANTGROUPS_SIZES);
                 LOGGER.warn(keysVariantGroup);
             }
+
             civicVariantGroupList.add(ImmutableCivicVariantGroup.builder()
                     .id(variantGroup.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .variants(createVariants(variantGroup.getAsJsonObject().getAsJsonArray("variants")))
@@ -232,8 +238,7 @@ final class CivicObjectFactory {
         for (JsonElement variants : arrayVariants) {
             Set<String> keysVariants = variants.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTS_SIZES.contains(keysVariants.size())) {
-                LOGGER.warn(
-                        "Found " + keysVariants.size() + " in civic variants rather than the expected " + EXPECTED_CIVIC_VARIANTS_SIZES);
+                LOGGER.warn("Found {} in civic variants rather than the expected {}", keysVariants.size(), EXPECTED_CIVIC_VARIANTS_SIZES);
                 LOGGER.warn(keysVariants);
             }
 
@@ -261,8 +266,9 @@ final class CivicObjectFactory {
     private static CivicCoordinates createCoordinates(@NotNull JsonObject objectCoordinates) {
         Set<String> keysCoordinates = objectCoordinates.keySet();
         if (!EXPECTED_CIVIC_COORDINATES_SIZES.contains(keysCoordinates.size())) {
-            LOGGER.warn("Found " + keysCoordinates.size() + " in civic coordinates rather than the expected "
-                    + EXPECTED_CIVIC_COORDINATES_SIZES);
+            LOGGER.warn("Found {} in civic coordinates rather than the expected {}",
+                    keysCoordinates.size(),
+                    EXPECTED_CIVIC_COORDINATES_SIZES);
             LOGGER.warn(keysCoordinates);
         }
 
@@ -297,46 +303,47 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicEvidenceItems> createEvidenceitems(@NotNull JsonArray evidenceItemsArray) {
+    private static List<CivicEvidenceItems> createEvidenceItems(@NotNull JsonArray evidenceItemsArray) {
         List<CivicEvidenceItems> evidenceItemsList = Lists.newArrayList();
-        for (JsonElement evideneItem : evidenceItemsArray) {
-            Set<String> keysEvidenceItems = evideneItem.getAsJsonObject().keySet();
+        for (JsonElement evidenceItem : evidenceItemsArray) {
+            Set<String> keysEvidenceItems = evidenceItem.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES.contains(keysEvidenceItems.size())) {
-                LOGGER.warn("Found " + keysEvidenceItems.size() + " in civic evidence items rather than the expected "
-                        + EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES);
+                LOGGER.warn("Found {} in civic evidence items rather than the expected {}",
+                        keysEvidenceItems.size(),
+                        EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES);
                 LOGGER.warn(keysEvidenceItems);
             }
 
             evidenceItemsList.add(ImmutableCivicEvidenceItems.builder()
-                    .status(evideneItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
-                    .rating(evideneItem.getAsJsonObject().get("rating").isJsonNull()
+                    .status(evidenceItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
+                    .rating(evidenceItem.getAsJsonObject().get("rating").isJsonNull()
                             ? null
-                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
-                    .drugInteractionType(evideneItem.getAsJsonObject().get("drug_interaction_type").isJsonNull()
+                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
+                    .drugInteractionType(evidenceItem.getAsJsonObject().get("drug_interaction_type").isJsonNull()
                             ? null
-                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
-                    .description(evideneItem.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .openChangeCount(evideneItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
-                    .evidenceType(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
-                    .drugs(createDrugs(evideneItem.getAsJsonObject().getAsJsonArray("drugs")))
-                    .variantOrigin(evideneItem.getAsJsonObject().get("variant_origin").isJsonNull()
+                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
+                    .description(evidenceItem.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
+                    .openChangeCount(evidenceItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
+                    .evidenceType(evidenceItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
+                    .drugs(createDrugs(evidenceItem.getAsJsonObject().getAsJsonArray("drugs")))
+                    .variantOrigin(evidenceItem.getAsJsonObject().get("variant_origin").isJsonNull()
                             ? null
-                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
-                    .disease(createDiseases(evideneItem.getAsJsonObject().getAsJsonObject("disease")))
-                    .source(createSource(evideneItem.getAsJsonObject().getAsJsonObject("source")))
-                    .evidenceDirection(evideneItem.getAsJsonObject().get("evidence_direction").isJsonNull()
+                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
+                    .disease(createDiseases(evidenceItem.getAsJsonObject().getAsJsonObject("disease")))
+                    .source(createSource(evidenceItem.getAsJsonObject().getAsJsonObject("source")))
+                    .evidenceDirection(evidenceItem.getAsJsonObject().get("evidence_direction").isJsonNull()
                             ? null
-                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_direction").toString())
-                    .variantId(!evideneItem.getAsJsonObject().has("variant_id")
+                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("evidence_direction").toString())
+                    .variantId(!evidenceItem.getAsJsonObject().has("variant_id")
                             ? null
-                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("variant_id").getAsString())
-                    .clinicalSignificance(evideneItem.getAsJsonObject().get("clinical_significance").isJsonNull()
+                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("variant_id").getAsString())
+                    .clinicalSignificance(evidenceItem.getAsJsonObject().get("clinical_significance").isJsonNull()
                             ? null
-                            : evideneItem.getAsJsonObject().getAsJsonPrimitive("clinical_significance").getAsString())
-                    .evidenceLevel(evideneItem.getAsJsonObject().getAsJsonPrimitive("evidence_level").getAsString())
-                    .type(evideneItem.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
-                    .id(evideneItem.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(evideneItem.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("clinical_significance").getAsString())
+                    .evidenceLevel(evidenceItem.getAsJsonObject().getAsJsonPrimitive("evidence_level").getAsString())
+                    .type(evidenceItem.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
+                    .id(evidenceItem.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
+                    .name(evidenceItem.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
         }
         return evidenceItemsList;
@@ -346,9 +353,10 @@ final class CivicObjectFactory {
     private static CivicSource createSource(@NotNull JsonObject objectSource) {
         Set<String> keysSource = objectSource.keySet();
         if (!EXPECTED_CIVIC_SOURCE_SIZES.contains(keysSource.size())) {
-            LOGGER.warn("Found " + keysSource.size() + " in civic source rather than the expected " + EXPECTED_CIVIC_SOURCE_SIZES);
+            LOGGER.warn("Found {} in civic source rather than the expected {}", keysSource.size(), EXPECTED_CIVIC_SOURCE_SIZES);
             LOGGER.warn(keysSource);
         }
+
         return ImmutableCivicSource.builder()
                 .status(objectSource.getAsJsonPrimitive("status").getAsString())
                 .openAccess(objectSource.get("open_access").isJsonNull()
@@ -376,8 +384,9 @@ final class CivicObjectFactory {
         for (JsonElement clinicalTrial : arrayClinicalTrial) {
             Set<String> keysClinicalTrials = clinicalTrial.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_CLINICALTRIAL_SIZES.contains(keysClinicalTrials.size())) {
-                LOGGER.warn("Found " + keysClinicalTrials.size() + " in civic clinial trials rather than the expected "
-                        + EXPECTED_CIVIC_CLINICALTRIAL_SIZES);
+                LOGGER.warn("Found {} in civic clinical trials rather than the expected {}",
+                        keysClinicalTrials.size(),
+                        EXPECTED_CIVIC_CLINICALTRIAL_SIZES);
                 LOGGER.warn(keysClinicalTrials);
             }
 
@@ -395,8 +404,9 @@ final class CivicObjectFactory {
     private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
         Set<String> keysPublicationDate = objectPublicationDate.keySet();
         if (!EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES.contains(keysPublicationDate.size())) {
-            LOGGER.warn("Found " + keysPublicationDate.size() + " in civic publication date rather than the expected "
-                    + EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES);
+            LOGGER.warn("Found {} in civic publication date rather than the expected {}",
+                    keysPublicationDate.size(),
+                    EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES);
             LOGGER.warn(keysPublicationDate);
         }
 
@@ -411,7 +421,7 @@ final class CivicObjectFactory {
     private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
         Set<String> keysDisease = objectDisease.keySet();
         if (!EXPECTED_CIVIC_DISEASES_SIZES.contains(keysDisease.size())) {
-            LOGGER.warn("Found " + keysDisease.size() + " in civic diseases rather than the expected " + EXPECTED_CIVIC_DISEASES_SIZES);
+            LOGGER.warn("Found {} in civic diseases rather than the expected {}", keysDisease.size(), EXPECTED_CIVIC_DISEASES_SIZES);
             LOGGER.warn(keysDisease);
         }
 
@@ -430,7 +440,7 @@ final class CivicObjectFactory {
         for (JsonElement drug : arrayDrugs) {
             Set<String> keysDrugs = drug.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_DRUGS_SIZES.contains(keysDrugs.size())) {
-                LOGGER.warn("Found " + keysDrugs.size() + " in civic drugs rather than the expected " + EXPECTED_CIVIC_DRUGS_SIZES);
+                LOGGER.warn("Found {} in civic drugs rather than the expected {}", keysDrugs.size(), EXPECTED_CIVIC_DRUGS_SIZES);
                 LOGGER.warn(keysDrugs);
             }
 
@@ -449,15 +459,16 @@ final class CivicObjectFactory {
     private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
         Set<String> keysLifecycleActions = objectLifeCycleActions.keySet();
         if (!EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES.contains(keysLifecycleActions.size())) {
-            LOGGER.warn("Found " + keysLifecycleActions.size() + " in civic lifecycle actions rather than the expected "
-                    + EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES);
+            LOGGER.warn("Found {} in civic lifecycle actions rather than the expected {}",
+                    keysLifecycleActions.size(),
+                    EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES);
             LOGGER.warn(keysLifecycleActions);
         }
 
         return ImmutableCivicLifecycleActions.builder()
                 .lastCommentedOn(objectLifeCycleActions.getAsJsonObject("last_commented_on") == null
                         ? null
-                        : createLastCommentOn(objectLifeCycleActions.getAsJsonObject("last_commented_on")))
+                        : createLastCommentedOn(objectLifeCycleActions.getAsJsonObject("last_commented_on")))
                 .lastModified(objectLifeCycleActions.getAsJsonObject("last_modified") == null
                         ? null
                         : createLastModified(objectLifeCycleActions.getAsJsonObject("last_modified")))
@@ -468,17 +479,18 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static CivicLastCommentedOn createLastCommentOn(@NotNull JsonObject objectLastCommned) {
-        Set<String> keysLastCommentedOn = objectLastCommned.keySet();
+    private static CivicLastCommentedOn createLastCommentedOn(@NotNull JsonObject objectLastCommentedOn) {
+        Set<String> keysLastCommentedOn = objectLastCommentedOn.keySet();
         if (!EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES.contains(keysLastCommentedOn.size())) {
-            LOGGER.warn("Found " + keysLastCommentedOn.size() + " in civic last commented on rather than the expected "
-                    + EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES);
+            LOGGER.warn("Found {} in civic last commented on rather than the expected {}",
+                    keysLastCommentedOn.size(),
+                    EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES);
             LOGGER.warn(keysLastCommentedOn);
         }
 
         return ImmutableCivicLastCommentedOn.builder()
-                .timestamp(objectLastCommned.getAsJsonPrimitive("timestamp").getAsString())
-                .user(createCivicUser(objectLastCommned.getAsJsonObject("user")))
+                .timestamp(objectLastCommentedOn.getAsJsonPrimitive("timestamp").getAsString())
+                .user(createCivicUser(objectLastCommentedOn.getAsJsonObject("user")))
                 .build();
     }
 
@@ -486,8 +498,9 @@ final class CivicObjectFactory {
     private static CivicLastModified createLastModified(@NotNull JsonObject objectLastModified) {
         Set<String> keysLastModified = objectLastModified.keySet();
         if (!EXPECTED_CIVIC_LAST_MODIFIED_SIZES.contains(keysLastModified.size())) {
-            LOGGER.warn("Found " + keysLastModified.size() + " in civic last modified rather than the expected"
-                    + EXPECTED_CIVIC_LAST_MODIFIED_SIZES);
+            LOGGER.warn("Found {} in civic last modified rather than the expected {}",
+                    keysLastModified.size(),
+                    EXPECTED_CIVIC_LAST_MODIFIED_SIZES);
             LOGGER.warn(keysLastModified);
         }
 
@@ -501,8 +514,9 @@ final class CivicObjectFactory {
     private static CivicLastReviewed createLastReviewed(@NotNull JsonObject objectLastReviewed) {
         Set<String> keysLastReviewed = objectLastReviewed.keySet();
         if (!EXPECTED_CIVIC_LAST_REVIEWED_SIZES.contains(keysLastReviewed.size())) {
-            LOGGER.warn("Found " + keysLastReviewed.size() + " in civic last reviewed rather than the expected "
-                    + EXPECTED_CIVIC_LAST_REVIEWED_SIZES);
+            LOGGER.warn("Found {} in civic last reviewed rather than the expected {}",
+                    keysLastReviewed.size(),
+                    EXPECTED_CIVIC_LAST_REVIEWED_SIZES);
             LOGGER.warn(keysLastReviewed);
         }
 
@@ -516,7 +530,7 @@ final class CivicObjectFactory {
     private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
         Set<String> keysUser = objectUser.keySet();
         if (!EXPECTED_CIVIC_USER_SIZES.contains(keysUser.size())) {
-            LOGGER.warn("Found " + keysUser.size() + " in civic user rather than the expected " + EXPECTED_CIVIC_USER_SIZES);
+            LOGGER.warn("Found {} in civic user rather than the expected {}", keysUser.size(), EXPECTED_CIVIC_USER_SIZES);
             LOGGER.warn(keysUser);
         }
 
@@ -563,8 +577,9 @@ final class CivicObjectFactory {
     private static CivicOrganization createOrganization(@NotNull JsonObject objectOrganization) {
         Set<String> keysOrganization = objectOrganization.keySet();
         if (!EXPECTED_CIVIC_ORGANIZATION_SIZES.contains(keysOrganization.size())) {
-            LOGGER.warn("Found " + keysOrganization.size() + " in civic organization rather than the expected "
-                    + EXPECTED_CIVIC_ORGANIZATION_SIZES);
+            LOGGER.warn("Found {} in civic organization rather than the expected {}",
+                    keysOrganization.size(),
+                    EXPECTED_CIVIC_ORGANIZATION_SIZES);
             LOGGER.warn(keysOrganization);
         }
 
@@ -585,8 +600,9 @@ final class CivicObjectFactory {
     private static CivicProfileImage createProfileImage(@NotNull JsonObject objectProfileImage) {
         Set<String> keysProfileImage = objectProfileImage.keySet();
         if (!EXPECTED_CIVIC_PROFILE_IMAGE_SIZES.contains(keysProfileImage.size())) {
-            LOGGER.warn("Found " + keysProfileImage.size() + " in civic profile image rather than the expected "
-                    + EXPECTED_CIVIC_PROFILE_IMAGE_SIZES);
+            LOGGER.warn("Found {} in civic profile image rather than the expected {}",
+                    keysProfileImage.size(),
+                    EXPECTED_CIVIC_PROFILE_IMAGE_SIZES);
             LOGGER.warn(keysProfileImage);
         }
 
@@ -603,7 +619,7 @@ final class CivicObjectFactory {
     private static CivicAvatars createAvatars(@NotNull JsonObject objectAvatars) {
         Set<String> keysAvatars = objectAvatars.keySet();
         if (!EXPECTED_CIVIC_AVATARS_SIZES.contains(keysAvatars.size())) {
-            LOGGER.warn("Found " + keysAvatars.size() + " in civic avatars rather than the expected " + EXPECTED_CIVIC_AVATARS_SIZES);
+            LOGGER.warn("Found {} in civic avatars rather than the expected {}", keysAvatars.size(), EXPECTED_CIVIC_AVATARS_SIZES);
             LOGGER.warn(keysAvatars);
         }
 
@@ -616,13 +632,14 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicVariantTypes> createVariantTypes(@NotNull JsonArray arrayvariantTypes) {
+    private static List<CivicVariantTypes> createVariantTypes(@NotNull JsonArray arrayVariantTypes) {
         List<CivicVariantTypes> civicVariantTypesList = Lists.newArrayList();
-        for (JsonElement variantTypes : arrayvariantTypes) {
+        for (JsonElement variantTypes : arrayVariantTypes) {
             Set<String> keysVariantTypes = variantTypes.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTTYPES_SIZES.contains(keysVariantTypes.size())) {
-                LOGGER.warn("Found " + keysVariantTypes.size() + " in civic variant types rather than the expected "
-                        + EXPECTED_CIVIC_VARIANTTYPES_SIZES);
+                LOGGER.warn("Found {} in civic variant types rather than the expected {}",
+                        keysVariantTypes.size(),
+                        EXPECTED_CIVIC_VARIANTTYPES_SIZES);
                 LOGGER.warn(keysVariantTypes);
             }
 
@@ -637,5 +654,4 @@ final class CivicObjectFactory {
         }
         return civicVariantTypesList;
     }
-
 }
