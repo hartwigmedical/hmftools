@@ -94,7 +94,7 @@ final class MetaDataResolver {
             }
         }
         if (count == 0){
-            LOGGER.warn("No tumur barcode is known");
+            LOGGER.warn("No tumur barcode is known for set setName: " + setName + "!");
         }
 
         return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);

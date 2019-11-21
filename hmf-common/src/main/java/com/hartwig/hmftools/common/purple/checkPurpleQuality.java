@@ -7,9 +7,9 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CheckPurpleQuality {
+public final class checkPurpleQuality {
 
-    private CheckPurpleQuality() {
+    private checkPurpleQuality() {
 
     }
 

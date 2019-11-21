@@ -66,8 +66,8 @@ public final class LimsFactory {
         final List<String> lines =
                 com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
         for (final String line : lines) {
-            final String[] parts = line.split(FIELD_SEPARATOR, 6);
-            if (parts.length == 6) {
+            final String[] parts = line.split(FIELD_SEPARATOR, 5);
+            if (parts.length == 5) {
                 shallowSeqPerSample.put(parts[0],
                         ImmutableLimsShallowSeqData.of(parts[0],
                                 parts[1],

@@ -6,13 +6,11 @@ import java.util.Map;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
-import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.checkPurpleQuality;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.patientreporter.actionability.ReportableEvidenceItemFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -40,8 +38,8 @@ public final class CopyNumberAnalyzer {
 
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())
-                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
-                .hasReliableQuality(CheckPurpleQuality.checkHasReliableQuality(purpleQC))
+                .hasReliablePurity(checkPurpleQuality.checkHasReliablePurity(purityContext))
+                .hasReliableQuality(checkPurpleQuality.checkHasReliableQuality(purpleQC))
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)

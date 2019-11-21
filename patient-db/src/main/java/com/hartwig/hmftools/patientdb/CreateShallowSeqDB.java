@@ -8,13 +8,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.ImmutableLimsShallowSeqData;
-import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
+import com.hartwig.hmftools.common.purple.checkPurpleQuality;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.purple.qc.PurpleQCFile;
-import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
@@ -84,7 +82,7 @@ public class CreateShallowSeqDB {
             String tumorSample = runInfo.tumorSample();
             String setName = path + "/" + runInfo.setName();
             String sampleBarcode = runInfo.tumorBarcodeSample();
-            LOGGER.info("setName: " + setName);
+
             String purple_purity_tsv_ext = Strings.EMPTY;
             String purple_qc_file_ext = Strings.EMPTY;
             File checkPipelineVersionFile = new File(setName + "/pipeline.version");
@@ -101,27 +99,28 @@ public class CreateShallowSeqDB {
             PurityContext purityContext = FittedPurityFile.read(purple_purity_tsv);
             PurpleQC purpleQC = PurpleQCFile.read(purple_qc_file);
 
-            boolean QCstatus = CheckPurpleQuality.checkHasReliableQuality(purpleQC);
-            boolean status = CheckPurpleQuality.checkHasReliablePurity(purityContext);
+            boolean QCstatus = checkPurpleQuality.checkHasReliableQuality(purpleQC);
+            boolean status = checkPurpleQuality.checkHasReliablePurity(purityContext);
             double purity = purityContext.bestFit().purity();
             List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
 
-            boolean inFile= false;
+            boolean inFile = false;
             if (shallowSeqData.size() == 0) {
                 String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status + "\n";
                 appendToTsv(shallowSeqOutputCsv, outputStringForFile);
-                LOGGER.info("Sample " + sampleBarcode + " is added to shallow seq db!");
+                LOGGER.info("Set: " + setName + " with sample barcode: " + sampleBarcode + " is added to shallow seq db!");
             } else {
                 for (LimsShallowSeqData sample : shallowSeqData) {
                     if (sample.sampleBarcode().equals(sampleBarcode)) {
-                        LOGGER.warn("Sample barcode are already present in file. Skipping " + sampleBarcode + "for writing to shallow seq db!");
+                        LOGGER.warn("Sample barcode are already present in file. Skipping set: " + setName + " with sample barcode: "
+                                + sampleBarcode + " for writing to shallow seq db!");
                         inFile = true;
                     }
                 }
-                if (!inFile) {
+                if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
                     String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status + "\n";
                     appendToTsv(shallowSeqOutputCsv, outputStringForFile);
-                    LOGGER.info("Sample " + sampleBarcode + " is added to shallow seq db!");
+                    LOGGER.info("Set: " + setName + " with sample barcode: " + sampleBarcode + " is added to shallow seq db!");
                 }
             }
         }

@@ -10,7 +10,6 @@ import com.google.common.io.Resources;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class MetaDataResolverTest {
@@ -30,32 +29,27 @@ public class MetaDataResolverTest {
     }
 
     @Test
-    @Ignore
     public void noSetNameReturnsNull() {
         final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirNoSetName";
         assertNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
     }
 
     @Test
-    @Ignore //TODO fix test
     public void canResolveSingleSampleMetaDataWithExplicitNoTumorSample() {
         testSingleSample("RunDirSingleSampleWithTumorSample");
     }
 
     @Test
-    @Ignore //TODO fix test
     public void canResolveSingleSampleMetaDataWithExplicitNullTumorSample() {
         testSingleSample("RunDirSingleSampleWithNullTumorSample");
     }
 
     @Test
-    @Ignore //TODO fix test
     public void canResolveSingleSampleMetaDataWithoutTumorSample() {
         testSingleSample("RunDirSingleSampleNoTumorSample");
     }
 
     @Test
-    @Ignore //TODO fix test
     public void canResolveMetaDataFilePV5() {
         final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirP5";
         assertNotNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
@@ -73,8 +67,7 @@ public class MetaDataResolverTest {
     }
 
     @Test
-    @Ignore //TODO fix test
-    public void canResolveSomaticMetaData() {
+    public void canResolveSomaticMetaDataP4() {
         final String setName = "RunDirSomatic";
         final String runDirectory = RESOURCE_DIR + File.separator + setName;
         final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
@@ -84,5 +77,20 @@ public class MetaDataResolverTest {
         assertEquals("CPCT12345678T", runContext.tumorSample());
         assertEquals(setName, runContext.setName());
         assertEquals(runDirectory, runContext.runDirectory());
+        assertEquals("", runContext.tumorBarcodeSample());
+    }
+
+    @Test
+    public void canResolveSomaticMetaDataP5() {
+        final String setName = "RunDirP5";
+        final String runDirectory = RESOURCE_DIR + File.separator + setName;
+        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
+
+        assertNotNull(runContext);
+        assertEquals("CPCT12345678R", runContext.refSample());
+        assertEquals("CPCT12345678T", runContext.tumorSample());
+        assertEquals(setName, runContext.setName());
+        assertEquals(runDirectory, runContext.runDirectory());
+        assertEquals("AB456", runContext.tumorBarcodeSample());
     }
 }

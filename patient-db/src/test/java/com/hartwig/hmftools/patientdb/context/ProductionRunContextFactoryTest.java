@@ -7,7 +7,6 @@ import java.io.File;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.utils.io.exception.MalformedFileException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ProductionRunContextFactoryTest {
@@ -15,7 +14,6 @@ public class ProductionRunContextFactoryTest {
     private static final String RESOURCE_DIR = Resources.getResource("context").getPath();
 
     @Test
-    @Ignore //TODO fix
     public void picksMetadataWhenAvailable() throws MalformedFileException {
         final String runDirectory = RESOURCE_DIR + File.separator + "RunDirSomatic";
 
