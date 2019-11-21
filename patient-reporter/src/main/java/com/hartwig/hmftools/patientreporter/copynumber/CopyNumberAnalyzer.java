@@ -6,6 +6,7 @@ import java.util.Map;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
+import com.hartwig.hmftools.common.purple.CheckPurpleQuality;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityStatus;
@@ -39,8 +40,8 @@ public final class CopyNumberAnalyzer {
 
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())
-                .hasReliablePurity(purityContext.status() != FittedPurityStatus.NO_TUMOR)
-                .hasReliableQuality(purpleQC.status() == PurpleQCStatus.PASS)
+                .hasReliablePurity(CheckPurpleQuality.checkHasReliablePurity(purityContext))
+                .hasReliableQuality(CheckPurpleQuality.checkHasReliableQuality(purpleQC))
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
