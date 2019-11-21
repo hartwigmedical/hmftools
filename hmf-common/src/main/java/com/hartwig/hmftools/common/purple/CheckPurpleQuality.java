@@ -7,10 +7,9 @@ import com.hartwig.hmftools.common.purple.qc.PurpleQCStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class checkPurpleQuality {
+public final class CheckPurpleQuality {
 
-    private checkPurpleQuality() {
-
+    private CheckPurpleQuality() {
     }
 
     public static boolean checkHasReliablePurity(@NotNull PurityContext purityContext) {
@@ -20,5 +19,4 @@ public final class checkPurpleQuality {
     public static boolean checkHasReliableQuality(@NotNull PurpleQC purpleQC) {
         return purpleQC.status() == PurpleQCStatus.PASS;
     }
-
 }
