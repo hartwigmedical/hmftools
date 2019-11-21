@@ -4,12 +4,14 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
@@ -232,7 +234,15 @@ public interface SvVisualiserConfig
         if (cmd.hasOption(CHROMOSOMES))
         {
             final String contigs = cmd.getOptionValue(CHROMOSOMES);
-            Collections.addAll(result, contigs.split(","));
+
+            if(contigs.equals("All"))
+            {
+                Arrays.stream(HumanChromosome.values()).forEach(x -> result.add(x.toString()));
+            }
+            else
+            {
+                Collections.addAll(result, contigs.split(","));
+            }
         }
         return result;
     }

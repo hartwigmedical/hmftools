@@ -103,7 +103,10 @@ public class SvVisualiser implements AutoCloseable
                 submitCluster(config.clusters(), false);
             }
 
-            config.chromosomes().forEach(this::submitChromosome);
+            if(!config.chromosomes().isEmpty())
+            {
+                submitChromosome(config.chromosomes());
+            }
         }
         else
         {
@@ -119,7 +122,7 @@ public class SvVisualiser implements AutoCloseable
             config.links().stream().map(Link::endChromosome).filter(HumanChromosome::contains).forEach(chromosomes::add);
             for (final String chromosome : chromosomes)
             {
-                submitChromosome(chromosome);
+                submitChromosome(Lists.newArrayList(chromosome));
             }
         }
 
@@ -132,19 +135,35 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    private void submitChromosome(@NotNull final String chromosome)
+    private void submitChromosome(@NotNull final List<String> chromosomes)
     {
-        if (!HumanChromosome.contains(chromosome))
+        if (chromosomes.stream().anyMatch(x -> !HumanChromosome.contains(x)))
         {
-            LOGGER.warn("Chromosome {} not permitted", chromosome);
+            LOGGER.warn("Invalid chromosomes: {}", chromosomes.toString());
             return;
         }
 
+        String chromosomesStr = "";
+
+        if(chromosomes.size() >= 23)
+        {
+            chromosomesStr = "All";
+        }
+        else
+        {
+            for (String chromosome : chromosomes)
+            {
+                chromosomesStr = appendStr(chromosomesStr, chromosome, '-');
+            }
+        }
+
         final Predicate<Link> linePredicate = x -> !x.isLineElement() || config.includeLineElements();
-        final Predicate<Link> chromosomePredicate = x -> x.startChromosome().equals(chromosome) || x.endChromosome().equals(chromosome);
+        final Predicate<Link> chromosomePredicate = x -> chromosomes.contains(x.startChromosome()) || chromosomes.contains(x.endChromosome());
         final Predicate<Link> combinedPredicate = chromosomePredicate.and(linePredicate);
 
-        final String sample = config.sample() + ".chr" + chromosome + (config.debug() ? ".debug" : "");
+
+        final String sample = config.sample() + ".chr" + chromosomesStr + (config.debug() ? ".debug" : "");
+
         final Set<Integer> clusterIds = config.links()
                 .stream()
                 .filter(combinedPredicate)
@@ -154,15 +173,19 @@ public class SvVisualiser implements AutoCloseable
         final List<Link> chromosomeLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         if (chromosomeLinks.isEmpty())
         {
-            LOGGER.warn("Chromosome {} not present in file", chromosome);
+            LOGGER.warn("Chromosomes {} not present in file", chromosomesStr);
             return;
         }
 
         final List<Segment> chromosomeSegments =
                 config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
-        chromosomeSegments.add(Segments.entireChromosome(config.sample(), chromosome));
 
-        final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosome);
+        for(String chromosome : chromosomes)
+        {
+            chromosomeSegments.add(Segments.entireChromosome(config.sample(), chromosome));
+        }
+
+        final Set<String> chromosomesOfInterest = Sets.newHashSet(chromosomes);
         chromosomeLinks.forEach(x ->
         {
             chromosomesOfInterest.add(x.startChromosome());
@@ -180,7 +203,7 @@ public class SvVisualiser implements AutoCloseable
                 Collections.emptyList(), false);
     }
 
-    private void submitCluster(List<Integer> clusterIds, boolean skipSingles)
+    private void submitCluster(final List<Integer> clusterIds, boolean skipSingles)
     {
         final List<Link> clusterLinks = config.links().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
         final List<Segment> clusterSegments = config.segments().stream().filter(x -> clusterIds.contains(x.clusterId())).collect(toList());
