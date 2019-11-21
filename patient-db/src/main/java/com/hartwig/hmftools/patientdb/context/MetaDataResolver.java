@@ -35,7 +35,6 @@ final class MetaDataResolver {
     private static final String NO_TUMOR_SAMPLE = "NA";
     private static final String BARCODE_START = "FR";
 
-
     private static final Gson GSON = new GsonBuilder().create();
 
     private MetaDataResolver() {
@@ -83,18 +82,15 @@ final class MetaDataResolver {
             return null;
         }
 
-        int lengthSetName = setName.split("_").length;
-        int count = 0;
-        String [] setNameSplitted = setName.split("_");
-        for (int set=0; set < lengthSetName; set ++) {
-            boolean containsFR = setNameSplitted[set].startsWith(BARCODE_START);
-            if (containsFR) {
-                count +=1;
-                tumorBarcodeSample = setNameSplitted[set];
+        boolean containsFR = false;
+        for (String setNamePart : setName.split("_")) {
+            if (setNamePart.startsWith(BARCODE_START)) {
+                containsFR = true;
+                tumorBarcodeSample = setNamePart;
             }
         }
-        if (count == 0){
-            LOGGER.warn("No tumur barcode is known for set setName: " + setName + "!");
+        if (!containsFR) {
+            LOGGER.warn("No tumor barcode is known for set set '{}'", setName);
         }
 
         return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);
@@ -106,11 +102,14 @@ final class MetaDataResolver {
 
         String refSample = sampleIdP5(json, REF_SAMPLE_FIELD_P5);
         String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_FIELD_P5);
-        String tumorBarcodeSample = sampleBarcodeIdP5(json);
+        String tumorBarcodeSample = sampleBarcodeP5(json, TUMOR_SAMPLE_FIELD_P5);
         String setName = fieldValue(json, SET_NAME_FIELD_P5);
 
         if (refSample == null) {
             LOGGER.warn("Could not find " + REF_SAMPLE_FIELD_P5 + " in metadata file!");
+            return null;
+        } else if (tumorSample == null) {
+            LOGGER.warn("Could not find " + TUMOR_SAMPLE_FIELD_P5 + " in metadata file!");
             return null;
         } else if (setName == null) {
             LOGGER.warn("Could not find " + SET_NAME_FIELD_P5 + " in metadata file!");
@@ -119,7 +118,7 @@ final class MetaDataResolver {
             LOGGER.warn("Could not find " + BARCODE_TUMOR_SAMPLE_FIELD_P5 + " in metadata file!");
             return null;
         }
-        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);
+        return new RunContextImpl(runDirectory, setName, refSample, tumorSample, tumorBarcodeSample);
     }
 
     @NotNull
@@ -141,8 +140,8 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static String sampleBarcodeIdP5(@NotNull final JsonObject object) {
-        final JsonElement element = object.get(TUMOR_SAMPLE_FIELD_P5);
+    private static String sampleBarcodeP5(@NotNull final JsonObject object, @NotNull final String fieldName) {
+        final JsonElement element = object.get(fieldName);
         JsonElement sampleBarcodeId = element.getAsJsonObject().get("sampleId");
         return sampleBarcodeId != null && !(sampleBarcodeId instanceof JsonNull) ? sampleBarcodeId.getAsString() : null;
     }
