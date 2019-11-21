@@ -108,14 +108,8 @@ public class CreateShallowSeqDB {
 
             boolean QCstatus = checkPurpleQuality.checkHasReliableQuality(purpleQC);
             boolean status = checkPurpleQuality.checkHasReliablePurity(purityContext);
-            String purityString = Double.toString(purityContext.bestFit().purity());
-            double purity = 0;
-            if (purityString.length() == 3) {
-                DecimalFormat df = new DecimalFormat("0.00");
-                purity = Double.valueOf(df.format(Double.valueOf(Double.toString(purityContext.bestFit().purity()).substring(0,3))));
-            } else if (purityString.length() >= 4) {
-                purity = Double.valueOf(Double.toString(purityContext.bestFit().purity()).substring(0,4));
-            }
+            DecimalFormat df2 = new DecimalFormat("#.##");
+            double purity = Double.valueOf(df2.format(purityContext.bestFit().purity()));
 
             List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
 
