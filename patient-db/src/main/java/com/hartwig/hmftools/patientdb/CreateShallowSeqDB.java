@@ -109,7 +109,7 @@ public class CreateShallowSeqDB {
             boolean QCstatus = checkPurpleQuality.checkHasReliableQuality(purpleQC);
             boolean status = checkPurpleQuality.checkHasReliablePurity(purityContext);
             final DecimalFormat decimalFormat = new DecimalFormat("#.##");
-            double purity = Math.round(Double.valueOf(decimalFormat.format(purityContext.bestFit().purity())));
+            double purity = Double.valueOf(decimalFormat.format(purityContext.bestFit().purity()));
 
             List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
 
