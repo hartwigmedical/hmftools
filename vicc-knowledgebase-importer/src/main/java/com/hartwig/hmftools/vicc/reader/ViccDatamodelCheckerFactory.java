@@ -12,7 +12,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker viccEntryDatamodelChecker() {
+    static ViccDatamodelChecker viccEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("source", true);
         map.put("genes", true);
@@ -36,7 +36,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker geneIdentifierDatamodelChecker() {
+    static ViccDatamodelChecker geneIdentifierChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("symbol", true);
         map.put("entrez_id", true);
@@ -45,7 +45,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker featureDatamodelChecker() {
+    static ViccDatamodelChecker featureChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("name", true);
         map.put("biomarker_type", false);
@@ -66,7 +66,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker sequenceOntologyDatamodelChecker() {
+    static ViccDatamodelChecker sequenceOntologyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("hierarchy", false);
         map.put("soid", true);
@@ -77,7 +77,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker associationDatamodelChecker() {
+    static ViccDatamodelChecker associationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("variant_name", false);
         map.put("evidence", true);
@@ -95,7 +95,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker evidenceDatamodelChecker() {
+    static ViccDatamodelChecker evidenceChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("info", true);
         map.put("evidenceType", true);
@@ -104,14 +104,14 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker evidenceInfoDatamodelChecker() {
+    static ViccDatamodelChecker evidenceInfoChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("publications", true);
         return new ViccDatamodelChecker("EvidenceInfo", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker evidenceTypeDatamodelChecker() {
+    static ViccDatamodelChecker evidenceTypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("sourceName", true);
         map.put("id", false);
@@ -119,7 +119,7 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
-    static ViccDatamodelChecker environmentalContextDatamodelChecker() {
+    static ViccDatamodelChecker environmentalContextChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("term", false);
         map.put("description", true);
@@ -130,5 +130,35 @@ final class ViccDatamodelCheckerFactory {
         map.put("toxicity", false);
         map.put("id", false);
         return new ViccDatamodelChecker("EnvironmentalContext", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker taxonomyChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("kingdom", true);
+        map.put("direct-parent", true);
+        map.put("class", true);
+        map.put("subclass", false);
+        map.put("superclass", true);
+        return new ViccDatamodelChecker("Taxonomy", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker phenotypeChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", false);
+        map.put("description", true);
+        map.put("family", true);
+        map.put("id", false);
+        return new ViccDatamodelChecker("Phenotype", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker phenotypeTypeChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("source", false);
+        map.put("term", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("PhenotypeType", map);
     }
 }

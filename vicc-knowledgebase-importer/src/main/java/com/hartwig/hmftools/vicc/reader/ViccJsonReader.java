@@ -47,11 +47,6 @@ public final class ViccJsonReader {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonReader.class);
 
-    private static final List<Integer> EXPECTED_PHENOTYPE_ELEMENT_SIZES = Lists.newArrayList(2, 3, 4);
-    private static final List<Integer> EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES = Lists.newArrayList(3);
-
-    private static final List<Integer> EXPECTED_TAXONOMY = Lists.newArrayList(4, 5);
-
     private ViccJsonReader() {
     }
 
@@ -66,7 +61,7 @@ public final class ViccJsonReader {
 
         while (reader.peek() != JsonToken.END_DOCUMENT) {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
-            ViccDatamodelCheckerFactory.viccEntryDatamodelChecker().check(viccEntryObject);
+            ViccDatamodelCheckerFactory.viccEntryChecker().check(viccEntryObject);
 
             ImmutableViccEntry.Builder viccEntryBuilder = ImmutableViccEntry.builder();
             viccEntryBuilder.source(viccEntryObject.getAsJsonPrimitive("source").getAsString());
@@ -127,7 +122,7 @@ public final class ViccJsonReader {
 
         for (JsonElement geneIdentifierElement : geneIdentifierArray) {
             JsonObject geneIdentifierObject = geneIdentifierElement.getAsJsonObject();
-            ViccDatamodelCheckerFactory.geneIdentifierDatamodelChecker().check(geneIdentifierObject);
+            ViccDatamodelCheckerFactory.geneIdentifierChecker().check(geneIdentifierObject);
 
             geneIdentifierList.add(ImmutableGeneIdentifier.builder()
                     .symbol(geneIdentifierObject.getAsJsonPrimitive("symbol").getAsString())
@@ -143,11 +138,11 @@ public final class ViccJsonReader {
     @NotNull
     private static List<Feature> createFeatures(@NotNull JsonArray featureArray) {
         List<Feature> featureList = Lists.newArrayList();
-        ViccDatamodelChecker featureDatamodelChecker = ViccDatamodelCheckerFactory.featureDatamodelChecker();
+        ViccDatamodelChecker featureChecker = ViccDatamodelCheckerFactory.featureChecker();
 
         for (JsonElement featureElement : featureArray) {
             JsonObject featureObject = featureElement.getAsJsonObject();
-            featureDatamodelChecker.check(featureObject);
+            featureChecker.check(featureObject);
 
             featureList.add(ImmutableFeature.builder()
                     .name(featureObject.has("name") ? featureObject.getAsJsonPrimitive("name").getAsString() : null)
@@ -188,7 +183,7 @@ public final class ViccJsonReader {
 
     @NotNull
     private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
-        ViccDatamodelCheckerFactory.sequenceOntologyDatamodelChecker().check(objectSequenceOntology);
+        ViccDatamodelCheckerFactory.sequenceOntologyChecker().check(objectSequenceOntology);
 
         return ImmutableSequenceOntology.builder()
                 .hierarchy(objectSequenceOntology.has("hierarchy")
@@ -203,7 +198,7 @@ public final class ViccJsonReader {
 
     @NotNull
     private static Association createAssociation(@NotNull JsonObject associationObject) {
-        ViccDatamodelCheckerFactory.associationDatamodelChecker().check(associationObject);
+        ViccDatamodelCheckerFactory.associationChecker().check(associationObject);
 
         return ImmutableAssociation.builder()
                 .variantName(associationObject.has("variant_name") && associationObject.get("variant_name").isJsonArray()
@@ -240,11 +235,11 @@ public final class ViccJsonReader {
     @NotNull
     private static List<Evidence> createEvidence(@NotNull JsonArray evidenceArray) {
         List<Evidence> evidenceList = Lists.newArrayList();
-        ViccDatamodelChecker evidenceDatamodelChecker = ViccDatamodelCheckerFactory.evidenceDatamodelChecker();
+        ViccDatamodelChecker evidenceChecker = ViccDatamodelCheckerFactory.evidenceChecker();
 
         for (JsonElement evidenceElement : evidenceArray) {
             JsonObject evidenceObject = evidenceElement.getAsJsonObject();
-            evidenceDatamodelChecker.check(evidenceObject);
+            evidenceChecker.check(evidenceObject);
 
             evidenceList.add(ImmutableEvidence.builder()
                     .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
@@ -258,7 +253,7 @@ public final class ViccJsonReader {
 
     @NotNull
     private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
-        ViccDatamodelCheckerFactory.evidenceInfoDatamodelChecker().check(evidenceInfoObject);
+        ViccDatamodelCheckerFactory.evidenceInfoChecker().check(evidenceInfoObject);
 
         return ImmutableEvidenceInfo.builder()
                 .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
@@ -267,7 +262,7 @@ public final class ViccJsonReader {
 
     @NotNull
     private static EvidenceType createEvidenceType(@NotNull JsonObject evidenceTypeObject) {
-        ViccDatamodelCheckerFactory.evidenceTypeDatamodelChecker().check(evidenceTypeObject);
+        ViccDatamodelCheckerFactory.evidenceTypeChecker().check(evidenceTypeObject);
 
         return ImmutableEvidenceType.builder()
                 .sourceName(evidenceTypeObject.getAsJsonPrimitive("sourceName").getAsString())
@@ -278,11 +273,11 @@ public final class ViccJsonReader {
     @NotNull
     private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonArray environmentalContextArray) {
         List<EnvironmentalContext> environmentalContextList = Lists.newArrayList();
-        ViccDatamodelChecker environmentalContextDatamodelChecker = ViccDatamodelCheckerFactory.environmentalContextDatamodelChecker();
+        ViccDatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
 
         for (JsonElement environmentalContextElement : environmentalContextArray) {
             JsonObject environmentalContextObject = environmentalContextElement.getAsJsonObject();
-            environmentalContextDatamodelChecker.check(environmentalContextObject);
+            environmentalContextChecker.check(environmentalContextObject);
 
             environmentalContextList.add(ImmutableEnvironmentalContext.builder()
                     .term(environmentalContextObject.has("term")
@@ -309,31 +304,24 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static Taxonomy createTaxonomy(@NotNull JsonObject environmentContextObject) {
-        if (!EXPECTED_TAXONOMY.contains(environmentContextObject.keySet().size())) {
-            LOGGER.warn("Found {} in taxonomy rather than the expected {}", environmentContextObject.keySet().size(), EXPECTED_TAXONOMY);
-            LOGGER.warn(environmentContextObject.keySet());
-        }
+    private static Taxonomy createTaxonomy(@NotNull JsonObject taxonomyObject) {
+        ViccDatamodelCheckerFactory.taxonomyChecker().check(taxonomyObject);
 
         return ImmutableTaxonomy.builder()
-                .kingdom(environmentContextObject.getAsJsonPrimitive("kingdom").getAsString())
-                .directParent(environmentContextObject.getAsJsonPrimitive("direct-parent").getAsString())
-                .classs(environmentContextObject.getAsJsonPrimitive("class").getAsString())
-                .subClass(environmentContextObject.has("subclass")
-                        ? environmentContextObject.getAsJsonPrimitive("subclass").getAsString()
+                .kingdom(taxonomyObject.getAsJsonPrimitive("kingdom").getAsString())
+                .directParent(taxonomyObject.getAsJsonPrimitive("direct-parent").getAsString())
+                .classs(taxonomyObject.getAsJsonPrimitive("class").getAsString())
+                .subClass(taxonomyObject.has("subclass")
+                        ? taxonomyObject.getAsJsonPrimitive("subclass").getAsString()
                         : null)
-                .superClass(environmentContextObject.getAsJsonPrimitive("superclass").getAsString())
+                .superClass(taxonomyObject.getAsJsonPrimitive("superclass").getAsString())
                 .build();
     }
 
     @NotNull
     private static Phenotype createPhenotype(@NotNull JsonObject phenotypeObject) {
-        if (!EXPECTED_PHENOTYPE_ELEMENT_SIZES.contains(phenotypeObject.keySet().size())) {
-            LOGGER.warn("Found {} in phenotype rather than the expected {}",
-                    phenotypeObject.keySet().size(),
-                    EXPECTED_PHENOTYPE_ELEMENT_SIZES);
-            LOGGER.warn(phenotypeObject.keySet());
-        }
+        ViccDatamodelCheckerFactory.phenotypeChecker().check(phenotypeObject);
+
         return ImmutablePhenotype.builder()
                 .type(phenotypeObject.has("type") ? createPhenotypeType(phenotypeObject.getAsJsonObject("type")) : null)
                 .description(phenotypeObject.getAsJsonPrimitive("description").getAsString())
@@ -343,13 +331,9 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static PhenotypeType createPhenotypeType(JsonObject phenotypeTypeObject) {
-        if (!EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES.contains(phenotypeTypeObject.keySet().size())) {
-            LOGGER.warn("Found {} in phenotype type rather than the expected {}",
-                    phenotypeTypeObject.keySet().size(),
-                    EXPECTED_PHENOTYPE_TYPE_ELEMENT_SIZES);
-            LOGGER.warn(phenotypeTypeObject.keySet());
-        }
+    private static PhenotypeType createPhenotypeType(@NotNull JsonObject phenotypeTypeObject) {
+        ViccDatamodelCheckerFactory.phenotypeTypeChecker().check(phenotypeTypeObject);
+
         return ImmutablePhenotypeType.builder()
                 .source(!phenotypeTypeObject.get("source").isJsonNull()
                         ? phenotypeTypeObject.getAsJsonPrimitive("source").getAsString()
