@@ -129,7 +129,8 @@ public class CreateShallowSeqDB {
                 // TODO: When can sampleBarcode be empty? Check earlier?
                 if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
                     String outputStringForFile =
-                            sampleBarcode + "," + tumorSample + "," + purity + "," + hasReliableQuality + "," + hasReliablePurity + "\n";
+                            sampleBarcode + DELIMITER + tumorSample + DELIMITER + purity + DELIMITER + hasReliableQuality + DELIMITER
+                                    + hasReliablePurity + "\n";
                     appendToTsv(shallowSeqOutputCsv, outputStringForFile);
                     LOGGER.info("Set: " + setPath + " with sample barcode: " + sampleBarcode + " is added to shallow seq db!");
                 }
