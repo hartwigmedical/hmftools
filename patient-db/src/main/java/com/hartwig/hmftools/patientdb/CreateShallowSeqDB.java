@@ -122,6 +122,9 @@ public class CreateShallowSeqDB {
                     appendToTsv(shallowSeqOutputCsv, outputStringForFile);
                     LOGGER.info("Set: " + setName + " with sample barcode: " + sampleBarcode + " is added to shallow seq db!");
                 }
+                if (sampleBarcode.equals(Strings.EMPTY)) {
+                    LOGGER.warn("Set: " + setName + " has none known sample barcode!");
+                }
             }
         }
     }
