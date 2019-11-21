@@ -87,6 +87,9 @@ public class CreateShallowSeqDB {
     private static void extractPurpleFromSample(@NotNull List<RunContext> runContexts, @NotNull String shallowSeqOutputCsv,
             @NotNull String path, @NotNull String purpleQCFile, @NotNull String purplePurityP4, @NotNull String purplePurityP5)
             throws IOException {
+
+        List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
+
         for (RunContext runInfo : runContexts) {
             String tumorSample = runInfo.tumorSample();
             String setPath = path + File.separator + runInfo.setName();
@@ -109,7 +112,6 @@ public class CreateShallowSeqDB {
             DecimalFormat decimalFormat = new DecimalFormat("#.##");
             String purity = decimalFormat.format(purityContext.bestFit().purity());
 
-            List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
 
             boolean inFile = false;
             if (shallowSeqData.size() == 0) {
@@ -121,8 +123,11 @@ public class CreateShallowSeqDB {
             } else {
                 for (LimsShallowSeqData sample : shallowSeqData) {
                     if (sample.sampleBarcode().equals(sampleBarcode)) {
-                        LOGGER.warn("Sample barcode is already present in file. Skipping set: " + setPath + " with sample barcode: "
-                                + sampleBarcode + " for writing to shallow seq db!");
+                        LOGGER.warn(
+                                "Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
+                                        + " writing to shallow seq db!",
+                                setPath,
+                                sampleBarcode);
                         inFile = true;
                     }
                 }
@@ -132,10 +137,10 @@ public class CreateShallowSeqDB {
                             sampleBarcode + DELIMITER + tumorSample + DELIMITER + purity + DELIMITER + hasReliableQuality + DELIMITER
                                     + hasReliablePurity + "\n";
                     appendToTsv(shallowSeqOutputCsv, outputStringForFile);
-                    LOGGER.info("Set: " + setPath + " with sample barcode: " + sampleBarcode + " is added to shallow seq db!");
+                    LOGGER.info("Set: {} with sample barcode: {} is added to shallow seq db!", setPath, sampleBarcode);
                 }
                 if (sampleBarcode.equals(Strings.EMPTY)) {
-                    LOGGER.warn("Set: " + setPath + " has no sample barcode!");
+                    LOGGER.warn("Set: {} has no sample barcode!", setPath);
                 }
             }
         }
