@@ -83,6 +83,20 @@ final class MetaDataResolver {
             return null;
         }
 
+        int lengthSetName = setName.split("_").length;
+        int count = 0;
+        String [] setNameSplitted = setName.split("_");
+        for (int set=0; set < lengthSetName; set ++) {
+            boolean containsFR = setNameSplitted[set].startsWith(BARCODE_START);
+            if (containsFR) {
+                count +=1;
+                tumorBarcodeSample = setNameSplitted[set];
+            }
+        }
+        if (count == 0){
+            LOGGER.warn("No tumur barcode is known");
+        }
+
         return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);
     }
 

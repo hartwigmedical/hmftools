@@ -106,8 +106,7 @@ public class CreateShallowSeqDB {
             double purity = purityContext.bestFit().purity();
             List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
 
-            LOGGER.info(shallowSeqData.size());
-
+            boolean inFile= false;
             if (shallowSeqData.size() == 0) {
                 String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status + "\n";
                 appendToTsv(shallowSeqOutputCsv, outputStringForFile);
@@ -116,11 +115,13 @@ public class CreateShallowSeqDB {
                 for (LimsShallowSeqData sample : shallowSeqData) {
                     if (sample.sampleBarcode().equals(sampleBarcode)) {
                         LOGGER.warn("Sample barcode are already present in file. Skipping " + sampleBarcode + "for writing to shallow seq db!");
-                    } else {
-                        String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status + "\n";
-                        appendToTsv(shallowSeqOutputCsv, outputStringForFile);
-                        LOGGER.info("Sample " + sampleBarcode + " is added to shallow seq db!");
+                        inFile = true;
                     }
+                }
+                if (!inFile) {
+                    String outputStringForFile = sampleBarcode + "," + tumorSample + "," + purity + "," + QCstatus + "," + status + "\n";
+                    appendToTsv(shallowSeqOutputCsv, outputStringForFile);
+                    LOGGER.info("Sample " + sampleBarcode + " is added to shallow seq db!");
                 }
             }
         }
