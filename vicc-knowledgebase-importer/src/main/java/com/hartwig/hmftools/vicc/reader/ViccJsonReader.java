@@ -53,7 +53,6 @@ public final class ViccJsonReader {
     @NotNull
     public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {
         List<ViccEntry> entries = Lists.newArrayList();
-        LOGGER.info("Reading VICC knowledgebase from {}", jsonPath);
 
         JsonParser parser = new JsonParser();
         JsonReader reader = new JsonReader(new FileReader(jsonPath));
