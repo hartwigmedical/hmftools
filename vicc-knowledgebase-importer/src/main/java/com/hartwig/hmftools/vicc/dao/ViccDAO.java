@@ -73,7 +73,7 @@ public class ViccDAO {
         final Connection conn = DriverManager.getConnection(url, userName, password);
         final String catalog = conn.getCatalog();
 
-        LOGGER.debug("Connecting to database {}", catalog);
+        LOGGER.info("Connecting to database {}", catalog);
         return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL));
     }
 
