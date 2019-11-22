@@ -182,6 +182,7 @@ searchTerm,primaryTumorLocation,subType
 "Other",Unknown,"Unknown"
 "Other (please specify below)_ACUP",Unknown,"CUP"
 "Other (please specify below)_Adenocarcinoma of unkown primary (ACUP)",Unknown ,"CUP"
+"Other (please specify below)_chondrosarcoom",Bone/Soft tissue,"Chondrosarcoma"
 "Other (please specify below)_Merkel Cel Carcinoom",Skin,"Merkel-cell carcinoma"
 "Other (please specify below)_myo-epitheliaal carcinoom",Bone/Soft tissue,"Undifferentiated sarcoma"
 "Other (please specify below)_NEC",NET,"NEC"
