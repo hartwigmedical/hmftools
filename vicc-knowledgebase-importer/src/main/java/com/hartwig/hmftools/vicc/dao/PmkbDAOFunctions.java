@@ -107,6 +107,7 @@ final class PmkbDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
+        // TODO Order from branch to root to avoid constraint violation.
         context.deleteFrom(PMKB).execute();
         context.deleteFrom(PMKBTISSUE).execute();
         context.deleteFrom(PMKBTUMOR).execute();

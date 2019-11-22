@@ -80,10 +80,12 @@ final class JaxTrialsDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        context.deleteFrom(JAXTRIALS).execute();
+        context.deleteFrom(JAXTRIALSMOLECULARPROFILE).execute();
+
         context.deleteFrom(JAXTRIALSINDICATIONS).execute();
         context.deleteFrom(JAXTRIALSVARIANTREQUIREMENTDETAILS).execute();
-        context.deleteFrom(JAXTRIALSMOLECULARPROFILE).execute();
         context.deleteFrom(JAXTRIALSTHERAPIES).execute();
+
+        context.deleteFrom(JAXTRIALS).execute();
     }
 }

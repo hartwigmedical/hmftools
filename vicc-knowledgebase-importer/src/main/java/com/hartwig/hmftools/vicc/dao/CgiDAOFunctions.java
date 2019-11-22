@@ -91,7 +91,6 @@ final class CgiDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        context.deleteFrom(CGI).execute();
         context.deleteFrom(CGICDNA).execute();
         context.deleteFrom(CGIINDIVIDUALMUTATION).execute();
         context.deleteFrom(CGIGDNA).execute();
@@ -99,5 +98,7 @@ final class CgiDAOFunctions {
         context.deleteFrom(CGISTRAND).execute();
         context.deleteFrom(CGIINFO).execute();
         context.deleteFrom(CGIREGION).execute();
+
+        context.deleteFrom(CGI).execute();
     }
 }

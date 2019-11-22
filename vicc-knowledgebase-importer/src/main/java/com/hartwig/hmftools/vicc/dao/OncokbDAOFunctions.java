@@ -218,6 +218,7 @@ final class OncokbDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
+        // TODO Order from branch to root to avoid constraint violation.
         context.deleteFrom(ONCOKB).execute();
         context.deleteFrom(ONCOKBBIOLOGICAL).execute();
         context.deleteFrom(ONCOKBVARIANTBIOLOGICAL).execute();

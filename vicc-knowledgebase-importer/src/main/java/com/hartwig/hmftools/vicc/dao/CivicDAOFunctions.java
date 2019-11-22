@@ -723,24 +723,7 @@ final class CivicDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        context.deleteFrom(CIVIC).execute();
-        context.deleteFrom(CIVICASSERTIONS).execute();
-        context.deleteFrom(CIVICHGVSEXPRESSIONS).execute();
-        context.deleteFrom(CIVICCLINVARENTRIES).execute();
-        context.deleteFrom(CIVICVARIANTALIASES).execute();
-        context.deleteFrom(CIVICVARIANTTYPES).execute();
-        context.deleteFrom(CIVICDESCRIPTION).execute();
-        context.deleteFrom(CIVICCOORDINATES).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPS).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSVARIANTS).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSCOORDINATES).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSTYPES).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMS).execute();
-        context.deleteFrom(CIVICDRUGS).execute();
-        context.deleteFrom(CIVICDISEASE).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSSOURCE).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSPUBLICATION).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSCLINICALTRIAL).execute();
+        // TODO Order from branch to root to avoid constraint violation.
         context.deleteFrom(CIVICSOURCE).execute();
         context.deleteFrom(CIVICERROR).execute();
         context.deleteFrom(CIVICPUBLICATION).execute();
@@ -761,5 +744,32 @@ final class CivicDAOFunctions {
         context.deleteFrom(CIVICLASTREVIEWEDAVATARS).execute();
         context.deleteFrom(CIVICLASTREVIEWEDORGANIZATION).execute();
         context.deleteFrom(CIVICLASTREVIEWEDPROFILEIMAGE).execute();
+
+        // These tables are part of CIVIC Evidence Items
+        context.deleteFrom(CIVICDRUGS).execute();
+        context.deleteFrom(CIVICDISEASE).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSSOURCE).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSPUBLICATION).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSCLINICALTRIAL).execute();
+
+        // Tables are part of CIVIC Group Variant Group
+        context.deleteFrom(CIVICVARIANTSGROUPSTYPES).execute();
+
+        // These tables are part of CIVIC Variant Group
+        context.deleteFrom(CIVICVARIANTSGROUPSVARIANTS).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPSCOORDINATES).execute();
+
+        // These tables are part of CIVIC
+        context.deleteFrom(CIVICEVIDENCEITEMS).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPS).execute();
+        context.deleteFrom(CIVICVARIANTALIASES).execute();
+        context.deleteFrom(CIVICVARIANTTYPES).execute();
+        context.deleteFrom(CIVICDESCRIPTION).execute();
+        context.deleteFrom(CIVICCOORDINATES).execute();
+        context.deleteFrom(CIVICASSERTIONS).execute();
+        context.deleteFrom(CIVICHGVSEXPRESSIONS).execute();
+        context.deleteFrom(CIVICCLINVARENTRIES).execute();
+
+        context.deleteFrom(CIVIC).execute();
     }
 }
