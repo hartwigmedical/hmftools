@@ -85,6 +85,7 @@ final class MetaDataResolver {
             return null;
         }
 
+        // take always the second barcode of setname (assume this is the tumor barcode)
         boolean containsFR = false;
         for (String setNamePart : setName.split("_")) {
             if (setNamePart.startsWith(BARCODE_START)) {
