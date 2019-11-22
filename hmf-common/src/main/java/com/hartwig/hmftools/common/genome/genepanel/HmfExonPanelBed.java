@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 final class HmfExonPanelBed {
 
     private static final String DELIMITER = "\t";
-    static final int EXTRA_BASES = 2;
 
     public static void write19File(@NotNull final String filename) throws IOException {
         writeBedFile(filename, Strings.EMPTY, createRegions(HmfGenePanelSupplier.allGeneList37()));
@@ -43,9 +43,32 @@ final class HmfExonPanelBed {
         final Map<String, GenomeRegions> regionsMap = Maps.newHashMap();
 
         for (HmfTranscriptRegion transcript : regions) {
-            for (HmfExonRegion exon : transcript.exome()) {
-                final GenomeRegions regionBuilder = regionsMap.computeIfAbsent(exon.chromosome(), GenomeRegions::new);
-                regionBuilder.addRegion(exon.start() - EXTRA_BASES, exon.end() + EXTRA_BASES);
+            final GenomeRegions regionBuilder = regionsMap.computeIfAbsent(transcript.chromosome(), GenomeRegions::new);
+
+            boolean forward = transcript.strand() == Strand.FORWARD;
+            for (int i = 0; i < transcript.exome().size(); i++) {
+                if (transcript.codingStart() == 0) {
+                    continue;
+                }
+
+                // Splice sites (+1,+2,+5, -2,-1)
+                final HmfExonRegion exon = transcript.exome().get(i);
+                if (i != 0) {
+                    regionBuilder.addRegion(exon.start() - 2, exon.start() - 1);
+                    if (!forward) {
+                        regionBuilder.addPosition(exon.start() - 5);
+                    }
+                }
+                if (i != transcript.exome().size() - 1) {
+                    regionBuilder.addRegion(exon.end() + 1, exon.end() + 2);
+                    if (forward) {
+                        regionBuilder.addPosition(exon.end() + 5);
+                    }
+                }
+
+                if (transcript.codingStart() < exon.end() && transcript.codingEnd() > exon.start()) {
+                    regionBuilder.addRegion(Math.max(transcript.codingStart(), exon.start()), Math.min(transcript.codingEnd(), exon.end()));
+                }
             }
         }
 
