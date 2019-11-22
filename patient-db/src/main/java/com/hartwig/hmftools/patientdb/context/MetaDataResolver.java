@@ -80,6 +80,9 @@ final class MetaDataResolver {
         } else if (setName == null) {
             LOGGER.warn("Could not find " + SET_NAME_FIELD_P4 + " in metadata file!");
             return null;
+        } else if (tumorSample == null) {
+            LOGGER.warn("Could not find " + TUMOR_SAMPLE_FIELD_P4 + " in metadata file!");
+            return null;
         }
 
         boolean containsFR = false;
@@ -93,7 +96,7 @@ final class MetaDataResolver {
             LOGGER.warn("No tumor barcode is known for set set '{}'", setName);
         }
 
-        return new RunContextImpl(runDirectory, setName, refSample, convertTumorSample(tumorSample), tumorBarcodeSample);
+        return new RunContextImpl(runDirectory, setName, refSample, tumorSample, tumorBarcodeSample);
     }
 
     @Nullable
@@ -119,11 +122,6 @@ final class MetaDataResolver {
             return null;
         }
         return new RunContextImpl(runDirectory, setName, refSample, tumorSample, tumorBarcodeSample);
-    }
-
-    @NotNull
-    private static String convertTumorSample(@Nullable String tumorSample) {
-        return tumorSample == null || tumorSample.equals(NO_TUMOR_SAMPLE) ? Strings.EMPTY : tumorSample;
     }
 
     @Nullable
