@@ -116,7 +116,7 @@ public class CreateShallowSeqDB {
 
             boolean hasReliableQuality = CheckPurpleQuality.checkHasReliableQuality(purpleQC);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
-            DecimalFormat decimalFormat = new DecimalFormat("#.##");
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
             String purity = decimalFormat.format(purityContext.bestFit().purity());
 
             if (currentShallowSeqData.isEmpty()) {
