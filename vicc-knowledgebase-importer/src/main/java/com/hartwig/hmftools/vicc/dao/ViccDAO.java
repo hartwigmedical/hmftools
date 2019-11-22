@@ -59,11 +59,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.conf.MappedSchema;
+import org.jooq.conf.RenderMapping;
+import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
 public class ViccDAO {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonSQLImporter.class);
+    private static final String DEV_CATALOG = "vicc_test";
 
     @NotNull
     private final DSLContext context;
@@ -72,9 +76,17 @@ public class ViccDAO {
             throws SQLException {
         final Connection conn = DriverManager.getConnection(url, userName, password);
         final String catalog = conn.getCatalog();
-
         LOGGER.info("Connecting to database {}", catalog);
-        return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL));
+
+        return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
+    }
+
+    @Nullable
+    private static Settings settings(@NotNull String catalog) {
+        return !catalog.equals(DEV_CATALOG)
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
+                .withOutput(catalog)))
+                : null;
     }
 
     private ViccDAO(@NotNull final DSLContext context) {
