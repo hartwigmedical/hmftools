@@ -105,7 +105,7 @@ final class MetaDataResolver {
 
         String refSample = sampleIdP5(json, REF_SAMPLE_ID_FIELD_P5);
         String tumorSample = sampleIdP5(json, TUMOR_SAMPLE_ID_FIELD_P5);
-        String tumorBarcodeSample = sampleBarcodeP5(json, TUMOR_SAMPLE_BARCODE_FIELD_P5);
+        String tumorBarcodeSample = sampleBarcodeP5(json, TUMOR_SAMPLE_ID_FIELD_P5);
         String setName = fieldValue(json, SET_NAME_FIELD_P5);
 
         if (refSample == null) {

@@ -8,8 +8,6 @@ import java.io.File;
 
 import com.google.common.io.Resources;
 
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class MetaDataResolverTest {
