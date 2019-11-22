@@ -31,15 +31,15 @@ public interface FilterConfig {
             .build();
 
     SoftFilterConfig DEFAULT_HOTSPOT_FILTER = ImmutableSoftFilterConfig.builder().from(NO_FILTER)
-            .minTumorQual(50)
-            .minTumorVaf(0.05)
+            .minTumorQual(35)
+            .minTumorVaf(0.005)
             .maxGermlineVaf(0.1)
             .build();
 
     SoftFilterConfig DEFAULT_PANEL_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
             .minTumorQual(100)
-            .minTumorVaf(0.01)
+            .minTumorVaf(0.015)
             .maxGermlineVaf(0.05)
             .maxGermlineRelativeQual(0.05)
             .maxGermlineRelativeReadContextCount(0.05)
