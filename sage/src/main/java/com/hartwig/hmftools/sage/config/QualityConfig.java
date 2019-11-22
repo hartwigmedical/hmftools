@@ -16,6 +16,7 @@ public interface QualityConfig {
     String JITTER_PENALTY = "jitter_penalty";
     String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
     String BASE_QUAL_FIXED_PENALTY = "base_qual_fixed_penalty";
+    String READ_EDGE_FIXED_PENALTY = "read_edge_fixed_penalty";
     String MAP_QUAL_FIXED_PENALTY = "map_qual_fixed_penalty";
     String MAP_QUAL_IMPROPER_PAIR_PENALTY = "map_qual_improper_pair_penalty";
     String MAP_QUAL_DISTANCE_FROM_REF = "map_qual_distance_from_ref_penalty";
@@ -23,6 +24,7 @@ public interface QualityConfig {
     double DEFAULT_JITTER_PENALTY = 0.25;
     int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
+    int DEFAULT_READ_EDGE_FIXED_PENALTY = 6;
     int DEFAULT_MAP_QUAL_FIXED_PENALTY = 24;
     int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     int DEFAULT_MAP_QUAL_DISTANCE_FROM_REF = 5;
@@ -32,6 +34,8 @@ public interface QualityConfig {
     int jitterMinRepeatCount();
 
     int baseQualityFixedPenalty();
+
+    int distanceFromReadEdgeFixedPenalty();
 
     int mapQualityFixedPenalty();
 
@@ -46,7 +50,7 @@ public interface QualityConfig {
     }
 
     default int modifiedBaseQuality(int baseQuality, int distanceFromReadEdge) {
-        return Math.min(baseQuality, distanceFromReadEdge) - baseQualityFixedPenalty();
+        return Math.min(baseQuality - baseQualityFixedPenalty(), distanceFromReadEdge - distanceFromReadEdgeFixedPenalty());
     }
 
     default double jitterPenalty(int repeatCount) {
@@ -67,6 +71,9 @@ public interface QualityConfig {
                 true,
                 "Fixed penalty to apply to base quality [" + DEFAULT_BASE_QUAL_FIXED_PENALTY + "]");
         options.addOption(MAP_QUAL_FIXED_PENALTY, true, "Fixed penalty to apply to map quality [" + DEFAULT_MAP_QUAL_FIXED_PENALTY + "]");
+        options.addOption(READ_EDGE_FIXED_PENALTY,
+                true,
+                "Fixed penalty to apply to distance from read edge [" + DEFAULT_READ_EDGE_FIXED_PENALTY + "]");
         options.addOption(MAP_QUAL_IMPROPER_PAIR_PENALTY,
                 true,
                 "Penalty to apply to map qual when SAM record does not have the ProperPair flag [" + DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY
@@ -85,6 +92,7 @@ public interface QualityConfig {
                 .jitterPenalty(defaultDoubleValue(cmd, JITTER_PENALTY, DEFAULT_JITTER_PENALTY))
                 .jitterMinRepeatCount(defaultIntValue(cmd, JITTER_MIN_REPEAT_COUNT, DEFAULT_JITTER_MIN_REPEAT_COUNT))
                 .baseQualityFixedPenalty(defaultIntValue(cmd, BASE_QUAL_FIXED_PENALTY, DEFAULT_BASE_QUAL_FIXED_PENALTY))
+                .distanceFromReadEdgeFixedPenalty(defaultIntValue(cmd, READ_EDGE_FIXED_PENALTY, DEFAULT_READ_EDGE_FIXED_PENALTY))
                 .mapQualityFixedPenalty(defaultIntValue(cmd, MAP_QUAL_FIXED_PENALTY, DEFAULT_MAP_QUAL_FIXED_PENALTY))
                 .mapQualityAdditionalDistanceFromRefPenalty(defaultIntValue(cmd,
                         MAP_QUAL_DISTANCE_FROM_REF,
