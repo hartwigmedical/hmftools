@@ -55,13 +55,16 @@ final class ViccDatamodelCheckerFactory {
         map.put("end", false);
         map.put("ref", false);
         map.put("alt", false);
+        map.put("provenance", false);
         map.put("provenance_rule", false);
-        map.put("gene_symbol", false);
+        map.put("geneSymbol", false);
         map.put("synonyms", false);
         map.put("entrez_id", false);
         map.put("sequence_ontology", false);
         map.put("links", false);
         map.put("description", false);
+        map.put("attributes", false);
+        map.put("info", false);
         return new ViccDatamodelChecker("Feature", map);
     }
 
@@ -89,7 +92,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("publication_url", false);
         map.put("phenotype", false);
         map.put("description", true);
-        map.put("environmentalContexts", true);
+        map.put("environmentalContexts", false);
         map.put("oncogenic", false);
         return new ViccDatamodelChecker("Association", map);
     }

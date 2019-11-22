@@ -162,6 +162,7 @@ public final class ViccJsonReader {
                             .getAsString() : null)
                     .alt(featureObject.has("alt") && !featureObject.get("alt").isJsonNull() ? featureObject.getAsJsonPrimitive("alt")
                             .getAsString() : null)
+                    // TODO Read provenance!
                     .provenance(Lists.newArrayList())
                     .provenanceRule(featureObject.has("provenance_rule")
                             ? featureObject.getAsJsonPrimitive("provenance_rule").getAsString()
@@ -175,6 +176,8 @@ public final class ViccJsonReader {
                             "sequence_ontology")) : null)
                     .links(featureObject.has("links") ? jsonArrayToStringList(featureObject.getAsJsonArray("links")) : null)
                     .description(featureObject.has("description") ? featureObject.getAsJsonPrimitive("description").getAsString() : null)
+                    // TODO Add 'attributes'
+                    // TODO Add 'info'
                     .build());
         }
 
@@ -225,7 +228,7 @@ public final class ViccJsonReader {
                                 : null)
                 .phenotype(associationObject.has("phenotype") ? createPhenotype(associationObject.getAsJsonObject("phenotype")) : null)
                 .description(associationObject.getAsJsonPrimitive("description").getAsString())
-                .environmentalContexts(associationObject.get("environmentalContexts") != null
+                .environmentalContexts(associationObject.has("environmentalContexts")
                         ? createEnvironmentalContexts(associationObject.getAsJsonArray("environmentalContexts"))
                         : null)
                 .oncogenic(associationObject.has("oncogenic") ? associationObject.getAsJsonPrimitive("oncogenic").getAsString() : null)
@@ -311,9 +314,7 @@ public final class ViccJsonReader {
                 .kingdom(taxonomyObject.getAsJsonPrimitive("kingdom").getAsString())
                 .directParent(taxonomyObject.getAsJsonPrimitive("direct-parent").getAsString())
                 .classs(taxonomyObject.getAsJsonPrimitive("class").getAsString())
-                .subClass(taxonomyObject.has("subclass")
-                        ? taxonomyObject.getAsJsonPrimitive("subclass").getAsString()
-                        : null)
+                .subClass(taxonomyObject.has("subclass") ? taxonomyObject.getAsJsonPrimitive("subclass").getAsString() : null)
                 .superClass(taxonomyObject.getAsJsonPrimitive("superclass").getAsString())
                 .build();
     }
