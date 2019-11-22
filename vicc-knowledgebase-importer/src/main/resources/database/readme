@@ -4,4 +4,4 @@ mysql> CREATE DATABASE vicc_test;
 Query OK, 1 row affected (0.00 sec)
 
 mysql> GRANT ALL on vicc_test.* TO 'build'@'localhost';
-Query OK, 1 row affected (0.00 sec)
+Query OK, 0 row affected (0.00 sec)
