@@ -58,14 +58,15 @@ public class CreateShallowSeqDB {
         LOGGER.info("Loading shallow seq runs from {}", cmd.getOptionValue(RUNS_DIRECTORY));
         final List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
 
-        List<LimsShallowSeqData> appendShallowSeqData = extractPurpleFromSample(runContexts,
+        List<LimsShallowSeqData> newShallowSeqEntries = extractNewEntriesForShallowDbFromRunContexts(runContexts,
                 cmd.getOptionValue(SHALLOW_SEQ_CSV),
                 cmd.getOptionValue(RUNS_DIRECTORY),
                 cmd.getOptionValue(PURPLE_QC_FILE),
                 cmd.getOptionValue(PURPLE_PURITY_P4_TSV),
-                cmd.getOptionValue(PURPLE_PURITY_P5_TSV), cmd.getOptionValue(PIPELINE_VERSION));
+                cmd.getOptionValue(PURPLE_PURITY_P5_TSV),
+                cmd.getOptionValue(PIPELINE_VERSION));
 
-        appendToCsv(cmd.getOptionValue(SHALLOW_SEQ_CSV), appendShallowSeqData);
+        appendToCsv(cmd.getOptionValue(SHALLOW_SEQ_CSV), newShallowSeqEntries);
 
         LOGGER.info("Shallow seq DB is complete!");
     }
@@ -89,13 +90,12 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static List<LimsShallowSeqData> extractPurpleFromSample(@NotNull List<RunContext> runContexts,
+    private static List<LimsShallowSeqData> extractNewEntriesForShallowDbFromRunContexts(@NotNull List<RunContext> runContexts,
             @NotNull String shallowSeqOutputCsv, @NotNull String path, @NotNull String purpleQCFile, @NotNull String purplePurityP4,
             @NotNull String purplePurityP5, @NotNull String pipelineVersion) throws IOException {
+        List<LimsShallowSeqData> currentShallowSeqData = read(shallowSeqOutputCsv);
 
-        List<LimsShallowSeqData> shallowSeqData = read(shallowSeqOutputCsv);
-
-        List<LimsShallowSeqData> appendShallowSeqData = Lists.newArrayList();
+        List<LimsShallowSeqData> shallowSeqDataToAppend = Lists.newArrayList();
 
         for (RunContext runInfo : runContexts) {
             String tumorSample = runInfo.tumorSample();
@@ -108,20 +108,19 @@ public class CreateShallowSeqDB {
             } else {
                 purplePurityTsvExt = purplePurityP4;
             }
-            String purplePurityTsv = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purplePurityTsvExt;
-            String purpleQcFile = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purpleQCFile;
+            String fullPurplePurityTsvPath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purplePurityTsvExt;
+            String fullPurpleQCFilePath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purpleQCFile;
 
-            PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-            PurpleQC purpleQC = PurpleQCFile.read(purpleQcFile);
+            PurityContext purityContext = FittedPurityFile.read(fullPurplePurityTsvPath);
+            PurpleQC purpleQC = PurpleQCFile.read(fullPurpleQCFilePath);
 
             boolean hasReliableQuality = CheckPurpleQuality.checkHasReliableQuality(purpleQC);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
             DecimalFormat decimalFormat = new DecimalFormat("#.##");
             String purity = decimalFormat.format(purityContext.bestFit().purity());
 
-            boolean inFile = false;
-            if (shallowSeqData.size() == 0) {
-                appendShallowSeqData.add(ImmutableLimsShallowSeqData.builder()
+            if (currentShallowSeqData.isEmpty()) {
+                shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
                         .sampleBarcode(sampleBarcode)
                         .sampleId(tumorSample)
                         .purityShallowSeq(purity)
@@ -130,7 +129,8 @@ public class CreateShallowSeqDB {
                         .build());
                 LOGGER.info("Set: {} is added to shallow list!", setPath);
             } else {
-                for (LimsShallowSeqData sample : shallowSeqData) {
+                boolean inFile = false;
+                for (LimsShallowSeqData sample : currentShallowSeqData) {
                     if (sample.sampleBarcode().equals(sampleBarcode)) {
                         LOGGER.warn("Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
                                 + " writing to shallow seq db!", setPath, sampleBarcode);
@@ -138,7 +138,7 @@ public class CreateShallowSeqDB {
                     }
                 }
                 if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
-                    appendShallowSeqData.add(ImmutableLimsShallowSeqData.builder()
+                    shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
                             .sampleBarcode(sampleBarcode)
                             .sampleId(tumorSample)
                             .purityShallowSeq(purity)
@@ -149,7 +149,7 @@ public class CreateShallowSeqDB {
                 }
             }
         }
-        return appendShallowSeqData;
+        return shallowSeqDataToAppend;
     }
 
     @NotNull
@@ -160,16 +160,15 @@ public class CreateShallowSeqDB {
         return runContexts;
     }
 
-    private static void appendToCsv(@NotNull String shallowSeqCsv, @NotNull List<LimsShallowSeqData> appendingShallowSeqData)
+    private static void appendToCsv(@NotNull String shallowSeqCsv, @NotNull List<LimsShallowSeqData> shallowSeqDataToAppend)
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(shallowSeqCsv, true));
-        for (LimsShallowSeqData stringToAppend : appendingShallowSeqData) {
+        for (LimsShallowSeqData dataToAppend : shallowSeqDataToAppend) {
             String outputStringForFile =
-                    stringToAppend.sampleBarcode() + DELIMITER + stringToAppend.sampleId() + DELIMITER + stringToAppend.purityShallowSeq()
-                            + DELIMITER + stringToAppend.hasReliableQuality() + DELIMITER + stringToAppend.hasReliablePurity() + "\n";
+                    dataToAppend.sampleBarcode() + DELIMITER + dataToAppend.sampleId() + DELIMITER + dataToAppend.purityShallowSeq()
+                            + DELIMITER + dataToAppend.hasReliableQuality() + DELIMITER + dataToAppend.hasReliablePurity() + "\n";
             writer.write(outputStringForFile);
-            LOGGER.info("Sample barcode: {} is added to shallow seq db!", stringToAppend.sampleBarcode());
-
+            LOGGER.info("Sample barcode: {} is added to shallow seq db!", dataToAppend.sampleBarcode());
         }
         writer.close();
     }
