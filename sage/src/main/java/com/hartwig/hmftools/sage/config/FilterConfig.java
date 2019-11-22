@@ -19,6 +19,7 @@ public interface FilterConfig {
 
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
+    int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
 
     SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
             .minTumorQual(0)
@@ -61,7 +62,7 @@ public interface FilterConfig {
     int hardMinTumorAltSupport();
 
     default int hardMaxNormalAltSupport() {
-        return 3;
+        return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
     }
 
     @NotNull
