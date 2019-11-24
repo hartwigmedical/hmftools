@@ -244,6 +244,7 @@ final class MolecularMatchTrialsDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
+        // TODO Order from branch to root to avoid constraint violation.
         context.deleteFrom(MOLECULARMATCHTRIALS).execute();
         context.deleteFrom(MOLECULARMATCHTRIALSALTERATIONS).execute();
         context.deleteFrom(MOLECULARMATCHTRIALSINTERVATIONS).execute();

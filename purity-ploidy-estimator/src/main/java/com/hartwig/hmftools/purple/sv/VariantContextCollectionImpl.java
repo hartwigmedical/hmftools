@@ -78,7 +78,7 @@ public class VariantContextCollectionImpl implements VariantContextCollection {
         return variantContexts.iterator();
     }
 
-    private class VCComparator extends VariantContextComparator {
+    private static class VCComparator extends VariantContextComparator {
 
         VCComparator(final List<String> contigs) {
             super(contigs);

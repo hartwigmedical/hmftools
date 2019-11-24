@@ -77,15 +77,6 @@ public class CFReportWriterTest {
     }
 
     @Test
-    public void canGenerateLowTumorPercentageReport() throws IOException {
-        generateQCFailCPCTReport("CPCT01000001T",
-                "10%",
-                null,
-                QCFailReason.LOW_TUMOR_PERCENTAGE,
-                testReportFilePath("hmf_low_tumor_percentage_report.pdf"));
-    }
-
-    @Test
     public void canGenerateLowDNAYieldReport() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",

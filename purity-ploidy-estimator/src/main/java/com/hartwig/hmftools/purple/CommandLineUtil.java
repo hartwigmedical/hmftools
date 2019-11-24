@@ -5,10 +5,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public enum CommandLineUtil {
-    ;
+public final class CommandLineUtil {
 
     private static final Logger LOGGER = LogManager.getLogger(CommandLineUtil.class);
+
+    private CommandLineUtil() {
+    }
 
     @NotNull
     public static String defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, @NotNull final String defaultValue) {
@@ -17,7 +19,7 @@ public enum CommandLineUtil {
 
     public static double defaultValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
         if (cmd.hasOption(opt)) {
-            final double result = Double.valueOf(cmd.getOptionValue(opt));
+            final double result = Double.parseDouble(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;
         }
@@ -27,7 +29,7 @@ public enum CommandLineUtil {
 
     public static int defaultIntValue(@NotNull final CommandLine cmd, @NotNull final String opt, final int defaultValue) {
         if (cmd.hasOption(opt)) {
-            final int result = Integer.valueOf(cmd.getOptionValue(opt));
+            final int result = Integer.parseInt(cmd.getOptionValue(opt));
             LOGGER.info("Using non default value {} for parameter {}", result, opt);
             return result;
         }

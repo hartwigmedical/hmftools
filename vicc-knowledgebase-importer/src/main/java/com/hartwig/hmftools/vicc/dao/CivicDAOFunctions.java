@@ -523,7 +523,7 @@ final class CivicDAOFunctions {
         }
 
         if (civic.lifecycleActions().lastModified() != null) {
-            int idLastModiefied =
+            int idLastModified =
                     context.insertInto(CIVICLASTMODIFIED, CIVICLASTMODIFIED.TIMESTAMP, CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID)
                             .values(civic.lifecycleActions().lastModified().timestamp(), idLifeActions)
                             .returning(CIVICLASTMODIFIED.ID)
@@ -531,7 +531,7 @@ final class CivicDAOFunctions {
                             .getValue(CIVICLASTMODIFIED.ID);
 
             CivicUser userModified = civic.lifecycleActions().lastModified().user();
-            int idLastModiefiedUser = context.insertInto(CIVICLASTMODIFIEDUSER,
+            int idLastModifiedUser = context.insertInto(CIVICLASTMODIFIEDUSER,
                     CIVICLASTMODIFIEDUSER.USERNAME,
                     CIVICLASTMODIFIEDUSER.AREAOFEXPERTISE,
                     CIVICLASTMODIFIEDUSER.TWITTERHANDLE,
@@ -571,7 +571,7 @@ final class CivicDAOFunctions {
                             userModified.featuredExpert(),
                             userModified.id(),
                             userModified.signupComplete(),
-                            idLastModiefied)
+                            idLastModified)
                     .returning(CIVICLASTMODIFIEDUSER.ID)
                     .fetchOne()
                     .getValue(CIVICLASTMODIFIEDUSER.ID);
@@ -586,10 +586,10 @@ final class CivicDAOFunctions {
                             userModified.avatars().x14(),
                             userModified.avatars().x64(),
                             userModified.avatars().x128(),
-                            idLastModiefiedUser)
+                            idLastModifiedUser)
                     .execute();
 
-            int idLastModiefiedOrganization = context.insertInto(CIVICLASTMODIFIEDORGANIZATION,
+            int idLastModifiedOrganization = context.insertInto(CIVICLASTMODIFIEDORGANIZATION,
                     CIVICLASTMODIFIEDORGANIZATION.URL,
                     CIVICLASTMODIFIEDORGANIZATION.IDORGANIZATION,
                     CIVICLASTMODIFIEDORGANIZATION.DESCRIPTION,
@@ -599,7 +599,7 @@ final class CivicDAOFunctions {
                             userModified.organization().id(),
                             userModified.organization().description(),
                             userModified.organization().name(),
-                            idLastModiefiedUser)
+                            idLastModifiedUser)
                     .returning(CIVICLASTMODIFIEDORGANIZATION.ID)
                     .fetchOne()
                     .getValue(CIVICLASTMODIFIEDORGANIZATION.ID);
@@ -617,7 +617,7 @@ final class CivicDAOFunctions {
                                 userModified.organization().profileImage().x14(),
                                 userModified.organization().profileImage().x64(),
                                 userModified.organization().profileImage().x128(),
-                                idLastModiefiedOrganization)
+                                idLastModifiedOrganization)
                         .execute();
             }
 
@@ -723,24 +723,7 @@ final class CivicDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        context.deleteFrom(CIVIC).execute();
-        context.deleteFrom(CIVICASSERTIONS).execute();
-        context.deleteFrom(CIVICHGVSEXPRESSIONS).execute();
-        context.deleteFrom(CIVICCLINVARENTRIES).execute();
-        context.deleteFrom(CIVICVARIANTALIASES).execute();
-        context.deleteFrom(CIVICVARIANTTYPES).execute();
-        context.deleteFrom(CIVICDESCRIPTION).execute();
-        context.deleteFrom(CIVICCOORDINATES).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPS).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSVARIANTS).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSCOORDINATES).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSTYPES).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMS).execute();
-        context.deleteFrom(CIVICDRUGS).execute();
-        context.deleteFrom(CIVICDISEASE).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSSOURCE).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSPUBLICATION).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSCLINICALTRIAL).execute();
+        // TODO Order from branch to root to avoid constraint violation.
         context.deleteFrom(CIVICSOURCE).execute();
         context.deleteFrom(CIVICERROR).execute();
         context.deleteFrom(CIVICPUBLICATION).execute();
@@ -761,5 +744,32 @@ final class CivicDAOFunctions {
         context.deleteFrom(CIVICLASTREVIEWEDAVATARS).execute();
         context.deleteFrom(CIVICLASTREVIEWEDORGANIZATION).execute();
         context.deleteFrom(CIVICLASTREVIEWEDPROFILEIMAGE).execute();
+
+        // These tables are part of CIVIC Evidence Items
+        context.deleteFrom(CIVICDRUGS).execute();
+        context.deleteFrom(CIVICDISEASE).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSSOURCE).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSPUBLICATION).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSCLINICALTRIAL).execute();
+
+        // Tables are part of CIVIC Group Variant Group
+        context.deleteFrom(CIVICVARIANTSGROUPSTYPES).execute();
+
+        // These tables are part of CIVIC Variant Group
+        context.deleteFrom(CIVICVARIANTSGROUPSVARIANTS).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPSCOORDINATES).execute();
+
+        // These tables are part of CIVIC
+        context.deleteFrom(CIVICEVIDENCEITEMS).execute();
+        context.deleteFrom(CIVICVARIANTSGROUPS).execute();
+        context.deleteFrom(CIVICVARIANTALIASES).execute();
+        context.deleteFrom(CIVICVARIANTTYPES).execute();
+        context.deleteFrom(CIVICDESCRIPTION).execute();
+        context.deleteFrom(CIVICCOORDINATES).execute();
+        context.deleteFrom(CIVICASSERTIONS).execute();
+        context.deleteFrom(CIVICHGVSEXPRESSIONS).execute();
+        context.deleteFrom(CIVICCLINVARENTRIES).execute();
+
+        context.deleteFrom(CIVIC).execute();
     }
 }

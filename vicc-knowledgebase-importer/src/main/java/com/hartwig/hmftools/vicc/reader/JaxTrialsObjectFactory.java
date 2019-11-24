@@ -39,8 +39,7 @@ final class JaxTrialsObjectFactory {
     static JaxTrials create(@NotNull JsonObject objectJaxTrials) {
         Set<String> keysJaxTrials = objectJaxTrials.keySet();
         if (!EXPECTED_JAX_TRIALS_ELEMENT_SIZES.contains(keysJaxTrials.size())) {
-            LOGGER.warn("Found " + keysJaxTrials.size() + " in jax trials rather than the expected "
-                    + EXPECTED_JAX_TRIALS_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in jax trials rather than the expected {}", keysJaxTrials.size(), EXPECTED_JAX_TRIALS_ELEMENT_SIZES);
             LOGGER.warn(keysJaxTrials);
         }
 
@@ -67,10 +66,12 @@ final class JaxTrialsObjectFactory {
         for (JsonElement indications : arrayIndications) {
             Set<String> keysIndications = indications.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES.contains(keysIndications.size())) {
-                LOGGER.warn("Found " + keysIndications.size() + " in jax trials indications rather than the expected "
-                        + EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in jax trials indications rather than the expected {}",
+                        keysIndications.size(),
+                        EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES);
                 LOGGER.warn(keysIndications);
             }
+
             indicationsList.add(ImmutableJaxTrialsIndications.builder()
                     .source(indications.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
                     .id(indications.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
@@ -82,16 +83,17 @@ final class JaxTrialsObjectFactory {
 
     @NotNull
     private static List<JaxTrialsVariantRequirementDetails> createJaxTrialsVariantRequirementsDetails(
-            @NotNull JsonArray arrarVariantRequirementDetails) {
+            @NotNull JsonArray arrayVariantRequirementDetails) {
         List<JaxTrialsVariantRequirementDetails> variantRequirementDetailsList = Lists.newArrayList();
-        for (JsonElement variantRequirementDetails : arrarVariantRequirementDetails) {
+        for (JsonElement variantRequirementDetails : arrayVariantRequirementDetails) {
             Set<String> keysRequirementDetails = variantRequirementDetails.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES.contains(keysRequirementDetails.size())) {
-                LOGGER.warn(
-                        "Found " + keysRequirementDetails.size() + " in jax trials variant requirement details rather than the expected "
-                                + EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in jax trials variant requirement details rather than the expected {}",
+                        keysRequirementDetails.size(),
+                        EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES);
                 LOGGER.warn(keysRequirementDetails);
             }
+
             variantRequirementDetailsList.add(ImmutableJaxTrialsVariantRequirementDetails.builder()
                     .molecularProfiles(createJaxTrialsMolecularProfile(variantRequirementDetails.getAsJsonObject()
                             .getAsJsonObject("molecularProfile")))
@@ -107,8 +109,9 @@ final class JaxTrialsObjectFactory {
 
         Set<String> keysMolecularProfile = objectMolecularProfile.keySet();
         if (!EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES.contains(keysMolecularProfile.size())) {
-            LOGGER.warn("Found " + keysMolecularProfile.size() + " in jax trials molecular profile rather than the expected "
-                    + EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES);
+            LOGGER.warn("Found {}  in jax trials molecular profile rather than the expected {}",
+                    keysMolecularProfile.size(),
+                    EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES);
             LOGGER.warn(keysMolecularProfile);
         }
 
@@ -125,8 +128,9 @@ final class JaxTrialsObjectFactory {
         for (JsonElement therapies : arrayTherapies) {
             Set<String> keysTherapies = therapies.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES.contains(keysTherapies.size())) {
-                LOGGER.warn("Found " + keysTherapies.size() + " in jax trials therapies rather than the expected "
-                        + EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in jax trials therapies rather than the expected {}",
+                        keysTherapies.size(),
+                        EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES);
                 LOGGER.warn(keysTherapies);
             }
 

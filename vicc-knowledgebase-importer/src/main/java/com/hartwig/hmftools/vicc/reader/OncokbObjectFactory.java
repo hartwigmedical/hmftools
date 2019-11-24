@@ -47,7 +47,7 @@ final class OncokbObjectFactory {
     static Oncokb create(@NotNull JsonObject objectOncoKb) {
         Set<String> keysOncokb = objectOncoKb.keySet();
         if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
-            LOGGER.warn("Found " + keysOncokb.size() + " in oncokb rather than the expected " + EXPECTED_ONCOKB_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in oncokb rather than the expected {}", keysOncokb.size(), EXPECTED_ONCOKB_ELEMENT_SIZES);
             LOGGER.warn(keysOncokb);
         }
 
@@ -74,10 +74,12 @@ final class OncokbObjectFactory {
     private static OncoKbClinical createClinicalOncoKb(@NotNull JsonObject objectClinical) {
         Set<String> keysClinical = objectClinical.keySet();
         if (!EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES.contains(keysClinical.size())) {
-            LOGGER.warn("Found " + keysClinical.size() + " in oncokb clinical rather than the expected "
-                    + EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in oncokb clinical rather than the expected {}",
+                    keysClinical.size(),
+                    EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES);
             LOGGER.warn(keysClinical);
         }
+
         return ImmutableOncoKbClinical.builder()
                 .RefSeq(objectClinical.getAsJsonPrimitive("RefSeq").getAsString())
                 .level(objectClinical.getAsJsonPrimitive("level").getAsString())
@@ -95,30 +97,31 @@ final class OncokbObjectFactory {
 
     @NotNull
     private static List<OncoKbDrugAbstracts> createDrugsAbstracts(@NotNull JsonArray arrayDrugsAbstracts) {
-
-        List<OncoKbDrugAbstracts> listDrugsabstracts = Lists.newArrayList();
+        List<OncoKbDrugAbstracts> listDrugsAbstracts = Lists.newArrayList();
         for (JsonElement drugAbstracts : arrayDrugsAbstracts) {
             Set<String> keysBiological = drugAbstracts.getAsJsonObject().keySet();
 
             if (!EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES.contains(keysBiological.size())) {
-                LOGGER.warn("Found " + keysBiological.size() + " in oncokb drugs abstracts rather than the expected "
-                        + EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES);
+                LOGGER.warn("Found {} in oncokb drugs abstracts rather than the expected {}",
+                        keysBiological.size(),
+                        EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES);
                 LOGGER.warn(keysBiological);
             }
-            listDrugsabstracts.add(ImmutableOncoKbDrugAbstracts.builder()
+            listDrugsAbstracts.add(ImmutableOncoKbDrugAbstracts.builder()
                     .text(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("text").getAsString())
                     .link(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
                     .build());
         }
-        return listDrugsabstracts;
+        return listDrugsAbstracts;
     }
 
     @NotNull
     private static OncoKbBiological createBiologicalOncoKb(@NotNull JsonObject objectBiological) {
         Set<String> keysBiological = objectBiological.keySet();
         if (!EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES.contains(keysBiological.size())) {
-            LOGGER.warn("Found " + keysBiological.size() + " in oncokb biological rather than the expected "
-                    + EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in oncokb biological rather than the expected {}",
+                    keysBiological.size(),
+                    EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES);
             LOGGER.warn(keysBiological);
         }
 
@@ -140,8 +143,9 @@ final class OncokbObjectFactory {
         Set<String> keysVariant = objectVariant.keySet();
 
         if (!EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
-            LOGGER.warn(
-                    "Found " + keysVariant.size() + " in oncokb variant rather than the expected" + EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in oncokb variant rather than the expected {}",
+                    keysVariant.size(),
+                    EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES);
             LOGGER.warn(keysVariant);
         }
 
@@ -166,8 +170,9 @@ final class OncokbObjectFactory {
         Set<String> keysConsequence = objectConsequence.keySet();
 
         if (!EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES.contains(keysConsequence.size())) {
-            LOGGER.warn("Found " + keysConsequence.size() + " in oncokb consequence rather than the expected "
-                    + EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in oncokb consequence rather than the expected {}",
+                    keysConsequence.size(),
+                    EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES);
             LOGGER.warn(keysConsequence);
         }
 
@@ -183,7 +188,7 @@ final class OncokbObjectFactory {
         Set<String> keysGene = objectGene.keySet();
 
         if (!EXPECTED_ONCOKB_GENE_ELEMENT_SIZES.contains(keysGene.size())) {
-            LOGGER.warn("Found " + keysGene.size() + " in oncokb gene rather than the expected " + EXPECTED_ONCOKB_GENE_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in oncokb gene rather than the expected {}", keysGene.size(), EXPECTED_ONCOKB_GENE_ELEMENT_SIZES);
             LOGGER.warn(keysGene);
         }
 

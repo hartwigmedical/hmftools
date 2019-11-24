@@ -19,7 +19,6 @@ public abstract class ViccEntry {
     @NotNull
     public abstract List<GeneIdentifier> geneIdentifiers();
 
-    // Field does not exist for SAGE records
     @Nullable
     public abstract List<String> featureNames();
 

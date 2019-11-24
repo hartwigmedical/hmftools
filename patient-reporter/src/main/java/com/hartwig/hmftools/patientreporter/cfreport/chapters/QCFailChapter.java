@@ -90,12 +90,6 @@ public class QCFailChapter implements ReportChapter {
                 explanation = "The amount of isolated DNA was <50 ng, which is insufficient for sequencing. ";
                 break;
             }
-            case LOW_TUMOR_PERCENTAGE: {
-                title = "Notification of inadequate tumor sample";
-                reason = "Not enough tumor cells detected by Pathology UMC Utrecht.";
-                explanation = "For sequencing we require a minimum of 30% tumor cells.";
-                break;
-            }
             case POST_ANALYSIS_FAIL: {
                 title = "Notification of inadequate tumor sample";
                 reason = "Analysis has failed post DNA isolation";
@@ -186,7 +180,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasUMCUPathologyTumorPercentage());
         divColumn.add(sampleHasMolecularTumorPercentage());
         return divColumn;
     }
@@ -222,7 +215,6 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
-        divColumn.add(sampleHasUMCUPathologyTumorPercentage());
         divColumn.add(sampleHasMolecularTumorPercentage());
         return divColumn;
     }
@@ -329,12 +321,6 @@ public class QCFailChapter implements ReportChapter {
     private Paragraph sampleHasMolecularTumorPercentage() {
         return createContentParagraph("The tumor percentage based on molecular estimation is ",
                 failReport.sampleReport().purityShallowSeq());
-    }
-
-    @NotNull
-    private Paragraph sampleHasUMCUPathologyTumorPercentage() {
-        return createContentParagraph("The tumor percentage estimated by Pathology UMC Utrecht is ",
-                failReport.sampleReport().pathologyTumorPercentage());
     }
 
     @NotNull

@@ -28,7 +28,7 @@ final class CgiObjectFactory {
         Set<String> keysCgi = objectCgi.keySet();
 
         if (!EXPECTED_CGI_ELEMENT_SIZES.contains(keysCgi.size())) {
-            LOGGER.warn("Found " + keysCgi.size() + " in cgi rather than the expected " + EXPECTED_CGI_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in cgi rather than the expected {}", keysCgi.size(), EXPECTED_CGI_ELEMENT_SIZES);
             LOGGER.warn(keysCgi);
         }
 

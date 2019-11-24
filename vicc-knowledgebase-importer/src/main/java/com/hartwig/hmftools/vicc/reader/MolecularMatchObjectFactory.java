@@ -2,7 +2,7 @@ package com.hartwig.hmftools.vicc.reader;
 
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -91,7 +91,7 @@ final class MolecularMatchObjectFactory {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES = Lists.newArrayList(9);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES = Lists.newArrayList(3, 11);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES = Lists.newArrayList(13, 14, 16, 17, 18, 19);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES = Lists.newArrayList(4, 6);
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_PREVALENCE_SIZES = Lists.newArrayList(4, 6);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_SOURCE_SIZES = Lists.newArrayList(8, 9, 10, 11, 12, 13);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TAGS_SIZES = Lists.newArrayList(3, 8, 9, 12, 13);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES = Lists.newArrayList(3, 4);
@@ -106,7 +106,7 @@ final class MolecularMatchObjectFactory {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES =
             Lists.newArrayList(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 45);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES = Lists.newArrayList(3, 7);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSBOUNDRIES_SIZES =
+    private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES =
             Lists.newArrayList(1, 2, 3, 5, 6, 7, 8, 9, 11, 13, 16, 17, 20, 21, 22, 24, 26, 27, 28, 29, 38, 41);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_POSITIONS_SIZES = Lists.newArrayList(2);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES = Lists.newArrayList(1, 2, 15, 17);
@@ -120,8 +120,9 @@ final class MolecularMatchObjectFactory {
     static MolecularMatch create(@NotNull JsonObject objectMolecularMatch) {
         Set<String> keysMolecularMatch = objectMolecularMatch.keySet();
         if (!EXPECTED_MOLECULARMATCH_ELEMENT_SIZES.contains(keysMolecularMatch.size())) {
-            LOGGER.warn("Found " + keysMolecularMatch.size() + " in molecular match rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in molecular match rather than the expected {}",
+                    keysMolecularMatch.size(),
+                    EXPECTED_MOLECULARMATCH_ELEMENT_SIZES);
             LOGGER.warn(keysMolecularMatch);
         }
 
@@ -197,8 +198,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement therapeuticContext : arrayTherapeuticContext) {
             Set<String> keysTherapeuticContext = therapeuticContext.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES.contains(keysTherapeuticContext.size())) {
-                LOGGER.warn("Found " + keysTherapeuticContext.size() + " in molecular match therapeutic context rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
+                LOGGER.warn("Found {} in molecular match therapeutic context rather than the expected {}",
+                        keysTherapeuticContext.size(),
+                        EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
                 LOGGER.warn(keysTherapeuticContext);
             }
 
@@ -216,13 +218,13 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static List<MolecularMatchClassification> createClassification(@NotNull JsonArray objectClassifications) {
-
         List<MolecularMatchClassification> classificationList = Lists.newArrayList();
         for (JsonElement classification : objectClassifications) {
             Set<String> keysClassification = classification.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES.contains(keysClassification.size())) {
-                LOGGER.warn("Found " + keysClassification.size() + " in molecular match classification rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
+                LOGGER.warn("Found {} in molecular match classification rather than the expected {}",
+                        keysClassification.size(),
+                        EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
                 LOGGER.warn(keysClassification);
             }
 
@@ -332,10 +334,12 @@ final class MolecularMatchObjectFactory {
         for (JsonElement parents : arrayParents) {
             Set<String> keysParents = parents.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_PARENTS_SIZES.contains(keysParents.size())) {
-                LOGGER.warn("Found " + keysParents.size() + " in molecular match parents rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_PARENTS_SIZES);
+                LOGGER.warn("Found {} in molecular match parents rather than the expected {}",
+                        keysParents.size(),
+                        EXPECTED_MOLECULARMATCH_PARENTS_SIZES);
                 LOGGER.warn(keysParents);
             }
+
             parentsList.add(ImmutableMolecularMatchParents.builder()
                     .transcripts(jsonArrayToStringList(parents.getAsJsonObject().getAsJsonArray("transcripts")))
                     .type(!parents.getAsJsonObject().has("type") || parents.getAsJsonObject().get("type").isJsonNull()
@@ -356,8 +360,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement tags : arrayTags) {
             Set<String> keysTags = tags.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TAGS_SIZES.contains(keysTags.size())) {
-                LOGGER.warn("Found " + keysTags.size() + " in molecular match tags rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_TAGS_SIZES);
+                LOGGER.warn("Found {} in molecular match tags rather than the expected {}",
+                        keysTags.size(),
+                        EXPECTED_MOLECULARMATCH_TAGS_SIZES);
                 LOGGER.warn(keysTags);
             }
 
@@ -405,8 +410,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement tierExplanation : arrarTierExplanation) {
             Set<String> keysTierExplanation = tierExplanation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES.contains(keysTierExplanation.size())) {
-                LOGGER.warn("Found " + keysTierExplanation.size() + " in molecular match tier explanation rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES);
+                LOGGER.warn("Found {} in molecular match tier explanation rather than the expected {}",
+                        keysTierExplanation.size(),
+                        EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES);
                 LOGGER.warn(keysTierExplanation);
             }
 
@@ -427,10 +433,12 @@ final class MolecularMatchObjectFactory {
         for (JsonElement variantInfo : arrayVariantInfo) {
             Set<String> keysVariantInfo = variantInfo.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES.contains(keysVariantInfo.size())) {
-                LOGGER.warn("Found " + keysVariantInfo.size() + " in molecular match variant info rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES);
+                LOGGER.warn("Found {} in molecular match variant info rather than the expected {}",
+                        keysVariantInfo.size(),
+                        EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES);
                 LOGGER.warn(keysVariantInfo);
             }
+
             variantInfoList.add(ImmutableMolecularMatchVariantInfo.builder()
                     .classification(variantInfo.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
                     .name(variantInfo.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
@@ -456,8 +464,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement fusions : arrayFusions) {
             Set<String> keysFusions = fusions.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_FUSIONS_SIZES.contains(keysFusions.size())) {
-                LOGGER.warn("Found " + keysFusions.size() + " in molecular match fusions rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_FUSIONS_SIZES);
+                LOGGER.warn("Found {} in molecular match fusions rather than the expected {}",
+                        keysFusions.size(),
+                        EXPECTED_MOLECULARMATCH_FUSIONS_SIZES);
                 LOGGER.warn(keysFusions);
             }
             fusionsList.add(ImmutableMolecularMatchFusions.builder()
@@ -480,8 +489,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement locations : arrayLocations) {
             Set<String> keysLocations = locations.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES.contains(keysLocations.size())) {
-                LOGGER.warn("Found " + keysLocations.size() + " in molecular match locations rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES);
+                LOGGER.warn("Found {} in molecular match locations rather than the expected {}",
+                        keysLocations.size(),
+                        EXPECTED_MOLECULARMATCH_LOCATIONS_SIZES);
                 LOGGER.warn(keysLocations);
             }
 
@@ -521,7 +531,7 @@ final class MolecularMatchObjectFactory {
         if (elementExonNumber.getAsJsonObject().get("exonNumber").isJsonArray()) {
             return jsonArrayToStringList(elementExonNumber.getAsJsonObject().getAsJsonArray("exonNumber"));
         } else {
-            return Arrays.asList(elementExonNumber.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString());
+            return Collections.singletonList(elementExonNumber.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString());
         }
     }
 
@@ -529,8 +539,7 @@ final class MolecularMatchObjectFactory {
     private static MolecularMatchAst createAst(@NotNull JsonObject objectAst) {
         Set<String> keysAst = objectAst.keySet();
         if (!EXPECTED_MOLECULARMATCH_AST_SIZES.contains(keysAst.size())) {
-            LOGGER.warn(
-                    "Found " + keysAst.size() + " in molecular match ast rather than the expected " + EXPECTED_MOLECULARMATCH_AST_SIZES);
+            LOGGER.warn("Found {} in molecular match ast rather than the expected {}", keysAst.size(), EXPECTED_MOLECULARMATCH_AST_SIZES);
             LOGGER.warn(keysAst);
         }
         return ImmutableMolecularMatchAst.builder()
@@ -547,10 +556,12 @@ final class MolecularMatchObjectFactory {
     private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
         Set<String> keysLeft = objectLeft.keySet();
         if (!EXPECTED_MOLECULARMATCH_LEFT_SIZES.contains(keysLeft.size())) {
-            LOGGER.warn("Found " + keysLeft.size() + " in molecular match ast left rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_LEFT_SIZES);
+            LOGGER.warn("Found {} in molecular match ast left rather than the expected {}",
+                    keysLeft.size(),
+                    EXPECTED_MOLECULARMATCH_LEFT_SIZES);
             LOGGER.warn(keysLeft);
         }
+
         return ImmutableMolecularMatchAstLeft.builder()
                 .operator(!objectLeft.has("operator") ? null : objectLeft.getAsJsonPrimitive("operator").getAsString())
                 .raw(!objectLeft.has("raw") ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
@@ -563,10 +574,12 @@ final class MolecularMatchObjectFactory {
     private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
         Set<String> keysRight = objectRight.keySet();
         if (!EXPECTED_MOLECULARMATCH_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
+            LOGGER.warn("Found {} in molecular match ast right rather than the expected {}",
+                    keysRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
             LOGGER.warn(keysRight);
         }
+
         return ImmutableMolecularMatchAstRight.builder()
                 .operator(!objectRight.has("operator") ? null : objectRight.getAsJsonPrimitive("operator").getAsString())
                 .left(!objectRight.has("left") ? null : createRightLeft(objectRight.getAsJsonObject("left")))
@@ -579,12 +592,14 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static MolecularMatchAstRightRight createRightRight(@NotNull JsonObject objectRight) {
-        Set<String> keysRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right right rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
-            LOGGER.warn(keysRight);
+        Set<String> keysRightRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRightRight.size())) {
+            LOGGER.warn("Found {} in molecular match ast right right rather than the expected {}",
+                    keysRightRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
+            LOGGER.warn(keysRightRight);
         }
+
         return ImmutableMolecularMatchAstRightRight.builder()
                 .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
                 .type(objectRight.getAsJsonPrimitive("type").getAsString())
@@ -594,12 +609,14 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
-        Set<String> keysRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right left rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
-            LOGGER.warn(keysRight);
+        Set<String> keysRightLeft = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRightLeft.size())) {
+            LOGGER.warn("Found {} in molecular match ast right left rather than the expected {}",
+                    keysRightLeft.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
+            LOGGER.warn(keysRightLeft);
         }
+
         return ImmutableMolecularMatchAstRightLeft.builder()
                 .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
                 .type(objectRight.getAsJsonPrimitive("type").getAsString())
@@ -611,12 +628,14 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static MolecularMatchAstRightLeftRight createRightLeftRight(@NotNull JsonObject objectRight) {
-        Set<String> keysRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found " + keysRight.size() + " in molecular match ast right left right rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
-            LOGGER.warn(keysRight);
+        Set<String> keysLeftRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysLeftRight.size())) {
+            LOGGER.warn("Found {} in molecular match ast right left right rather than the expected {}",
+                    keysLeftRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
+            LOGGER.warn(keysLeftRight);
         }
+
         return ImmutableMolecularMatchAstRightLeftRight.builder()
                 .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
                 .type(objectRight.getAsJsonPrimitive("type").getAsString())
@@ -630,8 +649,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement source : arraySources) {
             Set<String> keysSource = source.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_SOURCE_SIZES.contains(keysSource.size())) {
-                LOGGER.warn("Found " + keysSource.size() + " in molecular match source rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_SOURCE_SIZES);
+                LOGGER.warn("Found {} in molecular match source rather than the expected {}",
+                        keysSource.size(),
+                        EXPECTED_MOLECULARMATCH_SOURCE_SIZES);
                 LOGGER.warn(keysSource);
             }
 
@@ -674,8 +694,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement criteriaUnmet : arrayCriteriaUnmet) {
             Set<String> keysCriteriaUnmet = criteriaUnmet.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES.contains(keysCriteriaUnmet.size())) {
-                LOGGER.warn("Found " + keysCriteriaUnmet.size() + " in molecular match criteria unmet rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES);
+                LOGGER.warn("Found {} in molecular match criteria unmet rather than the expected {}",
+                        keysCriteriaUnmet.size(),
+                        EXPECTED_MOLECULARMATCH_CRITERIA_UNMET_SIZES);
                 LOGGER.warn(keysCriteriaUnmet);
             }
 
@@ -719,25 +740,26 @@ final class MolecularMatchObjectFactory {
     private static List<MolecularMatchPrevalence> createPrevalence(@NotNull JsonArray arrayPrevelance) {
         List<MolecularMatchPrevalence> prevalenceList = Lists.newArrayList();
 
-        for (JsonElement prevelance : arrayPrevelance) {
-            Set<String> keysPrevalence = prevelance.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES.contains(keysPrevalence.size())) {
-                LOGGER.warn("Found " + keysPrevalence.size() + " in molecular match prevalence rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_PREVELANCE_SIZES);
+        for (JsonElement prevalence : arrayPrevelance) {
+            Set<String> keysPrevalence = prevalence.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_PREVALENCE_SIZES.contains(keysPrevalence.size())) {
+                LOGGER.warn("Found {} in molecular match prevalence rather than the expected {}",
+                        keysPrevalence.size(),
+                        EXPECTED_MOLECULARMATCH_PREVALENCE_SIZES);
                 LOGGER.warn(keysPrevalence);
             }
 
             prevalenceList.add(ImmutableMolecularMatchPrevalence.builder()
-                    .count(prevelance.getAsJsonObject().getAsJsonPrimitive("count").getAsString())
-                    .percent(prevelance.getAsJsonObject().getAsJsonPrimitive("percent").getAsString())
-                    .studyId(prevelance.getAsJsonObject().getAsJsonPrimitive("studyId").getAsString())
-                    .samples(prevelance.getAsJsonObject().getAsJsonPrimitive("samples").getAsString())
-                    .molecular(!prevelance.getAsJsonObject().has("molecular")
+                    .count(prevalence.getAsJsonObject().getAsJsonPrimitive("count").getAsString())
+                    .percent(prevalence.getAsJsonObject().getAsJsonPrimitive("percent").getAsString())
+                    .studyId(prevalence.getAsJsonObject().getAsJsonPrimitive("studyId").getAsString())
+                    .samples(prevalence.getAsJsonObject().getAsJsonPrimitive("samples").getAsString())
+                    .molecular(!prevalence.getAsJsonObject().has("molecular")
                             ? null
-                            : prevelance.getAsJsonObject().getAsJsonPrimitive("molecular").getAsString())
-                    .condition(!prevelance.getAsJsonObject().has("condition")
+                            : prevalence.getAsJsonObject().getAsJsonPrimitive("molecular").getAsString())
+                    .condition(!prevalence.getAsJsonObject().has("condition")
                             ? null
-                            : prevelance.getAsJsonObject().getAsJsonPrimitive("condition").getAsString())
+                            : prevalence.getAsJsonObject().getAsJsonPrimitive("condition").getAsString())
                     .build());
         }
         return prevalenceList;
@@ -750,8 +772,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement mutation : arrayMutations) {
             Set<String> keysMutations = mutation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES.contains(keysMutations.size())) {
-                LOGGER.warn("Found " + keysMutations.size() + " in molecular match mutations rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES);
+                LOGGER.warn("Found {} in molecular match mutations rather than the expected {}",
+                        keysMutations.size(),
+                        EXPECTED_MOLECULARMATCH_MUTATIONS_SIZES);
                 LOGGER.warn(keysMutations);
             }
 
@@ -803,69 +826,70 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchFusionData> createFusionData(@NotNull JsonArray arrayFusionData) {
         List<MolecularMatchFusionData> fusionDataList = Lists.newArrayList();
-        for (JsonElement fusiondata : arrayFusionData.getAsJsonArray()) {
-            Set<String> keysFusionData = fusiondata.getAsJsonObject().keySet();
+        for (JsonElement fusionData : arrayFusionData.getAsJsonArray()) {
+            Set<String> keysFusionData = fusionData.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES.contains(keysFusionData.size())) {
-                LOGGER.warn("Found " + keysFusionData.size() + " in molecular match fusion data rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES);
+                LOGGER.warn("Found {} in molecular match fusion data rather than the expected {}",
+                        keysFusionData.size(),
+                        EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES);
                 LOGGER.warn(keysFusionData);
             }
 
             fusionDataList.add(ImmutableMolecularMatchFusionData.builder()
-                    .Bgreg(!fusiondata.getAsJsonObject().has("Bgreg")
+                    .Bgreg(!fusionData.getAsJsonObject().has("Bgreg")
                             ? null
-                            : createBreg(fusiondata.getAsJsonObject().getAsJsonArray("Bgreg")))
-                    .Bchr(!fusiondata.getAsJsonObject().has("Bchr")
+                            : createBreg(fusionData.getAsJsonObject().getAsJsonArray("Bgreg")))
+                    .Bchr(!fusionData.getAsJsonObject().has("Bchr")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Bchr")))
-                    .synonym(!fusiondata.getAsJsonObject().has("synonym")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bchr")))
+                    .synonym(!fusionData.getAsJsonObject().has("synonym")
                             ? null
-                            : fusiondata.getAsJsonObject().getAsJsonPrimitive("synonym").getAsString())
-                    .Agene(!fusiondata.getAsJsonObject().has("Agene")
+                            : fusionData.getAsJsonObject().getAsJsonPrimitive("synonym").getAsString())
+                    .Agene(!fusionData.getAsJsonObject().has("Agene")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Agene")))
-                    .Btx(!fusiondata.getAsJsonObject().has("Btx")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Agene")))
+                    .Btx(!fusionData.getAsJsonObject().has("Btx")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Btx")))
-                    .Achr(!fusiondata.getAsJsonObject().has("Achr")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Btx")))
+                    .Achr(!fusionData.getAsJsonObject().has("Achr")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Achr")))
-                    .ins(!fusiondata.getAsJsonObject().has("ins")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Achr")))
+                    .ins(!fusionData.getAsJsonObject().has("ins")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("ins")))
-                    .source(!fusiondata.getAsJsonObject().has("source")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("ins")))
+                    .source(!fusionData.getAsJsonObject().has("source")
                             ? null
-                            : fusiondata.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
-                    .Agreg(!fusiondata.getAsJsonObject().has("Agreg")
+                            : fusionData.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
+                    .Agreg(!fusionData.getAsJsonObject().has("Agreg")
                             ? null
-                            : createAreg(fusiondata.getAsJsonObject().getAsJsonArray("Agreg")))
-                    .Bgene(!fusiondata.getAsJsonObject().has("Bgene")
+                            : createAreg(fusionData.getAsJsonObject().getAsJsonArray("Agreg")))
+                    .Bgene(!fusionData.getAsJsonObject().has("Bgene")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Bgene")))
-                    .Acoord(!fusiondata.getAsJsonObject().has("Acoord")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bgene")))
+                    .Acoord(!fusionData.getAsJsonObject().has("Acoord")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Acoord")))
-                    .Bori(!fusiondata.getAsJsonObject().has("Bori")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Acoord")))
+                    .Bori(!fusionData.getAsJsonObject().has("Bori")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Bori")))
-                    .Aband(!fusiondata.getAsJsonObject().has("Aband")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bori")))
+                    .Aband(!fusionData.getAsJsonObject().has("Aband")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Aband")))
-                    .Bband(!fusiondata.getAsJsonObject().has("Bband")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Aband")))
+                    .Bband(!fusionData.getAsJsonObject().has("Bband")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Bband")))
-                    .Aori(!fusiondata.getAsJsonObject().has("Aori")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bband")))
+                    .Aori(!fusionData.getAsJsonObject().has("Aori")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Aori")))
-                    .Atx(!fusiondata.getAsJsonObject().has("Atx")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Aori")))
+                    .Atx(!fusionData.getAsJsonObject().has("Atx")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Atx")))
-                    .Bcoord(!fusiondata.getAsJsonObject().has("Bcoord")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Atx")))
+                    .Bcoord(!fusionData.getAsJsonObject().has("Bcoord")
                             ? null
-                            : jsonArrayToStringList(fusiondata.getAsJsonObject().getAsJsonArray("Bcoord")))
-                    .Paper(!fusiondata.getAsJsonObject().has("Paper")
+                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bcoord")))
+                    .Paper(!fusionData.getAsJsonObject().has("Paper")
                             ? null
-                            : fusiondata.getAsJsonObject().getAsJsonPrimitive("Paper").getAsString())
+                            : fusionData.getAsJsonObject().getAsJsonPrimitive("Paper").getAsString())
                     .build());
         }
         return fusionDataList;
@@ -873,20 +897,22 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static List<MolecularMatchAreg> createAreg(@NotNull JsonArray arrayAreg) {
-        List<MolecularMatchAreg> AregList = Lists.newArrayList();
+        List<MolecularMatchAreg> aregList = Lists.newArrayList();
         for (JsonElement areg : arrayAreg.getAsJsonArray()) {
             Set<String> keysAreg = areg.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_AREG_SIZES.contains(keysAreg.size())) {
-                LOGGER.warn("Found " + keysAreg.size() + " in molecular match areg rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_AREG_SIZES);
+                LOGGER.warn("Found {} in molecular match areg rather than the expected {}",
+                        keysAreg.size(),
+                        EXPECTED_MOLECULARMATCH_AREG_SIZES);
                 LOGGER.warn(keysAreg);
             }
-            AregList.add(ImmutableMolecularMatchAreg.builder()
+
+            aregList.add(ImmutableMolecularMatchAreg.builder()
                     .type(areg.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .num(areg.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .build());
         }
-        return AregList;
+        return aregList;
     }
 
     @NotNull
@@ -895,10 +921,12 @@ final class MolecularMatchObjectFactory {
         for (JsonElement breg : arrayBreg.getAsJsonArray()) {
             Set<String> keysBreg = breg.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_BREG_SIZES.contains(keysBreg.size())) {
-                LOGGER.warn("Found " + keysBreg.size() + " in molecular match breg rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_BREG_SIZES);
+                LOGGER.warn("Found {} in molecular match breg rather than the expected {}",
+                        keysBreg.size(),
+                        EXPECTED_MOLECULARMATCH_BREG_SIZES);
                 LOGGER.warn(keysBreg);
             }
+
             bregList.add(ImmutableMolecularMatchBreg.builder()
                     .type(breg.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
                     .num(breg.getAsJsonObject().getAsJsonPrimitive("num").getAsString())
@@ -911,12 +939,14 @@ final class MolecularMatchObjectFactory {
     private static MolecularMatchExonInfo createExonsInfo(@NotNull JsonObject objectExonsInfo) {
         Set<String> keysExonsInfo = objectExonsInfo.keySet();
         if (!EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES.contains(keysExonsInfo.size())) {
-            LOGGER.warn("Found " + keysExonsInfo.size() + " in molecular match exon info rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES);
+            LOGGER.warn("Found {} in molecular match exon info rather than the expected {}",
+                    keysExonsInfo.size(),
+                    EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES);
             LOGGER.warn(keysExonsInfo);
         }
+
         return ImmutableMolecularMatchExonInfo.builder()
-                .exonBoundaries(createExonBoundries(objectExonsInfo.getAsJsonObject("exonBoundaries")))
+                .exonBoundaries(createExonBoundaries(objectExonsInfo.getAsJsonObject("exonBoundaries")))
                 .txStart(!objectExonsInfo.has("txStart") ? null : objectExonsInfo.getAsJsonPrimitive("txStart").getAsString())
                 .cdsEnd(!objectExonsInfo.has("cdsEnd") ? null : objectExonsInfo.getAsJsonPrimitive("cdsEnd").getAsString())
                 .chr(objectExonsInfo.getAsJsonPrimitive("chr").getAsString())
@@ -930,10 +960,12 @@ final class MolecularMatchObjectFactory {
     private static MolecularMatchPositions createMolecularPositions(@NotNull JsonObject objectPositions) {
         Set<String> keysPositions = objectPositions.keySet();
         if (!EXPECTED_MOLECULARMATCH_POSITIONS_SIZES.contains(keysPositions.size())) {
-            LOGGER.warn("Found " + keysPositions.size() + " in molecular match positions rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_POSITIONS_SIZES);
+            LOGGER.warn("Found {} in molecular match positions rather than the expected {}",
+                    keysPositions.size(),
+                    EXPECTED_MOLECULARMATCH_POSITIONS_SIZES);
             LOGGER.warn(keysPositions);
         }
+
         return ImmutableMolecularMatchPositions.builder()
                 .start(objectPositions.getAsJsonPrimitive("start").getAsString())
                 .stop(objectPositions.getAsJsonPrimitive("stop").getAsString())
@@ -941,56 +973,57 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static MolecularMatchExonsBoundries createExonBoundries(@NotNull JsonObject objectExonsBoundries) {
-        Set<String> keysExonsBoundries = objectExonsBoundries.keySet();
-        if (!EXPECTED_MOLECULARMATCH_EXONSBOUNDRIES_SIZES.contains(keysExonsBoundries.size())) {
-            LOGGER.warn("Found " + keysExonsBoundries.size() + " in molecular match exons boundries rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_EXONSBOUNDRIES_SIZES);
-            LOGGER.warn(keysExonsBoundries);
+    private static MolecularMatchExonsBoundries createExonBoundaries(@NotNull JsonObject objectExonsBoundaries) {
+        Set<String> keysExonsBoundaries = objectExonsBoundaries.keySet();
+        if (!EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES.contains(keysExonsBoundaries.size())) {
+            LOGGER.warn("Found {} in molecular match exons boundaries rather than the expected {}",
+                    keysExonsBoundaries.size(),
+                    EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES);
+            LOGGER.warn(keysExonsBoundaries);
         }
 
         return ImmutableMolecularMatchExonsBoundries.builder()
-                .exon1(!objectExonsBoundries.has("1") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("1")))
-                .exon2(!objectExonsBoundries.has("2") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("2")))
-                .exon3(!objectExonsBoundries.has("3") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("3")))
-                .exon4(!objectExonsBoundries.has("4") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("4")))
-                .exon5(!objectExonsBoundries.has("5") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("5")))
-                .exon6(!objectExonsBoundries.has("6") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("6")))
-                .exon7(!objectExonsBoundries.has("7") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("7")))
-                .exon8(!objectExonsBoundries.has("8") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("8")))
-                .exon9(!objectExonsBoundries.has("9") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("9")))
-                .exon10(!objectExonsBoundries.has("10") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("10")))
-                .exon11(!objectExonsBoundries.has("11") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("11")))
-                .exon12(!objectExonsBoundries.has("12") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("12")))
-                .exon13(!objectExonsBoundries.has("13") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("13")))
-                .exon14(!objectExonsBoundries.has("14") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("14")))
-                .exon15(!objectExonsBoundries.has("15") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("15")))
-                .exon16(!objectExonsBoundries.has("16") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("16")))
-                .exon17(!objectExonsBoundries.has("17") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("17")))
-                .exon18(!objectExonsBoundries.has("18") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("18")))
-                .exon19(!objectExonsBoundries.has("19") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("19")))
-                .exon20(!objectExonsBoundries.has("20") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("20")))
-                .exon21(!objectExonsBoundries.has("21") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("21")))
-                .exon22(!objectExonsBoundries.has("22") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("22")))
-                .exon23(!objectExonsBoundries.has("23") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("23")))
-                .exon24(!objectExonsBoundries.has("24") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("24")))
-                .exon25(!objectExonsBoundries.has("25") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("25")))
-                .exon26(!objectExonsBoundries.has("26") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("26")))
-                .exon27(!objectExonsBoundries.has("27") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("27")))
-                .exon28(!objectExonsBoundries.has("28") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("28")))
-                .exon29(!objectExonsBoundries.has("29") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("29")))
-                .exon30(!objectExonsBoundries.has("30") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("30")))
-                .exon31(!objectExonsBoundries.has("31") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("31")))
-                .exon32(!objectExonsBoundries.has("32") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("32")))
-                .exon33(!objectExonsBoundries.has("33") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("33")))
-                .exon34(!objectExonsBoundries.has("34") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("34")))
-                .exon35(!objectExonsBoundries.has("35") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("35")))
-                .exon36(!objectExonsBoundries.has("36") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("36")))
-                .exon37(!objectExonsBoundries.has("37") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("37")))
-                .exon38(!objectExonsBoundries.has("38") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("38")))
-                .exon39(!objectExonsBoundries.has("39") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("39")))
-                .exon40(!objectExonsBoundries.has("40") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("40")))
-                .exon41(!objectExonsBoundries.has("41") ? null : createMolecularPositions(objectExonsBoundries.getAsJsonObject("41")))
+                .exon1(!objectExonsBoundaries.has("1") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("1")))
+                .exon2(!objectExonsBoundaries.has("2") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("2")))
+                .exon3(!objectExonsBoundaries.has("3") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("3")))
+                .exon4(!objectExonsBoundaries.has("4") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("4")))
+                .exon5(!objectExonsBoundaries.has("5") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("5")))
+                .exon6(!objectExonsBoundaries.has("6") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("6")))
+                .exon7(!objectExonsBoundaries.has("7") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("7")))
+                .exon8(!objectExonsBoundaries.has("8") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("8")))
+                .exon9(!objectExonsBoundaries.has("9") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("9")))
+                .exon10(!objectExonsBoundaries.has("10") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("10")))
+                .exon11(!objectExonsBoundaries.has("11") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("11")))
+                .exon12(!objectExonsBoundaries.has("12") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("12")))
+                .exon13(!objectExonsBoundaries.has("13") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("13")))
+                .exon14(!objectExonsBoundaries.has("14") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("14")))
+                .exon15(!objectExonsBoundaries.has("15") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("15")))
+                .exon16(!objectExonsBoundaries.has("16") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("16")))
+                .exon17(!objectExonsBoundaries.has("17") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("17")))
+                .exon18(!objectExonsBoundaries.has("18") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("18")))
+                .exon19(!objectExonsBoundaries.has("19") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("19")))
+                .exon20(!objectExonsBoundaries.has("20") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("20")))
+                .exon21(!objectExonsBoundaries.has("21") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("21")))
+                .exon22(!objectExonsBoundaries.has("22") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("22")))
+                .exon23(!objectExonsBoundaries.has("23") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("23")))
+                .exon24(!objectExonsBoundaries.has("24") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("24")))
+                .exon25(!objectExonsBoundaries.has("25") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("25")))
+                .exon26(!objectExonsBoundaries.has("26") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("26")))
+                .exon27(!objectExonsBoundaries.has("27") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("27")))
+                .exon28(!objectExonsBoundaries.has("28") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("28")))
+                .exon29(!objectExonsBoundaries.has("29") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("29")))
+                .exon30(!objectExonsBoundaries.has("30") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("30")))
+                .exon31(!objectExonsBoundaries.has("31") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("31")))
+                .exon32(!objectExonsBoundaries.has("32") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("32")))
+                .exon33(!objectExonsBoundaries.has("33") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("33")))
+                .exon34(!objectExonsBoundaries.has("34") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("34")))
+                .exon35(!objectExonsBoundaries.has("35") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("35")))
+                .exon36(!objectExonsBoundaries.has("36") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("36")))
+                .exon37(!objectExonsBoundaries.has("37") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("37")))
+                .exon38(!objectExonsBoundaries.has("38") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("38")))
+                .exon39(!objectExonsBoundaries.has("39") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("39")))
+                .exon40(!objectExonsBoundaries.has("40") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("40")))
+                .exon41(!objectExonsBoundaries.has("41") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("41")))
                 .build();
     }
 
@@ -1000,10 +1033,12 @@ final class MolecularMatchObjectFactory {
         for (JsonElement wgsDataMap : objectWgsaMap.getAsJsonArray()) {
             Set<String> keysWgsaMap = wgsDataMap.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES.contains(keysWgsaMap.size())) {
-                LOGGER.warn("Found " + keysWgsaMap.size() + " in molecular match wgsa map rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES);
+                LOGGER.warn("Found {} in molecular match wgsa map rather than the expected {}",
+                        keysWgsaMap.size(),
+                        EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES);
                 LOGGER.warn(keysWgsaMap);
             }
+
             molecularMatchWGSaMapList.add(ImmutableMolecularMatchWGSaMap.builder()
                     .AA(!wgsDataMap.getAsJsonObject().has("AA")
                             ? null
@@ -1028,16 +1063,18 @@ final class MolecularMatchObjectFactory {
         List<MolecularMatchWGSadataLocation> molecularMatchWGSadataLocationList = Lists.newArrayList();
         Set<String> keysWgsaData = objectWgsaData.keySet();
         if (!EXPECTED_MOLECULARMATCH_WGSADATA_SIZES.contains(keysWgsaData.size())) {
-            LOGGER.warn("Found " + keysWgsaData.size() + " in molecular match wgsa data rather than the expected "
-                    + EXPECTED_MOLECULARMATCH_WGSADATA_SIZES);
+            LOGGER.warn("Found {} in molecular match wgsa data rather than the expected {}",
+                    keysWgsaData.size(),
+                    EXPECTED_MOLECULARMATCH_WGSADATA_SIZES);
             LOGGER.warn(keysWgsaData);
         }
 
         for (JsonElement wgsDataLocation : objectWgsaData.get("locations").getAsJsonArray()) {
             Set<String> keysWgsaDataLocation = wgsDataLocation.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES.contains(keysWgsaDataLocation.size())) {
-                LOGGER.warn("Found " + keysWgsaDataLocation.size() + " in molecular match wgsa data locations rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES);
+                LOGGER.warn("Found {} in molecular match wgsa data locations rather than the expected {}",
+                        keysWgsaDataLocation.size(),
+                        EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES);
                 LOGGER.warn(keysWgsaDataLocation);
             }
 
@@ -1152,17 +1189,18 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static List<MolecularMatchGRch37Location> createGRCH37Location(@NotNull JsonArray arrayLocation) {
-        List<MolecularMatchGRch37Location> gRch37LocationList = Lists.newArrayList();
+        List<MolecularMatchGRch37Location> grch37LocationList = Lists.newArrayList();
 
         for (JsonElement location : arrayLocation) {
             Set<String> keysLocation = location.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES.contains(keysLocation.size())) {
-                LOGGER.warn("Found " + keysLocation.size() + " in molecular match grch37 location rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES);
+                LOGGER.warn("Found {} in molecular match grch37 location rather than the expected {}",
+                        keysLocation.size(),
+                        EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES);
                 LOGGER.warn(keysLocation);
             }
 
-            gRch37LocationList.add(ImmutableMolecularMatchGRch37Location.builder()
+            grch37LocationList.add(ImmutableMolecularMatchGRch37Location.builder()
                     .compositeKey(location.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
                     .ref(location.getAsJsonObject().get("ref").isJsonNull()
                             ? null
@@ -1184,7 +1222,7 @@ final class MolecularMatchObjectFactory {
                     .strand(location.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
                     .build());
         }
-        return gRch37LocationList;
+        return grch37LocationList;
     }
 
     @NotNull
@@ -1194,9 +1232,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement transcriptConsequences : arrayTranscriptConsequence) {
             Set<String> keysTranscriptConsequences = transcriptConsequences.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES.contains(keysTranscriptConsequences.size())) {
-                LOGGER.warn("Found " + keysTranscriptConsequences.size()
-                        + " in molecular match transcript consequences grch37 rather than the expected "
-                        + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES);
+                LOGGER.warn("Found {} in molecular match transcript consequences grch37 rather than the expected {}",
+                        keysTranscriptConsequences.size(),
+                        EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES);
                 LOGGER.warn(keysTranscriptConsequences);
             }
 
@@ -1227,9 +1265,9 @@ final class MolecularMatchObjectFactory {
         for (JsonElement transcriptConsequence : arrayTranscriptConsequence) {
             Set<String> keysTranscriptConsequence = transcriptConsequence.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES.contains(keysTranscriptConsequence.size())) {
-                LOGGER.warn(
-                        "Found " + keysTranscriptConsequence.size() + " in molecular match transcript consequence rather than the expected "
-                                + EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES);
+                LOGGER.warn("Found {} in molecular match transcript consequence rather than the expected {}",
+                        keysTranscriptConsequence.size(),
+                        EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES);
                 LOGGER.warn(keysTranscriptConsequence);
             }
 

@@ -30,7 +30,7 @@ final class BRCAObjectFactory {
         Set<String> keysBRCA = objectBrca.keySet();
 
         if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
-            LOGGER.warn("Found " + keysBRCA.size() + " in brca rather than the expected " + EXPECTED_BRCA_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in brca rather than the expected {}", keysBRCA.size(), EXPECTED_BRCA_ELEMENT_SIZES);
             LOGGER.warn(keysBRCA);
         }
 

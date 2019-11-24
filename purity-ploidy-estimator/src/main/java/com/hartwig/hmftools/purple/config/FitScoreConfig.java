@@ -28,10 +28,12 @@ public interface FitScoreConfig {
 
     static void addOptions(@NotNull Options options) {
         options.addOption(PLOIDY_PENALTY_FACTOR, true, "Penalty factor to apply to the number of copy number events");
-        options.addOption(PLOIDY_PENALTY_STANDARD_DEVIATION, true, "Standard deviation of normal distribution modelling ploidy deviation from whole number");
+        options.addOption(PLOIDY_PENALTY_STANDARD_DEVIATION,
+                true,
+                "Standard deviation of normal distribution modelling ploidy deviation from whole number");
         options.addOption(PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, true, "Minimum ploidy penalty standard deviation to be applied");
         options.addOption(PLOIDY_PENALTY_SUB_MIN_ADDITIONAL, true, "Additional penalty to apply to major allele < 1 or minor allele < 0");
-        options.addOption(PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, true, "Penaly multiplier applied to major allele < 1 ");
+        options.addOption(PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, true, "Penalty multiplier applied to major allele < 1 ");
         options.addOption(PLOIDY_PENALTY_MIN, true, "Minimum ploidy penalty");
     }
 
@@ -47,23 +49,23 @@ public interface FitScoreConfig {
 
     double ploidyPenaltyBaselineDeviation();
 
-
     @NotNull
     static FitScoreConfig createConfig(@NotNull final CommandLine cmd) {
-
         final double ploidyPenaltyFactor = defaultValue(cmd, PLOIDY_PENALTY_FACTOR, PLOIDY_PENALTY_FACTOR_DEFAULT);
-        final double ploidyPenaltyStandardDevation = defaultValue(cmd, PLOIDY_PENALTY_STANDARD_DEVIATION, PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
-        final double ploidyPenaltyMinStandardDevationPerPloidy = defaultValue(cmd, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT);
-        final double majorAlleleSubOnePenaltyMultiplier = defaultValue(cmd,
-                PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
-        final double majorAlleleSubOneAdditionalPenalty = defaultValue(cmd,
-                PLOIDY_PENALTY_SUB_MIN_ADDITIONAL, PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT);
+        final double ploidyPenaltyStandardDeviation =
+                defaultValue(cmd, PLOIDY_PENALTY_STANDARD_DEVIATION, PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
+        final double ploidyPenaltyMinStandardDeviationPerPloidy =
+                defaultValue(cmd, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT);
+        final double majorAlleleSubOnePenaltyMultiplier =
+                defaultValue(cmd, PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER, PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
+        final double majorAlleleSubOneAdditionalPenalty =
+                defaultValue(cmd, PLOIDY_PENALTY_SUB_MIN_ADDITIONAL, PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT);
         final double baselineDeviation = defaultValue(cmd, PLOIDY_PENALTY_MIN, PLOIDY_PENALTY_MIN_DEFAULT);
 
         return ImmutableFitScoreConfig.builder()
                 .ploidyPenaltyFactor(ploidyPenaltyFactor)
-                .ploidyPenaltyStandardDeviation(ploidyPenaltyStandardDevation)
-                .ploidyPenaltyMinStandardDeviationPerPloidy(ploidyPenaltyMinStandardDevationPerPloidy)
+                .ploidyPenaltyStandardDeviation(ploidyPenaltyStandardDeviation)
+                .ploidyPenaltyMinStandardDeviationPerPloidy(ploidyPenaltyMinStandardDeviationPerPloidy)
                 .ploidyPenaltyMajorAlleleSubOneMultiplier(majorAlleleSubOnePenaltyMultiplier)
                 .ploidyPenaltyMajorAlleleSubOneAdditional(majorAlleleSubOneAdditionalPenalty)
                 .ploidyPenaltyBaselineDeviation(baselineDeviation)

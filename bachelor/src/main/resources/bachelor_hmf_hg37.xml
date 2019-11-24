@@ -34,9 +34,8 @@
         <Gene name="VHL" ensembl="ENST00000256474"/>
         <Gene name="WT1" ensembl="ENST00000332351"/>
 
-        <!-- additional genes from Lynparza -->
+        <!-- additional genes which are suggested to be involved in HR repair pathway -->
         <Gene name="BARD1" ensembl="ENST00000260947"/>
-        <!-- <Gene name="BRCA1" ensembl="ENST00000357654"/> only use canonical -->
         <Gene name="BRIP1" ensembl="ENST00000259008"/>
         <Gene name="CDK12" ensembl="ENST00000447079"/>
         <Gene name="CHEK1" ensembl="ENST00000534070"/>

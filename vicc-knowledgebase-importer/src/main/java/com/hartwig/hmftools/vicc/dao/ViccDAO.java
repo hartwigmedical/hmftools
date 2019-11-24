@@ -28,7 +28,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.hartwig.hmftools.vicc.ViccJsonToSQLImporter;
+import com.hartwig.hmftools.vicc.ViccJsonSQLImporter;
 import com.hartwig.hmftools.vicc.datamodel.Association;
 import com.hartwig.hmftools.vicc.datamodel.EnvironmentalContext;
 import com.hartwig.hmftools.vicc.datamodel.Evidence;
@@ -59,11 +59,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.conf.MappedSchema;
+import org.jooq.conf.RenderMapping;
+import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 
 public class ViccDAO {
 
-    private static final Logger LOGGER = LogManager.getLogger(ViccJsonToSQLImporter.class);
+    private static final Logger LOGGER = LogManager.getLogger(ViccJsonSQLImporter.class);
+    private static final String DEV_CATALOG = "vicc_test";
 
     @NotNull
     private final DSLContext context;
@@ -72,9 +76,17 @@ public class ViccDAO {
             throws SQLException {
         final Connection conn = DriverManager.getConnection(url, userName, password);
         final String catalog = conn.getCatalog();
+        LOGGER.info("Connecting to database {}", catalog);
 
-        LOGGER.debug("Connecting to database {}", catalog);
-        return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL));
+        return new ViccDAO(DSL.using(conn, SQLDialect.MYSQL, settings(catalog)));
+    }
+
+    @Nullable
+    private static Settings settings(@NotNull String catalog) {
+        return !catalog.equals(DEV_CATALOG)
+                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
+                .withOutput(catalog)))
+                : null;
     }
 
     private ViccDAO(@NotNull final DSLContext context) {
@@ -100,29 +112,7 @@ public class ViccDAO {
     public void deleteAll() {
         LOGGER.info("Deleting all from vicc db");
 
-        context.deleteFrom(VICCENTRY).execute();
-        context.deleteFrom(TAG).execute();
-        context.deleteFrom(DEVTAG).execute();
-        context.deleteFrom(GENEIDENTIFIER).execute();
-        context.deleteFrom(GENE).execute();
-        context.deleteFrom(FEATURENAME).execute();
-        context.deleteFrom(FEATURE).execute();
-        context.deleteFrom(PROVENANCE).execute();
-        context.deleteFrom(SYNONYM).execute();
-        context.deleteFrom(LINK).execute();
-        context.deleteFrom(SEQUENCEONTOLOGY).execute();
-        context.deleteFrom(HIERARCHY).execute();
-        context.deleteFrom(ASSOCIATION).execute();
-        context.deleteFrom(EVIDENCE).execute();
-        context.deleteFrom(EVIDENCEINFO).execute();
-        context.deleteFrom(EVIDENCETYPE).execute();
-        context.deleteFrom(PUBLICATIONURL).execute();
-        context.deleteFrom(PHENOTYPE).execute();
-        context.deleteFrom(PHENOTYPETYPE).execute();
-        context.deleteFrom(ENVIRONMENTALCONTEXT).execute();
-        context.deleteFrom(APPROVEDCOUNTRY).execute();
-        context.deleteFrom(TAXONOMY).execute();
-
+        // Note: The order should be "from branch to root" to avoid constraint violation.
         BRCADAOFunctions.deleteAll(context);
         CgiDAOFunctions.deleteAll(context);
         CivicDAOFunctions.deleteAll(context);
@@ -133,6 +123,35 @@ public class ViccDAO {
         OncokbDAOFunctions.deleteAll(context);
         PmkbDAOFunctions.deleteAll(context);
         SageDAOFunctions.deleteAll(context);
+
+        // Below tables are part of Association
+        context.deleteFrom(EVIDENCETYPE).execute();
+        context.deleteFrom(EVIDENCEINFO).execute();
+        context.deleteFrom(EVIDENCE).execute();
+        context.deleteFrom(PUBLICATIONURL).execute();
+        context.deleteFrom(PHENOTYPE).execute();
+        context.deleteFrom(PHENOTYPETYPE).execute();
+        context.deleteFrom(APPROVEDCOUNTRY).execute();
+        context.deleteFrom(TAXONOMY).execute();
+        context.deleteFrom(ENVIRONMENTALCONTEXT).execute();
+
+        // Below tables are part of Feature
+        context.deleteFrom(PROVENANCE).execute();
+        context.deleteFrom(SYNONYM).execute();
+        context.deleteFrom(LINK).execute();
+        context.deleteFrom(HIERARCHY).execute();
+        context.deleteFrom(SEQUENCEONTOLOGY).execute();
+
+        // Below tables are part of VICC Entry
+        context.deleteFrom(ASSOCIATION).execute();
+        context.deleteFrom(FEATURENAME).execute();
+        context.deleteFrom(FEATURE).execute();
+        context.deleteFrom(GENE).execute();
+        context.deleteFrom(GENEIDENTIFIER).execute();
+        context.deleteFrom(DEVTAG).execute();
+        context.deleteFrom(TAG).execute();
+
+        context.deleteFrom(VICCENTRY).execute();
     }
 
     private void writeTags(int viccEntryId, @NotNull List<String> tags) {

@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.common.io.Resources;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsFactoryTest {
@@ -114,9 +115,14 @@ public class LimsFactoryTest {
         assertEquals(3, shallowSeqPuritySample.size());
 
         final String sample = "SAMP01011234T";
-        final LimsShallowSeqData limsShallowSeqData = shallowSeqPuritySample.get(sample);
+        final String barcode = "FR1";
 
+        final LimsShallowSeqData limsShallowSeqData = shallowSeqPuritySample.get(barcode);
+
+        assertEquals(barcode, limsShallowSeqData.sampleBarcode());
         assertEquals(sample, limsShallowSeqData.sampleId());
         assertEquals("0.19", limsShallowSeqData.purityShallowSeq());
+        assertTrue(limsShallowSeqData.hasReliablePurity());
+        assertTrue(limsShallowSeqData.hasReliableQuality());
     }
 }

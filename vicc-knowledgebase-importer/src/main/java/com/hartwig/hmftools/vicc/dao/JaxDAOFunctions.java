@@ -54,10 +54,11 @@ final class JaxDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        context.deleteFrom(JAX).execute();
         context.deleteFrom(JAXMOLECULARPROFILE).execute();
         context.deleteFrom(JAXTHERAPY).execute();
         context.deleteFrom(JAXINDICATIONS).execute();
         context.deleteFrom(JAXREFERENCES).execute();
+
+        context.deleteFrom(JAX).execute();
     }
 }

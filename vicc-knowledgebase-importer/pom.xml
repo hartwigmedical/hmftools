@@ -86,7 +86,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.vicc.ViccJsonToSQLImporter
+                            <mainClass>com.hartwig.hmftools.vicc.ViccJsonSQLImporter
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
@@ -113,7 +113,7 @@
                 <configuration>
                     <jdbc>
                         <driver>com.mysql.cj.jdbc.Driver</driver>
-                        <url>jdbc:mysql://localhost:3306/vicc_db?useSSL=false&amp;serverTimezone=CET</url>
+                        <url>jdbc:mysql://localhost:3306/vicc_test?useSSL=false&amp;serverTimezone=CET</url>
                         <user>build</user>
                         <password>build</password>
                     </jdbc>
@@ -121,7 +121,7 @@
                         <database>
                             <name>org.jooq.util.mysql.MySQLDatabase</name>
                             <includes>.*</includes>x
-                            <inputSchema>vicc_db</inputSchema>
+                            <inputSchema>vicc_test</inputSchema>
                         </database>
                         <target>
                             <packageName>com.hartwig.hmftools.vicc.database</packageName>

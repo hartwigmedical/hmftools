@@ -219,7 +219,7 @@ public class PatientReporterApplication {
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
         final QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
         if (qcFailReason == QCFailReason.UNDEFINED) {
-            LOGGER.warn(QC_FAIL_REASON + " has to be 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', "
+            LOGGER.warn(QC_FAIL_REASON + " has to be 'low_dna_yield', 'post_analysis_fail', "
                     + "'shallow_seq_low_purity' or 'insufficient_tissue_delivered'.");
         } else {
             return true;
@@ -287,7 +287,7 @@ public class PatientReporterApplication {
         options.addOption(QC_FAIL, false, "If set, generates a qc-fail report.");
         options.addOption(QC_FAIL_REASON,
                 true,
-                "Either 'low_tumor_percentage', 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
+                "Either 'low_dna_yield', 'post_analysis_fail', 'shallow_seq' or 'insufficient_tissue_delivered'");
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_FILE, true, "Path towards the purple qc file.");

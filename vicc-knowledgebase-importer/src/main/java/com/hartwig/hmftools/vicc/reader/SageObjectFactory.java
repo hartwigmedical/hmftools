@@ -26,7 +26,7 @@ final class SageObjectFactory {
         Set<String> keysSage = objectSage.keySet();
 
         if (!EXPECTED_SAGE_ELEMENT_SIZES.contains(keysSage.size())) {
-            LOGGER.warn("Found " + keysSage.size() + " in sage rather than the expected " + EXPECTED_SAGE_ELEMENT_SIZES);
+            LOGGER.warn("Found {} in sage rather than the expected {}", keysSage.size(), EXPECTED_SAGE_ELEMENT_SIZES);
             LOGGER.warn(keysSage);
         }
 

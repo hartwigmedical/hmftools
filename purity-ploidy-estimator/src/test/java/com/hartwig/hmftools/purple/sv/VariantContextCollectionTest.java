@@ -14,6 +14,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
 public class VariantContextCollectionTest {
+
     private static final String SAMPLE = "sample";
 
     private VCFCodec codec;
@@ -22,7 +23,6 @@ public class VariantContextCollectionTest {
     public void setup() {
         codec = createTestCodec();
     }
-
 
     @Test
     public void testAddSetsModifiedFlag() {
