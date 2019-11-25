@@ -59,6 +59,10 @@ public interface FilterConfig {
 
     int hardMinTumorQual();
 
+    default int hotspotAltSupportHardPass() {
+        return 4;
+    }
+
     int hardMinTumorAltSupport();
 
     default int hardMaxNormalAltSupport() {

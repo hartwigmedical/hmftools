@@ -29,8 +29,8 @@ public class PipelineFactory {
     private final SamSlicerFactory samSlicerFactory;
     private final Function<SageVariant, VariantContext> variantContextFactory;
 
-    private final ListMultimap<Chromosome, VariantHotspot> hotspots;
     private final ListMultimap<Chromosome, GenomeRegion> panel;
+    private final ListMultimap<Chromosome, VariantHotspot> hotspots;
 
     public PipelineFactory(@NotNull final SageConfig config, @NotNull final Executor executor,
             @NotNull final IndexedFastaSequenceFile refSequence, @NotNull final SamSlicerFactory samSlicerFactory,
@@ -47,8 +47,7 @@ public class PipelineFactory {
 
     public ChromosomePipeline create(@NotNull final String contig) throws IOException {
         final Chromosome chromosome = HumanChromosome.fromString(contig);
-        final SageVariantFactory variantFactory =
-                new SageVariantFactory(chromosome, config.filter(), hotspots.get(chromosome), panel.get(chromosome));
+        final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots.get(chromosome), panel.get(chromosome));
 
         return new ChromosomePipeline(contig, config, refSequence, variantFactory, variantContextFactory);
 
@@ -57,13 +56,26 @@ public class PipelineFactory {
     @NotNull
     public CompletableFuture<List<SageVariant>> createPipeline(@NotNull final GenomeRegion region) {
         final Chromosome chromosome = HumanChromosome.fromString(region.chromosome());
-        final SageVariantFactory variantFactory =
-                new SageVariantFactory(chromosome, config.filter(), hotspots.get(chromosome), panel.get(chromosome));
+
+        final List<VariantHotspot> chromosomeHotspots = hotspots.get(chromosome);
+        final List<GenomeRegion> chromosomePanel = panel.get(chromosome);
 
         if (config.germlineOnly()) {
-            return new GermlinePipeline(region, config, executor, refSequence, variantFactory, samSlicerFactory).submit();
+            return new GermlinePipeline(region,
+                    config,
+                    executor,
+                    refSequence,
+                    samSlicerFactory,
+                    chromosomeHotspots,
+                    chromosomePanel).submit();
         } else {
-            return new SomaticPipeline(region, config, executor, refSequence, variantFactory, samSlicerFactory).submit();
+            return new SomaticPipeline(region,
+                    config,
+                    executor,
+                    refSequence,
+                    samSlicerFactory,
+                    chromosomeHotspots,
+                    chromosomePanel).submit();
         }
     }
 }

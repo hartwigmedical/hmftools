@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.AltContextSupplier;
@@ -33,15 +34,20 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
     private final RefSequence refSequence;
     private final SageVariantFactory variantFactory;
     private final SamSlicerFactory samSlicerFactory;
+    private final List<VariantHotspot> hotspots;
+    private final List<GenomeRegion> panelRegions;
 
-    public SomaticPipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
-            final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory, final SamSlicerFactory samSlicerFactory) {
+    SomaticPipeline(final GenomeRegion region, final SageConfig config, final Executor executor, final IndexedFastaSequenceFile refGenome,
+            final SamSlicerFactory samSlicerFactory, @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions) {
         this.region = region;
         this.config = config;
         this.executor = executor;
-        this.variantFactory = variantFactory;
+        this.variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
         this.samSlicerFactory = samSlicerFactory;
         this.refSequence = new RefSequence(region, refGenome);
+        this.hotspots = hotspots;
+        this.panelRegions = panelRegions;
     }
 
     @Override
@@ -61,8 +67,14 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
             final String sample = samples.get(i);
             final String bam = bams.get(i);
 
-            CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(new AltContextSupplier(config, sample, region, bam, refSequence, samSlicerFactory), executor);
+            CompletableFuture<List<AltContext>> candidateFuture = CompletableFuture.supplyAsync(new AltContextSupplier(config,
+                    sample,
+                    region,
+                    bam,
+                    refSequence,
+                    samSlicerFactory,
+                    hotspots,
+                    panelRegions), executor);
 
             tumorFutures.add(candidateFuture);
         }
@@ -80,7 +92,8 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
                     region,
                     config.referenceBam(),
                     refSequence,
-                    somaticPipelineData.normalCandidates(), samSlicerFactory).get();
+                    somaticPipelineData.normalCandidates(),
+                    samSlicerFactory).get();
         });
 
         return normalFuture.thenApply(aVoid -> {
@@ -90,6 +103,5 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
             return somaticPipelineData.results();
         });
     }
-
 
 }

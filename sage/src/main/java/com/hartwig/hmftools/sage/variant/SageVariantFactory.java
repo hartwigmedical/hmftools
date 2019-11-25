@@ -5,48 +5,35 @@ import java.util.Set;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.select.TierSelector;
 
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
 public class SageVariantFactory {
 
-    private final InPanel inPanel;
     private final FilterConfig config;
-    private final InHotspot inHotspot;
-    private final SageVariantTierFactory tierFactory;
+    private final TierSelector tierSelector;
 
-    public SageVariantFactory(@NotNull final Chromosome chromosome, @NotNull final FilterConfig config,
-            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions) {
+    public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions) {
         this.config = config;
-        this.inPanel = new InPanel(chromosome, panelRegions);
-        this.inHotspot = new InHotspot(chromosome, hotspots);
-        this.tierFactory = new SageVariantTierFactory(inPanel, inHotspot);
-    }
-
-    public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots,
-            @NotNull final ListMultimap<Chromosome, GenomeRegion> panelRegions) {
-        this.config = config;
-        this.inPanel = new InPanel(panelRegions);
-        this.inHotspot = new InHotspot(hotspots);
-        this.tierFactory = new SageVariantTierFactory(inPanel, inHotspot);
+        this.tierSelector = new TierSelector(panelRegions, hotspots);
     }
 
     @NotNull
     public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
 
-        final SageVariantTier tier = tierFactory.tier(normal);
+        final SageVariantTier tier = tierSelector.tier(normal);
         final SoftFilterConfig softConfig = softConfig(tier);
-        final Set<String> filters = tumorAltContexts.isEmpty() ? Sets.newHashSet() : filters(softConfig, normal, tumorAltContexts.get(0));
+        final Set<String> filters = tumorAltContexts.isEmpty() ? Sets.newHashSet() : filters(tier, softConfig, normal, tumorAltContexts.get(0));
 
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
@@ -64,9 +51,12 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    private Set<String> filters(@NotNull final SoftFilterConfig config, @NotNull final AltContext normal,
-            @NotNull final AltContext primaryTumor) {
+    private Set<String> filters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config, @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
+
+        if (tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.altSupport() >= this.config.hotspotAltSupportHardPass()) {
+            return result;
+        }
 
         if (primaryTumor.primaryReadContext().quality() < config.minTumorQual()) {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);

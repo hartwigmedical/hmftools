@@ -93,11 +93,11 @@ public class SageApplication implements AutoCloseable {
             final String contig = samSequenceRecord.getSequenceName();
             if (HumanChromosome.contains(contig)) {
                 int maxPosition = samSequenceRecord.getSequenceLength();
-                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
+//                contigContexts.add(runChromosome(contig, config.regionSliceSize(), maxPosition));
             }
         }
 
-        //        contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
+                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
         //                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
         //        contigContexts.add(runChromosome("15", config.regionSliceSize(), dictionary().getSequence("15").getSequenceLength()));
         //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));

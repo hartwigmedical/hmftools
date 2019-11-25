@@ -3,10 +3,13 @@ package com.hartwig.hmftools.sage.select;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
+@NotThreadSafe
 public class RegionSelector<R extends GenomeRegion> {
 
     private final List<R> regions;

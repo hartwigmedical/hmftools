@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.AltContextSupplier;
@@ -32,14 +33,18 @@ class GermlinePipeline implements Supplier<CompletableFuture<List<SageVariant>>>
     private final RefSequence refSequence;
     private final SageVariantFactory variantFactory;
     private final SamSlicerFactory samSlicerFactory;
+    private final List<VariantHotspot> hotspots;
+    private final List<GenomeRegion> panelRegions;
 
-    GermlinePipeline(final GenomeRegion region, final SageConfig config, final Executor executor,
-            final IndexedFastaSequenceFile refGenome, final SageVariantFactory variantFactory, final SamSlicerFactory samSlicerFactory) {
+    GermlinePipeline(final GenomeRegion region, final SageConfig config, final Executor executor, final IndexedFastaSequenceFile refGenome,
+            final SamSlicerFactory samSlicerFactory, final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions) {
         this.region = region;
         this.config = config;
         this.executor = executor;
-        this.variantFactory = variantFactory;
+        this.variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
         this.samSlicerFactory = samSlicerFactory;
+        this.hotspots = hotspots;
+        this.panelRegions = panelRegions;
         this.refSequence = new RefSequence(region, refGenome);
     }
 
@@ -51,7 +56,9 @@ class GermlinePipeline implements Supplier<CompletableFuture<List<SageVariant>>>
                 region,
                 config.referenceBam(),
                 refSequence,
-                samSlicerFactory), executor);
+                samSlicerFactory,
+                hotspots,
+                panelRegions), executor);
 
         return candidates.thenApply(aVoid -> candidates.join()
                 .stream()
