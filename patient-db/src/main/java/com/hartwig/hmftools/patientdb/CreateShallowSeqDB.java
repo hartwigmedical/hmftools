@@ -143,7 +143,7 @@ public class CreateShallowSeqDB {
 
     @NotNull
     private static List<RunContext> loadRunContexts(@NotNull String runsDirectory) throws IOException {
-        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
+        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), "shallow-seq");
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;

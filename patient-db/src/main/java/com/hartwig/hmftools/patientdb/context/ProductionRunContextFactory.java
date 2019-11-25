@@ -10,8 +10,8 @@ public final class ProductionRunContextFactory {
     }
 
     @NotNull
-    public static RunContext fromRunDirectory(@NotNull final String runDirectory) throws MalformedFileException {
-        final RunContext runContextFromMetaData = MetaDataResolver.fromMetaDataFile(runDirectory);
+    public static RunContext fromRunDirectory(@NotNull final String runDirectory, @NotNull String whichPackages) throws MalformedFileException {
+        final RunContext runContextFromMetaData = MetaDataResolver.fromMetaDataFile(runDirectory, whichPackages);
         if (runContextFromMetaData == null) {
             throw new MalformedFileException("Could not resolve run context from meta data!");
         }

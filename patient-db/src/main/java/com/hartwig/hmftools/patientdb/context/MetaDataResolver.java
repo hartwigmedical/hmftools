@@ -38,13 +38,13 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    static RunContext fromMetaDataFile(@NotNull final String runDirectory) {
+    static RunContext fromMetaDataFile(@NotNull final String runDirectory, @NotNull String whichPackages) {
         File metaDataFileP4 = new File(runDirectory + File.separator + METADATA_FILE_P4);
         File metaDataFileP5 = new File(runDirectory + File.separator + METADATA_FILE_P5);
 
         if (metaDataFileP4.exists()) {
             try {
-                return fromPv4MetaData(runDirectory, metaDataFileP4);
+                return fromPv4MetaData(runDirectory, metaDataFileP4, whichPackages);
             } catch (FileNotFoundException exception) {
                 LOGGER.warn("Could not find meta data file {} for run dir {}.", METADATA_FILE_P4, runDirectory);
                 return null;
@@ -63,7 +63,8 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
+    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile, @NotNull String whichPackages)
+            throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
         String refSample = fieldValue(json, REF_SAMPLE_ID_FIELD_P4);
@@ -81,8 +82,8 @@ final class MetaDataResolver {
             return null;
         }
 
-        // Always take the final (second) barcode of setName (assume this is the tumor barcode)
         String tumorBarcodeSample = Strings.EMPTY;
+        // Always take the final (second) barcode of setName (assume this is the tumor barcode)
         boolean containsBarcode = false;
         for (String setNamePart : setName.split("_")) {
             if (setNamePart.startsWith(BARCODE_START)) {
@@ -90,8 +91,10 @@ final class MetaDataResolver {
                 tumorBarcodeSample = setNamePart;
             }
         }
-        if (!containsBarcode) {
+        if (!containsBarcode && whichPackages.equals("shallow-seq")) {
             LOGGER.warn("No tumor barcode could be derived from set name for '{}'", setName);
+        } else if (!containsBarcode && whichPackages.equals("loading-clinical-data")) {
+            LOGGER.info("Run context is created for sample {} of set name {}. This sample had none tumor barcode. '", tumorSample, setName);
         }
 
         return new RunContextImpl(runDirectory, setName, refSample, tumorSample, tumorBarcodeSample);
