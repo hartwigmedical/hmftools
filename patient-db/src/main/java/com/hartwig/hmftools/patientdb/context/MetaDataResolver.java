@@ -31,6 +31,7 @@ final class MetaDataResolver {
     private static final String SET_NAME_FIELD_P5 = "runName";
 
     private static final String BARCODE_START = "FR";
+    private static final String BARCODE_START_OLD = "HMF";
 
     private static final Gson GSON = new GsonBuilder().create();
 
@@ -86,7 +87,7 @@ final class MetaDataResolver {
         // Always take the final (second) barcode of setName (assume this is the tumor barcode)
         boolean containsBarcode = false;
         for (String setNamePart : setName.split("_")) {
-            if (setNamePart.startsWith(BARCODE_START)) {
+            if (setNamePart.startsWith(BARCODE_START) || setNamePart.startsWith(BARCODE_START_OLD)) {
                 containsBarcode = true;
                 tumorBarcodeSample = setNamePart;
             }
