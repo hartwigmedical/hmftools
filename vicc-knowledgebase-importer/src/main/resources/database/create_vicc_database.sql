@@ -406,7 +406,7 @@ CREATE TABLE association
 CREATE TABLE associationVariant
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    variantName varchar(255) NOT NULL,
+    variantName varchar(2000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
