@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
@@ -55,7 +54,7 @@ public class SnvSnvMergeTest {
 
         consumer = new SageVariantList();
         final MnvFactory mnvFactory =
-                new MnvFactory(sequence, new SageVariantFactory(config, ArrayListMultimap.create(), ArrayListMultimap.create()));
+                new MnvFactory(sequence, new SageVariantFactory(config, Lists.newArrayList(), Lists.newArrayList()));
         victim = new SnvSnvMerge(consumer, mnvFactory);
         refBases = sequence.getSubsequenceAt("1", 1, 60).getBases();
     }

@@ -14,11 +14,11 @@ import org.jetbrains.annotations.NotNull;
 @NotThreadSafe
 public class TierSelector {
 
-    private final RegionSelector<GenomeRegion> regionSelector;
+    private final PanelSelector<GenomeRegion> regionSelector;
     private final PositionSelector<VariantHotspot> hotspotSelector;
 
     public TierSelector(final List<GenomeRegion> panel, final List<VariantHotspot> hotspots) {
-        this.regionSelector = new RegionSelector<>(panel);
+        this.regionSelector = new PanelSelector<>(panel);
         this.hotspotSelector = new PositionSelector<>(hotspots);
     }
 
@@ -41,7 +41,7 @@ public class TierSelector {
             return SageVariantTier.HOTSPOT;
         }
 
-        if (regionSelector.select(variant.position()).isPresent()) {
+        if (regionSelector.inPanel(variant.position(), variant.end())) {
             return SageVariantTier.PANEL;
         }
 
