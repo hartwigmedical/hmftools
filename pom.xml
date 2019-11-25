@@ -52,8 +52,8 @@
 
         <bachelor.version>1.9</bachelor.version>
         <sv-linx.version>1.6</sv-linx.version>
-        <amber.version>3.0</amber.version>
-        <cobalt.version>1.7</cobalt.version>
+        <amber.version>3.1</amber.version>
+        <cobalt.version>1.8</cobalt.version>
         <purple.version>2.34</purple.version>
         <sage.version>1.1</sage.version>
         <strelka-post-process.version>1.6</strelka-post-process.version>

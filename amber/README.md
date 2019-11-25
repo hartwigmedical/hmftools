@@ -137,7 +137,7 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
  
 # Version History and Download Links
 To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
-- Upcoming
+- [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.1)
   - Added `validation_stringency` parameter.
   - Added explicit `stringsAsFactors = T` to R script
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.0)
