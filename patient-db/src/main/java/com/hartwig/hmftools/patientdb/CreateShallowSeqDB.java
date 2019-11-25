@@ -153,13 +153,12 @@ public class CreateShallowSeqDB {
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(shallowSeqCsv, true));
         for (LimsShallowSeqData dataToAppend : shallowSeqDataToAppend) {
-            if (!dataToAppend.sampleBarcode().equals(Strings.EMPTY)) {
-                String outputStringForFile =
-                        dataToAppend.sampleBarcode() + DELIMITER + dataToAppend.sampleId() + DELIMITER + dataToAppend.purityShallowSeq()
-                                + DELIMITER + dataToAppend.hasReliableQuality() + DELIMITER + dataToAppend.hasReliablePurity() + "\n";
-                writer.write(outputStringForFile);
-                LOGGER.info("Sample barcode: {} is added to shallow seq db!", dataToAppend.sampleBarcode());
-            }
+            String outputStringForFile =
+                    dataToAppend.sampleBarcode() + DELIMITER + dataToAppend.sampleId() + DELIMITER + dataToAppend.purityShallowSeq()
+                            + DELIMITER + dataToAppend.hasReliableQuality() + DELIMITER + dataToAppend.hasReliablePurity() + "\n";
+            writer.write(outputStringForFile);
+            LOGGER.info("Sample barcode: {} is added to shallow seq db!", dataToAppend.sampleBarcode());
+
         }
         writer.close();
     }
