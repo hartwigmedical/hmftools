@@ -47,6 +47,10 @@ final class JsonFunctions {
     static List<String> stringList(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);
 
+        if (object.get(field).isJsonNull()) {
+            return Lists.newArrayList();
+        }
+
         List<String> values = Lists.newArrayList();
         if (object.get(field).isJsonPrimitive()) {
             values.add(string(object, field));
