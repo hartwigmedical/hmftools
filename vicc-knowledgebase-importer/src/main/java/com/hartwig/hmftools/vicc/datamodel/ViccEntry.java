@@ -19,7 +19,7 @@ public abstract class ViccEntry {
     @NotNull
     public abstract List<GeneIdentifier> geneIdentifiers();
 
-    @Nullable
+    @NotNull
     public abstract List<String> featureNames();
 
     @NotNull

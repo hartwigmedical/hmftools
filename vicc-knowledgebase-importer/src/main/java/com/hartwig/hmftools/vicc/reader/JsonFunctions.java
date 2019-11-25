@@ -15,23 +15,76 @@ final class JsonFunctions {
     private JsonFunctions() {
     }
 
+    @Nullable
+    static JsonObject optionalJsonObject(@NotNull JsonObject object, @NotNull String field) {
+        if (!object.has(field)) {
+            return null;
+        }
+
+        if (object.get(field).isJsonNull()) {
+            return null;
+        }
+
+        assert object.get(field).isJsonObject();
+        return object.getAsJsonObject(field);
+    }
+
+    @Nullable
+    static JsonArray optionalJsonArray(@NotNull JsonObject object, @NotNull String field) {
+        if (!object.has(field)) {
+            return null;
+        }
+
+        if (object.get(field).isJsonNull()) {
+            return null;
+        }
+
+        assert object.get(field).isJsonArray();
+        return object.getAsJsonArray(field);
+    }
+
+    @NotNull
+    static List<String> stringList(@NotNull JsonObject object, @NotNull String field) {
+        assert object.has(field);
+
+        List<String> values = Lists.newArrayList();
+        if (object.get(field).isJsonPrimitive()) {
+            values.add(string(object, field));
+        } else {
+            assert object.get(field).isJsonArray();
+            for (JsonElement element : object.getAsJsonArray(field)) {
+                values.add(element.getAsString());
+            }
+        }
+        return values;
+    }
+
     @NotNull
     static List<String> optionalStringList(@NotNull JsonObject object, @NotNull String field) {
         if (!object.has(field)) {
             return Lists.newArrayList();
         }
 
-        assert object.get(field).isJsonArray();
-        return jsonArrayToStringList(object.getAsJsonArray(field));
+        return stringList(object, field);
     }
 
     @NotNull
-    static List<String> jsonArrayToStringList(@NotNull JsonArray array) {
+    @Deprecated
+    static List<String> toStringList(@NotNull JsonArray array) {
         List<String> values = Lists.newArrayList();
         for (JsonElement element : array) {
             values.add(element.getAsString());
         }
         return values;
+    }
+
+    @NotNull
+    static String string(@NotNull JsonObject object, @NotNull String field) {
+        assert object.has(field);
+
+        JsonElement element = object.get(field);
+        assert element.isJsonPrimitive();
+        return element.getAsJsonPrimitive().getAsString();
     }
 
     @Nullable
@@ -40,22 +93,18 @@ final class JsonFunctions {
             return null;
         }
 
-        JsonElement element = object.get(field);
-        assert element.isJsonPrimitive();
-        return element.getAsJsonPrimitive().getAsString();
+        return string(object, field);
     }
 
     @Nullable
     static String nullableString(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);
-        JsonElement element = object.get(field);
 
-        if (element.isJsonNull()) {
+        if (object.get(field).isJsonNull()) {
             return null;
         }
 
-        assert element.isJsonPrimitive();
-        return element.getAsJsonPrimitive().getAsString();
+        return string(object, field);
     }
 
     @Nullable
@@ -64,13 +113,6 @@ final class JsonFunctions {
             return null;
         }
 
-        JsonElement element = object.get(field);
-
-        if (element.isJsonNull()) {
-            return null;
-        }
-
-        assert element.isJsonPrimitive();
-        return element.getAsJsonPrimitive().getAsString();
+        return nullableString(object, field);
     }
 }

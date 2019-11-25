@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.Collections;
 import java.util.List;
@@ -135,8 +135,8 @@ final class MolecularMatchObjectFactory {
                 .sources(createSource(objectMolecularMatch.getAsJsonArray("sources")))
                 .clinicalSignificance(objectMolecularMatch.getAsJsonPrimitive("clinicalSignificance").getAsString())
                 .id(objectMolecularMatch.getAsJsonPrimitive("id").getAsString())
-                .includeCondition0(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeCondition0")))
-                .includeCondition1(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeCondition1")))
+                .includeCondition0(toStringList(objectMolecularMatch.getAsJsonArray("includeCondition0")))
+                .includeCondition1(toStringList(objectMolecularMatch.getAsJsonArray("includeCondition1")))
                 .uniqueKey(objectMolecularMatch.getAsJsonPrimitive("uniqueKey").getAsString())
                 .civicValue(objectMolecularMatch.getAsJsonPrimitive("civic").getAsString())
                 .hashKey(objectMolecularMatch.getAsJsonPrimitive("hashKey").getAsString())
@@ -144,10 +144,10 @@ final class MolecularMatchObjectFactory {
                 .version(objectMolecularMatch.getAsJsonPrimitive("version").getAsString())
                 .includeMutation1(!objectMolecularMatch.has("includeMutation1")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeMutation1")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("includeMutation1")))
                 .includeMutation0(!objectMolecularMatch.has("includeMutation0")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeMutation0")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("includeMutation0")))
                 .guidelineBody(!objectMolecularMatch.has("guidelineBody")
                         ? null
                         : objectMolecularMatch.getAsJsonPrimitive("guidelineBody").getAsString())
@@ -162,20 +162,20 @@ final class MolecularMatchObjectFactory {
                         : objectMolecularMatch.getAsJsonPrimitive("guidelineVersion").getAsString())
                 .institution(!objectMolecularMatch.has("institution")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("institution")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("institution")))
                 .tier(objectMolecularMatch.getAsJsonPrimitive("tier").getAsString())
                 .tierExplanation(createTierExplanation(objectMolecularMatch.getAsJsonArray("tierExplanation")))
                 .mvld(objectMolecularMatch.getAsJsonPrimitive("mvld").getAsString())
                 .tags(createTags(objectMolecularMatch.getAsJsonArray("tags")))
-                .criteriaMet(jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("criteriaMet")))
+                .criteriaMet(toStringList(objectMolecularMatch.getAsJsonArray("criteriaMet")))
                 .biomarkerClass(objectMolecularMatch.getAsJsonPrimitive("biomarkerClass").getAsString())
                 .classification(createClassification(objectMolecularMatch.getAsJsonArray("classifications")))
                 .includeDrug1(!objectMolecularMatch.has("includeDrug1")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeDrug1")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("includeDrug1")))
                 .includeStage0(!objectMolecularMatch.has("includeStage0")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeStage0")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("includeStage0")))
                 .therapeuticContext(createTherapeuticContext(objectMolecularMatch.getAsJsonArray("therapeuticContext")))
                 .sixtier(objectMolecularMatch.getAsJsonPrimitive("sixtier").getAsString())
                 .noTherapyAvailable(!objectMolecularMatch.has("noTherapyAvailable")
@@ -183,12 +183,12 @@ final class MolecularMatchObjectFactory {
                         : objectMolecularMatch.getAsJsonPrimitive("noTherapyAvailable").getAsString())
                 .external_id(!objectMolecularMatch.has("external_id")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("external_id")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("external_id")))
                 .narrative(objectMolecularMatch.getAsJsonPrimitive("narrative").getAsString())
                 .expression(objectMolecularMatch.getAsJsonPrimitive("expression").getAsString())
                 .includeGene0(!objectMolecularMatch.has("includeDrug0")
                         ? null
-                        : jsonArrayToStringList(objectMolecularMatch.getAsJsonArray("includeGene0")))
+                        : toStringList(objectMolecularMatch.getAsJsonArray("includeGene0")))
                 .build();
     }
 
@@ -231,7 +231,7 @@ final class MolecularMatchObjectFactory {
             classificationList.add(ImmutableMolecularMatchClassification.builder()
                     .end(!classification.getAsJsonObject().has("End")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("End")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("End")))
                     .classification(classification.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
                     .classificationOverride(
                             !classification.getAsJsonObject().has("classificationOverride") || classification.getAsJsonObject()
@@ -241,19 +241,19 @@ final class MolecularMatchObjectFactory {
                                     : classification.getAsJsonObject().getAsJsonPrimitive("classificationOverride").getAsString())
                     .start(!classification.getAsJsonObject().has("Start")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Start")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Start")))
                     .chr(!classification.getAsJsonObject().has("Chr")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Chr")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Chr")))
                     .geneSymbol(!classification.getAsJsonObject().has("geneSymbol")
                             ? null
                             : classification.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
                     .pathology(!classification.getAsJsonObject().has("pathology")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("pathology")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("pathology")))
                     .ref(!classification.getAsJsonObject().has("Ref")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Ref")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Ref")))
                     .description(!classification.getAsJsonObject().has("description")
                             ? null
                             : classification.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
@@ -262,7 +262,7 @@ final class MolecularMatchObjectFactory {
                             : classification.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
                     .NucleotideChange(!classification.getAsJsonObject().has("NucleotideChange")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("NucleotideChange")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("NucleotideChange")))
                     .parents(!classification.getAsJsonObject().has("parents")
                             ? null
                             : createParents(classification.getAsJsonObject().getAsJsonArray("parents")))
@@ -274,16 +274,16 @@ final class MolecularMatchObjectFactory {
                             : classification.getAsJsonObject().getAsJsonPrimitive("drugsExperimentalCount").getAsString())
                     .exon(!classification.getAsJsonObject().has("Exon")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Exon")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Exon")))
                     .drugsApprovedOffLabelCount(!classification.getAsJsonObject().has("drugsApprovedOffLabelCount")
                             ? null
                             : classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOffLabelCount").getAsString())
                     .exonicFunc(!classification.getAsJsonObject().has("ExonicFunc")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("ExonicFunc")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("ExonicFunc")))
                     .popFreqMax(!classification.getAsJsonObject().has("PopFreqMax")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("PopFreqMax")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("PopFreqMax")))
                     .copyNumberType(!classification.getAsJsonObject().has("copyNumberType") || classification.getAsJsonObject()
                             .get("copyNumberType")
                             .isJsonNull() ? null : classification.getAsJsonObject().getAsJsonPrimitive("copyNumberType").getAsString())
@@ -295,10 +295,10 @@ final class MolecularMatchObjectFactory {
                             .isJsonNull() ? null : classification.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .dbSNP(!classification.getAsJsonObject().has("dbSNP")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("dbSNP")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("dbSNP")))
                     .alt(!classification.getAsJsonObject().has("Alt")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("Alt")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Alt")))
                     .name(!classification.getAsJsonObject().has("name")
                             ? null
                             : classification.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
@@ -307,7 +307,7 @@ final class MolecularMatchObjectFactory {
                             : classification.getAsJsonObject().getAsJsonPrimitive("rootTerm").getAsString())
                     .sources(!classification.getAsJsonObject().has("sources")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("sources")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("sources")))
                     .drugsApprovedOnLabelCount(!classification.getAsJsonObject().has("drugsApprovedOnLabelCount")
                             ? null
                             : classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOnLabelCount").getAsString())
@@ -319,10 +319,10 @@ final class MolecularMatchObjectFactory {
                             : classification.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
                     .COSMIC_ID(!classification.getAsJsonObject().has("COSMIC_ID")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("COSMIC_ID")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("COSMIC_ID")))
                     .transcripts(!classification.getAsJsonObject().has("transcripts")
                             ? null
-                            : jsonArrayToStringList(classification.getAsJsonObject().getAsJsonArray("transcripts")))
+                            : toStringList(classification.getAsJsonObject().getAsJsonArray("transcripts")))
                     .build());
         }
         return classificationList;
@@ -341,7 +341,7 @@ final class MolecularMatchObjectFactory {
             }
 
             parentsList.add(ImmutableMolecularMatchParents.builder()
-                    .transcripts(jsonArrayToStringList(parents.getAsJsonObject().getAsJsonArray("transcripts")))
+                    .transcripts(toStringList(parents.getAsJsonObject().getAsJsonArray("transcripts")))
                     .type(!parents.getAsJsonObject().has("type") || parents.getAsJsonObject().get("type").isJsonNull()
                             ? null
                             : parents.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
@@ -442,7 +442,7 @@ final class MolecularMatchObjectFactory {
             variantInfoList.add(ImmutableMolecularMatchVariantInfo.builder()
                     .classification(variantInfo.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
                     .name(variantInfo.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .consequences(jsonArrayToStringList(variantInfo.getAsJsonObject().getAsJsonArray("consequences")))
+                    .consequences(toStringList(variantInfo.getAsJsonObject().getAsJsonArray("consequences")))
                     .fusions(createFusions(variantInfo.getAsJsonObject().getAsJsonArray("fusions")))
                     .locations(createLocations(variantInfo.getAsJsonObject().getAsJsonArray("locations")))
                     .geneFusionPartner(variantInfo.getAsJsonObject().getAsJsonPrimitive("geneFusionPartner").getAsString())
@@ -529,7 +529,7 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<String> createArrayExonNumber(@NotNull JsonElement elementExonNumber) {
         if (elementExonNumber.getAsJsonObject().get("exonNumber").isJsonArray()) {
-            return jsonArrayToStringList(elementExonNumber.getAsJsonObject().getAsJsonArray("exonNumber"));
+            return toStringList(elementExonNumber.getAsJsonObject().getAsJsonArray("exonNumber"));
         } else {
             return Collections.singletonList(elementExonNumber.getAsJsonObject().getAsJsonPrimitive("exonNumber").getAsString());
         }
@@ -802,21 +802,21 @@ final class MolecularMatchObjectFactory {
                             ? null
                             : mutation.getAsJsonObject().get("transcriptRecognized").getAsString())
                     .description(mutation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .mutationType(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
+                    .mutationType(toStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
                     .src(mutation.getAsJsonObject().getAsJsonPrimitive("_src").getAsString())
-                    .sources(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("sources")))
-                    .synonyms(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("synonyms")))
+                    .sources(toStringList(mutation.getAsJsonObject().getAsJsonArray("sources")))
+                    .synonyms(toStringList(mutation.getAsJsonObject().getAsJsonArray("synonyms")))
                     .gRch37Location(createGRCH37Location(mutation.getAsJsonObject().getAsJsonArray("GRCh37_location")))
                     .uniprotTranscript(!mutation.getAsJsonObject().has("uniprotTranscript")
                             ? null
                             : mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
                     .geneSymbol(mutation.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
-                    .pathology(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("pathology")))
+                    .pathology(toStringList(mutation.getAsJsonObject().getAsJsonArray("pathology")))
                     .transcript(!mutation.getAsJsonObject().has("transcript")
                             ? null
                             : mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
                     .id(mutation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .cDNA(jsonArrayToStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
+                    .cDNA(toStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
                     .name(mutation.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
         }
@@ -841,22 +841,22 @@ final class MolecularMatchObjectFactory {
                             : createBreg(fusionData.getAsJsonObject().getAsJsonArray("Bgreg")))
                     .Bchr(!fusionData.getAsJsonObject().has("Bchr")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bchr")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bchr")))
                     .synonym(!fusionData.getAsJsonObject().has("synonym")
                             ? null
                             : fusionData.getAsJsonObject().getAsJsonPrimitive("synonym").getAsString())
                     .Agene(!fusionData.getAsJsonObject().has("Agene")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Agene")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Agene")))
                     .Btx(!fusionData.getAsJsonObject().has("Btx")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Btx")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Btx")))
                     .Achr(!fusionData.getAsJsonObject().has("Achr")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Achr")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Achr")))
                     .ins(!fusionData.getAsJsonObject().has("ins")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("ins")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("ins")))
                     .source(!fusionData.getAsJsonObject().has("source")
                             ? null
                             : fusionData.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
@@ -865,28 +865,28 @@ final class MolecularMatchObjectFactory {
                             : createAreg(fusionData.getAsJsonObject().getAsJsonArray("Agreg")))
                     .Bgene(!fusionData.getAsJsonObject().has("Bgene")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bgene")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bgene")))
                     .Acoord(!fusionData.getAsJsonObject().has("Acoord")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Acoord")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Acoord")))
                     .Bori(!fusionData.getAsJsonObject().has("Bori")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bori")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bori")))
                     .Aband(!fusionData.getAsJsonObject().has("Aband")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Aband")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Aband")))
                     .Bband(!fusionData.getAsJsonObject().has("Bband")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bband")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bband")))
                     .Aori(!fusionData.getAsJsonObject().has("Aori")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Aori")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Aori")))
                     .Atx(!fusionData.getAsJsonObject().has("Atx")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Atx")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Atx")))
                     .Bcoord(!fusionData.getAsJsonObject().has("Bcoord")
                             ? null
-                            : jsonArrayToStringList(fusionData.getAsJsonObject().getAsJsonArray("Bcoord")))
+                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bcoord")))
                     .Paper(!fusionData.getAsJsonObject().has("Paper")
                             ? null
                             : fusionData.getAsJsonObject().getAsJsonPrimitive("Paper").getAsString())
@@ -1045,8 +1045,8 @@ final class MolecularMatchObjectFactory {
                             : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("AA").getAsString())
                     .name(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .GRCh37_Chr_Start_Ref_Alt(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("GRCh37_Chr_Start_Ref_Alt").getAsString())
-                    .Synonyms(jsonArrayToStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("Synonyms")))
-                    .ProtCoords(jsonArrayToStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("ProtCoords")))
+                    .Synonyms(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("Synonyms")))
+                    .ProtCoords(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("ProtCoords")))
                     .NucleotideChange(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("NucleotideChange").getAsString())
                     .Exon(!wgsDataMap.getAsJsonObject().has("Exon")
                             ? null
@@ -1087,16 +1087,16 @@ final class MolecularMatchObjectFactory {
                             : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("dbSNP").getAsString())
                     .ClinVar_DIS(!wgsDataLocation.getAsJsonObject().has("ClinVar_DIS")
                             ? null
-                            : jsonArrayToStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_DIS")))
+                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_DIS")))
                     .ClinVar_SIG(!wgsDataLocation.getAsJsonObject().has("ClinVar_SIG")
                             ? null
-                            : jsonArrayToStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_SIG")))
+                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_SIG")))
                     .ClinVar_STATUS(!wgsDataLocation.getAsJsonObject().has("ClinVar_STATUS")
                             ? null
-                            : jsonArrayToStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_STATUS")))
+                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_STATUS")))
                     .ClinVar_DBID(!wgsDataLocation.getAsJsonObject().has("ClinVar_DBID")
                             ? null
-                            : jsonArrayToStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_DBID")))
+                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_DBID")))
                     .ExAC_NFE(!wgsDataLocation.getAsJsonObject().has("ExAC_NFE")
                             ? null
                             : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_NFE").getAsString())
@@ -1133,7 +1133,7 @@ final class MolecularMatchObjectFactory {
                     .End(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("End").getAsString())
                     .Start(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Start").getAsString())
                     .SiPhy_29way_logOdds(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("SiPhy_29way_logOdds").getAsString())
-                    .FullAA(jsonArrayToStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("FullAA")))
+                    .FullAA(toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("FullAA")))
                     .Ref(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Ref").getAsString())
                     .GERP_RS(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("GERP++_RS").getAsString())
                     .FATHMM(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("FATHMM").getAsString())
@@ -1165,7 +1165,7 @@ final class MolecularMatchObjectFactory {
                     .wgRna(!wgsDataLocation.getAsJsonObject().has("wgRna")
                             ? null
                             : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("wgRna").getAsString())
-                    .Gene(jsonArrayToStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("Gene")))
+                    .Gene(toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("Gene")))
                     .phyloP46way_placental(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("phyloP46way_placental").getAsString())
                     .key(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("_key").getAsString())
                     .targetScanS(!wgsDataLocation.getAsJsonObject().has("targetScanS")
@@ -1242,7 +1242,7 @@ final class MolecularMatchObjectFactory {
                     .aminoAcidChange(transcriptConsequences.getAsJsonObject().get("amino_acid_change").isJsonNull()
                             ? null
                             : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
-                    .txSites(jsonArrayToStringList(transcriptConsequences.getAsJsonObject().getAsJsonArray("txSites")))
+                    .txSites(toStringList(transcriptConsequences.getAsJsonObject().getAsJsonArray("txSites")))
                     .exonNumber(transcriptConsequences.getAsJsonObject().get("exonNumber").isJsonNull()
                             ? null
                             : createArrayExonNumber(transcriptConsequences))

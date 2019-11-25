@@ -31,7 +31,7 @@ public abstract class Association {
     @Nullable
     public abstract String sourceLink();
 
-    @Nullable
+    @NotNull
     public abstract List<String> publicationUrls();
 
     @Nullable

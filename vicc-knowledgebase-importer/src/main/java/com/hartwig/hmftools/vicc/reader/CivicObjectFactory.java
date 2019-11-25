@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.List;
 import java.util.Set;
@@ -103,9 +103,9 @@ final class CivicObjectFactory {
                 .civicActionabilityScore(objectCivic.get("civic_actionability_score").isJsonNull()
                         ? null
                         : objectCivic.getAsJsonPrimitive("civic_actionability_score").getAsString())
-                .clinvarEntries(jsonArrayToStringList(objectCivic.getAsJsonArray("clinvar_entries")))
+                .clinvarEntries(toStringList(objectCivic.getAsJsonArray("clinvar_entries")))
                 .lifecycleActions(createLifeCycleActions(objectCivic.getAsJsonObject("lifecycle_actions")))
-                .variantAliases(jsonArrayToStringList(objectCivic.getAsJsonArray("variant_aliases")))
+                .variantAliases(toStringList(objectCivic.getAsJsonArray("variant_aliases")))
                 .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull()
                         ? null
                         : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
@@ -115,8 +115,8 @@ final class CivicObjectFactory {
                 .evidenceItem(createEvidenceItems(objectCivic.getAsJsonArray("evidence_items")))
                 .sources(createCivicSource(objectCivic.getAsJsonArray("sources")))
                 .entrezId(objectCivic.getAsJsonPrimitive("entrez_id").getAsString())
-                .assertions(jsonArrayToStringList(objectCivic.getAsJsonArray("assertions")))
-                .hgvs_expressions(jsonArrayToStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
+                .assertions(toStringList(objectCivic.getAsJsonArray("assertions")))
+                .hgvs_expressions(toStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
                 .errors(createCivicError(objectCivic.getAsJsonObject("errors")))
                 .coordinates(createCoordinates(objectCivic.getAsJsonObject("coordinates")))
                 .type(objectCivic.getAsJsonPrimitive("type").getAsString())

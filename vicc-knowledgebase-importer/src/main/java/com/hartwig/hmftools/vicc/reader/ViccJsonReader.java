@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonObject;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -73,24 +76,14 @@ public final class ViccJsonReader {
             ViccDatamodelCheckerFactory.viccEntryChecker().check(viccEntryObject);
 
             ImmutableViccEntry.Builder viccEntryBuilder = ImmutableViccEntry.builder();
-            viccEntryBuilder.source(viccEntryObject.getAsJsonPrimitive("source").getAsString());
-            viccEntryBuilder.genes(jsonArrayToStringList(viccEntryObject.getAsJsonArray("genes")));
+            viccEntryBuilder.source(string(viccEntryObject, "source"));
+            viccEntryBuilder.genes(stringList(viccEntryObject, "genes"));
             viccEntryBuilder.geneIdentifiers(createGeneIdentifiers(viccEntryObject.getAsJsonArray("gene_identifiers")));
-
-            // SAGE records have no "feature names" while all other knowledgebases do have it.
-            if (viccEntryObject.has("feature_names")) {
-                JsonElement featureNames = viccEntryObject.get("feature_names");
-                if (featureNames.isJsonArray()) {
-                    viccEntryBuilder.featureNames(jsonArrayToStringList(featureNames.getAsJsonArray()));
-                } else if (featureNames.isJsonPrimitive()) {
-                    viccEntryBuilder.featureNames(Lists.newArrayList(featureNames.getAsJsonPrimitive().getAsString()));
-                }
-            }
-
+            viccEntryBuilder.featureNames(optionalStringList(viccEntryObject, "feature_names"));
             viccEntryBuilder.features(createFeatures(viccEntryObject.getAsJsonArray("features")));
             viccEntryBuilder.association(createAssociation(viccEntryObject.getAsJsonObject("association")));
-            viccEntryBuilder.tags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("tags")));
-            viccEntryBuilder.devTags(jsonArrayToStringList(viccEntryObject.getAsJsonArray("dev_tags")));
+            viccEntryBuilder.tags(stringList(viccEntryObject, "tags"));
+            viccEntryBuilder.devTags(stringList(viccEntryObject, "dev_tags"));
 
             if (viccEntryObject.has("cgi")) {
                 viccEntryBuilder.KbSpecificObject(CgiObjectFactory.create(viccEntryObject.getAsJsonObject("cgi")));
@@ -134,10 +127,9 @@ public final class ViccJsonReader {
             ViccDatamodelCheckerFactory.geneIdentifierChecker().check(geneIdentifierObject);
 
             geneIdentifierList.add(ImmutableGeneIdentifier.builder()
-                    .symbol(geneIdentifierObject.getAsJsonPrimitive("symbol").getAsString())
-                    .entrezId(geneIdentifierObject.getAsJsonPrimitive("entrez_id").getAsString())
-                    .ensemblGeneId(!geneIdentifierObject.get("ensembl_gene_id").isJsonNull() ? geneIdentifierObject.getAsJsonPrimitive(
-                            "ensembl_gene_id").getAsString() : null)
+                    .symbol(string(geneIdentifierObject, "symbol"))
+                    .entrezId(string(geneIdentifierObject, "entrez_id"))
+                    .ensemblGeneId(nullableString(geneIdentifierObject, "ensembl_gene_id"))
                     .build());
         }
 
@@ -167,27 +159,34 @@ public final class ViccJsonReader {
                     .geneSymbol(optionalNullableString(featureObject, "geneSymbol"))
                     .synonyms(optionalStringList(featureObject, "synonyms"))
                     .entrezId(optionalString(featureObject, "entrez_id"))
-                    .sequenceOntology(featureObject.has("sequence_ontology") ? createSequenceOntology(featureObject.getAsJsonObject(
-                            "sequence_ontology")) : null)
+                    .sequenceOntology(createSequenceOntology(optionalJsonObject(featureObject, "sequence_ontology")))
                     .links(optionalStringList(featureObject, "links"))
                     .description(optionalString(featureObject, "description"))
-                    .info(featureObject.has("info") ? createFeatureInfo(featureObject.getAsJsonObject("info")) : null)
-                    .attribute(featureObject.has("attributes") ? createFeatureAttribute(featureObject.getAsJsonObject("attributes")) : null)
+                    .info(createFeatureInfo(optionalJsonObject(featureObject, "info")))
+                    .attribute(createFeatureAttribute(optionalJsonObject(featureObject, "attributes")))
                     .build());
         }
 
         return featureList;
     }
 
-    @NotNull
-    private static FeatureInfo createFeatureInfo(@NotNull JsonObject featureInfoObject) {
+    @Nullable
+    private static FeatureInfo createFeatureInfo(@Nullable JsonObject featureInfoObject) {
+        if (featureInfoObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.featureInfoChecker().check(featureInfoObject);
 
-        return ImmutableFeatureInfo.builder().germlineOrSomatic(featureInfoObject.get("germline_or_somatic").getAsString()).build();
+        return ImmutableFeatureInfo.builder().germlineOrSomatic(string(featureInfoObject, "germline_or_somatic")).build();
     }
 
-    @NotNull
-    private static FeatureAttribute createFeatureAttribute(@NotNull JsonObject featureAttributeObject) {
+    @Nullable
+    private static FeatureAttribute createFeatureAttribute(@Nullable JsonObject featureAttributeObject) {
+        if (featureAttributeObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.featureAttributeChecker().check(featureAttributeObject);
 
         return ImmutableFeatureAttribute.builder()
@@ -219,18 +218,20 @@ public final class ViccJsonReader {
         return nullableString(attributeObject, "string_value");
     }
 
-    @NotNull
-    private static SequenceOntology createSequenceOntology(@NotNull JsonObject sequenceOntologyObject) {
+    @Nullable
+    private static SequenceOntology createSequenceOntology(@Nullable JsonObject sequenceOntologyObject) {
+        if (sequenceOntologyObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.sequenceOntologyChecker().check(sequenceOntologyObject);
 
         return ImmutableSequenceOntology.builder()
-                .hierarchy(sequenceOntologyObject.has("hierarchy")
-                        ? jsonArrayToStringList(sequenceOntologyObject.getAsJsonArray("hierarchy"))
-                        : null)
-                .soid(sequenceOntologyObject.getAsJsonPrimitive("soid").getAsString())
-                .parentSoid(sequenceOntologyObject.getAsJsonPrimitive("parent_soid").getAsString())
-                .name(sequenceOntologyObject.getAsJsonPrimitive("name").getAsString())
-                .parentName(sequenceOntologyObject.getAsJsonPrimitive("parent_name").getAsString())
+                .hierarchy(optionalStringList(sequenceOntologyObject, "hierarchy"))
+                .soid(string(sequenceOntologyObject, "soid"))
+                .parentSoid(string(sequenceOntologyObject, "parent_soid"))
+                .name(string(sequenceOntologyObject, "name"))
+                .parentName(string(sequenceOntologyObject, "parent_name"))
                 .build();
     }
 
@@ -239,34 +240,23 @@ public final class ViccJsonReader {
         ViccDatamodelCheckerFactory.associationChecker().check(associationObject);
 
         return ImmutableAssociation.builder()
+                // TODO Read VariantName array.
                 .variantName(associationObject.has("variant_name") && associationObject.get("variant_name").isJsonArray()
                         ? Strings.EMPTY
                         : associationObject.has("variant_name") && associationObject.get("variant_name").isJsonPrimitive()
                                 ? associationObject.getAsJsonPrimitive("variant_name").getAsString()
                                 : null)
                 .evidence(createEvidence(associationObject.getAsJsonArray("evidence")))
-                .evidenceLevel(associationObject.has("evidence_level") ? associationObject.getAsJsonPrimitive("evidence_level")
-                        .getAsString() : null)
-                .evidenceLabel(
-                        associationObject.has("evidence_label") && !associationObject.get("evidence_label").isJsonNull() ? associationObject
-                                .getAsJsonPrimitive("evidence_label")
-                                .getAsString() : null)
-                .responseType(associationObject.has("response_type") && !associationObject.get("response_type").isJsonNull()
-                        ? associationObject.getAsJsonPrimitive("response_type").getAsString()
-                        : null)
-                .drugLabels(associationObject.has("drug_labels") ? associationObject.getAsJsonPrimitive("drug_labels").getAsString() : null)
-                .sourceLink(associationObject.has("source_link") ? associationObject.getAsJsonPrimitive("source_link").getAsString() : null)
-                .publicationUrls(associationObject.has("publication_url") && associationObject.get("publication_url").isJsonPrimitive()
-                        ? Lists.newArrayList(associationObject.getAsJsonPrimitive("publication_url").getAsString())
-                        : associationObject.has("publication_url") && associationObject.get("publication_url").isJsonArray()
-                                ? Lists.newArrayList(associationObject.getAsJsonArray("publication_url").getAsString())
-                                : null)
-                .phenotype(associationObject.has("phenotype") ? createPhenotype(associationObject.getAsJsonObject("phenotype")) : null)
-                .description(associationObject.getAsJsonPrimitive("description").getAsString())
-                .environmentalContexts(associationObject.has("environmentalContexts")
-                        ? createEnvironmentalContexts(associationObject.getAsJsonArray("environmentalContexts"))
-                        : null)
-                .oncogenic(associationObject.has("oncogenic") ? associationObject.getAsJsonPrimitive("oncogenic").getAsString() : null)
+                .evidenceLevel(optionalString(associationObject, "evidence_level"))
+                .evidenceLabel(optionalNullableString(associationObject, "evidence_label"))
+                .responseType(optionalNullableString(associationObject, "response_type"))
+                .drugLabels(optionalString(associationObject, "drug_labels"))
+                .sourceLink(optionalString(associationObject, "source_link"))
+                .publicationUrls(optionalStringList(associationObject, "publication_url"))
+                .phenotype(createPhenotype(optionalJsonObject(associationObject, "phenotype")))
+                .description(string(associationObject, "description"))
+                .environmentalContexts(createEnvironmentalContexts(optionalJsonArray(associationObject, "environmentalContexts")))
+                .oncogenic(optionalString(associationObject, "oncogenic"))
                 .build();
     }
 
@@ -280,22 +270,23 @@ public final class ViccJsonReader {
             evidenceChecker.check(evidenceObject);
 
             evidenceList.add(ImmutableEvidence.builder()
-                    .info(!evidenceObject.get("info").isJsonNull() ? createEvidenceInfo(evidenceObject.getAsJsonObject("info")) : null)
+                    .info(createEvidenceInfo(optionalJsonObject(evidenceObject, "info")))
                     .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
-                    .description(!evidenceObject.get("description").isJsonNull() ? evidenceObject.getAsJsonPrimitive("description")
-                            .getAsString() : null)
+                    .description(nullableString(evidenceObject, "description"))
                     .build());
         }
         return evidenceList;
     }
 
-    @NotNull
-    private static EvidenceInfo createEvidenceInfo(@NotNull JsonObject evidenceInfoObject) {
+    @Nullable
+    private static EvidenceInfo createEvidenceInfo(@Nullable JsonObject evidenceInfoObject) {
+        if (evidenceInfoObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.evidenceInfoChecker().check(evidenceInfoObject);
 
-        return ImmutableEvidenceInfo.builder()
-                .publications(jsonArrayToStringList(evidenceInfoObject.getAsJsonArray("publications")))
-                .build();
+        return ImmutableEvidenceInfo.builder().publications(stringList(evidenceInfoObject, "publications")).build();
     }
 
     @NotNull
@@ -303,13 +294,17 @@ public final class ViccJsonReader {
         ViccDatamodelCheckerFactory.evidenceTypeChecker().check(evidenceTypeObject);
 
         return ImmutableEvidenceType.builder()
-                .sourceName(evidenceTypeObject.getAsJsonPrimitive("sourceName").getAsString())
-                .id(evidenceTypeObject.has("id") ? evidenceTypeObject.getAsJsonPrimitive("id").getAsString() : null)
+                .sourceName(string(evidenceTypeObject, "sourceName"))
+                .id(optionalString(evidenceTypeObject, "id"))
                 .build();
     }
 
-    @NotNull
-    private static List<EnvironmentalContext> createEnvironmentalContexts(@NotNull JsonArray environmentalContextArray) {
+    @Nullable
+    private static List<EnvironmentalContext> createEnvironmentalContexts(@Nullable JsonArray environmentalContextArray) {
+        if (environmentalContextArray == null) {
+            return null;
+        }
+
         List<EnvironmentalContext> environmentalContextList = Lists.newArrayList();
         ViccDatamodelChecker environmentalContextChecker = ViccDatamodelCheckerFactory.environmentalContextChecker();
 
@@ -318,64 +313,64 @@ public final class ViccJsonReader {
             environmentalContextChecker.check(environmentalContextObject);
 
             environmentalContextList.add(ImmutableEnvironmentalContext.builder()
-                    .term(environmentalContextObject.has("term")
-                            ? environmentalContextObject.getAsJsonPrimitive("term").getAsString()
-                            : null)
-                    .description(environmentalContextObject.getAsJsonPrimitive("description").getAsString())
-                    .taxonomy(environmentalContextObject.has("taxonomy") ? createTaxonomy(environmentalContextObject.getAsJsonObject(
-                            "taxonomy")) : null)
-                    .source(environmentalContextObject.has("source")
-                            ? environmentalContextObject.getAsJsonPrimitive("source").getAsString()
-                            : null)
-                    .usanStem(environmentalContextObject.has("usan_stem") ? environmentalContextObject.getAsJsonPrimitive("usan_stem")
-                            .getAsString() : null)
-                    .approvedCountries(environmentalContextObject.has("approved_countries") ? jsonArrayToStringList(
-                            environmentalContextObject.getAsJsonArray("approved_countries")) : Lists.newArrayList())
-                    .toxicity(environmentalContextObject.has("toxicity") ? environmentalContextObject.getAsJsonPrimitive("toxicity")
-                            .getAsString() : null)
-                    .id(environmentalContextObject.has("id") && !environmentalContextObject.get("id").isJsonNull()
-                            ? environmentalContextObject.getAsJsonPrimitive("id").getAsString()
-                            : null)
+                    .term(optionalString(environmentalContextObject, "term"))
+                    .description(string(environmentalContextObject, "description"))
+                    .taxonomy(createTaxonomy(optionalJsonObject(environmentalContextObject, "taxonomy")))
+                    .source(optionalString(environmentalContextObject, "source"))
+                    .usanStem(optionalString(environmentalContextObject, "usan_stem"))
+                    .approvedCountries(optionalStringList(environmentalContextObject, "approved_countries"))
+                    .toxicity(optionalString(environmentalContextObject, "toxicity"))
+                    .id(optionalNullableString(environmentalContextObject, "id"))
                     .build());
         }
         return environmentalContextList;
     }
 
-    @NotNull
-    private static Taxonomy createTaxonomy(@NotNull JsonObject taxonomyObject) {
+    @Nullable
+    private static Taxonomy createTaxonomy(@Nullable JsonObject taxonomyObject) {
+        if (taxonomyObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.taxonomyChecker().check(taxonomyObject);
 
         return ImmutableTaxonomy.builder()
-                .kingdom(taxonomyObject.getAsJsonPrimitive("kingdom").getAsString())
-                .directParent(taxonomyObject.getAsJsonPrimitive("direct-parent").getAsString())
-                .classs(taxonomyObject.getAsJsonPrimitive("class").getAsString())
-                .subClass(taxonomyObject.has("subclass") ? taxonomyObject.getAsJsonPrimitive("subclass").getAsString() : null)
-                .superClass(taxonomyObject.getAsJsonPrimitive("superclass").getAsString())
+                .kingdom(string(taxonomyObject, "kingdom"))
+                .directParent(string(taxonomyObject, "direct-parent"))
+                .classs(string(taxonomyObject, "class"))
+                .subClass(optionalString(taxonomyObject, "subclass"))
+                .superClass(string(taxonomyObject, "superclass"))
                 .build();
     }
 
-    @NotNull
-    private static Phenotype createPhenotype(@NotNull JsonObject phenotypeObject) {
+    @Nullable
+    private static Phenotype createPhenotype(@Nullable JsonObject phenotypeObject) {
+        if (phenotypeObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.phenotypeChecker().check(phenotypeObject);
 
         return ImmutablePhenotype.builder()
-                .type(phenotypeObject.has("type") ? createPhenotypeType(phenotypeObject.getAsJsonObject("type")) : null)
-                .description(phenotypeObject.getAsJsonPrimitive("description").getAsString())
-                .family(phenotypeObject.getAsJsonPrimitive("family").getAsString())
-                .id(phenotypeObject.has("id") ? phenotypeObject.getAsJsonPrimitive("id").getAsString() : null)
+                .type(createPhenotypeType(optionalJsonObject(phenotypeObject, "type")))
+                .description(string(phenotypeObject, "description"))
+                .family(string(phenotypeObject, "family"))
+                .id(optionalString(phenotypeObject, "id"))
                 .build();
     }
 
-    @NotNull
-    private static PhenotypeType createPhenotypeType(@NotNull JsonObject phenotypeTypeObject) {
+    @Nullable
+    private static PhenotypeType createPhenotypeType(@Nullable JsonObject phenotypeTypeObject) {
+        if (phenotypeTypeObject == null) {
+            return null;
+        }
+
         ViccDatamodelCheckerFactory.phenotypeTypeChecker().check(phenotypeTypeObject);
 
         return ImmutablePhenotypeType.builder()
-                .source(!phenotypeTypeObject.get("source").isJsonNull()
-                        ? phenotypeTypeObject.getAsJsonPrimitive("source").getAsString()
-                        : null)
-                .term(phenotypeTypeObject.getAsJsonPrimitive("term").getAsString())
-                .id(phenotypeTypeObject.getAsJsonPrimitive("id").getAsString())
+                .source(nullableString(phenotypeTypeObject, "source"))
+                .term(string(phenotypeTypeObject, "term"))
+                .id(string(phenotypeTypeObject, "id"))
                 .build();
     }
 }
