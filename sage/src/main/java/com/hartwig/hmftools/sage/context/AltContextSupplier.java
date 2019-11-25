@@ -80,14 +80,10 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
             slicer.slice(tumorReader, this::processFirstPass);
 
             // Add all valid alt contexts
-            for (final RefContext refContext : candidates.refContexts()) {
-                for (final AltContext altContext : refContext.alts()) {
-                    if (altContext.altSupport() >= config.filter().hardMinTumorAltSupport()) {
-                        altContext.setPrimaryReadCounterFromInterim();
-                        altContexts.add(altContext);
-                    }
-                }
-            }
+            candidates.refContexts().stream().flatMap(x -> x.alts().stream()).filter(this::altSupportPredicate).forEach(x -> {
+                x.setPrimaryReadCounterFromInterim();
+                altContexts.add(x);
+            });
 
             slicer.slice(tumorReader, this::processSecondPass);
 
@@ -95,20 +91,16 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
             throw new CompletionException(e);
         }
 
-        return hardQualFilter(altContexts);
+        return altContexts.stream().filter(this::qualPredicate).collect(Collectors.toList());
     }
 
-    @NotNull
-    private List<AltContext> hardQualFilter(@NotNull final List<AltContext> altContexts) {
-        return altContexts.stream().filter(x -> sufficientQuality(x) || sufficientAltSupportInHotspot(x)).collect(Collectors.toList());
+
+    private boolean altSupportPredicate(@NotNull final AltContext altContext) {
+        return altContext.altSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);
     }
 
-    private boolean sufficientQuality(@NotNull final AltContext context) {
-        return context.primaryReadContext().quality() >= config.filter().hardMinTumorQual();
-    }
-
-    private boolean sufficientAltSupportInHotspot(@NotNull final AltContext context) {
-        return tierSelector.isHotspot(context) && context.altSupport() >= config.filter().hotspotAltSupportHardPass();
+    private boolean qualPredicate(@NotNull final AltContext altContext) {
+        return altContext.primaryReadContext().quality() >= config.filter().hardMinTumorQual() || tierSelector.isHotspot(altContext);
     }
 
 }

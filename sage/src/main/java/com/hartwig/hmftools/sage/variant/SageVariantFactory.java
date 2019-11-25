@@ -54,10 +54,6 @@ public class SageVariantFactory {
     private Set<String> filters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config, @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
 
-        if (tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.altSupport() >= this.config.hotspotAltSupportHardPass()) {
-            return result;
-        }
-
         if (primaryTumor.primaryReadContext().quality() < config.minTumorQual()) {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
