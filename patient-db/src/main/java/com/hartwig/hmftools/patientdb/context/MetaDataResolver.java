@@ -94,7 +94,7 @@ final class MetaDataResolver {
         if (!containsBarcode && whichPackages.equals("shallow-seq")) {
             LOGGER.warn("No tumor barcode could be derived from set name for '{}'", setName);
         } else if (!containsBarcode && whichPackages.equals("loading-clinical-data")) {
-            LOGGER.info("Run context is created for sample {} of set name {}. This sample had none tumor barcode. '", tumorSample, setName);
+            LOGGER.info("Run context is created for sample {} of set name {}. This sample had none tumor barcode. ", tumorSample, setName);
         }
 
         return new RunContextImpl(runDirectory, setName, refSample, tumorSample, tumorBarcodeSample);
