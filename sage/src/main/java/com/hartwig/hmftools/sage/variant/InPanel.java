@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -14,6 +16,7 @@ import com.hartwig.hmftools.sage.select.RegionSelector;
 
 import org.jetbrains.annotations.NotNull;
 
+@NotThreadSafe
 class InPanel {
 
     private final Map<Chromosome, RegionSelector<GenomeRegion>> panelSelectorMap;

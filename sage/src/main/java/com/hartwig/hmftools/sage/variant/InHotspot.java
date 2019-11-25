@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.variant;
 
 import java.util.List;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -10,6 +12,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 
+@NotThreadSafe
 class InHotspot {
 
     private static final int DISTANCE = 5;

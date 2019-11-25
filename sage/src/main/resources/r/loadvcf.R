@@ -11,7 +11,10 @@ vcf_data_frame<- function(vcf) {
     vcf.geno = geno(vcf)
     vcf.ad = vcf.geno$AD
     vcf.fixed = fixed(vcf)
-
+    ann.df = as.data.frame(vcf.info$ANN) %>% group_by(group) %>% filter(row_number()== 1) %>% separate(value, sep = "\\|", into = c("alt", "impact","severity", "gene")) %>%
+      select(group, impact, gene)
+  
+  
     normalAD = unlist(lapply(vcf.ad[ ,1], paste0, collapse=","))
     tumorAD = unlist(lapply(vcf.ad[ ,2], paste0, collapse=","))
 
@@ -82,17 +85,18 @@ vcf_data_frame<- function(vcf) {
         readContextCentre = ifelse(nchar(readContext) > 50, substring(readContext, 26, nchar(readContext) - 25), "")
         )
 
-    return (vcf.df)
+    result = vcf.df %>% mutate(group = row_number()) %>% left_join(ann.df, by = "group")
+    
+    return (result)
 }
 
-
 sagePanelResult = data.frame()
-for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/")) {
+for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/", pattern = "*vcf.gz$")) {
   cat (file, "\n")
   vcf = readVcf(paste0("~/hmf/analysis/sagePanel/", file))
   vcfDF = vcf_data_frame(vcf) %>% mutate(sample = substr(file,1, 13))    
   sagePanelResult = bind_rows(sagePanelResult, vcfDF)
 }
 
-save(sagePanelResult, "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
+save(sagePanelResult, file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
 

@@ -23,12 +23,14 @@ public class SageVariantFactory {
     private final InPanel inPanel;
     private final FilterConfig config;
     private final InHotspot inHotspot;
+    private final SageVariantTierFactory tierFactory;
 
     public SageVariantFactory(@NotNull final Chromosome chromosome, @NotNull final FilterConfig config,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions) {
         this.config = config;
         this.inPanel = new InPanel(chromosome, panelRegions);
         this.inHotspot = new InHotspot(chromosome, hotspots);
+        this.tierFactory = new SageVariantTierFactory(inPanel, inHotspot);
     }
 
     public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots,
@@ -36,12 +38,13 @@ public class SageVariantFactory {
         this.config = config;
         this.inPanel = new InPanel(panelRegions);
         this.inHotspot = new InHotspot(hotspots);
+        this.tierFactory = new SageVariantTierFactory(inPanel, inHotspot);
     }
 
     @NotNull
     public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
 
-        final SageVariantTier tier = tier(normal);
+        final SageVariantTier tier = tierFactory.tier(normal);
         final SoftFilterConfig softConfig = softConfig(tier);
         final Set<String> filters = tumorAltContexts.isEmpty() ? Sets.newHashSet() : filters(softConfig, normal, tumorAltContexts.get(0));
 
@@ -58,17 +61,6 @@ public class SageVariantFactory {
             default:
                 return config.softWideFilter();
         }
-    }
-
-    @NotNull
-    private SageVariantTier tier(@NotNull final AltContext normal) {
-        if (inHotspot.isOnHotspot(normal)) {
-            return SageVariantTier.HOTSPOT;
-        }
-        if (inPanel.inPanel(normal)) {
-            return SageVariantTier.PANEL;
-        }
-        return SageVariantTier.WIDE;
     }
 
     @NotNull

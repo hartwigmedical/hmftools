@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantContextFactoryImpl;
+import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +42,7 @@ public class PipelineFactory {
         this.hotspots = hotspots;
         this.panel = panel;
         variantContextFactory =
-                config.germlineOnly() ? SageVariantContextFactoryImpl::germlineOnly : SageVariantContextFactoryImpl::pairedTumorNormal;
+                config.germlineOnly() ? SageVariantContextFactory::germlineOnly : SageVariantContextFactory::pairedTumorNormal;
     }
 
     public ChromosomePipeline create(@NotNull final String contig) throws IOException {
