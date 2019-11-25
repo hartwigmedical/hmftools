@@ -119,7 +119,15 @@ public class CreateShallowSeqDB {
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
             String purity = decimalFormat.format(purityContext.bestFit().purity());
 
-            if (currentShallowSeqData.isEmpty()) {
+            boolean inFile = false;
+            for (LimsShallowSeqData sample : currentShallowSeqData) {
+                if (sample.sampleBarcode().equals(sampleBarcode)) {
+                    LOGGER.warn("Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
+                            + " writing to shallow seq db!", setPath, sampleBarcode);
+                    inFile = true;
+                }
+            }
+            if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
                 shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
                         .sampleBarcode(sampleBarcode)
                         .sampleId(tumorSample)
@@ -128,25 +136,6 @@ public class CreateShallowSeqDB {
                         .hasReliablePurity(hasReliablePurity)
                         .build());
                 LOGGER.info("Set: {} is added to shallow list!", setPath);
-            } else {
-                boolean inFile = false;
-                for (LimsShallowSeqData sample : currentShallowSeqData) {
-                    if (sample.sampleBarcode().equals(sampleBarcode)) {
-                        LOGGER.warn("Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
-                                + " writing to shallow seq db!", setPath, sampleBarcode);
-                        inFile = true;
-                    }
-                }
-                if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
-                    shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
-                            .sampleBarcode(sampleBarcode)
-                            .sampleId(tumorSample)
-                            .purityShallowSeq(purity)
-                            .hasReliableQuality(hasReliableQuality)
-                            .hasReliablePurity(hasReliablePurity)
-                            .build());
-                    LOGGER.info("Set: {} is added to shallow list!", setPath);
-                }
             }
         }
         return shallowSeqDataToAppend;
