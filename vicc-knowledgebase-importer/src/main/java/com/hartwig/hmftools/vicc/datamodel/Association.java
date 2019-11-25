@@ -10,8 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Association {
 
-    @Nullable
-    public abstract String variantName();
+    @NotNull
+    public abstract List<String> variantNames();
 
     @NotNull
     public abstract List<Evidence> evidence();

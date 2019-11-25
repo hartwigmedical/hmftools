@@ -53,7 +53,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViccJsonReader {
@@ -240,12 +239,7 @@ public final class ViccJsonReader {
         ViccDatamodelCheckerFactory.associationChecker().check(associationObject);
 
         return ImmutableAssociation.builder()
-                // TODO Read VariantName array.
-                .variantName(associationObject.has("variant_name") && associationObject.get("variant_name").isJsonArray()
-                        ? Strings.EMPTY
-                        : associationObject.has("variant_name") && associationObject.get("variant_name").isJsonPrimitive()
-                                ? associationObject.getAsJsonPrimitive("variant_name").getAsString()
-                                : null)
+                .variantNames(optionalStringList(associationObject, "variant_name"))
                 .evidence(createEvidence(associationObject.getAsJsonArray("evidence")))
                 .evidenceLevel(optionalString(associationObject, "evidence_level"))
                 .evidenceLabel(optionalNullableString(associationObject, "evidence_label"))

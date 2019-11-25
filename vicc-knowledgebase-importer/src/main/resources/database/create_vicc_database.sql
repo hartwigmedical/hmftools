@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS link;
 DROP TABLE IF EXISTS sequenceOntology;
 DROP TABLE IF EXISTS hierarchy;
 DROP TABLE IF EXISTS association;
+DROP TABLE IF EXISTS associationVariant;
 DROP TABLE IF EXISTS evidence;
 DROP TABLE IF EXISTS evidenceInfo;
 DROP TABLE IF EXISTS evidenceType;
@@ -348,7 +349,7 @@ CREATE TABLE featureAttribute
 CREATE TABLE provenance
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    provenanceName varchar(255) NOT NULL,
+    provenanceName varchar(2000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -391,7 +392,6 @@ CREATE TABLE hierarchy
 CREATE TABLE association
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    variantName varchar(255),
     evidenceLevel varchar(255),
     evidenceLabel varchar(255),
     responseType varchar(255),
@@ -401,6 +401,14 @@ CREATE TABLE association
     oncogenic varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE associationVariant
+(   id int NOT NULL AUTO_INCREMENT,
+    associationId int NOT NULL,
+    variantName varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
 CREATE TABLE evidence

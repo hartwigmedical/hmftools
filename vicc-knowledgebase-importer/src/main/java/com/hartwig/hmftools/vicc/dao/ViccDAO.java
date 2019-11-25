@@ -2,6 +2,7 @@ package com.hartwig.hmftools.vicc.dao;
 
 import static com.hartwig.hmftools.vicc.database.Tables.APPROVEDCOUNTRY;
 import static com.hartwig.hmftools.vicc.database.Tables.ASSOCIATION;
+import static com.hartwig.hmftools.vicc.database.Tables.ASSOCIATIONVARIANT;
 import static com.hartwig.hmftools.vicc.database.Tables.DEVTAG;
 import static com.hartwig.hmftools.vicc.database.Tables.ENVIRONMENTALCONTEXT;
 import static com.hartwig.hmftools.vicc.database.Tables.EVIDENCE;
@@ -88,10 +89,12 @@ public class ViccDAO {
 
     @Nullable
     private static Settings settings(@NotNull String catalog) {
-        return !catalog.equals(DEV_CATALOG)
-                ? new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
-                .withOutput(catalog)))
-                : null;
+        if (catalog.equals(DEV_CATALOG)) {
+            return null;
+        }
+
+        return new Settings().withRenderMapping(new RenderMapping().withSchemata(new MappedSchema().withInput(DEV_CATALOG)
+                .withOutput(catalog)));
     }
 
     private ViccDAO(@NotNull final DSLContext context) {
@@ -130,6 +133,7 @@ public class ViccDAO {
         SageDAOFunctions.deleteAll(context);
 
         // Below tables are part of Association
+        context.deleteFrom(ASSOCIATIONVARIANT).execute();
         context.deleteFrom(EVIDENCETYPE).execute();
         context.deleteFrom(EVIDENCEINFO).execute();
         context.deleteFrom(EVIDENCE).execute();
@@ -337,7 +341,6 @@ public class ViccDAO {
 
     private void writeAssociation(int viccEntryId, @NotNull Association association) {
         int id = context.insertInto(ASSOCIATION,
-                ASSOCIATION.VARIANTNAME,
                 ASSOCIATION.EVIDENCELEVEL,
                 ASSOCIATION.EVIDENCELABEL,
                 ASSOCIATION.RESPONSETYPE,
@@ -346,8 +349,7 @@ public class ViccDAO {
                 ASSOCIATION.DESCRIPTION,
                 ASSOCIATION.ONCOGENIC,
                 ASSOCIATION.VICCENTRYID)
-                .values(association.variantName(),
-                        association.evidenceLevel(),
+                .values(association.evidenceLevel(),
                         association.evidenceLabel(),
                         association.responseType(),
                         association.drugLabels(),
@@ -358,10 +360,19 @@ public class ViccDAO {
                 .returning(ASSOCIATION.ID)
                 .fetchOne()
                 .getValue(ASSOCIATION.ID);
+        writeVariantNames(id, association.variantNames());
         writeEvidences(id, association.evidence());
         writePublicationsUrls(id, association.publicationUrls());
         writePhenotype(id, association.phenotype());
         writeEnvironmentalContexts(id, association.environmentalContexts());
+    }
+
+    private void writeVariantNames(int associationId, @NotNull List<String> variantNames) {
+        for (String variant : variantNames) {
+            context.insertInto(ASSOCIATIONVARIANT, ASSOCIATIONVARIANT.VARIANTNAME, ASSOCIATIONVARIANT.ASSOCIATIONID)
+                    .values(variant, associationId)
+                    .execute();
+        }
     }
 
     private void writeEvidences(int associationId, @NotNull List<Evidence> evidences) {
