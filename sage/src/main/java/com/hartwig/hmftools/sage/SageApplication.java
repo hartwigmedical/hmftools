@@ -70,24 +70,8 @@ public class SageApplication implements AutoCloseable {
         final CommandLine cmd = createCommandLine(args, options);
         this.config = SageConfig.createConfig(cmd);
 
-        final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
-        if (!config.panel().isEmpty()) {
-            LOGGER.info("Reading gene panel bed file: {}", config.panel());
-            SortedSetMultimap<String, GenomeRegion> bed = BEDFileLoader.fromBedFile(config.panel());
-            for (String contig : bed.keySet()) {
-                if (HumanChromosome.contains(contig)) {
-                    panel.putAll(HumanChromosome.fromString(contig), bed.get(contig));
-                }
-            }
-        }
-
-        final ListMultimap<Chromosome, VariantHotspot> hotspots;
-        if (!config.hotspots().isEmpty()) {
-            LOGGER.info("Reading hotspot vcf: {}", config.hotspots());
-            hotspots = VariantHotspotFile.readFromVCF(config.hotspots());
-        } else {
-            hotspots = ArrayListMultimap.create();
-        }
+        final ListMultimap<Chromosome, VariantHotspot> hotspots = readHotspots();
+        final ListMultimap<Chromosome, GenomeRegion> panel = panelWithHotspots(hotspots);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
@@ -136,8 +120,8 @@ public class SageApplication implements AutoCloseable {
         //                        contigContexts.add(runSingleRegion("22", 29453442, 29453442));
         //                                contigContexts.add(runSingleRegion("17", 22_200_000, 22_300_000));
         //                                        contigContexts.add(runSingleRegion("10", 42350000, 42450000));
-        contigContexts.add(runSingleRegion("18", 48609831, 48609831));
-        contigContexts.add(runSingleRegion("12", 50479067, 50479067));
+        //        contigContexts.add(runSingleRegion("18", 48609831, 48609831));
+        //        contigContexts.add(runSingleRegion("12", 50479067, 50479067));
 
         for (Future<ChromosomePipeline> contigContext : contigContexts) {
             final ChromosomePipeline chromosomePipeline = contigContext.get();
@@ -198,5 +182,55 @@ public class SageApplication implements AutoCloseable {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
+
+
+    @NotNull
+    private ListMultimap<Chromosome, VariantHotspot> readHotspots() throws IOException {
+        if (!config.hotspots().isEmpty()) {
+            LOGGER.info("Reading hotspot vcf: {}", config.hotspots());
+            return VariantHotspotFile.readFromVCF(config.hotspots());
+        } else {
+            return ArrayListMultimap.create();
+        }
+    }
+
+
+    @NotNull
+    private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(@NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots)
+            throws IOException {
+
+        final ListMultimap<Chromosome, GenomeRegion> initialPanel = readPanel();
+        final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
+
+        for (HumanChromosome chromosome : HumanChromosome.values()) {
+            final GenomeRegions builder = new GenomeRegions(chromosome.toString());
+            if (initialPanel.containsKey(chromosome)) {
+                initialPanel.get(chromosome).forEach(x -> builder.addRegion(x.start(), x.end()));
+            }
+            if (hotspots.containsKey(chromosome)) {
+                hotspots.get(chromosome).forEach(x -> builder.addPosition(x.position()));
+            }
+
+            result.putAll(chromosome, builder.build());
+        }
+
+        return result;
+    }
+
+    private ListMultimap<Chromosome, GenomeRegion> readPanel() throws IOException {
+        final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
+        if (!config.panel().isEmpty()) {
+            LOGGER.info("Reading gene panel bed file: {}", config.panel());
+            SortedSetMultimap<String, GenomeRegion> bed = BEDFileLoader.fromBedFile(config.panel());
+            for (String contig : bed.keySet()) {
+                if (HumanChromosome.contains(contig)) {
+                    panel.putAll(HumanChromosome.fromString(contig), bed.get(contig));
+                }
+            }
+        }
+
+        return panel;
+    }
+
 
 }
