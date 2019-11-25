@@ -191,13 +191,9 @@ public class ViccDAO {
         }
     }
 
-    private void writeFeatureNames(int viccEntryId, @Nullable List<String> featureNames) {
-        if (featureNames != null) {
-            for (String featureName : featureNames) {
-                context.insertInto(FEATURENAME, FEATURENAME.NAMEOFFEATURE, FEATURENAME.VICCENTRYID)
-                        .values(featureName, viccEntryId)
-                        .execute();
-            }
+    private void writeFeatureNames(int viccEntryId, @NotNull List<String> featureNames) {
+        for (String featureName : featureNames) {
+            context.insertInto(FEATURENAME, FEATURENAME.NAMEOFFEATURE, FEATURENAME.VICCENTRYID).values(featureName, viccEntryId).execute();
         }
     }
 
@@ -331,13 +327,11 @@ public class ViccDAO {
         }
     }
 
-    private void writeHierarchy(int sequenceOntologyId, @Nullable List<String> hierarchies) {
-        if (hierarchies != null) {
-            for (String hierarchy : hierarchies) {
-                context.insertInto(HIERARCHY, HIERARCHY.HIERARCHYNAME, HIERARCHY.SEQUENCEONTOLOGYID)
-                        .values(hierarchy, sequenceOntologyId)
-                        .execute();
-            }
+    private void writeHierarchy(int sequenceOntologyId, @NotNull List<String> hierarchies) {
+        for (String hierarchy : hierarchies) {
+            context.insertInto(HIERARCHY, HIERARCHY.HIERARCHYNAME, HIERARCHY.SEQUENCEONTOLOGYID)
+                    .values(hierarchy, sequenceOntologyId)
+                    .execute();
         }
     }
 
@@ -364,13 +358,13 @@ public class ViccDAO {
                 .returning(ASSOCIATION.ID)
                 .fetchOne()
                 .getValue(ASSOCIATION.ID);
-        writeEvidence(id, association.evidence());
+        writeEvidences(id, association.evidence());
         writePublicationsUrls(id, association.publicationUrls());
         writePhenotype(id, association.phenotype());
         writeEnvironmentalContexts(id, association.environmentalContexts());
     }
 
-    private void writeEvidence(int associationId, @NotNull List<Evidence> evidences) {
+    private void writeEvidences(int associationId, @NotNull List<Evidence> evidences) {
         for (Evidence evidence : evidences) {
             int id = context.insertInto(EVIDENCE, EVIDENCE.DESCRIPTION, EVIDENCE.ASSOCIATIONID)
                     .values(evidence.description(), associationId)
@@ -398,13 +392,11 @@ public class ViccDAO {
                 .execute();
     }
 
-    private void writePublicationsUrls(int associationId, @Nullable List<String> publicationsUrls) {
-        if (publicationsUrls != null) {
-            for (String publicationUrl : publicationsUrls) {
-                context.insertInto(PUBLICATIONURL, PUBLICATIONURL.URLOFPUBLICATION, PUBLICATIONURL.ASSOCIATIONID)
-                        .values(publicationUrl, associationId)
-                        .execute();
-            }
+    private void writePublicationsUrls(int associationId, @NotNull List<String> publicationsUrls) {
+        for (String publicationUrl : publicationsUrls) {
+            context.insertInto(PUBLICATIONURL, PUBLICATIONURL.URLOFPUBLICATION, PUBLICATIONURL.ASSOCIATIONID)
+                    .values(publicationUrl, associationId)
+                    .execute();
         }
     }
 
