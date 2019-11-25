@@ -1,10 +1,16 @@
 package com.hartwig.hmftools.vicc.reader;
 
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -19,6 +25,8 @@ import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
+import com.hartwig.hmftools.vicc.datamodel.FeatureAttribute;
+import com.hartwig.hmftools.vicc.datamodel.FeatureInfo;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableAssociation;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEnvironmentalContext;
@@ -26,6 +34,8 @@ import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidence;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableEvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableFeature;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableFeatureAttribute;
+import com.hartwig.hmftools.vicc.datamodel.ImmutableFeatureInfo;
 import com.hartwig.hmftools.vicc.datamodel.ImmutableGeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotype;
 import com.hartwig.hmftools.vicc.datamodel.ImmutablePhenotypeType;
@@ -144,39 +154,25 @@ public final class ViccJsonReader {
             featureChecker.check(featureObject);
 
             featureList.add(ImmutableFeature.builder()
-                    .name(featureObject.has("name") ? featureObject.getAsJsonPrimitive("name").getAsString() : null)
-                    .biomarkerType(featureObject.has("biomarker_type")
-                            ? featureObject.getAsJsonPrimitive("biomarker_type").getAsString()
-                            : null)
-                    .referenceName(featureObject.has("referenceName")
-                            ? featureObject.getAsJsonPrimitive("referenceName").getAsString()
-                            : null)
-                    .chromosome(featureObject.has("chromosome") ? featureObject.getAsJsonPrimitive("chromosome").getAsString() : null)
-                    .start(featureObject.has("start") && !featureObject.get("start").isJsonNull()
-                            ? featureObject.getAsJsonPrimitive("start").getAsString()
-                            : null)
-                    .end(featureObject.has("end") && !featureObject.get("end").isJsonNull() ? featureObject.getAsJsonPrimitive("end")
-                            .getAsString() : null)
-                    .ref(featureObject.has("ref") && !featureObject.get("ref").isJsonNull() ? featureObject.getAsJsonPrimitive("ref")
-                            .getAsString() : null)
-                    .alt(featureObject.has("alt") && !featureObject.get("alt").isJsonNull() ? featureObject.getAsJsonPrimitive("alt")
-                            .getAsString() : null)
-                    // TODO Read provenance!
-                    .provenance(Lists.newArrayList())
-                    .provenanceRule(featureObject.has("provenance_rule")
-                            ? featureObject.getAsJsonPrimitive("provenance_rule").getAsString()
-                            : null)
-                    .geneSymbol(featureObject.has("geneSymbol") && !featureObject.get("geneSymbol").isJsonNull()
-                            ? featureObject.getAsJsonPrimitive("geneSymbol").getAsString()
-                            : null)
-                    .synonyms(featureObject.has("synonyms") ? jsonArrayToStringList(featureObject.getAsJsonArray("synonyms")) : null)
-                    .entrezId(featureObject.has("entrez_id") ? featureObject.getAsJsonPrimitive("entrez_id").getAsString() : null)
+                    .name(optionalString(featureObject, "name"))
+                    .biomarkerType(optionalString(featureObject, "biomarker_type"))
+                    .referenceName(optionalString(featureObject, "referenceName"))
+                    .chromosome(optionalString(featureObject, "chromosome"))
+                    .start(optionalNullableString(featureObject, "start"))
+                    .end(optionalNullableString(featureObject, "end"))
+                    .ref(optionalNullableString(featureObject, "ref"))
+                    .alt(optionalNullableString(featureObject, "alt"))
+                    .provenance(optionalStringList(featureObject, "provenance"))
+                    .provenanceRule(optionalString(featureObject, "provenance_rule"))
+                    .geneSymbol(optionalNullableString(featureObject, "geneSymbol"))
+                    .synonyms(optionalStringList(featureObject, "synonyms"))
+                    .entrezId(optionalString(featureObject, "entrez_id"))
                     .sequenceOntology(featureObject.has("sequence_ontology") ? createSequenceOntology(featureObject.getAsJsonObject(
                             "sequence_ontology")) : null)
-                    .links(featureObject.has("links") ? jsonArrayToStringList(featureObject.getAsJsonArray("links")) : null)
-                    .description(featureObject.has("description") ? featureObject.getAsJsonPrimitive("description").getAsString() : null)
-                    // TODO Add 'attributes'
-                    // TODO Add 'info'
+                    .links(optionalStringList(featureObject, "links"))
+                    .description(optionalString(featureObject, "description"))
+                    .info(featureObject.has("info") ? createFeatureInfo(featureObject.getAsJsonObject("info")) : null)
+                    .attribute(featureObject.has("attributes") ? createFeatureAttribute(featureObject.getAsJsonObject("attributes")) : null)
                     .build());
         }
 
@@ -184,17 +180,57 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static SequenceOntology createSequenceOntology(@NotNull JsonObject objectSequenceOntology) {
-        ViccDatamodelCheckerFactory.sequenceOntologyChecker().check(objectSequenceOntology);
+    private static FeatureInfo createFeatureInfo(@NotNull JsonObject featureInfoObject) {
+        ViccDatamodelCheckerFactory.featureInfoChecker().check(featureInfoObject);
+
+        return ImmutableFeatureInfo.builder().germlineOrSomatic(featureInfoObject.get("germline_or_somatic").getAsString()).build();
+    }
+
+    @NotNull
+    private static FeatureAttribute createFeatureAttribute(@NotNull JsonObject featureAttributeObject) {
+        ViccDatamodelCheckerFactory.featureAttributeChecker().check(featureAttributeObject);
+
+        return ImmutableFeatureAttribute.builder()
+                .aminoAcidChange(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("amino_acid_change")))
+                .germline(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("germline")))
+                .partnerGene(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("partner_gene")))
+                .description(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("description")))
+                .exons(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("exons")))
+                .notes(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("notes")))
+                .cosmic(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("cosmic")))
+                .effect(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("effect")))
+                .cnvType(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("cnv_type")))
+                .id(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("id")))
+                .cytoband(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("cytoband")))
+                .variantType(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("variant_type")))
+                .dnaChange(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("dna_change")))
+                .codons(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("codons")))
+                .chromosomeBasedCnv(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("chromosome_based_cnv")))
+                .transcript(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("transcript")))
+                .descriptionType(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("description_type")))
+                .chromosome(extractStringValueFromAttribute(featureAttributeObject.getAsJsonObject("chromosome")))
+                .build();
+    }
+
+    @Nullable
+    private static String extractStringValueFromAttribute(@NotNull JsonObject attributeObject) {
+        ViccDatamodelCheckerFactory.featureAttributeObjectChecker().check(attributeObject);
+
+        return nullableString(attributeObject, "string_value");
+    }
+
+    @NotNull
+    private static SequenceOntology createSequenceOntology(@NotNull JsonObject sequenceOntologyObject) {
+        ViccDatamodelCheckerFactory.sequenceOntologyChecker().check(sequenceOntologyObject);
 
         return ImmutableSequenceOntology.builder()
-                .hierarchy(objectSequenceOntology.has("hierarchy")
-                        ? jsonArrayToStringList(objectSequenceOntology.getAsJsonArray("hierarchy"))
+                .hierarchy(sequenceOntologyObject.has("hierarchy")
+                        ? jsonArrayToStringList(sequenceOntologyObject.getAsJsonArray("hierarchy"))
                         : null)
-                .soid(objectSequenceOntology.getAsJsonPrimitive("soid").getAsString())
-                .parentSoid(objectSequenceOntology.getAsJsonPrimitive("parent_soid").getAsString())
-                .name(objectSequenceOntology.getAsJsonPrimitive("name").getAsString())
-                .parentName(objectSequenceOntology.getAsJsonPrimitive("parent_name").getAsString())
+                .soid(sequenceOntologyObject.getAsJsonPrimitive("soid").getAsString())
+                .parentSoid(sequenceOntologyObject.getAsJsonPrimitive("parent_soid").getAsString())
+                .name(sequenceOntologyObject.getAsJsonPrimitive("name").getAsString())
+                .parentName(sequenceOntologyObject.getAsJsonPrimitive("parent_name").getAsString())
                 .build();
     }
 

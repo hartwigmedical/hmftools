@@ -43,7 +43,7 @@ public abstract class Feature {
     @Nullable
     public abstract String geneSymbol();
 
-    @Nullable
+    @NotNull
     public abstract List<String> synonyms();
 
     @Nullable
@@ -52,9 +52,16 @@ public abstract class Feature {
     @Nullable
     public abstract SequenceOntology sequenceOntology();
 
-    @Nullable
+    @NotNull
     public abstract List<String> links();
 
     @Nullable
     public abstract String description();
+
+    @Nullable
+    public abstract FeatureInfo info();
+
+    @Nullable
+    public abstract FeatureAttribute attribute();
+
 }

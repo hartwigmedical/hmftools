@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS featureName;
 DROP TABLE IF EXISTS tag;
 DROP TABLE IF EXISTS devTag;
 DROP TABLE IF EXISTS feature;
+DROP TABLE IF EXISTS featureInfo;
+DROP TABLE IF EXISTS featureAttribute;
 DROP TABLE IF EXISTS provenance;
 DROP TABLE IF EXISTS synonym;
 DROP TABLE IF EXISTS link;
@@ -308,6 +310,39 @@ CREATE TABLE feature
     description varchar(2000),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE featureInfo
+(   id int NOT NULL AUTO_INCREMENT,
+    featureId int NOT NULL,
+    germlineOrSomatic varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (featureId) REFERENCES feature(id)
+);
+
+CREATE TABLE featureAttribute
+(   id int NOT NULL AUTO_INCREMENT,
+    featureId int NOT NULL,
+    aminoAcidChange varchar(255),
+    germline varchar(255),
+    partnerGene varchar(255),
+    description varchar(255),
+    exons varchar(255),
+    notes varchar(255),
+    cosmic varchar(255),
+    effect varchar(255),
+    cnvType varchar(255),
+    featureAttributeId varchar(255),
+    cytoband varchar(255),
+    variantType varchar(255),
+    dnaChange varchar(255),
+    codons varchar(255),
+    chromosomeBasedCnv varchar(255),
+    transcript varchar(255),
+    descriptionType varchar(255),
+    chromosome varchar(255),
+    PRIMARY KEY (id),
+    FOREIGN KEY (featureId) REFERENCES feature(id)
 );
 
 CREATE TABLE provenance

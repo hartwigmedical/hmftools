@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.vicc.database.Tables.EVIDENCE;
 import static com.hartwig.hmftools.vicc.database.Tables.EVIDENCEINFO;
 import static com.hartwig.hmftools.vicc.database.Tables.EVIDENCETYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.FEATURE;
+import static com.hartwig.hmftools.vicc.database.Tables.FEATUREATTRIBUTE;
+import static com.hartwig.hmftools.vicc.database.Tables.FEATUREINFO;
 import static com.hartwig.hmftools.vicc.database.Tables.FEATURENAME;
 import static com.hartwig.hmftools.vicc.database.Tables.GENE;
 import static com.hartwig.hmftools.vicc.database.Tables.GENEIDENTIFIER;
@@ -35,6 +37,8 @@ import com.hartwig.hmftools.vicc.datamodel.Evidence;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceInfo;
 import com.hartwig.hmftools.vicc.datamodel.EvidenceType;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
+import com.hartwig.hmftools.vicc.datamodel.FeatureAttribute;
+import com.hartwig.hmftools.vicc.datamodel.FeatureInfo;
 import com.hartwig.hmftools.vicc.datamodel.GeneIdentifier;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.Phenotype;
@@ -67,6 +71,7 @@ import org.jooq.impl.DSL;
 public class ViccDAO {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccJsonSQLImporter.class);
+
     private static final String DEV_CATALOG = "vicc_test";
 
     @NotNull
@@ -110,7 +115,7 @@ public class ViccDAO {
     }
 
     public void deleteAll() {
-        LOGGER.info("Deleting all from vicc db");
+        LOGGER.info("Deleting all from VICC db");
 
         // Note: The order should be "from branch to root" to avoid constraint violation.
         BRCADAOFunctions.deleteAll(context);
@@ -136,6 +141,8 @@ public class ViccDAO {
         context.deleteFrom(ENVIRONMENTALCONTEXT).execute();
 
         // Below tables are part of Feature
+        context.deleteFrom(FEATUREINFO).execute();
+        context.deleteFrom(FEATUREATTRIBUTE).execute();
         context.deleteFrom(PROVENANCE).execute();
         context.deleteFrom(SYNONYM).execute();
         context.deleteFrom(LINK).execute();
@@ -226,10 +233,63 @@ public class ViccDAO {
                     .returning(FEATURE.ID)
                     .fetchOne()
                     .getValue(FEATURE.ID);
+            writeFeatureInfo(id, feature.info());
+            writeFeatureAttribute(id, feature.attribute());
             writeProvenance(id, feature.provenance());
             writeSynonyms(id, feature.synonyms());
             writeLinks(id, feature.links());
             writeSequenceOntology(id, feature.sequenceOntology());
+        }
+    }
+
+    private void writeFeatureInfo(int featureId, @Nullable FeatureInfo featureInfo) {
+        if (featureInfo != null) {
+            context.insertInto(FEATUREINFO, FEATUREINFO.GERMLINEORSOMATIC, FEATUREINFO.FEATUREID)
+                    .values(featureInfo.germlineOrSomatic(), featureId);
+        }
+    }
+
+    private void writeFeatureAttribute(int featureId, @Nullable FeatureAttribute featureAttribute) {
+        if (featureAttribute != null) {
+            context.insertInto(FEATUREATTRIBUTE,
+                    FEATUREATTRIBUTE.AMINOACIDCHANGE,
+                    FEATUREATTRIBUTE.GERMLINE,
+                    FEATUREATTRIBUTE.PARTNERGENE,
+                    FEATUREATTRIBUTE.DESCRIPTION,
+                    FEATUREATTRIBUTE.EXONS,
+                    FEATUREATTRIBUTE.NOTES,
+                    FEATUREATTRIBUTE.COSMIC,
+                    FEATUREATTRIBUTE.EFFECT,
+                    FEATUREATTRIBUTE.CNVTYPE,
+                    FEATUREATTRIBUTE.FEATUREATTRIBUTEID,
+                    FEATUREATTRIBUTE.CYTOBAND,
+                    FEATUREATTRIBUTE.VARIANTTYPE,
+                    FEATUREATTRIBUTE.DNACHANGE,
+                    FEATUREATTRIBUTE.CODONS,
+                    FEATUREATTRIBUTE.CHROMOSOMEBASEDCNV,
+                    FEATUREATTRIBUTE.TRANSCRIPT,
+                    FEATUREATTRIBUTE.DESCRIPTIONTYPE,
+                    FEATUREATTRIBUTE.CHROMOSOME,
+                    FEATUREINFO.FEATUREID)
+                    .values(featureAttribute.aminoAcidChange(),
+                            featureAttribute.germline(),
+                            featureAttribute.partnerGene(),
+                            featureAttribute.description(),
+                            featureAttribute.exons(),
+                            featureAttribute.notes(),
+                            featureAttribute.cosmic(),
+                            featureAttribute.effect(),
+                            featureAttribute.cnvType(),
+                            featureAttribute.id(),
+                            featureAttribute.cytoband(),
+                            featureAttribute.variantType(),
+                            featureAttribute.dnaChange(),
+                            featureAttribute.codons(),
+                            featureAttribute.chromosomeBasedCnv(),
+                            featureAttribute.transcript(),
+                            featureAttribute.descriptionType(),
+                            featureAttribute.chromosome(),
+                            featureId);
         }
     }
 
@@ -239,19 +299,15 @@ public class ViccDAO {
         }
     }
 
-    private void writeSynonyms(int featureId, @Nullable List<String> synonyms) {
-        if (synonyms != null) {
-            for (String synonym : synonyms) {
-                context.insertInto(SYNONYM, SYNONYM.SYNONYMNAME, SYNONYM.FEATUREID).values(synonym, featureId).execute();
-            }
+    private void writeSynonyms(int featureId, @NotNull List<String> synonyms) {
+        for (String synonym : synonyms) {
+            context.insertInto(SYNONYM, SYNONYM.SYNONYMNAME, SYNONYM.FEATUREID).values(synonym, featureId).execute();
         }
     }
 
-    private void writeLinks(int featureId, @Nullable List<String> links) {
-        if (links != null) {
-            for (String link : links) {
-                context.insertInto(LINK, LINK.LINKNAME, LINK.FEATUREID).values(link, featureId).execute();
-            }
+    private void writeLinks(int featureId, @NotNull List<String> links) {
+        for (String link : links) {
+            context.insertInto(LINK, LINK.LINKNAME, LINK.FEATUREID).values(link, featureId).execute();
         }
     }
 
