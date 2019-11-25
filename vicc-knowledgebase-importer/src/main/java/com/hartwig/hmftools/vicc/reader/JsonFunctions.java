@@ -7,10 +7,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class JsonFunctions {
+
+    private static final Logger LOGGER = LogManager.getLogger(JsonFunctions.class);
 
     private JsonFunctions() {
     }
@@ -57,7 +61,10 @@ final class JsonFunctions {
         } else {
             assert object.get(field).isJsonArray();
             for (JsonElement element : object.getAsJsonArray(field)) {
-                values.add(element.getAsString());
+                if (!element.isJsonPrimitive()) {
+                    LOGGER.warn("Converting array value for {} into string for element {}", field, element);
+                }
+                values.add(element.getAsJsonPrimitive().getAsString());
             }
         }
         return values;
@@ -87,7 +94,9 @@ final class JsonFunctions {
         assert object.has(field);
 
         JsonElement element = object.get(field);
-        assert element.isJsonPrimitive();
+        if (!element.isJsonPrimitive()) {
+            LOGGER.warn("Converting {} to String for element {}.", field, element);
+        }
         return element.getAsJsonPrimitive().getAsString();
     }
 
