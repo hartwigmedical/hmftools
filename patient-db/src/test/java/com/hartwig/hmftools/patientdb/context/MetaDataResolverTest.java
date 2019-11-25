@@ -8,6 +8,7 @@ import java.io.File;
 
 import com.google.common.io.Resources;
 
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class MetaDataResolverTest {
@@ -49,7 +50,7 @@ public class MetaDataResolverTest {
         assertEquals("CPCT12345678T", runContext.tumorSample());
         assertEquals(setName, runContext.setName());
         assertEquals(runDirectory, runContext.runDirectory());
-        assertEquals("", runContext.tumorBarcodeSample());
+        assertEquals(Strings.EMPTY, runContext.tumorBarcodeSample());
     }
 
     @Test
