@@ -346,7 +346,7 @@ public class ViccDAO {
                 ASSOCIATION.EVIDENCELEVEL,
                 ASSOCIATION.EVIDENCELABEL,
                 ASSOCIATION.RESPONSETYPE,
-                ASSOCIATION.DRUGLABEL,
+                ASSOCIATION.DRUGLABELS,
                 ASSOCIATION.SOURCELINK,
                 ASSOCIATION.DESCRIPTION,
                 ASSOCIATION.ONCOGENIC,
@@ -463,7 +463,7 @@ public class ViccDAO {
 
     private void writeApprovedCountries(int environmentalContextsId, @NotNull List<String> approvedCountries) {
         for (String approvesCountry : approvedCountries) {
-            context.insertInto(APPROVEDCOUNTRY, APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME, APPROVEDCOUNTRY.ENVIRONMENTCONTEXTID)
+            context.insertInto(APPROVEDCOUNTRY, APPROVEDCOUNTRY.APPROVEDCOUNTRYNAME, APPROVEDCOUNTRY.ENVIRONMENTALCONTEXTID)
                     .values(approvesCountry, environmentalContextsId)
                     .execute();
         }
@@ -477,7 +477,7 @@ public class ViccDAO {
                     TAXONOMY.CLASS,
                     TAXONOMY.SUBCLASS,
                     TAXONOMY.SUPERCLASS,
-                    TAXONOMY.ENVIRONMENTCONTEXTID)
+                    TAXONOMY.ENVIRONMENTALCONTEXTID)
                     .values(taxonomy.kingdom(),
                             taxonomy.directParent(),
                             taxonomy.classs(),

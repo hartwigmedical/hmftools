@@ -479,22 +479,22 @@ CREATE TABLE environmentalContext
 
 CREATE TABLE approvedCountry
 (   id int NOT NULL AUTO_INCREMENT,
-    environmentContextId int NOT NULL,
+    environmentalContextId int NOT NULL,
     approvedCountryName varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentContextId) REFERENCES environmentalContext(id)
+    FOREIGN KEY (environmentalContextId) REFERENCES environmentalContext(id)
 );
 
 CREATE TABLE taxonomy
 (   id int NOT NULL AUTO_INCREMENT,
-    environmentContextId int NOT NULL,
+    environmentalContextId int NOT NULL,
     kingdom varchar(225) NOT NULL,
     directParent varchar(225) NOT NULL,
     class varchar(225) NOT nULL,
     subClass varchar(225),
     superClass varchar(225) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentContextId) REFERENCES environmentalContext(id)
+    FOREIGN KEY (environmentalContextId) REFERENCES environmentalContext(id)
 );
 
 CREATE TABLE sage
