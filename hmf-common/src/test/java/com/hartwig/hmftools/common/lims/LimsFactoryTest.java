@@ -15,7 +15,6 @@ import java.util.Set;
 
 import com.google.common.io.Resources;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LimsFactoryTest {
@@ -111,7 +110,7 @@ public class LimsFactoryTest {
     @Test
     public void readCorrectlyShallowSeqPurity() throws IOException {
         Map<String, LimsShallowSeqData> shallowSeqPuritySample =
-                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.csv");
+                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity_new.csv");
         assertEquals(3, shallowSeqPuritySample.size());
 
         final String sample = "SAMP01011234T";
