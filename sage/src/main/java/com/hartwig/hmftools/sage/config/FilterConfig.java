@@ -61,8 +61,13 @@ public interface FilterConfig {
 
     int hardMinTumorAltSupport();
 
+    //TODO: Rename this... it isn't a hard filter
     default int hardMaxNormalAltSupport() {
         return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
+    }
+
+    default int hotspotMinTumorReadContextSupportToSkipQualCheck() {
+        return 5;
     }
 
     @NotNull

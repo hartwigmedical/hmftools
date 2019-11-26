@@ -50,6 +50,8 @@ vcf_data_frame<- function(vcf) {
       normalRCCFull = normalRCC[, 1],
       normalRCCPartial = normalRCC[, 2],
       normalRCCRealigned = normalRCC[, 3],
+      normalRCCShortened = normalRCC[, 4],
+      normalRCCLengthened = normalRCC[, 5],
       normalRCCCoverage = normalRCC[, 6],
       tumorRCCFull = tumorRCC[, 1],
       tumorRCCPartial = tumorRCC[, 2],
@@ -100,3 +102,5 @@ for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/", pattern = "
 
 save(sagePanelResult, file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
 
+load( file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
+jon = sagePanelResult %>% filter(tier == 'HOTSPOT', filter == 'PASS')
