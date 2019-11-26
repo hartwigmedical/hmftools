@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
@@ -33,15 +34,16 @@ import htsjdk.variant.vcf.VCFConstants;
 
 public class SageVariantContextFactory {
 
+    private static final double HET_CUTOFF = 0.1;
+
     @NotNull
     public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
         final AltContext normal = entry.normal();
 
-        final List<Allele> alleles = createAlleles(normal);
-        final Genotype normalGenotype = createGenotype(alleles, normal);
+        final Genotype normalGenotype = createGenotype(normal);
         final List<Genotype> genotypes = Collections.singletonList(normalGenotype);
         final ReadContextCounter normalCounter = normal.primaryReadContext();
-        return createContext(entry, alleles, genotypes, normalCounter);
+        return createContext(entry, createAlleles(normal), genotypes, normalCounter);
     }
 
     @NotNull
@@ -53,16 +55,12 @@ public class SageVariantContextFactory {
 
         final AltContext firstTumor = tumorContexts.get(0);
 
-        final Allele ref = Allele.create(normal.ref(), true);
-        final Allele alt = Allele.create(normal.alt(), false);
-        final List<Allele> alleles = Lists.newArrayList(ref, alt);
-        final Genotype normalGenotype = createGenotype(alleles, normal);
-
-        final List<Genotype> genotypes = tumorContexts.stream().map(x -> createGenotype(alleles, x)).collect(Collectors.toList());
+        final Genotype normalGenotype = createGenotype(normal);
+        final List<Genotype> genotypes = tumorContexts.stream().map(SageVariantContextFactory::createGenotype).collect(Collectors.toList());
         genotypes.add(0, normalGenotype);
 
         final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
-        return createContext(entry, alleles, genotypes, firstTumorCounter);
+        return createContext(entry, createAlleles(entry.normal()), genotypes, firstTumorCounter);
     }
 
     @NotNull
@@ -104,14 +102,7 @@ public class SageVariantContextFactory {
     }
 
     @NotNull
-    private static List<Allele> createAlleles(@NotNull final VariantHotspot variant) {
-        final Allele ref = Allele.create(variant.ref(), true);
-        final Allele alt = Allele.create(variant.alt(), false);
-        return Lists.newArrayList(ref, alt);
-    }
-
-    @NotNull
-    private static Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
+    private static Genotype createGenotype(@NotNull final AltContext evidence) {
         ReadContextCounter readContextCounter = evidence.primaryReadContext();
 
         return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
@@ -119,8 +110,31 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_QUALITY, readContextCounter.qual())
                 .attribute(READ_CONTEXT_COUNT, readContextCounter.rcc())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, readContextCounter.improperPair())
-                .alleles(alleles)
+                .alleles(createGenotypeAlleles(evidence))
                 .make();
+    }
+
+    @NotNull
+    private static List<Allele> createAlleles(@NotNull final VariantHotspot variant) {
+        final Allele ref = Allele.create(variant.ref(), true);
+        final Allele alt = Allele.create(variant.alt(), false);
+        return Lists.newArrayList(ref, alt);
+    }
+
+    @NotNull
+    private static List<Allele> createGenotypeAlleles(@NotNull final AltContext evidence) {
+        final Allele ref = Allele.create(evidence.ref(), true);
+        final Allele alt = Allele.create(evidence.alt(), false);
+
+
+
+        if (Doubles.lessThan(evidence.altAF(), HET_CUTOFF)) {
+            return Lists.newArrayList(ref, ref);
+        } else if (Doubles.lessThan(evidence.refAF(), HET_CUTOFF)) {
+            return Lists.newArrayList(alt, alt);
+        }
+
+        return Lists.newArrayList(ref, alt);
     }
 
 }

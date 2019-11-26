@@ -68,7 +68,7 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
         }
 
-        if (Doubles.greaterThan(normal.supportVaf(), config.maxGermlineVaf())) {
+        if (Doubles.greaterThan(normal.altAF(), config.maxGermlineVaf())) {
             result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
         }
 
