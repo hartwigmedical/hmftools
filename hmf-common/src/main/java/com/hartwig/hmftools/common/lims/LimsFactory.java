@@ -31,9 +31,9 @@ public final class LimsFactory {
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
     private static final String LIMS_JSON_FILE = "lims.json";
-    private static final String PRE_LIMS_ARRIVAL_DATES_FILE = "pre_lims_arrival_dates.csv";
-    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_FILE = "samples_without_sampling_date.csv";
-    private static final String LIMS_SHALLOW_SEQ = "shallow_seq_purity.csv";
+    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates.csv";
+    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_CSV = "samples_without_sampling_date.csv";
+    private static final String LIMS_SHALLOW_SEQ_CSV = "shallow_seq_purity.csv";
 
     private static final String FIELD_SEPARATOR = ",";
 
@@ -47,10 +47,10 @@ public final class LimsFactory {
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
 
         Map<String, LocalDate> preLIMSArrivalDates =
-                readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
+                readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_CSV);
         Set<String> samplesWithoutSamplingDate =
-                readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
-        Map<String, LimsShallowSeqData> shallowSeqPerSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ);
+                readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_CSV);
+        Map<String, LimsShallowSeqData> shallowSeqPerSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_CSV);
         return new Lims(dataPerSampleBarcode, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqPerSample);
     }
 
