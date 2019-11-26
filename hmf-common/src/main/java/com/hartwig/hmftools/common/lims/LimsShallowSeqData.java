@@ -18,7 +18,7 @@ public abstract class LimsShallowSeqData {
     @NotNull
     public abstract String purityShallowSeq();
 
-    public abstract boolean hasReliablePurity();
-
     public abstract boolean hasReliableQuality();
+
+    public abstract boolean hasReliablePurity();
 }

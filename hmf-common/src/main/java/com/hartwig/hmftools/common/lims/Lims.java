@@ -140,16 +140,17 @@ public class Lims {
     @NotNull
     public String purityShallowSeq(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-
+        LOGGER.info(sampleData);
         if (sampleData != null) {
             boolean purityShallowExecuted = shallowSeqExecuted(sampleBarcode);
-            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleId(sampleBarcode));
+            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleBarcode);
 
             if (purityShallowExecuted && shallowSeq == null) {
                 LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleBarcode + "!");
             } else {
                 if (purityShallowExecuted) {
-                    if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
+                    LOGGER.info(shallowSeq.hasReliablePurity());
+                    if (!shallowSeq.hasReliablePurity()) {
                         return "below detection threshold";
                     } else {
                         try {
