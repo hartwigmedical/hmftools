@@ -46,12 +46,17 @@ public final class LimsFactory {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
 
-        Map<String, LocalDate> preLIMSArrivalDates =
-                readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_CSV);
+        Map<String, LocalDate> preLIMSArrivalDates = readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_CSV);
         Set<String> samplesWithoutSamplingDate =
                 readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_CSV);
-        Map<String, LimsShallowSeqData> shallowSeqPerSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_CSV);
-        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqPerSample);
+        Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
+                readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_CSV);
+
+        return new Lims(dataPerSampleBarcode,
+                dataPerSubmission,
+                preLIMSArrivalDates,
+                samplesWithoutSamplingDate,
+                shallowSeqPerSampleBarcode);
     }
 
     @NotNull
@@ -62,13 +67,13 @@ public final class LimsFactory {
     @NotNull
     @VisibleForTesting
     static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
-        final Map<String, LimsShallowSeqData> shallowSeqPerSample = Maps.newHashMap();
+        final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode = Maps.newHashMap();
         final List<String> lines =
                 com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, 5);
             if (parts.length == 5) {
-                shallowSeqPerSample.put(parts[0],
+                shallowSeqPerSampleBarcode.put(parts[0],
                         ImmutableLimsShallowSeqData.of(parts[0],
                                 parts[1],
                                 parts[2],
@@ -78,7 +83,7 @@ public final class LimsFactory {
                 LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
             }
         }
-        return shallowSeqPerSample;
+        return shallowSeqPerSampleBarcode;
     }
 
     @NotNull

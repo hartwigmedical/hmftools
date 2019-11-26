@@ -26,16 +26,17 @@ public class Lims {
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
     @NotNull
-    private final Map<String, LimsShallowSeqData> shallowSeqPerSample;
+    private final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode;
 
     Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
-            @NotNull final Set<String> samplesWithoutSamplingDate, @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSample) {
+            @NotNull final Set<String> samplesWithoutSamplingDate,
+            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
         this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
-        this.shallowSeqPerSample = shallowSeqPerSample;
+        this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
     }
 
     public int sampleBarcodeCount() {
@@ -143,7 +144,7 @@ public class Lims {
         LOGGER.info(sampleData);
         if (sampleData != null) {
             boolean purityShallowExecuted = shallowSeqExecuted(sampleBarcode);
-            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleBarcode);
+            LimsShallowSeqData shallowSeq = shallowSeqPerSampleBarcode.get(sampleBarcode);
 
             if (purityShallowExecuted && shallowSeq == null) {
                 LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleBarcode + "!");
