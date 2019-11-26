@@ -256,16 +256,13 @@ public final class ViccJsonReader {
 
     @NotNull
     private static Evidence createEvidence(@NotNull JsonArray evidenceArray) {
-        ViccDatamodelChecker evidenceChecker = ViccDatamodelCheckerFactory.evidenceChecker();
-
         // There is a 1-1 relation between association and evidence.
         if (evidenceArray.size() != 1) {
             LOGGER.warn("Evidence array with size unequal to 1 found: {}", evidenceArray);
         }
 
         JsonObject evidenceObject = evidenceArray.get(0).getAsJsonObject();
-
-        evidenceChecker.check(evidenceObject);
+        ViccDatamodelCheckerFactory.evidenceChecker().check(evidenceObject);
 
         return ImmutableEvidence.builder()
                 .info(createEvidenceInfo(optionalJsonObject(evidenceObject, "info")))
