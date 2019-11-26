@@ -46,6 +46,10 @@ class MnvFactory {
         result.localPhaseSet(left.localPhaseSet());
         result.synthetic(true);
 
+        if (left.isPassing() && right.isPassing()) {
+            result.filters().clear();
+        }
+
         return result;
 
     }
