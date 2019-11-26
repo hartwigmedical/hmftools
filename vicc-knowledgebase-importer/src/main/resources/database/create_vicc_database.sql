@@ -248,14 +248,14 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE viccEntry
 (   id int NOT NULL AUTO_INCREMENT,
-    source varchar(255) NOT NULL,
+    source varchar(50) NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE gene
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    geneName varchar(255) NOT NULL,
+    geneName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -263,9 +263,9 @@ CREATE TABLE gene
 CREATE TABLE geneIdentifier
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    symbol varchar(255) NOT NULL,
-    entrezId varchar(255) NOT NULL,
-    ensemblGeneId varchar(255),
+    symbol varchar(20) NOT NULL,
+    entrezId varchar(20) NOT NULL,
+    ensemblGeneId varchar(20),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -273,7 +273,7 @@ CREATE TABLE geneIdentifier
 CREATE TABLE featureName
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    nameOfFeature varchar(2500),
+    nameOfFeature varchar(2000),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -281,7 +281,7 @@ CREATE TABLE featureName
 CREATE TABLE tag
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    tagName varchar(255) NOT NULL,
+    tagName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -289,7 +289,7 @@ CREATE TABLE tag
 CREATE TABLE devTag
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    devTagName varchar(255) NOT NULL,
+    devTagName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -298,17 +298,17 @@ CREATE TABLE feature
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
     name varchar(1000),
-    biomarkerType varchar(255),
-    referenceName varchar(255),
-    chromosome varchar(255),
-    start varchar(255),
-    end varchar(255),
+    biomarkerType varchar(100),
+    referenceName varchar(20),
+    chromosome varchar(20),
+    start varchar(20),
+    end varchar(20),
     ref varchar(1000),
-    alt varchar(255),
-    provenanceRule varchar(255),
-    geneSymbol varchar(255),
-    entrezId varchar(255),
-    description varchar(2000),
+    alt varchar(100),
+    provenanceRule varchar(20),
+    geneSymbol varchar(20),
+    entrezId varchar(20),
+    description varchar(1000),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -349,7 +349,7 @@ CREATE TABLE featureAttribute
 CREATE TABLE provenance
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    provenanceName varchar(2000) NOT NULL,
+    provenanceName varchar(1000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -357,7 +357,7 @@ CREATE TABLE provenance
 CREATE TABLE synonym
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    synonymName varchar(255),
+    synonymName varchar(150),
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -365,7 +365,7 @@ CREATE TABLE synonym
 CREATE TABLE link
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    linkName varchar(255),
+    linkName varchar(200),
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -373,10 +373,10 @@ CREATE TABLE link
 CREATE TABLE sequenceOntology
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    soid varchar(255) NOT NULL,
-    parentSoid varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
-    parentName varchar(255) NOT NULL,
+    soid varchar(20) NOT NULL,
+    parentSoid varchar(20) NOT NULL,
+    name varchar(50) NOT NULL,
+    parentName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -384,7 +384,7 @@ CREATE TABLE sequenceOntology
 CREATE TABLE hierarchy
 (   id int NOT NULL AUTO_INCREMENT,
     sequenceOntologyId int NOT NULL,
-    hierarchyName varchar(255),
+    hierarchyName varchar(20),
     PRIMARY KEY (id),
     FOREIGN KEY (sequenceOntologyId) REFERENCES sequenceOntology(id)
 );
