@@ -80,7 +80,7 @@ public final class LimsFactory {
                                 Boolean.parseBoolean(parts[3]),
                                 Boolean.parseBoolean(parts[4])));
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
+                LOGGER.warn("Could not properly parse line in shallow seq csv: {}", line);
             }
         }
         return shallowSeqPerSampleBarcode;
@@ -163,12 +163,12 @@ public final class LimsFactory {
                 try {
                     arrivalDate = LocalDate.parse(arrivalDateString, LimsConstants.DATE_FORMATTER);
                 } catch (DateTimeParseException exc) {
-                    LOGGER.warn("Could not parse date in pre-HMF arrival date csv: " + arrivalDateString);
+                    LOGGER.warn("Could not parse date in pre-HMF arrival date csv: {}", arrivalDateString);
                     arrivalDate = null;
                 }
                 arrivalDatesPerSample.put(sample, arrivalDate);
             } else {
-                LOGGER.warn("Invalid line in pre-HMF arrival date csv: " + line);
+                LOGGER.warn("Invalid line in pre-HMF arrival date csv: {}", line);
             }
         }
         return arrivalDatesPerSample;
