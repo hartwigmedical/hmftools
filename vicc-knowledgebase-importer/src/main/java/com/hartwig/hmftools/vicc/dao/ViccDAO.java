@@ -245,7 +245,8 @@ public class ViccDAO {
     private void writeFeatureInfo(int featureId, @Nullable FeatureInfo featureInfo) {
         if (featureInfo != null) {
             context.insertInto(FEATUREINFO, FEATUREINFO.GERMLINEORSOMATIC, FEATUREINFO.FEATUREID)
-                    .values(featureInfo.germlineOrSomatic(), featureId);
+                    .values(featureInfo.germlineOrSomatic(), featureId)
+                    .execute();
         }
     }
 
@@ -289,7 +290,8 @@ public class ViccDAO {
                             featureAttribute.transcript(),
                             featureAttribute.descriptionType(),
                             featureAttribute.chromosome(),
-                            featureId);
+                            featureId)
+                    .execute();
         }
     }
 
