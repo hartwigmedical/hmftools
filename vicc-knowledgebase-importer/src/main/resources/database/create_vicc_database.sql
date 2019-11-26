@@ -297,7 +297,7 @@ CREATE TABLE devTag
 CREATE TABLE feature
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    name varchar(1000),
+    name varchar(1000) NOT NULL,
     biomarkerType varchar(100),
     referenceName varchar(20),
     chromosome varchar(20),
@@ -357,7 +357,7 @@ CREATE TABLE provenance
 CREATE TABLE synonym
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    synonymName varchar(150),
+    synonymName varchar(150) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -365,7 +365,7 @@ CREATE TABLE synonym
 CREATE TABLE link
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    linkName varchar(200),
+    linkName varchar(200) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -384,7 +384,7 @@ CREATE TABLE sequenceOntology
 CREATE TABLE hierarchy
 (   id int NOT NULL AUTO_INCREMENT,
     sequenceOntologyId int NOT NULL,
-    hierarchyName varchar(20),
+    hierarchyName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (sequenceOntologyId) REFERENCES sequenceOntology(id)
 );
@@ -392,13 +392,13 @@ CREATE TABLE hierarchy
 CREATE TABLE association
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    evidenceLevel varchar(255),
-    evidenceLabel varchar(255),
-    responseType varchar(255),
-    drugLabels varchar(2000),
-    sourceLink varchar(255),
+    evidenceLevel varchar(20),
+    evidenceLabel varchar(20),
+    responseType varchar(50),
+    drugLabels varchar(1500),
+    sourceLink varchar(100),
     description varchar(2500) NOT NULL,
-    oncogenic varchar(255),
+    oncogenic varchar(100),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -406,7 +406,7 @@ CREATE TABLE association
 CREATE TABLE associationVariant
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    variantName varchar(2000) NOT NULL,
+    variantName varchar(1000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -414,7 +414,7 @@ CREATE TABLE associationVariant
 CREATE TABLE evidence
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    description varchar(2000),
+    description varchar(1000),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -422,7 +422,7 @@ CREATE TABLE evidence
 CREATE TABLE evidenceInfo
 (   id int NOT NULL AUTO_INCREMENT,
     evidenceId int NOT NULL,
-    publication varchar(225) NOT NULL,
+    publication varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (evidenceId) REFERENCES evidence(id)
 );
@@ -430,8 +430,8 @@ CREATE TABLE evidenceInfo
 CREATE TABLE evidenceType
 (   id int NOT NULL AUTO_INCREMENT,
     evidenceId int NOT NULL,
-    sourceName varchar(225) NOT NULL,
-    idEvidenceType varchar(225),
+    sourceName varchar(50) NOT NULL,
+    idEvidenceType varchar(200),
     PRIMARY KEY (id),
     FOREIGN KEY (evidenceId) REFERENCES evidence(id)
 );
@@ -439,7 +439,7 @@ CREATE TABLE evidenceType
 CREATE TABLE publicationUrl
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    urlOfPublication varchar(255),
+    urlOfPublication varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -448,8 +448,8 @@ CREATE TABLE phenotype
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
     description varchar(255) NOT NULL,
-    family varchar(255) NOT NULL,
-    idPhenotype varchar(255),
+    family varchar(100) NOT NULL,
+    idPhenotype varchar(50),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -457,9 +457,9 @@ CREATE TABLE phenotype
 CREATE TABLE phenotypeType
 (   id int NOT NULL AUTO_INCREMENT,
     phenotypeId int NOT NULL,
-    source varchar(255),
+    source varchar(50) NOT NULL,
     term varchar(255) NOT NULL,
-    idPhenotypeType varchar(255) NOT NULL,
+    idPhenotypeType varchar(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (phenotypeId) REFERENCES phenotype(id)
 );
@@ -468,11 +468,11 @@ CREATE TABLE environmentalContext
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
     term varchar(255),
-    description varchar(255),
-    source varchar(255),
-    usanStem varchar(255),
-    toxicity varchar(2000),
-    idEnvironmentalContext varchar(255),
+    description varchar(255) NOT NULL,
+    source varchar(50),
+    usanStem varchar(100),
+    toxicity varchar(1500),
+    idEnvironmentalContext varchar(20),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -480,7 +480,7 @@ CREATE TABLE environmentalContext
 CREATE TABLE approvedCountry
 (   id int NOT NULL AUTO_INCREMENT,
     environmentalContextId int NOT NULL,
-    approvedCountryName varchar(225) NOT NULL,
+    approvedCountryName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (environmentalContextId) REFERENCES environmentalContext(id)
 );
@@ -488,11 +488,11 @@ CREATE TABLE approvedCountry
 CREATE TABLE taxonomy
 (   id int NOT NULL AUTO_INCREMENT,
     environmentalContextId int NOT NULL,
-    kingdom varchar(225) NOT NULL,
-    directParent varchar(225) NOT NULL,
-    class varchar(225) NOT nULL,
-    subClass varchar(225),
-    superClass varchar(225) NOT NULL,
+    kingdom varchar(20) NOT NULL,
+    directParent varchar(100) NOT NULL,
+    class varchar(50) NOT nULL,
+    subClass varchar(50),
+    superClass varchar(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (environmentalContextId) REFERENCES environmentalContext(id)
 );
