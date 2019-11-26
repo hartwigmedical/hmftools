@@ -118,8 +118,6 @@ public class ViccDAO {
     }
 
     public void deleteAll() {
-        LOGGER.info("Deleting all from VICC db");
-
         // Note: The order should be "from branch to root" to avoid constraint violation.
         BRCADAOFunctions.deleteAll(context);
         CgiDAOFunctions.deleteAll(context);
