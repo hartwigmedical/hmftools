@@ -90,7 +90,7 @@ public class LimsTest {
         assertNotNull(dnaAmount);
         assertEquals(500L, (int) dnaAmount);
 
-        //assertEquals("71%", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));//TODO fix
+        assertEquals("71%", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));//TODO fix
         assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
         assertEquals(primaryTumor, lims.primaryTumor(TUMOR_SAMPLE_BARCODE));
         assertEquals(labSopVersions, lims.labProcedures(TUMOR_SAMPLE_BARCODE));
@@ -235,7 +235,7 @@ public class LimsTest {
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
 
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
-        shallowSeqDataPerSample.put(shallowSeqData.sampleId(), shallowSeqData);
+        shallowSeqDataPerSample.put(shallowSeqData.sampleBarcode(), shallowSeqData);
 
         return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
