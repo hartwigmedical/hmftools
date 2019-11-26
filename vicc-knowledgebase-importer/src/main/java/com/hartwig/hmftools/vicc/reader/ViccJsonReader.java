@@ -145,7 +145,7 @@ public final class ViccJsonReader {
             featureChecker.check(featureObject);
 
             featureList.add(ImmutableFeature.builder()
-                    .name(optionalString(featureObject, "name"))
+                    .name(string(featureObject, "name"))
                     .biomarkerType(optionalString(featureObject, "biomarker_type"))
                     .referenceName(optionalString(featureObject, "referenceName"))
                     .chromosome(optionalString(featureObject, "chromosome"))

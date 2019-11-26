@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class Feature {
 
-    @Nullable
+    @NotNull
     public abstract String name();
 
     @Nullable
@@ -63,5 +63,4 @@ public abstract class Feature {
 
     @Nullable
     public abstract FeatureAttribute attribute();
-
 }
