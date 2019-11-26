@@ -147,7 +147,7 @@ public class Lims {
             LimsShallowSeqData shallowSeq = shallowSeqPerSampleBarcode.get(sampleBarcode);
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleBarcode + "!");
+                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample {}!", sampleBarcode);
             } else {
                 if (purityShallowExecuted) {
                     LOGGER.info(shallowSeq.hasReliablePurity());
@@ -157,7 +157,7 @@ public class Lims {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
                         } catch (final NumberFormatException e) {
-                            LOGGER.warn("Could not convert shallow seq to a percentage: " + shallowSeq.purityShallowSeq());
+                            LOGGER.warn("Could not convert shallow seq to a percentage: {}", shallowSeq.purityShallowSeq());
                             return NOT_AVAILABLE_STRING;
                         }
                     }
@@ -208,7 +208,7 @@ public class Lims {
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
-        LOGGER.warn("Could not find lab SOP versions for sample: " + sampleBarcode + " in LIMS");
+        LOGGER.warn("Could not find lab SOP versions for sample: {} in LIMS", sampleBarcode);
         return NOT_AVAILABLE_STRING;
     }
 

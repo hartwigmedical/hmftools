@@ -146,7 +146,7 @@ public final class FastqStatsRunner {
             final XPath xPath = XPathFactory.newInstance().newXPath();
             return (String) xPath.evaluate("//Flowcell/text()", xmlDoc, XPathConstants.STRING);
         } catch (Exception e) {
-            LOGGER.warn("Could not extract flowcell name from " + runInfoXml.getPath());
+            LOGGER.warn("Could not extract flowcell name from {}", runInfoXml.getPath());
             return "Unknown";
         }
     }
@@ -183,7 +183,7 @@ public final class FastqStatsRunner {
             }
             return numThreads;
         } catch (NumberFormatException e) {
-            LOGGER.info("Couldn't parse thread count parameter > 0; using default value: " + availableThreads + ".");
+            LOGGER.info("Couldn't parse thread count parameter > 0; using default value: {}.", availableThreads);
             return availableThreads;
         }
     }

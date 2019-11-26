@@ -172,7 +172,7 @@ class FastqStats {
         if (fileNameArray.length >= 4) {
             return fileNameArray[3];
         } else {
-            LOGGER.warn("Could not get lane name from " + file.getName());
+            LOGGER.warn("Could not get lane name from {}", file.getName());
             return "Unknown";
         }
     }
