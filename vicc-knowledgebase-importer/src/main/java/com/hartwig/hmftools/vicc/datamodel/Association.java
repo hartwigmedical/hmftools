@@ -14,7 +14,7 @@ public abstract class Association {
     public abstract List<String> variantNames();
 
     @NotNull
-    public abstract List<Evidence> evidence();
+    public abstract Evidence evidence();
 
     @Nullable
     public abstract String evidenceLevel();

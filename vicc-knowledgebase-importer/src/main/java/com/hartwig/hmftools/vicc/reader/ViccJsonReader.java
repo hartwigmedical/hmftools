@@ -255,21 +255,23 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    private static List<Evidence> createEvidence(@NotNull JsonArray evidenceArray) {
-        List<Evidence> evidenceList = Lists.newArrayList();
+    private static Evidence createEvidence(@NotNull JsonArray evidenceArray) {
         ViccDatamodelChecker evidenceChecker = ViccDatamodelCheckerFactory.evidenceChecker();
 
-        for (JsonElement evidenceElement : evidenceArray) {
-            JsonObject evidenceObject = evidenceElement.getAsJsonObject();
-            evidenceChecker.check(evidenceObject);
-
-            evidenceList.add(ImmutableEvidence.builder()
-                    .info(createEvidenceInfo(optionalJsonObject(evidenceObject, "info")))
-                    .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
-                    .description(nullableString(evidenceObject, "description"))
-                    .build());
+        // There is a 1-1 relation between association and evidence.
+        if (evidenceArray.size() != 1) {
+            LOGGER.warn("Evidence array with size unequal to 1 found: {}", evidenceArray);
         }
-        return evidenceList;
+
+        JsonObject evidenceObject = evidenceArray.get(0).getAsJsonObject();
+
+        evidenceChecker.check(evidenceObject);
+
+        return ImmutableEvidence.builder()
+                .info(createEvidenceInfo(optionalJsonObject(evidenceObject, "info")))
+                .evidenceType(createEvidenceType(evidenceObject.getAsJsonObject("evidenceType")))
+                .description(nullableString(evidenceObject, "description"))
+                .build();
     }
 
     @Nullable

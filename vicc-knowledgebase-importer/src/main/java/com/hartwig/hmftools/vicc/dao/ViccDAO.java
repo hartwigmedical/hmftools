@@ -363,7 +363,7 @@ public class ViccDAO {
                 .fetchOne()
                 .getValue(ASSOCIATION.ID);
         writeVariantNames(id, association.variantNames());
-        writeEvidences(id, association.evidence());
+        writeEvidence(id, association.evidence());
         writePublicationsUrls(id, association.publicationUrls());
         writePhenotype(id, association.phenotype());
         writeEnvironmentalContexts(id, association.environmentalContexts());
@@ -377,16 +377,14 @@ public class ViccDAO {
         }
     }
 
-    private void writeEvidences(int associationId, @NotNull List<Evidence> evidences) {
-        for (Evidence evidence : evidences) {
-            int id = context.insertInto(EVIDENCE, EVIDENCE.DESCRIPTION, EVIDENCE.ASSOCIATIONID)
-                    .values(evidence.description(), associationId)
-                    .returning(EVIDENCE.ID)
-                    .fetchOne()
-                    .getValue(EVIDENCE.ID);
-            writeEvidenceInfo(id, evidence.info());
-            writeEvidenceType(id, evidence.evidenceType());
-        }
+    private void writeEvidence(int associationId, @NotNull Evidence evidence) {
+        int id = context.insertInto(EVIDENCE, EVIDENCE.DESCRIPTION, EVIDENCE.ASSOCIATIONID)
+                .values(evidence.description(), associationId)
+                .returning(EVIDENCE.ID)
+                .fetchOne()
+                .getValue(EVIDENCE.ID);
+        writeEvidenceInfo(id, evidence.info());
+        writeEvidenceType(id, evidence.evidenceType());
     }
 
     private void writeEvidenceInfo(int evidenceId, @Nullable EvidenceInfo evidenceInfo) {
