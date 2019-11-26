@@ -395,7 +395,7 @@ CREATE TABLE association
     evidenceLevel varchar(255),
     evidenceLabel varchar(255),
     responseType varchar(255),
-    drugLabel varchar(2000),
+    drugLabels varchar(2000),
     sourceLink varchar(255),
     description varchar(2500) NOT NULL,
     oncogenic varchar(255),

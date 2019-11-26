@@ -361,7 +361,7 @@ public final class ViccJsonReader {
         ViccDatamodelCheckerFactory.phenotypeTypeChecker().check(phenotypeTypeObject);
 
         return ImmutablePhenotypeType.builder()
-                .source(nullableString(phenotypeTypeObject, "source"))
+                .source(string(phenotypeTypeObject, "source"))
                 .term(string(phenotypeTypeObject, "term"))
                 .id(string(phenotypeTypeObject, "id"))
                 .build();

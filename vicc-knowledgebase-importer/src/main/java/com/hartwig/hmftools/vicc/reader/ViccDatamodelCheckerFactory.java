@@ -197,7 +197,7 @@ final class ViccDatamodelCheckerFactory {
     @NotNull
     static ViccDatamodelChecker phenotypeTypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("source", false);
+        map.put("source", true);
         map.put("term", true);
         map.put("id", true);
         return new ViccDatamodelChecker("PhenotypeType", map);
