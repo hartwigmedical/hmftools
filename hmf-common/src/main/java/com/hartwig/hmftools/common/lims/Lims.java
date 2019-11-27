@@ -141,7 +141,6 @@ public class Lims {
     @NotNull
     public String purityShallowSeq(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        LOGGER.info(sampleData);
         if (sampleData != null) {
             boolean purityShallowExecuted = shallowSeqExecuted(sampleBarcode);
             LimsShallowSeqData shallowSeq = shallowSeqPerSampleBarcode.get(sampleBarcode);
