@@ -205,7 +205,7 @@ public class EnsemblDAO
     private static int GD_END = 5;
     private static int GD_ENTREZ = 6; // currently unused
     private static int GD_BAND = 7;
-    private static int GD_SYN = 8;
+    private static int GD_SYN = 8; // currently unused
 
     public static boolean loadEnsemblGeneData(final String dataPath, Map<String, List<EnsemblGeneData>> chrGeneDataMap)
     {
@@ -243,7 +243,7 @@ public class EnsemblDAO
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
-                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]), items[GD_BAND], items[GD_SYN]);
+                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]), items[GD_BAND]);
 
                 if(!currentChr.equals(chromosome))
                 {

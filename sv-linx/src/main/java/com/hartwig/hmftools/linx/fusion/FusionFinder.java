@@ -304,7 +304,7 @@ public class FusionFinder
             // just check for a phasing match
             if(upstreamTrans.isExonic() && downstreamTrans.isExonic())
             {
-                phaseMatched = (upstreamTrans.preCoding() && downstreamTrans.preCoding())
+                phaseMatched = ((upstreamTrans.preCoding() || upstreamTrans.nonCoding()) && downstreamTrans.preCoding())
                         || (upstreamTrans.postCoding() && downstreamTrans.postCoding());
             }
             else
@@ -422,12 +422,6 @@ public class FusionFinder
 
         if(reportableFusion == null)
             return;
-
-        if(intragenic(reportableFusion.upstreamTrans(), reportableFusion.downstreamTrans())
-        && reportableFusion.upstreamTrans().ExonUpstreamPhase == -1)
-        {
-            return;
-        }
 
         reportableFusion.setReportable(true);
 
@@ -675,11 +669,6 @@ public class FusionFinder
         }
 
         return REPORTABLE_TYPE_NONE;
-    }
-
-    private static boolean intragenic(final Transcript upstream, final Transcript downstream)
-    {
-        return upstream.gene().synonyms().stream().anyMatch(downstream.gene().synonyms()::contains);
     }
 
 }

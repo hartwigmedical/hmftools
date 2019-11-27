@@ -110,7 +110,6 @@ public class DisruptionTest
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneId, chromosome, strand, 10000, 120000));
-        geneList.get(0).Synonyms.add(geneId);
         addGeneData(geneTransCache, chromosome, geneList);
 
         List<TranscriptData> transDataList = Lists.newArrayList();

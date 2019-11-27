@@ -23,8 +23,7 @@ public class GeneAnnotation {
     private EnsemblGeneData mGeneData;
 
     private List<Transcript> mTranscripts;
-    @NotNull
-    private final List<String> mSynonyms;
+
     @NotNull
     private final String mKaryotypeBand;
 
@@ -36,7 +35,7 @@ public class GeneAnnotation {
     private String mInsertSequence;
 
     public GeneAnnotation(int varId, final boolean isStart, final String geneName, final String stableId,
-            final int strand, final List<String> synonyms, final String karyotypeBand)
+            final int strand, final String karyotypeBand)
     {
         GeneName = geneName;
         StableId = stableId;
@@ -54,7 +53,6 @@ public class GeneAnnotation {
         mPloidy = 0;
         mInsertSequence = "";
 
-        mSynonyms = synonyms;
         mKaryotypeBand = karyotypeBand;
     }
 
@@ -103,13 +101,7 @@ public class GeneAnnotation {
         return mTranscripts.stream().filter(Transcript::isCanonical).findFirst().orElse(null);
     }
 
-    public List<String> synonyms() {
-        return ImmutableList.copyOf(mSynonyms);
-    }
-
-    public String karyotypeBand() {
-        return mKaryotypeBand;
-    }
+    public String karyotypeBand() { return mKaryotypeBand; }
 
     public static boolean isUpstream(final GeneAnnotation gene)
     {
