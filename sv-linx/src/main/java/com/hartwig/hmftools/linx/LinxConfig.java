@@ -38,6 +38,7 @@ public class LinxConfig
     final public int MaxSamples;
     final public boolean WriteVisualisationData;
     final public int ChainingSvLimit; // for analysis and chaining
+    final public boolean IsGermline;
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
@@ -75,6 +76,7 @@ public class LinxConfig
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
+    private static final String GERMLINE = "germline";
 
     // logging options
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
@@ -107,6 +109,7 @@ public class LinxConfig
         }
 
         PurpleDataPath = cmd.getOptionValue(PURPLE_DATA_DIR, "");
+        IsGermline = cmd.hasOption(GERMLINE);
 
         String dataOutputDir = "";
         if(cmd.hasOption(DATA_OUTPUT_DIR))
@@ -196,6 +199,7 @@ public class LinxConfig
         OutputDataPath = "";
         SvDataPath = "";
         UploadToDB = false;
+        IsGermline = false;
         FragileSiteFile = "";
         KataegisFile = "";
         LineElementFile = "";
@@ -229,6 +233,7 @@ public class LinxConfig
         options.addOption(FRAGILE_SITE_FILE, true, "Fragile Site file");
         options.addOption(KATAEGIS_FILE, true, "Kataegis data file");
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
+        options.addOption(GERMLINE, false, "Process germline SVs");
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");

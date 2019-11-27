@@ -660,33 +660,6 @@ public class CnDataLoader
 
             mChrEndsCNMap.put(entry.getKey(), new TelomereCentromereCnData(telomerePArm, telomereQArm, centromerePArm, centromereQArm));
         }
-
-        /*
-        for(final PurpleCopyNumber cnRecord : mCnRecords)
-        {
-            if(cnRecord.segmentStartSupport().equals(TELOMERE))
-            {
-                telomerePArm = cnRecord.averageTumorCopyNumber();
-            }
-
-            if(cnRecord.segmentEndSupport().equals(CENTROMERE))
-            {
-                centromerePArm = cnRecord.averageTumorCopyNumber();
-            }
-
-            if(cnRecord.segmentStartSupport().equals(CENTROMERE))
-            {
-                centromereQArm = cnRecord.averageTumorCopyNumber();
-            }
-
-            if(cnRecord.segmentEndSupport().equals(TELOMERE))
-            {
-                telomereQArm = cnRecord.averageTumorCopyNumber();
-                mChrEndsCNMap.put(
-                        cnRecord.chromosome(), new TelomereCentromereCnData(telomerePArm, telomereQArm, centromerePArm, centromereQArm));
-            }
-        }
-        */
     }
 
 }

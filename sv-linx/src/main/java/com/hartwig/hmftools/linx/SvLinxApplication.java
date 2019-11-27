@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
+import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromSvFile;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromVcf;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
@@ -79,7 +80,7 @@ public class SvLinxApplication
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
-        boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty();
+        boolean sampleDataFromFile = !config.PurpleDataPath.isEmpty() || config.IsGermline;
 
         List<String> samplesList = config.getSampleIds();
 
@@ -179,7 +180,7 @@ public class SvLinxApplication
             prefCounter.start();
 
             final List<StructuralVariantData> svRecords = sampleDataFromFile ?
-                    loadSampleSvDataFromFile(config.SvDataPath, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
+                    loadSampleSvDataFromFile(config, sampleId, cmd) : dbAccess.readStructuralVariantData(sampleId);
 
             final List<SvVarData> svDataList = createSvData(svRecords);
 
@@ -200,7 +201,8 @@ public class SvLinxApplication
                 LOGGER.info("sample({}) processing {} SVs, completed({})", sampleId, svDataList.size(), count - 1);
             }
 
-            cnDataLoader.loadSampleData(sampleId, svRecords);
+            if(!config.IsGermline)
+                cnDataLoader.loadSampleData(sampleId, svRecords);
 
             sampleAnalyser.setSampleSVs(sampleId, svDataList);
 
@@ -267,15 +269,19 @@ public class SvLinxApplication
         LOGGER.info("SV analysis complete");
     }
 
-    private static List<StructuralVariantData> loadSampleSvDataFromFile(final String samplePath, final String sampleId, final CommandLine cmd)
+    private static List<StructuralVariantData> loadSampleSvDataFromFile(
+            final LinxConfig config, final String sampleId, final CommandLine cmd)
     {
         if(cmd.hasOption(VCF_FILE))
         {
-            return loadSvDataFromVcf(cmd.getOptionValue(VCF_FILE));
+            if(config.IsGermline)
+                return loadSvDataFromGermlineVcf(cmd.getOptionValue(VCF_FILE));
+            else
+                return loadSvDataFromVcf(cmd.getOptionValue(VCF_FILE));
         }
         else
         {
-            return loadSvDataFromSvFile(sampleId, samplePath);
+            return loadSvDataFromSvFile(sampleId, config.SvDataPath);
         }
     }
 

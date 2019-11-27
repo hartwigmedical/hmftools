@@ -222,6 +222,31 @@ public class SvDataLoader
         return svDataList;
     }
 
+    public static final List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
+    {
+        final List<StructuralVariantData> svDataList = Lists.newArrayList();
+
+        try
+        {
+            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
+
+            int svId = 0;
+
+            for (StructuralVariant var : variants)
+            {
+                svDataList.add(convertGermlineSvData(var, svId++));
+            }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to load SVs from VCF: {}", e.toString());
+        }
+
+        LOGGER.info("loaded {} germline SV data records from VCF file: {}", svDataList.size(), vcfFile);
+
+        return svDataList;
+    }
+
     public static final List<StructuralVariantData> loadSvDataFromSvFile(final String sampleId, final String svDataPath)
     {
         try
@@ -282,6 +307,65 @@ public class SvDataLoader
                 .vcfId(getValueNotNull(var.id()))
                 .startRefContext(getValueNotNull(var.start().refGenomeContext()))
                 .endRefContext(var.end() == null ? "" : getValueNotNull(var.end().refGenomeContext()))
+                .recovered(var.recovered())
+                .recoveryMethod((getValueNotNull(var.recoveryMethod())))
+                .recoveryFilter(getValueNotNull(var.recoveryFilter()))
+                .insertSequenceAlignments(getValueNotNull(var.insertSequenceAlignments()))
+                .insertSequenceRepeatClass(getValueNotNull(var.insertSequenceRepeatClass()))
+                .insertSequenceRepeatType(getValueNotNull(var.insertSequenceRepeatType()))
+                .insertSequenceRepeatOrientation(getValueNotNull(var.insertSequenceRepeatOrientation()))
+                .insertSequenceRepeatCoverage(getValueNotNull(var.insertSequenceRepeatCoverage()))
+                .startAnchoringSupportDistance(var.start().anchoringSupportDistance())
+                .endAnchoringSupportDistance(var.end() == null ? 0 : var.end().anchoringSupportDistance())
+                .build();
+    }
+
+    public static StructuralVariantData convertGermlineSvData(final StructuralVariant var, int svId)
+    {
+        return ImmutableStructuralVariantData.builder()
+                .id(svId)
+                .startChromosome(var.chromosome(true))
+                .endChromosome(var.end() == null ? "0" : var.chromosome(false))
+                .startPosition(var.position(true))
+                .endPosition(var.end() == null ? -1 : var.position(false))
+                .startOrientation(var.orientation(true))
+                .endOrientation(var.end() == null ? (byte) 0 : var.orientation(false))
+                .startHomologySequence(var.start().homology())
+                .endHomologySequence(var.end() == null ? "" : var.end().homology())
+                .ploidy(1)
+                .startAF(getValueNotNull(var.start().alleleFrequency()))
+                .endAF(var.end() == null ? 0 : getValueNotNull(var.end().alleleFrequency()))
+                .adjustedStartAF(getValueNotNull(var.start().alleleFrequency()))
+                .adjustedEndAF(var.end() == null ? 0 : getValueNotNull(var.end().alleleFrequency()))
+                .adjustedStartCopyNumber(getValueNotNull(1))
+                .adjustedEndCopyNumber(var.end() == null ? 0 : 1)
+                .adjustedStartCopyNumberChange(1)
+                .adjustedEndCopyNumberChange(var.end() == null ? 0 : 1)
+                .insertSequence(var.insertSequence())
+                .type(var.type())
+                .filter(var.filter())
+                .imprecise(var.imprecise())
+                .qualityScore(getValueNotNull(var.qualityScore()))
+                .event(getValueNotNull(var.event()))
+                .startTumorVariantFragmentCount(getValueNotNull(var.start().tumorVariantFragmentCount()))
+                .startTumorReferenceFragmentCount(getValueNotNull(var.start().tumorReferenceFragmentCount()))
+                .startNormalVariantFragmentCount(getValueNotNull(var.start().normalVariantFragmentCount()))
+                .startNormalReferenceFragmentCount(getValueNotNull(var.start().normalReferenceFragmentCount()))
+                .endTumorVariantFragmentCount(0)
+                .endTumorReferenceFragmentCount(0)
+                .endNormalVariantFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().normalVariantFragmentCount()))
+                .endNormalReferenceFragmentCount(var.end() == null ? 0 : getValueNotNull(var.end().normalReferenceFragmentCount()))
+                .startIntervalOffsetStart(getValueNotNull(var.start().startOffset()))
+                .startIntervalOffsetEnd(getValueNotNull(var.start().endOffset()))
+                .endIntervalOffsetStart(var.end() == null ? 0 : getValueNotNull(var.end().startOffset()))
+                .endIntervalOffsetEnd(var.end() == null ? 0 : getValueNotNull(var.end().endOffset()))
+                .inexactHomologyOffsetStart(getValueNotNull(var.start().inexactHomologyOffsetStart()))
+                .inexactHomologyOffsetEnd(getValueNotNull(var.start().inexactHomologyOffsetEnd()))
+                .startLinkedBy(getValueNotNull(var.startLinkedBy()))
+                .endLinkedBy(getValueNotNull(var.endLinkedBy()))
+                .vcfId(getValueNotNull(var.id()))
+                .startRefContext("") // getValueNotNull(var.start().refGenomeContext())
+                .endRefContext(var.end() == null ? "" : "") // getValueNotNull(var.end().refGenomeContext())
                 .recovered(var.recovered())
                 .recoveryMethod((getValueNotNull(var.recoveryMethod())))
                 .recoveryFilter(getValueNotNull(var.recoveryFilter()))

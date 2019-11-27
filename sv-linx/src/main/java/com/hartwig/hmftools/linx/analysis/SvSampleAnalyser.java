@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx.analysis;
 
+import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
@@ -71,6 +72,7 @@ import com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
+import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -201,12 +203,15 @@ public class SvSampleAnalyser {
         mAllVariants = Lists.newArrayList(variants);
         mVisWriter.setSampleId(sampleId);
 
-        // look-up and cache relevant CN data into each SV
-        setSvCopyNumberData(
-                mAllVariants,
-                mCnDataLoader.getSvPloidyCalcMap(),
-                mCnDataLoader.getSvIdCnDataMap(),
-                mCnDataLoader.getChrCnDataMap());
+        if(!mConfig.IsGermline)
+        {
+            // look-up and cache relevant CN data into each SV
+            setSvCopyNumberData(
+                    mAllVariants,
+                    mCnDataLoader.getSvPloidyCalcMap(),
+                    mCnDataLoader.getSvIdCnDataMap(),
+                    mCnDataLoader.getChrCnDataMap());
+        }
 
         LOGGER.debug("loaded {} SVs", mAllVariants.size());
     }
@@ -276,6 +281,11 @@ public class SvSampleAnalyser {
         mAnalyser.setSampleData(mSampleId, mAllVariants);
 
         mAnalyser.preClusteringPreparation();
+
+        if(mConfig.IsGermline)
+        {
+            buildGermlineCopyNumberData();
+        }
 
         mKataegisAnnotator.annotateVariants(mSampleId, mAnalyser.getState().getChrBreakendMap());
         mReplicationOriginAnnotator.setReplicationOrigins(mAnalyser.getState().getChrBreakendMap());
@@ -398,6 +408,24 @@ public class SvSampleAnalyser {
 
             ++currentIndex;
         }
+    }
+
+    private void buildGermlineCopyNumberData()
+    {
+        CnSegmentBuilder cnSegmentBuilder = new CnSegmentBuilder();
+        cnSegmentBuilder.setAllelePloidies(1, 1);
+
+        cnSegmentBuilder.createCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
+
+        cnSegmentBuilder.setSamplePurity(mCnDataLoader, 1, 2, MALE);
+
+        mCnDataLoader.createChrCopyNumberMap();
+
+        setSvCopyNumberData(
+                mAllVariants,
+                mCnDataLoader.getSvPloidyCalcMap(),
+                mCnDataLoader.getSvIdCnDataMap(),
+                mCnDataLoader.getChrCnDataMap());
     }
 
     private void createOutputFiles()

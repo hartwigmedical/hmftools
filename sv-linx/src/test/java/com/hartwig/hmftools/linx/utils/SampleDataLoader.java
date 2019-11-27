@@ -35,9 +35,7 @@ public class SampleDataLoader
         final List<StructuralVariantData> svData = inputData.stream().map(StructuralVariantFile::fromString).collect(toList());
 
         return createSVs(svData, inputData);
-
     }
-
 
     private static List<SvVarData> createSVs(final List<StructuralVariantData> svDataList, final List<String> inputData)
     {

@@ -102,43 +102,6 @@ public interface StructuralVariant {
     @Nullable
     String endLinkedBy();
 
-    @NotNull
-    default Collection<String> startLinks() {
-        String linkedBy = startLinkedBy();
-        if (linkedBy == null) {
-            return Collections.emptyList();
-        }
-        List<String> links = Lists.newArrayList();
-        for (String s : linkedBy.split(",")) {
-            if (s.length() > 1) {
-                links.add(s);
-            }
-        }
-        return links;
-    }
-
-    @NotNull
-    default Collection<String> endLinks() {
-        String linkedBy = endLinkedBy();
-        if (linkedBy == null) {
-            return Collections.emptyList();
-        }
-        List<String> links = Lists.newArrayList();
-        for (String s : linkedBy.split(",")) {
-            if (s.length() > 1) {
-                links.add(s);
-            }
-        }
-        return links;
-    }
-
-    default boolean isFoldBackInversion() {
-        // TODO: should we add a max bounds check in here?
-        // TODO: restrict to same arm?
-        StructuralVariantLeg endLeg = end();
-        return endLeg != null && start().chromosome().equals(endLeg.chromosome()) && start().orientation() == endLeg.orientation();
-    }
-
     boolean recovered();
 
     @Nullable
