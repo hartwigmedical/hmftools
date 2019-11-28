@@ -54,20 +54,20 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     */
 
-    private final boolean tumor;
+    private final boolean addInterimReadContexts;
     private final int minQuality;
     private final SageConfig config;
     private final GenomeRegion bounds;
     private final RefSequence refGenome;
     private final RefContextCandidates candidates;
 
-    RefContextConsumer(boolean tumor, final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final RefSequence refGenome,
-            @NotNull final RefContextCandidates candidates) {
+    RefContextConsumer(boolean addInterimReadContexts, @NotNull final SageConfig config, @NotNull final GenomeRegion bounds,
+            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
         this.minQuality = config.minMapQuality();
         this.candidates = candidates;
-        this.tumor = tumor;
+        this.addInterimReadContexts = addInterimReadContexts;
 
         this.config = config;
     }
@@ -119,7 +119,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
-                if (tumor) {
+                if (addInterimReadContexts) {
                     refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refIndex, refBases));
                 } else {
                     refContext.altRead(ref, alt);
@@ -139,7 +139,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
-                if (tumor) {
+                if (addInterimReadContexts) {
                     refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
                 } else {
                     refContext.altRead(ref, alt);
@@ -172,7 +172,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
-                    if (tumor) {
+                    if (addInterimReadContexts) {
                         refContext.altRead(ref, alt, createSNVContext(refPosition, readBaseIndex, record, refBaseIndex, refBases));
                     } else {
                         refContext.altRead(ref, alt);

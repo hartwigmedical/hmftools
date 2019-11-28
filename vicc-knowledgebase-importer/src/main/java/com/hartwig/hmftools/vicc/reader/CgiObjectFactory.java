@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.List;
 import java.util.Set;
@@ -35,24 +35,24 @@ final class CgiObjectFactory {
         return ImmutableCgi.builder()
                 .targeting(objectCgi.getAsJsonPrimitive("Targeting").getAsString())
                 .source(objectCgi.getAsJsonPrimitive("Source").getAsString())
-                .cDNA(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("cDNA"))))
+                .cDNA(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("cDNA"))))
                 .primary_tumor_type(objectCgi.getAsJsonPrimitive("Primary Tumor type").getAsString())
-                .individual_mutation(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("individual_mutation"))))
+                .individual_mutation(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("individual_mutation"))))
                 .drugsFullName(objectCgi.getAsJsonPrimitive("Drug full name").getAsString())
                 .curator(objectCgi.getAsJsonPrimitive("Curator").getAsString())
                 .drug_family(objectCgi.getAsJsonPrimitive("Drug family").getAsString())
                 .alteration(objectCgi.getAsJsonPrimitive("Alteration").getAsString())
                 .drug(objectCgi.getAsJsonPrimitive("Drug").getAsString())
                 .biomarker(objectCgi.getAsJsonPrimitive("Biomarker").getAsString())
-                .gDNA(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("gDNA"))))
+                .gDNA(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("gDNA"))))
                 .drug_status(objectCgi.getAsJsonPrimitive("Drug status").getAsString())
                 .gene(objectCgi.getAsJsonPrimitive("Gene").getAsString())
-                .transcript(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("transcript"))))
-                .strand(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("strand"))))
-                .info(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("info"))))
+                .transcript(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("transcript"))))
+                .strand(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("strand"))))
+                .info(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("info"))))
                 .assay_type(objectCgi.getAsJsonPrimitive("Assay type").getAsString())
                 .alteration_type(objectCgi.getAsJsonPrimitive("Alteration type").getAsString())
-                .region(Lists.newArrayList(jsonArrayToStringList(objectCgi.getAsJsonArray("region"))))
+                .region(Lists.newArrayList(toStringList(objectCgi.getAsJsonArray("region"))))
                 .evidence_level(objectCgi.getAsJsonPrimitive("Evidence level").getAsString())
                 .association(objectCgi.getAsJsonPrimitive("Association").getAsString())
                 .metastatic_Tumor_Type(objectCgi.getAsJsonPrimitive("Metastatic Tumor Type").getAsString())

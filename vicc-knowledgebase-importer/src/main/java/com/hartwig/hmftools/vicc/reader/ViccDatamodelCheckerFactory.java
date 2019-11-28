@@ -69,6 +69,44 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker featureInfoChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("germline_or_somatic", true);
+        return new ViccDatamodelChecker("FeatureInfo", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker featureAttributeChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("amino_acid_change", true);
+        map.put("germline", true);
+        map.put("partner_gene", true);
+        map.put("description", true);
+        map.put("exons", true);
+        map.put("notes", true);
+        map.put("cosmic", true);
+        map.put("effect", true);
+        map.put("cnv_type", true);
+        map.put("id", true);
+        map.put("cytoband", true);
+        map.put("variant_type", true);
+        map.put("dna_change", true);
+        map.put("codons", true);
+        map.put("chromosome_based_cnv", true);
+        map.put("transcript", true);
+        map.put("description_type", true);
+        map.put("chromosome", true);
+        return new ViccDatamodelChecker("FeatureAttribute", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker featureAttributeObjectChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("string_value", true);
+        return new ViccDatamodelChecker("FeatureAttributeObject", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker sequenceOntologyChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("hierarchy", false);
@@ -159,7 +197,7 @@ final class ViccDatamodelCheckerFactory {
     @NotNull
     static ViccDatamodelChecker phenotypeTypeChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("source", false);
+        map.put("source", true);
         map.put("term", true);
         map.put("id", true);
         return new ViccDatamodelChecker("PhenotypeType", map);

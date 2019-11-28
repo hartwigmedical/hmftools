@@ -16,7 +16,7 @@ public class DedupIndel implements Consumer<SageVariant> {
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> list = Lists.newArrayList();
 
-    public DedupIndel(final Consumer<SageVariant> consumer) {
+    DedupIndel(final Consumer<SageVariant> consumer) {
         this.consumer = consumer;
     }
 

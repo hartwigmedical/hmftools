@@ -21,7 +21,7 @@ import org.junit.Test;
 public class LimsTest {
 
     private static final String REF_SAMPLE_BARCODE = "FR1234";
-    private static final String TUMOR_SAMPLE_BARCODE = "FR5678";
+    private static final String TUMOR_SAMPLE_BARCODE = "FR1";
     private static final String TUMOR_SAMPLE_ID = "CPCT02991111T";
     private static final String SUBMISSION = "ABCDEF123";
 
@@ -173,7 +173,7 @@ public class LimsTest {
 
         final LimsJsonSampleData sampleData2 =
                 createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
-        Lims lims2 = buildTestLimsWithSampleAndShallowSeq(sampleData2, "NotANumber");
+        Lims lims2 = buildTestLimsWithSampleAndShallowSeq(sampleData2, "NotANumber", true, true);
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
         assertEquals(Lims.NOT_DETERMINED_STRING, lims2.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
@@ -206,7 +206,8 @@ public class LimsTest {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
 
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2");
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2", false, true);
+
         assertEquals("20%", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
         assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
@@ -216,7 +217,7 @@ public class LimsTest {
         final LimsJsonSampleData sampleData =
                 createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
 
-        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "below detection threshold");
+        Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.10", true, false);
         assertEquals("below detection threshold", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
         assertEquals(Lims.NOT_DETERMINED_STRING, lims.pathologyTumorPercentage(TUMOR_SAMPLE_BARCODE));
     }
@@ -234,7 +235,7 @@ public class LimsTest {
         Set<String> samplesWithSamplingDates = Sets.newHashSet();
 
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
-        shallowSeqDataPerSample.put(shallowSeqData.sampleId(), shallowSeqData);
+        shallowSeqDataPerSample.put(shallowSeqData.sampleBarcode(), shallowSeqData);
 
         return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithSamplingDates, shallowSeqDataPerSample);
     }
@@ -252,7 +253,8 @@ public class LimsTest {
     }
 
     @NotNull
-    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull LimsJsonSampleData sampleData, @NotNull String shallowSeqPurity) {
+    private static Lims buildTestLimsWithSampleAndShallowSeq(@NotNull LimsJsonSampleData sampleData, @NotNull String shallowSeqPurity,
+            boolean hasReliableQuality, boolean hasReliablePurity) {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
         dataPerSampleBarcode.put(sampleData.tumorBarcode(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
@@ -260,9 +262,8 @@ public class LimsTest {
         Set<String> samplesWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSample = Maps.newHashMap();
 
-        shallowSeqDataPerSample.put(sampleData.sampleId(),
-                ImmutableLimsShallowSeqData.of("FR123", sampleData.sampleId(), shallowSeqPurity, true, true));
-
+        shallowSeqDataPerSample.put(sampleData.tumorBarcode(),
+                ImmutableLimsShallowSeqData.of("FR1", sampleData.sampleId(), shallowSeqPurity, hasReliableQuality, hasReliablePurity));
         return new Lims(dataPerSampleBarcode, dataPerSubmission, preLimsArrivalDates, samplesWithoutSamplingDate, shallowSeqDataPerSample);
     }
 

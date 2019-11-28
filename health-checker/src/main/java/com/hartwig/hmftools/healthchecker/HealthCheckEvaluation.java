@@ -57,59 +57,59 @@ final class HealthCheckEvaluation {
             case PURPLE_QC_STATUS:
                 return checkPurpleQCStatus(qcValue.value());
             default: {
-                LOGGER.warn("Unrecognized check to evaluate: " + qcValue.type());
+                LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
                 return false;
             }
         }
     }
 
     private static boolean checkCoverage(@NotNull String value, @NotNull String name, double minPercentage) {
-        double coverage = Double.valueOf(value);
+        double coverage = Double.parseDouble(value);
         if (coverage >= minPercentage) {
-            LOGGER.info("PASS - " + name + " coverage percentage of " + value + " is higher than min value " + minPercentage);
+            LOGGER.info("PASS - {} coverage percentage of {} is higher than min value {}", name, value, minPercentage);
             return true;
         } else {
-            LOGGER.info("FAIL - " + name + " coverage percentage of " + value + " is lower than min value " + minPercentage);
+            LOGGER.info("FAIL - {} coverage percentage of {} is lower than min value {}", name, value, minPercentage);
             return false;
         }
     }
 
     private static boolean checkAmberMeanBAF(@NotNull String value) {
-        double meanBaf = Double.valueOf(value);
+        double meanBaf = Double.parseDouble(value);
 
         if (meanBaf >= MIN_AMBER_MEAN_BAF && meanBaf <= MAX_AMBER_MEAN_BAF) {
-            LOGGER.info("PASS - Mean BAF of " + value + " is between " + MIN_AMBER_MEAN_BAF + " and " + MAX_AMBER_MEAN_BAF);
+            LOGGER.info("PASS - Mean BAF of {} is between {} and {}", value, MIN_AMBER_MEAN_BAF, MAX_AMBER_MEAN_BAF);
             return true;
         } else if (meanBaf < MIN_AMBER_MEAN_BAF) {
-            LOGGER.info("FAIL - Mean BAF of " + value + " is below " + MIN_AMBER_MEAN_BAF);
+            LOGGER.info("FAIL - Mean BAF of {} is below {}", value, MIN_AMBER_MEAN_BAF);
             return false;
         } else {
-            LOGGER.info("FAIL - Mean BAF of " + value + " is above " + MAX_AMBER_MEAN_BAF);
+            LOGGER.info("FAIL - Mean BAF of {} is above {}", value, MAX_AMBER_MEAN_BAF);
             return false;
         }
     }
 
     private static boolean checkAmberContamination(@NotNull String value) {
-        double contamination = Double.valueOf(value);
+        double contamination = Double.parseDouble(value);
 
         if (contamination <= MAX_AMBER_CONTAMINATION) {
-            LOGGER.info("PASS - Contamination of " + value + " is below " + MAX_AMBER_CONTAMINATION);
+            LOGGER.info("PASS - Contamination of {} is below {}", value, MAX_AMBER_CONTAMINATION);
             if (contamination > 0) {
                 LOGGER.warn("  Contamination found in sample!");
             }
             return true;
         } else {
-            LOGGER.info("FAIL - Contamination of " + value + " is above " + MAX_AMBER_CONTAMINATION);
+            LOGGER.info("FAIL - Contamination of {} is above {}", value, MAX_AMBER_CONTAMINATION);
             return false;
         }
     }
 
     private static boolean checkPurpleQCStatus(final String value) {
         if (value.equals(PURPLE_QC_PASS)) {
-            LOGGER.info("PASS - Purple QC value is " + PURPLE_QC_PASS);
+            LOGGER.info("PASS - Purple QC value is {}", value);
             return true;
         } else {
-            LOGGER.info("FAIL - Purple QC value is " + value);
+            LOGGER.info("FAIL - Purple QC value is {}", value);
             return false;
         }
     }

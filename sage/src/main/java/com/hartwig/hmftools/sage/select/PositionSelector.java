@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
 
+@NotThreadSafe
 public class PositionSelector<P extends GenomePosition> {
 
     @NotNull

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.pipeline;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,7 +23,7 @@ import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SagePipelineData {
+class SomaticPipelineData {
 
     private final String normalSample;
 
@@ -32,7 +32,7 @@ public class SagePipelineData {
     private final Map<Long, RefContext> normalMap = Maps.newHashMap();
     private final SageVariantFactory variantFactory;
 
-    SagePipelineData(final String normalSample, final int tumorSampleSize, final SageVariantFactory variantFactory) {
+    SomaticPipelineData(final String normalSample, final int tumorSampleSize, final SageVariantFactory variantFactory) {
         this.normalSample = normalSample;
         this.variantFactory = variantFactory;
         for (int i = 0; i < tumorSampleSize; i++) {

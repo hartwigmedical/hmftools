@@ -45,26 +45,32 @@ public final class ReportingDb {
             LOGGER.debug("This is a COLO sample. This sample will not be included in reporting db");
         } else if (type.equals(LimsSampleType.WIDE) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
-        } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORE01LR")
-                && !sampleId.startsWith("CORE01RI")) {
+        } else if (type.equals(LimsSampleType.CORE) && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORELR")
+                && !sampleId.startsWith("CORERI")) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
         } else if (type != LimsSampleType.OTHER) {
-            boolean present = false;
-            for (ReportingEntry entry : read(reportingDbTsv)) {
-                if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
-                        && reportType.equals(entry.reportType())) {
-                    LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
-                    present = true;
-                }
-            }
+            addToReportingDb(reportingDbTsv, sampleId, tumorBarcode, reportType, reportDate, purity, hasReliablePurity, hasReliableQuality);
+        }
+    }
 
-            if (!present) {
-                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
-                String stringToAppend =
-                        sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliablePurity
-                                + "\t" + hasReliableQuality + "\n";
-                appendToTsv(reportingDbTsv, stringToAppend);
+    private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String sampleId, @NotNull String tumorBarcode,
+            @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, @NotNull String hasReliablePurity,
+            @NotNull String hasReliableQuality) throws IOException {
+        boolean present = false;
+        for (ReportingEntry entry : read(reportingDbTsv)) {
+            if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
+                    && reportType.equals(entry.reportType())) {
+                LOGGER.warn("Sample {} has already been reported with report type '{}'!", sampleId, reportType);
+                present = true;
             }
+        }
+
+        if (!present) {
+            LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
+            String stringToAppend =
+                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliablePurity + "\t"
+                            + hasReliableQuality + "\n";
+            appendToTsv(reportingDbTsv, stringToAppend);
         }
     }
 
@@ -83,7 +89,7 @@ public final class ReportingDb {
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
                         && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
-                    LOGGER.warn("Sample has already been reported: {} with report type {}!", sampleId, reportType);
+                    LOGGER.warn("Sample {} has already been reported with report type '{}'!", sampleId, reportType);
                     present = true;
                 }
             }

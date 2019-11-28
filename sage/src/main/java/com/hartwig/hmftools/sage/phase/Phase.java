@@ -9,19 +9,19 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class Phase implements Consumer<SageVariant>, AutoCloseable {
+public class Phase implements Consumer<SageVariant> {
     private final SnvSnvMerge mnvMerge;
     private final DedupSnv snvIndelMerge;
     private final LocalPhaseSet localPhaseSet;
     private final DedupIndel dedupIndel;
 
-    public Phase(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
+    public Phase(boolean germline, @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
             @NotNull final Consumer<SageVariant> consumer) {
         final MnvFactory mnvFactory = new MnvFactory(reference, sageVariantFactory);
         dedupIndel = new DedupIndel(consumer);
         snvIndelMerge = new DedupSnv(dedupIndel);
         mnvMerge = new SnvSnvMerge(snvIndelMerge, mnvFactory);
-        localPhaseSet = new LocalPhaseSet(mnvMerge);
+        localPhaseSet = new LocalPhaseSet(germline, mnvMerge);
 
     }
 
@@ -30,8 +30,7 @@ public class Phase implements Consumer<SageVariant>, AutoCloseable {
         localPhaseSet.accept(sageVariant);
     }
 
-    @Override
-    public void close() {
+    public void flush() {
         localPhaseSet.flush();
         mnvMerge.flush();
         snvIndelMerge.flush();

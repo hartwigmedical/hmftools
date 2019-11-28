@@ -15,6 +15,10 @@ public interface VariantHotspot extends GenomePosition {
     @NotNull
     String alt();
 
+    default long end() {
+        return position() + ref().length() - 1;
+    }
+
     default boolean isSNV() {
         return ref().length() == 1 && alt().length() == 1;
     }

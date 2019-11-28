@@ -26,16 +26,17 @@ public class Lims {
     @NotNull
     private final Set<String> samplesWithoutSamplingDate;
     @NotNull
-    private final Map<String, LimsShallowSeqData> shallowSeqPerSample;
+    private final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode;
 
     Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
-            @NotNull final Set<String> samplesWithoutSamplingDate, @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSample) {
+            @NotNull final Set<String> samplesWithoutSamplingDate,
+            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
         this.preLimsArrivalDates = preLimsArrivalDates;
         this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
-        this.shallowSeqPerSample = shallowSeqPerSample;
+        this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
     }
 
     public int sampleBarcodeCount() {
@@ -140,22 +141,21 @@ public class Lims {
     @NotNull
     public String purityShallowSeq(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-
         if (sampleData != null) {
             boolean purityShallowExecuted = shallowSeqExecuted(sampleBarcode);
-            LimsShallowSeqData shallowSeq = shallowSeqPerSample.get(sampleId(sampleBarcode));
+            LimsShallowSeqData shallowSeq = shallowSeqPerSampleBarcode.get(sampleBarcode);
 
             if (purityShallowExecuted && shallowSeq == null) {
-                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample " + sampleBarcode + "!");
+                LOGGER.warn("BFX lims and lab status on shallow seq do not match for sample {}!", sampleBarcode);
             } else {
                 if (purityShallowExecuted) {
-                    if (shallowSeq.purityShallowSeq().equals("below detection threshold")) {
+                    if (!shallowSeq.hasReliablePurity()) {
                         return "below detection threshold";
                     } else {
                         try {
                             return Math.round(Double.parseDouble(shallowSeq.purityShallowSeq()) * 100) + "%";
                         } catch (final NumberFormatException e) {
-                            LOGGER.warn("Could not convert shallow seq to a percentage: " + shallowSeq.purityShallowSeq());
+                            LOGGER.warn("Could not convert shallow seq to a percentage: {}", shallowSeq.purityShallowSeq());
                             return NOT_AVAILABLE_STRING;
                         }
                     }
@@ -206,7 +206,7 @@ public class Lims {
         if (sampleData != null) {
             return sampleData.labProcedures();
         }
-        LOGGER.warn("Could not find lab SOP versions for sample: " + sampleBarcode + " in LIMS");
+        LOGGER.warn("Could not find lab SOP versions for sample: {} in LIMS", sampleBarcode);
         return NOT_AVAILABLE_STRING;
     }
 

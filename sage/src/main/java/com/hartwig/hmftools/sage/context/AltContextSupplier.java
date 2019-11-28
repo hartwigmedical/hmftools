@@ -9,10 +9,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
+import com.hartwig.hmftools.sage.select.TierSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,23 +24,24 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
+public class AltContextSupplier implements Supplier<List<AltContext>> {
 
-    private static final Logger LOGGER = LogManager.getLogger(TumorAltContextSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(AltContextSupplier.class);
 
     private final String sample;
-    private final SageConfig config;
     private final String bamFile;
-    private final List<AltContext> altContexts = Lists.newArrayList();
-    private final PositionSelector<AltContext> consumerSelector;
+    private final SageConfig config;
+    private final GenomeRegion bounds;
+    private final SamSlicerFactory samSlicerFactory;
     private final TumorRefContextCandidates candidates;
     private final RefContextConsumer refContextConsumer;
-    private final SamSlicerFactory samSlicerFactory;
+    private final PositionSelector<AltContext> consumerSelector;
+    private final List<AltContext> altContexts = Lists.newArrayList();
+    private final TierSelector tierSelector;
 
-    private final GenomeRegion bounds;
-
-    public TumorAltContextSupplier(final SageConfig config, final String sample, @NotNull final GenomeRegion bounds,
-            @NotNull final String bamFile, @NotNull final RefSequence refGenome, @NotNull final SamSlicerFactory samSlicerFactory) {
+    public AltContextSupplier(@NotNull final SageConfig config, @NotNull final String sample, @NotNull final GenomeRegion bounds,
+            @NotNull final String bamFile, @NotNull final RefSequence refGenome, @NotNull final SamSlicerFactory samSlicerFactory,
+            final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions) {
         this.config = config;
         this.sample = sample;
         this.bamFile = bamFile;
@@ -47,6 +50,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
         this.candidates = new TumorRefContextCandidates(sample);
         this.bounds = bounds;
         this.refContextConsumer = new RefContextConsumer(true, config, bounds, refGenome, this.candidates);
+        this.tierSelector = new TierSelector(panelRegions, hotspots);
 
     }
 
@@ -69,7 +73,7 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
             LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
         }
 
-        LOGGER.info("Tumor candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
+        LOGGER.info("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
 
@@ -96,9 +100,15 @@ public class TumorAltContextSupplier implements Supplier<List<AltContext>> {
 
     @NotNull
     private List<AltContext> hardQualFilter(@NotNull final List<AltContext> altContexts) {
-        return altContexts.stream()
-                .filter(x -> x.primaryReadContext().quality() >= config.filter().hardMinTumorQual())
-                .collect(Collectors.toList());
+        return altContexts.stream().filter(x -> sufficientQuality(x) || sufficientAltSupportInHotspot(x)).collect(Collectors.toList());
+    }
+
+    private boolean sufficientQuality(@NotNull final AltContext context) {
+        return context.primaryReadContext().quality() >= config.filter().hardMinTumorQual();
+    }
+
+    private boolean sufficientAltSupportInHotspot(@NotNull final AltContext context) {
+        return tierSelector.isHotspot(context) && context.altSupport() >= config.filter().hotspotAltSupportHardPass();
     }
 
 }

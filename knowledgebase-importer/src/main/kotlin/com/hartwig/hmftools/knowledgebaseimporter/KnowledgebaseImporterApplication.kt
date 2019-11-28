@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.knowledgebaseimporter
 
+import com.google.common.collect.Lists
 import com.hartwig.hmftools.apiclients.iclusion.api.IclusionApiWrapper
 import com.hartwig.hmftools.apiclients.iclusion.data.IclusionStudyDetails
 import com.hartwig.hmftools.extensions.cli.createCommandLine
 import com.hartwig.hmftools.extensions.cli.options.HmfOptions
 import com.hartwig.hmftools.extensions.cli.options.commands.RequiredCommandOption
 import com.hartwig.hmftools.extensions.cli.options.filesystem.RequiredInputFileOption
+import com.hartwig.hmftools.extensions.cli.options.flags.FlagOption
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredInputOption
 import com.hartwig.hmftools.extensions.cli.options.strings.RequiredOutputOption
 import com.hartwig.hmftools.extensions.csv.CsvReader
@@ -61,6 +63,7 @@ private fun createOptions(): HmfOptions {
     options.add(RequiredInputFileOption(CIVIC_EVIDENCE_LOCATION, "path to civic evidence file"))
     options.add(RequiredInputFileOption(COSMIC_FUSIONS_LOCATION, "path to cosmic fusions file"))
     options.add(RequiredInputFileOption(TREATMENT_TYPE_MAPPING_LOCATION, "path to treatment type mapping file"))
+    options.add(FlagOption(SKIP_ICLUSION, "if enabled, skips querying of iclusion database"))
     options.add(RequiredInputOption(ICLUSION_ENDPOINT, "iclusion endpoint"))
     options.add(RequiredInputOption(ICLUSION_CLIENT_ID, "iclusion clientId"))
     options.add(RequiredInputOption(ICLUSION_CLIENT_SECRET, "iclusion client secret"))
@@ -90,6 +93,11 @@ private fun readKnowledgebases(cmd: CommandLine, diseaseOntology: DiseaseOntolog
 }
 
 private fun readIclusionStudies(cmd: CommandLine): List<IclusionStudyDetails> {
+    if (cmd.hasOption(SKIP_ICLUSION)) {
+        logger.info("Skipping iclusion study query!")
+        return Lists.newArrayList()
+    }
+
     val iclusionEndpoint = cmd.getOptionValue(ICLUSION_ENDPOINT)
     logger.info("Connecting with iclusion API on $iclusionEndpoint")
     val iclusionApi = IclusionApiWrapper(iclusionEndpoint, cmd.getOptionValue(ICLUSION_CLIENT_ID),

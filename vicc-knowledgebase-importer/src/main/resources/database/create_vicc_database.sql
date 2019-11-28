@@ -7,12 +7,15 @@ DROP TABLE IF EXISTS featureName;
 DROP TABLE IF EXISTS tag;
 DROP TABLE IF EXISTS devTag;
 DROP TABLE IF EXISTS feature;
+DROP TABLE IF EXISTS featureInfo;
+DROP TABLE IF EXISTS featureAttribute;
 DROP TABLE IF EXISTS provenance;
 DROP TABLE IF EXISTS synonym;
 DROP TABLE IF EXISTS link;
 DROP TABLE IF EXISTS sequenceOntology;
 DROP TABLE IF EXISTS hierarchy;
 DROP TABLE IF EXISTS association;
+DROP TABLE IF EXISTS associationVariant;
 DROP TABLE IF EXISTS evidence;
 DROP TABLE IF EXISTS evidenceInfo;
 DROP TABLE IF EXISTS evidenceType;
@@ -245,14 +248,14 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE viccEntry
 (   id int NOT NULL AUTO_INCREMENT,
-    source varchar(255) NOT NULL,
+    source varchar(50) NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE gene
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    geneName varchar(255) NOT NULL,
+    geneName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -260,9 +263,9 @@ CREATE TABLE gene
 CREATE TABLE geneIdentifier
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    symbol varchar(255) NOT NULL,
-    entrezId varchar(255) NOT NULL,
-    ensemblGeneId varchar(255),
+    symbol varchar(20) NOT NULL,
+    entrezId varchar(20) NOT NULL,
+    ensemblGeneId varchar(20),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -270,7 +273,7 @@ CREATE TABLE geneIdentifier
 CREATE TABLE featureName
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    nameOfFeature varchar(2500),
+    nameOfFeature varchar(2000),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -278,7 +281,7 @@ CREATE TABLE featureName
 CREATE TABLE tag
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    tagName varchar(255) NOT NULL,
+    tagName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -286,7 +289,7 @@ CREATE TABLE tag
 CREATE TABLE devTag
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    devTagName varchar(255) NOT NULL,
+    devTagName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -294,26 +297,59 @@ CREATE TABLE devTag
 CREATE TABLE feature
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    name varchar(1000),
-    biomarkerType varchar(255),
-    referenceName varchar(255),
-    chromosome varchar(255),
-    start varchar(255),
-    end varchar(255),
+    name varchar(1000) NOT NULL,
+    biomarkerType varchar(100),
+    referenceName varchar(20),
+    chromosome varchar(20),
+    start varchar(20),
+    end varchar(20),
     ref varchar(1000),
-    alt varchar(255),
-    provenanceRule varchar(255),
-    geneSymbol varchar(255),
-    entrezId varchar(255),
-    description varchar(2000),
+    alt varchar(100),
+    provenanceRule varchar(20),
+    geneSymbol varchar(20),
+    entrezId varchar(20),
+    description varchar(1000),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE featureInfo
+(   id int NOT NULL AUTO_INCREMENT,
+    featureId int NOT NULL,
+    germlineOrSomatic varchar(20) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (featureId) REFERENCES feature(id)
+);
+
+CREATE TABLE featureAttribute
+(   id int NOT NULL AUTO_INCREMENT,
+    featureId int NOT NULL,
+    aminoAcidChange varchar(20),
+    germline varchar(20),
+    partnerGene varchar(20),
+    description varchar(20),
+    exons varchar(50),
+    notes varchar(20),
+    cosmic varchar(20),
+    effect varchar(20),
+    cnvType varchar(20),
+    featureAttributeId varchar(20),
+    cytoband varchar(20),
+    variantType varchar(20),
+    dnaChange varchar(20),
+    codons varchar(50),
+    chromosomeBasedCnv varchar(20),
+    transcript varchar(20),
+    descriptionType varchar(20),
+    chromosome varchar(20),
+    PRIMARY KEY (id),
+    FOREIGN KEY (featureId) REFERENCES feature(id)
 );
 
 CREATE TABLE provenance
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    provenanceName varchar(255) NOT NULL,
+    provenanceName varchar(1000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -321,7 +357,7 @@ CREATE TABLE provenance
 CREATE TABLE synonym
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    synonymName varchar(255),
+    synonymName varchar(150) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -329,7 +365,7 @@ CREATE TABLE synonym
 CREATE TABLE link
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    linkName varchar(255),
+    linkName varchar(200) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -337,10 +373,10 @@ CREATE TABLE link
 CREATE TABLE sequenceOntology
 (   id int NOT NULL AUTO_INCREMENT,
     featureId int NOT NULL,
-    soid varchar(255) NOT NULL,
-    parentSoid varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
-    parentName varchar(255) NOT NULL,
+    soid varchar(20) NOT NULL,
+    parentSoid varchar(20) NOT NULL,
+    name varchar(50) NOT NULL,
+    parentName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (featureId) REFERENCES feature(id)
 );
@@ -348,7 +384,7 @@ CREATE TABLE sequenceOntology
 CREATE TABLE hierarchy
 (   id int NOT NULL AUTO_INCREMENT,
     sequenceOntologyId int NOT NULL,
-    hierarchyName varchar(255),
+    hierarchyName varchar(20) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (sequenceOntologyId) REFERENCES sequenceOntology(id)
 );
@@ -356,22 +392,29 @@ CREATE TABLE hierarchy
 CREATE TABLE association
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    variantName varchar(255),
-    evidenceLevel varchar(255),
-    evidenceLabel varchar(255),
-    responseType varchar(255),
-    drugLabel varchar(2000),
-    sourceLink varchar(255),
+    evidenceLevel varchar(20),
+    evidenceLabel varchar(20),
+    responseType varchar(50),
+    drugLabels varchar(1500),
+    sourceLink varchar(100),
     description varchar(2500) NOT NULL,
-    oncogenic varchar(255),
+    oncogenic varchar(100),
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+);
+
+CREATE TABLE associationVariant
+(   id int NOT NULL AUTO_INCREMENT,
+    associationId int NOT NULL,
+    variantName varchar(1000) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
 CREATE TABLE evidence
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    description varchar(2000),
+    description varchar(1000),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -379,7 +422,7 @@ CREATE TABLE evidence
 CREATE TABLE evidenceInfo
 (   id int NOT NULL AUTO_INCREMENT,
     evidenceId int NOT NULL,
-    publication varchar(225) NOT NULL,
+    publication varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (evidenceId) REFERENCES evidence(id)
 );
@@ -387,8 +430,8 @@ CREATE TABLE evidenceInfo
 CREATE TABLE evidenceType
 (   id int NOT NULL AUTO_INCREMENT,
     evidenceId int NOT NULL,
-    sourceName varchar(225) NOT NULL,
-    idEvidenceType varchar(225),
+    sourceName varchar(50) NOT NULL,
+    idEvidenceType varchar(200),
     PRIMARY KEY (id),
     FOREIGN KEY (evidenceId) REFERENCES evidence(id)
 );
@@ -396,7 +439,7 @@ CREATE TABLE evidenceType
 CREATE TABLE publicationUrl
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
-    urlOfPublication varchar(255),
+    urlOfPublication varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -405,8 +448,8 @@ CREATE TABLE phenotype
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
     description varchar(255) NOT NULL,
-    family varchar(255) NOT NULL,
-    idPhenotype varchar(255),
+    family varchar(100) NOT NULL,
+    idPhenotype varchar(50),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
@@ -414,9 +457,9 @@ CREATE TABLE phenotype
 CREATE TABLE phenotypeType
 (   id int NOT NULL AUTO_INCREMENT,
     phenotypeId int NOT NULL,
-    source varchar(255),
+    source varchar(50) NOT NULL,
     term varchar(255) NOT NULL,
-    idPhenotypeType varchar(255) NOT NULL,
+    idPhenotypeType varchar(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (phenotypeId) REFERENCES phenotype(id)
 );
@@ -425,33 +468,33 @@ CREATE TABLE environmentalContext
 (   id int NOT NULL AUTO_INCREMENT,
     associationId int NOT NULL,
     term varchar(255),
-    description varchar(255),
-    source varchar(255),
-    usanStem varchar(255),
-    toxicity varchar(2000),
-    idEnvironmentalContext varchar(255),
+    description varchar(255) NOT NULL,
+    source varchar(50),
+    usanStem varchar(100),
+    toxicity varchar(1500),
+    idEnvironmentalContext varchar(20),
     PRIMARY KEY (id),
     FOREIGN KEY (associationId) REFERENCES association(id)
 );
 
 CREATE TABLE approvedCountry
 (   id int NOT NULL AUTO_INCREMENT,
-    environmentContextId int NOT NULL,
-    approvedCountryName varchar(225) NOT NULL,
+    environmentalContextId int NOT NULL,
+    approvedCountryName varchar(20) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentContextId) REFERENCES environmentalContext(id)
+    FOREIGN KEY (environmentalContextId) REFERENCES environmentalContext(id)
 );
 
 CREATE TABLE taxonomy
 (   id int NOT NULL AUTO_INCREMENT,
-    environmentContextId int NOT NULL,
-    kingdom varchar(225) NOT NULL,
-    directParent varchar(225) NOT NULL,
-    class varchar(225) NOT nULL,
-    subClass varchar(225),
-    superClass varchar(225) NOT NULL,
+    environmentalContextId int NOT NULL,
+    kingdom varchar(20) NOT NULL,
+    directParent varchar(100) NOT NULL,
+    class varchar(50) NOT nULL,
+    subClass varchar(50),
+    superClass varchar(50) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (environmentContextId) REFERENCES environmentalContext(id)
+    FOREIGN KEY (environmentalContextId) REFERENCES environmentalContext(id)
 );
 
 CREATE TABLE sage

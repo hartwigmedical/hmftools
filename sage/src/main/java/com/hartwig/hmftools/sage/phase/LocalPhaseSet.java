@@ -14,23 +14,25 @@ import org.jetbrains.annotations.NotNull;
 class LocalPhaseSet implements Consumer<SageVariant> {
 
     private int phase;
+    private final boolean germline;
     private final Consumer<SageVariant> consumer;
     private final ArrayDeque<SageVariant> deque = new ArrayDeque<>();
 
-    LocalPhaseSet(@NotNull final Consumer<SageVariant> consumer) {
+    LocalPhaseSet(boolean germline, @NotNull final Consumer<SageVariant> consumer) {
+        this.germline = germline;
         this.consumer = consumer;
     }
 
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
-        final AltContext newAltContext = newEntry.primaryTumor();
-        final ReadContext newReadContext = newAltContext.primaryReadContext().readContext();
+        final AltContext newAltContext = altContext(newEntry);
+        final ReadContext newReadContext = newAltContext.primaryReadContext().readContext();;
 
         Iterator<SageVariant> iterator = deque.iterator();
         while (iterator.hasNext()) {
             final SageVariant oldEntry = iterator.next();
 
-            final AltContext oldAltContext = oldEntry.primaryTumor();
+            final AltContext oldAltContext = altContext(oldEntry);
             final ReadContext oldReadContext = oldAltContext.primaryReadContext().readContext();
             long distance = newAltContext.position() - oldAltContext.position();
             int offset = offset(oldEntry.normal(), newEntry.normal());
@@ -52,6 +54,10 @@ class LocalPhaseSet implements Consumer<SageVariant> {
         }
 
         deque.add(newEntry);
+    }
+
+    private AltContext altContext(@NotNull final SageVariant newEntry) {
+        return germline ? newEntry.normal() : newEntry.primaryTumor();
     }
 
     public void flush() {

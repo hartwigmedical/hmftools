@@ -45,7 +45,9 @@ public class ViccJsonSQLImporter {
         LOGGER.info(" Loaded {} VICC entries from file.", viccEntries.size());
 
         ViccDAO viccDAO = connect(cmd);
+        LOGGER.info("Deleting all from VICC db");
         viccDAO.deleteAll();
+        LOGGER.info("Starting insertion of all VICC entries");
         int count = 0;
         for (ViccEntry viccEntry : viccEntries) {
             viccDAO.writeViccEntry(viccEntry);

@@ -30,21 +30,15 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
     }
 
     private fun curateGene(gene: String): String {
-        if (gene == "DUX4L1") {
-            return "DUX4"
-        } else if (gene == "SIP1") {
-            return "GEMIN2"
-        } else if (gene == "KIAA0284") {
-            return "CEP170B"
-        } else if (gene == "ACCN1") {
-            return "ASIC2"
-        } else if (gene == "FAM22A") {
-            return "NUTM2A"
-        } else if (gene == "ROD1") {
-            return "PTBP3"
+        return when (gene) {
+            "DUX4L1" -> "DUX4"
+            "SIP1" -> "GEMIN2"
+            "KIAA0284" -> "CEP170B"
+            "ACCN1" -> "ASIC2"
+            "FAM22A" -> "NUTM2A"
+            "ROD1" -> "PTBP3"
+            else -> gene
         }
-
-        return gene
     }
 
     private fun isBlackListed(fiveGene: String, threeGene: String) : Boolean {
@@ -60,6 +54,11 @@ class Cosmic(fusionsLocation: String) : Knowledgebase {
         } else if (fiveGene == "SEPT8" && threeGene == "AFF4") {
             return true
         } else if (fiveGene == "IL6R" && threeGene == "ATP8B2") {
+            return true
+        }
+
+        // See DEV-1061. Found once in a single publication: https://www.ncbi.nlm.nih.gov/pubmed/20033038
+        if (fiveGene == "NF1" && threeGene == "ASIC2") {
             return true
         }
 

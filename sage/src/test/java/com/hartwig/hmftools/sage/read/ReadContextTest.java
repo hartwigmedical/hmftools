@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.util.Strings;
@@ -73,11 +74,28 @@ public class ReadContextTest {
 
     @Test
     public void testPhasedMNV() {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGATC".getBytes());
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 4, 4, 5, 4, "ATCTTGATCT".getBytes());
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGAT".getBytes());
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATC".getBytes());
 
         assertTrue(victim1.phased(-1, victim2));
         assertTrue(victim2.phased(1, victim1));
+    }
+
+    @Test
+    public void testPhasedReadLongEnoughOnAtLeastOneSide() {
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGA".getBytes());
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATCT".getBytes());
+
+        assertTrue(victim1.phased(-1, victim2));
+        assertTrue(victim2.phased(1, victim1));
+    }
+
+    @Test
+    public void testBothCentreMatches() {
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "AAAATGGGG".getBytes());
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1005, 5, 5, 5, 4,     "TGGGGACCCC".getBytes());
+        assertFalse(victim1.phased(-5, victim2));
+        assertFalse(victim2.phased(5, victim1));
     }
 
 }

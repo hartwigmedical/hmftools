@@ -1,28 +1,26 @@
 package com.hartwig.hmftools.sage;
 
+import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
+
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
@@ -37,140 +35,67 @@ public class SageVCF implements AutoCloseable {
     public final static String MERGE_FILTER = "merge";
     public final static String DEDUP_FILTER = "dedup";
 
-    private final static String READ_CONTEXT = "RC";
-    private final static String READ_CONTEXT_DESCRIPTION = "Read context";
-    private final static String READ_CONTEXT_COUNT = "RC_CNT";
-    private final static String READ_CONTEXT_COUNT_DESCRIPTION =
+    public final static String READ_CONTEXT = "RC";
+    public final static String READ_CONTEXT_DESCRIPTION = "Read context";
+    public final static String READ_CONTEXT_COUNT = "RC_CNT";
+    public final static String READ_CONTEXT_COUNT_DESCRIPTION =
             "Read context counts [Full, Partial, Realigned, Shortened, Lengthened, Coverage]";
-    private static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
-    private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
-    private static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
-    private static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
-    private static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
-    private static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
-    private static final String READ_CONTEXT_QUALITY = "RC_QUAL";
-    private static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Qual, BaseQual, MapQual, JitterPenalty]";
-    private static final String READ_CONTEXT_AF_DESCRIPTION =
+    public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
+    public static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
+    public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
+    public static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
+    public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
+    public static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
+    public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
+    public static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Qual, BaseQual, MapQual, JitterPenalty]";
+    public static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Realigned) / Coverage";
 
-    private static final String READ_CONTEXT_DISTANCE = "RC_DIS";
-    private static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
-    private static final String READ_CONTEXT_DIFFERENCE = "RC_DIF";
-    private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
-    private static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
-    private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
+    public static final String READ_CONTEXT_DISTANCE = "RC_DIS";
+    public static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
+    public static final String READ_CONTEXT_DIFFERENCE = "RC_DIF";
+    public static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
+    public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
+    public static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
 
-
-    private final static String TIER = "TIER";
+    public final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
-    private final static String PHASE = "LPS";
+    public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
 
-    private final SageConfig config;
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
 
     SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
-        this.config = config;
-
-        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile()).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-        refContextEnrichment = new SomaticRefContextEnrichment(reference, this::write);
+        writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
+                .modifyOption(Options.INDEX_ON_THE_FLY, true)
+                .modifyOption(Options.USE_ASYNC_IO, false)
+                .setReferenceDictionary(reference.getSequenceDictionary())
+                .build();
+        refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
         final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
+        header.setSequenceDictionary(reference.getSequenceDictionary());
         writer.writeHeader(header);
     }
 
-    public void write(@NotNull final SageVariant entry) {
-        if (shouldWrite(entry)) {
-            refContextEnrichment.accept(create(entry));
+    public void addVCF(@NotNull final String filename) throws IOException {
+        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(filename, new VCFCodec(), false)) {
+            for (VariantContext context : reader.iterator()) {
+                refContextEnrichment.accept(context);
+            }
         }
     }
 
-    private void write(@NotNull final VariantContext context) {
+    public void write(@NotNull final VariantContext context) {
+        refContextEnrichment.accept(context);
+    }
+
+    private void writeToFile(@NotNull final VariantContext context) {
         writer.add(context);
     }
 
-    private boolean shouldWrite(@NotNull final SageVariant entry) {
-        if (entry.isPassing()) {
-            return true;
-        }
-
-        if (config.filter().hardFilter()) {
-            return false;
-        }
-
-        final AltContext normal = entry.normal();
-        return normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
-    }
-
     @NotNull
-    private VariantContext create(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.normal();
-        final List<AltContext> tumorContexts = entry.tumorAltContexts();
-
-        assert (tumorContexts.size() >= 1);
-
-        final AltContext firstTumor = tumorContexts.get(0);
-
-        final Allele ref = Allele.create(normal.ref(), true);
-        final Allele alt = Allele.create(normal.alt(), false);
-        final List<Allele> alleles = Lists.newArrayList(ref, alt);
-        final Genotype normalGenotype = createGenotype(alleles, normal);
-
-        final List<Genotype> genotypes = tumorContexts.stream().map(x -> createGenotype(alleles, x)).collect(Collectors.toList());
-        genotypes.add(0, normalGenotype);
-
-        final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
-
-        final VariantContextBuilder builder = new VariantContextBuilder().chr(normal.chromosome())
-                .start(normal.position())
-                .attribute(READ_CONTEXT, firstTumorCounter.toString())
-                .attribute(READ_CONTEXT_DIFFERENCE, firstTumorCounter.readContext().distanceCigar())
-                .attribute(READ_CONTEXT_DISTANCE, firstTumorCounter.readContext().distance())
-                .attribute(TIER, entry.tier())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, firstTumorCounter.readContextVaf())
-                .computeEndFromAlleles(alleles, (int) normal.position())
-                .source("SAGE")
-                .genotypes(genotypes)
-                .alleles(alleles)
-                .filters(entry.filters());
-
-        if (!firstTumor.primaryReadContext().readContext().microhomology().isEmpty()) {
-            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, firstTumorCounter.readContext().microhomology());
-        }
-
-        if (firstTumor.primaryReadContext().readContext().repeatCount() > 0) {
-            builder.attribute(READ_CONTEXT_REPEAT_COUNT, firstTumorCounter.readContext().repeatCount())
-                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, firstTumorCounter.readContext().repeat());
-        }
-
-        if (entry.localPhaseSet() > 0) {
-            builder.attribute(PHASE, entry.localPhaseSet());
-        }
-
-        final VariantContext context = builder.make();
-        context.getCommonInfo().setLog10PError(firstTumorCounter.quality() / -10d);
-        if (context.isNotFiltered()) {
-            context.getCommonInfo().addFilter(PASS);
-        }
-
-        return context;
-    }
-
-    @NotNull
-    private Genotype createGenotype(@NotNull final List<Allele> alleles, @NotNull final AltContext evidence) {
-        ReadContextCounter readContextCounter = evidence.primaryReadContext();
-
-        return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
-                .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
-                .attribute(READ_CONTEXT_QUALITY, readContextCounter.qual())
-                .attribute(READ_CONTEXT_COUNT, readContextCounter.rcc())
-                .attribute(READ_CONTEXT_IMPROPER_PAIR, readContextCounter.improperPair())
-                .alleles(alleles)
-                .make();
-    }
-
-    @NotNull
-    private static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
+    public static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
         final List<String> allSamples = Lists.newArrayList(normalSample);
         allSamples.addAll(tumorSamples);
 
@@ -184,7 +109,10 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
+                1,
+                VCFHeaderLineType.Integer,
+                READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
                 4,
                 VCFHeaderLineType.Integer,

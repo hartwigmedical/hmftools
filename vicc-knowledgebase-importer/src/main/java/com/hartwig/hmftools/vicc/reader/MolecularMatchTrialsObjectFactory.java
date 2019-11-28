@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +65,7 @@ final class MolecularMatchTrialsObjectFactory {
                         ? null
                         : objectMolecularMatchTrials.getAsJsonPrimitive("startDate").getAsString())
                 .title(objectMolecularMatchTrials.getAsJsonPrimitive("title").getAsString())
-                .molecularAlterations(jsonArrayToStringList(objectMolecularMatchTrials.getAsJsonArray("molecularAlterations")))
+                .molecularAlterations(toStringList(objectMolecularMatchTrials.getAsJsonArray("molecularAlterations")))
                 .score(objectMolecularMatchTrials.getAsJsonPrimitive("_score").getAsString())
                 .intervation(createMolecularMatchTrialsInterventions(objectMolecularMatchTrials.getAsJsonArray("interventions")))
                 .locations(createMolecularMatchTrialsLocations(objectMolecularMatchTrials.getAsJsonArray("locations")))
@@ -211,14 +211,14 @@ final class MolecularMatchTrialsObjectFactory {
         if (otherNameObject.get("other_name").isJsonPrimitive()) {
             return Collections.singletonList(otherNameObject.getAsJsonPrimitive("other_name").getAsString());
         } else {
-            return jsonArrayToStringList(otherNameObject.getAsJsonArray("other_name"));
+            return toStringList(otherNameObject.getAsJsonArray("other_name"));
         }
     }
 
     @NotNull
     private static Iterable<String> armGroupLabelMolecularMatchTrials(@NotNull JsonObject armGroupLabel) {
         if (armGroupLabel.get("arm_group_label").isJsonArray()) {
-            return jsonArrayToStringList(armGroupLabel.getAsJsonArray("arm_group_label"));
+            return toStringList(armGroupLabel.getAsJsonArray("arm_group_label"));
         } else if (armGroupLabel.get("arm_group_label").isJsonPrimitive()) {
             return Collections.singletonList(armGroupLabel.getAsJsonPrimitive("arm_group_label").getAsString());
         } else {
@@ -288,7 +288,7 @@ final class MolecularMatchTrialsObjectFactory {
 
         return ImmutableMolecularMatchTrialsLocation.builder()
                 .type(locationObject.getAsJsonPrimitive("type").getAsString())
-                .coordinates(jsonArrayToStringList(locationObject.getAsJsonArray("coordinates")))
+                .coordinates(toStringList(locationObject.getAsJsonArray("coordinates")))
                 .build();
     }
 

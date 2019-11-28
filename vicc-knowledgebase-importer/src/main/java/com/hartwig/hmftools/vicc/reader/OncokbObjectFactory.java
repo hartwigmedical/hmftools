@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.jsonArrayToStringList;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.List;
 import java.util.Set;
@@ -200,7 +200,7 @@ final class OncokbObjectFactory {
                         ? null
                         : objectGene.getAsJsonPrimitive("curatedRefSeq").getAsString())
                 .entrezGeneId(objectGene.getAsJsonPrimitive("entrezGeneId").getAsString())
-                .geneAliases(Lists.newArrayList(jsonArrayToStringList(objectGene.getAsJsonArray("geneAliases"))))
+                .geneAliases(Lists.newArrayList(toStringList(objectGene.getAsJsonArray("geneAliases"))))
                 .tsg(objectGene.getAsJsonPrimitive("tsg").getAsString())
                 .curatedIsoform(objectGene.get("curatedIsoform").isJsonNull()
                         ? null

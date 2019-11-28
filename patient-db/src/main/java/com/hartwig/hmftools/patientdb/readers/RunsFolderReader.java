@@ -21,7 +21,7 @@ public final class RunsFolderReader {
     }
 
     @NotNull
-    public static List<RunContext> extractRunContexts(@NotNull final File dir) throws IOException {
+    public static List<RunContext> extractRunContexts(@NotNull final File dir, @NotNull String whichPackages) throws IOException {
         final List<RunContext> runContexts = Lists.newArrayList();
         final File[] folders = dir.listFiles(File::isDirectory);
         if (folders == null) {
@@ -30,7 +30,7 @@ public final class RunsFolderReader {
         for (final File folder : folders) {
             try {
                 final String runDirectory = FolderChecker.build().checkFolder(folder.getPath());
-                final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
+                final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory, whichPackages);
                 runContexts.add(runContext);
             } catch (IOException e) {
                 LOGGER.error(e.getMessage());

@@ -31,9 +31,9 @@ public final class LimsFactory {
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
     private static final String LIMS_JSON_FILE = "lims.json";
-    private static final String PRE_LIMS_ARRIVAL_DATES_FILE = "pre_lims_arrival_dates.csv";
-    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_FILE = "samples_without_sampling_date.csv";
-    private static final String LIMS_SHALLOW_SEQ = "shallow_seq_purity.csv";
+    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates.csv";
+    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_CSV = "samples_without_sampling_date.csv";
+    private static final String LIMS_SHALLOW_SEQ_CSV = "shallow_seq_purity.csv";
 
     private static final String FIELD_SEPARATOR = ",";
 
@@ -46,12 +46,17 @@ public final class LimsFactory {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
 
-        Map<String, LocalDate> preLIMSArrivalDates =
-                readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_FILE);
+        Map<String, LocalDate> preLIMSArrivalDates = readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_CSV);
         Set<String> samplesWithoutSamplingDate =
-                readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_FILE);
-        Map<String, LimsShallowSeqData> shallowSeqPerSample = readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ);
-        return new Lims(dataPerSampleBarcode, dataPerSubmission, preLIMSArrivalDates, samplesWithoutSamplingDate, shallowSeqPerSample);
+                readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_CSV);
+        Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
+                readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_CSV);
+
+        return new Lims(dataPerSampleBarcode,
+                dataPerSubmission,
+                preLIMSArrivalDates,
+                samplesWithoutSamplingDate,
+                shallowSeqPerSampleBarcode);
     }
 
     @NotNull
@@ -62,23 +67,23 @@ public final class LimsFactory {
     @NotNull
     @VisibleForTesting
     static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
-        final Map<String, LimsShallowSeqData> shallowSeqPerSample = Maps.newHashMap();
+        final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode = Maps.newHashMap();
         final List<String> lines =
                 com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, 5);
             if (parts.length == 5) {
-                shallowSeqPerSample.put(parts[0],
+                shallowSeqPerSampleBarcode.put(parts[0],
                         ImmutableLimsShallowSeqData.of(parts[0],
                                 parts[1],
                                 parts[2],
                                 Boolean.parseBoolean(parts[3]),
                                 Boolean.parseBoolean(parts[4])));
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in shallow seq csv: " + line);
+                LOGGER.warn("Could not properly parse line in shallow seq csv: {}", line);
             }
         }
-        return shallowSeqPerSample;
+        return shallowSeqPerSampleBarcode;
     }
 
     @NotNull
@@ -158,12 +163,12 @@ public final class LimsFactory {
                 try {
                     arrivalDate = LocalDate.parse(arrivalDateString, LimsConstants.DATE_FORMATTER);
                 } catch (DateTimeParseException exc) {
-                    LOGGER.warn("Could not parse date in pre-HMF arrival date csv: " + arrivalDateString);
+                    LOGGER.warn("Could not parse date in pre-HMF arrival date csv: {}", arrivalDateString);
                     arrivalDate = null;
                 }
                 arrivalDatesPerSample.put(sample, arrivalDate);
             } else {
-                LOGGER.warn("Invalid line in pre-HMF arrival date csv: " + line);
+                LOGGER.warn("Invalid line in pre-HMF arrival date csv: {}", line);
             }
         }
         return arrivalDatesPerSample;

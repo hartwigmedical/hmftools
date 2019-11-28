@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class SequenceOntology {
 
-    @Nullable
+    @NotNull
     public abstract List<String> hierarchy();
 
     @NotNull

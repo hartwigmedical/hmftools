@@ -119,7 +119,15 @@ public class CreateShallowSeqDB {
             DecimalFormat decimalFormat = new DecimalFormat("0.00");
             String purity = decimalFormat.format(purityContext.bestFit().purity());
 
-            if (currentShallowSeqData.isEmpty()) {
+            boolean inFile = false;
+            for (LimsShallowSeqData sample : currentShallowSeqData) {
+                if (sample.sampleBarcode().equals(sampleBarcode)) {
+                    LOGGER.warn("Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
+                            + " writing to shallow seq db!", setPath, sampleBarcode);
+                    inFile = true;
+                }
+            }
+            if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
                 shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
                         .sampleBarcode(sampleBarcode)
                         .sampleId(tumorSample)
@@ -128,25 +136,6 @@ public class CreateShallowSeqDB {
                         .hasReliablePurity(hasReliablePurity)
                         .build());
                 LOGGER.info("Set: {} is added to shallow list!", setPath);
-            } else {
-                boolean inFile = false;
-                for (LimsShallowSeqData sample : currentShallowSeqData) {
-                    if (sample.sampleBarcode().equals(sampleBarcode)) {
-                        LOGGER.warn("Sample barcode is already present in file. Skipping set: {} with sample barcode: {} for"
-                                + " writing to shallow seq db!", setPath, sampleBarcode);
-                        inFile = true;
-                    }
-                }
-                if (!inFile && !sampleBarcode.equals(Strings.EMPTY)) {
-                    shallowSeqDataToAppend.add(ImmutableLimsShallowSeqData.builder()
-                            .sampleBarcode(sampleBarcode)
-                            .sampleId(tumorSample)
-                            .purityShallowSeq(purity)
-                            .hasReliableQuality(hasReliableQuality)
-                            .hasReliablePurity(hasReliablePurity)
-                            .build());
-                    LOGGER.info("Set: {} is added to shallow list!", setPath);
-                }
             }
         }
         return shallowSeqDataToAppend;
@@ -154,7 +143,7 @@ public class CreateShallowSeqDB {
 
     @NotNull
     private static List<RunContext> loadRunContexts(@NotNull String runsDirectory) throws IOException {
-        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
+        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), "shallow-seq");
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;
@@ -164,13 +153,12 @@ public class CreateShallowSeqDB {
             throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(shallowSeqCsv, true));
         for (LimsShallowSeqData dataToAppend : shallowSeqDataToAppend) {
-            if (!dataToAppend.sampleBarcode().equals(Strings.EMPTY)) {
-                String outputStringForFile =
-                        dataToAppend.sampleBarcode() + DELIMITER + dataToAppend.sampleId() + DELIMITER + dataToAppend.purityShallowSeq()
-                                + DELIMITER + dataToAppend.hasReliableQuality() + DELIMITER + dataToAppend.hasReliablePurity() + "\n";
-                writer.write(outputStringForFile);
-                LOGGER.info("Sample barcode: {} is added to shallow seq db!", dataToAppend.sampleBarcode());
-            }
+            String outputStringForFile =
+                    dataToAppend.sampleBarcode() + DELIMITER + dataToAppend.sampleId() + DELIMITER + dataToAppend.purityShallowSeq()
+                            + DELIMITER + dataToAppend.hasReliableQuality() + DELIMITER + dataToAppend.hasReliablePurity() + "\n";
+            writer.write(outputStringForFile);
+            LOGGER.info("Sample barcode: {} is added to shallow seq db!", dataToAppend.sampleBarcode());
+
         }
         writer.close();
     }
