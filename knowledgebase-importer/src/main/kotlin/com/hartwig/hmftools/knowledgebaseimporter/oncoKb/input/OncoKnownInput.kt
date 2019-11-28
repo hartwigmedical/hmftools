@@ -38,6 +38,8 @@ data class OncoKnownInput(private val Isoform: String?, @get:JvmName("getGene_")
             Alteration.contains("IGK")                          -> null
             Alteration.contains("TRB")                          -> null
             Alteration.contains("Delta")                        -> null
+            Alteration == "PVT1-MYC Fusion"                     -> null // See DEV-1061
+            Alteration == "ESR1-CCDC170 Fusion"                 -> null // See DEV-1061
             else                                                -> this
         }
     }
