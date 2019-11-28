@@ -33,7 +33,7 @@ public final class LimsFactory {
     private static final String LIMS_JSON_FILE = "lims.json";
     private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates.csv";
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_CSV = "samples_without_sampling_date.csv";
-    private static final String LIMS_SHALLOW_SEQ_CSV = "shallow_seq_purity_new.csv";
+    private static final String LIMS_SHALLOW_SEQ_CSV = "shallow_seq_purity.csv";
 
     private static final String FIELD_SEPARATOR = ",";
 

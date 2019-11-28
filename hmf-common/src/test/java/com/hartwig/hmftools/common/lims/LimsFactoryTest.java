@@ -110,7 +110,7 @@ public class LimsFactoryTest {
     @Test
     public void readCorrectlyShallowSeqPurity() throws IOException {
         Map<String, LimsShallowSeqData> shallowSeqPuritySample =
-                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity_new.csv");
+                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.csv");
         assertEquals(3, shallowSeqPuritySample.size());
 
         final String sample = "SAMP01011234T";
