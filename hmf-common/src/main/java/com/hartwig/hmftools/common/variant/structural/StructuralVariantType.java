@@ -19,7 +19,7 @@ public enum StructuralVariantType {
         return StructuralVariantType.valueOf(svType);
     }
 
-    public static int typeAsInt(StructuralVariantType type)
+    public static int typeAsInt(@NotNull StructuralVariantType type)
     {
         // ordered alphabetically
         switch(type)
