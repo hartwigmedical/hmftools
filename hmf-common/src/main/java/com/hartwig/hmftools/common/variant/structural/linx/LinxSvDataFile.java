@@ -3,11 +3,11 @@ package com.hartwig.hmftools.common.variant.structural.linx;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DELIMITER;
-import static com.hartwig.hmftools.common.variant.structural.linx.LinxClusterFile.DECIMAL_FORMAT;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -18,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 public class LinxSvDataFile
 {
     private static final String FILE_EXTENSION = ".linx.svs.tsv";
+
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
 
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
@@ -37,7 +39,7 @@ public class LinxSvDataFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxSvData> svDataList)
+    private static List<String> toLines(@NotNull final List<LinxSvData> svDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -46,7 +48,7 @@ public class LinxSvDataFile
     }
 
     @NotNull
-    static List<LinxSvData> fromLines(@NotNull List<String> lines)
+    private static List<LinxSvData> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("svId")).map(LinxSvDataFile::fromString).collect(toList());
     }
@@ -112,26 +114,26 @@ public class LinxSvDataFile
         int index = 0;
 
         return ImmutableLinxSvData.builder()
-                .svId(Integer.valueOf(values[index++]))
-                .clusterId(Integer.valueOf(values[index++]))
+                .svId(Integer.parseInt(values[index++]))
+                .clusterId(Integer.parseInt(values[index++]))
                 .clusterReason(values[index++])
-                .fragileSiteStart(Boolean.valueOf(values[index++]))
-                .fragileSiteEnd(Boolean.valueOf(values[index++]))
-                .isFoldback(Boolean.valueOf(values[index++]))
+                .fragileSiteStart(Boolean.parseBoolean(values[index++]))
+                .fragileSiteEnd(Boolean.parseBoolean(values[index++]))
+                .isFoldback(Boolean.parseBoolean(values[index++]))
                 .lineTypeStart(values[index++])
                 .lineTypeEnd(values[index++])
-                .ploidyMin(Double.valueOf(values[index++]))
-                .ploidyMax(Double.valueOf(values[index++]))
+                .ploidyMin(Double.parseDouble(values[index++]))
+                .ploidyMax(Double.parseDouble(values[index++]))
                 .geneStart(values[index++])
                 .geneEnd(values[index++])
-                .replicationTimingStart(Double.valueOf(values[index++]))
-                .replicationTimingEnd(Double.valueOf(values[index++]))
-                .localTopologyIdStart(Integer.valueOf(values[index++]))
-                .localTopologyIdEnd(Integer.valueOf(values[index++]))
+                .replicationTimingStart(Double.parseDouble(values[index++]))
+                .replicationTimingEnd(Double.parseDouble(values[index++]))
+                .localTopologyIdStart(Integer.parseInt(values[index++]))
+                .localTopologyIdEnd(Integer.parseInt(values[index++]))
                 .localTopologyStart(values[index++])
                 .localTopologyEnd(values[index++])
-                .localTICountStart(Integer.valueOf(values[index++]))
-                .localTICountEnd(Integer.valueOf(values[index++]))
+                .localTICountStart(Integer.parseInt(values[index++]))
+                .localTICountEnd(Integer.parseInt(values[index++]))
                 .build();
     }
 }

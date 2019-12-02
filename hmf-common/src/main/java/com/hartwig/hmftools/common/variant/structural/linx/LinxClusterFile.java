@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -15,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class LinxClusterFile
 {
-    public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0000");
     public static final String DELIMITER = "\t";
 
     private static final String FILE_EXTENSION = ".linx.clusters.tsv";

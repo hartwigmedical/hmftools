@@ -49,7 +49,7 @@ public class LinxViralInsertFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxViralInsertFile> viruses)
+    private static List<String> toLines(@NotNull final List<LinxViralInsertFile> viruses)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -58,7 +58,7 @@ public class LinxViralInsertFile
     }
 
     @NotNull
-    static List<LinxViralInsertFile> fromLines(@NotNull List<String> lines)
+    private static List<LinxViralInsertFile> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("SampleId")).map(LinxViralInsertFile::fromString).collect(toList());
     }

@@ -36,7 +36,7 @@ public class LinxFusionFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxFusion> fusions)
+    private static List<String> toLines(@NotNull final List<LinxFusion> fusions)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -45,7 +45,7 @@ public class LinxFusionFile
     }
 
     @NotNull
-    static List<LinxFusion> fromLines(@NotNull List<String> lines)
+    private static List<LinxFusion> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("FivePrimeBreakendId")).map(LinxFusionFile::fromString).collect(toList());
     }
@@ -101,21 +101,21 @@ public class LinxFusionFile
         int index = 0;
 
         return ImmutableLinxFusion.builder()
-                .fivePrimeBreakendId(Integer.valueOf(values[index++]))
-                .threePrimeBreakendId(Integer.valueOf(values[index++]))
+                .fivePrimeBreakendId(Integer.parseInt(values[index++]))
+                .threePrimeBreakendId(Integer.parseInt(values[index++]))
                 .name(values[index++])
-                .reported(Boolean.valueOf(values[index++]))
+                .reported(Boolean.parseBoolean(values[index++]))
                 .reportedType(values[index++])
-                .phased(Boolean.valueOf(values[index++]))
-                .chainLength(Integer.valueOf(values[index++]))
-                .chainLinks(Integer.valueOf(values[index++]))
-                .chainTerminated(Boolean.valueOf(values[index++]))
+                .phased(Boolean.parseBoolean(values[index++]))
+                .chainLength(Integer.parseInt(values[index++]))
+                .chainLinks(Integer.parseInt(values[index++]))
+                .chainTerminated(Boolean.parseBoolean(values[index++]))
                 .domainsKept(values[index++])
                 .domainsLost(values[index++])
-                .skippedExonsUp(Integer.valueOf(values[index++]))
-                .skippedExonsDown(Integer.valueOf(values[index++]))
-                .fusedExonUp(Integer.valueOf(values[index++]))
-                .fusedExonDown(Integer.valueOf(values[index++]))
+                .skippedExonsUp(Integer.parseInt(values[index++]))
+                .skippedExonsDown(Integer.parseInt(values[index++]))
+                .fusedExonUp(Integer.parseInt(values[index++]))
+                .fusedExonDown(Integer.parseInt(values[index++]))
                 .build();
     }
 
