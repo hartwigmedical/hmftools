@@ -98,7 +98,7 @@ public class SageApplication implements AutoCloseable {
         }
 
 //                contigContexts.add(runChromosome("17", config.regionSliceSize(), 4_000_000));
-        //                contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
+//                        contigContexts.add(runChromosome("17", config.regionSliceSize(), dictionary().getSequence("17").getSequenceLength()));
         //        contigContexts.add(runChromosome("15", config.regionSliceSize(), dictionary().getSequence("15").getSequenceLength()));
         //                contigContexts.add(runSingleRegion("17", 6133723, 6133723));
         //                        contigContexts.add(runSingleRegion("1", 696644, 696644));
@@ -122,6 +122,9 @@ public class SageApplication implements AutoCloseable {
         //                                        contigContexts.add(runSingleRegion("10", 42350000, 42450000));
         //        contigContexts.add(runSingleRegion("18", 48609831, 48609831));
         //        contigContexts.add(runSingleRegion("12", 50479067, 50479067));
+//                contigContexts.add(runSingleRegion("17", 210598, 210598));
+//                contigContexts.add(runSingleRegion("17", 302, 302));
+//                contigContexts.add(runSingleRegion("17", 1995134, 1995135));
 
         for (Future<ChromosomePipeline> contigContext : contigContexts) {
             final ChromosomePipeline chromosomePipeline = contigContext.get();

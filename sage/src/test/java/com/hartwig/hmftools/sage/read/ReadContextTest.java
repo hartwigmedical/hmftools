@@ -57,12 +57,12 @@ public class ReadContextTest {
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGT".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(1, "GT".getBytes()));
+        assertEquals(ReadContextMatch.CORE, victim.matchAtPosition(1, "GT".getBytes()));
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(1, "GTAA".getBytes()));
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(0, "TAA".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "TA".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "T".getBytes()));
+        assertEquals(ReadContextMatch.CORE, victim.matchAtPosition(0, "TA".getBytes()));
+        assertEquals(ReadContextMatch.CORE, victim.matchAtPosition(0, "T".getBytes()));
     }
 
     @Test

@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
 import org.jetbrains.annotations.NotNull;
@@ -56,11 +57,14 @@ public class SageVariantFactory {
             @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
 
+        final ReadContextCounter normalCounter = normal.primaryReadContext();
+
+
         if (!skipMinTumorQualTest(tier, primaryTumor) && primaryTumor.primaryReadContext().quality() < config.minTumorQual()) {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
 
-        if (Doubles.lessThan(primaryTumor.primaryReadContext().readContextVaf(), config.minTumorVaf())) {
+        if (Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
             result.add(SoftFilterConfig.MIN_TUMOR_VAF);
         }
 
@@ -68,17 +72,17 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
         }
 
-        if (Doubles.greaterThan(normal.altAF(), config.maxGermlineVaf())) {
+        if (Doubles.greaterThan(normalCounter.vaf(), config.maxGermlineVaf())) {
             result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
         }
 
-        double tumorReadContextSupport = primaryTumor.primaryReadContext().support();
-        double germlineReadContextSupport = normal.primaryReadContext().support();
-        if (Doubles.positive(tumorReadContextSupport)) {
-            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
-            }
-        }
+//        double tumorReadContextSupport = primaryTumor.primaryReadContext().support();
+//        double germlineReadContextSupport = normal.primaryReadContext().support();
+//        if (Doubles.positive(tumorReadContextSupport)) {
+//            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
+//                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
+//            }
+//        }
 
         double tumorQual = primaryTumor.primaryReadContext().quality();
         double germlineQual = normal.primaryReadContext().quality();

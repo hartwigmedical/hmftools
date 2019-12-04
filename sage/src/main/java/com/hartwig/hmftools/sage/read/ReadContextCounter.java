@@ -18,6 +18,8 @@ public class ReadContextCounter implements GenomePosition {
 
     private int full;
     private int partial;
+    private int core;
+    private int reference;
     private int realigned;
     private int lengthened;
     private int shortened;
@@ -71,8 +73,12 @@ public class ReadContextCounter implements GenomePosition {
         return coverage;
     }
 
-    public double readContextVaf() {
-        return coverage == 0 ? 0d : (double) support() / coverage;
+    public double af(double support) {
+        return coverage == 0 ? 0d : support / depth();
+    }
+
+    public double vaf() {
+        return af(altSupport());
     }
 
     public int quality() {
@@ -88,7 +94,7 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public int[] rcc() {
-        return new int[] { full, partial, realigned, shortened, lengthened, coverage };
+        return new int[] { full, partial, core, realigned, shortened, lengthened, reference, coverage };
     }
 
     public int[] qual() {
@@ -122,7 +128,7 @@ public class ReadContextCounter implements GenomePosition {
                     covered = true;
                 }
 
-                ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
                 if (!match.equals(ReadContextMatch.NONE)) {
                     switch (match) {
                         case FULL:
@@ -135,12 +141,18 @@ public class ReadContextCounter implements GenomePosition {
                             incrementQualityFlags(record);
                             incrementQualityScores(readIndex, record, qualityConfig);
                             break;
+                        case CORE:
+                            core++;
+                            break;
                     }
+                } else if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
+                    reference++;
                 } else if (realign) {
                     final RealignedContext context =
-                            variant.isSNV() && record.getCigar().getCigarElements().size() == 1
-                                    ? new Realigned().realignedAroundIndex(readContext, readIndex, record.getReadBases())
-                                    : new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
+                            variant.isSNV() && record.getCigar().getCigarElements().size() == 1 ? new Realigned().realignedAroundIndex(
+                                    readContext,
+                                    readIndex,
+                                    record.getReadBases()) : new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
                     switch (context.type()) {
                         case EXACT:
                             realigned++;
@@ -164,6 +176,18 @@ public class ReadContextCounter implements GenomePosition {
                 coverage++;
             }
         }
+    }
+
+    public int refSupport() {
+        return reference;
+    }
+
+    public int altSupport() {
+        return core + full + partial;
+    }
+
+    public int depth() {
+        return coverage;
     }
 
     private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {

@@ -34,7 +34,7 @@ import htsjdk.variant.vcf.VCFConstants;
 
 public class SageVariantContextFactory {
 
-    private static final double HET_CUTOFF = 0.1;
+    private static final double HET_CUTOFF = 0.9;
 
     @NotNull
     public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
@@ -71,7 +71,7 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT, counter.toString())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.readContextVaf())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .log10PError(counter.quality() / -10d)
                 .source("SAGE")
                 .computeEndFromAlleles(alleles, (int) variant.position())
@@ -103,14 +103,14 @@ public class SageVariantContextFactory {
 
     @NotNull
     private static Genotype createGenotype(@NotNull final AltContext evidence) {
-        ReadContextCounter readContextCounter = evidence.primaryReadContext();
+        final ReadContextCounter counter = evidence.primaryReadContext();
 
-        return new GenotypeBuilder(evidence.sample()).DP(evidence.readDepth())
-                .AD(new int[] { evidence.refSupport(), evidence.altSupport() })
-                .attribute(READ_CONTEXT_QUALITY, readContextCounter.qual())
-                .attribute(READ_CONTEXT_COUNT, readContextCounter.rcc())
-                .attribute(READ_CONTEXT_IMPROPER_PAIR, readContextCounter.improperPair())
-                .alleles(createGenotypeAlleles(evidence))
+        return new GenotypeBuilder(evidence.sample()).DP(counter.depth())
+                .AD(new int[] { counter.refSupport(), counter.altSupport() })
+                .attribute(READ_CONTEXT_QUALITY, counter.qual())
+                .attribute(READ_CONTEXT_COUNT, counter.rcc())
+                .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
+                .alleles(createGenotypeAlleles(evidence, counter))
                 .make();
     }
 
@@ -122,16 +122,14 @@ public class SageVariantContextFactory {
     }
 
     @NotNull
-    private static List<Allele> createGenotypeAlleles(@NotNull final AltContext evidence) {
-        final Allele ref = Allele.create(evidence.ref(), true);
-        final Allele alt = Allele.create(evidence.alt(), false);
+    private static List<Allele> createGenotypeAlleles(@NotNull final VariantHotspot variant, @NotNull final ReadContextCounter counter) {
+        final Allele ref = Allele.create(variant.ref(), true);
+        final Allele alt = Allele.create(variant.alt(), false);
 
-
-
-        if (Doubles.lessThan(evidence.altAF(), HET_CUTOFF)) {
-            return Lists.newArrayList(ref, ref);
-        } else if (Doubles.lessThan(evidence.refAF(), HET_CUTOFF)) {
+        if (Doubles.greaterOrEqual(counter.vaf(), HET_CUTOFF)) {
             return Lists.newArrayList(alt, alt);
+        } else if (Doubles.greaterOrEqual(counter.af(counter.refSupport()), HET_CUTOFF)) {
+            return Lists.newArrayList(ref, ref);
         }
 
         return Lists.newArrayList(ref, alt);

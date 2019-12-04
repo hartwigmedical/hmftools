@@ -118,9 +118,6 @@ public class AltContext implements VariantHotspot {
         return altReads;
     }
 
-    public int refSupport() {
-        return refContext.refReads();
-    }
 
     public int readDepth() {
         return refContext.readDepth();
@@ -131,17 +128,6 @@ public class AltContext implements VariantHotspot {
         return refContext.sample();
     }
 
-    public double altAF() {
-        return vaf(altSupport());
-    }
-
-    public double refAF() {
-        return vaf(refSupport());
-    }
-
-    private double vaf(int reads) {
-        return refContext.readDepth() == 0 ? 0d : (double) reads / refContext.readDepth();
-    }
 
     @Override
     public boolean equals(@Nullable Object another) {

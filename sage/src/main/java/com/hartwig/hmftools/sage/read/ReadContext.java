@@ -32,7 +32,7 @@ public class ReadContext {
         this.microhomology = Strings.EMPTY;
         this.repeatCount = 0;
         this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
-        this.refCentre = IndexedBases.refCentre(this.readBases, this.readBases);
+        this.refCentre = this.readBases;
     }
 
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
@@ -108,9 +108,13 @@ public class ReadContext {
         return readBases.matchAtPosition(otherReadIndex, otherBases);
     }
 
+    public boolean matchesRef(int otherReadIndex, byte[] otherBases) {
+        return refCentre.coreMatch(otherReadIndex, otherBases);
+    }
+
     @VisibleForTesting
     boolean centreMatch(int otherRefIndex, byte[] otherBases) {
-        return readBases.centreMatch(otherRefIndex, otherBases);
+        return readBases.coreMatch(otherRefIndex, otherBases);
     }
 
     @VisibleForTesting

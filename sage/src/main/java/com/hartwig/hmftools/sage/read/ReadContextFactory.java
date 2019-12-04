@@ -37,16 +37,6 @@ public class ReadContextFactory {
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
-        final IndexedBases indexedReadBases = IndexedBases.resize(refPosition,
-                readIndex,
-                Math.max(startIndex, 0),
-                Math.min(endIndex, record.getReadBases().length - 1),
-                DEFAULT_BUFFER,
-                record.getReadBases());
-
-
-
-
         return new ReadContext(microhomologyContext.toString(),
                 repeatContext.map(RepeatContext::count).orElse(0),
                 repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
