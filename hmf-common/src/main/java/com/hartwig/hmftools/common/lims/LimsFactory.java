@@ -31,11 +31,11 @@ public final class LimsFactory {
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
     private static final String LIMS_JSON_FILE = "lims.json";
-    private static final String PRE_LIMS_ARRIVAL_DATES_CSV = "pre_lims_arrival_dates.csv";
+    private static final String PRE_LIMS_ARRIVAL_DATES_TSV = "pre_lims_arrival_dates.tsv";
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_CSV = "samples_without_sampling_date.csv";
-    private static final String LIMS_SHALLOW_SEQ_CSV = "shallow_seq_purity.csv";
+    private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
 
-    private static final String FIELD_SEPARATOR = ",";
+    private static final String FIELD_SEPARATOR = "\t";
 
     private LimsFactory() {
     }
@@ -46,11 +46,11 @@ public final class LimsFactory {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
 
-        Map<String, LocalDate> preLIMSArrivalDates = readPreLIMSArrivalDateCsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_CSV);
+        Map<String, LocalDate> preLIMSArrivalDates = readPreLIMSArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
         Set<String> samplesWithoutSamplingDate =
                 readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_CSV);
         Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
-                readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_CSV);
+                readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_TSV);
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
@@ -66,10 +66,10 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqCsv) throws IOException {
+    static Map<String, LimsShallowSeqData> readLimsShallowSeq(@NotNull final String shallowSeqTsv) throws IOException {
         final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode = Maps.newHashMap();
         final List<String> lines =
-                com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqCsv).toPath());
+                com.hartwig.hmftools.common.utils.io.reader.FileReader.build().readLines(new File(shallowSeqTsv).toPath());
         for (final String line : lines) {
             final String[] parts = line.split(FIELD_SEPARATOR, 5);
             if (parts.length == 5) {
@@ -150,11 +150,11 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Map<String, LocalDate> readPreLIMSArrivalDateCsv(@NotNull final String preLIMSArrivalDatesCsvPath) throws IOException {
+    static Map<String, LocalDate> readPreLIMSArrivalDateTsv(@NotNull final String preLIMSArrivalDatesTsvPath) throws IOException {
         final Map<String, LocalDate> arrivalDatesPerSample = Maps.newHashMap();
-        final List<String> lines = Files.lines(Paths.get(preLIMSArrivalDatesCsvPath)).collect(Collectors.toList());
+        final List<String> lines = Files.lines(Paths.get(preLIMSArrivalDatesTsvPath)).collect(Collectors.toList());
         for (final String line : lines) {
-            final String[] parts = line.split(",");
+            final String[] parts = line.split(FIELD_SEPARATOR);
 
             if (parts.length == 2) {
                 final String sample = parts[0].trim();

@@ -87,7 +87,7 @@ public class LimsFactoryTest {
     @Test
     public void readCorrectlyFromPreLIMSArrivalDateFile() throws IOException {
         final Map<String, LocalDate> preLIMSArrivalDates =
-                LimsFactory.readPreLIMSArrivalDateCsv(LIMS_DIRECTORY + File.separator + "pre_lims_arrival_dates.csv");
+                LimsFactory.readPreLIMSArrivalDateTsv(LIMS_DIRECTORY + File.separator + "pre_lims_arrival_dates.tsv");
 
         assertNull(preLIMSArrivalDates.get("SAMP01010001T"));
         assertEquals(LimsTestUtil.toDate("2017-01-01"), preLIMSArrivalDates.get("SAMP01010003R"));
@@ -110,7 +110,7 @@ public class LimsFactoryTest {
     @Test
     public void readCorrectlyShallowSeqPurity() throws IOException {
         Map<String, LimsShallowSeqData> shallowSeqPuritySample =
-                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.csv");
+                LimsFactory.readLimsShallowSeq(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.tsv");
         assertEquals(3, shallowSeqPuritySample.size());
 
         final String sample = "SAMP01011234T";
