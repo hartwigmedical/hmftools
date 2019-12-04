@@ -32,7 +32,7 @@ public final class LimsFactory {
 
     private static final String LIMS_JSON_FILE = "lims.json";
     private static final String PRE_LIMS_ARRIVAL_DATES_TSV = "pre_lims_arrival_dates.tsv";
-    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_CSV = "samples_without_sampling_date.csv";
+    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_TSV = "samples_without_sampling_date.tsv";
     private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
 
     private static final String FIELD_SEPARATOR = "\t";
@@ -48,7 +48,7 @@ public final class LimsFactory {
 
         Map<String, LocalDate> preLIMSArrivalDates = readPreLIMSArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
         Set<String> samplesWithoutSamplingDate =
-                readSamplesWithoutSamplingDateCsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_CSV);
+                readSamplesWithoutSamplingDateTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
                 readLimsShallowSeq(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_TSV);
 
@@ -176,7 +176,7 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Set<String> readSamplesWithoutSamplingDateCsv(@NotNull String samplesWithoutSamplingDate) throws IOException {
+    static Set<String> readSamplesWithoutSamplingDateTsv(@NotNull String samplesWithoutSamplingDate) throws IOException {
         return Files.lines(Paths.get(samplesWithoutSamplingDate)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
     }
 }
