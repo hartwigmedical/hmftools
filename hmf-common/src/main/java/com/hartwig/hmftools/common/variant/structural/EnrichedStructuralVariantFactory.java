@@ -26,7 +26,8 @@ public final class EnrichedStructuralVariantFactory {
             final VariantContext startContext = variant.startContext();
             if (startContext != null) {
 
-                final Double purplePloidy = startContext.hasAttribute(PURPLE_PLOIDY) ? startContext.getAttributeAsDouble(PURPLE_PLOIDY, 0) : null;
+                final Double purplePloidy =
+                        startContext.hasAttribute(PURPLE_PLOIDY) ? startContext.getAttributeAsDouble(PURPLE_PLOIDY, 0) : null;
 
                 final ImmutableEnrichedStructuralVariant.Builder builder = ImmutableEnrichedStructuralVariant.builder()
                         .from(variant)
@@ -49,8 +50,8 @@ public final class EnrichedStructuralVariantFactory {
     }
 
     @NotNull
-    private ImmutableEnrichedStructuralVariantLeg createBuilder(@NotNull final VariantContext context, @NotNull final StructuralVariantLeg leg) {
-
+    private ImmutableEnrichedStructuralVariantLeg createBuilder(@NotNull final VariantContext context,
+            @NotNull final StructuralVariantLeg leg) {
         final List<Double> purpleAF =
                 context.hasAttribute(PURPLE_AF) ? context.getAttributeAsDoubleList(PURPLE_AF, 0.0) : Collections.emptyList();
 

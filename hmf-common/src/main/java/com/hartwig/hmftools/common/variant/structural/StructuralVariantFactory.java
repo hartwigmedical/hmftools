@@ -299,7 +299,6 @@ public class StructuralVariantFactory {
                 .filter(filters(context, null))
                 .startContext(context)
                 .build();
-
     }
 
     @NotNull

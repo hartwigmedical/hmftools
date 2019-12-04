@@ -36,7 +36,7 @@ public class LinxDriverFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxDriver> drivers)
+    private static List<String> toLines(@NotNull final List<LinxDriver> drivers)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -45,7 +45,7 @@ public class LinxDriverFile
     }
 
     @NotNull
-    static List<LinxDriver> fromLines(@NotNull List<String> lines)
+    private static List<LinxDriver> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxDriverFile::fromString).collect(toList());
     }
@@ -77,7 +77,7 @@ public class LinxDriverFile
         int index = 0;
 
         return ImmutableLinxDriver.builder()
-                .clusterId(Integer.valueOf(values[index++]))
+                .clusterId(Integer.parseInt(values[index++]))
                 .gene(values[index++])
                 .eventType(values[index++])
                 .build();

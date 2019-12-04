@@ -36,7 +36,7 @@ public class LinxBreakendFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxBreakend> breakends)
+    private static List<String> toLines(@NotNull final List<LinxBreakend> breakends)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -45,7 +45,7 @@ public class LinxBreakendFile
     }
 
     @NotNull
-    static List<LinxBreakend> fromLines(@NotNull List<String> lines)
+    private static List<LinxBreakend> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("Id")).map(LinxBreakendFile::fromString).collect(toList());
     }

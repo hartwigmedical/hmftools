@@ -36,7 +36,7 @@ public class LinxLinkFile
     }
 
     @NotNull
-    static List<String> toLines(@NotNull final List<LinxLink> svDataList)
+    private static List<String> toLines(@NotNull final List<LinxLink> svDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -45,7 +45,7 @@ public class LinxLinkFile
     }
 
     @NotNull
-    static List<LinxLink> fromLines(@NotNull List<String> lines)
+    private static List<LinxLink> fromLines(@NotNull List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("clusterId")).map(LinxLinkFile::fromString).collect(toList());
     }
@@ -103,21 +103,21 @@ public class LinxLinkFile
         int index = 0;
 
         return ImmutableLinxLink.builder()
-                .clusterId(Integer.valueOf(values[index++]))
-                .chainId(Integer.valueOf(values[index++]))
+                .clusterId(Integer.parseInt(values[index++]))
+                .chainId(Integer.parseInt(values[index++]))
                 .chainIndex(values[index++])
-                .chainCount(Integer.valueOf(values[index++]))
-                .upperSvId(Integer.valueOf(values[index++]))
-                .lowerSvId(Integer.valueOf(values[index++]))
-                .lowerBreakendIsStart(Boolean.valueOf(values[index++]))
-                .upperBreakendIsStart(Boolean.valueOf(values[index++]))
+                .chainCount(Integer.parseInt(values[index++]))
+                .upperSvId(Integer.parseInt(values[index++]))
+                .lowerSvId(Integer.parseInt(values[index++]))
+                .lowerBreakendIsStart(Boolean.parseBoolean(values[index++]))
+                .upperBreakendIsStart(Boolean.parseBoolean(values[index++]))
                 .chromosome(values[index++])
                 .arm(values[index++])
-                .assembled(Boolean.valueOf(values[index++]))
-                .traversedSVCount(Integer.valueOf(values[index++]))
-                .length(Long.valueOf(values[index++]))
-                .ploidy(Double.valueOf(values[index++]))
-                .ploidyUncertainty(Double.valueOf(values[index++]))
+                .assembled(Boolean.parseBoolean(values[index++]))
+                .traversedSVCount(Integer.parseInt(values[index++]))
+                .length(Long.parseLong(values[index++]))
+                .ploidy(Double.parseDouble(values[index++]))
+                .ploidyUncertainty(Double.parseDouble(values[index++]))
                 .pseudogeneInfo(index < values.length ? values[index++] : "")
                 .build();
     }
