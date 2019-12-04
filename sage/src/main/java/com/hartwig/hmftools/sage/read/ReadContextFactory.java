@@ -21,7 +21,7 @@ public class ReadContextFactory {
 
     @NotNull
     public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
-            final IndexedBases refBases) {
+            final IndexedBases refSequence) {
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -46,6 +46,7 @@ public class ReadContextFactory {
 
 
 
+
         return new ReadContext(microhomologyContext.toString(),
                 repeatContext.map(RepeatContext::count).orElse(0),
                 repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
@@ -54,7 +55,7 @@ public class ReadContextFactory {
                 Math.max(startIndex, 0),
                 Math.min(endIndex, record.getReadBases().length - 1),
                 DEFAULT_BUFFER,
-                refBases,
+                refSequence,
                 record);
     }
 

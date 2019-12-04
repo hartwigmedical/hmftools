@@ -21,7 +21,16 @@ public class IndexedBases {
         int index = recordLeftFlankLength + recordIndex - recordLeftCentreIndex;
         byte[] bases = Arrays.copyOfRange(recordBases, recordLeftFlankIndex, recordRightFlankIndex + 1);
         return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
+    }
 
+    @NotNull
+    public static IndexedBases refCentre(@NotNull final IndexedBases readSequences, @NotNull final IndexedBases refSequence) {
+
+        int otherRefIndex = readSequences.position() - refSequence.position() + refSequence.index();
+        int otherLeftCentreIndex = readSequences.otherLeftCentreIndex(otherRefIndex);
+        int otherRightCentreIndex = readSequences.otherRightCentreIndex(otherRefIndex);
+
+        return resize(readSequences.position(), otherRefIndex, otherLeftCentreIndex, otherRightCentreIndex, 0, refSequence.bases());
     }
 
     private final int position;

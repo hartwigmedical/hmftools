@@ -16,10 +16,9 @@ public class ReadContext {
     private final int repeatCount;
     private final String microhomology;
 
+    private final IndexedBases refCentre;
     private final IndexedBases readBases;
 
-//    private final int refIndex;
-//    private final byte refBases[];
 
     public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
             final int rightCentreIndex, final int flankSize, final byte[] readBases) {
@@ -33,10 +32,12 @@ public class ReadContext {
         this.microhomology = Strings.EMPTY;
         this.repeatCount = 0;
         this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
+        this.refCentre = IndexedBases.refCentre(this.readBases, this.readBases);
     }
 
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
-            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, IndexedBases refBases, @NotNull final SAMRecord record) {
+            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, IndexedBases refSequence,
+            @NotNull final SAMRecord record) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
@@ -48,11 +49,12 @@ public class ReadContext {
         int recordLeftFlankStartIndex = Math.max(0, leftCentreIndex - flankSize);
         int recordRightFlankEndIndex = Math.min(record.getReadBases().length - 1, rightCentreIndex + flankSize);
 
-
-        ReadContextDistance distance = new ReadContextDistance(recordLeftFlankStartIndex, recordRightFlankEndIndex, record, refBases);
+        ReadContextDistance distance = new ReadContextDistance(recordLeftFlankStartIndex, recordRightFlankEndIndex, record, refSequence);
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
+
         this.readBases = IndexedBases.resize(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
+        this.refCentre = IndexedBases.refCentre(this.readBases, refSequence);
     }
 
     public int position() {
@@ -121,16 +123,13 @@ public class ReadContext {
         return readBases.rightFlankMatchingBases(otherRefIndex, otherBases);
     }
 
-
     public int leftFlankStartIndex() {
         return Math.max(0, readBases.leftCentreIndex() - flankSize());
     }
 
-
     public int rightFlankEndIndex() {
         return Math.min(readBases().length - 1, readBases.rightCentreIndex() + flankSize());
     }
-
 
     @Override
     public String toString() {
