@@ -36,14 +36,14 @@ public class CreateShallowSeqDB {
 
     private static final String RUNS_DIRECTORY = "runs_dir";
 
-    private static final String SHALLOW_SEQ_CSV = "shallow_seq_csv";
+    private static final String SHALLOW_SEQ_TSV = "shallow_seq_tsv";
     private static final String PURPLE_PURITY_P4_TSV = "purple_purity_p4_tsv";
     private static final String PURPLE_PURITY_P5_TSV = "purple_purity_p5_tsv";
     private static final String PURPLE_QC_FILE = "purple_qc_file";
     private static final String PIPELINE_VERSION = "pipeline_version_file";
 
     private static final String PURPLE_DIR = "purple";
-    private static final String DELIMITER = ",";
+    private static final String DELIMITER = "\t";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
         final Options options = createBasicOptions();
@@ -59,14 +59,14 @@ public class CreateShallowSeqDB {
         final List<RunContext> runContexts = loadRunContexts(cmd.getOptionValue(RUNS_DIRECTORY));
 
         List<LimsShallowSeqData> newShallowSeqEntries = extractNewEntriesForShallowDbFromRunContexts(runContexts,
-                cmd.getOptionValue(SHALLOW_SEQ_CSV),
+                cmd.getOptionValue(SHALLOW_SEQ_TSV),
                 cmd.getOptionValue(RUNS_DIRECTORY),
                 cmd.getOptionValue(PURPLE_QC_FILE),
                 cmd.getOptionValue(PURPLE_PURITY_P4_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P5_TSV),
                 cmd.getOptionValue(PIPELINE_VERSION));
 
-        appendToCsv(cmd.getOptionValue(SHALLOW_SEQ_CSV), newShallowSeqEntries);
+        appendToCsv(cmd.getOptionValue(SHALLOW_SEQ_TSV), newShallowSeqEntries);
 
         LOGGER.info("Shallow seq DB is complete!");
     }
@@ -167,7 +167,7 @@ public class CreateShallowSeqDB {
         final String runsDirectory = cmd.getOptionValue(RUNS_DIRECTORY);
 
         boolean allParamsPresent = !Utils.anyNull(runsDirectory,
-                cmd.getOptionValue(SHALLOW_SEQ_CSV),
+                cmd.getOptionValue(SHALLOW_SEQ_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P4_TSV),
                 cmd.getOptionValue(PURPLE_PURITY_P5_TSV),
                 cmd.getOptionValue(PURPLE_QC_FILE),
@@ -198,7 +198,7 @@ public class CreateShallowSeqDB {
 
         options.addOption(RUNS_DIRECTORY, true, "Path towards the folder containing all shallow seq runs .");
 
-        options.addOption(SHALLOW_SEQ_CSV, true, "Path towards output file for the shallow seq db CSV.");
+        options.addOption(SHALLOW_SEQ_TSV, true, "Path towards output file for the shallow seq db TSV.");
 
         options.addOption(PURPLE_PURITY_P4_TSV, true, "Path towards the purple purity TSV of P4 and lower.");
         options.addOption(PURPLE_PURITY_P5_TSV, true, "Path towards the purple purity TSV of P5.");

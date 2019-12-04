@@ -31,9 +31,9 @@ public final class LimsFactory {
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
     private static final String LIMS_JSON_FILE = "lims.json";
-    private static final String PRE_LIMS_ARRIVAL_DATES_TSV = "pre_lims_arrival_dates.tsv";
-    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_TSV = "samples_without_sampling_date.tsv";
-    private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
+    private static final String PRE_LIMS_ARRIVAL_DATES_TSV = "pre_lims_arrival_dates_pilot.tsv";
+    private static final String SAMPLES_WITHOUT_SAMPLING_DATE_TSV = "samples_without_sampling_date_pilot.tsv";
+    private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity_pilot.tsv";
 
     private static final String FIELD_SEPARATOR = "\t";
 
