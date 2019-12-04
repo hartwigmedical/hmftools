@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;
 
@@ -78,24 +79,30 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         if (inBounds(record)) {
 
             if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
-                final byte[] refBases = refGenome.alignment(record);
+                final IndexedBases indexedBases = refGenome.alignment(record);
+
+                final byte[] refBases = indexedBases.bases();
+
                 final CigarHandler handler = new CigarHandler() {
                     @Override
                     public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        processAligned(record, readIndex, refPosition, element.getLength(), refBases);
+                        int refIndex = refPosition - record.getAlignmentStart() + indexedBases.index();
+                        processAligned(record, readIndex, refPosition, element.getLength(), refIndex, refBases);
                     }
 
                     @Override
                     public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        processInsert(element, record, readIndex, refPosition, refBases);
+                        int refIndex = refPosition - record.getAlignmentStart() + indexedBases.index();
+                        processInsert(element, record, readIndex, refPosition, refIndex, refBases);
                     }
 
                     @Override
                     public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        processDel(element, record, readIndex, refPosition, refBases);
+                        int refIndex = refPosition - record.getAlignmentStart() + indexedBases.index();
+                        processDel(element, record, readIndex, refPosition, refIndex, refBases);
                     }
                 };
 
@@ -105,11 +112,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-
-    private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition, int refIndex,
             byte[] refBases) {
-
-        int refIndex = refPosition - record.getAlignmentStart();
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases, refIndex, 1);
@@ -126,10 +130,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition, int refIndex,
             byte[] refBases) {
-
-        int refIndex = refPosition - record.getAlignmentStart();
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases, refIndex, e.getLength() + 1);
@@ -147,15 +149,13 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     }
 
     private void processAligned(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            byte[] refBases) {
-
-        int refBasesStartIndex = refPositionStart - record.getAlignmentStart();
+            int refIndex, byte[] refBases) {
 
         for (int i = 0; i < alignmentLength; i++) {
 
             int refPosition = refPositionStart + i;
             int readBaseIndex = readBasesStartIndex + i;
-            int refBaseIndex = refBasesStartIndex + i;
+            int refBaseIndex = refIndex + i;
 
             if (!inBounds(refPosition)) {
                 continue;

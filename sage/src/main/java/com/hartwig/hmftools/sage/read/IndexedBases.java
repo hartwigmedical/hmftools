@@ -12,6 +12,16 @@ public class IndexedBases {
     private final int rightFlankIndex;
     private final byte[] bases;
 
+    public IndexedBases(final int index, final byte[] bases) {
+        this.index = index;
+        this.leftCentreIndex = index;
+        this.rightCentreIndex = index;
+        this.bases = bases;
+        this.leftFlankIndex = index;
+        this.rightFlankIndex = index;
+        this.flankSize = 0;
+    }
+
     public IndexedBases(final int index, final int leftCentreIndex, int rightCentreIndex, final byte[] bases) {
         this.index = index;
         this.leftCentreIndex = leftCentreIndex;
