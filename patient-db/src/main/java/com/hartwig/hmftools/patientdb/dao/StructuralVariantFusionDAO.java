@@ -137,9 +137,8 @@ public class StructuralVariantFusionDAO {
                 Integer fivePrimeId = breakendIdToDbIdMap.get(fusion.fivePrimeBreakendId());
                 Integer threePrimeId = breakendIdToDbIdMap.get(fusion.threePrimeBreakendId());
 
-                if (fivePrimeId == null || threePrimeId == null) {
+                if (fivePrimeId == null || threePrimeId == null)
                     return;
-                }
 
                 fusionInserter.values(timestamp,
                         sampleId,

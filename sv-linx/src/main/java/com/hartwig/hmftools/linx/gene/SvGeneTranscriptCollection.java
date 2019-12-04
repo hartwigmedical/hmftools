@@ -262,7 +262,7 @@ public class SvGeneTranscriptCollection
 
         if(precedingGeneSAPos >= 0)
         {
-            // if the breakend is after (higher for +ve strand) the nearest splice acceptor, then the distance will be positve
+            // if the breakend is after (higher for +ve strand) the nearest preceding splice acceptor, then the distance will be positive
             // and mean that the transcript isn't interupted when used in a downstream fusion
             long preDistance = transcript.gene().Strand == 1 ? position - precedingGeneSAPos : precedingGeneSAPos - position;
             transcript.setSpliceAcceptorDistance(true, (int)preDistance);
