@@ -16,15 +16,14 @@ public class ReadContextDistance {
     @VisibleForTesting
     ReadContextDistance(final boolean testing, final int buffer, final int readBasesAltIndex, @NotNull final SAMRecord record,
             byte[] refBases) {
-        this(readBasesAltIndex - buffer, readBasesAltIndex + buffer, record, refBases);
+        this(readBasesAltIndex - buffer, readBasesAltIndex + buffer, record, new IndexedBases(record.getAlignmentStart(), 0, refBases));
     }
 
-    public ReadContextDistance(final int readBasesStartIndex, final int readBasesEndIndex, @NotNull final SAMRecord record,
-            byte[] refBases) {
+    public ReadContextDistance(final int readBasesStartIndex, final int readBasesEndIndex, @NotNull final SAMRecord record, @NotNull final IndexedBases refBases) {
 
         final StringBuilder differenceBuilder = new StringBuilder();
 
-        int refBasesCurrentIndex = 0;
+        int refBasesCurrentIndex = refBases.index();
         int readBasesCurrentIndex = 0;
         for (CigarElement cigarElement : record.getCigar()) {
 
@@ -70,7 +69,7 @@ public class ReadContextDistance {
                         differenceBuilder.append(readBasesLength).append(CigarOperator.EQ.toString());
                         break;
                     case M:
-                        final String cigar = mCigar(readBasesLength, readBasesMinIndex, record.getReadBases(), refBasesMinIndex, refBases);
+                        final String cigar = mCigar(readBasesLength, readBasesMinIndex, record.getReadBases(), refBasesMinIndex, refBases.bases());
                         differenceBuilder.append(cigar);
                         break;
 

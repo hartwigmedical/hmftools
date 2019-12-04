@@ -79,30 +79,25 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         if (inBounds(record)) {
 
             if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
-                final IndexedBases indexedBases = refGenome.alignment(record);
-
-                final byte[] refBases = indexedBases.bases();
+                final IndexedBases refBases = refGenome.alignment(record);
 
                 final CigarHandler handler = new CigarHandler() {
                     @Override
                     public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        int refIndex = refPosition - record.getAlignmentStart() + indexedBases.index();
-                        processAligned(record, readIndex, refPosition, element.getLength(), refIndex, refBases);
+                        processAligned(record, readIndex, refPosition, element.getLength(), refBases);
                     }
 
                     @Override
                     public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        int refIndex = refPosition - record.getAlignmentStart() + indexedBases.index();
-                        processInsert(element, record, readIndex, refPosition, refIndex, refBases);
+                        processInsert(element, record, readIndex, refPosition, refBases);
                     }
 
                     @Override
                     public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        int refIndex = refPosition - record.getAlignmentStart() + indexedBases.index();
-                        processDel(element, record, readIndex, refPosition, refIndex, refBases);
+                        processDel(element, record, readIndex, refPosition, refBases);
                     }
                 };
 
@@ -112,17 +107,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition, int refIndex,
-            byte[] refBases) {
+    private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+            final IndexedBases refBases) {
+        int refIndex = refPosition - refBases.position() + refBases.index();
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
-            final String ref = new String(refBases, refIndex, 1);
+            final String ref = new String(refBases.bases(), refIndex, 1);
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
                 if (addInterimReadContexts) {
-                    refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refIndex, refBases));
+                    refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
@@ -130,17 +126,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition, int refIndex,
-            byte[] refBases) {
+    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+            final IndexedBases refBases) {
+        int refIndex = refPosition - refBases.position() + refBases.index();
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
-            final String ref = new String(refBases, refIndex, e.getLength() + 1);
+            final String ref = new String(refBases.bases(), refIndex, e.getLength() + 1);
             final String alt = new String(record.getReadBases(), readIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
                 if (addInterimReadContexts) {
-                    refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refIndex, refBases));
+                    refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refBases));
                 } else {
                     refContext.altRead(ref, alt);
                 }
@@ -149,7 +146,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     }
 
     private void processAligned(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            int refIndex, byte[] refBases) {
+            final IndexedBases refBases) {
+
+        int refIndex = refPositionStart - refBases.position() + refBases.index();
 
         for (int i = 0; i < alignmentLength; i++) {
 
@@ -161,7 +160,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 continue;
             }
 
-            final byte refByte = refBases[refBaseIndex];
+            final byte refByte = refBases.bases()[refBaseIndex];
             final String ref = String.valueOf((char) refByte);
             final byte readByte = record.getReadBases()[readBaseIndex];
             final int baseQuality = record.getBaseQualities()[readBaseIndex];
@@ -171,7 +170,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (addInterimReadContexts) {
-                        refContext.altRead(ref, alt, createSNVContext(refPosition, readBaseIndex, record, refBaseIndex, refBases));
+                        refContext.altRead(ref, alt, createSNVContext(refPosition, readBaseIndex, record, refBases));
                     } else {
                         refContext.altRead(ref, alt);
                     }

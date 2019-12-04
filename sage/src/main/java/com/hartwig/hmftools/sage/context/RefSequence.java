@@ -20,7 +20,7 @@ public class RefSequence {
 
     public RefSequence(@NotNull final GenomeRegion region, @NotNull final IndexedFastaSequenceFile refGenome) {
         sequenceLength = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
-        actualStart = Math.max(0, (int) region.start() - BUFFER);
+        actualStart = Math.max(1, (int) region.start() - BUFFER);
         final int actualEnd = Math.min(sequenceLength, (int) region.end() + BUFFER);
         this.sequence = refGenome.getSubsequenceAt(region.chromosome(), actualStart, actualEnd);
     }
@@ -29,18 +29,22 @@ public class RefSequence {
         return Arrays.copyOfRange(sequence.getBases(), start - actualStart, end - actualStart + 1);
     }
 
+    /**
+     * returns reference sequence spanning read with index pointing to alignment start
+     */
     @NotNull
     public IndexedBases alignment(final SAMRecord record) {
 
         int alignmentStart = record.getAlignmentStart();
 
-        int readStart = alignmentStart;
-//                record.getCigar().isLeftClipped() ? alignmentStart - record.getCigar().getCigarElement(0).getLength() : alignmentStart;
+        int refPositionStart = record.getCigar().isLeftClipped()
+                ? Math.max(1, alignmentStart - record.getCigar().getCigarElement(0).getLength())
+                : alignmentStart;
 
         int alignmentEnd = Math.max(record.getAlignmentEnd(), alignmentStart + record.getReadLength());
-        int index = alignmentStart - readStart;
+        int alignmentStartIndex = alignmentStart - refPositionStart;
 
-        return new IndexedBases(index, alignment(Math.max(readStart, 0), Math.min(alignmentEnd, sequenceLength)));
+        return new IndexedBases(alignmentStart, alignmentStartIndex, alignment(refPositionStart, Math.min(alignmentEnd, sequenceLength)));
     }
 
 }

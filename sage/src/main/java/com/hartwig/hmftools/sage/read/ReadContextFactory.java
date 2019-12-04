@@ -21,7 +21,7 @@ public class ReadContextFactory {
 
     @NotNull
     public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
-            int refIndex, byte[] refBases) {
+            final IndexedBases refBases) {
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -37,6 +37,15 @@ public class ReadContextFactory {
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
+        final IndexedBases indexedReadBases = IndexedBases.resize(refPosition,
+                readIndex,
+                Math.max(startIndex, 0),
+                Math.min(endIndex, record.getReadBases().length - 1),
+                DEFAULT_BUFFER,
+                record.getReadBases());
+
+
+
         return new ReadContext(microhomologyContext.toString(),
                 repeatContext.map(RepeatContext::count).orElse(0),
                 repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
@@ -51,7 +60,7 @@ public class ReadContextFactory {
 
     @NotNull
     public static ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
-            @NotNull final SAMRecord record, final int refIndex, byte[] refBases) {
+            @NotNull final SAMRecord record, final IndexedBases refBases) {
 
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -80,8 +89,7 @@ public class ReadContextFactory {
     }
 
     @NotNull
-    public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, int refIndex,
-            byte[] refBases) {
+    public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, final IndexedBases refBases) {
 
         int startIndex = readIndex;
         int endIndex = readIndex;

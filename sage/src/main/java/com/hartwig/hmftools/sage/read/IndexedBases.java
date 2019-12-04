@@ -1,9 +1,30 @@
 package com.hartwig.hmftools.sage.read;
 
+import static com.hartwig.hmftools.sage.read.ReadContextMatch.FULL;
+import static com.hartwig.hmftools.sage.read.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.read.ReadContextMatch.PARTIAL;
+
+import java.util.Arrays;
+
 import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases {
 
+    @NotNull
+    public static IndexedBases resize(final int position, final int recordIndex, final int recordLeftCentreIndex,
+            final int recordRightCentreIndex, final int flankSize, final byte[] recordBases) {
+        int recordLeftFlankIndex = Math.max(0, recordLeftCentreIndex - flankSize);
+        int recordLeftFlankLength = recordLeftCentreIndex - recordLeftFlankIndex;
+        int recordRightFlankIndex = Math.min(recordBases.length - 1, recordRightCentreIndex + flankSize);
+
+        int rightCentreIndex = recordLeftFlankLength + recordRightCentreIndex - recordLeftCentreIndex;
+        int index = recordLeftFlankLength + recordIndex - recordLeftCentreIndex;
+        byte[] bases = Arrays.copyOfRange(recordBases, recordLeftFlankIndex, recordRightFlankIndex + 1);
+        return new IndexedBases(position, index, recordLeftFlankLength, rightCentreIndex, flankSize, bases);
+
+    }
+
+    private final int position;
     private final int index;
     private final int flankSize;
     private final int leftFlankIndex;
@@ -12,7 +33,8 @@ public class IndexedBases {
     private final int rightFlankIndex;
     private final byte[] bases;
 
-    public IndexedBases(final int index, final byte[] bases) {
+    public IndexedBases(final int position, final int index, final byte[] bases) {
+        this.position = position;
         this.index = index;
         this.leftCentreIndex = index;
         this.rightCentreIndex = index;
@@ -22,17 +44,9 @@ public class IndexedBases {
         this.flankSize = 0;
     }
 
-    public IndexedBases(final int index, final int leftCentreIndex, int rightCentreIndex, final byte[] bases) {
-        this.index = index;
-        this.leftCentreIndex = leftCentreIndex;
-        this.rightCentreIndex = rightCentreIndex;
-        this.bases = bases;
-        this.leftFlankIndex = leftCentreIndex;
-        this.rightFlankIndex = rightCentreIndex;
-        this.flankSize = 0;
-    }
-
-    public IndexedBases(final int index, final int leftCentreIndex, int rightCentreIndex, int flankSize, final byte[] bases) {
+    public IndexedBases(final int position, final int index, final int leftCentreIndex, int rightCentreIndex, int flankSize,
+            final byte[] bases) {
+        this.position = position;
         this.index = index;
         this.leftCentreIndex = leftCentreIndex;
         this.rightCentreIndex = rightCentreIndex;
@@ -59,12 +73,12 @@ public class IndexedBases {
             return false;
         }
 
-        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.bases, flankSize);
+        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, other.bases);
         if (leftFlankingBases < 0) {
             return false;
         }
 
-        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.bases, flankSize);
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, other.bases);
         return rightFlankingBases >= 0 && (rightFlankingBases >= flankSize || leftFlankingBases >= flankSize);
     }
 
@@ -79,6 +93,34 @@ public class IndexedBases {
         return otherRightCentreIndex < otherBases.length;
     }
 
+    @NotNull
+    public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
+
+        if (otherReadIndex < 0 || !flanksComplete()) {
+            return NONE;
+        }
+
+        boolean centreMatch = centreMatch(otherReadIndex, otherBases);
+        if (!centreMatch) {
+            return NONE;
+        }
+
+        int leftFlankingBases = leftFlankMatchingBases(otherReadIndex, otherBases);
+        if (leftFlankingBases < 0) {
+            return NONE;
+        }
+
+        int rightFlankingBases = rightFlankMatchingBases(otherReadIndex, otherBases);
+        if (rightFlankingBases < 0) {
+            return NONE;
+        }
+
+        if (leftFlankingBases != flankSize && rightFlankingBases != flankSize) {
+            return NONE;
+        }
+
+        return leftFlankingBases == rightFlankingBases ? FULL : PARTIAL;
+    }
 
     boolean centreMatch(final int otherRefIndex, final byte[] otherBases) {
 
@@ -101,9 +143,9 @@ public class IndexedBases {
         return true;
     }
 
-    int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases, int flankSize) {
+    int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases) {
         int otherRightCentreIndex = otherRefIndex + rightCentreIndex - index;
-        int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + flankSize) - otherRightCentreIndex;
+        int otherRightFlankLength = Math.min(otherBases.length - 1, otherRightCentreIndex + this.flankSize) - otherRightCentreIndex;
         int maxLength = Math.min(rightFlankLength(), otherRightFlankLength);
 
         for (int i = 1; i <= maxLength; i++) {
@@ -115,9 +157,9 @@ public class IndexedBases {
         return maxLength;
     }
 
-    int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases, int flankSize) {
+    int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases) {
         int otherLeftCentreIndex = otherRefIndex + leftCentreIndex - index;
-        int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - flankSize);
+        int otherLeftFlankLength = otherLeftCentreIndex - Math.max(0, otherLeftCentreIndex - this.flankSize);
         int totalLength = Math.min(leftFlankLength(), otherLeftFlankLength);
 
         for (int i = 1; i <= totalLength; i++) {
@@ -147,6 +189,10 @@ public class IndexedBases {
         return new String(bases, leftFlankIndex, length());
     }
 
+    public int flankSize() {
+        return flankSize;
+    }
+
     public int index() {
         return index;
     }
@@ -170,4 +216,17 @@ public class IndexedBases {
     private int centreLength() {
         return rightCentreIndex - leftCentreIndex + 1;
     }
+
+    public int leftCentreIndex() {
+        return leftCentreIndex;
+    }
+
+    public int rightCentreIndex() {
+        return rightCentreIndex;
+    }
+
+    public int position() {
+        return position;
+    }
+
 }
