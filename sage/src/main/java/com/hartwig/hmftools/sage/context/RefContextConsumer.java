@@ -77,11 +77,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         if (inBounds(record)) {
 
-            int alignmentStart = record.getAlignmentStart();
-            int alignmentEnd = record.getAlignmentEnd();
-
             if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
-                final byte[] refBases = refGenome.alignment(alignmentStart, alignmentEnd);
+                final byte[] refBases = refGenome.alignment(record);
                 final CigarHandler handler = new CigarHandler() {
                     @Override
                     public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
@@ -107,6 +104,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             }
         }
     }
+
 
     private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             byte[] refBases) {
