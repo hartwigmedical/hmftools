@@ -20,10 +20,6 @@ public class RefContext implements GenomePosition {
     private final Map<String, AltContext> alts;
 
     private int readDepth;
-    private int mapQuality;
-    private int baseQuality;
-    private int quality;
-    private int refReads;
 
     public RefContext(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -41,12 +37,8 @@ public class RefContext implements GenomePosition {
         return alts.values();
     }
 
-    public void refRead(int mapQuality, int baseQuality) {
+    public void refRead() {
         this.readDepth++;
-        this.refReads++;
-        this.mapQuality += mapQuality;
-        this.baseQuality += baseQuality;
-        this.quality += Math.min(mapQuality, baseQuality);
     }
 
     @NotNull
@@ -77,14 +69,6 @@ public class RefContext implements GenomePosition {
     @Override
     public long position() {
         return position;
-    }
-
-    public int refQuality() {
-        return quality;
-    }
-
-    public int refReads() {
-        return refReads;
     }
 
     public int readDepth() {

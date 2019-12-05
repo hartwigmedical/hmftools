@@ -76,9 +76,9 @@ public class ReadContext {
     }
 
     public boolean isFullMatch(@NotNull final ReadContext other) {
-        return isComplete() && other.isComplete() && centreMatch(other.readIndex(), other.readBases())
-                && leftFlankMatchingBases(other.readIndex(), other.readBases()) == flankSize()
-                && rightFlankMatchingBases(other.readIndex(), other.readBases()) == flankSize();
+        return isComplete() && other.isComplete() && readBases.coreMatch(other.readIndex(), other.readBases())
+                && readBases.leftFlankMatchingBases(other.readIndex(), other.readBases()) == flankSize()
+                && readBases.rightFlankMatchingBases(other.readIndex(), other.readBases()) == flankSize();
     }
 
     int minCentreQuality(int readIndex, SAMRecord record) {
@@ -110,21 +110,6 @@ public class ReadContext {
 
     public boolean matchesRef(int otherReadIndex, byte[] otherBases) {
         return refCentre.coreMatch(otherReadIndex, otherBases);
-    }
-
-    @VisibleForTesting
-    boolean centreMatch(int otherRefIndex, byte[] otherBases) {
-        return readBases.coreMatch(otherRefIndex, otherBases);
-    }
-
-    @VisibleForTesting
-    int leftFlankMatchingBases(int otherRefIndex, byte[] otherBases) {
-        return readBases.leftFlankMatchingBases(otherRefIndex, otherBases);
-    }
-
-    @VisibleForTesting
-    int rightFlankMatchingBases(int otherRefIndex, byte[] otherBases) {
-        return readBases.rightFlankMatchingBases(otherRefIndex, otherBases);
     }
 
     public int leftFlankStartIndex() {
@@ -183,6 +168,11 @@ public class ReadContext {
 
     public int flankSize() {
         return readBases.flankSize();
+    }
+
+    @NotNull
+    public String refContext() {
+        return refCentre.centerString();
     }
 
 }

@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.sage.SageVCF.REF_CONTEXT;
 import static com.hartwig.hmftools.sage.SageVCF.TIER;
 
 import java.util.Collections;
@@ -68,7 +69,8 @@ public class SageVariantContextFactory {
             @NotNull final List<Genotype> genotypes, @NotNull final ReadContextCounter counter) {
         final VariantContextBuilder builder = new VariantContextBuilder().chr(variant.chromosome())
                 .start(variant.position())
-                .attribute(READ_CONTEXT, counter.toString())
+                .attribute(READ_CONTEXT, counter.readContext().toString())
+                .attribute(REF_CONTEXT, counter.readContext().refContext())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())

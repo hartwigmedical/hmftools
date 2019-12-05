@@ -124,7 +124,7 @@ public class SageApplication implements AutoCloseable {
         //        contigContexts.add(runSingleRegion("12", 50479067, 50479067));
 //                contigContexts.add(runSingleRegion("17", 210598, 210598));
 //                contigContexts.add(runSingleRegion("17", 302, 302));
-//                contigContexts.add(runSingleRegion("16", 33954503, 33954503));
+//                contigContexts.add(runSingleRegion("2", 583000, 584000));
 
         for (Future<ChromosomePipeline> contigContext : contigContexts) {
             final ChromosomePipeline chromosomePipeline = contigContext.get();

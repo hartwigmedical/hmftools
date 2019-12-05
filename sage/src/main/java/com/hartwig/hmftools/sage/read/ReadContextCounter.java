@@ -6,6 +6,7 @@ import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.Realigned;
 import com.hartwig.hmftools.sage.context.RealignedContext;
+import com.hartwig.hmftools.sage.context.RealignedType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -65,11 +66,19 @@ public class ReadContextCounter implements GenomePosition {
         return variant.position();
     }
 
-    public int support() {
-        return full + partial + realigned;
+    public int altSupport() {
+        return full + partial + core + realigned;
     }
 
     public int coverage() {
+        return coverage;
+    }
+
+    public int refSupport() {
+        return reference;
+    }
+
+    public int depth() {
         return coverage;
     }
 
@@ -110,6 +119,8 @@ public class ReadContextCounter implements GenomePosition {
         return readContext;
     }
 
+
+
     @Override
     public String toString() {
         return readContext.toString();
@@ -120,55 +131,65 @@ public class ReadContextCounter implements GenomePosition {
 
         try {
 
-            if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position() && readContext.isComplete()) {
+            if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position()
+                    && readContext.isComplete()) {
 
-                boolean covered = false;
-                if (coverage < sageConfig.maxReadDepth()) {
-                    int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                    if (readContext.isCentreCovered(readIndex, record.getReadBases())) {
+                if (coverage >= sageConfig.maxReadDepth()) {
+                    return;
+                }
+
+                int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+
+                // Check if FULL, PARTIAL, OR CORE
+                final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                if (!match.equals(ReadContextMatch.NONE)) {
+                    switch (match) {
+                        case FULL:
+                            full++;
+                            incrementQualityFlags(record);
+                            incrementQualityScores(readIndex, record, qualityConfig);
+                            break;
+                        case PARTIAL:
+                            partial++;
+                            incrementQualityFlags(record);
+                            incrementQualityScores(readIndex, record, qualityConfig);
+                            break;
+                        case CORE:
+                            core++;
+                            break;
+                    }
+
+                    coverage++;
+                    return;
+                }
+
+                // Check if realigned
+                final RealignedContext realignment = realignmentContext(realign, readIndex, record);
+                if (realignment.type().equals(RealignedType.EXACT)) {
+                    realigned++;
+                    coverage++;
+                    return;
+                }
+
+                // Check if lengthened, shortened AND/OR reference!
+                boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
+
+
+                switch (realignment.type()) {
+                    case LENGTHENED:
+                        jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
+                        lengthened++;
                         covered = true;
-                    }
+                        break;
+                    case SHORTENED:
+                        jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
+                        shortened++;
+                        covered = true;
+                        break;
+                }
 
-                    final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
-                    if (!match.equals(ReadContextMatch.NONE)) {
-                        switch (match) {
-                            case FULL:
-                                full++;
-                                incrementQualityFlags(record);
-                                incrementQualityScores(readIndex, record, qualityConfig);
-                                break;
-                            case PARTIAL:
-                                partial++;
-                                incrementQualityFlags(record);
-                                incrementQualityScores(readIndex, record, qualityConfig);
-                                break;
-                            case CORE:
-                                core++;
-                                break;
-                        }
-                    } else if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
-                        reference++;
-                    } else if (realign) {
-                        final RealignedContext context = variant.isSNV() && record.getCigar().getCigarElements().size() == 1 ? new Realigned().realignedAroundIndex(readContext,
-                                readIndex,
-                                record.getReadBases()) : new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
-                        switch (context.type()) {
-                            case EXACT:
-                                realigned++;
-                                covered = true;
-                                break;
-                            case LENGTHENED:
-                                jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
-                                lengthened++;
-                                covered = true;
-                                break;
-                            case SHORTENED:
-                                jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
-                                shortened++;
-                                covered = true;
-                                break;
-                        }
-                    }
+                if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
+                    reference++;
                 }
 
                 if (covered) {
@@ -181,16 +202,17 @@ public class ReadContextCounter implements GenomePosition {
         }
     }
 
-    public int refSupport() {
-        return reference;
-    }
+    @NotNull
+    private RealignedContext realignmentContext(boolean realign, int readIndex, SAMRecord record) {
+        if (!realign) {
+            return new RealignedContext(RealignedType.NONE, 0);
+        }
 
-    public int altSupport() {
-        return core + full + partial;
-    }
+        if (variant.isSNV() && record.getCigar().getCigarElements().size() == 1) {
+            return new Realigned().realignedAroundIndex(readContext, readIndex, record.getReadBases());
+        }
 
-    public int depth() {
-        return coverage;
+        return new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
     }
 
     private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {

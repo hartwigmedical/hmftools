@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.read.ReadContextMatch.PARTIAL;
 
 import java.util.Arrays;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class IndexedBases {
@@ -191,12 +192,12 @@ public class IndexedBases {
 
     @NotNull
     public String centerString() {
-        return new String(bases, leftCoreIndex, centreLength());
+        return bases.length == 0 ? Strings.EMPTY : new String(bases, leftCoreIndex, centreLength());
     }
 
     @Override
     public String toString() {
-        return new String(bases, leftFlankIndex, length());
+        return bases.length == 0 ? Strings.EMPTY : new String(bases, leftFlankIndex, length());
     }
 
     public int flankSize() {

@@ -59,7 +59,6 @@ public class SageVariantFactory {
 
         final ReadContextCounter normalCounter = normal.primaryReadContext();
 
-
         if (!skipMinTumorQualTest(tier, primaryTumor) && primaryTumor.primaryReadContext().quality() < config.minTumorQual()) {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
@@ -76,13 +75,13 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
         }
 
-//        double tumorReadContextSupport = primaryTumor.primaryReadContext().support();
-//        double germlineReadContextSupport = normal.primaryReadContext().support();
-//        if (Doubles.positive(tumorReadContextSupport)) {
-//            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
-//                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
-//            }
-//        }
+        double tumorReadContextSupport = primaryTumor.primaryReadContext().altSupport();
+        double germlineReadContextSupport = normal.primaryReadContext().altSupport();
+        if (Doubles.positive(tumorReadContextSupport)) {
+            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
+                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
+            }
+        }
 
         double tumorQual = primaryTumor.primaryReadContext().quality();
         double germlineQual = normal.primaryReadContext().quality();
@@ -97,7 +96,7 @@ public class SageVariantFactory {
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
         return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.primaryReadContext().support() >= config.hotspotMinTumorReadContextSupportToSkipQualCheck();
+                && primaryTumor.primaryReadContext().altSupport() >= config.hotspotMinTumorReadContextSupportToSkipQualCheck();
     }
 
 }

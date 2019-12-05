@@ -8,9 +8,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ReadContextTest {
+public class IndexedBasesTest {
 
-    private ReadContext victim = new ReadContext("", 1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
+    private IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
     public void testRightFlankMatchingBases() {
@@ -36,16 +36,16 @@ public class ReadContextTest {
     }
 
     @Test
-    public void testCentreMatch() {
+    public void testCoreMatch() {
 
-        assertEquals(true, victim.centreMatch(5, "GATCTCCTCA".getBytes()));
-        assertEquals(true, victim.centreMatch(1, "TCC".getBytes()));
+        assertEquals(true, victim.coreMatch(5, "GATCTCCTCA".getBytes()));
+        assertEquals(true, victim.coreMatch(1, "TCC".getBytes()));
 
-        assertEquals(false, victim.centreMatch(1, "CCC".getBytes()));
-        assertEquals(false, victim.centreMatch(1, "TTC".getBytes()));
-        assertEquals(false, victim.centreMatch(1, "TCT".getBytes()));
-        assertEquals(false, victim.centreMatch(1, "TC".getBytes()));
-        assertEquals(false, victim.centreMatch(0, "CC".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "CCC".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "TTC".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "TCT".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "TC".getBytes()));
+        assertEquals(false, victim.coreMatch(0, "CC".getBytes()));
     }
 
 

@@ -163,7 +163,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final byte refByte = refBases.bases()[refBaseIndex];
             final String ref = String.valueOf((char) refByte);
             final byte readByte = record.getReadBases()[readBaseIndex];
-            final int baseQuality = record.getBaseQualities()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.readDepth() < config.maxReadDepth()) {
@@ -176,7 +175,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     }
 
                 } else {
-                    refContext.refRead(record.getMappingQuality(), baseQuality);
+                    refContext.refRead();
                 }
             }
         }
