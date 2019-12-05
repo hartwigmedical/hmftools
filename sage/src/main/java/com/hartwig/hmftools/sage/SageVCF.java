@@ -108,7 +108,7 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Float,
                 READ_CONTEXT_AF_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 8, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
                 1,
                 VCFHeaderLineType.Integer,

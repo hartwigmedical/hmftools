@@ -118,63 +118,66 @@ public class ReadContextCounter implements GenomePosition {
     public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig) {
         final QualityConfig qualityConfig = sageConfig.qualityConfig();
 
-        if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position()
-                && readContext.isComplete()) {
+        try {
 
-            boolean covered = false;
-            if (coverage < sageConfig.maxReadDepth()) {
-                int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                if (readContext.isCentreCovered(readIndex, record.getReadBases())) {
-                    covered = true;
+            if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position() && readContext.isComplete()) {
+
+                boolean covered = false;
+                if (coverage < sageConfig.maxReadDepth()) {
+                    int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                    if (readContext.isCentreCovered(readIndex, record.getReadBases())) {
+                        covered = true;
+                    }
+
+                    final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                    if (!match.equals(ReadContextMatch.NONE)) {
+                        switch (match) {
+                            case FULL:
+                                full++;
+                                incrementQualityFlags(record);
+                                incrementQualityScores(readIndex, record, qualityConfig);
+                                break;
+                            case PARTIAL:
+                                partial++;
+                                incrementQualityFlags(record);
+                                incrementQualityScores(readIndex, record, qualityConfig);
+                                break;
+                            case CORE:
+                                core++;
+                                break;
+                        }
+                    } else if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
+                        reference++;
+                    } else if (realign) {
+                        final RealignedContext context = variant.isSNV() && record.getCigar().getCigarElements().size() == 1 ? new Realigned().realignedAroundIndex(readContext,
+                                readIndex,
+                                record.getReadBases()) : new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
+                        switch (context.type()) {
+                            case EXACT:
+                                realigned++;
+                                covered = true;
+                                break;
+                            case LENGTHENED:
+                                jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
+                                lengthened++;
+                                covered = true;
+                                break;
+                            case SHORTENED:
+                                jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
+                                shortened++;
+                                covered = true;
+                                break;
+                        }
+                    }
                 }
 
-                final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
-                if (!match.equals(ReadContextMatch.NONE)) {
-                    switch (match) {
-                        case FULL:
-                            full++;
-                            incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig);
-                            break;
-                        case PARTIAL:
-                            partial++;
-                            incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig);
-                            break;
-                        case CORE:
-                            core++;
-                            break;
-                    }
-                } else if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
-                    reference++;
-                } else if (realign) {
-                    final RealignedContext context =
-                            variant.isSNV() && record.getCigar().getCigarElements().size() == 1 ? new Realigned().realignedAroundIndex(
-                                    readContext,
-                                    readIndex,
-                                    record.getReadBases()) : new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
-                    switch (context.type()) {
-                        case EXACT:
-                            realigned++;
-                            covered = true;
-                            break;
-                        case LENGTHENED:
-                            jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
-                            lengthened++;
-                            covered = true;
-                            break;
-                        case SHORTENED:
-                            jitterPenalty += qualityConfig.jitterPenalty(context.repeatCount());
-                            shortened++;
-                            covered = true;
-                            break;
-                    }
+                if (covered) {
+                    coverage++;
                 }
             }
-
-            if (covered) {
-                coverage++;
-            }
+        } catch (Exception e) {
+            System.out.println("Error at chromosome: " + chromosome() + ", position: " + position());
+            throw e;
         }
     }
 
