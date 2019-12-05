@@ -1,6 +1,6 @@
 cancerType,doids
 Acute Lymphoid Leukemia,
-All Solid Tumors,
+All Solid Tumors,1790
 All Tumors,162
 Anaplastic oligodendroglioma,
 Any cancer type,162
@@ -28,9 +28,9 @@ Head an neck,11934
 Head an neck squamous,5520
 Hematologic malignancies,
 Hepatic carcinoma,686
-Hepatocellular Mixed Fibrolamellar Carcinoma,0080182
+Hepatocellular Mixed Fibrolamellar Carcinoma,80182
 Histiocytic Disorder,
-Inflammatory myofibroblastic,0050905
+Inflammatory myofibroblastic,50905
 Lagerhans cell histiocytosis,
 Lung,1324
 Lung squamous cell,3907
