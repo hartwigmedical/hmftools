@@ -1,6 +1,6 @@
 cancerType,doids
 Acute Lymphoid Leukemia,
-All Solid Tumors,1790
+All Solid Tumors,
 All Tumors,162
 Anaplastic oligodendroglioma,
 Any cancer type,162
@@ -53,7 +53,7 @@ PTEN Harmatoma Tumor Syndrome,
 Renal,263
 Salivary glands,8850
 Solid Tumor,
-Solid tumors,
+Solid tumors,1790
 Stomach,10534
 Thymic,3277
 Thyroid,1781
