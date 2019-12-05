@@ -121,6 +121,7 @@ public class FusionDisruptionAnalyser
         mLogRepeatedGenePairs = false;
         mFindNeoEpitopes = false;
         mFusionParams = new FusionParameters();
+        mFusionParams.RequireUpstreamBiotypes = true;
 
         mRnaFusionMapper = null;
 

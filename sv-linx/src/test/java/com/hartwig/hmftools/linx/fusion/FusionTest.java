@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
@@ -170,7 +171,7 @@ public class FusionTest
         long codingEnd = 1900;
 
         TranscriptData transData = new TranscriptData(transId1, transName1, geneId1, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, "");
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
         List<ExonData> exons = Lists.newArrayList();
 
@@ -201,7 +202,7 @@ public class FusionTest
         codingEnd = 11980;
 
         transData = new TranscriptData(transId2, transName2, geneId2, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, "");
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
         exons = Lists.newArrayList();
 

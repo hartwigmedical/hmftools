@@ -8,7 +8,7 @@ import static java.lang.Math.pow;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.TRANSCRIPT_PROTEIN_CODING;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.mapExonPhase;
@@ -329,7 +329,7 @@ public class CohortExpFusions
         if(transcript.exons().size() == 1)
             return transcriptRegions;
 
-        boolean proteinCoding = transcript.BioType.equals(TRANSCRIPT_PROTEIN_CODING);
+        boolean proteinCoding = transcript.BioType.equals(BIOTYPE_PROTEIN_CODING);
 
         for (int i = 0; i < transcript.exons().size() - 1; ++i)
         {

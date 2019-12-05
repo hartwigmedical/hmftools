@@ -10,6 +10,7 @@ public class FusionParameters
     public List<String> InvalidReasons;
     public boolean AllowExonSkipping;
     public boolean RequirePhaseMatch;
+    public boolean RequireUpstreamBiotypes;
 
     public FusionParameters()
     {
@@ -17,6 +18,7 @@ public class FusionParameters
         InvalidReasons = Lists.newArrayList();
         AllowExonSkipping = true;
         RequirePhaseMatch = false;
+        RequireUpstreamBiotypes = false;
     }
 
 }

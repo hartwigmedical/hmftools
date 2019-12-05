@@ -40,6 +40,15 @@ public class FusionFinder
     private List<String> mProteinsRequiredKept;
     private List<String> mProteinsRequiredLost;
 
+    public static final String BIOTYPE_PROTEIN_CODING = "protein_coding";
+    public static final String BIOTYPE_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
+    public static final String BIOTYPE_RETAINED_INTRON = "retained_intron";
+    public static final String BIOTYPE_PROCESSED_TRANS = "processed_transcript";
+    public static final String BIOTYPE_LINC_RNA = "lincRNA";
+
+    private static List<String> mRequiredBiotypes = Lists.newArrayList(
+            BIOTYPE_PROCESSED_TRANS, BIOTYPE_PROTEIN_CODING, BIOTYPE_NONSENSE_MED_DECAY, BIOTYPE_RETAINED_INTRON, BIOTYPE_LINC_RNA);
+
     private static boolean mLogInvalidReasons;
 
     private static final int EXON_THRESHOLD = 1;
@@ -160,10 +169,11 @@ public class FusionFinder
 
     public static boolean validFusionTranscript(final Transcript transcript)
     {
-        return validFusionTranscript(transcript, true);
+        return validFusionTranscript(transcript, true, false);
     }
 
-    private static boolean validFusionTranscript(final Transcript transcript, boolean requireUpstreamDisruptive)
+    private static boolean validFusionTranscript(
+            final Transcript transcript, boolean requireUpstreamDisruptive, boolean requireUpstreamBiotypes)
     {
         // check any conditions which would preclude this transcript being a part of a fusion no matter the other end
         if(transcript.isUpstream())
@@ -172,6 +182,9 @@ public class FusionFinder
                 return false;
 
             if(requireUpstreamDisruptive && !transcript.isDisruptive())
+                return false;
+
+            if(requireUpstreamBiotypes && !mRequiredBiotypes.contains(transcript.bioType()))
                 return false;
         }
         else
@@ -200,7 +213,8 @@ public class FusionFinder
         // see SV Fusions document for permitted combinations
         boolean checkExactMatch = false;
 
-        if(!validFusionTranscript(upstreamTrans, requireUpstreamDisruptive) || !validFusionTranscript(downstreamTrans))
+        if(!validFusionTranscript(upstreamTrans, requireUpstreamDisruptive, params.RequireUpstreamBiotypes)
+        || !validFusionTranscript(downstreamTrans))
         {
             logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "invalid trans");
             return null;
@@ -366,14 +380,14 @@ public class FusionFinder
         return null;
     }
 
-    private static boolean exonToExonInPhase(final Transcript transUp, final Transcript transDown)
+    private static boolean exonToExonInPhase(final Transcript upTrans, final Transcript downTrans)
     {
         // check phasing and offset since exon start or coding start
-        transUp.setExonicCodingBase();
-        transDown.setExonicCodingBase();
+        upTrans.setExonicCodingBase();
+        downTrans.setExonicCodingBase();
 
-        int upPhase = transUp.exonicBasePhase();
-        int downPhase = transDown.exonicBasePhase();
+        int upPhase = upTrans.exonicBasePhase();
+        int downPhase = downTrans.exonicBasePhase();
 
         if(upPhase == -1 && downPhase == -1)
             return true;
@@ -381,20 +395,20 @@ public class FusionFinder
         return ((upPhase + 1) % 3) == (downPhase % 3);
     }
 
-    public static boolean isPotentiallyRelevantFusion(final Transcript t1, final Transcript t2)
+    public static boolean isPotentiallyRelevantFusion(final Transcript upTrans, final Transcript downTrans)
     {
-        if(!t1.geneName().equals(t2.geneName()))
+        if(!upTrans.geneName().equals(downTrans.geneName()))
             return true;
 
         // skip fusions between different transcripts in the same gene,
-        if (!t1.StableId.equals(t2.StableId))
+        if (!upTrans.StableId.equals(downTrans.StableId))
             return false;
 
-        if(t1.nonCoding())
+        if(upTrans.nonCoding())
             return false;
 
         // skip fusions within the same intron
-        if(t1.isIntronic() && t2.isIntronic() && t1.ExonUpstream == t2.ExonUpstream)
+        if(upTrans.isIntronic() && downTrans.isIntronic() && upTrans.ExonUpstream == downTrans.ExonUpstream)
             return false;
 
         return true;
@@ -522,9 +536,6 @@ public class FusionFinder
         return featurePreserved;
     }
 
-    public static String TRANSCRIPT_PROTEIN_CODING = "protein_coding";
-    public static String TRANSCRIPT_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
-
     private static int MAX_UPSTREAM_DISTANCE_KNOWN = 100000;
     private static int MAX_UPSTREAM_DISTANCE_OTHER = 10000;
 
@@ -547,7 +558,7 @@ public class FusionFinder
         if(upTrans.getDistanceUpstream() > maxUpstreamDistance || downTrans.getDistanceUpstream() > maxUpstreamDistance)
             return false;
 
-        if(downTrans.bioType().equals(TRANSCRIPT_NONSENSE_MED_DECAY))
+        if(downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
             return false;
 
         if(downTrans.hasNegativePrevSpliceAcceptorDistance())
@@ -600,7 +611,7 @@ public class FusionFinder
 
             factor /= 10;
 
-            if(downTrans.bioType().equals(TRANSCRIPT_PROTEIN_CODING))
+            if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
                 transScore += factor;
 
             factor /= 100;
@@ -618,7 +629,7 @@ public class FusionFinder
 
             factor /= 10;
 
-            if(upTrans.bioType().equals(TRANSCRIPT_PROTEIN_CODING))
+            if(upTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
                 transScore += factor;
 
             factor /= 100;

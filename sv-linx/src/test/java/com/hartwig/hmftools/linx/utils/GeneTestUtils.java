@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DEL;
 import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.AMP;
 import static com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod.BAF_WEIGHTED;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class GeneTestUtils
         }
 
         TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, "");
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
         List<ExonData> exons = Lists.newArrayList();
 
@@ -239,7 +240,7 @@ public class GeneTestUtils
         }
 
         TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, "");
+                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
 
         transData.setExons(exons);
 
