@@ -49,7 +49,7 @@ public class ReportingDbTest {
     @Test
     public void canWriteReportDatesToTsv() throws IOException {
         if (WRITE_TO_TSV) {
-            File reportDatesTsv = new File(REPORT_BASE_DIR + "/reporting_db_test.tsv");
+            File reportDatesTsv = new File(REPORT_BASE_DIR + File.separator + "reporting_db_test.tsv");
 
             if (reportDatesTsv.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
