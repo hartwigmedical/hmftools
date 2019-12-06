@@ -54,6 +54,13 @@ public class GeneTestUtils
         geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
     }
 
+    public static int getCodingBases(final Long start, final Long end)
+    {
+        if(start != null && end != null)
+            return (int)(end - start) + 1;
+        return 0;
+    }
+
     public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
             long[] exonStarts, int[] exonEndPhases, int exonLength)
     {
@@ -120,7 +127,7 @@ public class GeneTestUtils
     }
 
     public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
-            long[] exonStarts, int exonLength, Long codingStart, Long codingEnd, boolean isCanonical)
+            long[] exonStarts, int exonLength, Long codingStart, Long codingEnd, boolean isCanonical, final String biotype)
     {
         if(exonStarts.length == 0 || exonLength <= 0)
             return null;
@@ -240,7 +247,7 @@ public class GeneTestUtils
         }
 
         TranscriptData transData = new TranscriptData(transId, generateTransName(transId), geneId, isCanonical, strand, transStart, transEnd,
-                codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
+                codingStart, codingEnd, biotype);
 
         transData.setExons(exons);
 

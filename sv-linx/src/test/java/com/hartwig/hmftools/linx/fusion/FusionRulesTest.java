@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.getCodingBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -307,12 +308,6 @@ public class FusionRulesTest
 
     }
 
-    private static int getCodingBases(final Long start, final Long end)
-    {
-        if(start != null && end != null)
-            return (int)(end - start) + 1;
-        return 0;
-    }
 
 
 }

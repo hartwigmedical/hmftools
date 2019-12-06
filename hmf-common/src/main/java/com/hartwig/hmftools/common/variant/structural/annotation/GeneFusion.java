@@ -54,6 +54,12 @@ public class GeneFusion
     public final String getKnownType(){ return mKnownType; }
     public void setKnownType(final String type) { mKnownType = type; }
 
+    public final String toString()
+    {
+        return String.format("%s %s phased(%s) known(%s)",
+                mUpstreamTrans.toString(), mDownstreamTrans.toString(), mPhaseMatched, mKnownType);
+    }
+
     public boolean phaseMatched(){ return mPhaseMatched; }
 
     public void setExonsSkipped(int exonsUp, int exonsDown)

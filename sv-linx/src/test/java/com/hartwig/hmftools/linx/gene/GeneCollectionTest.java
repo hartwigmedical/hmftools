@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.Transcri
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_3P_UTR;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_NON_CODING;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MAX;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MIN;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
@@ -292,7 +293,8 @@ public class GeneCollectionTest
         Long codingStart = new Long(100);
         Long codingEnd = new Long(110);
 
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+        TranscriptData transData = createTransExons(
+                geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         long position = 150;
         Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
@@ -310,7 +312,8 @@ public class GeneCollectionTest
         codingStart = new Long(105);
         codingEnd = new Long(405);
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+        transData = createTransExons(
+                geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 350;
         trans = extractTranscriptExonData(transData, position, genePosStrand);
@@ -337,7 +340,8 @@ public class GeneCollectionTest
         codingStart = new Long(500);
         codingEnd = new Long(510);
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+        transData = createTransExons(
+                geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
 
         position = 450;
@@ -356,7 +360,8 @@ public class GeneCollectionTest
         codingStart = new Long(205);
         codingEnd = new Long(505);
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true);
+        transData = createTransExons(
+                geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
         position = 250;
         trans = extractTranscriptExonData(transData, position, geneNegStrand);
@@ -373,7 +378,6 @@ public class GeneCollectionTest
     @Test
     public void testProteinDomainPositions()
     {
-        String transName = "ENST0001";
         String geneId = "G0001";
         int transId = 1;
 

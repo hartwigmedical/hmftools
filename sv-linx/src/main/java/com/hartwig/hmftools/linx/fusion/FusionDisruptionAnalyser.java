@@ -81,6 +81,7 @@ public class FusionDisruptionAnalyser
     private boolean mFindNeoEpitopes;
 
     private final List<GeneFusion> mFusions;
+    private final List<GeneFusion> mUniqueFusions;
     private final Map<GeneFusion,String> mInvalidFusions;
 
     private RnaFusionMapper mRnaFusionMapper;
@@ -115,6 +116,7 @@ public class FusionDisruptionAnalyser
         mNeoEpitopeFinder = null;
 
         mFusions = Lists.newArrayList();
+        mUniqueFusions = Lists.newArrayList();
         mInvalidFusions = Maps.newHashMap();
         mLogReportableOnly = false;
         mLogAllPotentials = false;
@@ -211,6 +213,7 @@ public class FusionDisruptionAnalyser
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
     public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
+    public final List<GeneFusion> getUniqueFusions() { return mUniqueFusions; }
 
     // for testing
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
@@ -267,25 +270,26 @@ public class FusionDisruptionAnalyser
         mSampleId = sampleId;
         mChrBreakendMap = chrBreakendMap;
 
+        mUniqueFusions.clear();
         findFusions(svList, clusters);
         mDisruptionFinder.findReportableDisruptions(svList);
 
-        final List<GeneFusion> uniqueFusions = extractUniqueFusions();
-        final List<Transcript> transcripts = getTranscriptList(svList, uniqueFusions);
+        mUniqueFusions.addAll(extractUniqueFusions());
+        final List<Transcript> transcripts = getTranscriptList(svList, mUniqueFusions);
 
         final List<LinxBreakend> breakends = Lists.newArrayList();
         final List<LinxFusion> fusions = Lists.newArrayList();
-        convertBreakendsAndFusions(uniqueFusions, transcripts, fusions, breakends);
+        convertBreakendsAndFusions(mUniqueFusions, transcripts, fusions, breakends);
 
         if(mConfig.isSingleSample())
         {
-            mFusionWriter.writeSampleData(mSampleId, uniqueFusions, fusions, breakends);
+            mFusionWriter.writeSampleData(mSampleId, mUniqueFusions, fusions, breakends);
             mDisruptionFinder.writeSampleData(mSampleId);
         }
         else
         {
             // write fusions in detail when in batch mode
-            final List<GeneFusion> fusionList = mLogAllPotentials ? mFusions : uniqueFusions;
+            final List<GeneFusion> fusionList = mLogAllPotentials ? mFusions : mUniqueFusions;
 
             for(final GeneFusion fusion : fusionList)
             {
@@ -296,11 +300,11 @@ public class FusionDisruptionAnalyser
             mDisruptionFinder.writeMultiSampleData(mSampleId, svList);
         }
 
-        addVisualisationData(uniqueFusions);
+        addVisualisationData(mUniqueFusions);
 
         if(LOGGER.isDebugEnabled())
         {
-            for(final GeneFusion fusion : uniqueFusions)
+            for(final GeneFusion fusion : mUniqueFusions)
             {
                 if(fusion.getKnownType() == REPORTABLE_TYPE_NONE)
                     continue;

@@ -86,6 +86,7 @@ public class FusionFinder
     }
 
     public void setHasValidConfigData(boolean toggle) { mHasValidConfigData = toggle; }
+    public void setKnownFusionData(final KnownFusionData data) { mKnownFusionData = data; }
     public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
 
     public static void addCmdLineArgs(Options options)
@@ -575,8 +576,8 @@ public class FusionFinder
     {
         GeneFusion reportableFusion = null;
 
-        // form a score by allocating 0/1 or length value to each power 10 descending
-        long highestScore = 0;
+        // form a score by allocating 0/1 or length value to each power of 10 descending
+        double highestScore = 0;
 
         for(final GeneFusion fusion : fusions)
         {
@@ -588,30 +589,48 @@ public class FusionFinder
             final Transcript downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
-            - prioritise fusions which don't skip exons
-            - take both canonical if possible
-            - favour 3' over 5' by canoncial, protein-coding then coding bases (or exon count if not coding)
+            1. inframe
+            2. chain not terminated for known fusions
+            3. 3’ partner biotype is protein_coding
+            4. No exons skipped
+            5. Best 3' partner by canonical, not NMD then coding bases (or exon count if not coding)
+            6. Best 5' partner by canonical, protein-coding then coding bases
             */
 
-            long transScore = 0;
-            long factor = 1000000000;
+            double transScore = 0;
+            double factor = 1000000;
 
+            // 1. Phase matched
+            if(fusion.phaseMatched())
+                transScore += factor;
+
+            factor /= 10;
+
+            // 2. Chain not terminated (only applicable for chained & known fusions)
+            if(!fusion.isTerminated())
+                transScore += factor;
+
+            factor /= 10;
+
+            // 3' protein coding
+            if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
+                transScore += factor;
+
+            factor /= 10;
+
+            // 4. Not skipping exons
             if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
                 transScore += factor;
 
             factor /= 10;
 
-            if(downTrans.isCanonical() && upTrans.isCanonical())
-                transScore += factor;
-
-            factor /= 10;
-
+            // 5. Best 3' partner
             if(downTrans.isCanonical())
                 transScore += factor;
 
             factor /= 10;
 
-            if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
+            if(!downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
                 transScore += factor;
 
             factor /= 100;
@@ -624,6 +643,7 @@ public class FusionFinder
 
             factor /= 10;
 
+            // 6. Best 3' partner
             if(upTrans.isCanonical())
                 transScore += factor;
 

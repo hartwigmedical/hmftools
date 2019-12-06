@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.linx.utils.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
@@ -25,6 +28,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotatio
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -38,9 +42,9 @@ public class FusionTest
     @Test
     public void testReportableFusionComparison()
     {
-        // test the selection and prioritisation logic from a collection of valid fusions
+        // test the selection and prioritisation logic for reportable fusions
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
 
@@ -61,7 +65,6 @@ public class FusionTest
 
         List<TranscriptData> transDataList = Lists.newArrayList();
 
-        String transName = "ENST0001";
         int transId = 1;
 
         long[] exonStarts = new long[]{100, 300, 500, 700, 900};
@@ -139,6 +142,40 @@ public class FusionTest
         {
             assertTrue(!fusions.get(i).reportable());
         }
+    }
+
+    @Test
+    public void testFusionPrioritisation()
+    {
+        // create a set of valid fusions and successively invalidate the top one to test prioritisation logic
+
+        String chromosome = "1";
+        byte strand = 1;
+
+        String geneId1 = "ENSG0001";
+
+        GeneAnnotation upGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
+
+        Long codingStart = new Long(350);
+        Long codingEnd = new Long(950);
+
+        Transcript upTrans1 = new Transcript(upGene, 1, "TRANS01", 2, 1, 3, 1,
+                50, 300,5, true, 100, 1000, codingStart, codingEnd);
+        upTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
+
+
+        GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
+
+        codingStart = new Long(10350);
+        codingEnd = new Long(10950);
+
+        Transcript downTrans1 = new Transcript(downGene, 11, "TRANS11", 2, 1, 3, 1,
+                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
+        downTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
+
+        GeneFusion fusion1 = new GeneFusion(upTrans1, downTrans1, true);
+
+
     }
 
     @Test
