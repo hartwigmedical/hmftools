@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.SageVCF;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,11 +16,13 @@ class SnvSnvMerge implements Consumer<SageVariant> {
 
     private static final int BUFFER = 2;
 
+    private final SageConfig config;
     private final MnvFactory factory;
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> list = Lists.newLinkedList();
 
-    SnvSnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
+    SnvSnvMerge(final SageConfig config, @NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
+        this.config = config;
         this.consumer = consumer;
         this.factory = factory;
     }
@@ -27,7 +30,7 @@ class SnvSnvMerge implements Consumer<SageVariant> {
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
         flush(newEntry);
-        if (isPhasedSnv(newEntry)) {
+        if (config.mnvDetection() && isPhasedSnv(newEntry)) {
 
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);

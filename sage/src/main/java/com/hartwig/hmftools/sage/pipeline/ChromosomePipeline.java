@@ -69,7 +69,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
                 sageVCF.write(context);
             }
         };
-        final Phase phase = new Phase(config.germlineOnly(), reference, sageVariantFactory, phasedConsumer);
+        final Phase phase = new Phase(config, reference, sageVariantFactory, phasedConsumer);
 
         // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
