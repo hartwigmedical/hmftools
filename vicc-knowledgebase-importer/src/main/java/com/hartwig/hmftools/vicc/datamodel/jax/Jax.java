@@ -28,13 +28,13 @@ public abstract class Jax implements KbSpecificObject {
     public abstract String evidenceType();
 
     @NotNull
-    public abstract JaxIndications indications();
+    public abstract JaxIndication indication();
 
     @NotNull
     public abstract String efficacyEvidence();
 
-    @Nullable
-    public abstract List<JaxReferences> references();
+    @NotNull
+    public abstract List<JaxReference> references();
 
     @NotNull
     public abstract String id();

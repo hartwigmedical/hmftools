@@ -30,6 +30,8 @@ public class ViccJsonSQLImporter {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
+    private static final String SKIP_DATABASE_WRITING = "skip_database_writing";
+
     public static void main(final String... args) throws ParseException, IOException, SQLException {
         LOGGER.info("Running VICC Knowledgebase Importer");
         final Options options = createOptions();
@@ -44,19 +46,23 @@ public class ViccJsonSQLImporter {
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJsonPath);
         LOGGER.info(" Loaded {} VICC entries from file.", viccEntries.size());
 
-        ViccDAO viccDAO = connect(cmd);
-        LOGGER.info("Deleting all from VICC db");
-        viccDAO.deleteAll();
-        LOGGER.info("Starting insertion of all VICC entries");
-        int count = 0;
-        for (ViccEntry viccEntry : viccEntries) {
-            viccDAO.writeViccEntry(viccEntry);
-            count++;
-            if (count % 1000 == 0) {
-                LOGGER.info(" Completed inserting {} VICC entries into VICC db", count);
+        if (cmd.hasOption(SKIP_DATABASE_WRITING)) {
+            LOGGER.info("Skipping DB writing.");
+        } else {
+            ViccDAO viccDAO = connect(cmd);
+            LOGGER.info("Deleting all from VICC db");
+            viccDAO.deleteAll();
+            LOGGER.info("Starting insertion of all VICC entries");
+            int count = 0;
+            for (ViccEntry viccEntry : viccEntries) {
+                viccDAO.writeViccEntry(viccEntry);
+                count++;
+                if (count % 1000 == 0) {
+                    LOGGER.info(" Completed inserting {} VICC entries into VICC db", count);
+                }
             }
+            LOGGER.info("Done inserting {} entries into VICC db", viccEntries.size());
         }
-        LOGGER.info("Done inserting {} entries into VICC db", viccEntries.size());
     }
 
     private static boolean validInput(@NotNull CommandLine cmd) {
@@ -86,6 +92,8 @@ public class ViccJsonSQLImporter {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
+
+        options.addOption(SKIP_DATABASE_WRITING, false, "If this flag is set to true, we skip the writing to the database");
 
         return options;
     }

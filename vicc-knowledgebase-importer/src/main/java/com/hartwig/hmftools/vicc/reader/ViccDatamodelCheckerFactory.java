@@ -202,4 +202,54 @@ final class ViccDatamodelCheckerFactory {
         map.put("id", true);
         return new ViccDatamodelChecker("PhenotypeType", map);
     }
+
+    @NotNull
+    static ViccDatamodelChecker jaxEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("responseType", true);
+        map.put("approvalStatus", true);
+        map.put("molecularProfile", true);
+        map.put("therapy", true);
+        map.put("evidenceType", true);
+        map.put("indication", true);
+        map.put("efficacyEvidence", true);
+        map.put("references", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("JaxEntry", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxMolecularProfileChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("profileName", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("JaxMolecularProfile", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxTherapyChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("therapyName", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("JaxTherapy", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxIndicationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("source", true);
+        map.put("id", true);
+        map.put("name", true);
+        return new ViccDatamodelChecker("JaxIndication", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxReferenceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("url", true);
+        map.put("id", true);
+        map.put("pubMedId", true);
+        map.put("title", true);
+        return new ViccDatamodelChecker("JaxReference", map);
+    }
 }

@@ -6,14 +6,18 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class JaxIndications {
+public abstract class JaxReference {
 
     @NotNull
-    public abstract String source();
+    public abstract String url();
 
     @NotNull
     public abstract String id();
 
+    @Nullable
+    public abstract String pubMedId();
+
     @NotNull
-    public abstract String name();
+    public abstract String title();
+
 }

@@ -231,8 +231,8 @@ DROP TABLE IF EXISTS jaxTrialsTherapies;
 DROP TABLE IF EXISTS jax;
 DROP TABLE IF EXISTS jaxMolecularProfile;
 DROP TABLE IF EXISTS jaxTherapy;
-DROP TABLE IF EXISTS jaxIndications;
-DROP TABLE IF EXISTS jaxReferences;
+DROP TABLE IF EXISTS jaxIndication;
+DROP TABLE IF EXISTS jaxReference;
 DROP TABLE IF EXISTS cgi;
 DROP TABLE IF EXISTS cgicDNA;
 DROP TABLE IF EXISTS cgiIndividualMutation;
@@ -2709,7 +2709,7 @@ CREATE TABLE jax
     approvalStatus varchar(255) NOT NULL,
     evidenceType varchar(255) NOT NULL,
     efficacyEvidence varchar(1000) NOT NULL,
-    idJaxSource varchar(255) NOT NULL,
+    idJaxEntry varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -2732,28 +2732,26 @@ CREATE TABLE jaxTherapy
     FOREIGN KEY (jaxId) REFERENCES jax(id)
 );
 
-CREATE TABLE jaxIndications
+CREATE TABLE jaxIndication
 (   id int NOT NULL AUTO_INCREMENT,
     jaxId int NOT NULL,
     source varchar(255) NOT NULL,
-    idIndications varchar(255) NOT NULL,
+    idIndication varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (jaxId) REFERENCES jax(id)
 );
 
-CREATE TABLE jaxReferences
+CREATE TABLE jaxReference
 (   id int NOT NULL AUTO_INCREMENT,
     jaxId int NOT NULL,
     url varchar(255),
-    idReferences varchar(255),
+    idReference varchar(255),
     pubMedId varchar(255),
     title varchar(500),
     PRIMARY KEY (id),
     FOREIGN KEY (jaxId) REFERENCES jax(id)
 );
-
-
 
 CREATE TABLE cgi
 (   id int NOT NULL AUTO_INCREMENT,
