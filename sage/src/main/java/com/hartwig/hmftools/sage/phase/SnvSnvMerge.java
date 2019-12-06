@@ -16,21 +16,28 @@ class SnvSnvMerge implements Consumer<SageVariant> {
 
     private static final int BUFFER = 2;
 
-    private final SageConfig config;
+    private final boolean enabled;
     private final MnvFactory factory;
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> list = Lists.newLinkedList();
 
     SnvSnvMerge(final SageConfig config, @NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
-        this.config = config;
+        this.enabled = config.mnvDetection();
         this.consumer = consumer;
         this.factory = factory;
     }
 
+    SnvSnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
+        this.enabled = true;
+        this.consumer = consumer;
+        this.factory = factory;
+    }
+
+
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
         flush(newEntry);
-        if (config.mnvDetection() && isPhasedSnv(newEntry)) {
+        if (enabled && isPhasedSnv(newEntry)) {
 
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);
