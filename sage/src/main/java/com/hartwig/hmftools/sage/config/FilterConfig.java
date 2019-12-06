@@ -20,6 +20,7 @@ public interface FilterConfig {
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
+    int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
 
     SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
             .minTumorQual(0)
@@ -30,11 +31,8 @@ public interface FilterConfig {
             .maxGermlineRelativeReadContextCount(1d)
             .build();
 
-    SoftFilterConfig DEFAULT_HOTSPOT_FILTER = ImmutableSoftFilterConfig.builder().from(NO_FILTER)
-            .minTumorQual(35)
-            .minTumorVaf(0.005)
-            .maxGermlineVaf(0.1)
-            .build();
+    SoftFilterConfig DEFAULT_HOTSPOT_FILTER =
+            ImmutableSoftFilterConfig.builder().from(NO_FILTER).minTumorQual(35).minTumorVaf(0.005).maxGermlineVaf(0.1).build();
 
     SoftFilterConfig DEFAULT_PANEL_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
@@ -59,14 +57,19 @@ public interface FilterConfig {
 
     int hardMinTumorQual();
 
-    default int hotspotAltSupportHardPass() {
-        return 4;
-    }
-
     int hardMinTumorAltSupport();
 
+    default int hardMinTumorQualFiltered() {
+        return DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED;
+    }
+
+    //TODO: Rename this... it isn't a hard filter
     default int hardMaxNormalAltSupport() {
         return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
+    }
+
+    default int hotspotMinTumorReadContextSupportToSkipQualCheck() {
+        return 5;
     }
 
     @NotNull

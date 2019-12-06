@@ -70,7 +70,7 @@ class SomaticPipelineData {
             }
 
             if (!readContextCounters.isEmpty()) {
-                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::support).reversed());
+                readContextCounters.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
                 altContext.setPrimaryReadContext(new ReadContextCounter(hotspot, readContextCounters.get(0).readContext()));
             }
         }

@@ -55,7 +55,7 @@ public class SnvSnvMergeTest {
         consumer = new SageVariantList();
         final MnvFactory mnvFactory =
                 new MnvFactory(sequence, new SageVariantFactory(config, Lists.newArrayList(), Lists.newArrayList()));
-        victim = new SnvSnvMerge(consumer, mnvFactory);
+        victim = new SnvSnvMerge( consumer, mnvFactory);
         refBases = sequence.getSubsequenceAt("1", 1, 60).getBases();
     }
 

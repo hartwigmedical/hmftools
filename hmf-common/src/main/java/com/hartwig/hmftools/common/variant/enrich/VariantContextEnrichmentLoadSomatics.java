@@ -12,10 +12,12 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class VariantContextEnrichmentLoadSomatics implements VariantContextEnrichment {
 
+    @NotNull
     public static VariantContextEnrichmentFactory factory(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions) {
         return consumer -> new VariantContextEnrichmentLoadSomatics(highConfidenceRegions, consumer);
     }
 
+    @NotNull
     private final HighConfidenceEnrichment highConfidenceEnrichment;
 
     private VariantContextEnrichmentLoadSomatics(@NotNull final Multimap<String, GenomeRegion> highConfidenceRegions,

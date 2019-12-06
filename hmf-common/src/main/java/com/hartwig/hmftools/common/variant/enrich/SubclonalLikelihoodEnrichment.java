@@ -29,7 +29,6 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
         this.consumer = consumer;
 
         likelihoodFactory = new SubclonalLikelihood(binWidth, peakModel);
-
     }
 
     @Override
@@ -45,7 +44,7 @@ public class SubclonalLikelihoodEnrichment implements VariantContextEnrichment {
 
     @Override
     public void flush() {
-
+        // None
     }
 
     @NotNull

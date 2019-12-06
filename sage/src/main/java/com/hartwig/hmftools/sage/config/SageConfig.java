@@ -36,6 +36,7 @@ public interface SageConfig {
     String PANEL_ONLY = "panel_only";
     String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
+    String DISABLE_MNV = "disable_mnv";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
@@ -44,6 +45,7 @@ public interface SageConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
+        options.addOption(DISABLE_MNV, false, "Disables merging phased SNVs into MNVs");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -91,6 +93,8 @@ public interface SageConfig {
 
     boolean germlineOnly();
 
+    boolean mnvDetection();
+
     @NotNull
     String hotspots();
 
@@ -136,6 +140,7 @@ public interface SageConfig {
                 .referenceBam(reference_bam)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
+                .mnvDetection(!cmd.hasOption(DISABLE_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))

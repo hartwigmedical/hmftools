@@ -24,6 +24,7 @@ public final class ReportingDb {
     private static final Logger LOGGER = LogManager.getLogger(ReportingDb.class);
 
     private static final String DELIMITER = "\t";
+    private static final String NA_STRING = "N/A";
 
     private ReportingDb() {
     }
@@ -34,9 +35,11 @@ public final class ReportingDb {
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
 
-        String purity = new DecimalFormat("#'%'").format(report.impliedPurity() * 100);
-        String hasReliablePurity = String.valueOf(report.hasReliablePurity());
-        String hasReliableQuality = String.valueOf(report.hasReliableQuality());
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        String purity = decimalFormat.format(report.impliedPurity());
+
+        boolean hasReliablePurity = report.hasReliablePurity();
+        boolean hasReliableQuality = report.hasReliableQuality();
 
         String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
@@ -54,8 +57,8 @@ public final class ReportingDb {
     }
 
     private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String sampleId, @NotNull String tumorBarcode,
-            @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, @NotNull String hasReliablePurity,
-            @NotNull String hasReliableQuality) throws IOException {
+            @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, boolean hasReliablePurity,
+            boolean hasReliableQuality) throws IOException {
         boolean present = false;
         for (ReportingEntry entry : read(reportingDbTsv)) {
             if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
@@ -68,8 +71,8 @@ public final class ReportingDb {
         if (!present) {
             LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
             String stringToAppend =
-                    sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliablePurity + "\t"
-                            + hasReliableQuality + "\n";
+                    tumorBarcode  + "\t" + sampleId + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" +  hasReliableQuality + "\t"
+                            +  hasReliablePurity+ "\n";
             appendToTsv(reportingDbTsv, stringToAppend);
         }
     }
@@ -96,7 +99,9 @@ public final class ReportingDb {
 
             if (!present) {
                 LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
-                String stringToAppend = sampleId + "\t" + tumorBarcode + "\t" + reportDate + "\t" + reportType + "\tN/A\tN/A\tN/A\n";
+                String stringToAppend =
+                        tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING + "\t" + NA_STRING + "\t"
+                                + NA_STRING + "\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }
         }

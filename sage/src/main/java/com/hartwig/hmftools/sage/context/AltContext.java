@@ -68,7 +68,7 @@ public class AltContext implements VariantHotspot {
 
     @NotNull
     public ReadContextCounter setPrimaryReadCounterFromInterim() {
-        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::support).reversed());
+        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
         readContextCounter = interimReadContexts.isEmpty()
                 ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
                 : new ReadContextCounter(this, interimReadContexts.get(0).readContext());
@@ -118,9 +118,6 @@ public class AltContext implements VariantHotspot {
         return altReads;
     }
 
-    public int refSupport() {
-        return refContext.refReads();
-    }
 
     public int readDepth() {
         return refContext.readDepth();
@@ -131,9 +128,6 @@ public class AltContext implements VariantHotspot {
         return refContext.sample();
     }
 
-    public double supportVaf() {
-        return refContext.readDepth() == 0 ? 0d : (double) altReads / refContext.readDepth();
-    }
 
     @Override
     public boolean equals(@Nullable Object another) {

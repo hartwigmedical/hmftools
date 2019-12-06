@@ -8,9 +8,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ReadContextTest {
+public class IndexedBasesTest {
 
-    private ReadContext victim = new ReadContext("", 1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
+    private IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
     @Test
     public void testRightFlankMatchingBases() {
@@ -36,16 +36,16 @@ public class ReadContextTest {
     }
 
     @Test
-    public void testCentreMatch() {
+    public void testCoreMatch() {
 
-        assertEquals(true, victim.centreMatch(5, "GATCTCCTCA".getBytes()));
-        assertEquals(true, victim.centreMatch(1, "TCC".getBytes()));
+        assertEquals(true, victim.coreMatch(5, "GATCTCCTCA".getBytes()));
+        assertEquals(true, victim.coreMatch(1, "TCC".getBytes()));
 
-        assertEquals(false, victim.centreMatch(1, "CCC".getBytes()));
-        assertEquals(false, victim.centreMatch(1, "TTC".getBytes()));
-        assertEquals(false, victim.centreMatch(1, "TCT".getBytes()));
-        assertEquals(false, victim.centreMatch(1, "TC".getBytes()));
-        assertEquals(false, victim.centreMatch(0, "CC".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "CCC".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "TTC".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "TCT".getBytes()));
+        assertEquals(false, victim.coreMatch(1, "TC".getBytes()));
+        assertEquals(false, victim.coreMatch(0, "CC".getBytes()));
     }
 
 
@@ -57,12 +57,12 @@ public class ReadContextTest {
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGT".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(1, "GT".getBytes()));
+        assertEquals(ReadContextMatch.CORE, victim.matchAtPosition(1, "GT".getBytes()));
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(1, "GTAA".getBytes()));
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(0, "TAA".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "TA".getBytes()));
-        assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(0, "T".getBytes()));
+        assertEquals(ReadContextMatch.CORE, victim.matchAtPosition(0, "TA".getBytes()));
+        assertEquals(ReadContextMatch.CORE, victim.matchAtPosition(0, "T".getBytes()));
     }
 
     @Test

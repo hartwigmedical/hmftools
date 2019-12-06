@@ -14,7 +14,8 @@ public class CigarTraversal {
         int readIndex = 0;
         int refBase = record.getAlignmentStart();
 
-        for (final CigarElement e : cigar.getCigarElements()) {
+        for (int i = 0; i < cigar.numCigarElements(); i++) {
+            final CigarElement e = cigar.getCigarElement(i);
             switch (e.getOperator()) {
                 case H:
                     break; // ignore hard clips
@@ -41,7 +42,9 @@ public class CigarTraversal {
                 case M:
                 case EQ:
                 case X:
-                    handler.handleAlignment(record, e, readIndex, refBase);
+                    boolean isFollowedByIndel = i < cigar.numCigarElements() - 1 && cigar.getCigarElement(i + 1).getOperator().isIndel();
+                    final CigarElement element = isFollowedByIndel ? new CigarElement(e.getLength() - 1, e.getOperator()) : e;
+                    handler.handleAlignment(record, element, readIndex, refBase);
                     readIndex += e.getLength();
                     refBase += e.getLength();
                     break;

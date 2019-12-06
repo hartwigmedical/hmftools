@@ -54,7 +54,7 @@ public class Realigned {
     }
 
     @NotNull
-    public RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, final byte[] otherBases) {
+    RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, final byte[] otherBases) {
 
         int exactLength = baseEndIndex - baseStartIndex + 1;
 
@@ -69,7 +69,7 @@ public class Realigned {
     }
 
     @NotNull
-    public RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases) {
+    private RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases) {
         int exactLength = baseEndIndex - baseStartIndex + 1;
 
         int matchingBases = matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherIndex, otherBases);

@@ -21,7 +21,7 @@ public enum CodingEffect {
         final List<CodingEffect> simplifiedEffects = consequences.stream().map(CodingEffect::effect).collect(Collectors.toList());
 
         if (gene.equals("TP53")) {
-            // TP53 has some known pathogenic variants in splice regions
+            // TP53 has some known pathogenic variants in splice regions on the exon-side
             if (consequences.contains(SYNONYMOUS_VARIANT) && consequences.contains(SPLICE_REGION_VARIANT)) {
                 return SPLICE;
             }

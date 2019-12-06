@@ -35,11 +35,12 @@ public class SageVCF implements AutoCloseable {
     public final static String MERGE_FILTER = "merge";
     public final static String DEDUP_FILTER = "dedup";
 
+    public final static String REF_CONTEXT = "REF";
     public final static String READ_CONTEXT = "RC";
     public final static String READ_CONTEXT_DESCRIPTION = "Read context";
     public final static String READ_CONTEXT_COUNT = "RC_CNT";
     public final static String READ_CONTEXT_COUNT_DESCRIPTION =
-            "Read context counts [Full, Partial, Realigned, Shortened, Lengthened, Coverage]";
+            "Read context counts [Full, Partial, Core, Realigned, Shortened, Lengthened, Reference, Coverage]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
     public static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
@@ -108,7 +109,7 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Float,
                 READ_CONTEXT_AF_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 8, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
                 1,
                 VCFHeaderLineType.Integer,
@@ -118,6 +119,7 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
+        header.addMetaDataLine(new VCFInfoHeaderLine(REF_CONTEXT, 1, VCFHeaderLineType.String, "Ref Context"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DIFFERENCE,
                 1,
