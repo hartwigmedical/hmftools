@@ -643,7 +643,7 @@ public class FusionFinder
 
             factor /= 10;
 
-            // 6. Best 3' partner
+            // 6. Best 5' partner
             if(upTrans.isCanonical())
                 transScore += factor;
 

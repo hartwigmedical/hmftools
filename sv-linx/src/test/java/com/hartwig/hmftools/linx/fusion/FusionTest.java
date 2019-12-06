@@ -3,6 +3,9 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.utils.GeneTestUtils.getCodingBases;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
@@ -28,6 +31,9 @@ import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotatio
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionAnnotations;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
+import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -163,7 +169,6 @@ public class FusionTest
                 50, 300,5, true, 100, 1000, codingStart, codingEnd);
         upTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
 
-
         GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
 
         codingStart = new Long(10350);
@@ -174,8 +179,79 @@ public class FusionTest
         downTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
 
         GeneFusion fusion1 = new GeneFusion(upTrans1, downTrans1, true);
+        GeneFusion fusion2 = new GeneFusion(upTrans1, downTrans1, false);
 
+        List<GeneFusion> fusions = Lists.newArrayList(fusion1, fusion2);
 
+        // 1. phase-matched
+        GeneFusion topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion1, topFusion);
+
+        // 2. valid chain
+        fusion2 = new GeneFusion(upTrans1, downTrans1, true);
+
+        FusionAnnotations annotations = ImmutableFusionAnnotations.builder()
+                .clusterId(1).clusterCount(10).resolvedType("")
+                .disruptionUp(ImmutableFusionTermination.builder()
+                         .allLinksAssembled(true).facingBreakends(0).disruptedExons(0).totalBreakends(1).minDistance(100)
+                        .transcriptTerminated(true)
+                        .build())
+                .build();
+
+        fusion1.setAnnotations(annotations);
+
+        fusions = Lists.newArrayList(fusion1, fusion2);
+        topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion2, topFusion);
+
+        // 3. down protein coding
+        Transcript downTrans2 = new Transcript(downGene, 12, "TRANS12", 2, 1, 3, 1,
+                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
+        downTrans2.setBioType(BIOTYPE_PROCESSED_TRANS);
+
+        fusion1.setAnnotations(null);
+        fusion2 = new GeneFusion(upTrans1, downTrans2, true);
+
+        fusions = Lists.newArrayList(fusion1, fusion2);
+        topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion1, topFusion);
+
+        // 4. exons skipped
+        fusion2 = new GeneFusion(upTrans1, downTrans1, true);
+        fusion1.setExonsSkipped(2, 0);
+        fusions = Lists.newArrayList(fusion1, fusion2);
+        topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion2, topFusion);
+
+        // 5. 3P partner canonical
+        Transcript downTrans3 = new Transcript(downGene, 13, "TRANS13", 2, 1, 3, 1,
+                50, 300,5, false, 10000, 11000, codingStart, codingEnd);
+        downTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
+
+        fusion1 = new GeneFusion(upTrans1, downTrans3, true);
+        fusions = Lists.newArrayList(fusion1, fusion2);
+        topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion2, topFusion);
+
+        // 6. 5P partner canonical
+        Transcript upTrans2 = new Transcript(upGene, 2, "TRANS02", 2, 1, 3, 1,
+                50, 300,5, false, 100, 1000, codingStart, codingEnd);
+        upTrans2.setBioType(BIOTYPE_PROTEIN_CODING);
+
+        fusion1 = new GeneFusion(upTrans2, downTrans1, true);
+        fusions = Lists.newArrayList(fusion1, fusion2);
+        topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion2, topFusion);
+
+        // 7. 5P partner less coding bases
+        Transcript upTrans3 = new Transcript(upGene, 3, "TRANS03", 2, 1, 3, 1,
+                40, 200,5, true, 100, 1000, codingStart, codingEnd);
+        upTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
+
+        fusion1 = new GeneFusion(upTrans3, downTrans1, true);
+        fusions = Lists.newArrayList(fusion1, fusion2);
+        topFusion = determineReportableFusion(fusions, false);
+        assertEquals(fusion2, topFusion);
     }
 
     @Test
