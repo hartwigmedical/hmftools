@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.vicc.reader;
 
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -24,32 +25,17 @@ import com.hartwig.hmftools.vicc.datamodel.oncokb.Oncokb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbGene;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class OncokbObjectFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(OncokbObjectFactory.class);
-
-    private static final List<Integer> EXPECTED_ONCOKB_ELEMENT_SIZES = Lists.newArrayList(1);
-    private static final List<Integer> EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES = Lists.newArrayList(11);
-    private static final List<Integer> EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES = Lists.newArrayList(9);
-    private static final List<Integer> EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES = Lists.newArrayList(8);
-    private static final List<Integer> EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_ONCOKB_GENE_ELEMENT_SIZES = Lists.newArrayList(8);
 
     private OncokbObjectFactory() {
     }
 
     @NotNull
     static Oncokb create(@NotNull JsonObject objectOncoKb) {
-        Set<String> keysOncokb = objectOncoKb.keySet();
-        if (!EXPECTED_ONCOKB_ELEMENT_SIZES.contains(keysOncokb.size())) {
-            LOGGER.warn("Found {} in oncokb rather than the expected {}", keysOncokb.size(), EXPECTED_ONCOKB_ELEMENT_SIZES);
-            LOGGER.warn(keysOncokb);
-        }
+
+        ViccDatamodelCheckerFactory.oncoKbEntryChecker().check(objectOncoKb);
 
         if (objectOncoKb.has("biological")) {
             return createOncoKbBiological(objectOncoKb);
@@ -72,25 +58,19 @@ final class OncokbObjectFactory {
 
     @NotNull
     private static OncoKbClinical createClinicalOncoKb(@NotNull JsonObject objectClinical) {
-        Set<String> keysClinical = objectClinical.keySet();
-        if (!EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES.contains(keysClinical.size())) {
-            LOGGER.warn("Found {} in oncokb clinical rather than the expected {}",
-                    keysClinical.size(),
-                    EXPECTED_ONCOKB_CLINICAL_ELEMENT_SIZES);
-            LOGGER.warn(keysClinical);
-        }
+        ViccDatamodelCheckerFactory.oncoKbClinicalChecker().check(objectClinical);
 
         return ImmutableOncoKbClinical.builder()
-                .RefSeq(objectClinical.getAsJsonPrimitive("RefSeq").getAsString())
-                .level(objectClinical.getAsJsonPrimitive("level").getAsString())
-                .Isoform(objectClinical.getAsJsonPrimitive("Isoform").getAsString())
+                .RefSeq(string(objectClinical, "RefSeq"))
+                .level(string(objectClinical,"level"))
+                .Isoform(string(objectClinical,"Isoform"))
                 .oncokbVariant(createVariantOncoKb(objectClinical.getAsJsonObject("variant")))
-                .entrezGeneID(objectClinical.getAsJsonPrimitive("Entrez Gene ID").getAsString())
-                .drugPmids(objectClinical.getAsJsonPrimitive("drugPmids").getAsString())
-                .cancerType(objectClinical.getAsJsonPrimitive("cancerType").getAsString())
-                .drug(objectClinical.getAsJsonPrimitive("drug").getAsString())
-                .gene(objectClinical.getAsJsonPrimitive("gene").getAsString())
-                .levelLabel(objectClinical.getAsJsonPrimitive("level_label").getAsString())
+                .entrezGeneID(string(objectClinical,"Entrez Gene ID"))
+                .drugPmids(string(objectClinical,"drugPmids"))
+                .cancerType(string(objectClinical,"cancerType"))
+                .drug(string(objectClinical,"drug"))
+                .gene(string(objectClinical,"gene"))
+                .levelLabel(string(objectClinical,"level_label"))
                 .oncoKbDrugAbstracts(createDrugsAbstracts(objectClinical.getAsJsonArray("drugAbstracts")))
                 .build();
     }
@@ -99,17 +79,13 @@ final class OncokbObjectFactory {
     private static List<OncoKbDrugAbstracts> createDrugsAbstracts(@NotNull JsonArray arrayDrugsAbstracts) {
         List<OncoKbDrugAbstracts> listDrugsAbstracts = Lists.newArrayList();
         for (JsonElement drugAbstracts : arrayDrugsAbstracts) {
-            Set<String> keysBiological = drugAbstracts.getAsJsonObject().keySet();
 
-            if (!EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES.contains(keysBiological.size())) {
-                LOGGER.warn("Found {} in oncokb drugs abstracts rather than the expected {}",
-                        keysBiological.size(),
-                        EXPECTED_ONCOKB_DRUGS_ABSTRACT_ELEMENT_SIZES);
-                LOGGER.warn(keysBiological);
-            }
+            JsonObject drugAbstractsObject = drugAbstracts.getAsJsonObject();
+
+            ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker().check(drugAbstractsObject);
             listDrugsAbstracts.add(ImmutableOncoKbDrugAbstracts.builder()
-                    .text(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("text").getAsString())
-                    .link(drugAbstracts.getAsJsonObject().getAsJsonPrimitive("link").getAsString())
+                    .text(string(drugAbstractsObject, "text"))
+                    .link(string(drugAbstractsObject, "link"))
                     .build());
         }
         return listDrugsAbstracts;
@@ -117,49 +93,32 @@ final class OncokbObjectFactory {
 
     @NotNull
     private static OncoKbBiological createBiologicalOncoKb(@NotNull JsonObject objectBiological) {
-        Set<String> keysBiological = objectBiological.keySet();
-        if (!EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES.contains(keysBiological.size())) {
-            LOGGER.warn("Found {} in oncokb biological rather than the expected {}",
-                    keysBiological.size(),
-                    EXPECTED_ONCOKB_BIOLOGICAL_ELEMENT_SIZES);
-            LOGGER.warn(keysBiological);
-        }
+        ViccDatamodelCheckerFactory.oncoKbBiologicalChecker().check(objectBiological);
 
         return ImmutableOncoKbBiological.builder()
-                .mutationEffectPmids(objectBiological.getAsJsonPrimitive("mutationEffectPmids").getAsString())
-                .Isoform(objectBiological.getAsJsonPrimitive("Isoform").getAsString())
+                .mutationEffectPmids(string(objectBiological, "mutationEffectPmids"))
+                .Isoform(string(objectBiological, "Isoform"))
                 .oncokbVariant(createVariantOncoKb(objectBiological.getAsJsonObject("variant")))
-                .entrezGeneID(objectBiological.getAsJsonPrimitive("Entrez Gene ID").getAsString())
-                .oncogenic(objectBiological.getAsJsonPrimitive("oncogenic").getAsString())
-                .mutationEffect(objectBiological.getAsJsonPrimitive("mutationEffect").getAsString())
-                .RefSeq(objectBiological.getAsJsonPrimitive("RefSeq").getAsString())
-                .gene(objectBiological.getAsJsonPrimitive("gene").getAsString())
-                .mutationEffectAbstracts(objectBiological.getAsJsonPrimitive("mutationEffectAbstracts").getAsString())
+                .entrezGeneID(string(objectBiological,"Entrez Gene ID"))
+                .oncogenic(string(objectBiological,"oncogenic"))
+                .mutationEffect(string(objectBiological,"mutationEffect"))
+                .RefSeq(string(objectBiological,"RefSeq"))
+                .gene(string(objectBiological,"gene"))
+                .mutationEffectAbstracts(string(objectBiological,"mutationEffectAbstracts"))
                 .build();
     }
 
     @NotNull
     private static OncokbVariant createVariantOncoKb(@NotNull JsonObject objectVariant) {
-        Set<String> keysVariant = objectVariant.keySet();
-
-        if (!EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
-            LOGGER.warn("Found {} in oncokb variant rather than the expected {}",
-                    keysVariant.size(),
-                    EXPECTED_ONCOKB_VARIANT_ELEMENT_SIZES);
-            LOGGER.warn(keysVariant);
-        }
+        ViccDatamodelCheckerFactory.oncoKbVariantChecker().check(objectVariant);
 
         return ImmutableOncokbVariant.builder()
-                .variantResidues(objectVariant.get("variantResidues").isJsonNull()
-                        ? null
-                        : objectVariant.getAsJsonPrimitive("variantResidues").getAsString())
-                .proteinStart(objectVariant.getAsJsonPrimitive("proteinStart").getAsString())
-                .name(objectVariant.getAsJsonPrimitive("name").getAsString())
-                .proteinEnd(objectVariant.getAsJsonPrimitive("proteinEnd").getAsString())
-                .refResidues(objectVariant.get("refResidues").isJsonNull()
-                        ? null
-                        : objectVariant.getAsJsonPrimitive("refResidues").getAsString())
-                .alteration(objectVariant.getAsJsonPrimitive("alteration").getAsString())
+                .variantResidues(optionalNullableString(objectVariant, "variantResidues"))
+                .proteinStart(string(objectVariant, "proteinStart"))
+                .name(string(objectVariant, "name"))
+                .proteinEnd(string(objectVariant, "proteinEnd"))
+                .refResidues(optionalNullableString(objectVariant, "refResidues"))
+                .alteration(string(objectVariant, "alteration"))
                 .oncoKbConsequence(createConsequenceOncokb(objectVariant.getAsJsonObject("consequence")))
                 .oncokbGene(createGeneOncoKb(objectVariant.getAsJsonObject("gene")))
                 .build();
@@ -167,44 +126,30 @@ final class OncokbObjectFactory {
 
     @NotNull
     private static OncoKbConsequence createConsequenceOncokb(@NotNull JsonObject objectConsequence) {
-        Set<String> keysConsequence = objectConsequence.keySet();
+        ViccDatamodelCheckerFactory.oncoKbConsequenceChecker().check(objectConsequence);
 
-        if (!EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES.contains(keysConsequence.size())) {
-            LOGGER.warn("Found {} in oncokb consequence rather than the expected {}",
-                    keysConsequence.size(),
-                    EXPECTED_ONCOKB_CONSEQUENCE_ELEMENT_SIZES);
-            LOGGER.warn(keysConsequence);
-        }
 
         return ImmutableOncoKbConsequence.builder()
-                .term(objectConsequence.getAsJsonPrimitive("term").getAsString())
-                .description(objectConsequence.getAsJsonPrimitive("description").getAsString())
-                .isGenerallyTruncating(objectConsequence.getAsJsonPrimitive("isGenerallyTruncating").getAsString())
+                .term(string(objectConsequence, "term"))
+                .description(string(objectConsequence, "description"))
+                .isGenerallyTruncating(string(objectConsequence, "isGenerallyTruncating"))
                 .build();
     }
 
     @NotNull
     private static OncokbGene createGeneOncoKb(@NotNull JsonObject objectGene) {
-        Set<String> keysGene = objectGene.keySet();
+        ViccDatamodelCheckerFactory.oncoKbGeneChecker().check(objectGene);
 
-        if (!EXPECTED_ONCOKB_GENE_ELEMENT_SIZES.contains(keysGene.size())) {
-            LOGGER.warn("Found {} in oncokb gene rather than the expected {}", keysGene.size(), EXPECTED_ONCOKB_GENE_ELEMENT_SIZES);
-            LOGGER.warn(keysGene);
-        }
 
         return ImmutableOncokbGene.builder()
-                .oncogene(objectGene.getAsJsonPrimitive("oncogene").getAsString())
-                .name(objectGene.getAsJsonPrimitive("name").getAsString())
-                .hugoSymbol(objectGene.getAsJsonPrimitive("hugoSymbol").getAsString())
-                .curatedRefSeq(objectGene.get("curatedRefSeq").isJsonNull()
-                        ? null
-                        : objectGene.getAsJsonPrimitive("curatedRefSeq").getAsString())
-                .entrezGeneId(objectGene.getAsJsonPrimitive("entrezGeneId").getAsString())
-                .geneAliases(Lists.newArrayList(toStringList(objectGene.getAsJsonArray("geneAliases"))))
-                .tsg(objectGene.getAsJsonPrimitive("tsg").getAsString())
-                .curatedIsoform(objectGene.get("curatedIsoform").isJsonNull()
-                        ? null
-                        : objectGene.getAsJsonPrimitive("curatedIsoform").getAsString())
+                .oncogene(string(objectGene, "oncogene"))
+                .name(string(objectGene, "name"))
+                .hugoSymbol(string(objectGene, "hugoSymbol"))
+                .curatedRefSeq(optionalNullableString(objectGene,"curatedRefSeq"))
+                .entrezGeneId(string(objectGene, "entrezGeneId"))
+                .geneAliases(toStringList(objectGene.getAsJsonArray("geneAliases")))
+                .tsg(string(objectGene, "tsg"))
+                .curatedIsoform(optionalNullableString(objectGene,"curatedIsoform"))
                 .build();
     }
 }

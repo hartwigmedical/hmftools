@@ -2,7 +2,10 @@ package com.hartwig.hmftools.vicc.reader;
 
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbConsequence;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokbGene;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -251,5 +254,90 @@ final class ViccDatamodelCheckerFactory {
         map.put("pubMedId", true);
         map.put("title", true);
         return new ViccDatamodelChecker("JaxReference", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("biological", false);
+        map.put("clinical", false);
+        return new ViccDatamodelChecker("OncoKbEntry", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbBiologicalChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("mutationEffectPmids", true);
+        map.put("Isoform", true);
+        map.put("variant", true);
+        map.put("Entrez Gene ID", true);
+        map.put("oncogenic", true);
+        map.put("mutationEffect", true);
+        map.put("RefSeq", true);
+        map.put("gene", true);
+        map.put("mutationEffectAbstracts", true);
+        return new ViccDatamodelChecker("OncoKbBiological", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbClinicalChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("RefSeq", true);
+        map.put("level", true);
+        map.put("Isoform", true);
+        map.put("variant", true);
+        map.put("Entrez Gene ID", true);
+        map.put("drugPmids", true);
+        map.put("cancerType", true);
+        map.put("drug", true);
+        map.put("gene", true);
+        map.put("level_label", true);
+        map.put("drugAbstracts", true);
+        return new ViccDatamodelChecker("OncoKbClinical", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbDrugsAbstractChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("text", true);
+        map.put("link", true);
+        return new ViccDatamodelChecker("OncoKbDrugsAbstract", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbVariantChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("variantResidues", false);
+        map.put("proteinStart", true);
+        map.put("name", true);
+        map.put("proteinEnd", true);
+        map.put("refResidues", false);
+        map.put("alteration", true);
+        map.put("consequence", true);
+        map.put("gene", true);
+        return new ViccDatamodelChecker("OncoKbVariant", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbConsequenceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("term", true);
+        map.put("description", true);
+        map.put("isGenerallyTruncating", true);
+        return new ViccDatamodelChecker("OncoKbConsequence", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker oncoKbGeneChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("oncogene", true);
+        map.put("name", true);
+        map.put("hugoSymbol", true);
+        map.put("curatedRefSeq", false);
+        map.put("entrezGeneId", true);
+        map.put("geneAliases", true);
+        map.put("tsg", true);
+        map.put("curatedIsoform", false);
+        return new ViccDatamodelChecker("OncoKbGene", map);
     }
 }
