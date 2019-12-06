@@ -163,7 +163,12 @@ public class ReadContext {
 
     @NotNull
     public String mnvAdditionalAlt(int length) {
-        return new String(readBases(), readIndex() - length + 1, length);
+        try {
+            return new String(readBases(), readIndex() - length + 1, length);
+        } catch (Exception e) {
+            throw e;
+        }
+
     }
 
     public int flankSize() {

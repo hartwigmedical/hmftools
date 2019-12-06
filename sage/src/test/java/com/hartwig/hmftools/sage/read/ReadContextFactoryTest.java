@@ -76,13 +76,24 @@ public class ReadContextFactoryTest {
 
     @Test
     public void testDeleteAtHomologyRepeat() {
-        String refSequence = "GATCATCATCTG";
+        String refSequence = "GATCACCATCTG";
         String readSequence = "GATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3D8M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("ATCA", 1000, 1, record, refBases);
         assertEquals("GATCATCT", victium.centerBases());
+    }
+
+    @Test
+    public void testDeleteAtRepeatInRef() {
+        String refSequence = "GATCATCATCTG";
+        String readSequence = "GATCATCTG";
+        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+
+        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3D8M", readSequence);
+        ReadContext victium = ReadContextFactory.createDelContext("ATCA", 1000, 1, record, refBases);
+        assertEquals("GATCATCTG", victium.centerBases());
     }
 
     @Test

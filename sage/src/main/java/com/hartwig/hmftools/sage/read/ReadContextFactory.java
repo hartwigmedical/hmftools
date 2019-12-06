@@ -21,7 +21,8 @@ public class ReadContextFactory {
 
     @NotNull
     public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
-            final IndexedBases refSequence) {
+            final IndexedBases refBases) {
+        int refIndex = refPosition - refBases.position() + refBases.index();
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -30,28 +31,36 @@ public class ReadContextFactory {
         int length = Math.max(microhomologyContext.length(), microhomologyContextWithRepeats.length() - ref.length() + 1) + 1;
         int endIndex = Math.min(record.getReadBases().length, startIndex + length);
 
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
-        if (repeatContext.isPresent()) {
-            final RepeatContext repeat = repeatContext.get();
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1 , refBases.bases());
+        if ( refRepeatContext.isPresent()) {
+            final RepeatContext repeat = refRepeatContext.get();
+            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
+            endIndex = Math.max(endIndex, repeat.endIndex() + 1);
+        }
+
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
+        if (readRepeatContext.isPresent()) {
+            final RepeatContext repeat = readRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
         return new ReadContext(microhomologyContext.toString(),
-                repeatContext.map(RepeatContext::count).orElse(0),
-                repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
+                readRepeatContext.map(RepeatContext::count).orElse(0),
+                readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
                 Math.max(startIndex, 0),
                 Math.min(endIndex, record.getReadBases().length - 1),
                 DEFAULT_BUFFER,
-                refSequence,
+                refBases,
                 record);
     }
 
     @NotNull
     public static ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
             @NotNull final SAMRecord record, final IndexedBases refBases) {
+        int refIndex = refPosition - refBases.position() + refBases.index();
 
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -60,16 +69,23 @@ public class ReadContextFactory {
         int length = Math.max(microhomologyContextWithRepeats.length() + 1, alt.length());
         int endIndex = Math.min(record.getReadBases().length, startIndex + length);
 
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
-        if (repeatContext.isPresent()) {
-            final RepeatContext repeat = repeatContext.get();
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1 , refBases.bases());
+        if ( refRepeatContext.isPresent()) {
+            final RepeatContext repeat = refRepeatContext.get();
+            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
+            endIndex = Math.max(endIndex, repeat.endIndex() + 1);
+        }
+
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
+        if (readRepeatContext.isPresent()) {
+            final RepeatContext repeat = readRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
         return new ReadContext(microhomologyContext.toString(),
-                repeatContext.map(RepeatContext::count).orElse(0),
-                repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
+                readRepeatContext.map(RepeatContext::count).orElse(0),
+                readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
                 Math.max(startIndex, 0),
@@ -82,18 +98,27 @@ public class ReadContextFactory {
     @NotNull
     public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, final IndexedBases refBases) {
 
+        int refIndex = refPosition - refBases.position() + refBases.index();
         int startIndex = readIndex;
         int endIndex = readIndex;
-        final Optional<RepeatContext> repeatContext = RepeatContextFactory.repeats(readIndex, record.getReadBases());
-        if (repeatContext.isPresent()) {
-            final RepeatContext repeat = repeatContext.get();
+
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1 , refBases.bases());
+        if ( refRepeatContext.isPresent()) {
+            final RepeatContext repeat = refRepeatContext.get();
+            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
+            endIndex = Math.max(endIndex, repeat.endIndex() + 1);
+        }
+
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex, record.getReadBases());
+        if (readRepeatContext.isPresent()) {
+            final RepeatContext repeat = readRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
         }
 
         return new ReadContext(Strings.EMPTY,
-                repeatContext.map(RepeatContext::count).orElse(0),
-                repeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
+                readRepeatContext.map(RepeatContext::count).orElse(0),
+                readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
                 Math.max(startIndex, 0),

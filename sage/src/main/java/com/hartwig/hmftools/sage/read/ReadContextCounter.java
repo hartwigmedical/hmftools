@@ -10,7 +10,6 @@ import com.hartwig.hmftools.sage.context.RealignedType;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition {
@@ -45,6 +44,8 @@ public class ReadContextCounter implements GenomePosition {
         this.readContext = left.readContext;
         this.full = Math.min(left.full, right.full);
         this.partial = Math.min(left.partial, right.partial);
+        this.core = Math.min(left.core, right.core);
+        this.reference = Math.min(left.reference, right.reference);
         this.realigned = Math.min(left.realigned, right.realigned);
         this.lengthened = Math.min(left.lengthened, right.lengthened);
         this.shortened = Math.min(left.shortened, right.shortened);
@@ -119,8 +120,6 @@ public class ReadContextCounter implements GenomePosition {
         return readContext;
     }
 
-
-
     @Override
     public String toString() {
         return readContext.toString();
@@ -173,7 +172,6 @@ public class ReadContextCounter implements GenomePosition {
 
                 // Check if lengthened, shortened AND/OR reference!
                 boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
-
 
                 switch (realignment.type()) {
                     case LENGTHENED:
@@ -235,7 +233,7 @@ public class ReadContextCounter implements GenomePosition {
                 : readContext.minCentreQuality(readBaseIndex, record);
     }
 
-    public int qualityJitterPenalty() {
+    private int qualityJitterPenalty() {
         return (int) jitterPenalty;
     }
 
@@ -252,10 +250,6 @@ public class ReadContextCounter implements GenomePosition {
         if (!record.getProperPairFlag()) {
             improperPair++;
         }
-    }
-
-    private boolean alignmentMismatches(@NotNull final SAMRecord record) {
-        return !(record.getCigar().numCigarElements() == 1 && record.getCigar().getCigarElement(0).getOperator().equals(CigarOperator.M));
     }
 
 }
