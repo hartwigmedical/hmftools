@@ -217,19 +217,20 @@ final class OncokbDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-
-
-        context.deleteFrom(ONCOKBVARIANTBIOLOGICAL).execute();
+        // First delete biological nodes
+        context.deleteFrom(ONCOKBGENEALIASESBIOLOGICAL).execute();
         context.deleteFrom(ONCOKBCONSEQUENCESBIOLOGICAL).execute();
         context.deleteFrom(ONCOKBGENEBIOLOGICAL).execute();
-        context.deleteFrom(ONCOKBGENEALIASESBIOLOGICAL).execute();
+        context.deleteFrom(ONCOKBVARIANTBIOLOGICAL).execute();
 
-        context.deleteFrom(ONCOKBGENEALIASESCLINICAL).execute();
+        // Then delete clinical nodes
         context.deleteFrom(ONCOKBDRUGABSTRACTSCLINICAL).execute();
-        context.deleteFrom(ONCOKBVARIANTCLINICAL).execute();
+        context.deleteFrom(ONCOKBGENEALIASESCLINICAL).execute();
         context.deleteFrom(ONCOKBCONSEQUENCESCLINICAL).execute();
         context.deleteFrom(ONCOKBGENECLINICAL).execute();
+        context.deleteFrom(ONCOKBVARIANTCLINICAL).execute();
 
+        // Then delete top-nodes + final entry node
         context.deleteFrom(ONCOKBBIOLOGICAL).execute();
         context.deleteFrom(ONCOKBCLINICAL).execute();
         context.deleteFrom(ONCOKB).execute();
