@@ -13,13 +13,13 @@ import org.jetbrains.annotations.Nullable;
 public abstract class OncoKbClinical implements KbSpecificObject {
 
     @NotNull
-    public abstract String RefSeq();
+    public abstract String refSeq();
 
     @NotNull
     public abstract String level();
 
     @NotNull
-    public abstract String Isoform();
+    public abstract String isoform();
 
     @NotNull
     public abstract OncokbVariant oncokbVariant();
@@ -44,6 +44,5 @@ public abstract class OncoKbClinical implements KbSpecificObject {
 
     @NotNull
     public abstract List<OncoKbDrugAbstracts> oncoKbDrugAbstracts();
-
 
 }

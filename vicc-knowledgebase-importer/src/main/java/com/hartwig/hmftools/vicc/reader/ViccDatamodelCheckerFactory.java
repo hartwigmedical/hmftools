@@ -2,10 +2,7 @@ package com.hartwig.hmftools.vicc.reader;
 
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokbGene;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -307,11 +304,11 @@ final class ViccDatamodelCheckerFactory {
     @NotNull
     static ViccDatamodelChecker oncoKbVariantChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("variantResidues", false);
+        map.put("variantResidues", true);
         map.put("proteinStart", true);
         map.put("name", true);
         map.put("proteinEnd", true);
-        map.put("refResidues", false);
+        map.put("refResidues", true);
         map.put("alteration", true);
         map.put("consequence", true);
         map.put("gene", true);
@@ -333,11 +330,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("oncogene", true);
         map.put("name", true);
         map.put("hugoSymbol", true);
-        map.put("curatedRefSeq", false);
+        map.put("curatedRefSeq", true);
         map.put("entrezGeneId", true);
         map.put("geneAliases", true);
         map.put("tsg", true);
-        map.put("curatedIsoform", false);
+        map.put("curatedIsoform", true);
         return new ViccDatamodelChecker("OncoKbGene", map);
     }
 }
