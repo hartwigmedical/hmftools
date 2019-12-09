@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -56,9 +57,11 @@ class MnvFactory {
 
     @NotNull
     private AltContext merge(@NotNull final VariantHotspot variant, @NotNull final AltContext left, @NotNull final AltContext right) {
-        final ReadContextCounter counter = new ReadContextCounter(variant, left.primaryReadContext(), right.primaryReadContext());
-        final AltContext result = new AltContext(left.refContext(), variant.ref(), variant.alt());
-        result.setPrimaryReadContext(counter);
+        final RefContext mergedRefContext = new RefContext(left.refContext(), right.refContext());
+
+        final ReadContextCounter mergedReadContextCounter = new ReadContextCounter(variant, left.primaryReadContext(), right.primaryReadContext());
+        final AltContext result = new AltContext(mergedRefContext, variant.ref(), variant.alt());
+        result.setPrimaryReadContext(mergedReadContextCounter);
 
         return result;
     }
