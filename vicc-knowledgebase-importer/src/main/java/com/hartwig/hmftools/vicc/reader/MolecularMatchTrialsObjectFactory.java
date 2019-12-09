@@ -17,19 +17,19 @@ import com.google.gson.JsonObject;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrials;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsGeo;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsIntervation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsIntervention;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsLocation;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsLocations;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsOverallContact;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsTags;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsSubLocation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.ImmutableMolecularMatchTrialsTag;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsContact;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsGeo;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsIntervation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsIntervention;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsLocation;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsLocations;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsOverallContact;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsTags;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsSubLocation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsTag;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,35 +47,35 @@ final class MolecularMatchTrialsObjectFactory {
                 .status(string(molecularMatchTrialsObject, "status"))
                 .startDate(optionalNullableString(molecularMatchTrialsObject, "startDate"))
                 .title(string(molecularMatchTrialsObject, "title"))
+                .briefTitle(nullableString(molecularMatchTrialsObject, "briefTitle"))
+                .studyType(string(molecularMatchTrialsObject, "studyType"))
                 .molecularAlterations(stringList(molecularMatchTrialsObject, "molecularAlterations"))
                 .score(string(molecularMatchTrialsObject, "_score"))
-                .intervation(createInterventions(molecularMatchTrialsObject.getAsJsonArray("interventions")))
+                .interventions(createInterventions(molecularMatchTrialsObject.getAsJsonArray("interventions")))
                 .locations(createLocations(molecularMatchTrialsObject.getAsJsonArray("locations")))
-                .briefTitle(nullableString(molecularMatchTrialsObject, "briefTitle"))
                 .overallContact(createOverallContact(optionalJsonObject(molecularMatchTrialsObject, "overallContact")))
                 .link(string(molecularMatchTrialsObject, "link"))
                 .phase(string(molecularMatchTrialsObject, "phase"))
                 .tags(createTags(molecularMatchTrialsObject.getAsJsonArray("tags")))
                 .id(string(molecularMatchTrialsObject, "id"))
-                .studyType(string(molecularMatchTrialsObject, "studyType"))
                 .build();
     }
 
     @NotNull
-    private static List<MolecularMatchTrialsIntervation> createInterventions(@NotNull JsonArray interventionArray) {
-        List<MolecularMatchTrialsIntervation> molecularMatchTrialsInterventionList = Lists.newArrayList();
+    private static List<MolecularMatchTrialsIntervention> createInterventions(@NotNull JsonArray interventionArray) {
+        List<MolecularMatchTrialsIntervention> molecularMatchTrialsInterventionList = Lists.newArrayList();
         ViccDatamodelChecker interventionChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsInterventionChecker();
 
         for (JsonElement interventionElement : interventionArray) {
             JsonObject interventionObject = interventionElement.getAsJsonObject();
             interventionChecker.check(interventionObject);
 
-            molecularMatchTrialsInterventionList.add(ImmutableMolecularMatchTrialsIntervation.builder()
-                    .intervention_name(optionalString(interventionObject, "intervention_name"))
-                    .other_name(optionalStringList(interventionObject, "other_name"))
+            molecularMatchTrialsInterventionList.add(ImmutableMolecularMatchTrialsIntervention.builder()
+                    .interventionName(optionalString(interventionObject, "intervention_name"))
+                    .otherNames(optionalStringList(interventionObject, "other_name"))
+                    .interventionType(optionalString(interventionObject, "intervention_type"))
+                    .armGroupLabels(optionalStringList(interventionObject, "arm_group_label"))
                     .description(optionalString(interventionObject, "description"))
-                    .arm_group_label(optionalStringList(interventionObject, "arm_group_label"))
-                    .intervention_type(optionalString(interventionObject, "intervention_type"))
                     .build());
         }
 
@@ -83,41 +83,41 @@ final class MolecularMatchTrialsObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchTrialsLocations> createLocations(@NotNull JsonArray locationArray) {
-        List<MolecularMatchTrialsLocations> locationList = Lists.newArrayList();
+    private static List<MolecularMatchTrialsLocation> createLocations(@NotNull JsonArray locationArray) {
+        List<MolecularMatchTrialsLocation> locationList = Lists.newArrayList();
         ViccDatamodelChecker locationChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsLocationChecker();
 
         for (JsonElement locationElement : locationArray) {
             JsonObject locationObject = locationElement.getAsJsonObject();
             locationChecker.check(locationObject);
 
-            locationList.add(ImmutableMolecularMatchTrialsLocations.builder()
+            locationList.add(ImmutableMolecularMatchTrialsLocation.builder()
                     .status(string(locationObject, "status"))
-                    .last_name(optionalString(locationObject, "last_name"))
+                    .name(optionalString(locationObject, "name"))
+                    .contact(createContact(optionalJsonObject(locationObject, "contact")))
+                    .lastName(optionalString(locationObject, "last_name"))
                     .email(optionalString(locationObject, "email"))
                     .phone(optionalString(locationObject, "phone"))
-                    .phone_backup(optionalString(locationObject, "phone_backup"))
-                    .email_backup(optionalString(locationObject, "email_backup"))
-                    .last_name_backup(optionalString(locationObject, "last_name_backup"))
-                    .phone_ext_backup(optionalString(locationObject, "phone_ext_backup"))
-                    .phone_ext(optionalString(locationObject, "phone_ext"))
+                    .phoneExt(optionalString(locationObject, "phone_ext"))
+                    .lastNameBackup(optionalString(locationObject, "last_name_backup"))
+                    .emailBackup(optionalString(locationObject, "email_backup"))
+                    .phoneBackup(optionalString(locationObject, "phone_backup"))
+                    .phoneExtBackup(optionalString(locationObject, "phone_ext_backup"))
+                    .subLocation(createSubLocation(optionalJsonObject(locationObject, "location")))
+                    .street(optionalString(locationObject, "street"))
                     .city(optionalString(locationObject, "city"))
-                    .valid(optionalString(locationObject, "_valid"))
                     .zip(optionalString(locationObject, "zip"))
-                    .created(optionalString(locationObject, "created"))
+                    .state(optionalString(locationObject, "state"))
                     .country(optionalString(locationObject, "country"))
                     .number(optionalString(locationObject, "number"))
+                    .poBox(optionalString(locationObject, "po_box"))
                     .id(optionalString(locationObject, "id"))
+                    .valid(optionalString(locationObject, "_valid"))
+                    .validMessage(optionalString(locationObject, "_validMessage"))
+                    .created(optionalString(locationObject, "created"))
                     .lastUpdated(optionalString(locationObject, "lastUpdated"))
-                    .contact(createContact(optionalJsonObject(locationObject, "contact")))
-                    .state(optionalString(locationObject, "state"))
-                    .street(optionalString(locationObject, "street"))
-                    .location(createSubLocation(optionalJsonObject(locationObject, "location")))
-                    .po_box(optionalString(locationObject, "po_box"))
                     .failedGeocode(optionalString(locationObject, "failedGeocode"))
                     .geo(createGeo(optionalJsonObject(locationObject, "geo")))
-                    .validMessage(optionalString(locationObject, "_validMessage"))
-                    .name(optionalString(locationObject, "name"))
                     .build());
         }
 
@@ -133,18 +133,18 @@ final class MolecularMatchTrialsObjectFactory {
         ViccDatamodelCheckerFactory.molecularMatchTrialsOverallContactChecker().check(overallContactObject);
 
         return ImmutableMolecularMatchTrialsOverallContact.builder()
-                .phone(optionalNullableString(overallContactObject, "phone"))
-                .last_name(optionalString(overallContactObject, "last_name"))
-                .email(optionalString(overallContactObject, "email"))
-                .affiliation(optionalNullableString(overallContactObject, "affiliation"))
-                .phone_ext(optionalString(overallContactObject, "phone_ext"))
-                .country(optionalString(overallContactObject, "country"))
-                .city(optionalString(overallContactObject, "city"))
                 .name(optionalString(overallContactObject, "name"))
-                .zip(optionalString(overallContactObject, "zip"))
-                .url(optionalString(overallContactObject, "url"))
-                .street(optionalString(overallContactObject, "street"))
                 .type(optionalString(overallContactObject, "type"))
+                .affiliation(optionalNullableString(overallContactObject, "affiliation"))
+                .lastName(optionalString(overallContactObject, "last_name"))
+                .email(optionalString(overallContactObject, "email"))
+                .phone(optionalNullableString(overallContactObject, "phone"))
+                .phoneExt(optionalString(overallContactObject, "phone_ext"))
+                .street(optionalString(overallContactObject, "street"))
+                .city(optionalString(overallContactObject, "city"))
+                .zip(optionalString(overallContactObject, "zip"))
+                .country(optionalString(overallContactObject, "country"))
+                .url(optionalString(overallContactObject, "url"))
                 .build();
     }
 
@@ -160,14 +160,14 @@ final class MolecularMatchTrialsObjectFactory {
     }
 
     @Nullable
-    private static MolecularMatchTrialsLocation createSubLocation(@Nullable JsonObject subLocationObject) {
+    private static MolecularMatchTrialsSubLocation createSubLocation(@Nullable JsonObject subLocationObject) {
         if (subLocationObject == null) {
             return null;
         }
 
         ViccDatamodelCheckerFactory.molecularMatchTrialsSubLocationChecker().check(subLocationObject);
 
-        return ImmutableMolecularMatchTrialsLocation.builder()
+        return ImmutableMolecularMatchTrialsSubLocation.builder()
                 .type(string(subLocationObject, "type"))
                 .coordinates(stringList(subLocationObject, "coordinates"))
                 .build();
@@ -182,22 +182,22 @@ final class MolecularMatchTrialsObjectFactory {
         ViccDatamodelCheckerFactory.molecularMatchTrialsContactChecker().check(contactObject);
 
         return ImmutableMolecularMatchTrialsContact.builder()
-                .phone(optionalString(contactObject, "phone"))
                 .name(optionalString(contactObject, "name"))
                 .email(optionalString(contactObject, "email"))
+                .phone(optionalString(contactObject, "phone"))
                 .build();
     }
 
     @NotNull
-    private static List<MolecularMatchTrialsTags> createTags(@NotNull JsonArray tagArray) {
-        List<MolecularMatchTrialsTags> tagList = Lists.newArrayList();
+    private static List<MolecularMatchTrialsTag> createTags(@NotNull JsonArray tagArray) {
+        List<MolecularMatchTrialsTag> tagList = Lists.newArrayList();
         ViccDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTrialsTagChecker();
 
         for (JsonElement tagElement : tagArray) {
             JsonObject tagObject = tagElement.getAsJsonObject();
             tagChecker.check(tagObject);
 
-            tagList.add(ImmutableMolecularMatchTrialsTags.builder()
+            tagList.add(ImmutableMolecularMatchTrialsTag.builder()
                     .facet(string(tagObject, "facet"))
                     .compositeKey(string(tagObject, "compositeKey"))
                     .suppress(string(tagObject, "suppress"))

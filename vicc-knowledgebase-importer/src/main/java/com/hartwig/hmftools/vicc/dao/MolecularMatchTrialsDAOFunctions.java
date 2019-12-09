@@ -1,22 +1,27 @@
 package com.hartwig.hmftools.vicc.dao;
 
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALS;
-import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSALTERATIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSALTERATION;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSARMGROUPLABEL;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSCONTACT;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSCOORDINATES;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSGEO;
-import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSINTERVATIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSINTERVENTION;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSLOCATION;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSLOCATIONS;
-import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOTHERGROUPLABEL;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOTHERNAME;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOVERALLCONTACT;
-import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSTAGS;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSSUBLOCATION;
+import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSTAG;
 
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsIntervation;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsLocations;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsTags;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsContact;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsGeo;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsIntervention;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsLocation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsOverallContact;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsSubLocation;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsTag;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -31,231 +36,236 @@ final class MolecularMatchTrialsDAOFunctions {
                 MOLECULARMATCHTRIALS.STATUS,
                 MOLECULARMATCHTRIALS.STARTDATE,
                 MOLECULARMATCHTRIALS.TITLE,
-                MOLECULARMATCHTRIALS.SCORE,
                 MOLECULARMATCHTRIALS.BRIEFTITLE,
+                MOLECULARMATCHTRIALS.STUDYTYPE,
+                MOLECULARMATCHTRIALS.SCORE,
                 MOLECULARMATCHTRIALS.LINK,
                 MOLECULARMATCHTRIALS.PHASE,
                 MOLECULARMATCHTRIALS.IDMOLECULARMATCHTRIALS,
-                MOLECULARMATCHTRIALS.STUDYTYPE,
                 MOLECULARMATCHTRIALS.VICCENTRYID)
                 .values(molecularMatchTrials.status(),
                         molecularMatchTrials.startDate(),
                         molecularMatchTrials.title(),
-                        molecularMatchTrials.score(),
                         molecularMatchTrials.briefTitle(),
+                        molecularMatchTrials.studyType(),
+                        molecularMatchTrials.score(),
                         molecularMatchTrials.link(),
                         molecularMatchTrials.phase(),
                         molecularMatchTrials.id(),
-                        molecularMatchTrials.studyType(),
                         viccEntryId)
                 .returning(MOLECULARMATCHTRIALS.ID)
                 .fetchOne()
                 .getValue(MOLECULARMATCHTRIALS.ID);
 
-        for (String molecularAlterations : molecularMatchTrials.molecularAlterations()) {
-            context.insertInto(MOLECULARMATCHTRIALSALTERATIONS,
-                    MOLECULARMATCHTRIALSALTERATIONS.MOLECULARALTERATIONS,
-                    MOLECULARMATCHTRIALSALTERATIONS.MOLECULARMATCHTRIALSID).values(molecularAlterations, id).execute();
+        for (String molecularAlteration : molecularMatchTrials.molecularAlterations()) {
+            context.insertInto(MOLECULARMATCHTRIALSALTERATION,
+                    MOLECULARMATCHTRIALSALTERATION.MOLECULARALTERATION,
+                    MOLECULARMATCHTRIALSALTERATION.MOLECULARMATCHTRIALSID).values(molecularAlteration, id).execute();
         }
 
-        for (MolecularMatchTrialsIntervation intervation : molecularMatchTrials.intervation()) {
-            int idIntervation = context.insertInto(MOLECULARMATCHTRIALSINTERVATIONS,
-                    MOLECULARMATCHTRIALSINTERVATIONS.INTERVENTION_NAME,
-                    MOLECULARMATCHTRIALSINTERVATIONS.DESCRIPTION,
-                    MOLECULARMATCHTRIALSINTERVATIONS.INTERVENTION_TYPE,
-                    MOLECULARMATCHTRIALSINTERVATIONS.MOLECULARMATCHTRIALSID)
-                    .values(intervation.intervention_name(), intervation.description(), intervation.intervention_type(), id)
-                    .returning(MOLECULARMATCHTRIALSINTERVATIONS.ID)
+        for (MolecularMatchTrialsIntervention intervention : molecularMatchTrials.interventions()) {
+            int idIntervention = context.insertInto(MOLECULARMATCHTRIALSINTERVENTION,
+                    MOLECULARMATCHTRIALSINTERVENTION.INTERVENTIONNAME,
+                    MOLECULARMATCHTRIALSINTERVENTION.INTERVENTIONTYPE,
+                    MOLECULARMATCHTRIALSINTERVENTION.DESCRIPTION,
+                    MOLECULARMATCHTRIALSINTERVENTION.MOLECULARMATCHTRIALSID)
+                    .values(intervention.interventionName(), intervention.interventionType(), intervention.description(), id)
+                    .returning(MOLECULARMATCHTRIALSINTERVENTION.ID)
                     .fetchOne()
-                    .getValue(MOLECULARMATCHTRIALSINTERVATIONS.ID);
+                    .getValue(MOLECULARMATCHTRIALSINTERVENTION.ID);
 
-            if (intervation.other_name() != null) {
-                for (String otherName : intervation.other_name()) {
-                    context.insertInto(MOLECULARMATCHTRIALSOTHERNAME,
-                            MOLECULARMATCHTRIALSOTHERNAME.OTHER_NAME,
-                            MOLECULARMATCHTRIALSOTHERNAME.MOLECULARMATCHTRIALSINTERVATIONSID).values(otherName, idIntervation).execute();
-                }
+            for (String otherName : intervention.otherNames()) {
+                context.insertInto(MOLECULARMATCHTRIALSOTHERNAME,
+                        MOLECULARMATCHTRIALSOTHERNAME.OTHERNAME,
+                        MOLECULARMATCHTRIALSOTHERNAME.MOLECULARMATCHTRIALSINTERVENTIONID).values(otherName, idIntervention).execute();
             }
 
-            if (intervation.arm_group_label() != null) {
-                for (String armGroupLabel : intervation.arm_group_label()) {
-                    context.insertInto(MOLECULARMATCHTRIALSOTHERGROUPLABEL,
-                            MOLECULARMATCHTRIALSOTHERGROUPLABEL.ARM_GROUP_LABEL,
-                            MOLECULARMATCHTRIALSOTHERGROUPLABEL.MOLECULARMATCHTRIALSINTERVATIONSID)
-                            .values(armGroupLabel, idIntervation)
-                            .execute();
-                }
+            for (String armGroupLabel : intervention.armGroupLabels()) {
+                context.insertInto(MOLECULARMATCHTRIALSARMGROUPLABEL,
+                        MOLECULARMATCHTRIALSARMGROUPLABEL.ARMGROUPLABEL,
+                        MOLECULARMATCHTRIALSARMGROUPLABEL.MOLECULARMATCHTRIALSINTERVENTIONID)
+                        .values(armGroupLabel, idIntervention)
+                        .execute();
             }
         }
 
-        for (MolecularMatchTrialsLocations locations : molecularMatchTrials.locations()) {
-            int idLocations = context.insertInto(MOLECULARMATCHTRIALSLOCATIONS,
-                    MOLECULARMATCHTRIALSLOCATIONS.STATUS,
-                    MOLECULARMATCHTRIALSLOCATIONS.LAST_NAME,
-                    MOLECULARMATCHTRIALSLOCATIONS.EMAIL,
-                    MOLECULARMATCHTRIALSLOCATIONS.PHONE,
-                    MOLECULARMATCHTRIALSLOCATIONS.PHONE_BACKUP,
-                    MOLECULARMATCHTRIALSLOCATIONS.EMAIL_BACKUP,
-                    MOLECULARMATCHTRIALSLOCATIONS.LAST_NAME_BACKUP,
-                    MOLECULARMATCHTRIALSLOCATIONS.PHONE_EXT_BACKUP,
-                    MOLECULARMATCHTRIALSLOCATIONS.PHONE_EXT,
-                    MOLECULARMATCHTRIALSLOCATIONS.CITY,
-                    MOLECULARMATCHTRIALSLOCATIONS.VALID,
-                    MOLECULARMATCHTRIALSLOCATIONS.ZIP,
-                    MOLECULARMATCHTRIALSLOCATIONS.CREATED,
-                    MOLECULARMATCHTRIALSLOCATIONS.COUNTRY,
-                    MOLECULARMATCHTRIALSLOCATIONS.NUMBER,
-                    MOLECULARMATCHTRIALSLOCATIONS.IDLOCATIONS,
-                    MOLECULARMATCHTRIALSLOCATIONS.LASTUPDATED,
-                    MOLECULARMATCHTRIALSLOCATIONS.STATE,
-                    MOLECULARMATCHTRIALSLOCATIONS.STREET,
-                    MOLECULARMATCHTRIALSLOCATIONS.PO_BOX,
-                    MOLECULARMATCHTRIALSLOCATIONS.FAILEDGEOCODE,
-                    MOLECULARMATCHTRIALSLOCATIONS.VALIDMESSAGE,
-                    MOLECULARMATCHTRIALSLOCATIONS.NAME,
-                    MOLECULARMATCHTRIALSLOCATIONS.MOLECULARMATCHTRIALSID)
-                    .values(locations.status(),
-                            locations.last_name(),
-                            locations.email(),
-                            locations.phone(),
-                            locations.phone_backup(),
-                            locations.email_backup(),
-                            locations.last_name_backup(),
-                            locations.phone_ext_backup(),
-                            locations.phone_ext(),
-                            locations.city(),
-                            locations.valid(),
-                            locations.zip(),
-                            locations.created(),
-                            locations.country(),
-                            locations.number(),
-                            locations.id(),
-                            locations.lastUpdated(),
-                            locations.state(),
-                            locations.street(),
-                            locations.po_box(),
-                            locations.failedGeocode(),
-                            locations.validMessage(),
-                            locations.name(),
+        for (MolecularMatchTrialsLocation location : molecularMatchTrials.locations()) {
+            int idLocation = context.insertInto(MOLECULARMATCHTRIALSLOCATION,
+                    MOLECULARMATCHTRIALSLOCATION.STATUS,
+                    MOLECULARMATCHTRIALSLOCATION.NAME,
+                    MOLECULARMATCHTRIALSLOCATION.LASTNAME,
+                    MOLECULARMATCHTRIALSLOCATION.EMAIL,
+                    MOLECULARMATCHTRIALSLOCATION.PHONE,
+                    MOLECULARMATCHTRIALSLOCATION.PHONEEXT,
+                    MOLECULARMATCHTRIALSLOCATION.LASTNAMEBACKUP,
+                    MOLECULARMATCHTRIALSLOCATION.EMAILBACKUP,
+                    MOLECULARMATCHTRIALSLOCATION.PHONEBACKUP,
+                    MOLECULARMATCHTRIALSLOCATION.PHONEEXTBACKUP,
+                    MOLECULARMATCHTRIALSLOCATION.STREET,
+                    MOLECULARMATCHTRIALSLOCATION.ZIP,
+                    MOLECULARMATCHTRIALSLOCATION.CITY,
+                    MOLECULARMATCHTRIALSLOCATION.STATE,
+                    MOLECULARMATCHTRIALSLOCATION.COUNTRY,
+                    MOLECULARMATCHTRIALSLOCATION.NUMBER,
+                    MOLECULARMATCHTRIALSLOCATION.POBOX,
+                    MOLECULARMATCHTRIALSLOCATION.IDLOCATION,
+                    MOLECULARMATCHTRIALSLOCATION.VALID,
+                    MOLECULARMATCHTRIALSLOCATION.VALIDMESSAGE,
+                    MOLECULARMATCHTRIALSLOCATION.CREATED,
+                    MOLECULARMATCHTRIALSLOCATION.LASTUPDATED,
+                    MOLECULARMATCHTRIALSLOCATION.FAILEDGEOCODE,
+                    MOLECULARMATCHTRIALSLOCATION.MOLECULARMATCHTRIALSID)
+                    .values(location.status(),
+                            location.name(),
+                            location.lastName(),
+                            location.email(),
+                            location.phone(),
+                            location.phoneExt(),
+                            location.lastNameBackup(),
+                            location.emailBackup(),
+                            location.phoneBackup(),
+                            location.phoneExtBackup(),
+                            location.street(),
+                            location.zip(),
+                            location.city(),
+                            location.state(),
+                            location.country(),
+                            location.number(),
+                            location.poBox(),
+                            location.id(),
+                            location.valid(),
+                            location.validMessage(),
+                            location.created(),
+                            location.lastUpdated(),
+                            location.failedGeocode(),
                             id)
                     .returning(MOLECULARMATCHTRIALSLOCATIONS.ID)
                     .fetchOne()
                     .getValue(MOLECULARMATCHTRIALSLOCATIONS.ID);
 
-            if (locations.contact() != null) {
+            MolecularMatchTrialsContact contact = location.contact();
+            if (contact != null) {
                 context.insertInto(MOLECULARMATCHTRIALSCONTACT,
-                        MOLECULARMATCHTRIALSCONTACT.PHONE,
                         MOLECULARMATCHTRIALSCONTACT.NAME,
                         MOLECULARMATCHTRIALSCONTACT.EMAIL,
-                        MOLECULARMATCHTRIALSCONTACT.MOLECULARMATCHTRIALSLOCATIONSID)
-                        .values(locations.contact().phone(), locations.contact().name(), locations.contact().email(), idLocations)
+                        MOLECULARMATCHTRIALSCONTACT.PHONE,
+                        MOLECULARMATCHTRIALSCONTACT.MOLECULARMATCHTRIALSLOCATIONID)
+                        .values(contact.name(), contact.email(), contact.phone(), idLocation)
                         .execute();
             }
 
-            if (locations.location() != null) {
-                int idLocation = context.insertInto(MOLECULARMATCHTRIALSLOCATION,
-                        MOLECULARMATCHTRIALSLOCATION.TYPE,
-                        MOLECULARMATCHTRIALSLOCATION.MOLECULARMATCHTRIALSLOCATIONSID)
-                        .values(locations.location().type(), idLocations)
-                        .returning(MOLECULARMATCHTRIALSLOCATION.ID)
+            MolecularMatchTrialsSubLocation subLocation = location.subLocation();
+            if (subLocation != null) {
+                int idSubLocation = context.insertInto(MOLECULARMATCHTRIALSSUBLOCATION,
+                        MOLECULARMATCHTRIALSSUBLOCATION.TYPE,
+                        MOLECULARMATCHTRIALSSUBLOCATION.MOLECULARMATCHTRIALSLOCATIONID)
+                        .values(subLocation.type(), idLocation)
+                        .returning(MOLECULARMATCHTRIALSSUBLOCATION.ID)
                         .fetchOne()
-                        .getValue(MOLECULARMATCHTRIALSLOCATION.ID);
+                        .getValue(MOLECULARMATCHTRIALSSUBLOCATION.ID);
 
-                for (String coordinates : locations.location().coordinates()) {
+                for (String coordinate : subLocation.coordinates()) {
                     context.insertInto(MOLECULARMATCHTRIALSCOORDINATES,
                             MOLECULARMATCHTRIALSCOORDINATES.COORDINATES,
-                            MOLECULARMATCHTRIALSCOORDINATES.MOLECULARMATCHTRIALSLOCATIONID).values(coordinates, idLocation).execute();
+                            MOLECULARMATCHTRIALSCOORDINATES.MOLECULARMATCHTRIALSSUBLOCATIONID).values(coordinate, idSubLocation).execute();
                 }
             }
 
-            if (locations.geo() != null) {
+            MolecularMatchTrialsGeo geo = location.geo();
+            if (geo != null) {
                 context.insertInto(MOLECULARMATCHTRIALSGEO,
                         MOLECULARMATCHTRIALSGEO.LAT,
                         MOLECULARMATCHTRIALSGEO.LON,
-                        MOLECULARMATCHTRIALSGEO.MOLECULARMATCHTRIALSLOCATIONSID)
-                        .values(locations.geo().lat(), locations.geo().lon(), idLocations)
+                        MOLECULARMATCHTRIALSGEO.MOLECULARMATCHTRIALSLOCATIONID)
+                        .values(geo.lat(), geo.lon(), idLocation)
                         .execute();
             }
         }
 
-        if (molecularMatchTrials.overallContact() != null) {
+        MolecularMatchTrialsOverallContact overallContact = molecularMatchTrials.overallContact();
+        if (overallContact != null) {
             context.insertInto(MOLECULARMATCHTRIALSOVERALLCONTACT,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.PHONE,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.LAST_NAME,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.PHONE_EXT,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.COUNTRY,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.EMAIL,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.AFFILIATION,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.CITY,
                     MOLECULARMATCHTRIALSOVERALLCONTACT.NAME,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.ZIP,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.URL,
-                    MOLECULARMATCHTRIALSOVERALLCONTACT.STREET,
                     MOLECULARMATCHTRIALSOVERALLCONTACT.TYPE,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.AFFILIATION,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.LASTNAME,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.EMAIL,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.PHONE,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.PHONEEXT,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.STREET,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.ZIP,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.CITY,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.COUNTRY,
+                    MOLECULARMATCHTRIALSOVERALLCONTACT.URL,
                     MOLECULARMATCHTRIALSOVERALLCONTACT.MOLECULARMATCHTRIALSID)
-                    .values(molecularMatchTrials.overallContact().phone(),
-                            molecularMatchTrials.overallContact().last_name(),
-                            molecularMatchTrials.overallContact().phone_ext(),
-                            molecularMatchTrials.overallContact().country(),
-                            molecularMatchTrials.overallContact().email(),
-                            molecularMatchTrials.overallContact().affiliation(),
-                            molecularMatchTrials.overallContact().city(),
-                            molecularMatchTrials.overallContact().name(),
-                            molecularMatchTrials.overallContact().zip(),
-                            molecularMatchTrials.overallContact().url(),
-                            molecularMatchTrials.overallContact().street(),
-                            molecularMatchTrials.overallContact().type(),
+                    .values(overallContact.name(),
+                            overallContact.type(),
+                            overallContact.affiliation(),
+                            overallContact.lastName(),
+                            overallContact.email(),
+                            overallContact.phone(),
+                            overallContact.phoneExt(),
+                            overallContact.street(),
+                            overallContact.zip(),
+                            overallContact.city(),
+                            overallContact.country(),
+                            overallContact.url(),
                             id)
                     .execute();
         }
 
-        for (MolecularMatchTrialsTags tags : molecularMatchTrials.tags()) {
-            context.insertInto(MOLECULARMATCHTRIALSTAGS,
-                    MOLECULARMATCHTRIALSTAGS.FACET,
-                    MOLECULARMATCHTRIALSTAGS.COMPOSITEKEY,
-                    MOLECULARMATCHTRIALSTAGS.SUPPRESS,
-                    MOLECULARMATCHTRIALSTAGS.FILTERTYPE,
-                    MOLECULARMATCHTRIALSTAGS.TERM,
-                    MOLECULARMATCHTRIALSTAGS.CUSTOM,
-                    MOLECULARMATCHTRIALSTAGS.PRIORITY,
-                    MOLECULARMATCHTRIALSTAGS.ALIAS,
-                    MOLECULARMATCHTRIALSTAGS.MANUALSUPPRESS,
-                    MOLECULARMATCHTRIALSTAGS.GENERATEDBY,
-                    MOLECULARMATCHTRIALSTAGS.GENERATEDBYTERM,
-                    MOLECULARMATCHTRIALSTAGS.IDTAGS,
-                    MOLECULARMATCHTRIALSTAGS.MANUALPRIORITY,
-                    MOLECULARMATCHTRIALSTAGS.MOLECULARMATCHTRIALSID)
-                    .values(tags.facet(),
-                            tags.compositeKey(),
-                            tags.suppress(),
-                            tags.filterType(),
-                            tags.term(),
-                            tags.custom(),
-                            tags.priority(),
-                            tags.alias(),
-                            tags.manualSuppress(),
-                            tags.generatedBy(),
-                            tags.generatedByTerm(),
-                            tags.id(),
-                            tags.manualPriority(),
+        for (MolecularMatchTrialsTag tag : molecularMatchTrials.tags()) {
+            context.insertInto(MOLECULARMATCHTRIALSTAG,
+                    MOLECULARMATCHTRIALSTAG.FACET,
+                    MOLECULARMATCHTRIALSTAG.COMPOSITEKEY,
+                    MOLECULARMATCHTRIALSTAG.SUPPRESS,
+                    MOLECULARMATCHTRIALSTAG.FILTERTYPE,
+                    MOLECULARMATCHTRIALSTAG.TERM,
+                    MOLECULARMATCHTRIALSTAG.CUSTOM,
+                    MOLECULARMATCHTRIALSTAG.PRIORITY,
+                    MOLECULARMATCHTRIALSTAG.ALIAS,
+                    MOLECULARMATCHTRIALSTAG.MANUALSUPPRESS,
+                    MOLECULARMATCHTRIALSTAG.GENERATEDBY,
+                    MOLECULARMATCHTRIALSTAG.GENERATEDBYTERM,
+                    MOLECULARMATCHTRIALSTAG.IDTAG,
+                    MOLECULARMATCHTRIALSTAG.MANUALPRIORITY,
+                    MOLECULARMATCHTRIALSTAG.MOLECULARMATCHTRIALSID)
+                    .values(tag.facet(),
+                            tag.compositeKey(),
+                            tag.suppress(),
+                            tag.filterType(),
+                            tag.term(),
+                            tag.custom(),
+                            tag.priority(),
+                            tag.alias(),
+                            tag.manualSuppress(),
+                            tag.generatedBy(),
+                            tag.generatedByTerm(),
+                            tag.id(),
+                            tag.manualPriority(),
                             id)
                     .execute();
         }
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        // TODO Order from branch to root to avoid constraint violation.
-        context.deleteFrom(MOLECULARMATCHTRIALS).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSALTERATIONS).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSINTERVATIONS).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSOTHERNAME).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSOTHERGROUPLABEL).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSOVERALLCONTACT).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSTAGS).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSLOCATIONS).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSCONTACT).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSGEO).execute();
-        context.deleteFrom(MOLECULARMATCHTRIALSLOCATION).execute();
+        // Tables that are part of a location
         context.deleteFrom(MOLECULARMATCHTRIALSCOORDINATES).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSSUBLOCATION).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSGEO).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSCONTACT).execute();
+
+        // Tables that are part of an intervention
+        context.deleteFrom(MOLECULARMATCHTRIALSOTHERNAME).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSARMGROUPLABEL).execute();
+
+        // Tables that are part of the main entry object
+        context.deleteFrom(MOLECULARMATCHTRIALSTAG).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSOVERALLCONTACT).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSLOCATION).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSINTERVENTION).execute();
+        context.deleteFrom(MOLECULARMATCHTRIALSALTERATION).execute();
+
+        context.deleteFrom(MOLECULARMATCHTRIALS).execute();
     }
 }

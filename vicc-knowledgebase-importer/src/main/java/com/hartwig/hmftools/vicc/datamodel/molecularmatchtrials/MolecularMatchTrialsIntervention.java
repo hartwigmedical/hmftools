@@ -8,20 +8,20 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchTrialsIntervation {
+public abstract class MolecularMatchTrialsIntervention {
 
     @Nullable
-    public abstract String intervention_name();
+    public abstract String interventionName();
+
+    @NotNull
+    public abstract List<String> otherNames();
 
     @Nullable
-    public abstract List<String> other_name();
+    public abstract String interventionType();
+
+    @NotNull
+    public abstract List<String> armGroupLabels();
 
     @Nullable
     public abstract String description();
-
-    @Nullable
-    public abstract List<String> arm_group_label();
-
-    @Nullable
-    public abstract String intervention_type();
 }

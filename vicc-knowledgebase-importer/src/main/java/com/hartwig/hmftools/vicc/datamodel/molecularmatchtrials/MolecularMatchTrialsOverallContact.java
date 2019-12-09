@@ -9,38 +9,38 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchTrialsOverallContact {
 
     @Nullable
-    public abstract String phone();
+    public abstract String name();
 
     @Nullable
-    public abstract String last_name();
-
-    @Nullable
-    public abstract String phone_ext();
-
-    @Nullable
-    public abstract String country();
-
-    @Nullable
-    public abstract String email();
+    public abstract String type();
 
     @Nullable
     public abstract String affiliation();
 
     @Nullable
-    public abstract String city();
+    public abstract String lastName();
 
     @Nullable
-    public abstract String name();
+    public abstract String email();
 
     @Nullable
-    public abstract String zip();
+    public abstract String phone();
 
     @Nullable
-    public abstract String url();
+    public abstract String phoneExt();
 
     @Nullable
     public abstract String street();
 
     @Nullable
-    public abstract String type();
+    public abstract String zip();
+
+    @Nullable
+    public abstract String city();
+
+    @Nullable
+    public abstract String country();
+
+    @Nullable
+    public abstract String url();
 }

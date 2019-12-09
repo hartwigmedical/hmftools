@@ -75,14 +75,14 @@ final class JaxObjectFactory {
     }
 
     @NotNull
-    private static List<JaxReference> createJaxReferences(@Nullable JsonArray referencesArray) {
-        if (referencesArray == null) {
+    private static List<JaxReference> createJaxReferences(@Nullable JsonArray referenceArray) {
+        if (referenceArray == null) {
             return Lists.newArrayList();
         }
 
         ViccDatamodelChecker referenceChecker = ViccDatamodelCheckerFactory.jaxReferenceChecker();
         List<JaxReference> referenceList = Lists.newArrayList();
-        for (JsonElement referenceElement : referencesArray) {
+        for (JsonElement referenceElement : referenceArray) {
             JsonObject referenceObject = referenceElement.getAsJsonObject();
             referenceChecker.check(referenceObject);
 
