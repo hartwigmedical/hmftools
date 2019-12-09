@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSCOOR
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSGEO;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSINTERVENTION;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSLOCATION;
-import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSLOCATIONS;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOTHERNAME;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSOVERALLCONTACT;
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHTRIALSSUBLOCATION;
@@ -139,9 +138,9 @@ final class MolecularMatchTrialsDAOFunctions {
                             location.lastUpdated(),
                             location.failedGeocode(),
                             id)
-                    .returning(MOLECULARMATCHTRIALSLOCATIONS.ID)
+                    .returning(MOLECULARMATCHTRIALSLOCATION.ID)
                     .fetchOne()
-                    .getValue(MOLECULARMATCHTRIALSLOCATIONS.ID);
+                    .getValue(MOLECULARMATCHTRIALSLOCATION.ID);
 
             MolecularMatchTrialsContact contact = location.contact();
             if (contact != null) {
