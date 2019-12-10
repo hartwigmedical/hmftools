@@ -2,13 +2,22 @@ package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-@Ignore
 public class ReadContextFactoryTest {
+
+    @Test
+    public void testSimpleSNVhas5BaseCore() {
+        String refSequence = "GATCATCTAGG";
+        String readSequence = "GATCACCTAGG";
+        IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
+
+        SAMRecord record = ReadContextDistanceTest.buildSamRecord("11M", readSequence);
+        ReadContext victium = ReadContextFactory.createSNVContext(1005, 5, record, refBases);
+        assertEquals("CACCT", victium.centerBases());
+    }
 
     @Test
     public void testSimpleInsert() {
@@ -18,7 +27,7 @@ public class ReadContextFactoryTest {
 
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("2M3I9M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("AGGC", 1000, 1, record, refBases);
-        assertEquals("AGGCT", victium.centerBases());
+        assertEquals("GAGGCT", victium.centerBases());
     }
 
     @Test
@@ -29,7 +38,7 @@ public class ReadContextFactoryTest {
 
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("2M1I11M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("GA", 1000, 1, record, refBases);
-        assertEquals("GAAAAAAAAAT", victium.centerBases());
+        assertEquals("TGAAAAAAAAAT", victium.centerBases());
     }
 
     @Test
@@ -62,7 +71,7 @@ public class ReadContextFactoryTest {
 
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("5M4I7M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("GATCA", 1000, 4, record, refBases);
-        assertEquals("GATCAA", victium.centerBases());
+        assertEquals("GCGATCAA", victium.centerBases());
     }
 
     @Test
@@ -106,7 +115,7 @@ public class ReadContextFactoryTest {
 
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M1D9M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("GA", 1000, 0, record, refBases);
-        assertEquals("GT", victium.centerBases());
+        assertEquals("GTC", victium.centerBases());
     }
 
     @Test
@@ -117,7 +126,7 @@ public class ReadContextFactoryTest {
 
         SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M2D8M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("GAT", 1000, 0, record, refBases);
-        assertEquals("GC", victium.centerBases());
+        assertEquals("GCA", victium.centerBases());
     }
 
 }
