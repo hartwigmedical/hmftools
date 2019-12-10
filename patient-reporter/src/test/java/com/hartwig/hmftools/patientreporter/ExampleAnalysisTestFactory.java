@@ -270,7 +270,6 @@ public final class ExampleAnalysisTestFactory {
                 .refArrivalDate(LocalDate.parse("01-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(Strings.EMPTY)
-                .pathologyTumorPercentage("80%")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .requesterName("C")
                 .requesterEmail("D")

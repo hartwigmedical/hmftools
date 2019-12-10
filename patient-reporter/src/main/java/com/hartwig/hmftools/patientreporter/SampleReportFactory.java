@@ -47,7 +47,6 @@ public final class SampleReportFactory {
                 .refArrivalDate(arrivalDateRefSample)
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .purityShallowSeq(lims.purityShallowSeq(tumorSampleBarcode))
-                .pathologyTumorPercentage(lims.pathologyTumorPercentage(tumorSampleBarcode))
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
                 .addressee(hospitalQuery.fullAddresseeString())
                 .hospitalName(hospitalQuery.hospitalName())

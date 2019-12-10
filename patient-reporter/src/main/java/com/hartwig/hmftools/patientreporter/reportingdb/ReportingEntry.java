@@ -10,10 +10,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ReportingEntry {
 
     @NotNull
-    public abstract String sampleId();
+    public abstract String tumorBarcode();
 
     @NotNull
-    public abstract String tumorBarcode();
+    public abstract String sampleId();
 
     @NotNull
     public abstract String reportDate();
@@ -25,9 +25,9 @@ public abstract class ReportingEntry {
     public abstract String purity();
 
     @NotNull
-    public abstract String hasReliablePurity();
+    public abstract String hasReliableQuality();
 
     @NotNull
-    public abstract String hasReliableQuality();
+    public abstract String hasReliablePurity();
 
 }

@@ -31,9 +31,6 @@ public abstract class SampleReport {
     public abstract String purityShallowSeq();
 
     @NotNull
-    public abstract String pathologyTumorPercentage();
-
-    @NotNull
     public abstract String labProcedures();
 
     @NotNull
