@@ -10,6 +10,7 @@ import com.hartwig.hmftools.sage.context.RealignedType;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition {
@@ -26,9 +27,8 @@ public class ReadContextCounter implements GenomePosition {
     private int coverage;
 
     private int quality;
+
     private double jitterPenalty;
-    private int baseQuality;
-    private int mapQuality;
 
     private int improperPair;
 
@@ -52,8 +52,6 @@ public class ReadContextCounter implements GenomePosition {
         this.coverage = Math.min(left.coverage, right.coverage);
         this.quality = Math.min(left.quality, right.quality);
         this.jitterPenalty = Math.min(left.jitterPenalty, right.jitterPenalty);
-        this.baseQuality = Math.min(left.baseQuality, right.baseQuality);
-        this.mapQuality = Math.min(left.mapQuality, right.mapQuality);
     }
 
     @NotNull
@@ -95,20 +93,12 @@ public class ReadContextCounter implements GenomePosition {
         return Math.max(0, quality - (int) jitterPenalty);
     }
 
-    public int baseQuality() {
-        return baseQuality;
-    }
-
-    public int mapQuality() {
-        return mapQuality;
-    }
-
     public int[] rcc() {
         return new int[] { full, partial, core, realigned, shortened, lengthened, reference, coverage };
     }
 
     public int[] qual() {
-        return new int[] { quality(), baseQuality, mapQuality, qualityJitterPenalty() };
+        return new int[] { quality(), 0, 0, qualityJitterPenalty() };
     }
 
     public int improperPair() {
@@ -125,7 +115,7 @@ public class ReadContextCounter implements GenomePosition {
         return readContext.toString();
     }
 
-    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig) {
+    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig, IndexedBases refSequence) {
         final QualityConfig qualityConfig = sageConfig.qualityConfig();
 
         try {
@@ -222,8 +212,6 @@ public class ReadContextCounter implements GenomePosition {
         int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, readContext.distance(), record.getProperPairFlag());
         int modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
-        this.mapQuality += mapQuality;
-        this.baseQuality += baseQuality;
         this.quality += Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
@@ -250,6 +238,20 @@ public class ReadContextCounter implements GenomePosition {
         if (!record.getProperPairFlag()) {
             improperPair++;
         }
+    }
+
+    private int indelLength(@NotNull final SAMRecord record) {
+        int result = 0;
+        for (CigarElement cigarElement : record.getCigar()) {
+            switch (cigarElement.getOperator()) {
+                case I:
+                case D:
+                    result += cigarElement.getLength();
+            }
+
+        }
+
+        return result;
     }
 
 }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -57,13 +56,11 @@ class GermlinePipeline implements Supplier<CompletableFuture<List<SageVariant>>>
                 config.referenceBam(),
                 refSequence,
                 samSlicerFactory,
+                refSequence,
                 hotspots,
                 panelRegions), executor);
 
-        return candidates.thenApply(aVoid -> candidates.join()
-                .stream()
-                .map(variantFactory::create)
-                .collect(Collectors.toList()));
+        return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
     }
 
     @Override

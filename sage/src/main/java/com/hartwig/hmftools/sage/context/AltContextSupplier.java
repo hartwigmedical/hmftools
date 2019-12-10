@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
@@ -38,10 +39,12 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
     private final PositionSelector<AltContext> consumerSelector;
     private final List<AltContext> altContexts = Lists.newArrayList();
     private final TierSelector tierSelector;
+    private final RefSequence refSequence;
 
     public AltContextSupplier(@NotNull final SageConfig config, @NotNull final String sample, @NotNull final GenomeRegion bounds,
             @NotNull final String bamFile, @NotNull final RefSequence refGenome, @NotNull final SamSlicerFactory samSlicerFactory,
-            final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions) {
+            @NotNull final RefSequence refSequence, @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions) {
         this.config = config;
         this.sample = sample;
         this.bamFile = bamFile;
@@ -51,6 +54,7 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
         this.bounds = bounds;
         this.refContextConsumer = new RefContextConsumer(true, config, bounds, refGenome, this.candidates);
         this.tierSelector = new TierSelector(panelRegions, hotspots);
+        this.refSequence = refSequence;
 
     }
 
@@ -59,9 +63,12 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
     }
 
     private void processSecondPass(final SAMRecord samRecord) {
+
+        final IndexedBases refBases = refSequence.alignment(samRecord);
+
         consumerSelector.select(samRecord.getAlignmentStart(),
                 samRecord.getAlignmentEnd(),
-                x -> x.primaryReadContext().accept(x.readDepth() < config.maxReadDepth(), samRecord, config));
+                x -> x.primaryReadContext().accept(x.readDepth() < config.maxReadDepth(), samRecord, config, refBases));
     }
 
     @Override
@@ -93,7 +100,6 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
 
         return altContexts.stream().filter(this::qualPredicate).collect(Collectors.toList());
     }
-
 
     private boolean altSupportPredicate(@NotNull final AltContext altContext) {
         return altContext.alignerSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);

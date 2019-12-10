@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 
@@ -33,16 +34,18 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final int minQuality;
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
+    private final RefSequence refSequence;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
             @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates,
-            @NotNull final SamSlicerFactory samSlicerFactory) {
+            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final RefSequence refSequence) {
         this.minQuality = config.minMapQuality();
         this.bounds = bounds;
         this.candidates = candidates;
         this.bamFile = bamFile;
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
+        this.refSequence = refSequence;
         refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
         consumerSelector =
                 new PositionSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
@@ -67,10 +70,13 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     public void accept(final SAMRecord samRecord) {
         refContextConsumer.accept(samRecord);
 
+        final IndexedBases refBases = refSequence.alignment(samRecord);
+
+
         if (samRecord.getMappingQuality() >= minQuality) {
             consumerSelector.select(samRecord.getAlignmentStart(),
                     samRecord.getAlignmentEnd(),
-                    x -> x.primaryReadContext().accept(x.readDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
+                    x -> x.primaryReadContext().accept(x.readDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig, refBases));
         }
     }
 }
