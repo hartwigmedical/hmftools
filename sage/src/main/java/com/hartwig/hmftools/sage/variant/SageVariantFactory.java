@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.variant;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -30,12 +31,19 @@ public class SageVariantFactory {
     }
 
     @NotNull
+    public SageVariant create(@NotNull final AltContext normal) {
+        final SageVariantTier tier = tierSelector.tier(normal);
+        final Set<String> filters = germlineOnlyFilters(normal);
+
+        return new SageVariant(tier, filters, normal, Collections.emptyList());
+    }
+
+    @NotNull
     public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
 
         final SageVariantTier tier = tierSelector.tier(normal);
         final SoftFilterConfig softConfig = softConfig(tier);
-        final Set<String> filters =
-                tumorAltContexts.isEmpty() ? Sets.newHashSet() : filters(tier, softConfig, normal, tumorAltContexts.get(0));
+        final Set<String> filters = filters(tier, softConfig, normal, tumorAltContexts.get(0));
 
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
@@ -50,6 +58,17 @@ public class SageVariantFactory {
             default:
                 return config.softWideFilter();
         }
+    }
+
+    @NotNull
+    private Set<String> germlineOnlyFilters(@NotNull final AltContext germline) {
+        final Set<String> result = Sets.newHashSet();
+
+        if (Doubles.lessThan(germline.primaryReadContext().vaf(), config.minGermlineVaf())) {
+            result.add(FilterConfig.MIN_GERMLINE_VAF);
+        }
+
+        return result;
     }
 
     @NotNull
