@@ -2,10 +2,12 @@ package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
+@Ignore
 public class ReadContextFactoryTest {
 
     @Test
