@@ -57,18 +57,10 @@ public class ReadContext {
         this.refCentre = IndexedBases.refCentre(this.readBases, refSequence);
     }
 
+
+
     public int position() {
         return position;
-    }
-
-    int distanceFromReadEdge(int readIndex, SAMRecord record) {
-        int leftOffset = this.readIndex() - readBases.leftCentreIndex();
-        int rightOffset = readBases.rightCentreIndex() - this.readIndex();
-
-        int leftIndex = readIndex - leftOffset;
-        int rightIndex = readIndex + rightOffset;
-
-        return Math.min(leftIndex, record.getReadBases().length - rightIndex - 1);
     }
 
     public boolean isComplete() {
@@ -112,13 +104,26 @@ public class ReadContext {
         return refCentre.coreMatch(otherReadIndex, otherBases);
     }
 
-    public int leftFlankStartIndex() {
-        return Math.max(0, readBases.leftCentreIndex() - flankSize());
+    public int readBasesPositionIndex() {
+        return readBases.index();
     }
 
-    public int rightFlankEndIndex() {
-        return Math.min(readBases().length - 1, readBases.rightCentreIndex() + flankSize());
+    public int readBasesLeftFlankIndex() {
+        return readBases.leftFlankIndex();
     }
+
+    public int readBasesRightFlankIndex() {
+        return readBases.rightFlankIndex();
+    }
+
+    public int readBasesLeftCentreIndex() {
+        return readBases.leftCentreIndex();
+    }
+
+    public int readBasesRightCentreIndex() {
+        return readBases.rightCentreIndex();
+    }
+
 
     @Override
     public String toString() {

@@ -136,12 +136,12 @@ public class ReadContextCounter implements GenomePosition {
                         case FULL:
                             full++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig);
+                            incrementQualityScores(readIndex, record, qualityConfig, refSequence);
                             break;
                         case PARTIAL:
                             partial++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig);
+                            incrementQualityScores(readIndex, record, qualityConfig, refSequence);
                             break;
                         case CORE:
                             core++;
@@ -203,16 +203,24 @@ public class ReadContextCounter implements GenomePosition {
         return new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
     }
 
-    private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {
+    private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig,
+            final IndexedBases refSequence) {
+        this.quality += calculateQualityScore(readBaseIndex, record, qualityConfig, refSequence);
+    }
+
+    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig,
+            final IndexedBases refSequence) {
+        final int distanceFromRef = readDistanceFromRef(readBaseIndex, record, refSequence);
+
         final int baseQuality = baseQuality(readBaseIndex, record);
-        final int distanceFromReadEdge = readContext.distanceFromReadEdge(readBaseIndex, record);
+        final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
 
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, readContext.distance(), record.getProperPairFlag());
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, distanceFromRef, record.getProperPairFlag());
         int modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
-        this.quality += Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
+        return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
     private int baseQuality(int readBaseIndex, SAMRecord record) {
@@ -252,6 +260,34 @@ public class ReadContextCounter implements GenomePosition {
         }
 
         return result;
+    }
+
+    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record) {
+        int index = readContext.readBasesPositionIndex();
+        int leftIndex = readContext.readBasesLeftCentreIndex();
+        int rightIndex = readContext.readBasesRightCentreIndex();
+
+        int leftOffset = index - leftIndex;
+        int rightOffset = rightIndex - index;
+
+        int adjustedLeftIndex = readIndex - leftOffset;
+        int adjustedRightIndex = readIndex + rightOffset;
+
+        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex ));
+    }
+
+    private int readDistanceFromRef(int readIndex, final SAMRecord record, final IndexedBases refSequence) {
+        int index = readContext.readBasesPositionIndex();
+        int leftIndex = readContext.readBasesLeftFlankIndex();
+        int rightIndex = readContext.readBasesRightFlankIndex();
+
+        int leftOffset = index - leftIndex;
+        int rightOffset = rightIndex - index;
+
+        return new ReadContextDistance(Math.max(0, readIndex - leftOffset),
+                Math.min(record.getReadBases().length - 1, readIndex + rightOffset),
+                record,
+                refSequence).distance();
     }
 
 }

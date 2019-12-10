@@ -9,7 +9,7 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextFactoryTest {
 
     @Test
-    public void testSimpleSNVhas5BaseCore() {
+    public void testSimpleSnvHas5BaseCore() {
         String refSequence = "GATCATCTAGG";
         String readSequence = "GATCACCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());

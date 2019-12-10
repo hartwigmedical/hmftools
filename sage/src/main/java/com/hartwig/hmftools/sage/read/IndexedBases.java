@@ -240,4 +240,12 @@ public class IndexedBases {
         return position;
     }
 
+    public int leftFlankIndex() {
+        return leftFlankIndex;
+    }
+
+    public int rightFlankIndex() {
+        return rightFlankIndex;
+    }
+
 }

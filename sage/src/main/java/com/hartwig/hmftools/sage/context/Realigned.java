@@ -18,12 +18,12 @@ public class Realigned {
 
     @NotNull
     public RealignedContext realignedInEntireRecord(@NotNull final ReadContext readContext, final byte[] otherBases) {
-        return realigned(readContext.leftFlankStartIndex(), readContext.rightFlankEndIndex(), readContext.readBases(), otherBases);
+        return realigned(readContext.readBasesLeftFlankIndex(), readContext.readBasesRightFlankIndex(), readContext.readBases(), otherBases);
     }
 
     @NotNull
     public RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases) {
-        return realigned(readContext.leftFlankStartIndex(), readContext.rightFlankEndIndex(), readContext.readBases(), otherBaseIndex, otherBases, MAX_REPEAT_SIZE);
+        return realigned(readContext.readBasesLeftFlankIndex(), readContext.readBasesRightFlankIndex(), readContext.readBases(), otherBaseIndex, otherBases, MAX_REPEAT_SIZE);
     }
 
     @NotNull
