@@ -16,8 +16,10 @@ public class GeneFusion
     private String mKnownType;
     private boolean mNeoEpitopeOnly;
 
-    // private String mAnnotations;
     private FusionAnnotations mAnnotations;
+
+    // calculated priority accoriding to scheme for selecting fusions
+    private double mPriority;
 
     public static String REPORTABLE_TYPE_NONE = "";
     public static String REPORTABLE_TYPE_KNOWN = "Known";
@@ -36,6 +38,7 @@ public class GeneFusion
         mExonsSkippedDown = 0;
         mNeoEpitopeOnly = false;
         mAnnotations = null;
+        mPriority = 0;
     }
 
     public String name() { return mUpstreamTrans.geneName() + "_" + mDownstreamTrans.geneName(); }
@@ -51,7 +54,7 @@ public class GeneFusion
     public boolean neoEpitopeOnly(){ return mNeoEpitopeOnly; }
     public void setNeoEpitopeOnly(boolean toggle) { mNeoEpitopeOnly = toggle; }
 
-    public final String getKnownType(){ return mKnownType; }
+    public final String knownType(){ return mKnownType; }
     public void setKnownType(final String type) { mKnownType = type; }
 
     public final String toString()
@@ -89,6 +92,9 @@ public class GeneFusion
 
     public final FusionAnnotations getAnnotations() { return mAnnotations; }
     public void setAnnotations(final FusionAnnotations annotations) { mAnnotations = annotations; }
+
+    public void setPriority(double priority) { mPriority = priority; }
+    public double priority() { return mPriority; }
 
     public boolean isTerminated()
     {

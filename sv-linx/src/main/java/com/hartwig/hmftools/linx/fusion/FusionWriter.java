@@ -87,7 +87,7 @@ public class FusionWriter
                     .threePrimeBreakendId(downBreakendId)
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
-                    .reportedType(geneFusion.getKnownType())
+                    .reportedType(geneFusion.knownType())
                     .phased(geneFusion.phaseMatched())
                     .chainLength(geneFusion.getChainLength())
                     .chainLinks(geneFusion.getChainLinks())
@@ -144,6 +144,7 @@ public class FusionWriter
 
     public void initialiseOutputFiles()
     {
+        // initialise the integrated, verbose fusion and breakend output file
         try
         {
             if(mFusionWriter == null)
@@ -187,7 +188,7 @@ public class FusionWriter
                     mFusionWriter.write(fieldsStr);
                 }
 
-                mFusionWriter.write(",ProteinsKept,ProteinsLost,OverlapUp,OverlapDown,ChainInfo");
+                mFusionWriter.write(",ProteinsKept,ProteinsLost,PriorityScore,OverlapUp,OverlapDown,ChainInfo");
                 mFusionWriter.newLine();
             }
         }
@@ -197,7 +198,7 @@ public class FusionWriter
         }
     }
 
-    public void writeMultiSampleData(final GeneFusion fusion, final String sampleId)
+    public void writeVerboseFusionData(final GeneFusion fusion, final String sampleId)
     {
         if(mFusionWriter == null)
             return;
@@ -215,7 +216,7 @@ public class FusionWriter
             }
 
             writer.write(String.format("%s,%s,%s",
-                    sampleId, fusion.reportable(), fusion.getKnownType()));
+                    sampleId, fusion.reportable(), fusion.knownType()));
 
             writer.write(String.format(",%s,%d,%d,%s",
                     fusion.phaseMatched(), annotations.clusterId(), annotations.clusterCount(), annotations.resolvedType()));
@@ -247,8 +248,9 @@ public class FusionWriter
                         trans.prevSpliceAcceptorDistance(), trans.isCanonical(), trans.bioType()));
             }
 
-            writer.write(String.format(",%s,%s",
-                        fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost()));
+            writer.write(String.format(",%s,%s,%f",
+                        fusion.downstreamTrans().getProteinFeaturesKept(), fusion.downstreamTrans().getProteinFeaturesLost(),
+                        fusion.priority()));
 
             String chainInfo = "";
             String defaultValues = ",0:false;0;0;0;false";

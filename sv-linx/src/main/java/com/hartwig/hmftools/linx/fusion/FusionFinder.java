@@ -443,7 +443,7 @@ public class FusionFinder
         // check impact on protein regions
         setFusionProteinFeatures(reportableFusion);
 
-        if (reportableFusion.getKnownType() != REPORTABLE_TYPE_KNOWN)
+        if (reportableFusion.knownType() != REPORTABLE_TYPE_KNOWN)
         {
             final Transcript downTrans = reportableFusion.downstreamTrans();
             long requiredKeptButLost = mProteinsRequiredKept.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
@@ -546,11 +546,11 @@ public class FusionFinder
             return false;
 
         // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-        if (fusion.getKnownType() == REPORTABLE_TYPE_NONE)
+        if (fusion.knownType() == REPORTABLE_TYPE_NONE)
             return false;
 
         // set limits on how far upstream the breakend can be - adjusted for whether the fusions is known or not
-        int maxUpstreamDistance = fusion.getKnownType() == REPORTABLE_TYPE_KNOWN ?
+        int maxUpstreamDistance = fusion.knownType() == REPORTABLE_TYPE_KNOWN ?
                 MAX_UPSTREAM_DISTANCE_KNOWN : MAX_UPSTREAM_DISTANCE_OTHER;
 
         final Transcript upTrans = fusion.upstreamTrans();
@@ -565,7 +565,7 @@ public class FusionFinder
         if(downTrans.hasNegativePrevSpliceAcceptorDistance())
             return false;
 
-        if(fusion.getKnownType() != REPORTABLE_TYPE_KNOWN
+        if(fusion.knownType() != REPORTABLE_TYPE_KNOWN
         && (fusion.getExonsSkipped(true) > 0 || fusion.getExonsSkipped(false) > 0))
             return false;
 
@@ -574,6 +574,8 @@ public class FusionFinder
 
     public static GeneFusion determineReportableFusion(final List<GeneFusion> fusions, boolean requireReportable)
     {
+        boolean useOldScheme = false;
+
         GeneFusion reportableFusion = null;
 
         // form a score by allocating 0/1 or length value to each power of 10 descending
@@ -584,9 +586,24 @@ public class FusionFinder
             if(requireReportable && !couldBeReportable(fusion))
                 continue;
 
-            // first check whether a fusion is known or not - a key requirement of it being potentially reportable
-            final Transcript upTrans = fusion.upstreamTrans();
-            final Transcript downTrans = fusion.downstreamTrans();
+            double fusionPriorityScore = useOldScheme ? calcFusionPriorityOld(fusion) : calcFusionPriority(fusion);
+            fusion.setPriority(fusionPriorityScore);
+
+            if(fusionPriorityScore > highestScore)
+            {
+                reportableFusion = fusion;
+                highestScore = fusionPriorityScore;
+            }
+        }
+
+        return reportableFusion;
+    }
+
+    private static double calcFusionPriority(final GeneFusion fusion)
+    {
+        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
+        final Transcript upTrans = fusion.upstreamTrans();
+        final Transcript downTrans = fusion.downstreamTrans();
 
             /* prioritisation rules:
             1. inframe
@@ -597,75 +614,133 @@ public class FusionFinder
             6. Best 5' partner by canonical, protein-coding then coding bases
             */
 
-            double transScore = 0;
-            double factor = 1000000;
+        double fusionPriorityScore = 0;
+        double factor = 1000000;
 
-            // 1. Phase matched
-            if(fusion.phaseMatched())
-                transScore += factor;
+        // 1. Phase matched
+        if(fusion.phaseMatched())
+            fusionPriorityScore += factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            // 2. Chain not terminated (only applicable for chained & known fusions)
-            if(!fusion.isTerminated())
-                transScore += factor;
+        // 2. Chain not terminated (only applicable for chained & known fusions)
+        if(!fusion.isTerminated())
+            fusionPriorityScore += factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            // 3' protein coding
-            if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
-                transScore += factor;
+        // 3' protein coding
+        if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
+            fusionPriorityScore += factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            // 4. Not skipping exons
-            if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
-                transScore += factor;
+        // 4. Not skipping exons
+        if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
+            fusionPriorityScore += factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            // 5. Best 3' partner
-            if(downTrans.isCanonical())
-                transScore += factor;
+        // 5. Best 3' partner
+        if(downTrans.isCanonical())
+            fusionPriorityScore += factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            if(!downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
-                transScore += factor;
+        if(!downTrans.bioType().equals(BIOTYPE_NONSENSE_MED_DECAY))
+            fusionPriorityScore += factor;
 
-            factor /= 100;
+        factor /= 100;
 
-            long length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
+        long length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
 
-            // will be a range between 1-99 * current factor
-            length = min(round(length/10), 99);
-            transScore += length * factor;
+        // will be a range between 1-99 * current factor
+        length = min(round(length/10), 99);
+        fusionPriorityScore += length * factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            // 6. Best 5' partner
-            if(upTrans.isCanonical())
-                transScore += factor;
+        // 6. Best 5' partner
+        if(upTrans.isCanonical())
+            fusionPriorityScore += factor;
 
-            factor /= 10;
+        factor /= 10;
 
-            if(upTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
-                transScore += factor;
+        if(upTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
+            fusionPriorityScore += factor;
 
-            factor /= 100;
+        factor /= 100;
 
-            length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
-            length = min(round(length/10), 99);
-            transScore += length * factor;
+        length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
+        length = min(round(length/10), 99);
+        fusionPriorityScore += length * factor;
 
-            if(transScore > highestScore)
-            {
-                reportableFusion = fusion;
-                highestScore = transScore;
-            }
-        }
+        return fusionPriorityScore;
+    }
 
-        return reportableFusion;
+    private static double calcFusionPriorityOld(final GeneFusion fusion)
+    {
+        // first check whether a fusion is known or not - a key requirement of it being potentially reportable
+        final Transcript upTrans = fusion.upstreamTrans();
+        final Transcript downTrans = fusion.downstreamTrans();
+
+            /* prioritisation rules:
+            1. No exons skipped
+            2. Both canonical
+            3. Best 3' partner by canonical, not NMD then coding bases (or exon count if not coding)
+            4. Best 5' partner by canonical, protein-coding then coding bases
+            */
+
+        double fusionPriorityScore = 0;
+        double factor = 1000000;
+
+        // 1. Not skipping exons
+        if(fusion.getExonsSkipped(true) == 0 && fusion.getExonsSkipped(false) == 0)
+            fusionPriorityScore += factor;
+
+        factor /= 10;
+
+        // 2. both canonical
+        if(upTrans.isCanonical() && downTrans.isCanonical())
+            fusionPriorityScore += factor;
+
+        factor /= 10;
+
+        // 3. Best 3' partner
+        if(downTrans.isCanonical())
+            fusionPriorityScore += factor;
+
+        factor /= 10;
+
+        if(downTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
+            fusionPriorityScore += factor;
+
+        factor /= 100;
+
+        long length = downTrans.isCoding() ? downTrans.calcCodingBases() : downTrans.ExonMax;
+
+        // will be a range between 1-99 * current factor
+        length = min(round(length/10), 99);
+        fusionPriorityScore += length * factor;
+
+        factor /= 10;
+
+        // 4. Best 5' partner
+        if(upTrans.isCanonical())
+            fusionPriorityScore += factor;
+
+        factor /= 10;
+
+        if(upTrans.bioType().equals(BIOTYPE_PROTEIN_CODING))
+            fusionPriorityScore += factor;
+
+        factor /= 100;
+
+        length = upTrans.isCoding() ? upTrans.calcCodingBases() : upTrans.ExonMax;
+        length = min(round(length/10), 99);
+        fusionPriorityScore += length * factor;
+
+        return fusionPriorityScore;
     }
 
     public String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)

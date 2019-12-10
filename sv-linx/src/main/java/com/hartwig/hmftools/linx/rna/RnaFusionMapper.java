@@ -421,6 +421,9 @@ public class RnaFusionMapper
             }
         }
 
+        if(!matchType.equals(DNA_MATCH_TYPE_NONE))
+            return matchType;
+
         for(Map.Entry<GeneFusion,String> entry : mDnaInvalidFusions.entrySet())
         {
             if(entry.getKey().name().equals(rnaFusionData.name()))
