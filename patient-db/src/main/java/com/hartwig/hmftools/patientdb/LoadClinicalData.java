@@ -118,7 +118,7 @@ public final class LoadClinicalData {
 
     @NotNull
     private static List<RunContext> loadRunContexts(@NotNull String runsDirectory) throws IOException {
-        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), "loading-clinical-data");
+        List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;

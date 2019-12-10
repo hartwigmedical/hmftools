@@ -15,15 +15,15 @@ public class ProductionRunContextFactoryTest {
 
     @Test
     public void picksMetadataWhenAvailable() throws MalformedFileException {
-        final String runDirectory = RESOURCE_DIR + File.separator + "RunDirSomatic";
+        String runDirectory = RESOURCE_DIR + File.separator + "RunDirSomatic";
 
-        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory, "loading-clinical-data"));
+        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory));
     }
 
     @Test(expected = MalformedFileException.class)
     public void throwExceptionWhenNoMetaData() throws MalformedFileException {
-        final String runDirectory = RESOURCE_DIR + File.separator + "DoesNotExist";
+        String runDirectory = RESOURCE_DIR + File.separator + "DoesNotExist";
 
-        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory, "loading-clinical-data"));
+        assertNotNull(ProductionRunContextFactory.fromRunDirectory(runDirectory));
     }
 }
