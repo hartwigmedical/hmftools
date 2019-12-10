@@ -96,7 +96,7 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
 
 
     private boolean altSupportPredicate(@NotNull final AltContext altContext) {
-        return altContext.altSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);
+        return altContext.alignerSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);
     }
 
     private boolean qualPredicate(@NotNull final AltContext altContext) {

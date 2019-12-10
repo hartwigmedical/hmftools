@@ -114,7 +114,7 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
-    public int altSupport() {
+    public int alignerSupport() {
         return altReads;
     }
 

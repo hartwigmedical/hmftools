@@ -101,7 +101,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         }
 
         final AltContext normal = entry.normal();
-        if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+        if (normal.alignerSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }
 

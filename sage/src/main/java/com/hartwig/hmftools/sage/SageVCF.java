@@ -58,6 +58,9 @@ public class SageVCF implements AutoCloseable {
     public static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     public static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
+    public static final String ALIGNER_SUPPORT_ALT = "ASA";
+    public static final String ALIGNER_SUPPORT_REF = "ASR";
+
 
     public final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
@@ -109,6 +112,8 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Float,
                 READ_CONTEXT_AF_DESCRIPTION));
 
+        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_ALT, 1, VCFHeaderLineType.Integer, "Aligned Alt Support"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_REF, 1, VCFHeaderLineType.Integer, "Aligned Ref Support"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 8, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
                 1,
