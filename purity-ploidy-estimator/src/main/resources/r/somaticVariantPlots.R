@@ -175,6 +175,5 @@ ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfal
 clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clonality.tsv"), sep = "\t", header = T, numerals = "no.loss", skipNul = T) %>% 
   mutate(isSubclonal = isSubclonal == "true", isValid = isValid == "true", peak = as.character(peak), bucketWeight = as.numeric(as.character(bucketWeight))) %>% filter(isValid)
 clonalityModelPlot = clonality_plot(somaticVariants, clonalityModel)
-clonalityModelPlot
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 
