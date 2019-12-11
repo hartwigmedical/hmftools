@@ -31,7 +31,7 @@ public class ReadContextCounter implements GenomePosition {
     private int coreQuality;
     private int realignedQuality;
     private int referenceQuality;
-    private int otherQuality;
+    private int totalQuality;
 
     private double jitterPenalty;
 
@@ -60,7 +60,7 @@ public class ReadContextCounter implements GenomePosition {
         this.coreQuality = Math.min(left.coreQuality, right.coreQuality);
         this.realignedQuality = Math.min(left.realignedQuality, right.realignedQuality);
         this.referenceQuality = Math.min(left.referenceQuality, right.referenceQuality);
-        this.otherQuality = Math.min(left.otherQuality, right.otherQuality);
+        this.totalQuality = Math.min(left.totalQuality, right.totalQuality);
         this.jitterPenalty = Math.min(left.jitterPenalty, right.jitterPenalty);
     }
 
@@ -104,16 +104,12 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     private double af(double support) {
-        return coverage == 0 ? 0d : support / totalQuality();
+        return coverage == 0 ? 0d : support / totalQuality;
     }
 
     public int tumorQuality() {
         int tumorQuality = fullQuality + partialQuality + coreQuality + realignedQuality;
         return Math.max(0, tumorQuality - (int) jitterPenalty);
-    }
-
-    public int totalQuality() {
-        return fullQuality + partialQuality + coreQuality + realignedQuality + referenceQuality + otherQuality;
     }
 
     public int[] counts() {
@@ -125,9 +121,8 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public int[] quality() {
-        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, referenceQuality, totalQuality() };
+        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, referenceQuality, totalQuality };
     }
-
 
     public int improperPair() {
         return improperPair;
@@ -156,12 +151,19 @@ public class ReadContextCounter implements GenomePosition {
                 }
 
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
+                if (!covered) {
+                    return;
+                }
 
                 // TODO: Check if this is okay? Should we check for jitter if quality 0
                 double quality = calculateQualityScore(readIndex, record, qualityConfig, refSequence);
                 if (quality <= 0) {
                     return;
                 }
+
+                coverage++;
+                totalQuality += quality;
 
                 // Check if FULL, PARTIAL, OR CORE
                 final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
@@ -184,7 +186,6 @@ public class ReadContextCounter implements GenomePosition {
                             break;
                     }
 
-                    coverage++;
                     return;
                 }
 
@@ -193,34 +194,26 @@ public class ReadContextCounter implements GenomePosition {
                 if (realignment.type().equals(RealignedType.EXACT)) {
                     realigned++;
                     realignedQuality += quality;
-                    coverage++;
                     return;
                 }
 
                 // Check if lengthened, shortened AND/OR reference!
-                boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
 
                 switch (realignment.type()) {
                     case LENGTHENED:
                         jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
                         lengthened++;
-                        covered = true;
                         break;
                     case SHORTENED:
                         jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
                         shortened++;
-                        covered = true;
                         break;
                 }
 
-                if (covered) {
-                    coverage++;
-                    if (readContext.matchesRef(readIndex, record.getReadBases())) {
-                        reference++;
-                        referenceQuality += quality;
-                    } else {
-                        otherQuality += quality;
-                    }
+
+                if (readContext.matchesRef(readIndex, record.getReadBases())) {
+                    reference++;
+                    referenceQuality += quality;
                 }
             }
         } catch (Exception e) {

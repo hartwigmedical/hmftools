@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.variant;
 
 import static com.hartwig.hmftools.sage.SageVCF.PASS;
 import static com.hartwig.hmftools.sage.SageVCF.PHASE;
+import static com.hartwig.hmftools.sage.SageVCF.RAW_TUMOR_SUPPORT;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_DIFFERENCE;
@@ -114,6 +115,7 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
+                .attribute(RAW_TUMOR_SUPPORT, evidence.rawSupport())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();
     }

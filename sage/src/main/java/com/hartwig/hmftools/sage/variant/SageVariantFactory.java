@@ -77,12 +77,13 @@ public class SageVariantFactory {
         Set<String> result = Sets.newHashSet();
 
         final ReadContextCounter normalCounter = normal.primaryReadContext();
+        final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
 
-        if (!skipMinTumorQualTest(tier, primaryTumor) && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
+        if (!skipTumorTests && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
 
-        if (Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
+        if (!skipTumorTests && Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
             result.add(SoftFilterConfig.MIN_TUMOR_VAF);
         }
 
@@ -115,7 +116,7 @@ public class SageVariantFactory {
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
         return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.primaryReadContext().altSupport() >= config.hotspotMinTumorReadContextSupportToSkipQualCheck();
+                && primaryTumor.rawSupport() >= config.hotspotMinTumorReadContextSupportToSkipQualCheck();
     }
 
 }
