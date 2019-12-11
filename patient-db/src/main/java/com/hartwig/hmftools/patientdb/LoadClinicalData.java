@@ -108,6 +108,7 @@ public final class LoadClinicalData {
         }
 
         writeClinicalData(dbWriter,
+                lims,
                 sequencedPatientIds,
                 sampleDataPerPatient,
                 ecrfModels,
@@ -244,7 +245,7 @@ public final class LoadClinicalData {
         LOGGER.info(" Finished writing raw drup ecrf data for {} patients", drupEcrfModel.patientCount());
     }
 
-    private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Set<String> sequencedPatientIds,
+    private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims, @NotNull Set<String> sequencedPatientIds,
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull EcrfModels ecrfModels,
             @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink) throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
@@ -268,11 +269,11 @@ public final class LoadClinicalData {
                 missingPatients++;
                 List<SampleData> sequencedSamples = sequencedOnly(sampleDataPerPatient.get(patientId));
                 missingSamples += sequencedSamples.size();
-                dbAccess.writeSampleClinicalData(patientId, sequencedSamples);
+                dbAccess.writeSampleClinicalData(patientId, lims.isBlacklisted(patientId), sequencedSamples);
             } else if (patient.sequencedBiopsies().isEmpty()) {
-                LOGGER.warn("No sequenced biopsies found for sequenced patient: " + patientId + "! Skipping writing to db");
+                LOGGER.warn("No sequenced biopsies found for sequenced patient: {}! Skipping writing to db", patientId);
             } else {
-                dbAccess.writeFullClinicalData(patient);
+                dbAccess.writeFullClinicalData(patient, lims.isBlacklisted(patientId));
                 List<ValidationFinding> findings = PatientValidator.validatePatient(patient);
 
                 dbAccess.writeValidationFindings(findings);

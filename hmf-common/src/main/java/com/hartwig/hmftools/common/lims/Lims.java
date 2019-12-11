@@ -114,8 +114,8 @@ public class Lims {
         return samplesIdsWithoutSamplingDate.contains(sampleId);
     }
 
-    public boolean isBlacklisted(@NotNull String sampleBarcode) {
-        return blacklistedPatients.contains(patientId(sampleBarcode));
+    public boolean isBlacklisted(@NotNull String patientId) {
+        return blacklistedPatients.contains(patientId);
     }
 
     @NotNull

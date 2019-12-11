@@ -1,2 +1,2 @@
 ALTER TABLE patient
-    ADD blacklisted BOOLEAN NOT NULL DEFAULT FALSE after patientIdentifier;
+    ADD blacklisted BOOLEAN NOT NULL after patientIdentifier;

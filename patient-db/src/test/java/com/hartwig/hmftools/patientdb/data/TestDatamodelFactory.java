@@ -18,7 +18,6 @@ public final class TestDatamodelFactory {
                 .sampleId("sample-" + arrivalDate.toString())
                 .setName(Strings.EMPTY)
                 .sequenced(false)
-                .belongsToBlacklistedPatient(false)
                 .arrivalDate(arrivalDate)
                 .pathologyTumorPercentage("N/A");
     }
