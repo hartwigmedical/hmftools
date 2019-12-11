@@ -22,21 +22,25 @@ public class Lims {
     @NotNull
     private final Map<String, LimsJsonSubmissionData> dataPerSubmission;
     @NotNull
+    private final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode;
+    @NotNull
     private final Map<String, LocalDate> preLimsArrivalDatesPerSampleId;
     @NotNull
     private final Set<String> samplesIdsWithoutSamplingDate;
     @NotNull
-    private final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode;
+    private final Set<String> blacklistedPatients;
 
-    Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
+    public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
             @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
+            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
             @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
-            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode) {
+            @NotNull final Set<String> blacklistedPatients) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
+        this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
         this.preLimsArrivalDatesPerSampleId = preLimsArrivalDatesPerSampleId;
         this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
-        this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
+        this.blacklistedPatients = blacklistedPatients;
     }
 
     public int sampleBarcodeCount() {
@@ -108,6 +112,10 @@ public class Lims {
 
     public boolean confirmedToHaveNoSamplingDate(@NotNull String sampleId) {
         return samplesIdsWithoutSamplingDate.contains(sampleId);
+    }
+
+    public boolean isBlacklisted(@NotNull String sampleBarcode) {
+        return blacklistedPatients.contains(patientId(sampleBarcode));
     }
 
     @NotNull

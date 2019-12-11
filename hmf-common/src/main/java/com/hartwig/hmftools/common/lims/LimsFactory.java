@@ -35,6 +35,7 @@ public final class LimsFactory {
     private static final String PRE_LIMS_ARRIVAL_DATES_TSV = "pre_lims_arrival_dates.tsv";
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_TSV = "samples_without_sampling_date.tsv";
     private static final String LIMS_SHALLOW_SEQ_TSV = "shallow_seq_purity.tsv";
+    private static final String PATIENT_BLACKLIST_TSV = "patient_blacklist.tsv";
 
     private static final String FIELD_SEPARATOR = "\t";
 
@@ -46,23 +47,26 @@ public final class LimsFactory {
         String limsJsonPath = limsDirectory + File.separator + LIMS_JSON_FILE;
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = readLimsJsonSamples(limsJsonPath);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = readLimsJsonSubmissions(limsJsonPath);
-
-        Map<String, LocalDate> preLimsArrivalDates = readPreLimsArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
-        Set<String> samplesWithoutSamplingDate =
-                readSamplesWithoutSamplingDateTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
         Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode =
                 readLimsShallowSeqTsv(limsDirectory + File.separator + LIMS_SHALLOW_SEQ_TSV);
 
+        Map<String, LocalDate> preLimsArrivalDates = readPreLimsArrivalDateTsv(limsDirectory + File.separator + PRE_LIMS_ARRIVAL_DATES_TSV);
+        Set<String> sampleIdsWithoutSamplingDate =
+                readSingleColumnTsv(limsDirectory + File.separator + SAMPLES_WITHOUT_SAMPLING_DATE_TSV);
+        Set<String> blacklistedPatients =
+                readSingleColumnTsv(limsDirectory + File.separator + PATIENT_BLACKLIST_TSV);
+
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
+                shallowSeqPerSampleBarcode,
                 preLimsArrivalDates,
-                samplesWithoutSamplingDate,
-                shallowSeqPerSampleBarcode);
+                sampleIdsWithoutSamplingDate,
+                blacklistedPatients);
     }
 
     @NotNull
     public static Lims empty() {
-        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(), Sets.newHashSet(), Maps.newHashMap());
+        return new Lims(Maps.newHashMap(), Maps.newHashMap(), Maps.newHashMap(),  Maps.newHashMap(), Sets.newHashSet(), Sets.newHashSet());
     }
 
     @NotNull
@@ -156,7 +160,7 @@ public final class LimsFactory {
 
     @NotNull
     @VisibleForTesting
-    static Set<String> readSamplesWithoutSamplingDateTsv(@NotNull String samplesWithoutSamplingDateTsv) throws IOException {
+    static Set<String> readSingleColumnTsv(@NotNull String samplesWithoutSamplingDateTsv) throws IOException {
         return Files.lines(Paths.get(samplesWithoutSamplingDateTsv)).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
     }
 

@@ -100,7 +100,7 @@ public class LimsFactoryTest {
     @Test
     public void readCorrectlyFromSamplesWithoutSamplingDateFile() throws IOException {
         Set<String> samplesWithoutSamplingDate =
-                LimsFactory.readSamplesWithoutSamplingDateTsv(LIMS_DIRECTORY + File.separator + "samples_without_sampling_date.tsv");
+                LimsFactory.readSingleColumnTsv(LIMS_DIRECTORY + File.separator + "samples_without_sampling_date.tsv");
 
         assertEquals(2, samplesWithoutSamplingDate.size());
         assertTrue(samplesWithoutSamplingDate.contains("SAMP01011234T"));

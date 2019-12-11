@@ -219,17 +219,19 @@ public class LimsTest {
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
         dataPerSubmission.put(submissionData.submission(), submissionData);
 
-        Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
-        Set<String> sampleIdsWithoutSamplingDates = Sets.newHashSet();
-
         Map<String, LimsShallowSeqData> shallowSeqDataPerSampleBarcode = Maps.newHashMap();
         shallowSeqDataPerSampleBarcode.put(shallowSeqData.sampleBarcode(), shallowSeqData);
 
+        Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
+        Set<String> sampleIdsWithoutSamplingDates = Sets.newHashSet();
+        Set<String> blacklistedPatients = Sets.newHashSet();
+
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
+                shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDates,
-                shallowSeqDataPerSampleBarcode);
+                blacklistedPatients);
     }
 
     @NotNull
@@ -237,15 +239,17 @@ public class LimsTest {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
         dataPerSampleBarcode.put(sampleData.tumorBarcode(), sampleData);
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSampleBarcode = Maps.newHashMap();
         Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
         Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
-        Map<String, LimsShallowSeqData> shallowSeqDataPerSampleBarcode = Maps.newHashMap();
+        Set<String> blacklistedPatients = Sets.newHashSet();
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
+                shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                shallowSeqDataPerSampleBarcode);
+                blacklistedPatients);
     }
 
     @NotNull
@@ -255,34 +259,39 @@ public class LimsTest {
         dataPerSampleBarcode.put(sampleData.tumorBarcode(), sampleData);
 
         Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
-        Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
-        Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
         Map<String, LimsShallowSeqData> shallowSeqDataPerSampleBarcode = Maps.newHashMap();
-
         shallowSeqDataPerSampleBarcode.put(sampleData.tumorBarcode(),
                 ImmutableLimsShallowSeqData.of("FR1", sampleData.sampleId(), shallowSeqPurity, hasReliableQuality, hasReliablePurity));
 
+        Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
+        Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
+        Set<String> blacklistedPatients = Sets.newHashSet();
+
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
+                shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                shallowSeqDataPerSampleBarcode);
+                blacklistedPatients);
     }
 
     @NotNull
     private static Lims buildTestLimsWithPreLimsArrivalDateForSampleId(@NotNull String sampleId, @NotNull LocalDate date) {
         final Map<String, LimsJsonSampleData> dataPerSampleBarcode = Maps.newHashMap();
         final Map<String, LimsJsonSubmissionData> dataPerSubmission = Maps.newHashMap();
+        Map<String, LimsShallowSeqData> shallowSeqDataPerSampleBarcode = Maps.newHashMap();
+
         final Map<String, LocalDate> preLimsArrivalDatesPerSampleId = Maps.newHashMap();
         preLimsArrivalDatesPerSampleId.put(sampleId, date);
 
         Set<String> sampleIdsWithoutSamplingDate = Sets.newHashSet();
-        Map<String, LimsShallowSeqData> shallowSeqDataPerSampleBarcode = Maps.newHashMap();
+        Set<String> blacklistedPatients = Sets.newHashSet();
 
         return new Lims(dataPerSampleBarcode,
                 dataPerSubmission,
+                shallowSeqDataPerSampleBarcode,
                 preLimsArrivalDatesPerSampleId,
                 sampleIdsWithoutSamplingDate,
-                shallowSeqDataPerSampleBarcode);
+                blacklistedPatients);
     }
 }
