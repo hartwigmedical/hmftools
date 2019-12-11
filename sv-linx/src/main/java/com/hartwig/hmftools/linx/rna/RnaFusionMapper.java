@@ -617,24 +617,32 @@ public class RnaFusionMapper
 
         long position = breakend.position();
 
+        int offsetMargin = breakend.usesStart() ?
+                breakend.getSV().getSvData().startHomologySequence().length() : breakend.getSV().getSvData().endHomologySequence().length();
+
+        offsetMargin = offsetMargin / 2 + 1;
+
+        // the interval offset could be used in place of half the homology but interpretation of the GRIDSS value needs to be understood first
+        /*
+        int offsetMargin = requireHigherBreakendPos ?
+                (breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetEnd() : breakend.getSV().getSvData().endIntervalOffsetEnd())
+                : (breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetStart() : breakend.getSV().getSvData().endIntervalOffsetStart());
+        */
+
         if(requireHigherBreakendPos)
         {
             if(breakend.orientation() != 1)
                 return false;
 
             // factor in any uncertainty around the precise breakend, eg from homology
-            position += breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetEnd() : breakend.getSV().getSvData().endIntervalOffsetEnd();
-
-            return (position >= rnaPosition);
+            return (position + offsetMargin >= rnaPosition);
         }
         else
         {
             if(breakend.orientation() != -1)
                 return false;
 
-            position += breakend.usesStart() ? breakend.getSV().getSvData().startIntervalOffsetStart() : breakend.getSV().getSvData().endIntervalOffsetStart();
-
-            return (position <= rnaPosition);
+            return (position - offsetMargin <= rnaPosition);
         }
     }
 
