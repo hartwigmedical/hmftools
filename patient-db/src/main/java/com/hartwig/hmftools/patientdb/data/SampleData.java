@@ -16,6 +16,8 @@ public abstract class SampleData implements Comparable<SampleData> {
 
     public abstract boolean sequenced();
 
+    public abstract boolean belongsToBlacklistedPatient();
+
     @NotNull
     public abstract String setName();
 

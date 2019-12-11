@@ -85,16 +85,16 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyFromPreLIMSArrivalDateFile() throws IOException {
-        Map<String, LocalDate> preLIMSArrivalDates =
+    public void readCorrectlyFromPreLimsArrivalDateFile() throws IOException {
+        Map<String, LocalDate> preLimsArrivalDates =
                 LimsFactory.readPreLimsArrivalDateTsv(LIMS_DIRECTORY + File.separator + "pre_lims_arrival_dates.tsv");
 
-        assertNull(preLIMSArrivalDates.get("SAMP01010001T"));
-        assertEquals(LimsTestUtil.toDate("2017-01-01"), preLIMSArrivalDates.get("SAMP01010003R"));
-        assertEquals(LimsTestUtil.toDate("2017-01-05"), preLIMSArrivalDates.get("SAMP01010004T"));
-        assertNull(preLIMSArrivalDates.get("SAMP01010005T"));
-        assertNull(preLIMSArrivalDates.get("SAMP01010006R"));
-        assertNull(preLIMSArrivalDates.get("DoesNotExist"));
+        assertNull(preLimsArrivalDates.get("SAMP01010001T"));
+        assertEquals(LimsTestUtil.toDate("2017-01-01"), preLimsArrivalDates.get("SAMP01010003R"));
+        assertEquals(LimsTestUtil.toDate("2017-01-05"), preLimsArrivalDates.get("SAMP01010004T"));
+        assertNull(preLimsArrivalDates.get("SAMP01010005T"));
+        assertNull(preLimsArrivalDates.get("SAMP01010006R"));
+        assertNull(preLimsArrivalDates.get("DoesNotExist"));
     }
 
     @Test
@@ -108,7 +108,7 @@ public class LimsFactoryTest {
     }
 
     @Test
-    public void readCorrectlyShallowSeqPurity() throws IOException {
+    public void readCorrectlyFromShallowSeqPurityFile() throws IOException {
         Map<String, LimsShallowSeqData> shallowSeqPuritySample =
                 LimsFactory.readLimsShallowSeqTsv(LIMS_DIRECTORY + File.separator + "shallow_seq_purity.tsv");
         assertEquals(3, shallowSeqPuritySample.size());
