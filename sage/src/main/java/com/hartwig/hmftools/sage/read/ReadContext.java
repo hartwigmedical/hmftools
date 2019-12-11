@@ -15,10 +15,8 @@ public class ReadContext {
     private final String repeat;
     private final int repeatCount;
     private final String microhomology;
-
     private final IndexedBases refCentre;
     private final IndexedBases readBases;
-
 
     public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
             final int rightCentreIndex, final int flankSize, final byte[] readBases) {
@@ -127,7 +125,7 @@ public class ReadContext {
 
     @Override
     public String toString() {
-        return readBases.toString();
+        return readBases.centerString();
     }
 
     public int distance() {

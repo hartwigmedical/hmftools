@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.sage.variant;
 
-import static com.hartwig.hmftools.sage.SageVCF.ALIGNER_SUPPORT_ALT;
-import static com.hartwig.hmftools.sage.SageVCF.ALIGNER_SUPPORT_REF;
 import static com.hartwig.hmftools.sage.SageVCF.PASS;
 import static com.hartwig.hmftools.sage.SageVCF.PHASE;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT;
@@ -9,6 +7,7 @@ import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_DIFFERENCE;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_DISTANCE;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_IMPROPER_PAIR;
+import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_JITTER;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_REPEAT_COUNT;
@@ -111,11 +110,10 @@ public class SageVariantContextFactory {
 
         return new GenotypeBuilder(evidence.sample()).DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })
-                .attribute(READ_CONTEXT_QUALITY, counter.qual())
-                .attribute(READ_CONTEXT_COUNT, counter.rcc())
+                .attribute(READ_CONTEXT_QUALITY, counter.quality())
+                .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
-                .attribute(ALIGNER_SUPPORT_ALT, evidence.alignerSupport())
-                .attribute(ALIGNER_SUPPORT_REF, evidence.refContext().alignerSupport())
+                .attribute(READ_CONTEXT_JITTER, counter.jitter())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();
     }
@@ -132,7 +130,7 @@ public class SageVariantContextFactory {
         final Allele ref = Allele.create(variant.ref(), true);
         final Allele alt = Allele.create(variant.alt(), false);
 
-        if (germline && Doubles.lessOrEqual(counter.af(counter.refSupport()), HET_CUTOFF)) {
+        if (germline && Doubles.lessOrEqual(counter.refAllelicFrequency(), HET_CUTOFF)) {
             return Lists.newArrayList(alt, alt);
         }
 

@@ -37,29 +37,32 @@ public class SageVCF implements AutoCloseable {
 
     public final static String REF_CONTEXT = "REF";
     public final static String READ_CONTEXT = "RC";
-    public final static String READ_CONTEXT_DESCRIPTION = "Read context";
+    private final static String READ_CONTEXT_DESCRIPTION = "Read context";
+    public final static String READ_CONTEXT_JITTER = "RC_JIT";
+    private final static String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
+
     public final static String READ_CONTEXT_COUNT = "RC_CNT";
-    public final static String READ_CONTEXT_COUNT_DESCRIPTION =
-            "Read context counts [Full, Partial, Core, Realigned, Shortened, Lengthened, Reference, Coverage]";
+    private final static String READ_CONTEXT_COUNT_DESCRIPTION =
+            "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
-    public static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
+    private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
-    public static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
+    private static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
     public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
-    public static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
+    private static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
-    public static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Qual, BaseQual, MapQual, JitterPenalty]";
-    public static final String READ_CONTEXT_AF_DESCRIPTION =
+    private static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Full, Partial, Core, Realigned, Reference, Total]";
+    private static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Realigned) / Coverage";
 
     public static final String READ_CONTEXT_DISTANCE = "RC_DIS";
-    public static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
+    private static final String READ_CONTEXT_DISTANCE_DESCRIPTION = "Distance from read context to ref sequence";
     public static final String READ_CONTEXT_DIFFERENCE = "RC_DIF";
-    public static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
+    private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
-    public static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
-    public static final String ALIGNER_SUPPORT_ALT = "ASA";
-    public static final String ALIGNER_SUPPORT_REF = "ASR";
+    private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
+//    public static final String ALIGNER_SUPPORT_ALT = "ASA";
+//    public static final String ALIGNER_SUPPORT_REF = "ASR";
 
 
     public final static String TIER = "TIER";
@@ -112,15 +115,16 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Float,
                 READ_CONTEXT_AF_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_ALT, 1, VCFHeaderLineType.Integer, "Aligned Alt Support"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_REF, 1, VCFHeaderLineType.Integer, "Aligned Ref Support"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 8, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
+//        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_ALT, 1, VCFHeaderLineType.Integer, "Aligned Alt Support"));
+//        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_REF, 1, VCFHeaderLineType.Integer, "Aligned Ref Support"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
                 1,
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_QUALITY,
-                4,
+                6,
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 

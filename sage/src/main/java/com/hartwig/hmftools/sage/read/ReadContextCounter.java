@@ -91,16 +91,20 @@ public class ReadContextCounter implements GenomePosition {
         return coverage;
     }
 
-    public double af(double support) {
-        return coverage == 0 ? 0d : support / depth();
-    }
-
     public double vaf() {
-        return af(altSupport());
+        return af(tumorQuality());
     }
 
-    public int referenceQuality() {
+    public double refAllelicFrequency() {
+        return af(refQuality());
+    }
+
+    public int refQuality() {
         return referenceQuality;
+    }
+
+    private double af(double support) {
+        return coverage == 0 ? 0d : support / totalQuality();
     }
 
     public int tumorQuality() {
@@ -109,16 +113,21 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public int totalQuality() {
-        return tumorQuality() + referenceQuality + otherQuality;
+        return fullQuality + partialQuality + coreQuality + realignedQuality + referenceQuality + otherQuality;
     }
 
-    public int[] rcc() {
-        return new int[] { full, partial, core, realigned, shortened, lengthened, reference, coverage };
+    public int[] counts() {
+        return new int[] { full, partial, core, realigned, reference, coverage };
     }
 
-    public int[] qual() {
-        return new int[] { tumorQuality(), 0, 0, qualityJitterPenalty() };
+    public int[] jitter() {
+        return new int[] { shortened, lengthened, qualityJitterPenalty() };
     }
+
+    public int[] quality() {
+        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, referenceQuality, totalQuality() };
+    }
+
 
     public int improperPair() {
         return improperPair;
