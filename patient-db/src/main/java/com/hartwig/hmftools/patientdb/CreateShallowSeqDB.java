@@ -72,41 +72,23 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
-    private static List<LimsShallowSeqData> read(@NotNull String shallowSeqCsv) throws IOException {
-        List<String> linesShallowDB = LineReader.build().readLines(new File(shallowSeqCsv).toPath(), line -> line.length() > 0);
-        List<LimsShallowSeqData> shallowSeqDataList = Lists.newArrayList();
-        for (String line : linesShallowDB.subList(1, linesShallowDB.size())) {
-            String[] values = line.split(DELIMITER);
-
-            shallowSeqDataList.add(ImmutableLimsShallowSeqData.builder()
-                    .sampleBarcode(values[0])
-                    .sampleId(values[1])
-                    .purityShallowSeq(values[2])
-                    .hasReliableQuality(Boolean.parseBoolean(values[3]))
-                    .hasReliablePurity(Boolean.parseBoolean(values[4]))
-                    .build());
-        }
-        return shallowSeqDataList;
-    }
-
-    @NotNull
     private static List<LimsShallowSeqData> extractNewEntriesForShallowDbFromRunContexts(@NotNull List<RunContext> runContexts,
-            @NotNull String shallowSeqOutputCsv, @NotNull String path, @NotNull String purpleQCFile, @NotNull String purplePurityP4,
-            @NotNull String purplePurityP5, @NotNull String pipelineVersion) throws IOException {
-        List<LimsShallowSeqData> currentShallowSeqData = read(shallowSeqOutputCsv);
+            @NotNull String shallowSeqTsv, @NotNull String runDirsPath, @NotNull String purpleQCFile, @NotNull String purplePurityExtP4,
+            @NotNull String purplePurityExtP5, @NotNull String pipelineVersionExt) throws IOException {
+        List<LimsShallowSeqData> currentShallowSeqData = read(shallowSeqTsv);
 
         List<LimsShallowSeqData> shallowSeqDataToAppend = Lists.newArrayList();
 
         for (RunContext runInfo : runContexts) {
             String tumorSample = runInfo.tumorSample();
-            String setPath = path + File.separator + runInfo.setName();
+            String setPath = runDirsPath + File.separator + runInfo.setName();
             String sampleBarcode = runInfo.tumorBarcodeSample();
 
             String purplePurityTsvExt;
-            if (new File(setPath + File.separator + pipelineVersion).exists()) {
-                purplePurityTsvExt = purplePurityP5;
+            if (new File(setPath + File.separator + pipelineVersionExt).exists()) {
+                purplePurityTsvExt = purplePurityExtP5;
             } else {
-                purplePurityTsvExt = purplePurityP4;
+                purplePurityTsvExt = purplePurityExtP4;
             }
             String fullPurplePurityTsvPath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purplePurityTsvExt;
             String fullPurpleQCFilePath = setPath + File.separator + PURPLE_DIR + File.separator + tumorSample + purpleQCFile;
@@ -116,8 +98,7 @@ public class CreateShallowSeqDB {
 
             boolean hasReliableQuality = CheckPurpleQuality.checkHasReliableQuality(purpleQC);
             boolean hasReliablePurity = CheckPurpleQuality.checkHasReliablePurity(purityContext);
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            String purity = decimalFormat.format(purityContext.bestFit().purity());
+            String purity = new DecimalFormat("0.00").format(purityContext.bestFit().purity());
 
             boolean inFile = false;
             for (LimsShallowSeqData sample : currentShallowSeqData) {
@@ -142,8 +123,26 @@ public class CreateShallowSeqDB {
     }
 
     @NotNull
+    private static List<LimsShallowSeqData> read(@NotNull String shallowSeqTsv) throws IOException {
+        List<String> linesShallowDB = LineReader.build().readLines(new File(shallowSeqTsv).toPath(), line -> line.length() > 0);
+        List<LimsShallowSeqData> shallowSeqDataList = Lists.newArrayList();
+        for (String line : linesShallowDB.subList(1, linesShallowDB.size())) {
+            String[] values = line.split(DELIMITER);
+
+            shallowSeqDataList.add(ImmutableLimsShallowSeqData.builder()
+                    .sampleBarcode(values[0])
+                    .sampleId(values[1])
+                    .purityShallowSeq(values[2])
+                    .hasReliableQuality(Boolean.parseBoolean(values[3]))
+                    .hasReliablePurity(Boolean.parseBoolean(values[4]))
+                    .build());
+        }
+        return shallowSeqDataList;
+    }
+
+    @NotNull
     private static List<RunContext> loadRunContexts(@NotNull String runsDirectory) throws IOException {
-        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory), "shallow-seq");
+        final List<RunContext> runContexts = RunsFolderReader.extractRunContexts(new File(runsDirectory));
         LOGGER.info(" Loaded run contexts from {} ({} sets)", runsDirectory, runContexts.size());
 
         return runContexts;

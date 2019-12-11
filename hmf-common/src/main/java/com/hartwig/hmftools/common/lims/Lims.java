@@ -22,21 +22,25 @@ public class Lims {
     @NotNull
     private final Map<String, LimsJsonSubmissionData> dataPerSubmission;
     @NotNull
-    private final Map<String, LocalDate> preLimsArrivalDates;
-    @NotNull
-    private final Set<String> samplesWithoutSamplingDate;
-    @NotNull
     private final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode;
+    @NotNull
+    private final Map<String, LocalDate> preLimsArrivalDatesPerSampleId;
+    @NotNull
+    private final Set<String> samplesIdsWithoutSamplingDate;
+    @NotNull
+    private final Set<String> blacklistedPatients;
 
-    Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
-            @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission, @NotNull final Map<String, LocalDate> preLimsArrivalDates,
-            @NotNull final Set<String> samplesWithoutSamplingDate,
-            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode) {
+    public Lims(@NotNull final Map<String, LimsJsonSampleData> dataPerSampleBarcode,
+            @NotNull final Map<String, LimsJsonSubmissionData> dataPerSubmission,
+            @NotNull final Map<String, LimsShallowSeqData> shallowSeqPerSampleBarcode,
+            @NotNull final Map<String, LocalDate> preLimsArrivalDatesPerSampleId, @NotNull final Set<String> samplesIdsWithoutSamplingDate,
+            @NotNull final Set<String> blacklistedPatients) {
         this.dataPerSampleBarcode = dataPerSampleBarcode;
         this.dataPerSubmission = dataPerSubmission;
-        this.preLimsArrivalDates = preLimsArrivalDates;
-        this.samplesWithoutSamplingDate = samplesWithoutSamplingDate;
         this.shallowSeqPerSampleBarcode = shallowSeqPerSampleBarcode;
+        this.preLimsArrivalDatesPerSampleId = preLimsArrivalDatesPerSampleId;
+        this.samplesIdsWithoutSamplingDate = samplesIdsWithoutSamplingDate;
+        this.blacklistedPatients = blacklistedPatients;
     }
 
     public int sampleBarcodeCount() {
@@ -90,7 +94,7 @@ public class Lims {
         LocalDate arrivalDate = sampleData != null ? getNullableDate(sampleData.arrivalDate()) : null;
 
         if (arrivalDate == null) {
-            arrivalDate = preLimsArrivalDates.get(fallbackSampleId);
+            arrivalDate = preLimsArrivalDatesPerSampleId.get(fallbackSampleId);
         }
 
         return arrivalDate;
@@ -100,14 +104,18 @@ public class Lims {
     public LocalDate samplingDate(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
-            final String samplingDateString = sampleData.samplingDate();
+            String samplingDateString = sampleData.samplingDate();
             return getNullableDate(samplingDateString);
         }
         return null;
     }
 
     public boolean confirmedToHaveNoSamplingDate(@NotNull String sampleId) {
-        return samplesWithoutSamplingDate.contains(sampleId);
+        return samplesIdsWithoutSamplingDate.contains(sampleId);
+    }
+
+    public boolean isBlacklisted(@NotNull String patientId) {
+        return blacklistedPatients.contains(patientId);
     }
 
     @NotNull
@@ -171,11 +179,6 @@ public class Lims {
     public String pathologyTumorPercentage(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
-            // Even if pathology tumor percentage has been determined, we still suppress it in case of shallow seq.
-            if (shallowSeqExecuted(sampleBarcode)) {
-                return NOT_DETERMINED_STRING;
-            }
-
             String tumorPercentageString = sampleData.pathologyTumorPercentage();
             if (tumorPercentageString == null) {
                 return NOT_AVAILABLE_STRING;

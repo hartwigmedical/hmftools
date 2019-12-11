@@ -11,19 +11,19 @@ import org.jetbrains.annotations.NotNull;
 public class Realigned {
 
     private static final int MIN_REPEAT_COUNT = 4;
-    private static final int MAX_REPEAT_SIZE = 5;
+    public static final int MAX_REPEAT_SIZE = 5;
     private static final RealignedContext NONE = new RealignedContext(RealignedType.NONE, 0);
     private static final RealignedContext EXACT = new RealignedContext(RealignedType.EXACT, 0);
     private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
     @NotNull
     public RealignedContext realignedInEntireRecord(@NotNull final ReadContext readContext, final byte[] otherBases) {
-        return realigned(readContext.leftFlankStartIndex(), readContext.rightFlankEndIndex(), readContext.readBases(), otherBases);
+        return realigned(readContext.readBasesLeftFlankIndex(), readContext.readBasesRightFlankIndex(), readContext.readBases(), otherBases);
     }
 
     @NotNull
-    public RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases) {
-        return realigned(readContext.leftFlankStartIndex(), readContext.rightFlankEndIndex(), readContext.readBases(), otherBaseIndex, otherBases, MAX_REPEAT_SIZE);
+    public RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize) {
+        return realigned(readContext.readBasesLeftFlankIndex(), readContext.readBasesRightFlankIndex(), readContext.readBases(), otherBaseIndex, otherBases, maxSize);
     }
 
     @NotNull

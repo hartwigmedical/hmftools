@@ -39,13 +39,13 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    static RunContext fromMetaDataFile(@NotNull final String runDirectory, @NotNull String whichPackages) {
+    static RunContext fromMetaDataFile(@NotNull String runDirectory) {
         File metaDataFileP4 = new File(runDirectory + File.separator + METADATA_FILE_P4);
         File metaDataFileP5 = new File(runDirectory + File.separator + METADATA_FILE_P5);
 
         if (metaDataFileP4.exists()) {
             try {
-                return fromPv4MetaData(runDirectory, metaDataFileP4, whichPackages);
+                return fromPv4MetaData(runDirectory, metaDataFileP4);
             } catch (FileNotFoundException exception) {
                 LOGGER.warn("Could not find meta data file {} for run dir {}.", METADATA_FILE_P4, runDirectory);
                 return null;
@@ -64,7 +64,7 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile, @NotNull String whichPackages)
+    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile)
             throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
@@ -92,10 +92,8 @@ final class MetaDataResolver {
                 tumorBarcodeSample = setNamePart;
             }
         }
-        if (!containsBarcode && whichPackages.equals("shallow-seq")) {
+        if (!containsBarcode) {
             LOGGER.warn("No tumor barcode could be derived from set name for '{}'", setName);
-        } else if (!containsBarcode && whichPackages.equals("loading-clinical-data")) {
-            LOGGER.info("Run context is created for sample {} of set name {}. This sample had none tumor barcode. ", tumorSample, setName);
         }
 
         return new RunContextImpl(runDirectory, setName, refSample, tumorSample, tumorBarcodeSample);

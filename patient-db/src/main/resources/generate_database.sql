@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
     patientIdentifier varchar(50) UNIQUE,
+    blacklisted BOOLEAN NOT NULL,
     PRIMARY KEY (id)
 );
 

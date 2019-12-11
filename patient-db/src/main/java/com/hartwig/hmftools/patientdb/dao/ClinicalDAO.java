@@ -59,8 +59,8 @@ class ClinicalDAO {
         context.execute("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
-    void writeFullClinicalData(@NotNull Patient patient) {
-        final int patientId = writePatientIdentifier(patient.patientIdentifier());
+    void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
+        int patientId = writePatient(patient.patientIdentifier(), blacklisted);
         writeBaselineData(patientId, patient.baselineData(), patient.preTreatmentData());
         patient.sequencedBiopsies().forEach(sample -> writeSampleData(patientId, sample));
         patient.clinicalBiopsies().forEach(biopsy -> writeBiopsyData(patientId, biopsy));
@@ -70,20 +70,20 @@ class ClinicalDAO {
         patient.ranoMeasurements().forEach(ranoMeasurement -> writeRanoMeasurementData(patientId, ranoMeasurement));
     }
 
-    void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
-        final int patientId = writePatientIdentifier(patientIdentifier);
+    void writeSampleClinicalData(@NotNull String patientIdentifier, boolean blacklisted, @NotNull List<SampleData> samples) {
+        int patientId = writePatient(patientIdentifier, blacklisted);
         samples.forEach(sample -> writeSampleData(patientId, sample));
     }
 
-    private int writePatientIdentifier(@NotNull String patientIdentifier) {
-        return context.insertInto(PATIENT, PATIENT.PATIENTIDENTIFIER)
-                .values(patientIdentifier)
+    private int writePatient(@NotNull String patientIdentifier, boolean blacklisted) {
+        return context.insertInto(PATIENT, PATIENT.PATIENTIDENTIFIER, PATIENT.BLACKLISTED)
+                .values(patientIdentifier, (byte) (blacklisted ? 1 : 0))
                 .returning(PATIENT.ID)
                 .fetchOne()
                 .getValue(PATIENT.ID);
     }
 
-    private void writeSampleData(final int patientId, @NotNull final SampleData sample) {
+    private void writeSampleData(int patientId, @NotNull SampleData sample) {
         context.insertInto(SAMPLE,
                 SAMPLE.SAMPLEID,
                 SAMPLE.PATIENTID,
@@ -166,7 +166,7 @@ class ClinicalDAO {
 
     private void writePreTreatmentDrugData(int patientId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
         drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
-            final int id = context.insertInto(PRETREATMENTDRUG,
+            int id = context.insertInto(PRETREATMENTDRUG,
                     PRETREATMENTDRUG.PATIENTID,
                     PRETREATMENTDRUG.STARTDATE,
                     PRETREATMENTDRUG.ENDDATE,
@@ -189,7 +189,7 @@ class ClinicalDAO {
         });
     }
 
-    private void writeBiopsyData(final int patientId, @NotNull final BiopsyData biopsy) {
+    private void writeBiopsyData(int patientId, @NotNull BiopsyData biopsy) {
         context.insertInto(BIOPSY,
                 BIOPSY.ID,
                 BIOPSY.SAMPLEID,
@@ -213,7 +213,7 @@ class ClinicalDAO {
         writeFormStatus(biopsy.id(), BIOPSY.getName(), "biopsy", biopsy.formStatus());
     }
 
-    private void writeTreatmentData(final int patientId, @NotNull final BiopsyTreatmentData treatment) {
+    private void writeTreatmentData(int patientId, @NotNull BiopsyTreatmentData treatment) {
         context.insertInto(TREATMENT,
                 TREATMENT.ID,
                 TREATMENT.BIOPSYID,
@@ -240,8 +240,7 @@ class ClinicalDAO {
         treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));
     }
 
-    private void writeDrugData(final int patientId, final int treatmentId, @NotNull final DrugData drug,
-            @NotNull final FormStatus formStatus) {
+    private void writeDrugData(int patientId, int treatmentId, @NotNull DrugData drug, @NotNull final FormStatus formStatus) {
         drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
             final int id = context.insertInto(DRUG,
                     DRUG.TREATMENTID,
@@ -265,8 +264,8 @@ class ClinicalDAO {
         });
     }
 
-    private void writeTreatmentResponseData(final int patientId, @NotNull final BiopsyTreatmentResponseData treatmentResponse) {
-        final int id = context.insertInto(TREATMENTRESPONSE,
+    private void writeTreatmentResponseData(int patientId, @NotNull BiopsyTreatmentResponseData treatmentResponse) {
+        int id = context.insertInto(TREATMENTRESPONSE,
                 TREATMENTRESPONSE.TREATMENTID,
                 TREATMENTRESPONSE.PATIENTID,
                 TREATMENTRESPONSE.RESPONSEDATE,
@@ -286,8 +285,8 @@ class ClinicalDAO {
         writeFormStatus(id, TREATMENTRESPONSE.getName(), "treatmentResponse", treatmentResponse.formStatus());
     }
 
-    private void writeTumorMarkerData(final int patientId, @NotNull final TumorMarkerData tumorMarker) {
-        final int id = context.insertInto(TUMORMARKER,
+    private void writeTumorMarkerData(int patientId, @NotNull TumorMarkerData tumorMarker) {
+        int id = context.insertInto(TUMORMARKER,
                 TUMORMARKER.PATIENTID,
                 TUMORMARKER.DATE,
                 TUMORMARKER.MARKER,
@@ -301,8 +300,8 @@ class ClinicalDAO {
         writeFormStatus(id, TUMORMARKER.getName(), "tumorMarker", tumorMarker.formStatus());
     }
 
-    private void writeRanoMeasurementData(final int patientId, @NotNull final RanoMeasurementData RanoMeasurement) {
-        final int id = context.insertInto(RANOMEASUREMENT,
+    private void writeRanoMeasurementData(int patientId, @NotNull RanoMeasurementData RanoMeasurement) {
+        int id = context.insertInto(RANOMEASUREMENT,
                 RANOMEASUREMENT.PATIENTID,
                 RANOMEASUREMENT.RESPONSEDATE,
                 RANOMEASUREMENT.THERAPYGIVEN,
@@ -322,8 +321,7 @@ class ClinicalDAO {
         writeFormStatus(id, RANOMEASUREMENT.getName(), "RanoMeasurement", RanoMeasurement.formStatus());
     }
 
-    private void writeFormStatus(final int id, @NotNull final String tableName, @NotNull final String formName,
-            @NotNull final FormStatus formStatus) {
+    private void writeFormStatus(int id, @NotNull String tableName, @NotNull String formName, @NotNull FormStatus formStatus) {
         context.insertInto(FORMSMETADATA,
                 FORMSMETADATA.ID,
                 FORMSMETADATA.TABLENAME,

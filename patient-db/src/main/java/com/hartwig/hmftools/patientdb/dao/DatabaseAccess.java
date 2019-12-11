@@ -269,12 +269,12 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalDAO.clear();
     }
 
-    public void writeFullClinicalData(@NotNull Patient patient) {
-        clinicalDAO.writeFullClinicalData(patient);
+    public void writeFullClinicalData(@NotNull Patient patient, boolean blacklisted) {
+        clinicalDAO.writeFullClinicalData(patient, blacklisted);
     }
 
-    public void writeSampleClinicalData(@NotNull String patientIdentifier, @NotNull List<SampleData> samples) {
-        clinicalDAO.writeSampleClinicalData(patientIdentifier, samples);
+    public void writeSampleClinicalData(@NotNull String patientIdentifier, boolean blacklisted, @NotNull List<SampleData> samples) {
+        clinicalDAO.writeSampleClinicalData(patientIdentifier, blacklisted, samples);
     }
 
     public void writeDrupEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {

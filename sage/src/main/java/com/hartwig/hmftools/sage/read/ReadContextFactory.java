@@ -18,6 +18,7 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextFactory {
 
     private static final int DEFAULT_BUFFER = 25;
+    private static final int MIN_CORE_DISTANCE = 2;
 
     @NotNull
     public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
@@ -27,12 +28,12 @@ public class ReadContextFactory {
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
-        int startIndex = microhomologyContextWithRepeats.position();
+        int startIndex = microhomologyContextWithRepeats.position() - MIN_CORE_DISTANCE;
         int length = Math.max(microhomologyContext.length(), microhomologyContextWithRepeats.length() - ref.length() + 1) + 1;
-        int endIndex = Math.min(record.getReadBases().length, startIndex + length);
+        int endIndex = Math.max(microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1 , refBases.bases());
-        if ( refRepeatContext.isPresent()) {
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
+        if (refRepeatContext.isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
@@ -65,12 +66,12 @@ public class ReadContextFactory {
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
-        int startIndex = microhomologyContextWithRepeats.position();
+        int startIndex = microhomologyContextWithRepeats.position() - MIN_CORE_DISTANCE;
         int length = Math.max(microhomologyContextWithRepeats.length() + 1, alt.length());
-        int endIndex = Math.min(record.getReadBases().length, startIndex + length);
+        int endIndex = Math.max(microhomologyContextWithRepeats.position() + MIN_CORE_DISTANCE, microhomologyContextWithRepeats.position() + length);
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1 , refBases.bases());
-        if ( refRepeatContext.isPresent()) {
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
+        if (refRepeatContext.isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);
@@ -96,14 +97,15 @@ public class ReadContextFactory {
     }
 
     @NotNull
-    public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, final IndexedBases refBases) {
+    public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record,
+            final IndexedBases refBases) {
 
         int refIndex = refPosition - refBases.position() + refBases.index();
-        int startIndex = readIndex;
-        int endIndex = readIndex;
+        int startIndex = readIndex - MIN_CORE_DISTANCE;
+        int endIndex = readIndex + MIN_CORE_DISTANCE;
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1 , refBases.bases());
-        if ( refRepeatContext.isPresent()) {
+        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
+        if (refRepeatContext.isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
             startIndex = Math.min(startIndex, repeat.startIndex() - 1);
             endIndex = Math.max(endIndex, repeat.endIndex() + 1);

@@ -34,7 +34,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
     private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
 
-    public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
+    ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
             @NotNull final Function<SageVariant, VariantContext> variantContextFactory) throws IOException {
         this.chromosome = chromosome;
@@ -92,7 +92,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
     }
 
     private boolean include(@NotNull final SageVariant entry) {
-        if (entry.isPassing() || config.germlineOnly()) {
+        if (entry.isPassing()) {
             return true;
         }
 
@@ -100,12 +100,16 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
             return false;
         }
 
+        if (config.germlineOnly()) {
+            return true;
+        }
+
         final AltContext normal = entry.normal();
-        if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+        if (normal.rawSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }
 
-        return entry.primaryTumor().primaryReadContext().quality() >= config.filter().hardMinTumorQualFiltered();
+        return entry.primaryTumor().primaryReadContext().tumorQuality() >= config.filter().hardMinTumorQualFiltered();
     }
 
 }

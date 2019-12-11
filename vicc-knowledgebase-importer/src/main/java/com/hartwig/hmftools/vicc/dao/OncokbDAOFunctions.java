@@ -45,11 +45,11 @@ final class OncokbDAOFunctions {
                     ONCOKBBIOLOGICAL.MUTATIONEFFECTABSTRACTS,
                     ONCOKBBIOLOGICAL.VICCENTRYID)
                     .values(oncokbBiological.mutationEffectPmids(),
-                            oncokbBiological.Isoform(),
+                            oncokbBiological.isoform(),
                             oncokbBiological.entrezGeneID(),
                             oncokbBiological.oncogenic(),
                             oncokbBiological.mutationEffect(),
-                            oncokbBiological.RefSeq(),
+                            oncokbBiological.refSeq(),
                             oncokbBiological.gene(),
                             oncokbBiological.mutationEffectAbstracts(),
                             id)
@@ -57,7 +57,7 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBBIOLOGICAL.ID);
 
-            OncokbVariant oncokbVariant = oncokb.oncoKbBiological().oncokbVariant();
+            OncokbVariant oncokbVariant = oncokbBiological.oncokbVariant();
 
             int idVariant = context.insertInto(ONCOKBVARIANTBIOLOGICAL,
                     ONCOKBVARIANTBIOLOGICAL.VARIANTRESIDUES,
@@ -78,7 +78,7 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBVARIANTBIOLOGICAL.ID);
 
-            OncoKbConsequence oncoKbConsequence = oncokb.oncoKbBiological().oncokbVariant().oncoKbConsequence();
+            OncoKbConsequence oncoKbConsequence = oncokbBiological.oncokbVariant().oncoKbConsequence();
 
             context.insertInto(ONCOKBCONSEQUENCESBIOLOGICAL,
                     ONCOKBCONSEQUENCESBIOLOGICAL.TERM,
@@ -88,7 +88,7 @@ final class OncokbDAOFunctions {
                     .values(oncoKbConsequence.term(), oncoKbConsequence.description(), oncoKbConsequence.isGenerallyTruncating(), idVariant)
                     .execute();
 
-            OncokbGene oncoKbGene = oncokb.oncoKbBiological().oncokbVariant().oncokbGene();
+            OncokbGene oncoKbGene = oncokbBiological.oncokbVariant().oncokbGene();
 
             int idGene = context.insertInto(ONCOKBGENEBIOLOGICAL,
                     ONCOKBGENEBIOLOGICAL.ONCOGENE,
@@ -120,7 +120,6 @@ final class OncokbDAOFunctions {
 
         OncoKbClinical oncokbClinical = oncokb.oncoKbClinical();
         if (oncokbClinical != null) {
-
             int idClinical = context.insertInto(ONCOKBCLINICAL,
                     ONCOKBCLINICAL.REFSEQ,
                     ONCOKBCLINICAL.LEVEL,
@@ -131,7 +130,7 @@ final class OncokbDAOFunctions {
                     ONCOKBCLINICAL.GENE,
                     ONCOKBCLINICAL.LEVELLABEL,
                     ONCOKBCLINICAL.VICCENTRYID)
-                    .values(oncokbClinical.RefSeq(),
+                    .values(oncokbClinical.refSeq(),
                             oncokbClinical.level(),
                             oncokbClinical.entrezGeneID(),
                             oncokbClinical.drugPmids(),
@@ -218,18 +217,22 @@ final class OncokbDAOFunctions {
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        // TODO Order from branch to root to avoid constraint violation.
-        context.deleteFrom(ONCOKB).execute();
-        context.deleteFrom(ONCOKBBIOLOGICAL).execute();
-        context.deleteFrom(ONCOKBVARIANTBIOLOGICAL).execute();
+        // First delete biological nodes
+        context.deleteFrom(ONCOKBGENEALIASESBIOLOGICAL).execute();
         context.deleteFrom(ONCOKBCONSEQUENCESBIOLOGICAL).execute();
         context.deleteFrom(ONCOKBGENEBIOLOGICAL).execute();
-        context.deleteFrom(ONCOKBGENEALIASESBIOLOGICAL).execute();
-        context.deleteFrom(ONCOKBCLINICAL).execute();
+        context.deleteFrom(ONCOKBVARIANTBIOLOGICAL).execute();
+
+        // Then delete clinical nodes
         context.deleteFrom(ONCOKBDRUGABSTRACTSCLINICAL).execute();
-        context.deleteFrom(ONCOKBVARIANTCLINICAL).execute();
+        context.deleteFrom(ONCOKBGENEALIASESCLINICAL).execute();
         context.deleteFrom(ONCOKBCONSEQUENCESCLINICAL).execute();
         context.deleteFrom(ONCOKBGENECLINICAL).execute();
-        context.deleteFrom(ONCOKBGENEALIASESCLINICAL).execute();
+        context.deleteFrom(ONCOKBVARIANTCLINICAL).execute();
+
+        // Then delete top-nodes + final entry node
+        context.deleteFrom(ONCOKBBIOLOGICAL).execute();
+        context.deleteFrom(ONCOKBCLINICAL).execute();
+        context.deleteFrom(ONCOKB).execute();
     }
 }

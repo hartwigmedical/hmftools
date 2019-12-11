@@ -80,7 +80,6 @@ public class CFReportWriterTest {
     public void canGenerateLowDNAYieldReport() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
-                null,
                 QCFailReason.LOW_DNA_YIELD,
                 testReportFilePath("hmf_low_dna_yield_report.pdf"));
     }
@@ -89,7 +88,6 @@ public class CFReportWriterTest {
     public void canGenerateInsufficientTissue() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
-                null,
                 QCFailReason.INSUFFICIENT_TISSUE,
                 testReportFilePath("hmf_insufficient_tissue_report.pdf"));
     }
@@ -98,7 +96,6 @@ public class CFReportWriterTest {
     public void canGeneratePostDNAIsolationFailReport() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
                 "60%",
-                null,
                 QCFailReason.POST_ANALYSIS_FAIL,
                 testReportFilePath("hmf_post_dna_isolation_fail_report.pdf"));
     }
@@ -106,7 +103,6 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateLowMolecularTumorPercentageCORE() throws IOException {
         generateQCFailCPCTReport("CORE01000001T",
-                null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_core_report.pdf"));
@@ -115,7 +111,6 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateLowMolecularTumorPercentageWIDE() throws IOException {
         generateQCFailCPCTReport("WIDE01000001T",
-                null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_wide_report.pdf"));
@@ -124,14 +119,13 @@ public class CFReportWriterTest {
     @Test
     public void canGenerateLowMolecularTumorPercentageCPCT() throws IOException {
         generateQCFailCPCTReport("CPCT01000001T",
-                null,
                 "15%",
                 QCFailReason.SHALLOW_SEQ_LOW_PURITY,
                 testReportFilePath("hmf_low_molecular_tumor_percentage_cpct_report.pdf"));
     }
 
-    private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String pathologyTumorPercentage,
-            @Nullable String shallowSeqPurity, @NotNull QCFailReason reason, @NotNull String filename) throws IOException {
+    private static void generateQCFailCPCTReport(@NotNull String sampleId, @Nullable String shallowSeqPurity, @NotNull QCFailReason reason,
+            @NotNull String filename) throws IOException {
         SampleMetadata sampleMetadata = ImmutableSampleMetadata.builder()
                 .refSampleId("x")
                 .refSampleBarcode("FR12123488")
@@ -145,7 +139,6 @@ public class CFReportWriterTest {
                 .refArrivalDate(LocalDate.parse("10-Jan-2019", DATE_FORMATTER))
                 .tumorArrivalDate(LocalDate.parse("05-Jan-2019", DATE_FORMATTER))
                 .purityShallowSeq(shallowSeqPurity != null ? shallowSeqPurity : "not determined")
-                .pathologyTumorPercentage(pathologyTumorPercentage != null ? pathologyTumorPercentage : "not determined")
                 .labProcedures("PREP013V23-QC037V20-SEQ008V25")
                 .addressee("HMF Testing Center")
                 .hospitalName(Strings.EMPTY)

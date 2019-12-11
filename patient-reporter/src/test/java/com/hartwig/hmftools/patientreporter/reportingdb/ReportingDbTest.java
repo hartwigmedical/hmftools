@@ -23,27 +23,27 @@ public class ReportingDbTest {
 
     @Test
     public void canReadReportDatesTsv() throws IOException {
-        List<ReportingEntry> reportDates = ReportingDb.read(REPORT_DATES_TSV);
+        List<ReportingEntry> reportingEntries = ReportingDb.read(REPORT_DATES_TSV);
 
-        assertEquals(2, reportDates.size());
+        assertEquals(2, reportingEntries.size());
 
-        ReportingEntry reportingEntry1 = reportDates.get(0);
-        assertEquals("sampleId1", reportingEntry1.sampleId());
+        ReportingEntry reportingEntry1 = reportingEntries.get(0);
         assertEquals("ABCD", reportingEntry1.tumorBarcode());
+        assertEquals("sampleId1", reportingEntry1.sampleId());
         assertEquals("22-Oct-2019", reportingEntry1.reportDate());
         assertEquals("sequence_report", reportingEntry1.reportType());
-        assertEquals("70%", reportingEntry1.purity());
-        assertEquals("TRUE", reportingEntry1.hasReliablePurity());
-        assertEquals("TRUE", reportingEntry1.hasReliableQuality());
+        assertEquals("0.70", reportingEntry1.purity());
+        assertEquals("true", reportingEntry1.hasReliableQuality());
+        assertEquals("false", reportingEntry1.hasReliablePurity());
 
-        ReportingEntry reportingEntry2 = reportDates.get(1);
-        assertEquals("sampleId2", reportingEntry2.sampleId());
+        ReportingEntry reportingEntry2 = reportingEntries.get(1);
         assertEquals("EFGH", reportingEntry2.tumorBarcode());
+        assertEquals("sampleId2", reportingEntry2.sampleId());
         assertEquals("22-Oct-2019", reportingEntry2.reportDate());
         assertEquals("shallow_seq_low_purity", reportingEntry2.reportType());
         assertEquals("N/A", reportingEntry2.purity());
-        assertEquals("N/A", reportingEntry2.hasReliablePurity());
         assertEquals("N/A", reportingEntry2.hasReliableQuality());
+        assertEquals("N/A", reportingEntry2.hasReliablePurity());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class ReportingDbTest {
 
             if (reportDatesTsv.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
-                writer.write("sampleId\ttumorBarcode\treportDate\treportType\tpurity\thasReliablePurity\thasReliableQuality\n");
+                writer.write("tumorBarcode\tsampleId\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
                 writer.close();
             }
 

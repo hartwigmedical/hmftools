@@ -21,6 +21,12 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     @NotNull
     public abstract String title();
 
+    @Nullable
+    public abstract String briefTitle();
+
+    @NotNull
+    public abstract String studyType();
+
     @NotNull
     public abstract List<String> molecularAlterations();
 
@@ -28,13 +34,10 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     public abstract String score();
 
     @NotNull
-    public abstract List<MolecularMatchTrialsIntervation> intervation();
+    public abstract List<MolecularMatchTrialsIntervention> interventions();
 
     @NotNull
-    public abstract List<MolecularMatchTrialsLocations> locations();
-
-    @Nullable
-    public abstract String briefTitle();
+    public abstract List<MolecularMatchTrialsLocation> locations();
 
     @Nullable
     public abstract MolecularMatchTrialsOverallContact overallContact();
@@ -46,12 +49,9 @@ public abstract class MolecularMatchTrials implements KbSpecificObject {
     public abstract String phase();
 
     @NotNull
-    public abstract List<MolecularMatchTrialsTags> tags();
+    public abstract List<MolecularMatchTrialsTag> tags();
 
     @NotNull
     public abstract String id();
-
-    @NotNull
-    public abstract String studyType();
 
 }

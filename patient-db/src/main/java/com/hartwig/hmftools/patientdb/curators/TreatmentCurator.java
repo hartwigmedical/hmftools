@@ -95,9 +95,9 @@ public class TreatmentCurator implements CleanableCurator {
 
     @VisibleForTesting
     TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
-        final List<DrugEntry> drugEntries = readEntries(mappingInputStream);
-        final Directory index = createIndex(drugEntries);
-        final IndexReader reader = DirectoryReader.open(index);
+        List<DrugEntry> drugEntries = readEntries(mappingInputStream);
+        Directory index = createIndex(drugEntries);
+        IndexReader reader = DirectoryReader.open(index);
 
         spellChecker = createIndexSpellchecker(index);
         indexSearcher = new IndexSearcher(reader);
@@ -111,14 +111,14 @@ public class TreatmentCurator implements CleanableCurator {
         for (DrugEntry drugEntry : drugEntries) {
             for (String synonym : drugEntry.synonyms()) {
                 if (uniqueTokenizedTermToEntryMap.containsValue(synonym)) {
-                    LOGGER.warn("Drug synonym already included in search terms: " + synonym);
+                    LOGGER.warn("Drug synonym already included in search terms: {}", synonym);
                 } else {
                     uniqueTokenizedTermToEntryMap.put(toTokenizedString(synonym), synonym);
                 }
             }
             if (drugEntry.synonyms().isEmpty()) {
                 if (uniqueTokenizedTermToEntryMap.containsValue(drugEntry.canonicalName())) {
-                    LOGGER.warn("Drug canonical name already included in search terms: " + drugEntry.canonicalName());
+                    LOGGER.warn("Drug canonical name already included in search terms: {}", drugEntry.canonicalName());
                 } else {
                     uniqueTokenizedTermToEntryMap.put(toTokenizedString(drugEntry.canonicalName()), drugEntry.canonicalName());
                 }
@@ -147,21 +147,20 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<DrugEntry> readEntries(@NotNull final InputStream mappingInputStream) throws IOException {
-
-        final List<DrugEntry> drugEntries = Lists.newArrayList();
-        final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+    private static List<DrugEntry> readEntries(@NotNull InputStream mappingInputStream) throws IOException {
+        List<DrugEntry> drugEntries = Lists.newArrayList();
+        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
-            final String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
-            final String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();
-            final String synonymsField = record.get(DRUG_SYNONYMS_CSV_FIELD).trim();
-            final String treatmentMechanism = record.get(DRUG_MECHANISM_CSV_FILE.trim());
+            String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
+            String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();
+            String synonymsField = record.get(DRUG_SYNONYMS_CSV_FIELD).trim();
+            String treatmentMechanism = record.get(DRUG_MECHANISM_CSV_FILE.trim());
 
-            final List<String> synonyms = Lists.newArrayList();
+            List<String> synonyms = Lists.newArrayList();
             if (!synonymsField.isEmpty()) {
-                final CSVParser synonymsParser = CSVParser.parse(synonymsField, CSVFormat.DEFAULT);
-                for (final CSVRecord synonymsRecord : synonymsParser) {
-                    for (final String synonym : synonymsRecord) {
+                CSVParser synonymsParser = CSVParser.parse(synonymsField, CSVFormat.DEFAULT);
+                for (CSVRecord synonymsRecord : synonymsParser) {
+                    for (String synonym : synonymsRecord) {
                         synonyms.add(synonym.trim());
                     }
                 }
@@ -172,8 +171,8 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    public List<CuratedDrug> search(@NotNull final String searchTerm) {
-        final Optional<CuratedDrug> matchedDrug = matchSingle(searchTerm);
+    public List<CuratedDrug> search(@NotNull String searchTerm) {
+        Optional<CuratedDrug> matchedDrug = matchSingle(searchTerm);
         if (!matchedDrug.isPresent()) {
             return matchMultiple(searchTerm);
         } else {
@@ -182,20 +181,22 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    Optional<CuratedDrug> matchSingle(@NotNull final String searchTerm) {
-        final Analyzer analyzer = spellcheckAnalyzer(spellChecker);
-        final Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
+    Optional<CuratedDrug> matchSingle(@NotNull String searchTerm) {
+        Analyzer analyzer = spellcheckAnalyzer(spellChecker);
+        Query query = new QueryParser(DRUG_NAME_FIELD, analyzer).createPhraseQuery(DRUG_NAME_FIELD, searchTerm);
         try {
-            final ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
+            ScoreDoc[] hits = indexSearcher.search(query, NUM_HITS).scoreDocs;
 
             for (WeightedTerm term : QueryTermExtractor.getTerms(query)) {
                 unusedTokenizedTermToEntryMap.remove(term.getTerm());
             }
 
             if (hits.length == 1) {
-                final Document searchResult = indexSearcher.doc(hits[0].doc);
+                Document searchResult = indexSearcher.doc(hits[0].doc);
                 return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
-                        searchResult.get(DRUG_TYPE_FIELD), searchResult.get(DRUG_MECHANISM_FIELD), searchTerm));
+                        searchResult.get(DRUG_TYPE_FIELD),
+                        searchResult.get(DRUG_MECHANISM_FIELD),
+                        searchTerm));
             }
 
             return Optional.empty();
@@ -211,15 +212,15 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    List<CuratedDrug> matchMultiple(@NotNull final String searchTerm) {
-        final Map<SearchToken, CuratedDrug> matchedTokens = Maps.newHashMap();
-        final List<SearchToken> searchTokens = generateSearchTokens(searchTerm);
-        for (final SearchToken searchToken : searchTokens) {
+    List<CuratedDrug> matchMultiple(@NotNull String searchTerm) {
+        Map<SearchToken, CuratedDrug> matchedTokens = Maps.newHashMap();
+        List<SearchToken> searchTokens = generateSearchTokens(searchTerm);
+        for (SearchToken searchToken : searchTokens) {
             if (matchedTokens.keySet()
                     .stream()
                     .noneMatch(token -> (token.startOffset() <= searchToken.startOffset() && searchToken.startOffset() <= token.endOffset())
                             || (token.startOffset() <= searchToken.endOffset() && searchToken.endOffset() <= token.endOffset()))) {
-                final Optional<CuratedDrug> matchedTreatment = matchSingle(searchToken.term());
+                Optional<CuratedDrug> matchedTreatment = matchSingle(searchToken.term());
                 matchedTreatment.ifPresent(curatedTreatment -> matchedTokens.put(searchToken, curatedTreatment));
             }
         }
@@ -227,15 +228,15 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static List<SearchToken> generateSearchTokens(@NotNull final String searchTerm) {
-        final Set<SearchToken> searchTokens = Sets.newHashSet();
-        final TokenStream tokenStream = getSpellCheckedShingleStream(searchTerm);
+    private static List<SearchToken> generateSearchTokens(@NotNull String searchTerm) {
+        Set<SearchToken> searchTokens = Sets.newHashSet();
+        TokenStream tokenStream = getSpellCheckedShingleStream(searchTerm);
         try {
             tokenStream.reset();
 
             while (tokenStream.incrementToken()) {
-                final String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
-                final OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
+                String searchToken = tokenStream.getAttribute(CharTermAttribute.class).toString();
+                OffsetAttribute offsetAttribute = tokenStream.getAttribute(OffsetAttribute.class);
                 searchTokens.add(ImmutableSearchToken.of(searchToken, offsetAttribute.startOffset(), offsetAttribute.endOffset()));
             }
             tokenStream.end();
@@ -250,16 +251,16 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static TokenStream getSpellCheckedShingleStream(@NotNull final String searchTerm) {
+    private static TokenStream getSpellCheckedShingleStream(@NotNull String searchTerm) {
         StringReader reader = new StringReader(searchTerm);
-        final Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
+        Analyzer analyzer = createShingleAnalyzer(MAX_SHINGLES);
         return analyzer.tokenStream(DRUG_NAME_FIELD, reader);
     }
 
     @NotNull
-    private static Directory createIndex(@NotNull final List<DrugEntry> drugEntries) throws IOException {
-        final Directory drugIndex = new RAMDirectory();
-        final IndexWriter indexWriter = createIndexWriter(drugIndex);
+    private static Directory createIndex(@NotNull List<DrugEntry> drugEntries) throws IOException {
+        Directory drugIndex = new RAMDirectory();
+        IndexWriter indexWriter = createIndexWriter(drugIndex);
         for (final DrugEntry drugEntry : drugEntries) {
             indexDrugEntry(indexWriter, drugEntry);
         }
@@ -268,14 +269,14 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static IndexWriter createIndexWriter(@NotNull final Directory directory) throws IOException {
-        final Analyzer analyzer = indexAnalyzer();
-        final IndexWriterConfig config = new IndexWriterConfig(analyzer);
+    private static IndexWriter createIndexWriter(@NotNull Directory directory) throws IOException {
+        Analyzer analyzer = indexAnalyzer();
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
         return new IndexWriter(directory, config);
     }
 
-    private static void indexDrugEntry(@NotNull final IndexWriter writer, @NotNull final DrugEntry drugEntry) throws IOException {
-        final Document document = new Document();
+    private static void indexDrugEntry(@NotNull IndexWriter writer, @NotNull DrugEntry drugEntry) throws IOException {
+        Document document = new Document();
         drugEntry.synonyms().forEach(synonym -> {
             document.add(new TextField(DRUG_NAME_FIELD, synonym, Field.Store.NO));
             document.add(new TextField(DRUG_TERMS_FIELD, synonym, Field.Store.YES));
@@ -290,12 +291,12 @@ public class TreatmentCurator implements CleanableCurator {
 
     @NotNull
     private static SpellChecker createIndexSpellchecker(@NotNull final Directory index) throws IOException {
-        final Directory spellCheckerDirectory = new RAMDirectory();
-        final IndexReader indexReader = DirectoryReader.open(index);
-        final Analyzer analyzer = new SimpleAnalyzer();
-        final IndexWriterConfig config = new IndexWriterConfig(analyzer);
-        final Dictionary dictionary = new HighFrequencyDictionary(indexReader, DRUG_TERMS_FIELD, 0.0f);
-        final SpellChecker spellChecker = new SpellChecker(spellCheckerDirectory);
+        Directory spellCheckerDirectory = new RAMDirectory();
+        IndexReader indexReader = DirectoryReader.open(index);
+        Analyzer analyzer = new SimpleAnalyzer();
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        Dictionary dictionary = new HighFrequencyDictionary(indexReader, DRUG_TERMS_FIELD, 0.0f);
+        SpellChecker spellChecker = new SpellChecker(spellCheckerDirectory);
 
         spellChecker.indexDictionary(dictionary, config, false);
         spellChecker.setAccuracy(SPELLCHECK_ACCURACY);
@@ -303,7 +304,7 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static Analyzer createShingleAnalyzer(final int maxShingles) {
+    private static Analyzer createShingleAnalyzer(int maxShingles) {
         return new Analyzer() {
             @Override
             protected TokenStreamComponents createComponents(@NotNull final String field) {
@@ -317,14 +318,14 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static Analyzer spellcheckAnalyzer(@NotNull final SpellChecker spellChecker) {
+    private static Analyzer spellcheckAnalyzer(@NotNull SpellChecker spellChecker) {
         return new Analyzer() {
             @Override
             protected TokenStreamComponents createComponents(@NotNull final String field) {
-                final Tokenizer source = new WhitespaceTokenizer();
+                Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
-                final SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(defaultTokenFilter(source), spellChecker);
-                final TokenFilter concatenatingFilter = new ConcatenatingFilter(spellCheckFilter, ' ');
+                SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(defaultTokenFilter(source), spellChecker);
+                TokenFilter concatenatingFilter = new ConcatenatingFilter(spellCheckFilter, ' ');
                 return new TokenStreamComponents(source, concatenatingFilter);
             }
         };
@@ -335,7 +336,7 @@ public class TreatmentCurator implements CleanableCurator {
         return new Analyzer() {
             @Override
             protected TokenStreamComponents createComponents(@NotNull final String field) {
-                final Tokenizer source = new WhitespaceTokenizer();
+                Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
                 return new TokenStreamComponents(source, defaultTokenFilter(source));
             }
@@ -347,9 +348,9 @@ public class TreatmentCurator implements CleanableCurator {
         return new Analyzer() {
             @Override
             protected TokenStreamComponents createComponents(@NotNull final String field) {
-                final Tokenizer source = new WhitespaceTokenizer();
+                Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
-                final TokenFilter concatenatingFilter = new ConcatenatingFilter(defaultTokenFilter(source), ' ');
+                TokenFilter concatenatingFilter = new ConcatenatingFilter(defaultTokenFilter(source), ' ');
                 return new TokenStreamComponents(source, concatenatingFilter);
             }
         };
@@ -357,13 +358,13 @@ public class TreatmentCurator implements CleanableCurator {
 
     @NotNull
     private static TokenFilter defaultTokenFilter(@NotNull final Tokenizer source) {
-        final TokenFilter filteredSource = new LowerCaseFilter(source);
+        TokenFilter filteredSource = new LowerCaseFilter(source);
         return new WordDelimiterGraphFilter(filteredSource, SPLIT_ON_NUMERICS | GENERATE_WORD_PARTS | GENERATE_NUMBER_PARTS, null);
     }
 
     @NotNull
     private static Analyzer indexAnalyzer() {
-        final Map<String, Analyzer> fieldAnalyzers = Maps.newHashMap();
+        Map<String, Analyzer> fieldAnalyzers = Maps.newHashMap();
         fieldAnalyzers.put(DRUG_NAME_FIELD, concatenatingAnalyzer());
         return new PerFieldAnalyzerWrapper(wordDelimiterAnalyzer(), fieldAnalyzers);
     }

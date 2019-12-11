@@ -2,10 +2,7 @@ package com.hartwig.hmftools.vicc.reader;
 
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokbGene;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -307,11 +304,11 @@ final class ViccDatamodelCheckerFactory {
     @NotNull
     static ViccDatamodelChecker oncoKbVariantChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
-        map.put("variantResidues", false);
+        map.put("variantResidues", true);
         map.put("proteinStart", true);
         map.put("name", true);
         map.put("proteinEnd", true);
-        map.put("refResidues", false);
+        map.put("refResidues", true);
         map.put("alteration", true);
         map.put("consequence", true);
         map.put("gene", true);
@@ -333,11 +330,136 @@ final class ViccDatamodelCheckerFactory {
         map.put("oncogene", true);
         map.put("name", true);
         map.put("hugoSymbol", true);
-        map.put("curatedRefSeq", false);
+        map.put("curatedRefSeq", true);
         map.put("entrezGeneId", true);
         map.put("geneAliases", true);
         map.put("tsg", true);
-        map.put("curatedIsoform", false);
+        map.put("curatedIsoform", true);
         return new ViccDatamodelChecker("OncoKbGene", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("status", true);
+        map.put("startDate", false);
+        map.put("title", true);
+        map.put("molecularAlterations", true);
+        map.put("_score", true);
+        map.put("interventions", true);
+        map.put("locations", true);
+        map.put("briefTitle", true);
+        map.put("overallContact", true);
+        map.put("link", true);
+        map.put("phase", true);
+        map.put("tags", true);
+        map.put("id", true);
+        map.put("studyType", true);
+        return new ViccDatamodelChecker("MolecularMatchTrialsEntryChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsInterventionChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("intervention_name", false);
+        map.put("other_name", false);
+        map.put("description", false);
+        map.put("arm_group_label", false);
+        map.put("intervention_type", false);
+        return new ViccDatamodelChecker("MolecularMatchTrialsInterventionChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsLocationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("status", true);
+        map.put("last_name", false);
+        map.put("email", false);
+        map.put("phone", false);
+        map.put("phone_backup", false);
+        map.put("email_backup", false);
+        map.put("last_name_backup", false);
+        map.put("phone_ext_backup", false);
+        map.put("phone_ext", false);
+        map.put("city", false);
+        map.put("_valid", false);
+        map.put("zip", false);
+        map.put("created", false);
+        map.put("country", false);
+        map.put("number", false);
+        map.put("id", false);
+        map.put("lastUpdated", false);
+        map.put("contact", false);
+        map.put("state", false);
+        map.put("street", false);
+        map.put("location", false);
+        map.put("po_box", false);
+        map.put("failedGeocode", false);
+        map.put("geo", false);
+        map.put("_validMessage", false);
+        map.put("name", false);
+        return new ViccDatamodelChecker("MolecularMatchTrialsLocationChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsOverallContactChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("phone", false);
+        map.put("last_name", false);
+        map.put("email", false);
+        map.put("affiliation", false);
+        map.put("phone_ext", false);
+        map.put("country", false);
+        map.put("city", false);
+        map.put("name", false);
+        map.put("zip", false);
+        map.put("url", false);
+        map.put("street", false);
+        map.put("type", false);
+        return new ViccDatamodelChecker("MolecularMatchTrialsOverallContactChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsGeoChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("lat", true);
+        map.put("lon", true);
+        return new ViccDatamodelChecker("MolecularMatchTrialsGeoChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsSubLocationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("coordinates", true);
+        return new ViccDatamodelChecker("MolecularMatchTrialsSubLocationChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsContactChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("phone", false);
+        map.put("name", false);
+        map.put("email", false);
+        return new ViccDatamodelChecker("MolecularMatchTrialsContactChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTrialsTagChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("facet", true);
+        map.put("compositeKey", true);
+        map.put("suppress", true);
+        map.put("filterType", true);
+        map.put("term", true);
+        map.put("custom", true);
+        map.put("priority", true);
+        map.put("alias", false);
+        map.put("manualSuppress", false);
+        map.put("generatedBy", false);
+        map.put("generatedByTerm", false);
+        map.put("id", false);
+        map.put("manualPriority", false);
+        return new ViccDatamodelChecker("MolecularMatchTrialsTagChecker", map);
     }
 }

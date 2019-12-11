@@ -14,7 +14,7 @@ public abstract class OncoKbBiological implements KbSpecificObject {
     public abstract String mutationEffectPmids();
 
     @NotNull
-    public abstract String Isoform();
+    public abstract String isoform();
 
     @NotNull
     public abstract OncokbVariant oncokbVariant();
@@ -29,14 +29,12 @@ public abstract class OncoKbBiological implements KbSpecificObject {
     public abstract String mutationEffect();
 
     @NotNull
-    public abstract String RefSeq();
+    public abstract String refSeq();
 
     @NotNull
     public abstract String gene();
 
     @NotNull
     public abstract String mutationEffectAbstracts();
-
-
 
 }

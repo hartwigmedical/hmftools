@@ -10,6 +10,7 @@ import com.hartwig.hmftools.sage.context.RealignedType;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition {
@@ -25,10 +26,14 @@ public class ReadContextCounter implements GenomePosition {
     private int shortened;
     private int coverage;
 
-    private int quality;
+    private int fullQuality;
+    private int partialQuality;
+    private int coreQuality;
+    private int realignedQuality;
+    private int referenceQuality;
+    private int totalQuality;
+
     private double jitterPenalty;
-    private int baseQuality;
-    private int mapQuality;
 
     private int improperPair;
 
@@ -50,10 +55,13 @@ public class ReadContextCounter implements GenomePosition {
         this.lengthened = Math.min(left.lengthened, right.lengthened);
         this.shortened = Math.min(left.shortened, right.shortened);
         this.coverage = Math.min(left.coverage, right.coverage);
-        this.quality = Math.min(left.quality, right.quality);
+        this.fullQuality = Math.min(left.fullQuality, right.fullQuality);
+        this.partialQuality = Math.min(left.partialQuality, right.partialQuality);
+        this.coreQuality = Math.min(left.coreQuality, right.coreQuality);
+        this.realignedQuality = Math.min(left.realignedQuality, right.realignedQuality);
+        this.referenceQuality = Math.min(left.referenceQuality, right.referenceQuality);
+        this.totalQuality = Math.min(left.totalQuality, right.totalQuality);
         this.jitterPenalty = Math.min(left.jitterPenalty, right.jitterPenalty);
-        this.baseQuality = Math.min(left.baseQuality, right.baseQuality);
-        this.mapQuality = Math.min(left.mapQuality, right.mapQuality);
     }
 
     @NotNull
@@ -71,44 +79,49 @@ public class ReadContextCounter implements GenomePosition {
         return full + partial + core + realigned;
     }
 
-    public int coverage() {
-        return coverage;
-    }
-
     public int refSupport() {
         return reference;
+    }
+
+    public int coverage() {
+        return coverage;
     }
 
     public int depth() {
         return coverage;
     }
 
-    public double af(double support) {
-        return coverage == 0 ? 0d : support / depth();
-    }
-
     public double vaf() {
-        return af(altSupport());
+        return af(tumorQuality());
     }
 
-    public int quality() {
-        return Math.max(0, quality - (int) jitterPenalty);
+    public double refAllelicFrequency() {
+        return af(refQuality());
     }
 
-    public int baseQuality() {
-        return baseQuality;
+    public int refQuality() {
+        return referenceQuality;
     }
 
-    public int mapQuality() {
-        return mapQuality;
+    private double af(double support) {
+        return coverage == 0 ? 0d : support / totalQuality;
     }
 
-    public int[] rcc() {
-        return new int[] { full, partial, core, realigned, shortened, lengthened, reference, coverage };
+    public int tumorQuality() {
+        int tumorQuality = fullQuality + partialQuality + coreQuality + realignedQuality;
+        return Math.max(0, tumorQuality - (int) jitterPenalty);
     }
 
-    public int[] qual() {
-        return new int[] { quality(), baseQuality, mapQuality, qualityJitterPenalty() };
+    public int[] counts() {
+        return new int[] { full, partial, core, realigned, reference, coverage };
+    }
+
+    public int[] jitter() {
+        return new int[] { shortened, lengthened, qualityJitterPenalty() };
+    }
+
+    public int[] quality() {
+        return new int[] { fullQuality, partialQuality, coreQuality, realignedQuality, referenceQuality, totalQuality };
     }
 
     public int improperPair() {
@@ -125,7 +138,7 @@ public class ReadContextCounter implements GenomePosition {
         return readContext.toString();
     }
 
-    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig) {
+    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig, IndexedBases refSequence) {
         final QualityConfig qualityConfig = sageConfig.qualityConfig();
 
         try {
@@ -138,27 +151,41 @@ public class ReadContextCounter implements GenomePosition {
                 }
 
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
+                if (!covered) {
+                    return;
+                }
+
+                // TODO: Check if this is okay? Should we check for jitter if quality 0
+                double quality = calculateQualityScore(readIndex, record, qualityConfig, refSequence);
+                if (quality <= 0) {
+                    return;
+                }
+
+                coverage++;
+                totalQuality += quality;
 
                 // Check if FULL, PARTIAL, OR CORE
                 final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
                 if (!match.equals(ReadContextMatch.NONE)) {
                     switch (match) {
                         case FULL:
-                            full++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig);
+                            full++;
+                            fullQuality += quality;
                             break;
                         case PARTIAL:
-                            partial++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig);
+                            partial++;
+                            partialQuality += quality;
                             break;
                         case CORE:
+                            incrementQualityFlags(record);
                             core++;
+                            coreQuality += quality;
                             break;
                     }
 
-                    coverage++;
                     return;
                 }
 
@@ -166,32 +193,27 @@ public class ReadContextCounter implements GenomePosition {
                 final RealignedContext realignment = realignmentContext(realign, readIndex, record);
                 if (realignment.type().equals(RealignedType.EXACT)) {
                     realigned++;
-                    coverage++;
+                    realignedQuality += quality;
                     return;
                 }
 
                 // Check if lengthened, shortened AND/OR reference!
-                boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
 
                 switch (realignment.type()) {
                     case LENGTHENED:
                         jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
                         lengthened++;
-                        covered = true;
                         break;
                     case SHORTENED:
                         jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
                         shortened++;
-                        covered = true;
                         break;
                 }
 
-                if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
-                    reference++;
-                }
 
-                if (covered) {
-                    coverage++;
+                if (readContext.matchesRef(readIndex, record.getReadBases())) {
+                    reference++;
+                    referenceQuality += quality;
                 }
             }
         } catch (Exception e) {
@@ -206,25 +228,26 @@ public class ReadContextCounter implements GenomePosition {
             return new RealignedContext(RealignedType.NONE, 0);
         }
 
-        if (variant.isSNV() && record.getCigar().getCigarElements().size() == 1) {
-            return new Realigned().realignedAroundIndex(readContext, readIndex, record.getReadBases());
-        }
-
-        return new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
+        int indelLength = indelLength(record);
+        return new Realigned().realignedAroundIndex(readContext,
+                readIndex,
+                record.getReadBases(),
+                Math.max(indelLength, Realigned.MAX_REPEAT_SIZE));
     }
 
-    private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {
+    private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig,
+            final IndexedBases refSequence) {
+        final int distanceFromRef = readDistanceFromRef(readBaseIndex, record, refSequence);
+
         final int baseQuality = baseQuality(readBaseIndex, record);
-        final int distanceFromReadEdge = readContext.distanceFromReadEdge(readBaseIndex, record);
+        final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
 
-        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, readContext.distance(), record.getProperPairFlag());
+        int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, distanceFromRef, record.getProperPairFlag());
         int modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
-        this.mapQuality += mapQuality;
-        this.baseQuality += baseQuality;
-        this.quality += Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
+        return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
     private int baseQuality(int readBaseIndex, SAMRecord record) {
@@ -250,6 +273,48 @@ public class ReadContextCounter implements GenomePosition {
         if (!record.getProperPairFlag()) {
             improperPair++;
         }
+    }
+
+    private int indelLength(@NotNull final SAMRecord record) {
+        int result = 0;
+        for (CigarElement cigarElement : record.getCigar()) {
+            switch (cigarElement.getOperator()) {
+                case I:
+                case D:
+                    result += cigarElement.getLength();
+            }
+
+        }
+
+        return result;
+    }
+
+    private int readDistanceFromEdge(int readIndex, @NotNull final SAMRecord record) {
+        int index = readContext.readBasesPositionIndex();
+        int leftIndex = readContext.readBasesLeftCentreIndex();
+        int rightIndex = readContext.readBasesRightCentreIndex();
+
+        int leftOffset = index - leftIndex;
+        int rightOffset = rightIndex - index;
+
+        int adjustedLeftIndex = readIndex - leftOffset;
+        int adjustedRightIndex = readIndex + rightOffset;
+
+        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
+    }
+
+    private int readDistanceFromRef(int readIndex, final SAMRecord record, final IndexedBases refSequence) {
+        int index = readContext.readBasesPositionIndex();
+        int leftIndex = readContext.readBasesLeftFlankIndex();
+        int rightIndex = readContext.readBasesRightFlankIndex();
+
+        int leftOffset = index - leftIndex;
+        int rightOffset = rightIndex - index;
+
+        return new ReadContextDistance(Math.max(0, readIndex - leftOffset),
+                Math.min(record.getReadBases().length - 1, readIndex + rightOffset),
+                record,
+                refSequence).distance();
     }
 
 }

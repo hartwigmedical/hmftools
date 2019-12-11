@@ -212,16 +212,16 @@ DROP TABLE IF EXISTS pmkbTumor;
 DROP TABLE IF EXISTS pmkbVariant;
 DROP TABLE IF EXISTS pmkbGene;
 DROP TABLE IF EXISTS molecularMatchTrials;
-DROP TABLE IF EXISTS molecularMatchTrialsAlterations;
-DROP TABLE IF EXISTS molecularMatchTrialsIntervations;
+DROP TABLE IF EXISTS molecularMatchTrialsAlteration;
+DROP TABLE IF EXISTS molecularMatchTrialsIntervention;
 DROP TABLE IF EXISTS molecularMatchTrialsOtherName;
-DROP TABLE IF EXISTS molecularMatchTrialsOtherGroupLabel;
+DROP TABLE IF EXISTS molecularMatchTrialsArmGroupLabel;
 DROP TABLE IF EXISTS molecularMatchTrialsOverallContact;
-DROP TABLE IF EXISTS molecularMatchTrialsTags;
-DROP TABLE IF EXISTS molecularMatchTrialsLocations;
+DROP TABLE IF EXISTS molecularMatchTrialsTag;
+DROP TABLE IF EXISTS molecularMatchTrialsLocation;
 DROP TABLE IF EXISTS molecularMatchTrialsContact;
 DROP TABLE IF EXISTS molecularMatchTrialsGeo;
-DROP TABLE IF EXISTS molecularMatchTrialsLocation;
+DROP TABLE IF EXISTS molecularMatchTrialsSubLocation;
 DROP TABLE IF EXISTS molecularMatchTrialsCoordinates;
 DROP TABLE IF EXISTS jaxTrials;
 DROP TABLE IF EXISTS jaxTrialsIndications;
@@ -523,11 +523,11 @@ CREATE TABLE oncokbBiological
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
     mutationEffectPmids varchar(255) NOT NULL,
-    Isoform varchar(255) NOT NULL,
+    isoform varchar(255) NOT NULL,
     entrezGeneID varchar(255) NOT NULL,
     oncogenic varchar(255) NOT NULL,
     mutationEffect varchar(255) NOT NULL,
-    RefSeq varchar(255) NOT NULL,
+    refSeq varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     mutationEffectAbstracts varchar(255) NOT NULL,
     PRIMARY KEY (id),
@@ -582,7 +582,7 @@ CREATE TABLE oncokbGeneAliasesBiological
 CREATE TABLE oncokbClinical
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    RefSeq varchar(255) NOT NULL,
+    refSeq varchar(255) NOT NULL,
     level varchar(255) NOT NULL,
     entrezGeneID varchar(255) NOT NULL,
     drugPmids varchar(255) NOT NULL,
@@ -2503,70 +2503,70 @@ CREATE TABLE molecularMatchTrials
     status varchar(500) NOT NULL,
     startDate varchar(255),
     title varchar(1000) NOT NULL,
-    score varchar(255) NOT NULL,
     briefTitle varchar(1000),
+    studyType varchar(255) NOT NULL,
+    score varchar(255) NOT NULL,
     link varchar(255) NOT NULL,
     phase varchar(255) NOT NULL,
     idMolecularMatchTrials varchar(255) NOT NULL,
-    studyType varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-CREATE TABLE molecularMatchTrialsAlterations
+CREATE TABLE molecularMatchTrialsAlteration
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
-    molecularAlterations varchar(500) NOT NULL,
+    molecularAlteration varchar(500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchTrialsId) REFERENCES molecularMatchTrials(id)
 );
 
-CREATE TABLE molecularMatchTrialsIntervations
+CREATE TABLE molecularMatchTrialsIntervention
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
-    intervention_name varchar(9000),
+    interventionName varchar(9000),
+    interventionType varchar(250),
     description varchar(2000),
-    intervention_type varchar(250),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchTrialsId) REFERENCES molecularMatchTrials(id)
 );
 
 CREATE TABLE molecularMatchTrialsOtherName
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchTrialsIntervationsId int NOT NULL,
-    other_name varchar(500),
+    molecularMatchTrialsInterventionId int NOT NULL,
+    otherName varchar(500),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchTrialsIntervationsId) REFERENCES molecularMatchTrialsIntervations(id)
+    FOREIGN KEY (molecularMatchTrialsInterventionId) REFERENCES molecularMatchTrialsIntervention(id)
 );
 
-CREATE TABLE molecularMatchTrialsOtherGroupLabel
+CREATE TABLE molecularMatchTrialsArmGroupLabel
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchTrialsIntervationsId int NOT NULL,
-    arm_group_label varchar(500),
+    molecularMatchTrialsInterventionId int NOT NULL,
+    armGroupLabel varchar(500),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchTrialsIntervationsId) REFERENCES molecularMatchTrialsIntervations(id)
+    FOREIGN KEY (molecularMatchTrialsInterventionId) REFERENCES molecularMatchTrialsIntervention(id)
 );
 
 CREATE TABLE molecularMatchTrialsOverallContact
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
-    phone varchar(250),
-    last_name varchar(250),
-    phone_ext varchar(250),
-    country varchar(250),
-    email varchar(250),
-    affiliation varchar(250),
-    city varchar(250),
     name varchar(250),
-    zip varchar(250),
-    url varchar(250),
-    street varchar(250),
     type varchar(250),
+    affiliation varchar(250),
+    lastName varchar(250),
+    email varchar(250),
+    phone varchar(250),
+    phoneExt varchar(250),
+    street varchar(250),
+    zip varchar(250),
+    city varchar(250),
+    country varchar(250),
+    url varchar(250),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchTrialsId) REFERENCES molecularMatchTrials(id)
 );
 
-CREATE TABLE molecularMatchTrialsTags
+CREATE TABLE molecularMatchTrialsTag
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
     facet varchar(250) NOT NULL,
@@ -2580,75 +2580,75 @@ CREATE TABLE molecularMatchTrialsTags
     manualSuppress varchar(250),
     generatedBy varchar(250),
     generatedByTerm varchar(250),
-    idTags varchar(250),
+    idTag varchar(250),
     manualPriority varchar(250),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchTrialsId) REFERENCES molecularMatchTrials(id)
 );
 
-CREATE TABLE molecularMatchTrialsLocations
+CREATE TABLE molecularMatchTrialsLocation
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchTrialsId int NOT NULL,
     status varchar(250) NOT NULL,
-    last_name varchar(1000),
+    name varchar(1000),
+    lastName varchar(1000),
     email varchar(1000),
     phone varchar(250),
-    phone_backup varchar(250),
-    email_backup varchar(250),
-    last_name_backup varchar(250),
-    phone_ext_backup varchar(250),
-    phone_ext varchar(250),
+    phoneExt varchar(250),
+    lastNameBackup varchar(250),
+    emailBackup varchar(250),
+    phoneBackup varchar(250),
+    phoneExtBackup varchar(250),
+    street varchar(250),
     city varchar(250),
-    valid varchar(250),
     zip varchar(250),
-    created varchar(250),
+    state varchar(250),
     country varchar(250),
     number varchar(250),
-    idLocations varchar(250),
-    lastUpdated varchar(250),
-    state varchar(250),
-    street varchar(250),
-    po_box varchar(250),
-    failedGeocode varchar(250),
+    poBox varchar(250),
+    idLocation varchar(250),
+    valid varchar(250),
     validMessage varchar(250),
-    name varchar(1000),
+    created varchar(250),
+    lastUpdated varchar(250),
+    failedGeocode varchar(250),
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchTrialsId) REFERENCES molecularMatchTrials(id)
 );
 
 CREATE TABLE molecularMatchTrialsContact
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchTrialsLocationsId int NOT NULL,
-    phone varchar(250),
+    molecularMatchTrialsLocationId int NOT NULL,
     name varchar(250),
     email varchar(250),
+    phone varchar(250),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchTrialsLocationsId) REFERENCES molecularMatchTrialsLocations(id)
+    FOREIGN KEY (molecularMatchTrialsLocationId) REFERENCES molecularMatchTrialsLocation(id)
 );
 
 CREATE TABLE molecularMatchTrialsGeo
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchTrialsLocationsId int NOT NULL,
+    molecularMatchTrialsLocationId int NOT NULL,
     lat varchar(250),
     lon varchar(250),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchTrialsLocationsId) REFERENCES molecularMatchTrialsLocations(id)
+    FOREIGN KEY (molecularMatchTrialsLocationId) REFERENCES molecularMatchTrialsLocation(id)
 );
 
-CREATE TABLE molecularMatchTrialsLocation
+CREATE TABLE molecularMatchTrialsSubLocation
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchTrialsLocationsId int NOT NULL,
+    molecularMatchTrialsLocationId int NOT NULL,
     type varchar(250) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchTrialsLocationsId) REFERENCES molecularMatchTrialsLocations(id)
+    FOREIGN KEY (molecularMatchTrialsLocationId) REFERENCES molecularMatchTrialsLocation(id)
 );
 
 CREATE TABLE molecularMatchTrialsCoordinates
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchTrialsLocationId int NOT NULL,
+    molecularMatchTrialsSubLocationId int NOT NULL,
     coordinates varchar(250) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchTrialsLocationId) REFERENCES molecularMatchTrialsLocation(id)
+    FOREIGN KEY (molecularMatchTrialsSubLocationId) REFERENCES molecularMatchTrialsSubLocation(id)
 );
 
 CREATE TABLE jaxTrials

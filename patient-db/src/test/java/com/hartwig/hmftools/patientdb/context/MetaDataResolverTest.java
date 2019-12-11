@@ -18,32 +18,32 @@ public class MetaDataResolverTest {
     @Test
     public void noMetaDataReturnsNull() {
         final String noMetaDataRunDir = RESOURCE_DIR + File.separator + "RunDirNoMetaData";
-        assertNull(MetaDataResolver.fromMetaDataFile(noMetaDataRunDir, "loading-clinical-data"));
+        assertNull(MetaDataResolver.fromMetaDataFile(noMetaDataRunDir));
     }
 
     @Test
     public void noRefSampleReturnsNull() {
         final String noRefSampleRunDir = RESOURCE_DIR + File.separator + "RunDirNoRefSample";
-        assertNull(MetaDataResolver.fromMetaDataFile(noRefSampleRunDir, "loading-clinical-data"));
+        assertNull(MetaDataResolver.fromMetaDataFile(noRefSampleRunDir));
     }
 
     @Test
     public void noSetNameReturnsNull() {
         final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirNoSetName";
-        assertNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir, "loading-clinical-data"));
+        assertNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
     }
 
     @Test
     public void canResolveMetaDataFilePV5() {
         final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirP5";
-        assertNotNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir, "loading-clinical-data"));
+        assertNotNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
     }
 
     @Test
     public void canResolveSomaticMetaDataP4() {
         final String setName = "RunDirSomatic";
         final String runDirectory = RESOURCE_DIR + File.separator + setName;
-        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory, "loading-clinical-data");
+        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
         assertEquals("CPCT12345678R", runContext.refSample());
@@ -57,7 +57,7 @@ public class MetaDataResolverTest {
     public void canResolveSomaticMetaDataP5() {
         final String setName = "RunDirP5";
         final String runDirectory = RESOURCE_DIR + File.separator + setName;
-        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory, "loading-clinical-data");
+        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
         assertEquals("CPCT12345678R", runContext.refSample());
