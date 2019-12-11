@@ -106,7 +106,7 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
     }
 
     private boolean qualPredicate(@NotNull final AltContext altContext) {
-        return altContext.primaryReadContext().quality() >= config.filter().hardMinTumorQual() || tierSelector.isHotspot(altContext);
+        return altContext.primaryReadContext().tumorQuality() >= config.filter().hardMinTumorQual() || tierSelector.isHotspot(altContext);
     }
 
 }

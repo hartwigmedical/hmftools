@@ -26,7 +26,12 @@ public class ReadContextCounter implements GenomePosition {
     private int shortened;
     private int coverage;
 
-    private int quality;
+    private int fullQuality;
+    private int partialQuality;
+    private int coreQuality;
+    private int realignedQuality;
+    private int referenceQuality;
+    private int otherQuality;
 
     private double jitterPenalty;
 
@@ -50,7 +55,12 @@ public class ReadContextCounter implements GenomePosition {
         this.lengthened = Math.min(left.lengthened, right.lengthened);
         this.shortened = Math.min(left.shortened, right.shortened);
         this.coverage = Math.min(left.coverage, right.coverage);
-        this.quality = Math.min(left.quality, right.quality);
+        this.fullQuality = Math.min(left.fullQuality, right.fullQuality);
+        this.partialQuality = Math.min(left.partialQuality, right.partialQuality);
+        this.coreQuality = Math.min(left.coreQuality, right.coreQuality);
+        this.realignedQuality = Math.min(left.realignedQuality, right.realignedQuality);
+        this.referenceQuality = Math.min(left.referenceQuality, right.referenceQuality);
+        this.otherQuality = Math.min(left.otherQuality, right.otherQuality);
         this.jitterPenalty = Math.min(left.jitterPenalty, right.jitterPenalty);
     }
 
@@ -69,12 +79,12 @@ public class ReadContextCounter implements GenomePosition {
         return full + partial + core + realigned;
     }
 
-    public int coverage() {
-        return coverage;
-    }
-
     public int refSupport() {
         return reference;
+    }
+
+    public int coverage() {
+        return coverage;
     }
 
     public int depth() {
@@ -89,8 +99,17 @@ public class ReadContextCounter implements GenomePosition {
         return af(altSupport());
     }
 
-    public int quality() {
-        return Math.max(0, quality - (int) jitterPenalty);
+    public int referenceQuality() {
+        return referenceQuality;
+    }
+
+    public int tumorQuality() {
+        int tumorQuality = fullQuality + partialQuality + coreQuality + realignedQuality;
+        return Math.max(0, tumorQuality - (int) jitterPenalty);
+    }
+
+    public int totalQuality() {
+        return tumorQuality() + referenceQuality + otherQuality;
     }
 
     public int[] rcc() {
@@ -98,7 +117,7 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public int[] qual() {
-        return new int[] { quality(), 0, 0, qualityJitterPenalty() };
+        return new int[] { tumorQuality(), 0, 0, qualityJitterPenalty() };
     }
 
     public int improperPair() {
@@ -129,22 +148,30 @@ public class ReadContextCounter implements GenomePosition {
 
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
 
+                // TODO: Check if this is okay? Should we check for jitter if quality 0
+                double quality = calculateQualityScore(readIndex, record, qualityConfig, refSequence);
+                if (quality <= 0) {
+                    return;
+                }
+
                 // Check if FULL, PARTIAL, OR CORE
                 final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
                 if (!match.equals(ReadContextMatch.NONE)) {
                     switch (match) {
                         case FULL:
-                            full++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig, refSequence);
+                            full++;
+                            fullQuality += quality;
                             break;
                         case PARTIAL:
-                            partial++;
                             incrementQualityFlags(record);
-                            incrementQualityScores(readIndex, record, qualityConfig, refSequence);
+                            partial++;
+                            partialQuality += quality;
                             break;
                         case CORE:
+                            incrementQualityFlags(record);
                             core++;
+                            coreQuality += quality;
                             break;
                     }
 
@@ -156,6 +183,7 @@ public class ReadContextCounter implements GenomePosition {
                 final RealignedContext realignment = realignmentContext(realign, readIndex, record);
                 if (realignment.type().equals(RealignedType.EXACT)) {
                     realigned++;
+                    realignedQuality += quality;
                     coverage++;
                     return;
                 }
@@ -176,12 +204,14 @@ public class ReadContextCounter implements GenomePosition {
                         break;
                 }
 
-                if (covered && readContext.matchesRef(readIndex, record.getReadBases())) {
-                    reference++;
-                }
-
                 if (covered) {
                     coverage++;
+                    if (readContext.matchesRef(readIndex, record.getReadBases())) {
+                        reference++;
+                        referenceQuality += quality;
+                    } else {
+                        otherQuality += quality;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -196,16 +226,11 @@ public class ReadContextCounter implements GenomePosition {
             return new RealignedContext(RealignedType.NONE, 0);
         }
 
-        if (variant.isSNV() && record.getCigar().getCigarElements().size() == 1) {
-            return new Realigned().realignedAroundIndex(readContext, readIndex, record.getReadBases());
-        }
-
-        return new Realigned().realignedInEntireRecord(readContext, record.getReadBases());
-    }
-
-    private void incrementQualityScores(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig,
-            final IndexedBases refSequence) {
-        this.quality += calculateQualityScore(readBaseIndex, record, qualityConfig, refSequence);
+        int indelLength = indelLength(record);
+        return new Realigned().realignedAroundIndex(readContext,
+                readIndex,
+                record.getReadBases(),
+                Math.max(indelLength, Realigned.MAX_REPEAT_SIZE));
     }
 
     private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig,
@@ -273,7 +298,7 @@ public class ReadContextCounter implements GenomePosition {
         int adjustedLeftIndex = readIndex - leftOffset;
         int adjustedRightIndex = readIndex + rightOffset;
 
-        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex ));
+        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
 
     private int readDistanceFromRef(int readIndex, final SAMRecord record, final IndexedBases refSequence) {

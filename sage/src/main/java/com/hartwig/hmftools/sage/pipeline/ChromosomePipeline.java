@@ -105,7 +105,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
             return false;
         }
 
-        return entry.primaryTumor().primaryReadContext().quality() >= config.filter().hardMinTumorQualFiltered();
+        return entry.primaryTumor().primaryReadContext().tumorQuality() >= config.filter().hardMinTumorQualFiltered();
     }
 
 }

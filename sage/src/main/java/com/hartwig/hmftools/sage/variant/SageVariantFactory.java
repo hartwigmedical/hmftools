@@ -78,7 +78,7 @@ public class SageVariantFactory {
 
         final ReadContextCounter normalCounter = normal.primaryReadContext();
 
-        if (!skipMinTumorQualTest(tier, primaryTumor) && primaryTumor.primaryReadContext().quality() < config.minTumorQual()) {
+        if (!skipMinTumorQualTest(tier, primaryTumor) && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
             result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
         }
 
@@ -102,8 +102,8 @@ public class SageVariantFactory {
             }
         }
 
-        double tumorQual = primaryTumor.primaryReadContext().quality();
-        double germlineQual = normal.primaryReadContext().quality();
+        double tumorQual = primaryTumor.primaryReadContext().tumorQuality();
+        double germlineQual = normal.primaryReadContext().tumorQuality();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
                 result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);

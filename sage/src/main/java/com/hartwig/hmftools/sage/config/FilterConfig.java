@@ -18,10 +18,10 @@ public interface FilterConfig {
     String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_alt_support";
     String MIN_GERMLINE_VAF = "min_germline_vaf";
 
+    int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
-    int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
 
     SoftFilterConfig NO_FILTER = ImmutableSoftFilterConfig.builder()
             .minTumorQual(0)
