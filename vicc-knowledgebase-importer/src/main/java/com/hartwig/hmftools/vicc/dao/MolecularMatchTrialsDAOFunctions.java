@@ -22,10 +22,14 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTr
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsSubLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrialsTag;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
 final class MolecularMatchTrialsDAOFunctions {
+
+    private static final Logger LOGGER = LogManager.getLogger(MolecularMatchTrialsDAOFunctions.class);
 
     private MolecularMatchTrialsDAOFunctions() {
     }
@@ -57,6 +61,8 @@ final class MolecularMatchTrialsDAOFunctions {
                 .getValue(MOLECULARMATCHTRIALS.ID);
 
         for (String molecularAlteration : molecularMatchTrials.molecularAlterations()) {
+            // TODO Clean up after verifying that no alterations are captured.
+            LOGGER.info("Writing '{}' alteration for MM trials", molecularAlteration);
             context.insertInto(MOLECULARMATCHTRIALSALTERATION,
                     MOLECULARMATCHTRIALSALTERATION.MOLECULARALTERATION,
                     MOLECULARMATCHTRIALSALTERATION.MOLECULARMATCHTRIALSID).values(molecularAlteration, id).execute();
