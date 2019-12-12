@@ -500,14 +500,14 @@ CREATE TABLE taxonomy
 CREATE TABLE sage
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
+    gene varchar(255) NOT NULL,
     entrezId varchar(255) NOT NULL,
     clinicalManifestation varchar(255) NOT NULL,
-    publicationUrl varchar(255) NOT NULL,
-    germlineOrSomatic varchar(255) NOT NULL,
-    evidenceLabel varchar(255) NOT NULL,
-    drugLabel varchar(255) NOT NULL,
     responseType varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
+    evidenceLabel varchar(255) NOT NULL,
+    drugLabels varchar(255) NOT NULL,
+    germlineOrSomatic varchar(255) NOT NULL,
+    publicationUrl varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );

@@ -462,4 +462,18 @@ final class ViccDatamodelCheckerFactory {
         map.put("manualPriority", false);
         return new ViccDatamodelChecker("MolecularMatchTrialsTagChecker", map);
     }
+
+    @NotNull
+    static ViccDatamodelChecker sageChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("gene", true);
+        map.put("entrez_id", true);
+        map.put("clinical_manifestation", true);
+        map.put("response_type", true);
+        map.put("evidence_label", true);
+        map.put("drug_labels", true);
+        map.put("germline_or_somatic", true);
+        map.put("publication_url", true);
+        return new ViccDatamodelChecker("SageChecker", map);
+    }
 }

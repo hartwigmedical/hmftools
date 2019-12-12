@@ -14,23 +14,23 @@ final class SageDAOFunctions {
 
     static void write(@NotNull DSLContext context, int viccEntryId, @NotNull Sage sage) {
         context.insertInto(SAGE,
+                SAGE.GENE,
                 SAGE.ENTREZID,
                 SAGE.CLINICALMANIFESTATION,
-                SAGE.PUBLICATIONURL,
-                SAGE.GERMLINEORSOMATIC,
-                SAGE.EVIDENCELABEL,
-                SAGE.DRUGLABEL,
                 SAGE.RESPONSETYPE,
-                SAGE.GENE,
+                SAGE.EVIDENCELABEL,
+                SAGE.DRUGLABELS,
+                SAGE.GERMLINEORSOMATIC,
+                SAGE.PUBLICATIONURL,
                 SAGE.VICCENTRYID)
-                .values(sage.entrezId(),
+                .values(sage.gene(),
+                        sage.entrezId(),
                         sage.clinicalManifestation(),
-                        sage.publicationUrl(),
-                        sage.germlineOrSomatic(),
+                        sage.responseType(),
                         sage.evidenceLabel(),
                         sage.drugLabels(),
-                        sage.responseType(),
-                        sage.gene(),
+                        sage.germlineOrSomatic(),
+                        sage.publicationUrl(),
                         viccEntryId)
                 .execute();
     }
