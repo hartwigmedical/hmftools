@@ -20,7 +20,6 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReporter;
 import com.hartwig.hmftools.patientreporter.reportingdb.ReportingDb;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -77,9 +76,10 @@ public class PatientReporterApplication {
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String SAMPLE_SUMMARY_TSV = "sample_summary_tsv";
 
-    // Some additional optional params
+    // Some additional optional params and flags
     private static final String COMMENTS = "comments";
     private static final String CORRECTED_REPORT = "corrected_report";
+    private static final String UNOFFICIAL_REPORT = "unofficial_report";
     private static final String LOG_DEBUG = "log_debug";
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -127,7 +127,8 @@ public class PatientReporterApplication {
                     cmd.getOptionValue(CHORD_PREDICTION_TXT),
                     cmd.getOptionValue(CIRCOS_FILE),
                     cmd.getOptionValue(COMMENTS),
-                    cmd.hasOption(CORRECTED_REPORT));
+                    cmd.hasOption(CORRECTED_REPORT),
+                    cmd.hasOption(UNOFFICIAL_REPORT));
             String outputFilePath = generateOutputFilePathForPatientReport(cmd.getOptionValue(OUTPUT_DIRECTORY), report);
             reportWriter.writeAnalysedPatientReport(report, outputFilePath);
 
@@ -217,7 +218,7 @@ public class PatientReporterApplication {
     }
 
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
-        final QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
+        QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
         if (qcFailReason == QCFailReason.UNDEFINED) {
             LOGGER.warn(QC_FAIL_REASON + " has to be 'low_dna_yield', 'post_analysis_fail', "
                     + "'shallow_seq_low_purity' or 'insufficient_tissue_delivered'.");
@@ -268,7 +269,7 @@ public class PatientReporterApplication {
 
     @NotNull
     private static Options createOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(REF_SAMPLE_ID, true, "The reference sample ID for the sample for which we are generating a report.");
         options.addOption(REF_SAMPLE_BARCODE, true, "The reference sample barcode for the sample for which we are generating a report.");
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
@@ -307,18 +308,18 @@ public class PatientReporterApplication {
 
         options.addOption(COMMENTS, true, "Additional comments to be added to the report (optional).");
         options.addOption(CORRECTED_REPORT, false, "If provided, generate a corrected report with corrected name");
+        options.addOption(UNOFFICIAL_REPORT, false, "If provided, generates a report with potentially some sections removed.");
         options.addOption(LOG_DEBUG, false, "If provided, set the log level to debug rather than default.");
         return options;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull Options options, @NotNull String... args) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
-    private static void printUsageAndExit(@NotNull final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
+    private static void printUsageAndExit(@NotNull Options options) {
+        HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Patient-Reporter", options);
         System.exit(1);
     }
