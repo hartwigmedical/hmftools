@@ -8,14 +8,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class OncokbVariant {
 
-    @Nullable
-    public abstract String variantResidues();
+    @NotNull
+    public abstract String name();
+
+    @NotNull
+    public abstract String alteration();
+
+    @NotNull
+    public abstract OncoKbConsequence oncoKbConsequence();
 
     @NotNull
     public abstract String proteinStart();
-
-    @NotNull
-    public abstract String name();
 
     @NotNull
     public abstract String proteinEnd();
@@ -23,11 +26,8 @@ public abstract class OncokbVariant {
     @Nullable
     public abstract String refResidues();
 
-    @NotNull
-    public abstract String alteration();
-
-    @NotNull
-    public abstract OncoKbConsequence oncoKbConsequence();
+    @Nullable
+    public abstract String variantResidues();
 
     @NotNull
     public abstract OncokbGene oncokbGene();
