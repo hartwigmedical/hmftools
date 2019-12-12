@@ -15,7 +15,10 @@ public abstract class OncokbVariant {
     public abstract String alteration();
 
     @NotNull
-    public abstract OncoKbConsequence oncoKbConsequence();
+    public abstract OncoKbConsequence consequence();
+
+    @NotNull
+    public abstract OncokbGene gene();
 
     @NotNull
     public abstract String proteinStart();
@@ -28,7 +31,4 @@ public abstract class OncokbVariant {
 
     @Nullable
     public abstract String variantResidues();
-
-    @NotNull
-    public abstract OncokbGene oncokbGene();
 }

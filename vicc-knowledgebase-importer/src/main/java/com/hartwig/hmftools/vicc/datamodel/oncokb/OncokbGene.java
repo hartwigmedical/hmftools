@@ -19,19 +19,19 @@ public abstract class OncokbGene {
     @NotNull
     public abstract String name();
 
-    @Nullable
-    public abstract String curatedRefSeq();
+    @NotNull
+    public abstract String entrezGeneId();
 
     @Nullable
     public abstract String curatedIsoform();
+
+    @Nullable
+    public abstract String curatedRefSeq();
 
     @NotNull
     public abstract String oncogene();
 
     @NotNull
     public abstract String tsg();
-
-    @NotNull
-    public abstract String entrezGeneId();
 
 }

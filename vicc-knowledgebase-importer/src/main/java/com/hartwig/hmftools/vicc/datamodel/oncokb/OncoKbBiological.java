@@ -14,7 +14,7 @@ public abstract class OncoKbBiological implements KbSpecificObject {
     public abstract String gene();
 
     @NotNull
-    public abstract String entrezGeneID();
+    public abstract String entrezGeneId();
 
     @NotNull
     public abstract String isoform();

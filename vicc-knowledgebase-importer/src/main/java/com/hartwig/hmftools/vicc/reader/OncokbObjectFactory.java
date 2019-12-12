@@ -13,14 +13,14 @@ import com.google.gson.JsonObject;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbDrugAbstracts;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbDrugAbstract;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokbGene;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokbVariant;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbConsequence;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbDrugAbstracts;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbDrugAbstract;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.Oncokb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbGene;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbVariant;
@@ -37,22 +37,22 @@ final class OncokbObjectFactory {
         ViccDatamodelCheckerFactory.oncoKbEntryChecker().check(oncoKbObject);
 
         if (oncoKbObject.has("biological")) {
-            return createOncoKbBiological(oncoKbObject);
+            return createOncoKbBiological(oncoKbObject.getAsJsonObject("biological"));
         } else if (oncoKbObject.has("clinical")) {
-            return createOncoKbClinical(oncoKbObject);
+            return createOncoKbClinical(oncoKbObject.getAsJsonObject("clinical"));
         } else {
             throw new IllegalStateException("OncoKb object neither biological nor clinical: " + oncoKbObject);
         }
     }
 
     @NotNull
-    private static Oncokb createOncoKbBiological(@NotNull JsonObject oncoKbObject) {
-        return ImmutableOncokb.builder().oncoKbBiological(createBiologicalOncoKb(oncoKbObject.getAsJsonObject("biological"))).build();
+    private static Oncokb createOncoKbBiological(@NotNull JsonObject oncoKbBiologicalObject) {
+        return ImmutableOncokb.builder().oncoKbBiological(createBiologicalOncoKb(oncoKbBiologicalObject)).build();
     }
 
     @NotNull
-    private static Oncokb createOncoKbClinical(@NotNull JsonObject oncoKbObject) {
-        return ImmutableOncokb.builder().oncoKbClinical(createClinicalOncoKb(oncoKbObject.getAsJsonObject("clinical"))).build();
+    private static Oncokb createOncoKbClinical(@NotNull JsonObject oncoKbClinicalObject) {
+        return ImmutableOncokb.builder().oncoKbClinical(createClinicalOncoKb(oncoKbClinicalObject)).build();
     }
 
     @NotNull
@@ -60,34 +60,36 @@ final class OncokbObjectFactory {
         ViccDatamodelCheckerFactory.oncoKbClinicalChecker().check(clinicalObject);
 
         return ImmutableOncoKbClinical.builder()
-                .refSeq(string(clinicalObject, "RefSeq"))
-                .level(string(clinicalObject, "level"))
+                .gene(string(clinicalObject, "gene"))
+                .entrezGeneId(string(clinicalObject, "Entrez Gene ID"))
                 .isoform(string(clinicalObject, "Isoform"))
-                .oncokbVariant(createVariantOncoKb(clinicalObject.getAsJsonObject("variant")))
-                .entrezGeneID(string(clinicalObject, "Entrez Gene ID"))
-                .drugPmids(string(clinicalObject, "drugPmids"))
+                .refSeq(string(clinicalObject, "RefSeq"))
+                .variant(createVariantOncoKb(clinicalObject.getAsJsonObject("variant")))
                 .cancerType(string(clinicalObject, "cancerType"))
                 .drug(string(clinicalObject, "drug"))
-                .gene(string(clinicalObject, "gene"))
+                .drugPmids(string(clinicalObject, "drugPmids"))
+                .drugAbstracts(createDrugsAbstracts(clinicalObject.getAsJsonArray("drugAbstracts")))
+                .level(string(clinicalObject, "level"))
                 .levelLabel(string(clinicalObject, "level_label"))
-                .oncoKbDrugAbstracts(createDrugsAbstracts(clinicalObject.getAsJsonArray("drugAbstracts")))
                 .build();
     }
 
     @NotNull
-    private static List<OncoKbDrugAbstracts> createDrugsAbstracts(@NotNull JsonArray drugsAbstractArray) {
-        List<OncoKbDrugAbstracts> drugsAbstractList = Lists.newArrayList();
-        for (JsonElement drugAbstracts : drugsAbstractArray) {
-            JsonObject drugAbstractsObject = drugAbstracts.getAsJsonObject();
+    private static List<OncoKbDrugAbstract> createDrugsAbstracts(@NotNull JsonArray drugAbstractArray) {
+        List<OncoKbDrugAbstract> drugAbstractList = Lists.newArrayList();
+        ViccDatamodelChecker drugAbstractChecker = ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker();
 
-            ViccDatamodelCheckerFactory.oncoKbDrugsAbstractChecker().check(drugAbstractsObject);
-            drugsAbstractList.add(ImmutableOncoKbDrugAbstracts.builder()
-                    .text(string(drugAbstractsObject, "text"))
-                    .link(string(drugAbstractsObject, "link"))
+        for (JsonElement drugAbstractElement : drugAbstractArray) {
+            JsonObject drugAbstractObject = drugAbstractElement.getAsJsonObject();
+
+            drugAbstractChecker.check(drugAbstractObject);
+            drugAbstractList.add(ImmutableOncoKbDrugAbstract.builder()
+                    .text(string(drugAbstractObject, "text"))
+                    .link(string(drugAbstractObject, "link"))
                     .build());
         }
 
-        return drugsAbstractList;
+        return drugAbstractList;
     }
 
     @NotNull
@@ -95,14 +97,14 @@ final class OncokbObjectFactory {
         ViccDatamodelCheckerFactory.oncoKbBiologicalChecker().check(biologicalObject);
 
         return ImmutableOncoKbBiological.builder()
-                .mutationEffectPmids(string(biologicalObject, "mutationEffectPmids"))
+                .gene(string(biologicalObject, "gene"))
+                .entrezGeneId(string(biologicalObject, "Entrez Gene ID"))
                 .isoform(string(biologicalObject, "Isoform"))
+                .refSeq(string(biologicalObject, "RefSeq"))
                 .oncokbVariant(createVariantOncoKb(biologicalObject.getAsJsonObject("variant")))
-                .entrezGeneID(string(biologicalObject, "Entrez Gene ID"))
                 .oncogenic(string(biologicalObject, "oncogenic"))
                 .mutationEffect(string(biologicalObject, "mutationEffect"))
-                .refSeq(string(biologicalObject, "RefSeq"))
-                .gene(string(biologicalObject, "gene"))
+                .mutationEffectPmids(string(biologicalObject, "mutationEffectPmids"))
                 .mutationEffectAbstracts(string(biologicalObject, "mutationEffectAbstracts"))
                 .build();
     }
@@ -112,14 +114,14 @@ final class OncokbObjectFactory {
         ViccDatamodelCheckerFactory.oncoKbVariantChecker().check(variantObject);
 
         return ImmutableOncokbVariant.builder()
-                .variantResidues(nullableString(variantObject, "variantResidues"))
-                .proteinStart(string(variantObject, "proteinStart"))
                 .name(string(variantObject, "name"))
+                .alteration(string(variantObject, "alteration"))
+                .consequence(createConsequenceOncokb(variantObject.getAsJsonObject("consequence")))
+                .gene(createGeneOncoKb(variantObject.getAsJsonObject("gene")))
+                .proteinStart(string(variantObject, "proteinStart"))
                 .proteinEnd(string(variantObject, "proteinEnd"))
                 .refResidues(nullableString(variantObject, "refResidues"))
-                .alteration(string(variantObject, "alteration"))
-                .oncoKbConsequence(createConsequenceOncokb(variantObject.getAsJsonObject("consequence")))
-                .oncokbGene(createGeneOncoKb(variantObject.getAsJsonObject("gene")))
+                .variantResidues(nullableString(variantObject, "variantResidues"))
                 .build();
     }
 
@@ -139,14 +141,14 @@ final class OncokbObjectFactory {
         ViccDatamodelCheckerFactory.oncoKbGeneChecker().check(geneObject);
 
         return ImmutableOncokbGene.builder()
-                .oncogene(string(geneObject, "oncogene"))
-                .name(string(geneObject, "name"))
                 .hugoSymbol(string(geneObject, "hugoSymbol"))
-                .curatedRefSeq(nullableString(geneObject, "curatedRefSeq"))
-                .entrezGeneId(string(geneObject, "entrezGeneId"))
                 .geneAliases(stringList(geneObject, "geneAliases"))
-                .tsg(string(geneObject, "tsg"))
+                .name(string(geneObject, "name"))
+                .entrezGeneId(string(geneObject, "entrezGeneId"))
                 .curatedIsoform(nullableString(geneObject, "curatedIsoform"))
+                .curatedRefSeq(nullableString(geneObject, "curatedRefSeq"))
+                .oncogene(string(geneObject, "oncogene"))
+                .tsg(string(geneObject, "tsg"))
                 .build();
     }
 }

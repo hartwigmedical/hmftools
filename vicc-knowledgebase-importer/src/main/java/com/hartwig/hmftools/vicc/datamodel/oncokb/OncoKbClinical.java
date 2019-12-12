@@ -16,7 +16,7 @@ public abstract class OncoKbClinical implements KbSpecificObject {
     public abstract String gene();
 
     @NotNull
-    public abstract String entrezGeneID();
+    public abstract String entrezGeneId();
 
     @NotNull
     public abstract String isoform();
@@ -25,7 +25,7 @@ public abstract class OncoKbClinical implements KbSpecificObject {
     public abstract String refSeq();
 
     @NotNull
-    public abstract OncokbVariant oncokbVariant();
+    public abstract OncokbVariant variant();
 
     @NotNull
     public abstract String cancerType();
@@ -37,12 +37,12 @@ public abstract class OncoKbClinical implements KbSpecificObject {
     public abstract String drugPmids();
 
     @NotNull
+    public abstract List<OncoKbDrugAbstract> drugAbstracts();
+
+    @NotNull
     public abstract String level();
 
     @NotNull
     public abstract String levelLabel();
-
-    @NotNull
-    public abstract List<OncoKbDrugAbstracts> oncoKbDrugAbstracts();
 
 }
