@@ -46,8 +46,6 @@ public class StructuralVariantFactory {
     private final static String LEFT_INS_SEQ = "LEFT_SVINSSEQ";
     private final static String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
     private final static String HOM_SEQ = "HOMSEQ";
-    private final static String BPI_START = "BPI_START";
-    private final static String BPI_END = "BPI_END";
     private final static String BPI_AF = "BPI_AF";
     private final static String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private final static String IHOMPOS = "IHOMPOS";
@@ -134,8 +132,8 @@ public class StructuralVariantFactory {
         final StructuralVariantType type = type(context);
         Preconditions.checkArgument(!StructuralVariantType.BND.equals(type));
 
-        final int start = context.hasAttribute(BPI_START) ? context.getAttributeAsInt(BPI_START, -1) : context.getStart();
-        final int end = context.hasAttribute(BPI_END) ? context.getAttributeAsInt(BPI_END, -1) : context.getEnd();
+        final int start = context.getStart();
+        final int end = context.getEnd();
         final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
 
         byte startOrientation = 0, endOrientation = 0;
@@ -214,8 +212,8 @@ public class StructuralVariantFactory {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(first)));
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(second)));
 
-        final int start = first.hasAttribute(BPI_START) ? first.getAttributeAsInt(BPI_START, -1) : first.getStart();
-        final int end = second.hasAttribute(BPI_START) ? second.getAttributeAsInt(BPI_START, -1) : second.getStart();
+        final int start = first.getStart();
+        final int end = second.getStart();
         final List<Double> af = first.hasAttribute(BPI_AF) ? first.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
 
         final String alt = first.getAlternateAllele(0).getDisplayString();
