@@ -153,6 +153,16 @@ public class SvGeneTranscriptCollection
         }
     }
 
+    public final List<EnsemblGeneData> findGenes(final String chromosome, long position, int upstreamDistance)
+    {
+        final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
+
+        if (geneRegions == null)
+            return Lists.newArrayList();
+
+        return findGeneRegions(position, geneRegions, upstreamDistance);
+    }
+
     public void setSvGeneData(final List<SvVarData> svList, boolean applyPromotorDistance, boolean selectiveLoading)
     {
         int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
@@ -317,7 +327,7 @@ public class SvGeneTranscriptCollection
         return genesList;
     }
 
-    private List<EnsemblGeneData> findGeneRegions(long position, List<EnsemblGeneData> geneDataList, int upstreamDistance)
+    public static final List<EnsemblGeneData> findGeneRegions(long position, final List<EnsemblGeneData> geneDataList, int upstreamDistance)
     {
         List<EnsemblGeneData> matchedGenes = Lists.newArrayList();
 
