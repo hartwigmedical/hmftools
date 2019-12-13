@@ -96,13 +96,13 @@ final class OncokbDAOFunctions {
                     ONCOKBGENEBIOLOGICAL.ONCOGENE,
                     ONCOKBGENEBIOLOGICAL.TSG,
                     ONCOKBGENEBIOLOGICAL.ONCOKBVARIANTBIOLOGICALID)
-                    .values(oncoKbGene.oncogene(),
+                    .values(oncoKbGene.hugoSymbol(),
                             oncoKbGene.name(),
-                            oncoKbGene.hugoSymbol(),
-                            oncoKbGene.curatedRefSeq(),
                             oncoKbGene.entrezGeneId(),
-                            oncoKbGene.tsg(),
                             oncoKbGene.curatedIsoform(),
+                            oncoKbGene.curatedRefSeq(),
+                            oncoKbGene.oncogene(),
+                            oncoKbGene.tsg(),
                             idVariant)
                     .returning(ONCOKBGENEBIOLOGICAL.ID)
                     .fetchOne()
