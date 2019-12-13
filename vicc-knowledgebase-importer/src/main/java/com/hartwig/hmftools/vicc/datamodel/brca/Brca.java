@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BRCA implements KbSpecificObject {
+public abstract class Brca implements KbSpecificObject {
 
     @NotNull
     public abstract String geneSymbol();
@@ -113,27 +113,27 @@ public abstract class BRCA implements KbSpecificObject {
     public abstract String sourceURL();
 
     @NotNull
-    public abstract BRCAAnnotation1000Genomes annotation1000Genomes();
+    public abstract BrcaAnnotation1000Genomes annotation1000Genomes();
 
     @NotNull
-    public abstract BRCAAnnotationBIC annotationBIC();
+    public abstract BrcaAnnotationBIC annotationBIC();
 
     @NotNull
-    public abstract BRCAAnnotationClinVar annotationClinVar();
+    public abstract BrcaAnnotationClinVar annotationClinVar();
 
     @NotNull
-    public abstract BRCAAnnotationENIGMA annotationENIGMA();
+    public abstract BrcaAnnotationENIGMA annotationENIGMA();
 
     @NotNull
-    public abstract BRCAAnnotationESP annotationESP();
+    public abstract BrcaAnnotationESP annotationESP();
 
     @NotNull
-    public abstract BRCAAnnotationExAC annotationExAC();
+    public abstract BrcaAnnotationExAC annotationExAC();
 
     @NotNull
-    public abstract BRCAAnnotationExLOVD annotationExLOVD();
+    public abstract BrcaAnnotationExLOVD annotationExLOVD();
 
     @NotNull
-    public abstract BRCAAnnotationLOVD annotationLOVD();
+    public abstract BrcaAnnotationLOVD annotationLOVD();
 
 }

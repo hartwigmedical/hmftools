@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.vicc.database.Tables.BRCAANNOTATIONEXAC;
 import static com.hartwig.hmftools.vicc.database.Tables.BRCAANNOTATIONEXLOVD;
 import static com.hartwig.hmftools.vicc.database.Tables.BRCAANNOTATIONLOVD;
 
+import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
+
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 
@@ -18,7 +20,7 @@ final class BRCADAOFunctions {
     private BRCADAOFunctions() {
     }
 
-    static void write(@NotNull DSLContext context, int viccEntryId, @NotNull com.hartwig.hmftools.vicc.datamodel.brca.BRCA brca) {
+    static void write(@NotNull DSLContext context, int viccEntryId, @NotNull Brca brca) {
         int id = context.insertInto(BRCA,
                 BRCA.GENESYMBOL,
                 BRCA.CHR,

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BRCAAnnotationBIC {
+public abstract class BrcaAnnotationBIC {
 
     @NotNull
     public abstract String variantInBIC();

@@ -3,24 +3,24 @@ package com.hartwig.hmftools.vicc.reader;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
 
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCA;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotation1000Genomes;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationBIC;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationClinVar;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationENIGMA;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationESP;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationExAC;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationExLOVD;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCAAnnotationLOVD;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCA;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotation1000Genomes;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationBIC;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationClinVar;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationENIGMA;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationESP;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationExAC;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationExLOVD;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCAAnnotationLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotation1000Genomes;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationBIC;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationClinVar;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationENIGMA;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationESP;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationExAC;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationExLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrca;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotation1000Genomes;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationBIC;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationClinVar;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationENIGMA;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationESP;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationExAC;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationExLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationLOVD;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,10 +30,10 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    static BRCA create(@NotNull JsonObject brcaObject) {
+    static Brca create(@NotNull JsonObject brcaObject) {
         ViccDatamodelCheckerFactory.brcaEntryChecker().check(brcaObject);
 
-        return ImmutableBRCA.builder()
+        return ImmutableBrca.builder()
                 .geneSymbol(string(brcaObject, "Gene_Symbol"))
                 .chr(string(brcaObject, "Chr"))
                 .pos(string(brcaObject, "Pos"))
@@ -80,8 +80,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotation1000Genomes createBRCAAnnotation1000Genomes(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotation1000Genomes.builder()
+    private static BrcaAnnotation1000Genomes createBRCAAnnotation1000Genomes(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotation1000Genomes.builder()
                 .variantIn1000Genomes(string(brcaObject, "Variant_in_1000_Genomes"))
                 .bxId(string(brcaObject, "BX_ID_1000_Genomes"))
                 .alleleFrequency(string(brcaObject, "Allele_frequency_1000_Genomes"))
@@ -94,8 +94,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationBIC createBRCAAnnotationBIC(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationBIC.builder()
+    private static BrcaAnnotationBIC createBRCAAnnotationBIC(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationBIC.builder()
                 .variantInBIC(string(brcaObject, "Variant_in_BIC"))
                 .bxId(string(brcaObject, "BX_ID_BIC"))
                 .mutationType(string(brcaObject, "Mutation_type_BIC"))
@@ -111,8 +111,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationClinVar createBRCAAnnotationClinVar(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationClinVar.builder()
+    private static BrcaAnnotationClinVar createBRCAAnnotationClinVar(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationClinVar.builder()
                 .variantInClinVar(string(brcaObject, "Variant_in_ClinVar"))
                 .bxId(string(brcaObject, "BX_ID_ClinVar"))
                 .clinicalSignificance(string(brcaObject, "Clinical_Significance_ClinVar"))
@@ -125,8 +125,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationENIGMA createBRCAAnnotationENIGMA(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationENIGMA.builder()
+    private static BrcaAnnotationENIGMA createBRCAAnnotationENIGMA(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationENIGMA.builder()
                 .variantInENIGMA(string(brcaObject, "Variant_in_ENIGMA"))
                 .bxId(string(brcaObject, "BX_ID_ENIGMA"))
                 .alleleOrigin(string(brcaObject, "Allele_origin_ENIGMA"))
@@ -146,8 +146,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationESP createBRCAAnnotationESP(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationESP.builder()
+    private static BrcaAnnotationESP createBRCAAnnotationESP(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationESP.builder()
                 .variantInESP(string(brcaObject, "Variant_in_ESP"))
                 .bxId(string(brcaObject, "BX_ID_ESP"))
                 .minorAlleleFrequencyPercent(string(brcaObject, "Minor_allele_frequency_percent_ESP"))
@@ -158,8 +158,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationExAC createBRCAAnnotationExAC(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationExAC.builder()
+    private static BrcaAnnotationExAC createBRCAAnnotationExAC(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationExAC.builder()
                 .variantInExAC(string(brcaObject, "Variant_in_ExAC"))
                 .bxId(string(brcaObject, "BX_ID_ExAC"))
                 .alleleFrequency(string(brcaObject, "Allele_frequency_ExAC"))
@@ -195,8 +195,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationExLOVD createBRCAAnnotationExLOVD(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationExLOVD.builder()
+    private static BrcaAnnotationExLOVD createBRCAAnnotationExLOVD(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationExLOVD.builder()
                 .variantInExLOVD(string(brcaObject, "Variant_in_exLOVD"))
                 .bxId(string(brcaObject, "BX_ID_exLOVD"))
                 .cooccurrenceLR(string(brcaObject, "Co_occurrence_LR_exLOVD"))
@@ -211,8 +211,8 @@ final class BRCAObjectFactory {
     }
 
     @NotNull
-    private static BRCAAnnotationLOVD createBRCAAnnotationLOVD(@NotNull JsonObject brcaObject) {
-        return ImmutableBRCAAnnotationLOVD.builder()
+    private static BrcaAnnotationLOVD createBRCAAnnotationLOVD(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationLOVD.builder()
                 .variantInLOVD(string(brcaObject, "Variant_in_LOVD"))
                 .bxId(string(brcaObject, "BX_ID_LOVD"))
                 .dbId(string(brcaObject, "DBID_LOVD"))

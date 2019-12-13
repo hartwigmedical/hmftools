@@ -6,29 +6,29 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BRCAAnnotation1000Genomes {
+public abstract class BrcaAnnotationClinVar {
 
     @NotNull
-    public abstract String variantIn1000Genomes();
+    public abstract String variantInClinVar();
 
     @NotNull
     public abstract String bxId();
 
     @NotNull
-    public abstract String alleleFrequency();
+    public abstract String clinicalSignificance();
 
     @NotNull
-    public abstract String afrAlleleFrequency();
+    public abstract String submitter();
 
     @NotNull
-    public abstract String amrAlleleFrequency();
+    public abstract String method();
 
     @NotNull
-    public abstract String easAlleleFrequency();
+    public abstract String alleleOrigin();
 
     @NotNull
-    public abstract String eurAlleleFrequency();
+    public abstract String scv();
 
     @NotNull
-    public abstract String sasAlleleFrequency();
+    public abstract String dateLastUpdated();
 }
