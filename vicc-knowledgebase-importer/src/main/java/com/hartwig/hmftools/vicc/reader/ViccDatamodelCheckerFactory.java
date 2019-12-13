@@ -217,6 +217,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("Genomic_Coordinate_hg37", true);
         map.put("Hg37_Start", true);
         map.put("Hg37_End", true);
+        map.put("Genomic_Coordinate_hg38", true);
         map.put("Hg38_Start", true);
         map.put("Hg38_End", true);
         map.put("Protein_Change", true);
