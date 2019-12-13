@@ -11,9 +11,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class BRCA implements KbSpecificObject {
 
     @NotNull
-    public abstract BRCApart1 brcApart1();
+    public abstract BRCApart1 brcaPart1();
 
     @NotNull
-    public abstract BRCApart2 brcApart2();
+    public abstract BRCApart2 brcaPart2();
 
 }

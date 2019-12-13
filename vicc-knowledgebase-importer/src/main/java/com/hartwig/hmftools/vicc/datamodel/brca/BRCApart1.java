@@ -9,320 +9,320 @@ import org.jetbrains.annotations.Nullable;
 public abstract class BRCApart1 {
 
     @NotNull
-    public abstract String Variant_frequency_LOVD();
+    public abstract String variantFrequencyLOVD();
 
     @NotNull
-    public abstract String Allele_frequency_FIN_ExAC();
+    public abstract String alleleFrequencyFINExAC();
 
     @NotNull
-    public abstract String ClinVarAccession_ENIGMA();
+    public abstract String clinVarAccessionENIGMA();
 
     @NotNull
-    public abstract String Homozygous_count_AFR_ExAC();
+    public abstract String homozygousCountAFRExAC();
 
     @NotNull
-    public abstract String BX_ID_ExAC();
+    public abstract String bxIdExAC();
 
     @NotNull
-    public abstract String Variant_in_LOVD();
+    public abstract String variantInLOVD();
 
     @NotNull
-    public abstract String Allele_frequency_AFR_ExAC();
+    public abstract String alleleFrequencyAFRExAC();
 
     @NotNull
-    public abstract String Chr();
+    public abstract String chr();
 
     @NotNull
-    public abstract String BX_ID_ENIGMA();
+    public abstract String bxIdENIGMA();
 
     @NotNull
-    public abstract String Co_occurrence_LR_exLOVD();
+    public abstract String cooccurrenceLRExLOVD();
 
     @NotNull
-    public abstract String Homozygous_count_EAS_ExAC();
+    public abstract String homozygousCountEASExAC();
 
     @NotNull
-    public abstract String Submitter_ClinVar();
+    public abstract String submitterClinVar();
 
     @NotNull
-    public abstract String Allele_frequency_EAS_ExAC();
+    public abstract String alleleFrequencyEASExAC();
 
     @NotNull
-    public abstract String Hg37_End();
+    public abstract String hg37End();
 
     @NotNull
-    public abstract String Submitters_LOVD();
+    public abstract String submittersLOVD();
 
     @NotNull
-    public abstract String Clinical_classification_BIC();
+    public abstract String clinicalClassificationBIC();
 
     @NotNull
-    public abstract String Homozygous_count_NFE_ExAC();
+    public abstract String homozygousCountNFEExAC();
 
     @NotNull
-    public abstract String Allele_count_SAS_ExAC();
+    public abstract String alleleCountSASExAC();
 
     @NotNull
-    public abstract String Method_ClinVar();
+    public abstract String methodClinVar();
 
     @NotNull
-    public abstract String Allele_count_NFE_ExAC();
+    public abstract String alleleCountNFEExAC();
 
     @NotNull
-    public abstract String Pathogenicity_all();
+    public abstract String pathogenicityAll();
 
     @NotNull
-    public abstract String Germline_or_Somatic_BIC();
+    public abstract String germlineOrSomaticBIC();
 
     @NotNull
-    public abstract String Homozygous_count_SAS_ExAC();
+    public abstract String homozygousCountSASExAC();
 
     @NotNull
-    public abstract String BIC_Nomenclature();
+    public abstract String bicNomenclature();
 
     @NotNull
-    public abstract String Assertion_method_ENIGMA();
+    public abstract String assertionMethodENIGMA();
 
     @NotNull
-    public abstract String Literature_source_exLOVD();
+    public abstract String literatureSourceExLOVD();
 
     @NotNull
-    public abstract String Change_Type_id();
+    public abstract String changeTypeId();
 
     @NotNull
-    public abstract String Collection_method_ENIGMA();
+    public abstract String collectionMethodENIGMA();
 
     @NotNull
-    public abstract String Sum_family_LR_exLOVD();
+    public abstract String sumFamilyLRExLOVD();
 
     @NotNull
-    public abstract String HGVS_cDNA_LOVD();
+    public abstract String hgvsCDNALOVD();
 
     @NotNull
-    public abstract String Homozygous_count_FIN_ExAC();
+    public abstract String homozygousCountFINExAC();
 
     @NotNull
-    public abstract String EAS_Allele_frequency_1000_Genomes();
+    public abstract String easAlleleFrequency1000Genomes();
 
     @NotNull
-    public abstract String Ethnicity_BIC();
+    public abstract String ethnicityBIC();
 
     @NotNull
-    public abstract String Individuals_LOVD();
+    public abstract String individualsLOVD();
 
     @NotNull
-    public abstract String Variant_in_ExAC();
+    public abstract String variantInExAC();
 
     @NotNull
-    public abstract String URL_ENIGMA();
+    public abstract String urlENIGMA();
 
     @NotNull
-    public abstract String Allele_Origin_ClinVar();
+    public abstract String alleleOriginClinVar();
 
     @NotNull
-    public abstract String Allele_frequency_AMR_ExAC();
+    public abstract String alleleFrequencyAMRExAC();
 
     @NotNull
-    public abstract String Variant_in_1000_Genomes();
+    public abstract String variantIn1000Genomes();
 
     @NotNull
-    public abstract String AFR_Allele_frequency_1000_Genomes();
+    public abstract String afrAlleleFrequency1000Genomes();
 
     @NotNull
-    public abstract String BX_ID_exLOVD();
+    public abstract String bxIdExLOVD();
 
     @NotNull
-    public abstract String Source();
+    public abstract String source();
 
     @NotNull
-    public abstract String Condition_ID_value_ENIGMA();
+    public abstract String conditionIdValueENIGMA();
 
     @NotNull
-    public abstract String HGVS_Protein();
+    public abstract String hgvsProtein();
 
     @NotNull
-    public abstract String Ref();
+    public abstract String ref();
 
     @NotNull
-    public abstract String Allele_number_AFR_ExAC();
+    public abstract String alleleNumberAFRExAC();
 
     @NotNull
-    public abstract String Allele_count_AFR_ExAC();
+    public abstract String alleleCountAFRExAC();
 
     @NotNull
-    public abstract String BX_ID_LOVD();
+    public abstract String bxIdLOVD();
 
     @NotNull
-    public abstract String Synonyms();
+    public abstract String synonyms();
 
     @NotNull
-    public abstract String Gene_Symbol();
+    public abstract String geneSymbol();
 
     @NotNull
-    public abstract String Comment_on_clinical_significance_ENIGMA();
+    public abstract String commentOnClinicalSignificanceENIGMA();
 
     @NotNull
-    public abstract String Missense_analysis_prior_probability_exLOVD();
+    public abstract String missenseAnalysisPriorProbabilityExLOVD();
 
     @NotNull
-    public abstract String Allele_number_FIN_ExAC();
+    public abstract String alleleNumberFINExAC();
 
     @NotNull
-    public abstract String Posterior_probability_exLOVD();
+    public abstract String posteriorProbabilityExLOVD();
 
     @NotNull
-    public abstract String Polyphen_Score();
+    public abstract String polyphenScore();
 
     @NotNull
-    public abstract String Reference_Sequence();
+    public abstract String referenceSequence();
 
     @NotNull
-    public abstract String Allele_count_EAS_ExAC();
+    public abstract String alleleCountEASExAC();
 
     @NotNull
-    public abstract String Hg38_End();
+    public abstract String hg38End();
 
     @NotNull
-    public abstract String HGVS_cDNA();
+    public abstract String hgvsCDNA();
 
     @NotNull
-    public abstract String Functional_analysis_technique_LOVD();
+    public abstract String functionalAnalysisTechniqueLOVD();
 
     @NotNull
-    public abstract String SAS_Allele_frequency_1000_Genomes();
+    public abstract String sasAlleleFrequency1000Genomes();
 
     @NotNull
-    public abstract String RNA_LOVD();
+    public abstract String rnaLOVD();
 
     @NotNull
-    public abstract String Combined_prior_probablility_exLOVD();
+    public abstract String combinedPriorProbabilityExLOVD();
 
     @NotNull
-    public abstract String BX_ID_ClinVar();
+    public abstract String bxIdClinVar();
 
     @NotNull
-    public abstract String IARC_class_exLOVD();
+    public abstract String iarcClassExLOVD();
 
     @NotNull
-    public abstract String BX_ID_BIC();
+    public abstract String bxIdBIC();
 
     @NotNull
-    public abstract String Sift_Prediction();
+    public abstract String siftPrediction();
 
     @NotNull
-    public abstract String Allele_number_NFE_ExAC();
+    public abstract String alleleNumberNFEExAC();
 
     @NotNull
-    public abstract String Allele_origin_ENIGMA();
+    public abstract String alleleOriginENIGMA();
 
     @NotNull
-    public abstract String Allele_number_OTH_ExAC();
+    public abstract String alleleNumberOTHExAC();
 
     @NotNull
-    public abstract String Hg36_End();
+    public abstract String hg36End();
 
     @NotNull
-    public abstract String Allele_frequency_SAS_ExAC();
+    public abstract String alleleFrequencySASExAC();
 
     @NotNull
-    public abstract String Date_Last_Updated_ClinVar();
+    public abstract String dateLastUpdatedClinVar();
 
     @NotNull
-    public abstract String Allele_number_EAS_ExAC();
+    public abstract String alleleNumberEASExAC();
 
     @NotNull
-    public abstract String Allele_frequency_OTH_ExAC();
+    public abstract String alleleFrequencyOTHExAC();
 
     @NotNull
-    public abstract String Source_URL();
+    public abstract String sourceURL();
 
     @NotNull
-    public abstract String SCV_ClinVar();
+    public abstract String scvClinVar();
 
     @NotNull
-    public abstract String Pathogenicity_expert();
+    public abstract String pathogenicityExpert();
 
     @NotNull
-    public abstract String Allele_frequency_1000_Genomes();
+    public abstract String alleleFrequency1000Genomes();
 
     @NotNull
-    public abstract String Functional_analysis_result_LOVD();
+    public abstract String functionalAnalysisResultLOVD();
 
     @NotNull
-    public abstract String AMR_Allele_frequency_1000_Genomes();
+    public abstract String amrAlleleFrequency1000Genomes();
 
     @NotNull
-    public abstract String Variant_in_ESP();
+    public abstract String variantInESP();
 
     @NotNull
-    public abstract String Variant_in_BIC();
+    public abstract String variantInBIC();
 
     @NotNull
-    public abstract String Clinical_significance_ENIGMA();
+    public abstract String clinicalSignificanceENIGMA();
 
     @NotNull
-    public abstract String Max_Allele_Frequency();
+    public abstract String maxAlleleFrequency();
 
     @NotNull
-    public abstract String Allele_count_AMR_ExAC();
+    public abstract String alleleCountAMRExAC();
 
     @NotNull
-    public abstract String Variant_in_ENIGMA();
+    public abstract String variantInENIGMA();
 
     @NotNull
-    public abstract String BX_ID_ESP();
+    public abstract String bxIdESP();
 
     @NotNull
-    public abstract String Patient_nationality_BIC();
+    public abstract String patientNationalityBIC();
 
     @NotNull
-    public abstract String BX_ID_1000_Genomes();
+    public abstract String bxId1000Genomes();
 
     @NotNull
-    public abstract String Genomic_Coordinate_hg37();
+    public abstract String genomicCoordinateHg37();
 
     @NotNull
-    public abstract String Genomic_Coordinate_hg36();
+    public abstract String genomicCoordinateHg36();
 
     @NotNull
-    public abstract String EUR_Allele_frequency_1000_Genomes();
+    public abstract String eurAlleleFrequency1000Genomes();
 
     @NotNull
-    public abstract String Number_of_family_member_carrying_mutation_BIC();
+    public abstract String numberOfFamilyMemberCarryingMutationBIC();
 
     @NotNull
-    public abstract String Segregation_LR_exLOVD();
+    public abstract String segregationLRExLOVD();
 
     @NotNull
-    public abstract String Allele_Frequency();
+    public abstract String alleleFrequency();
 
     @NotNull
-    public abstract String Minor_allele_frequency_percent_ESP();
+    public abstract String minorAlleleFrequencyPercentESP();
 
     @NotNull
-    public abstract String Allele_frequency_ExAC();
+    public abstract String alleleFrequencyExAC();
 
     @NotNull
-    public abstract String Mutation_type_BIC();
+    public abstract String mutationTypeBIC();
 
     @NotNull
-    public abstract String Assertion_method_citation_ENIGMA();
+    public abstract String assertionMethodCitationENIGMA();
 
     @NotNull
-    public abstract String Condition_ID_type_ENIGMA();
+    public abstract String conditionIdTypeENIGMA();
 
     @NotNull
-    public abstract String Allele_count_OTH_ExAC();
+    public abstract String alleleCountOTHExAC();
 
     @NotNull
-    public abstract String HGVS_protein_LOVD();
+    public abstract String hgvsProteinLOVD();
 
     @NotNull
-    public abstract String Variant_in_ClinVar();
+    public abstract String variantInClinVar();
 
     @NotNull
-    public abstract String Clinical_importance_BIC();
+    public abstract String clinicalImportanceBIC();
 
     @NotNull
-    public abstract String Discordant();
+    public abstract String discordant();
 }

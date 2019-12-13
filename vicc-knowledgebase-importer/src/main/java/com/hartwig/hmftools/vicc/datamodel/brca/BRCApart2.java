@@ -9,95 +9,95 @@ import org.jetbrains.annotations.Nullable;
 public abstract class BRCApart2 {
 
     @NotNull
-    public abstract String Allele_count_FIN_ExAC();
+    public abstract String alleleCountFINExAC();
 
     @NotNull
-    public abstract String Condition_category_ENIGMA();
+    public abstract String conditionCategoryENIGMA();
 
     @NotNull
-    public abstract String Allele_Frequency_ESP();
+    public abstract String alleleFrequencyESP();
 
     @NotNull
-    public abstract String Homozygous_count_OTH_ExAC();
+    public abstract String homozygousCountOTHExAC();
 
     @NotNull
-    public abstract String Genetic_origin_LOVD();
+    public abstract String geneticOriginLOVD();
 
     @NotNull
     public abstract String id();
 
     @NotNull
-    public abstract String Homozygous_count_AMR_ExAC();
+    public abstract String homozygousCountAMRExAC();
 
     @NotNull
-    public abstract String Clinical_Significance_ClinVar();
+    public abstract String clinicalSignificanceClinVar();
 
     @NotNull
-    public abstract String AA_Allele_Frequency_ESP();
+    public abstract String aaAlleleFrequencyESP();
 
     @NotNull
-    public abstract String Protein_Change();
+    public abstract String proteinChange();
 
     @NotNull
-    public abstract String Variant_in_exLOVD();
+    public abstract String variantInExLOVD();
 
     @NotNull
-    public abstract String EA_Allele_Frequency_ESP();
+    public abstract String eaAlleleFrequencyESP();
 
     @NotNull
-    public abstract String HGVS_RNA();
+    public abstract String hgvsRNA();
 
     @NotNull
-    public abstract String Clinical_significance_citations_ENIGMA();
+    public abstract String clinicalSignificanceCitationsENIGMA();
 
     @NotNull
-    public abstract String Variant_effect_LOVD();
+    public abstract String variantEffectLOVD();
 
     @NotNull
-    public abstract String Polyphen_Prediction();
+    public abstract String polyphenPrediction();
 
     @NotNull
-    public abstract String Data_Release_id();
+    public abstract String dataReleaseId();
 
     @NotNull
-    public abstract String Hg37_Start();
+    public abstract String hg37Start();
 
     @NotNull
-    public abstract String Hg36_Start();
+    public abstract String hg36Start();
 
     @NotNull
-    public abstract String Sift_Score();
+    public abstract String siftScore();
 
     @NotNull
-    public abstract String Genomic_Coordinate_hg38();
+    public abstract String genomicCoordinateHg38();
 
     @NotNull
-    public abstract String Alt();
+    public abstract String alt();
 
     @NotNull
-    public abstract String Literature_citation_BIC();
+    public abstract String literatureCitationBIC();
 
     @NotNull
-    public abstract String Variant_haplotype_LOVD();
+    public abstract String variantHaplotypeLOVD();
 
     @NotNull
-    public abstract String Allele_frequency_NFE_ExAC();
+    public abstract String alleleFrequencyNFEExAC();
 
     @NotNull
-    public abstract String Hg38_Start();
+    public abstract String hg38Start();
 
     @NotNull
-    public abstract String Pos();
+    public abstract String pos();
 
     @NotNull
-    public abstract String Date_last_evaluated_ENIGMA();
+    public abstract String dateLastEvaluatedENIGMA();
 
     @NotNull
-    public abstract String Allele_number_SAS_ExAC();
+    public abstract String alleleNumberSASExAC();
 
     @NotNull
-    public abstract String Allele_number_AMR_ExAC();
+    public abstract String alleleNumberAMRExAC();
 
     @NotNull
-    public abstract String DBID_LOVD();
+    public abstract String dbIdLOVD();
 }
