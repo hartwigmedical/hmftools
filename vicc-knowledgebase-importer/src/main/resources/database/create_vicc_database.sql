@@ -2876,7 +2876,7 @@ CREATE TABLE brca
     changeTypeId varchar(255) NOT NULL,
     dataReleaseId varchar(255) NOT NULL,
     source varchar(255) NOT NULL,
-    sourceURL varchar(255) NOT NULL,
+    sourceURL varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -2951,7 +2951,6 @@ CREATE TABLE brcaAnnotationENIGMA (
     FOREIGN KEY (brcaId) REFERENCES brca(id)
 );
 
-
 CREATE TABLE brcaAnnotationESP (
     id int NOT NULL AUTO_INCREMENT,
     brcaId int NOT NULL,
@@ -2964,7 +2963,6 @@ CREATE TABLE brcaAnnotationESP (
     PRIMARY KEY (id),
     FOREIGN KEY (brcaId) REFERENCES brca(id)
 );
-
 
 CREATE TABLE brcaAnnotationExAC (
     id int NOT NULL AUTO_INCREMENT,
@@ -3004,7 +3002,6 @@ CREATE TABLE brcaAnnotationExAC (
     FOREIGN KEY (brcaId) REFERENCES brca(id)
 );
 
-
 CREATE TABLE brcaAnnotationExLOVD (
     id int NOT NULL AUTO_INCREMENT,
     brcaId int NOT NULL,
@@ -3021,7 +3018,6 @@ CREATE TABLE brcaAnnotationExLOVD (
     PRIMARY KEY (id),
     FOREIGN KEY (brcaId) REFERENCES brca(id)
 );
-
 
 CREATE TABLE brcaAnnotationLOVD (
     id int NOT NULL AUTO_INCREMENT,
