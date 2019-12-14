@@ -2923,7 +2923,7 @@ CREATE TABLE brcaAnnotationClinVar (
     submitter varchar(2500) NOT NULL,
     method varchar(255) NOT NULL,
     alleleOrigin varchar(255) NOT NULL,
-    scv varchar(255) NOT NULL,
+    scv varchar(500) NOT NULL,
     dateLastUpdated varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (brcaId) REFERENCES brca(id)
