@@ -2906,7 +2906,7 @@ CREATE TABLE brcaAnnotationBIC (
     clinicalImportance varchar(255) NOT NULL,
     nomenclature varchar(255) NOT NULL,
     ethnicity varchar(2500) NOT NULL,
-    patientNationality varchar(255) NOT NULL,
+    patientNationality varchar(500) NOT NULL,
     germlineOrSomatic varchar(255) NOT NULL,
     numberOfFamilyMemberCarryingMutation varchar(255) NOT NULL,
     literatureCitation varchar(255) NOT NULL,
