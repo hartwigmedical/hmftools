@@ -3034,7 +3034,7 @@ CREATE TABLE brcaAnnotationLOVD (
     geneticOrigin varchar(255) NOT NULL,
     functionalAnalysisTechnique varchar(255) NOT NULL,
     functionalAnalysisResult varchar(255) NOT NULL,
-    submitters varchar(255) NOT NULL,
+    submitters varchar(1000) NOT NULL,
     individuals varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (brcaId) REFERENCES brca(id)
