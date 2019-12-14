@@ -2859,7 +2859,7 @@ CREATE TABLE brca
     hg38End varchar(255) NOT NULL,
     proteinChange varchar(255) NOT NULL,
     referenceSequence varchar(255) NOT NULL,
-    synonyms varchar(255) NOT NULL,
+    synonyms varchar(1000) NOT NULL,
     hgvsCDNA varchar(255) NOT NULL,
     hgvsProtein varchar(255) NOT NULL,
     hgvsRNA varchar(255) NOT NULL,
