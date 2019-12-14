@@ -2909,7 +2909,7 @@ CREATE TABLE brcaAnnotationBIC (
     patientNationality varchar(500) NOT NULL,
     germlineOrSomatic varchar(255) NOT NULL,
     numberOfFamilyMemberCarryingMutation varchar(255) NOT NULL,
-    literatureCitation varchar(255) NOT NULL,
+    literatureCitation varchar(1000) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (brcaId) REFERENCES brca(id)
 );
