@@ -2920,7 +2920,7 @@ CREATE TABLE brcaAnnotationClinVar (
     variantInClinVar varchar(255) NOT NULL,
     bxId varchar(255) NOT NULL,
     clinicalSignificance varchar(255) NOT NULL,
-    submitter varchar(255) NOT NULL,
+    submitter varchar(2500) NOT NULL,
     method varchar(255) NOT NULL,
     alleleOrigin varchar(255) NOT NULL,
     scv varchar(255) NOT NULL,
