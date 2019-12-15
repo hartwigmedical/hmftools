@@ -2944,7 +2944,7 @@ CREATE TABLE brcaAnnotationENIGMA (
     conditionIdType varchar(255) NOT NULL,
     clinicalSignificance varchar(255) NOT NULL,
     clinicalSignificanceCitations varchar(255) NOT NULL,
-    commentOnClinicalSignificance varchar(255) NOT NULL,
+    commentOnClinicalSignificance varchar(500) NOT NULL,
     dateLastEvaluated varchar(255) NOT NULL,
     url varchar(255) NOT NULL,
     PRIMARY KEY (id),
