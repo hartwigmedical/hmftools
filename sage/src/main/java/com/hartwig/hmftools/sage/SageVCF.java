@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
+import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 
@@ -155,6 +156,8 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
+
+        header.addMetaDataLine(new VCFFilterHeaderLine(FilterConfig.MIN_GERMLINE_VAF, "Insufficient germline VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_QUAL, "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_VAF, "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_GERMLINE_DEPTH, "Insufficient germline depth"));
