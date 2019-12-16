@@ -184,7 +184,7 @@ final class CivicObjectFactory {
                     .type(string(variantObject, "type"))
                     .variantTypes(createVariantTypes(variantObject.getAsJsonArray("variant_types")))
                     .civicActionabilityScore(optionalNullableString(variantObject, "civic_actionability_score"))
-                    .coordinates(createCoordinates(optionalJsonObject(variantObject, "createCoordinates")))
+                    .coordinates(createCoordinates(optionalJsonObject(variantObject, "coordinates")))
                     .id(string(variantObject, "id"))
                     .geneId(string(variantObject, "gene_id"))
                     .description(string(variantObject, "description"))

@@ -390,8 +390,9 @@ final class ViccDatamodelCheckerFactory {
         map.put("stop", true);
         map.put("reference_bases", true);
         map.put("variant_bases", true);
-        map.put("ensembl_version", true);
         map.put("representative_transcript", true);
+        map.put("ensembl_version", true);
+        map.put("reference_build", false);
         map.put("chromosome2", true);
         map.put("start2", true);
         map.put("stop2", true);
@@ -453,7 +454,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("type", true);
         map.put("variant_types", true);
         map.put("civic_actionability_score", false);
-        map.put("createCoordinates", false);
+        map.put("coordinates", false);
         map.put("id", true);
         map.put("gene_id", true);
         map.put("description", true);
@@ -587,10 +588,10 @@ final class ViccDatamodelCheckerFactory {
         map.put("twitter_handle", true);
         map.put("facebook_profile", true);
         map.put("linkedin_profile", true);
-        map.put("orcid ", true);
-        map.put("signup_complete ", true);
-        map.put("accepted_license ", true);
-        map.put("id ", true);
+        map.put("orcid", true);
+        map.put("signup_complete", true);
+        map.put("accepted_license", true);
+        map.put("id", true);
         return new ViccDatamodelChecker("CivicUser", map);
     }
 

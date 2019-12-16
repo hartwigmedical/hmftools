@@ -30,6 +30,9 @@ public abstract class CivicCoordinates {
     public abstract String ensemblVersion();
 
     @Nullable
+    public abstract String referenceBuild();
+
+    @Nullable
     public abstract String chromosome2();
 
     @Nullable
