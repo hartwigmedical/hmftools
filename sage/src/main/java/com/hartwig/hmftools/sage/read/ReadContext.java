@@ -85,6 +85,20 @@ public class ReadContext {
         return quality;
     }
 
+    int avgCentreQuality(int readIndex, @NotNull final SAMRecord record) {
+        int leftOffset = this.readIndex() - readBases.leftCentreIndex();
+        int rightOffset = readBases.rightCentreIndex() - this.readIndex();
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        float quality = 0;
+        for (int i = leftIndex; i <= rightIndex; i++) {
+            quality += record.getBaseQualities()[i];
+        }
+        return Math.round(quality / (rightIndex - leftIndex + 1));
+    }
+
     public boolean phased(int offset, @NotNull final ReadContext other) {
         return readBases.phased(offset, other.readBases);
     }
