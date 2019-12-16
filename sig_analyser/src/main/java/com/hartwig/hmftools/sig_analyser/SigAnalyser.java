@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 public class SigAnalyser
 {
     public static final String GENERIC_INPUT_FILE = "gen_input_file";
-    public static final String SAMPLE_IDS = "sample_ids";
     public static final String LOG_DEBUG = "log_debug";
 
     public static final String OUTPUT_DIR = "output_dir";
@@ -37,48 +36,23 @@ public class SigAnalyser
     private static final String RUN_NMF = "run_nmf";
     private static final String RUN_BA = "run_buckets";
     private static final String RUN_SAMPLE_SIM = "run_sim";
-    private static final String LOAD_SNVS = "load_snvs";
 
     private static final Logger LOGGER = LogManager.getLogger(SigAnalyser.class);
 
-    public static void main(@NotNull final String[] args) throws ParseException {
-
+    public static void main(@NotNull final String[] args) throws ParseException
+    {
         Options options = createBasicOptions();
 
         // allow components to add their own arg lists
         SimConfig.addCmdLineArgs(options);
         NmfConfig.addCmdLineArgs(options);
         BucketAnalyser.addCmdLineArgs(options);
-        SigSnvLoader.addCmdLineArgs(options);
 
         final CommandLine cmd = createCommandLine(args, options);
 
         if (cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
-        }
-
-        if(cmd.hasOption(LOAD_SNVS))
-        {
-            try
-            {
-                final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
-
-                SigSnvLoader snvLoader = new SigSnvLoader();
-
-                if(snvLoader.initialise(dbAccess, cmd))
-                {
-                    snvLoader.loadData();
-                }
-
-                LOGGER.info("variant download complete");
-            }
-            catch(SQLException e)
-            {
-                LOGGER.error("DB connection failed: {}", e.toString());
-            }
-
-            return;
         }
 
         LOGGER.info("starting signature analyser");
@@ -122,10 +96,6 @@ public class SigAnalyser
         LOGGER.info("analysis complete");
     }
 
-    private static final String DB_USER = "db_user";
-    private static final String DB_PASS = "db_pass";
-    private static final String DB_URL = "db_url";
-
     @NotNull
     private static Options createBasicOptions()
     {
@@ -138,12 +108,6 @@ public class SigAnalyser
         options.addOption(RUN_NMF, false, "Run NMF");
         options.addOption(RUN_BA, false, "Run bucket analysis");
         options.addOption(RUN_SAMPLE_SIM, false, "Generate simulated sample counts");
-        options.addOption(LOAD_SNVS, false, "Create sample bucket counts for SNVs from DB");
-        options.addOption(SAMPLE_IDS, true, "Optional: restrict to sample list");
-
-        options.addOption(DB_USER, true, "Database user name");
-        options.addOption(DB_PASS, true, "Database password");
-        options.addOption(DB_URL, true, "Database url");
 
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
 
@@ -156,16 +120,5 @@ public class SigAnalyser
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
-    @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException
-    {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
-        final String jdbcUrl = "jdbc:" + databaseUrl;
-        return new DatabaseAccess(userName, password, jdbcUrl);
-    }
-
 
 }

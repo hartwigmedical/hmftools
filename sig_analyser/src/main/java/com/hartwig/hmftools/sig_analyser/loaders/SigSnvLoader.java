@@ -1,105 +1,37 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.SigAnalyser.SAMPLE_IDS;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SigSnvLoader
 {
-    private String mOutputDir;
-    private String mOutputFileId;
-    private DatabaseAccess mDbAccess;
-    private boolean mApplySampleQC;
+    private final DataLoaderConfig mConfig;
 
-    final Map<String,Integer> mBucketStringToIndex;
-    SigMatrix mSampleBucketCounts;
-    final List<String> mSampleIds;
-
-    private Double mPloidyMin;
-    private Double mPloidyMax;
-    private Double mSubclonalLikelihoodMin;
-    private Double mSubclonalLikelihoodMax;
+    private final Map<String,Integer> mBucketStringToIndex;
+    private SigMatrix mSampleBucketCounts;
 
     private static final int SNV_BUCKET_COUNT = 96;
-    private static final String APPLY_SAMPLE_QC = "apply_sample_qc";
-    private static final String SUBCLONAL_MIN = "subclonal_min";
-    private static final String SUBCLONAL_MAX = "subclonal_max";
-    private static final String PLOIDY_MAX = "ploidy_max";
-    private static final String PLOIDY_MIN = "ploidy_min";
 
     private static final Logger LOGGER = LogManager.getLogger(SigSnvLoader.class);
 
-    public SigSnvLoader()
+    public SigSnvLoader(final DataLoaderConfig config)
     {
-        mOutputDir = "";
-        mOutputFileId = "";
+        mConfig = config;
+
         mBucketStringToIndex = Maps.newHashMap();
-        mSampleIds = Lists.newArrayList();
-        mApplySampleQC = true;
-        mPloidyMin = null;
-        mPloidyMax = null;
-        mSubclonalLikelihoodMin = null;
-        mSubclonalLikelihoodMax = null;
-    }
-
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(APPLY_SAMPLE_QC, false, "Check sample QC status etc");
-        options.addOption(SUBCLONAL_MAX, true, "Optional: subclonal max threshold");
-        options.addOption(SUBCLONAL_MIN, true, "Optional: subclonal min threshold");
-        options.addOption(PLOIDY_MAX, true, "Optional: ploidy max threshold");
-        options.addOption(PLOIDY_MIN, true, "Optional: ploidy min threshold");
-    }
-
-    public boolean initialise(final DatabaseAccess dbAccess, final CommandLine cmd)
-    {
-        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
-        mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
-        mDbAccess = dbAccess;
-
-        mApplySampleQC = cmd.hasOption(APPLY_SAMPLE_QC);
-
-        if(cmd.hasOption(SUBCLONAL_MIN))
-            mSubclonalLikelihoodMin = Double.parseDouble(cmd.getOptionValue(SUBCLONAL_MIN, "0"));
-
-        if(cmd.hasOption(SUBCLONAL_MAX))
-            mSubclonalLikelihoodMax = Double.parseDouble(cmd.getOptionValue(SUBCLONAL_MAX, "0"));
-
-        if(cmd.hasOption(PLOIDY_MIN))
-            mPloidyMin = Double.parseDouble(cmd.getOptionValue(PLOIDY_MIN, "0"));
-
-        if(cmd.hasOption(PLOIDY_MAX))
-            mPloidyMax = Double.parseDouble(cmd.getOptionValue(PLOIDY_MAX, "0"));
-
-        if(cmd.hasOption(SAMPLE_IDS))
-        {
-            mSampleIds.addAll(Arrays.stream(cmd.getOptionValue(SAMPLE_IDS).split(";")).collect(Collectors.toList()));
-        }
-
         buildBucketMap();
-
-        return true;
     }
 
     private void buildBucketMap()
@@ -141,50 +73,61 @@ public class SigSnvLoader
         }
     }
 
-    public void loadData()
+    public void loadData(DatabaseAccess dbAccess)
     {
-        List<String> sampleIds = null;
+        mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, mConfig.SampleIds.size());
 
-        if(!mSampleIds.isEmpty())
+        LOGGER.info("retrieving SNV data for {} samples", mConfig.SampleIds.size());
+
+        for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
-            sampleIds = mSampleIds;
-        }
-        else
-        {
-            if(mApplySampleQC)
-                sampleIds = mDbAccess.readPurpleSampleListPassingQC(MIN_SAMPLE_PURITY);
-            else
-                sampleIds = mDbAccess.readSomaticVariantSampleList();
-        }
+            String sampleId = mConfig.SampleIds.get(sampleIndex);
+            final List<SomaticVariant> variants = dbAccess.readSomaticVariants(sampleId, VariantType.SNP);
 
-        mSampleBucketCounts = new SigMatrix(SNV_BUCKET_COUNT, sampleIds.size());
-
-        LOGGER.info("retrieving SNV data for {} samples", sampleIds.size());
-
-        for(int sampleIndex = 0; sampleIndex < sampleIds.size(); ++sampleIndex)
-        {
-            String sampleId = sampleIds.get(sampleIndex);
-            final List<SomaticVariant> variants = mDbAccess.readSomaticVariants(sampleId);
-
-            LOGGER.info("sample({}) processing {} variants", sampleId, variants.size());
+            LOGGER.info("sample({}:{}) processing {} variants", sampleIndex, sampleId, variants.size());
 
             processSampleVariants(sampleId, variants, sampleIndex);
         }
 
         try
         {
-            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_sample_counts.csv");
+            BufferedWriter writer = getNewFile(mConfig.OutputDir, mConfig.OutputFileId + "_sample_counts.csv");
 
-            int i = 0;
-            for(; i < sampleIds.size()-1; ++i)
+            writer.write("BucketName");
+
+            for(int i = 0; i < mConfig.SampleIds.size(); ++i)
             {
-                writer.write(String.format("%s,", sampleIds.get(i)));
+                writer.write(String.format(",%s", mConfig.SampleIds.get(i)));
             }
-            writer.write(String.format("%s", sampleIds.get(i)));
+
+            writer.newLine();
+
+            double[][] scData = mSampleBucketCounts.getData();
+
+            for(int i = 0; i < mSampleBucketCounts.Rows; ++i)
+            {
+                writer.write(getBucketNameByIndex(mBucketStringToIndex, i));
+
+                for(int j = 0; j < mSampleBucketCounts.Cols; ++j) {
+
+                    writer.write(String.format(",%.0f", scData[i][j]));
+                }
+
+                writer.newLine();
+            }
+
+            /*
+            int i = 0;
+            for(; i < mConfig.SampleIds.size()-1; ++i)
+            {
+                writer.write(String.format("%s,", mConfig.SampleIds.get(i)));
+            }
+            writer.write(String.format("%s", mConfig.SampleIds.get(i)));
 
             writer.newLine();
 
             writeMatrixData(writer, mSampleBucketCounts, true);
+            */
 
             writer.close();
         }
@@ -212,16 +155,7 @@ public class SigSnvLoader
                 continue;
 
             // check filters
-            if(mSubclonalLikelihoodMin != null && variant.subclonalLikelihood() < mSubclonalLikelihoodMin)
-                continue;
-
-            if(mSubclonalLikelihoodMax != null && variant.subclonalLikelihood() > mSubclonalLikelihoodMax)
-                continue;
-
-            if(mPloidyMin != null && variant.ploidy() < mPloidyMin)
-                continue;
-
-            if(mPloidyMax != null && variant.ploidy() > mPloidyMax)
+            if(!mConfig.passesFilters(variant))
                 continue;
 
             // convert base change to standard set and the context accordingly
@@ -256,13 +190,24 @@ public class SigSnvLoader
         }
     }
 
-    private static char convertBase(char base)
+    public static char convertBase(char base)
     {
         if(base == 'A') return 'T';
         if(base == 'T') return 'A';
         if(base == 'C') return 'G';
         if(base == 'G') return 'C';
         return base;
+    }
+
+    public static String getBucketNameByIndex(final Map<String,Integer> bucketNameIndexMap, int index)
+    {
+        for(Map.Entry<String,Integer> entry : bucketNameIndexMap.entrySet())
+        {
+            if(entry.getValue() == index)
+                return entry.getKey();
+        }
+
+        return String.format("MissingBucket_%d", index);
     }
 
     private static String standardiseSnv(final String snv)
@@ -277,6 +222,5 @@ public class SigSnvLoader
 
         return snv;
     }
-
 
 }

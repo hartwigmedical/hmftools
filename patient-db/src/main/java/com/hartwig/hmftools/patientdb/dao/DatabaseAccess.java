@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.purity.FittedPurity;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxCluster;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxDriver;
@@ -163,6 +164,11 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     public List<SomaticVariant> readSomaticVariants(@NotNull final String sample) {
         return somaticVariantDAO.read(sample);
+    }
+
+    @NotNull
+    public List<SomaticVariant> readSomaticVariants(@NotNull final String sample, VariantType type) {
+        return somaticVariantDAO.read(sample, type);
     }
 
     @NotNull

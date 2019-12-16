@@ -35,10 +35,19 @@ class SomaticVariantDAO {
     }
 
     @NotNull
-    public final List<SomaticVariant> read(@NotNull final String sample) {
+    public final List<SomaticVariant> read(@NotNull final String sample)
+    {
+        return read(sample, VariantType.UNDEFINED);
+    }
+
+    @NotNull
+    public final List<SomaticVariant> read(@NotNull final String sample, VariantType type) {
         List<SomaticVariant> variants = Lists.newArrayList();
 
-        final Result<Record> result = context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch();
+        final Result<Record> result = type == VariantType.UNDEFINED ?
+                context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch()
+                : context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample))
+                        .and(SOMATICVARIANT.TYPE.eq(type.toString())).fetch();
 
         for (Record record : result) {
             variants.add(ImmutableSomaticVariantImpl.builder()
