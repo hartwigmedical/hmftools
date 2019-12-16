@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class OncokbGene {
+public abstract class OncokbGene2 {
 
     @NotNull
     public abstract String hugoSymbol();

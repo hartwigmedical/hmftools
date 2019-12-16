@@ -25,7 +25,7 @@ public abstract class OncoKbClinical implements KbSpecificObject {
     public abstract String refSeq();
 
     @NotNull
-    public abstract OncokbVariant variant();
+    public abstract OncokbVariant2 variant();
 
     @NotNull
     public abstract String cancerType();
