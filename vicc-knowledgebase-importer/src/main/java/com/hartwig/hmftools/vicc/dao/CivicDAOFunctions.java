@@ -124,9 +124,9 @@ final class CivicDAOFunctions {
                     .execute();
         }
 
-        if (civic.provisionalValues() != null) {
+        if (civic.provisionalValue() != null) {
             context.insertInto(CIVICDESCRIPTION, CIVICDESCRIPTION.REVISIONID, CIVICDESCRIPTION.VALUE, CIVICDESCRIPTION.CIVICID)
-                    .values(civic.provisionalValues().revisionId(), civic.provisionalValues().value(), id)
+                    .values(civic.provisionalValue().revisionId(), civic.provisionalValue().value(), id)
                     .execute();
         }
 
@@ -155,7 +155,7 @@ final class CivicDAOFunctions {
                         civic.coordinates().representativeTranscript(),
                         civic.coordinates().ensemblVersion(),
                         civic.coordinates().chromosome(),
-                        civic.coordinates().referenceBuild(),
+                        "",
                         id)
                 .execute();
 
@@ -221,7 +221,7 @@ final class CivicDAOFunctions {
                                     variants.coordinates().representativeTranscript(),
                                     variants.coordinates().ensemblVersion(),
                                     variants.coordinates().chromosome(),
-                                    variants.coordinates().referenceBuild(),
+                                    "",
                                     idVariantGroupVariants)
                             .execute();
                 }

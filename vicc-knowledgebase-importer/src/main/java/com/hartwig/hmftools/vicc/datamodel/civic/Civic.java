@@ -58,7 +58,7 @@ public abstract class Civic implements KbSpecificObject {
     public abstract String alleleRegistryId();
 
     @Nullable
-    public abstract CivicDescription provisionalValues();
+    public abstract CivicProvisionalValue provisionalValue();
 
     @NotNull
     public abstract CivicLifecycleActions lifecycleActions();
@@ -71,7 +71,4 @@ public abstract class Civic implements KbSpecificObject {
 
     @NotNull
     public abstract String description();
-
-    @NotNull
-    public abstract CivicError error();
 }

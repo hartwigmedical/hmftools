@@ -356,6 +356,111 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker civicEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("entrez_id", true);
+        map.put("entrez_name", true);
+        map.put("name", true);
+        map.put("type", true);
+        map.put("coordinates", true);
+        map.put("sources", true);
+        map.put("variant_groups", false);
+        map.put("variant_types", true);
+        map.put("civic_actionability_score", true);
+        map.put("clinvar_entries", true);
+        map.put("lifecycle_actions", true);
+        map.put("variant_aliases", true);
+        map.put("allele_registry_id", true);
+        map.put("provisional_values", true);
+        map.put("gene_id", true);
+        map.put("evidence_items", true);
+        map.put("assertions", true);
+        map.put("hgvs_expressions", true);
+        map.put("errors", true);
+        map.put("id", true);
+        map.put("description", true);
+        return new ViccDatamodelChecker("CivicEntry", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicCoordinatesChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("chromosome", true);
+        map.put("start", true);
+        map.put("stop", true);
+        map.put("reference_bases", true);
+        map.put("variant_bases", true);
+        map.put("ensembl_version", true);
+        map.put("representative_transcript", true);
+        map.put("chromosome2", true);
+        map.put("start2", true);
+        map.put("stop2", true);
+        map.put("representative_transcript2", true);
+        return new ViccDatamodelChecker("CivicCoordinates", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicSourceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("status", true);
+        map.put("open_access", true);
+        map.put("name", true);
+        map.put("journal", true);
+        map.put("citation", true);
+        map.put("pmc_id", true);
+        map.put("full_journal_title", true);
+        map.put("source_url", true);
+        map.put("clinical_trials", true);
+        map.put("pubmed_id", true);
+        map.put("is_review", true);
+        map.put("publication_date", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("CivicSource", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicProvisionalValueChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("description", false);
+        return new ViccDatamodelChecker("CivicProvisionalValue", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicProvisionalValueDescriptionChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("revision_id", false);
+        map.put("value", false);
+        return new ViccDatamodelChecker("CivicProvisionalValueDescription", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicVariantGroupChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("type", true);
+        map.put("description", true);
+        map.put("variants", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("CivicVariantGroup", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicVariantChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("entrez_id", true);
+        map.put("entrez_name", true);
+        map.put("name", true);
+        map.put("type", true);
+        map.put("variant_types", true);
+        map.put("civic_actionability_score", false);
+        map.put("createCoordinates", false);
+        map.put("id", true);
+        map.put("gene_id", true);
+        map.put("description", true);
+        return new ViccDatamodelChecker("CivicVariant", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker jaxEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("responseType", true);

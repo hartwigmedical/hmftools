@@ -11,9 +11,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicVariantGroup {
 
     @NotNull
-    public abstract String id();
-
-    @NotNull
     public abstract String name();
 
     @NotNull
@@ -24,4 +21,7 @@ public abstract class CivicVariantGroup {
 
     @NotNull
     public abstract List<CivicVariant> variants();
+
+    @NotNull
+    public abstract String id();
 }
