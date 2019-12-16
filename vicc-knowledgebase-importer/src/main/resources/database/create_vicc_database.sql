@@ -41,7 +41,7 @@ DROP TABLE IF EXISTS oncokbGeneAliasClinical;
 DROP TABLE IF EXISTS civic;
 DROP TABLE IF EXISTS civicAssertion;
 DROP TABLE IF EXISTS civicHGVSExpression;
-DROP TABLE IF EXISTS civicClinvarEntry;
+DROP TABLE IF EXISTS civicClinVarEntry;
 DROP TABLE IF EXISTS civicVariantAlias;
 DROP TABLE IF EXISTS civicVariantType;
 DROP TABLE IF EXISTS civicProvisionalValue;
