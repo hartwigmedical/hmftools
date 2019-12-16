@@ -15,7 +15,7 @@ final class SageObjectFactory {
 
     @NotNull
     static Sage create(@NotNull JsonObject sageObject) {
-        ViccDatamodelCheckerFactory.sageChecker().check(sageObject);
+        ViccDatamodelCheckerFactory.sageEntryChecker().check(sageObject);
 
         return ImmutableSage.builder()
                 .gene(string(sageObject, "gene"))

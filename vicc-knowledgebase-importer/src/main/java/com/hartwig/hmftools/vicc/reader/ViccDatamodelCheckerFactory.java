@@ -779,7 +779,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("tags", true);
         map.put("id", true);
         map.put("studyType", true);
-        return new ViccDatamodelChecker("MolecularMatchTrialsEntryChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsEntry", map);
     }
 
     @NotNull
@@ -790,7 +790,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("description", false);
         map.put("arm_group_label", false);
         map.put("intervention_type", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsInterventionChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsIntervention", map);
     }
 
     @NotNull
@@ -822,7 +822,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("geo", false);
         map.put("_validMessage", false);
         map.put("name", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsLocationChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsLocation", map);
     }
 
     @NotNull
@@ -840,7 +840,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("url", false);
         map.put("street", false);
         map.put("type", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsOverallContactChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsOverallContact", map);
     }
 
     @NotNull
@@ -848,7 +848,7 @@ final class ViccDatamodelCheckerFactory {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("lat", true);
         map.put("lon", true);
-        return new ViccDatamodelChecker("MolecularMatchTrialsGeoChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsGeo", map);
     }
 
     @NotNull
@@ -856,7 +856,7 @@ final class ViccDatamodelCheckerFactory {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("type", true);
         map.put("coordinates", true);
-        return new ViccDatamodelChecker("MolecularMatchTrialsSubLocationChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsSubLocation", map);
     }
 
     @NotNull
@@ -865,7 +865,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("phone", false);
         map.put("name", false);
         map.put("email", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsContactChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsContact", map);
     }
 
     @NotNull
@@ -884,11 +884,11 @@ final class ViccDatamodelCheckerFactory {
         map.put("generatedByTerm", false);
         map.put("id", false);
         map.put("manualPriority", false);
-        return new ViccDatamodelChecker("MolecularMatchTrialsTagChecker", map);
+        return new ViccDatamodelChecker("MolecularMatchTrialsTag", map);
     }
 
     @NotNull
-    static ViccDatamodelChecker sageChecker() {
+    static ViccDatamodelChecker sageEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("gene", true);
         map.put("entrez_id", true);
@@ -898,6 +898,6 @@ final class ViccDatamodelCheckerFactory {
         map.put("drug_labels", true);
         map.put("germline_or_somatic", true);
         map.put("publication_url", true);
-        return new ViccDatamodelChecker("SageChecker", map);
+        return new ViccDatamodelChecker("SageEntry", map);
     }
 }
