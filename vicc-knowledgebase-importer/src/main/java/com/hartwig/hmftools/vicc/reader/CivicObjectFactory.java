@@ -4,11 +4,11 @@ import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonArray;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonObject;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -55,30 +55,10 @@ import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariant;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantGroup;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class CivicObjectFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(CivicObjectFactory.class);
-
-    private static final List<Integer> EXPECTED_CIVIC_AVATARS_SIZES = Lists.newArrayList(4);
-    private static final List<Integer> EXPECTED_CIVIC_DISEASES_SIZES = Lists.newArrayList(5);
-    private static final List<Integer> EXPECTED_CIVIC_DRUGS_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES = Lists.newArrayList(17);
-    private static final List<Integer> EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_CIVIC_LAST_MODIFIED_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_CIVIC_LAST_REVIEWED_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES = Lists.newArrayList(0, 3);
-    private static final List<Integer> EXPECTED_CIVIC_ORGANIZATION_SIZES = Lists.newArrayList(0, 5);
-    private static final List<Integer> EXPECTED_CIVIC_PROFILE_IMAGE_SIZES = Lists.newArrayList(5);
-    private static final List<Integer> EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES = Lists.newArrayList(0, 1, 2, 3);
-    private static final List<Integer> EXPECTED_CIVIC_SOURCE_SIZES = Lists.newArrayList(13);
-    private static final List<Integer> EXPECTED_CIVIC_USER_SIZES = Lists.newArrayList(21);
-    private static final List<Integer> EXPECTED_CIVIC_VARIANTTYPES_SIZES = Lists.newArrayList(6);
-    private static final List<Integer> EXPECTED_CIVIC_CLINICALTRIAL_SIZES = Lists.newArrayList(4);
 
     private CivicObjectFactory() {
     }
@@ -107,7 +87,7 @@ final class CivicObjectFactory {
                 .clinvarEntries(stringList(civicObject, "clinvar_entries"))
                 .alleleRegistryId(nullableString(civicObject, "allele_registry_id"))
                 .provisionalValue(createProvisionalValue(civicObject.getAsJsonObject("provisional_values")))
-                .lifecycleActions(createLifeCycleActions(civicObject.getAsJsonObject("lifecycle_actions")))
+                .lifecycleActions(createLifecycleActions(civicObject.getAsJsonObject("lifecycle_actions")))
                 .id(string(civicObject, "id"))
                 .geneId(string(civicObject, "gene_id"))
                 .description(string(civicObject, "description"))
@@ -140,27 +120,9 @@ final class CivicObjectFactory {
     @NotNull
     private static List<CivicSource> createSources(@NotNull JsonArray sourceArray) {
         List<CivicSource> sourceList = Lists.newArrayList();
-        ViccDatamodelChecker sourceChecker = ViccDatamodelCheckerFactory.civicSourceChecker();
 
         for (JsonElement sourceElement : sourceArray) {
-            JsonObject sourceObject = sourceElement.getAsJsonObject();
-            sourceChecker.check(sourceObject);
-
-            sourceList.add(ImmutableCivicSource.builder()
-                    .name(nullableString(sourceObject, "name"))
-                    .status(string(sourceObject, "status"))
-                    .openAccess(nullableString(sourceObject, "open_access"))
-                    .journal(nullableString(sourceObject, "journal"))
-                    .fullJournalTitle(nullableString(sourceObject, "full_journal_title"))
-                    .citation(string(sourceObject, "citation"))
-                    .pmcId(nullableString(sourceObject, "pmc_id"))
-                    .sourceUrl(string(sourceObject, "source_url"))
-                    .clinicalTrials(createCivicClinicalTrials(sourceObject.getAsJsonArray("clinical_trials")))
-                    .pubmedId(string(sourceObject, "pubmed_id"))
-                    .isReview(string(sourceObject, "is_review"))
-                    .publicationDate(createPublicationDate(sourceObject.getAsJsonObject("publication_date")))
-                    .id(string(sourceObject, "id"))
-                    .build());
+            sourceList.add(createSource(sourceElement.getAsJsonObject()));
         }
 
         return sourceList;
@@ -233,355 +195,261 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicEvidenceItem> createEvidenceItems(@NotNull JsonArray evidenceItemsArray) {
-        List<CivicEvidenceItem> evidenceItemsList = Lists.newArrayList();
-        for (JsonElement evidenceItem : evidenceItemsArray) {
-            Set<String> keysEvidenceItems = evidenceItem.getAsJsonObject().keySet();
-            if (!EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES.contains(keysEvidenceItems.size())) {
-                LOGGER.warn("Found {} in civic evidence items rather than the expected {}",
-                        keysEvidenceItems.size(),
-                        EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES);
-                LOGGER.warn(keysEvidenceItems);
-            }
+    private static List<CivicVariantType> createVariantTypes(@NotNull JsonArray variantTypeArray) {
+        List<CivicVariantType> variantTypeList = Lists.newArrayList();
+        ViccDatamodelChecker variantTypeChecker = ViccDatamodelCheckerFactory.civicVariantTypeChecker();
 
-            evidenceItemsList.add(ImmutableCivicEvidenceItem.builder()
-                    .status(evidenceItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
-                    .rating(evidenceItem.getAsJsonObject().get("rating").isJsonNull()
-                            ? null
-                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("rating").getAsString())
-                    .drugInteractionType(evidenceItem.getAsJsonObject().get("drug_interaction_type").isJsonNull()
-                            ? null
-                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("drug_interaction_type").getAsString())
-                    .description(evidenceItem.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .openChangeCount(evidenceItem.getAsJsonObject().getAsJsonPrimitive("open_change_count").getAsString())
-                    .evidenceType(evidenceItem.getAsJsonObject().getAsJsonPrimitive("evidence_type").getAsString())
-                    .drugs(createDrugs(evidenceItem.getAsJsonObject().getAsJsonArray("drugs")))
-                    .variantOrigin(evidenceItem.getAsJsonObject().get("variant_origin").isJsonNull()
-                            ? null
-                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("variant_origin").getAsString())
-                    .disease(createDiseases(evidenceItem.getAsJsonObject().getAsJsonObject("disease")))
-                    .source(createSource(evidenceItem.getAsJsonObject().getAsJsonObject("source")))
-                    .evidenceDirection(evidenceItem.getAsJsonObject().get("evidence_direction").isJsonNull()
-                            ? null
-                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("evidence_direction").toString())
-                    .variantId(!evidenceItem.getAsJsonObject().has("variant_id")
-                            ? null
-                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("variant_id").getAsString())
-                    .clinicalSignificance(evidenceItem.getAsJsonObject().get("clinical_significance").isJsonNull()
-                            ? null
-                            : evidenceItem.getAsJsonObject().getAsJsonPrimitive("clinical_significance").getAsString())
-                    .evidenceLevel(evidenceItem.getAsJsonObject().getAsJsonPrimitive("evidence_level").getAsString())
-                    .type(evidenceItem.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
-                    .id(evidenceItem.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(evidenceItem.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+        for (JsonElement variantTypeElement : variantTypeArray) {
+            JsonObject variantTypeObject = variantTypeElement.getAsJsonObject();
+            variantTypeChecker.check(variantTypeObject);
+
+            variantTypeList.add(ImmutableCivicVariantType.builder()
+                    .name(string(variantTypeObject, "name"))
+                    .displayName(string(variantTypeObject, "display_name"))
+                    .description(string(variantTypeObject, "description"))
+                    .url(string(variantTypeObject, "url"))
+                    .soId(string(variantTypeObject, "so_id"))
+                    .id(string(variantTypeObject, "id"))
                     .build());
         }
-        return evidenceItemsList;
+        return variantTypeList;
     }
 
     @NotNull
-    private static CivicSource createSource(@NotNull JsonObject objectSource) {
-        Set<String> keysSource = objectSource.keySet();
-        if (!EXPECTED_CIVIC_SOURCE_SIZES.contains(keysSource.size())) {
-            LOGGER.warn("Found {} in civic source rather than the expected {}", keysSource.size(), EXPECTED_CIVIC_SOURCE_SIZES);
-            LOGGER.warn(keysSource);
+    private static List<CivicEvidenceItem> createEvidenceItems(@NotNull JsonArray evidenceItemArray) {
+        List<CivicEvidenceItem> evidenceItemList = Lists.newArrayList();
+        ViccDatamodelChecker evidenceItemChecker = ViccDatamodelCheckerFactory.civicEvidenceItemChecker();
+
+        for (JsonElement evidenceItemElement : evidenceItemArray) {
+            JsonObject evidenceItemObject = evidenceItemElement.getAsJsonObject();
+            evidenceItemChecker.check(evidenceItemObject);
+
+            evidenceItemList.add(ImmutableCivicEvidenceItem.builder()
+                    .name(string(evidenceItemObject, "name"))
+                    .type(string(evidenceItemObject, "type"))
+                    .status(string(evidenceItemObject, "status"))
+                    .rating(nullableString(evidenceItemObject, "rating"))
+                    .evidenceType(string(evidenceItemObject, "evidence_type"))
+                    .evidenceLevel(string(evidenceItemObject, "evidence_level"))
+                    .evidenceDirection(nullableString(evidenceItemObject, "evidence_direction"))
+                    .drugInteractionType(nullableString(evidenceItemObject, "drug_interaction_type"))
+                    .drugs(createDrugs(evidenceItemObject.getAsJsonArray("drugs")))
+                    .disease(createDisease(evidenceItemObject.getAsJsonObject("disease")))
+                    .variantOrigin(nullableString(evidenceItemObject, "variant_origin"))
+                    .source(createSource(evidenceItemObject.getAsJsonObject("source")))
+                    .clinicalSignificance(nullableString(evidenceItemObject, "clinical_significance"))
+                    .openChangeCount(string(evidenceItemObject, "open_change_count"))
+                    .description(string(evidenceItemObject, "description"))
+                    .variantId(optionalString(evidenceItemObject, "variant_id"))
+                    .id(string(evidenceItemObject, "id"))
+                    .build());
         }
+        return evidenceItemList;
+    }
+
+    @NotNull
+    private static CivicSource createSource(@NotNull JsonObject sourceObject) {
+        ViccDatamodelCheckerFactory.civicSourceChecker().check(sourceObject);
 
         return ImmutableCivicSource.builder()
-                .status(objectSource.getAsJsonPrimitive("status").getAsString())
-                .openAccess(objectSource.get("open_access").isJsonNull()
-                        ? null
-                        : objectSource.getAsJsonPrimitive("open_access").getAsString())
-                .name(objectSource.get("name").isJsonNull() ? null : objectSource.getAsJsonPrimitive("name").getAsString())
-                .journal(objectSource.get("journal").isJsonNull() ? null : objectSource.getAsJsonPrimitive("journal").getAsString())
-                .citation(objectSource.getAsJsonPrimitive("citation").getAsString())
-                .pmcId(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
-                .fullJournalTitle(objectSource.get("full_journal_title").isJsonNull()
-                        ? null
-                        : objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
-                .sourceUrl(objectSource.getAsJsonPrimitive("source_url").getAsString())
-                .clinicalTrials(createCivicClinicalTrials(objectSource.getAsJsonArray("clinical_trials")))
-                .pubmedId(objectSource.getAsJsonPrimitive("pubmed_id").getAsString())
-                .isReview(objectSource.getAsJsonPrimitive("is_review").getAsString())
-                .publicationDate(createPublicationDate(objectSource.getAsJsonObject("publication_date")))
-                .id(objectSource.getAsJsonPrimitive("id").getAsString())
+                .name(nullableString(sourceObject, "name"))
+                .status(string(sourceObject, "status"))
+                .openAccess(nullableString(sourceObject, "open_access"))
+                .journal(nullableString(sourceObject, "journal"))
+                .fullJournalTitle(nullableString(sourceObject, "full_journal_title"))
+                .citation(string(sourceObject, "citation"))
+                .pmcId(nullableString(sourceObject, "pmc_id"))
+                .sourceUrl(string(sourceObject, "source_url"))
+                .clinicalTrials(createClinicalTrials(sourceObject.getAsJsonArray("clinical_trials")))
+                .pubmedId(string(sourceObject, "pubmed_id"))
+                .isReview(string(sourceObject, "is_review"))
+                .publicationDate(createPublicationDate(sourceObject.getAsJsonObject("publication_date")))
+                .id(string(sourceObject, "id"))
                 .build();
     }
 
     @NotNull
-    private static List<CivicClinicalTrial> createCivicClinicalTrials(@NotNull JsonArray arrayClinicalTrial) {
+    private static List<CivicClinicalTrial> createClinicalTrials(@NotNull JsonArray clinicalTrialArray) {
         List<CivicClinicalTrial> clinicalTrialList = Lists.newArrayList();
-        for (JsonElement clinicalTrial : arrayClinicalTrial) {
-            Set<String> keysClinicalTrials = clinicalTrial.getAsJsonObject().keySet();
-            if (!EXPECTED_CIVIC_CLINICALTRIAL_SIZES.contains(keysClinicalTrials.size())) {
-                LOGGER.warn("Found {} in civic clinical trials rather than the expected {}",
-                        keysClinicalTrials.size(),
-                        EXPECTED_CIVIC_CLINICALTRIAL_SIZES);
-                LOGGER.warn(keysClinicalTrials);
-            }
+        ViccDatamodelChecker clinicalTrialChecker = ViccDatamodelCheckerFactory.civicClinicalTrialChecker();
+
+        for (JsonElement clinicalTrialElement : clinicalTrialArray) {
+            JsonObject clinicalTrialObject = clinicalTrialElement.getAsJsonObject();
+            clinicalTrialChecker.check(clinicalTrialObject);
 
             clinicalTrialList.add(ImmutableCivicClinicalTrial.builder()
-                    .nctId(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("nct_id").getAsString())
-                    .description(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .clinicalTrialUrl(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("clinical_trial_url").getAsString())
-                    .name(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .name(string(clinicalTrialObject, "name"))
+                    .nctId(string(clinicalTrialObject, "nct_id"))
+                    .clinicalTrialUrl(string(clinicalTrialObject, "clinical_trial_url"))
+                    .description(string(clinicalTrialObject, "description"))
                     .build());
         }
         return clinicalTrialList;
     }
 
     @NotNull
-    private static CivicPublicationDate createPublicationDate(@NotNull JsonObject objectPublicationDate) {
-        Set<String> keysPublicationDate = objectPublicationDate.keySet();
-        if (!EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES.contains(keysPublicationDate.size())) {
-            LOGGER.warn("Found {} in civic publication date rather than the expected {}",
-                    keysPublicationDate.size(),
-                    EXPECTED_CIVIC_PUBLICATIONS_DATE_SIZES);
-            LOGGER.warn(keysPublicationDate);
-        }
+    private static CivicPublicationDate createPublicationDate(@NotNull JsonObject publicationDateObject) {
+        ViccDatamodelCheckerFactory.civicPublicationDateChecker().check(publicationDateObject);
 
         return ImmutableCivicPublicationDate.builder()
-                .year(!objectPublicationDate.has("year") ? null : objectPublicationDate.getAsJsonPrimitive("year").getAsString())
-                .day(!objectPublicationDate.has("day") ? null : objectPublicationDate.getAsJsonPrimitive("day").getAsString())
-                .month(!objectPublicationDate.has("month") ? null : objectPublicationDate.getAsJsonPrimitive("month").getAsString())
+                .year(optionalString(publicationDateObject, "year"))
+                .month(optionalString(publicationDateObject, "month"))
+                .day(optionalString(publicationDateObject, "day"))
                 .build();
     }
 
     @NotNull
-    private static CivicDisease createDiseases(@NotNull JsonObject objectDisease) {
-        Set<String> keysDisease = objectDisease.keySet();
-        if (!EXPECTED_CIVIC_DISEASES_SIZES.contains(keysDisease.size())) {
-            LOGGER.warn("Found {} in civic diseases rather than the expected {}", keysDisease.size(), EXPECTED_CIVIC_DISEASES_SIZES);
-            LOGGER.warn(keysDisease);
-        }
+    private static CivicDisease createDisease(@NotNull JsonObject diseaseObject) {
+        ViccDatamodelCheckerFactory.civicDiseaseChecker().check(diseaseObject);
 
         return ImmutableCivicDisease.builder()
-                .doid(objectDisease.get("doid").isJsonNull() ? null : objectDisease.getAsJsonPrimitive("doid").getAsString())
-                .url(objectDisease.getAsJsonPrimitive("url").getAsString())
-                .displayName(objectDisease.getAsJsonPrimitive("display_name").getAsString())
-                .id(objectDisease.getAsJsonPrimitive("id").getAsString())
-                .name(objectDisease.getAsJsonPrimitive("name").getAsString())
+                .name(string(diseaseObject, "name"))
+                .displayName(string(diseaseObject, "display_name"))
+                .doid(nullableString(diseaseObject, "doid"))
+                .url(string(diseaseObject, "url"))
+                .id(string(diseaseObject, "id"))
                 .build();
     }
 
     @NotNull
-    private static List<CivicDrug> createDrugs(@NotNull JsonArray arrayDrugs) {
-        List<CivicDrug> drugsList = Lists.newArrayList();
-        for (JsonElement drug : arrayDrugs) {
-            Set<String> keysDrugs = drug.getAsJsonObject().keySet();
-            if (!EXPECTED_CIVIC_DRUGS_SIZES.contains(keysDrugs.size())) {
-                LOGGER.warn("Found {} in civic drugs rather than the expected {}", keysDrugs.size(), EXPECTED_CIVIC_DRUGS_SIZES);
-                LOGGER.warn(keysDrugs);
-            }
+    private static List<CivicDrug> createDrugs(@NotNull JsonArray drugArray) {
+        List<CivicDrug> drugList = Lists.newArrayList();
+        ViccDatamodelChecker drugChecker = ViccDatamodelCheckerFactory.civicDrugChecker();
 
-            drugsList.add(ImmutableCivicDrug.builder()
-                    .pubchemId(drug.getAsJsonObject().get("pubchem_id").isJsonNull()
-                            ? null
-                            : drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
-                    .id(drug.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(drug.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+        for (JsonElement drugElement : drugArray) {
+            JsonObject drugObject = drugElement.getAsJsonObject();
+            drugChecker.check(drugObject);
+
+            drugList.add(ImmutableCivicDrug.builder()
+                    .name(string(drugObject, "name"))
+                    .pubchemId(nullableString(drugObject, "pubchem_id"))
+                    .id(string(drugObject, "id"))
                     .build());
         }
-        return drugsList;
+        return drugList;
     }
 
     @NotNull
-    private static CivicLifecycleActions createLifeCycleActions(@NotNull JsonObject objectLifeCycleActions) {
-        Set<String> keysLifecycleActions = objectLifeCycleActions.keySet();
-        if (!EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES.contains(keysLifecycleActions.size())) {
-            LOGGER.warn("Found {} in civic lifecycle actions rather than the expected {}",
-                    keysLifecycleActions.size(),
-                    EXPECTED_CIVIC_LIFECYCLE_ACTIONS_SIZES);
-            LOGGER.warn(keysLifecycleActions);
-        }
+    private static CivicLifecycleActions createLifecycleActions(@NotNull JsonObject lifecycleActionsObject) {
+        ViccDatamodelCheckerFactory.civicLifecycleActionsChecker().check(lifecycleActionsObject);
 
         return ImmutableCivicLifecycleActions.builder()
-                .lastCommentedOn(objectLifeCycleActions.getAsJsonObject("last_commented_on") == null
-                        ? null
-                        : createLastCommentedOn(objectLifeCycleActions.getAsJsonObject("last_commented_on")))
-                .lastModified(objectLifeCycleActions.getAsJsonObject("last_modified") == null
-                        ? null
-                        : createLastModified(objectLifeCycleActions.getAsJsonObject("last_modified")))
-                .lastReviewed(objectLifeCycleActions.getAsJsonObject("last_reviewed") == null
-                        ? null
-                        : createLastReviewed(objectLifeCycleActions.getAsJsonObject("last_reviewed")))
+                .lastCommentedOn(createLastCommentedOn(optionalJsonObject(lifecycleActionsObject, "last_commented_on")))
+                .lastModified(createLastModified(optionalJsonObject(lifecycleActionsObject, "last_modified")))
+                .lastReviewed(createLastReviewed(optionalJsonObject(lifecycleActionsObject, "last_reviewed")))
                 .build();
     }
 
-    @NotNull
-    private static CivicLastCommentedOn createLastCommentedOn(@NotNull JsonObject objectLastCommentedOn) {
-        Set<String> keysLastCommentedOn = objectLastCommentedOn.keySet();
-        if (!EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES.contains(keysLastCommentedOn.size())) {
-            LOGGER.warn("Found {} in civic last commented on rather than the expected {}",
-                    keysLastCommentedOn.size(),
-                    EXPECTED_CIVIC_LAST_COMMENTED_ON_SIZES);
-            LOGGER.warn(keysLastCommentedOn);
+    @Nullable
+    private static CivicLastCommentedOn createLastCommentedOn(@Nullable JsonObject lastCommentedOnObject) {
+        if (lastCommentedOnObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.civicLastCommentedOnChecker().check(lastCommentedOnObject);
 
         return ImmutableCivicLastCommentedOn.builder()
-                .timestamp(objectLastCommentedOn.getAsJsonPrimitive("timestamp").getAsString())
-                .user(createCivicUser(objectLastCommentedOn.getAsJsonObject("user")))
+                .timestamp(string(lastCommentedOnObject, "timestamp"))
+                .user(createUser(lastCommentedOnObject.getAsJsonObject("user")))
                 .build();
     }
 
-    @NotNull
-    private static CivicLastModified createLastModified(@NotNull JsonObject objectLastModified) {
-        Set<String> keysLastModified = objectLastModified.keySet();
-        if (!EXPECTED_CIVIC_LAST_MODIFIED_SIZES.contains(keysLastModified.size())) {
-            LOGGER.warn("Found {} in civic last modified rather than the expected {}",
-                    keysLastModified.size(),
-                    EXPECTED_CIVIC_LAST_MODIFIED_SIZES);
-            LOGGER.warn(keysLastModified);
+    @Nullable
+    private static CivicLastModified createLastModified(@Nullable JsonObject lastModifiedObject) {
+        if (lastModifiedObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.civicLastModifiedChecker().check(lastModifiedObject);
 
         return ImmutableCivicLastModified.builder()
-                .timestamp(objectLastModified.getAsJsonPrimitive("timestamp").getAsString())
-                .user(createCivicUser(objectLastModified.getAsJsonObject("user")))
+                .timestamp(string(lastModifiedObject, "timestamp"))
+                .user(createUser(lastModifiedObject.getAsJsonObject("user")))
                 .build();
     }
 
-    @NotNull
-    private static CivicLastReviewed createLastReviewed(@NotNull JsonObject objectLastReviewed) {
-        Set<String> keysLastReviewed = objectLastReviewed.keySet();
-        if (!EXPECTED_CIVIC_LAST_REVIEWED_SIZES.contains(keysLastReviewed.size())) {
-            LOGGER.warn("Found {} in civic last reviewed rather than the expected {}",
-                    keysLastReviewed.size(),
-                    EXPECTED_CIVIC_LAST_REVIEWED_SIZES);
-            LOGGER.warn(keysLastReviewed);
+    @Nullable
+    private static CivicLastReviewed createLastReviewed(@Nullable JsonObject lastReviewedObject) {
+        if (lastReviewedObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.civicLastReviewedChecker().check(lastReviewedObject);
 
         return ImmutableCivicLastReviewed.builder()
-                .timestamp(objectLastReviewed.getAsJsonPrimitive("timestamp").getAsString())
-                .user(createCivicUser(objectLastReviewed.getAsJsonObject("user")))
+                .timestamp(string(lastReviewedObject, "timestamp"))
+                .user(createUser(lastReviewedObject.getAsJsonObject("user")))
                 .build();
     }
 
     @NotNull
-    private static CivicUser createCivicUser(@NotNull JsonObject objectUser) {
-        Set<String> keysUser = objectUser.keySet();
-        if (!EXPECTED_CIVIC_USER_SIZES.contains(keysUser.size())) {
-            LOGGER.warn("Found {} in civic user rather than the expected {}", keysUser.size(), EXPECTED_CIVIC_USER_SIZES);
-            LOGGER.warn(keysUser);
-        }
+    private static CivicUser createUser(@NotNull JsonObject userObject) {
+        ViccDatamodelCheckerFactory.civicUserChecker().check(userObject);
 
         return ImmutableCivicUser.builder()
-                .username(objectUser.getAsJsonPrimitive("username").getAsString())
-                .areaOfExpertise(objectUser.get("area_of_expertise").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("area_of_expertise").getAsString())
-                .organization(createOrganization(objectUser.getAsJsonObject("organization")))
-                .twitterHandle(objectUser.get("twitter_handle").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("twitter_handle").getAsString())
-                .name(objectUser.getAsJsonPrimitive("name").getAsString())
-                .bio(objectUser.get("bio").isJsonNull() ? null : objectUser.getAsJsonPrimitive("bio").getAsString())
-                .url(objectUser.get("url").isJsonNull() ? null : objectUser.getAsJsonPrimitive("url").getAsString())
-                .createdAt(objectUser.getAsJsonPrimitive("created_at").getAsString())
-                .avatars(createAvatars(objectUser.getAsJsonObject("avatars")))
-                .acceptedLicense(objectUser.get("accepted_license").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("accepted_license").getAsString())
-                .affiliation(objectUser.get("affiliation").isJsonNull() ? null : objectUser.getAsJsonPrimitive("affiliation").getAsString())
-                .avatarUrl(objectUser.getAsJsonPrimitive("avatar_url").getAsString())
-                .role(objectUser.getAsJsonPrimitive("role").getAsString())
-                .facebookProfile(objectUser.get("facebook_profile").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("facebook_profile").getAsString())
-                .linkedinProfile(objectUser.get("linkedin_profile").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("linkedin_profile").getAsString())
-                .orcid(objectUser.get("orcid").isJsonNull() ? null : objectUser.getAsJsonPrimitive("orcid").getAsString())
-                .displayName(objectUser.getAsJsonPrimitive("display_name").getAsString())
-                .lastSeenAt(objectUser.get("last_seen_at").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("last_seen_at").getAsString())
-                .featuredExpert(objectUser.getAsJsonPrimitive("featured_expert").getAsString())
-                .id(objectUser.getAsJsonPrimitive("id").getAsString())
-                .signupComplete(objectUser.get("signup_complete").isJsonNull()
-                        ? null
-                        : objectUser.getAsJsonPrimitive("signup_complete").getAsString())
+                .username(string(userObject, "username"))
+                .name(string(userObject, "name"))
+                .displayName(string(userObject, "display_name"))
+                .role(string(userObject, "role"))
+                .organization(createOrganization(userObject.getAsJsonObject("organization")))
+                .affiliation(nullableString(userObject, "affiliation"))
+                .featuredExpert(string(userObject, "featured_expert"))
+                .areaOfExpertise(nullableString(userObject, "area_of_expertise"))
+                .bio(nullableString(userObject, "bio"))
+                .url(nullableString(userObject, "url"))
+                .createdAt(string(userObject, "created_at"))
+                .lastSeenAt(nullableString(userObject, "last_seen_at"))
+                .avatars(createAvatars(userObject.getAsJsonObject("avatars")))
+                .avatarUrl(string(userObject, "avatar_url"))
+                .twitterHandle(nullableString(userObject, "twitter_handle"))
+                .facebookProfile(nullableString(userObject, "facebook_profile"))
+                .linkedinProfile(nullableString(userObject, "linkedin_profile"))
+                .orcid(nullableString(userObject, "orcid"))
+                .signupComplete(nullableString(userObject, "signup_complete"))
+                .acceptedLicense(nullableString(userObject, "accepted_license"))
+                .id(string(userObject, "id"))
                 .build();
     }
 
     @NotNull
-    private static CivicOrganization createOrganization(@NotNull JsonObject objectOrganization) {
-        Set<String> keysOrganization = objectOrganization.keySet();
-        if (!EXPECTED_CIVIC_ORGANIZATION_SIZES.contains(keysOrganization.size())) {
-            LOGGER.warn("Found {} in civic organization rather than the expected {}",
-                    keysOrganization.size(),
-                    EXPECTED_CIVIC_ORGANIZATION_SIZES);
-            LOGGER.warn(keysOrganization);
-        }
+    private static CivicOrganization createOrganization(@NotNull JsonObject organizationObject) {
+        ViccDatamodelCheckerFactory.civicOrganizationChecker().check(organizationObject);
 
         return ImmutableCivicOrganization.builder()
-                .url(!objectOrganization.has("url") ? null : objectOrganization.getAsJsonPrimitive("url").getAsString())
-                .id(!objectOrganization.has("id") ? null : objectOrganization.getAsJsonPrimitive("id").getAsString())
-                .profileImage(!objectOrganization.has("profile_image")
-                        ? null
-                        : createProfileImage(objectOrganization.getAsJsonObject("profile_image")))
-                .description(!objectOrganization.has("description")
-                        ? null
-                        : objectOrganization.getAsJsonPrimitive("description").getAsString())
-                .name(!objectOrganization.has("name") ? null : objectOrganization.getAsJsonPrimitive("name").getAsString())
+                .name(optionalString(organizationObject, "name"))
+                .url(optionalString(organizationObject, "url"))
+                .profileImage(createProfileImage(optionalJsonObject(organizationObject, "profile_image")))
+                .id(optionalString(organizationObject, "id"))
+                .description(optionalString(organizationObject, "description"))
                 .build();
     }
 
-    @NotNull
-    private static CivicProfileImage createProfileImage(@NotNull JsonObject objectProfileImage) {
-        Set<String> keysProfileImage = objectProfileImage.keySet();
-        if (!EXPECTED_CIVIC_PROFILE_IMAGE_SIZES.contains(keysProfileImage.size())) {
-            LOGGER.warn("Found {} in civic profile image rather than the expected {}",
-                    keysProfileImage.size(),
-                    EXPECTED_CIVIC_PROFILE_IMAGE_SIZES);
-            LOGGER.warn(keysProfileImage);
+    @Nullable
+    private static CivicProfileImage createProfileImage(@Nullable JsonObject profileImageObject) {
+        if (profileImageObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.civicProfileImageChecker().check(profileImageObject);
 
         return ImmutableCivicProfileImage.builder()
-                .x32(objectProfileImage.getAsJsonPrimitive("x32").getAsString())
-                .x256(objectProfileImage.getAsJsonPrimitive("x256").getAsString())
-                .x14(objectProfileImage.getAsJsonPrimitive("x14").getAsString())
-                .x64(objectProfileImage.getAsJsonPrimitive("x64").getAsString())
-                .x128(objectProfileImage.getAsJsonPrimitive("x128").getAsString())
+                .x14(string(profileImageObject, "x14"))
+                .x32(string(profileImageObject, "x32"))
+                .x64(string(profileImageObject, "x64"))
+                .x128(string(profileImageObject, "x128"))
+                .x256(string(profileImageObject, "x256"))
                 .build();
     }
 
     @NotNull
-    private static CivicAvatars createAvatars(@NotNull JsonObject objectAvatars) {
-        Set<String> keysAvatars = objectAvatars.keySet();
-        if (!EXPECTED_CIVIC_AVATARS_SIZES.contains(keysAvatars.size())) {
-            LOGGER.warn("Found {} in civic avatars rather than the expected {}", keysAvatars.size(), EXPECTED_CIVIC_AVATARS_SIZES);
-            LOGGER.warn(keysAvatars);
-        }
+    private static CivicAvatars createAvatars(@NotNull JsonObject avatarsObject) {
+        ViccDatamodelCheckerFactory.civicAvatarsChecker().check(avatarsObject);
 
         return ImmutableCivicAvatars.builder()
-                .x32(objectAvatars.getAsJsonPrimitive("x32").getAsString())
-                .x14(objectAvatars.getAsJsonPrimitive("x14").getAsString())
-                .x64(objectAvatars.getAsJsonPrimitive("x64").getAsString())
-                .x128(objectAvatars.getAsJsonPrimitive("x128").getAsString())
+                .x14(string(avatarsObject, "x14"))
+                .x32(string(avatarsObject, "x32"))
+                .x64(string(avatarsObject, "x64"))
+                .x128(string(avatarsObject, "x128"))
                 .build();
-    }
-
-    @NotNull
-    private static List<CivicVariantType> createVariantTypes(@NotNull JsonArray arrayVariantTypes) {
-        List<CivicVariantType> civicVariantTypeList = Lists.newArrayList();
-        for (JsonElement variantTypes : arrayVariantTypes) {
-            Set<String> keysVariantTypes = variantTypes.getAsJsonObject().keySet();
-            if (!EXPECTED_CIVIC_VARIANTTYPES_SIZES.contains(keysVariantTypes.size())) {
-                LOGGER.warn("Found {} in civic variant types rather than the expected {}",
-                        keysVariantTypes.size(),
-                        EXPECTED_CIVIC_VARIANTTYPES_SIZES);
-                LOGGER.warn(keysVariantTypes);
-            }
-
-            civicVariantTypeList.add(ImmutableCivicVariantType.builder()
-                    .displayName(variantTypes.getAsJsonObject().getAsJsonPrimitive("display_name").getAsString())
-                    .description(variantTypes.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .url(variantTypes.getAsJsonObject().getAsJsonPrimitive("url").getAsString())
-                    .soId(variantTypes.getAsJsonObject().getAsJsonPrimitive("so_id").getAsString())
-                    .id(variantTypes.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(variantTypes.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .build());
-        }
-        return civicVariantTypeList;
     }
 }

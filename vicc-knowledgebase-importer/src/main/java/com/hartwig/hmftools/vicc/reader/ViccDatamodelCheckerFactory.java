@@ -461,6 +461,172 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker civicVariantTypeChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("display_name", true);
+        map.put("description", true);
+        map.put("url", true);
+        map.put("so_id", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("CivicVariantType", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicEvidenceItemChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("type", true);
+        map.put("status", true);
+        map.put("rating", true);
+        map.put("evidence_type", true);
+        map.put("evidence_level", true);
+        map.put("evidence_direction", true);
+        map.put("drug_interaction_type", true);
+        map.put("drugs", true);
+        map.put("disease", true);
+        map.put("variant_origin", true);
+        map.put("source", true);
+        map.put("clinical_significance", true);
+        map.put("open_change_count", true);
+        map.put("description", true);
+        map.put("variant_id", false);
+        map.put("id", true);
+        return new ViccDatamodelChecker("CivicEvidenceItem", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicClinicalTrialChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("nct_id", true);
+        map.put("clinical_trial_url", true);
+        map.put("description", true);
+        return new ViccDatamodelChecker("CivicClinicalTrial", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicPublicationDateChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("year", false);
+        map.put("month", false);
+        map.put("day", false);
+        return new ViccDatamodelChecker("CivicPublicationDate", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicDiseaseChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("display_name", true);
+        map.put("doid", true);
+        map.put("url", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("CivicDisease", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicDrugChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("pubchem_id", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("CivicDrug", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicLifecycleActionsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("last_commented_on", false);
+        map.put("last_modified", false);
+        map.put("last_reviewed", false);
+        return new ViccDatamodelChecker("CivicLifecycleActions", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicLastCommentedOnChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("timestamp", true);
+        map.put("user", true);
+        return new ViccDatamodelChecker("CivicLastCommentedOn", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicLastModifiedChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("timestamp", true);
+        map.put("user", true);
+        return new ViccDatamodelChecker("CivicLastModified", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicLastReviewedChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("timestamp", true);
+        map.put("user", true);
+        return new ViccDatamodelChecker("CivicLastReviewed", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicUserChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("username", true);
+        map.put("name", true);
+        map.put("display_name", true);
+        map.put("role", true);
+        map.put("organization", true);
+        map.put("affiliation", true);
+        map.put("featured_expert", true);
+        map.put("area_of_expertise", true);
+        map.put("bio", true);
+        map.put("url", true);
+        map.put("created_at", true);
+        map.put("last_seen_at", true);
+        map.put("avatars", true);
+        map.put("avatar_url", true);
+        map.put("twitter_handle", true);
+        map.put("facebook_profile", true);
+        map.put("linkedin_profile", true);
+        map.put("orcid ", true);
+        map.put("signup_complete ", true);
+        map.put("accepted_license ", true);
+        map.put("id ", true);
+        return new ViccDatamodelChecker("CivicUser", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicOrganizationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", false);
+        map.put("url", false);
+        map.put("profile_image", false);
+        map.put("id", false);
+        map.put("description", false);
+        return new ViccDatamodelChecker("CivicOrganization", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicProfileImageChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("x14", true);
+        map.put("x32", true);
+        map.put("x64", true);
+        map.put("x128", true);
+        map.put("x256", true);
+        return new ViccDatamodelChecker("CivicProfileImage", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker civicAvatarsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("x14", true);
+        map.put("x32", true);
+        map.put("x64", true);
+        map.put("x128", true);
+        return new ViccDatamodelChecker("CivicAvatars", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker jaxEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("responseType", true);

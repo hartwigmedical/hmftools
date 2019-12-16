@@ -11,54 +11,54 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicEvidenceItem {
 
     @NotNull
-    public abstract String status();
-
-    @Nullable
-    public abstract String rating();
-
-    @Nullable
-    public abstract String drugInteractionType();
-
-    @NotNull
-    public abstract String description();
-
-    @NotNull
-    public abstract String openChangeCount();
-
-    @NotNull
-    public abstract String evidenceType();
-
-    @NotNull
-    public abstract List<CivicDrug> drugs();
-
-    @Nullable
-    public abstract String variantOrigin();
-
-    @NotNull
-    public abstract CivicDisease disease();
-
-    @NotNull
-    public abstract CivicSource source();
-
-    @Nullable
-    public abstract String evidenceDirection();
-
-    @Nullable
-    public abstract String variantId();
-
-    @Nullable
-    public abstract String clinicalSignificance();
-
-    @NotNull
-    public abstract String evidenceLevel();
+    public abstract String name();
 
     @NotNull
     public abstract String type();
 
     @NotNull
-    public abstract String id();
+    public abstract String status();
+
+    @Nullable
+    public abstract String rating();
 
     @NotNull
-    public abstract String name();
+    public abstract String evidenceType();
+
+    @NotNull
+    public abstract String evidenceLevel();
+
+    @Nullable
+    public abstract String evidenceDirection();
+
+    @Nullable
+    public abstract String drugInteractionType();
+
+    @NotNull
+    public abstract List<CivicDrug> drugs();
+
+    @NotNull
+    public abstract CivicDisease disease();
+
+    @Nullable
+    public abstract String variantOrigin();
+
+    @NotNull
+    public abstract CivicSource source();
+
+    @Nullable
+    public abstract String clinicalSignificance();
+
+    @NotNull
+    public abstract String openChangeCount();
+
+    @NotNull
+    public abstract String description();
+
+    @Nullable
+    public abstract String variantId();
+
+    @NotNull
+    public abstract String id();
 
 }
