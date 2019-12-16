@@ -51,7 +51,7 @@
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
         <bachelor.version>1.9</bachelor.version>
-        <sv-linx.version>1.6</sv-linx.version>
+        <sv-linx.version>1.7</sv-linx.version>
         <amber.version>3.1</amber.version>
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.35</purple.version>
