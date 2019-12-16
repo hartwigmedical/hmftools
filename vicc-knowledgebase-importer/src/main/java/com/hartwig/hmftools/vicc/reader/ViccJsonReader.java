@@ -120,10 +120,11 @@ public final class ViccJsonReader {
     @NotNull
     private static List<GeneIdentifier> createGeneIdentifiers(@NotNull JsonArray geneIdentifierArray) {
         List<GeneIdentifier> geneIdentifierList = Lists.newArrayList();
+        ViccDatamodelChecker geneIdentifierChecker = ViccDatamodelCheckerFactory.geneIdentifierChecker();
 
         for (JsonElement geneIdentifierElement : geneIdentifierArray) {
             JsonObject geneIdentifierObject = geneIdentifierElement.getAsJsonObject();
-            ViccDatamodelCheckerFactory.geneIdentifierChecker().check(geneIdentifierObject);
+            geneIdentifierChecker.check(geneIdentifierObject);
 
             geneIdentifierList.add(ImmutableGeneIdentifier.builder()
                     .symbol(string(geneIdentifierObject, "symbol"))

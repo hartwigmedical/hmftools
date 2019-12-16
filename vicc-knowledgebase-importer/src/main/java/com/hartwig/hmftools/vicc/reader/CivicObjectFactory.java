@@ -98,8 +98,8 @@ final class CivicObjectFactory {
     private static CivicCoordinates createCoordinates(@Nullable JsonObject coordinatesObject) {
         if (coordinatesObject == null) {
             return null;
-
         }
+
         ViccDatamodelCheckerFactory.civicCoordinatesChecker().check(coordinatesObject);
 
         return ImmutableCivicCoordinates.builder()
@@ -154,6 +154,7 @@ final class CivicObjectFactory {
 
         List<CivicVariantGroup> variantGroupList = Lists.newArrayList();
         ViccDatamodelChecker variantGroupChecker = ViccDatamodelCheckerFactory.civicVariantGroupChecker();
+
         for (JsonElement variantGroupElement : variantGroupArray) {
             JsonObject variantGroupObject = variantGroupElement.getAsJsonObject();
             variantGroupChecker.check(variantGroupObject);

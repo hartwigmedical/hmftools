@@ -81,8 +81,8 @@ final class OncokbObjectFactory {
 
         for (JsonElement drugAbstractElement : drugAbstractArray) {
             JsonObject drugAbstractObject = drugAbstractElement.getAsJsonObject();
-
             drugAbstractChecker.check(drugAbstractObject);
+
             drugAbstractList.add(ImmutableOncoKbDrugAbstract.builder()
                     .text(string(drugAbstractObject, "text"))
                     .link(string(drugAbstractObject, "link"))
