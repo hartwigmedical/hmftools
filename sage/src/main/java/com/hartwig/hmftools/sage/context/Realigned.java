@@ -3,6 +3,9 @@ package com.hartwig.hmftools.sage.context;
 import static com.hartwig.hmftools.sage.context.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.context.RealignedType.SHORTENED;
 
+import java.util.Optional;
+
+import com.hartwig.hmftools.common.variant.repeat.RepeatContext;
 import com.hartwig.hmftools.common.variant.repeat.RepeatContextFactory;
 import com.hartwig.hmftools.sage.read.ReadContext;
 
@@ -10,100 +13,104 @@ import org.jetbrains.annotations.NotNull;
 
 public class Realigned {
 
-    private static final int MIN_REPEAT_COUNT = 4;
     public static final int MAX_REPEAT_SIZE = 5;
     private static final RealignedContext NONE = new RealignedContext(RealignedType.NONE, 0);
     private static final RealignedContext EXACT = new RealignedContext(RealignedType.EXACT, 0);
-    private static final Repeat NO_REPEAT = new Repeat(0, 0);
 
     @NotNull
-    public RealignedContext realignedInEntireRecord(@NotNull final ReadContext readContext, final byte[] otherBases) {
-        return realigned(readContext.readBasesLeftFlankIndex(), readContext.readBasesRightFlankIndex(), readContext.readBases(), otherBases);
-    }
+    public static RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases,
+            int maxSize) {
 
-    @NotNull
-    public RealignedContext realignedAroundIndex(@NotNull final ReadContext readContext, final int otherBaseIndex, final byte[] otherBases, int maxSize) {
-        return realigned(readContext.readBasesLeftFlankIndex(), readContext.readBasesRightFlankIndex(), readContext.readBases(), otherBaseIndex, otherBases, maxSize);
-    }
-
-    @NotNull
-    private RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases,  final int otherBaseIndex, final byte[] otherBases, int maxDistance) {
-
-        RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndex, otherBases);
-        if (context.type() != RealignedType.NONE) {
-            return context;
+        if (realigned(readContext.readBasesPositionIndex(),
+                readContext.readBasesLeftFlankIndex(),
+                readContext.readBasesRightFlankIndex(),
+                readContext.readBases(),
+                otherBaseIndex,
+                otherBases,
+                maxSize)) {
+            return EXACT;
         }
 
-        int exactLength = baseEndIndex - baseStartIndex + 1;
+        return jitter(readContext.readBasesPositionIndex(),
+                readContext.readBasesLeftCentreIndex(),
+                readContext.readBasesRightCentreIndex(),
+                readContext.readBases(),
+                otherBaseIndex,
+                otherBases);
 
-        for (int i = otherBaseIndex + 1; i <= Math.min(otherBaseIndex + maxDistance, otherBases.length - exactLength + MAX_REPEAT_SIZE); i++) {
-            context = realigned(baseStartIndex, baseEndIndex, bases, i, otherBases);
-            if (context.type() != RealignedType.NONE) {
-                return context;
+    }
+
+    static boolean realigned(int baseIndex, int baseStartIndex, int baseEndIndex, final byte[] bases, final int otherBaseIndex,
+            final byte[] otherBases, int maxDistance) {
+
+        for (int offset = -maxDistance; offset <= maxDistance; offset++) {
+            if (realigned(baseIndex, baseStartIndex, baseEndIndex, bases, otherBaseIndex + offset, otherBases)) {
+                return true;
             }
         }
 
-        for (int i = otherBaseIndex - 1; i >= Math.max(otherBaseIndex - maxDistance, 0); i--) {
-            context = realigned(baseStartIndex, baseEndIndex, bases, i, otherBases);
-            if (context.type() != RealignedType.NONE) {
-                return context;
-            }
-        }
+        return false;
+    }
 
-        return NONE;
+    private static boolean realigned(int baseIndex, int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases) {
+
+        int leftOffset = baseIndex - baseStartIndex;
+        int otherStartIndex = otherIndex - leftOffset;
+        int expectedLength = baseEndIndex - baseStartIndex + 1;
+        return otherStartIndex >= 0 && otherStartIndex + expectedLength <= otherBases.length
+                && matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherStartIndex, otherBases) == expectedLength;
+
     }
 
     @NotNull
-    RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, final byte[] otherBases) {
+    static RealignedContext jitter(int baseIndex, int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex,
+            byte[] otherBases) {
 
-        int exactLength = baseEndIndex - baseStartIndex + 1;
+        int leftOffset = baseIndex - baseStartIndex;
+        int otherStartIndex = otherIndex - leftOffset;
+        return jitter(baseStartIndex, baseEndIndex, bases, otherStartIndex, otherBases);
 
-        for (int i = 0; i <= otherBases.length - exactLength + MAX_REPEAT_SIZE; i++) {
-            RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, i, otherBases);
-            if (context.type() != RealignedType.NONE) {
-                return context;
-            }
-        }
-
-        return NONE;
     }
 
     @NotNull
-    private RealignedContext realigned(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherIndex, byte[] otherBases) {
+    private static RealignedContext jitter(int baseStartIndex, int baseEndIndex, final byte[] bases, int otherStartIndex,
+            byte[] otherBases) {
         int exactLength = baseEndIndex - baseStartIndex + 1;
 
-        int matchingBases = matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherIndex, otherBases);
+        int matchingBases = matchingBasesFromLeft(baseStartIndex, baseEndIndex, bases, otherStartIndex, otherBases);
         if (matchingBases == exactLength) {
             return EXACT;
         }
 
-        if (matchingBases < MIN_REPEAT_COUNT) {
+        int baseNextIndex = baseStartIndex + matchingBases;
+        int otherNextIndex = otherStartIndex + matchingBases;
+
+        final Optional<RepeatContext> optionalRepeat = RepeatContextFactory.repeats(otherNextIndex - 1, otherBases);
+        if (!optionalRepeat.isPresent()) {
             return NONE;
         }
 
-        int baseNextIndex = baseStartIndex + matchingBases;
-        int otherNextIndex = otherIndex + matchingBases;
+        final RepeatContext repeat = optionalRepeat.get();
 
-        final Repeat repeat = repeatCount(otherNextIndex, otherBases);
-        int repeatLength = repeat.repeatLength;
+        int repeatLength = repeat.sequence().length();
         if (repeatLength == 0) {
             return NONE;
         }
 
-        int matchingBasesShortened = matchingBasesFromLeft(baseNextIndex + repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
-        if (matchingBasesShortened > 0 && matchingBases + matchingBasesShortened == exactLength - repeatLength) {
-            return new RealignedContext(SHORTENED, repeat.repeatCount);
-        }
-
         int matchingBasesLengthened = matchingBasesFromLeft(baseNextIndex - repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
         if (matchingBasesLengthened > 0 && matchingBases + matchingBasesLengthened == exactLength + repeatLength) {
-            return new RealignedContext(LENGTHENED, repeat.repeatCount + 1);
+            return new RealignedContext(LENGTHENED, repeat.count());
+        }
+
+        int matchingBasesShortened = matchingBasesFromLeft(baseNextIndex + repeatLength, baseEndIndex, bases, otherNextIndex, otherBases);
+        if (matchingBasesShortened > 0 && matchingBases + matchingBasesShortened == exactLength - repeatLength) {
+            return new RealignedContext(SHORTENED, repeat.count());
         }
 
         return NONE;
     }
 
-    private int matchingBasesFromLeft(int startIndex, int endIndex, byte[] bases, int otherIndex, byte[] otherBases) {
+    private static int matchingBasesFromLeft(int startIndex, int endIndex, byte[] bases, int otherIndex, byte[] otherBases) {
         if (startIndex < 0) {
             return 0;
         }
@@ -117,28 +124,6 @@ public class Realigned {
         }
 
         return maxLength;
-    }
-
-    private Repeat repeatCount(int index, byte[] bases) {
-        for (int i = 1; i <= MAX_REPEAT_SIZE; i++) {
-            int repeats = RepeatContextFactory.backwardRepeats(index - i, i, bases) + 1;
-            if (repeats >= MIN_REPEAT_COUNT) {
-                return new Repeat(i, repeats);
-            }
-        }
-
-        return NO_REPEAT;
-
-    }
-
-    private static class Repeat {
-        private final int repeatLength;
-        private final int repeatCount;
-
-        Repeat(final int repeatLength, final int repeatCount) {
-            this.repeatLength = repeatLength;
-            this.repeatCount = repeatCount;
-        }
     }
 
 }
