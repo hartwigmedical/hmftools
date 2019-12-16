@@ -41,13 +41,13 @@ import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTTYPES;
 
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrugs;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrug;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItem;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicSource;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicUser;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariant;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantGroup;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantTypes;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariants;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -87,7 +87,7 @@ final class CivicDAOFunctions {
             context.insertInto(CIVICASSERTIONS, CIVICASSERTIONS.ASSERTIONS, CIVICASSERTIONS.CIVICID).values(assertions, id).execute();
         }
 
-        for (String hgvsExpression : civic.hgvs_expressions()) {
+        for (String hgvsExpression : civic.hgvsExpressions()) {
             context.insertInto(CIVICHGVSEXPRESSIONS, CIVICHGVSEXPRESSIONS.HGVS_EXPRESSIONS, CIVICHGVSEXPRESSIONS.CIVICID)
                     .values(hgvsExpression, id)
                     .execute();
@@ -105,7 +105,7 @@ final class CivicDAOFunctions {
                     .execute();
         }
 
-        for (CivicVariantTypes variantTypes : civic.variantTypes()) {
+        for (CivicVariantType variantTypes : civic.variantTypes()) {
             context.insertInto(CIVICVARIANTTYPES,
                     CIVICVARIANTTYPES.DISPLAYNAME,
                     CIVICVARIANTTYPES.DESCRIPTION,
@@ -124,9 +124,9 @@ final class CivicDAOFunctions {
                     .execute();
         }
 
-        if (civic.provisional_values() != null) {
+        if (civic.provisionalValues() != null) {
             context.insertInto(CIVICDESCRIPTION, CIVICDESCRIPTION.REVISIONID, CIVICDESCRIPTION.VALUE, CIVICDESCRIPTION.CIVICID)
-                    .values(civic.provisional_values().revision_id(), civic.provisional_values().value(), id)
+                    .values(civic.provisionalValues().revisionId(), civic.provisionalValues().value(), id)
                     .execute();
         }
 
@@ -171,7 +171,7 @@ final class CivicDAOFunctions {
                     .fetchOne()
                     .getValue(CIVICVARIANTSGROUPS.ID);
 
-            for (CivicVariants variants : variantGroup.variants()) {
+            for (CivicVariant variants : variantGroup.variants()) {
                 int idVariantGroupVariants = context.insertInto(CIVICVARIANTSGROUPSVARIANTS,
                         CIVICVARIANTSGROUPSVARIANTS.ENTREZ_NAME,
                         CIVICVARIANTSGROUPSVARIANTS.DESCRIPTION,
@@ -182,11 +182,11 @@ final class CivicDAOFunctions {
                         CIVICVARIANTSGROUPSVARIANTS.IDVARIANTS,
                         CIVICVARIANTSGROUPSVARIANTS.NAME,
                         CIVICVARIANTSGROUPSVARIANTS.CIVICVARIANTSGROUPSID)
-                        .values(variants.entrez_name(),
+                        .values(variants.entrezName(),
                                 variants.description(),
-                                variants.civic_actionability_score(),
-                                variants.gene_id(),
-                                variants.entrez_id(),
+                                variants.civicActionabilityScore(),
+                                variants.geneId(),
+                                variants.entrezId(),
                                 variants.type(),
                                 variants.id(),
                                 variants.name(),
@@ -226,7 +226,7 @@ final class CivicDAOFunctions {
                             .execute();
                 }
 
-                for (CivicVariantTypes variantTypesGroup : variants.variant_types()) {
+                for (CivicVariantType variantTypesGroup : variants.variantTypes()) {
                     context.insertInto(CIVICVARIANTSGROUPSTYPES,
                             CIVICVARIANTSGROUPSTYPES.DISPLAYNAME,
                             CIVICVARIANTSGROUPSTYPES.DESCRIPTION,
@@ -247,7 +247,7 @@ final class CivicDAOFunctions {
             }
         }
 
-        for (CivicEvidenceItems evidenceItems : civic.evidenceItem()) {
+        for (CivicEvidenceItem evidenceItems : civic.evidenceItems()) {
             int idEvidenceItems = context.insertInto(CIVICEVIDENCEITEMS,
                     CIVICEVIDENCEITEMS.STATUS,
                     CIVICEVIDENCEITEMS.RATING,
@@ -283,7 +283,7 @@ final class CivicDAOFunctions {
                     .fetchOne()
                     .getValue(CIVICEVIDENCEITEMS.ID);
 
-            for (CivicDrugs drugs : evidenceItems.drugs()) {
+            for (CivicDrug drugs : evidenceItems.drugs()) {
                 context.insertInto(CIVICDRUGS, CIVICDRUGS.PUBCHEMID, CIVICDRUGS.IDDRUGS, CIVICDRUGS.NAME, CIVICDRUGS.CIVICEVIDENCEITEMSID)
                         .values(drugs.pubchemId(), drugs.id(), drugs.name(), idEvidenceItems)
                         .execute();
@@ -322,7 +322,7 @@ final class CivicDAOFunctions {
                             evidenceItems.source().name(),
                             evidenceItems.source().journal(),
                             evidenceItems.source().citation(),
-                            evidenceItems.source().pmc_Id(),
+                            evidenceItems.source().pmcId(),
                             evidenceItems.source().fullJournalTitle(),
                             evidenceItems.source().sourceUrl(),
                             evidenceItems.source().pubmedId(),
@@ -351,9 +351,9 @@ final class CivicDAOFunctions {
                         CIVICEVIDENCEITEMSCLINICALTRIAL.CLINICAL_TRIAL_URL,
                         CIVICEVIDENCEITEMSCLINICALTRIAL.NAME,
                         CIVICEVIDENCEITEMSCLINICALTRIAL.CIVICEVIDENCEITEMSSOURCEID)
-                        .values(clinicalTrial.nct_id(),
+                        .values(clinicalTrial.nctId(),
                                 clinicalTrial.description(),
-                                clinicalTrial.clinical_trial_url(),
+                                clinicalTrial.clinicalTrialUrl(),
                                 clinicalTrial.name(),
                                 idEvidenceItemsSource)
                         .execute();
@@ -380,7 +380,7 @@ final class CivicDAOFunctions {
                                 source.name(),
                                 source.journal(),
                                 source.citation(),
-                                source.pmc_Id(),
+                                source.pmcId(),
                                 source.fullJournalTitle(),
                                 source.sourceUrl(),
                                 source.pubmedId(),
@@ -406,9 +406,9 @@ final class CivicDAOFunctions {
                             CIVICCLINICALTRIAL.CLINICAL_TRIAL_URL,
                             CIVICCLINICALTRIAL.NAME,
                             CIVICCLINICALTRIAL.CIVICSOURCEID)
-                            .values(clinicalTrial.nct_id(),
+                            .values(clinicalTrial.nctId(),
                                     clinicalTrial.description(),
-                                    clinicalTrial.clinical_trial_url(),
+                                    clinicalTrial.clinicalTrialUrl(),
                                     clinicalTrial.name(),
                                     idSource)
                             .execute();

@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class CivicSource {
 
+    @Nullable
+    public abstract String name();
+
     @NotNull
     public abstract String status();
 
@@ -17,19 +20,16 @@ public abstract class CivicSource {
     public abstract String openAccess();
 
     @Nullable
-    public abstract String name();
+    public abstract String journal();
 
     @Nullable
-    public abstract String journal();
+    public abstract String fullJournalTitle();
 
     @NotNull
     public abstract String citation();
 
     @Nullable
-    public abstract String pmc_Id();
-
-    @Nullable
-    public abstract String fullJournalTitle();
+    public abstract String pmcId();
 
     @NotNull
     public abstract String sourceUrl();

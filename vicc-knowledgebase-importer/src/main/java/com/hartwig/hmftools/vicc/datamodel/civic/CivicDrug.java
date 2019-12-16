@@ -6,14 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicDrugs {
+public abstract class CivicDrug {
+
+    @NotNull
+    public abstract String name();
 
     @Nullable
     public abstract String pubchemId();
 
     @NotNull
     public abstract String id();
-
-    @NotNull
-    public abstract String name();
 }

@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicEvidenceItems {
+public abstract class CivicEvidenceItem {
 
     @NotNull
     public abstract String status();
@@ -29,7 +29,7 @@ public abstract class CivicEvidenceItems {
     public abstract String evidenceType();
 
     @NotNull
-    public abstract List<CivicDrugs> drugs();
+    public abstract List<CivicDrug> drugs();
 
     @Nullable
     public abstract String variantOrigin();

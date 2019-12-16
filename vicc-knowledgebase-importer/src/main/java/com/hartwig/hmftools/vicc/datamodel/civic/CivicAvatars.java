@@ -9,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicAvatars {
 
     @NotNull
-    public abstract String x32();
+    public abstract String x14();
 
     @NotNull
-    public abstract String x14();
+    public abstract String x32();
 
     @NotNull
     public abstract String x64();

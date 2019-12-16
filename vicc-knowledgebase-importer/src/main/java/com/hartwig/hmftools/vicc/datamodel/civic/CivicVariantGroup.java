@@ -14,7 +14,7 @@ public abstract class CivicVariantGroup {
     public abstract String id();
 
     @NotNull
-    public abstract List<CivicVariants> variants();
+    public abstract String name();
 
     @NotNull
     public abstract String type();
@@ -23,5 +23,5 @@ public abstract class CivicVariantGroup {
     public abstract String description();
 
     @NotNull
-    public abstract String name();
+    public abstract List<CivicVariant> variants();
 }

@@ -15,9 +15,9 @@ import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicCoordinates;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicDescription;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicDisease;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrugs;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrug;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicError;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItem;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastCommentedOn;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastModified;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastReviewed;
@@ -27,18 +27,18 @@ import com.hartwig.hmftools.vicc.datamodel.civic.CivicProfileImage;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicPublicationDate;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicSource;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicUser;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariant;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantGroup;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantTypes;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariants;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantType;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivic;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicAvatars;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicClinicalTrial;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicCoordinates;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicDescription;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicDisease;
-import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicDrugs;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicDrug;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicError;
-import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicEvidenceItem;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicLastCommentedOn;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicLastModified;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicLastReviewed;
@@ -48,9 +48,9 @@ import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicProfileImage;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicPublicationDate;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicSource;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicUser;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariant;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantGroup;
-import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantTypes;
-import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariants;
+import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,15 +109,15 @@ final class CivicObjectFactory {
                 .alleleRegistryId(objectCivic.get("allele_registry_id").isJsonNull()
                         ? null
                         : objectCivic.getAsJsonPrimitive("allele_registry_id").getAsString())
-                .provisional_values(createCivicDescription(objectCivic.getAsJsonObject("provisional_values")))
+                .provisionalValues(createCivicDescription(objectCivic.getAsJsonObject("provisional_values")))
                 .geneId(objectCivic.getAsJsonPrimitive("gene_id").getAsString())
                 .name(objectCivic.getAsJsonPrimitive("name").getAsString())
-                .evidenceItem(createEvidenceItems(objectCivic.getAsJsonArray("evidence_items")))
+                .evidenceItems(createEvidenceItems(objectCivic.getAsJsonArray("evidence_items")))
                 .sources(createCivicSource(objectCivic.getAsJsonArray("sources")))
                 .entrezId(objectCivic.getAsJsonPrimitive("entrez_id").getAsString())
                 .assertions(toStringList(objectCivic.getAsJsonArray("assertions")))
-                .hgvs_expressions(toStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
-                .errors(createCivicError(objectCivic.getAsJsonObject("errors")))
+                .hgvsExpressions(toStringList(objectCivic.getAsJsonArray("hgvs_expressions")))
+                .error(createCivicError(objectCivic.getAsJsonObject("errors")))
                 .coordinates(createCoordinates(objectCivic.getAsJsonObject("coordinates")))
                 .type(objectCivic.getAsJsonPrimitive("type").getAsString())
                 .id(objectCivic.getAsJsonPrimitive("id").getAsString())
@@ -147,7 +147,7 @@ final class CivicObjectFactory {
                             ? null
                             : source.getAsJsonObject().getAsJsonPrimitive("journal").getAsString())
                     .citation(source.getAsJsonObject().getAsJsonPrimitive("citation").getAsString())
-                    .pmc_Id(source.getAsJsonObject().get("pmc_id").isJsonNull()
+                    .pmcId(source.getAsJsonObject().get("pmc_id").isJsonNull()
                             ? null
                             : source.getAsJsonObject().getAsJsonPrimitive("pmc_id").getAsString())
                     .fullJournalTitle(source.getAsJsonObject().get("full_journal_title").isJsonNull()
@@ -197,7 +197,7 @@ final class CivicObjectFactory {
                 LOGGER.warn(keysDescription);
             }
             return ImmutableCivicDescription.builder()
-                    .revision_id(!description.has("revision_id") || description.get("revision_id").isJsonNull()
+                    .revisionId(!description.has("revision_id") || description.get("revision_id").isJsonNull()
                             ? null
                             : description.getAsJsonPrimitive("revision_id").getAsString())
                     .value(!description.has("value") || description.get("value").isJsonNull()
@@ -205,7 +205,7 @@ final class CivicObjectFactory {
                             : description.getAsJsonPrimitive("value").getAsString())
                     .build();
         } else {
-            return ImmutableCivicDescription.builder().revision_id("").value("").build();
+            return ImmutableCivicDescription.builder().revisionId("").value("").build();
         }
     }
 
@@ -233,8 +233,8 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicVariants> createVariants(@NotNull JsonArray arrayVariants) {
-        List<CivicVariants> variantsList = Lists.newArrayList();
+    private static List<CivicVariant> createVariants(@NotNull JsonArray arrayVariants) {
+        List<CivicVariant> variantsList = Lists.newArrayList();
         for (JsonElement variants : arrayVariants) {
             Set<String> keysVariants = variants.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTS_SIZES.contains(keysVariants.size())) {
@@ -242,15 +242,15 @@ final class CivicObjectFactory {
                 LOGGER.warn(keysVariants);
             }
 
-            variantsList.add(ImmutableCivicVariants.builder()
-                    .entrez_name(variants.getAsJsonObject().getAsJsonPrimitive("entrez_name").getAsString())
-                    .variant_types(createVariantTypes(variants.getAsJsonObject().getAsJsonArray("variant_types")))
+            variantsList.add(ImmutableCivicVariant.builder()
+                    .entrezName(variants.getAsJsonObject().getAsJsonPrimitive("entrez_name").getAsString())
+                    .variantTypes(createVariantTypes(variants.getAsJsonObject().getAsJsonArray("variant_types")))
                     .description(variants.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .civic_actionability_score(!variants.getAsJsonObject().has("civic_actionability_score") || variants.getAsJsonObject()
+                    .civicActionabilityScore(!variants.getAsJsonObject().has("civic_actionability_score") || variants.getAsJsonObject()
                             .get("civic_actionability_score")
                             .isJsonNull() ? null : variants.getAsJsonObject().getAsJsonPrimitive("civic_actionability_score").getAsString())
-                    .gene_id(variants.getAsJsonObject().getAsJsonPrimitive("gene_id").getAsString())
-                    .entrez_id(variants.getAsJsonObject().getAsJsonPrimitive("entrez_id").getAsString())
+                    .geneId(variants.getAsJsonObject().getAsJsonPrimitive("gene_id").getAsString())
+                    .entrezId(variants.getAsJsonObject().getAsJsonPrimitive("entrez_id").getAsString())
                     .coordinates(!variants.getAsJsonObject().has("createCoordinates")
                             ? null
                             : createCoordinates(variants.getAsJsonObject().getAsJsonObject("createCoordinates")))
@@ -303,8 +303,8 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicEvidenceItems> createEvidenceItems(@NotNull JsonArray evidenceItemsArray) {
-        List<CivicEvidenceItems> evidenceItemsList = Lists.newArrayList();
+    private static List<CivicEvidenceItem> createEvidenceItems(@NotNull JsonArray evidenceItemsArray) {
+        List<CivicEvidenceItem> evidenceItemsList = Lists.newArrayList();
         for (JsonElement evidenceItem : evidenceItemsArray) {
             Set<String> keysEvidenceItems = evidenceItem.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_EVIDENCE_ITEMS_SIZES.contains(keysEvidenceItems.size())) {
@@ -314,7 +314,7 @@ final class CivicObjectFactory {
                 LOGGER.warn(keysEvidenceItems);
             }
 
-            evidenceItemsList.add(ImmutableCivicEvidenceItems.builder()
+            evidenceItemsList.add(ImmutableCivicEvidenceItem.builder()
                     .status(evidenceItem.getAsJsonObject().getAsJsonPrimitive("status").getAsString())
                     .rating(evidenceItem.getAsJsonObject().get("rating").isJsonNull()
                             ? null
@@ -365,7 +365,7 @@ final class CivicObjectFactory {
                 .name(objectSource.get("name").isJsonNull() ? null : objectSource.getAsJsonPrimitive("name").getAsString())
                 .journal(objectSource.get("journal").isJsonNull() ? null : objectSource.getAsJsonPrimitive("journal").getAsString())
                 .citation(objectSource.getAsJsonPrimitive("citation").getAsString())
-                .pmc_Id(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
+                .pmcId(objectSource.get("pmc_id").isJsonNull() ? null : objectSource.getAsJsonPrimitive("pmc_id").getAsString())
                 .fullJournalTitle(objectSource.get("full_journal_title").isJsonNull()
                         ? null
                         : objectSource.getAsJsonPrimitive("full_journal_title").getAsString())
@@ -391,9 +391,9 @@ final class CivicObjectFactory {
             }
 
             clinicalTrialList.add(ImmutableCivicClinicalTrial.builder()
-                    .nct_id(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("nct_id").getAsString())
+                    .nctId(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("nct_id").getAsString())
                     .description(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .clinical_trial_url(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("clinical_trial_url").getAsString())
+                    .clinicalTrialUrl(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("clinical_trial_url").getAsString())
                     .name(clinicalTrial.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
         }
@@ -435,8 +435,8 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicDrugs> createDrugs(@NotNull JsonArray arrayDrugs) {
-        List<CivicDrugs> drugsList = Lists.newArrayList();
+    private static List<CivicDrug> createDrugs(@NotNull JsonArray arrayDrugs) {
+        List<CivicDrug> drugsList = Lists.newArrayList();
         for (JsonElement drug : arrayDrugs) {
             Set<String> keysDrugs = drug.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_DRUGS_SIZES.contains(keysDrugs.size())) {
@@ -444,7 +444,7 @@ final class CivicObjectFactory {
                 LOGGER.warn(keysDrugs);
             }
 
-            drugsList.add(ImmutableCivicDrugs.builder()
+            drugsList.add(ImmutableCivicDrug.builder()
                     .pubchemId(drug.getAsJsonObject().get("pubchem_id").isJsonNull()
                             ? null
                             : drug.getAsJsonObject().getAsJsonPrimitive("pubchem_id").getAsString())
@@ -632,8 +632,8 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicVariantTypes> createVariantTypes(@NotNull JsonArray arrayVariantTypes) {
-        List<CivicVariantTypes> civicVariantTypesList = Lists.newArrayList();
+    private static List<CivicVariantType> createVariantTypes(@NotNull JsonArray arrayVariantTypes) {
+        List<CivicVariantType> civicVariantTypeList = Lists.newArrayList();
         for (JsonElement variantTypes : arrayVariantTypes) {
             Set<String> keysVariantTypes = variantTypes.getAsJsonObject().keySet();
             if (!EXPECTED_CIVIC_VARIANTTYPES_SIZES.contains(keysVariantTypes.size())) {
@@ -643,7 +643,7 @@ final class CivicObjectFactory {
                 LOGGER.warn(keysVariantTypes);
             }
 
-            civicVariantTypesList.add(ImmutableCivicVariantTypes.builder()
+            civicVariantTypeList.add(ImmutableCivicVariantType.builder()
                     .displayName(variantTypes.getAsJsonObject().getAsJsonPrimitive("display_name").getAsString())
                     .description(variantTypes.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
                     .url(variantTypes.getAsJsonObject().getAsJsonPrimitive("url").getAsString())
@@ -652,6 +652,6 @@ final class CivicObjectFactory {
                     .name(variantTypes.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
                     .build());
         }
-        return civicVariantTypesList;
+        return civicVariantTypeList;
     }
 }

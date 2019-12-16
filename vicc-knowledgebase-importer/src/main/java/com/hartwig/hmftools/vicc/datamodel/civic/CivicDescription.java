@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicDescription {
 
     @Nullable
-    public abstract String revision_id();
+    public abstract String revisionId();
 
     @Nullable
     public abstract String value();

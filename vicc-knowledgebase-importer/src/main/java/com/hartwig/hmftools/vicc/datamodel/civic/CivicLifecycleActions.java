@@ -17,6 +17,4 @@ public abstract class CivicLifecycleActions {
     @Nullable
     public abstract CivicLastReviewed lastReviewed();
 
-
-
 }

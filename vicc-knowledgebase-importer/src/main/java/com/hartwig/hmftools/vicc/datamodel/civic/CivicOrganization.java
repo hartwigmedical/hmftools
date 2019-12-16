@@ -9,17 +9,17 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicOrganization {
 
     @Nullable
-    public abstract String url();
+    public abstract String name();
 
     @Nullable
-    public abstract String id();
+    public abstract String url();
 
     @Nullable
     public abstract CivicProfileImage profileImage();
 
     @Nullable
-    public abstract String description();
+    public abstract String id();
 
     @Nullable
-    public abstract String name();
+    public abstract String description();
 }

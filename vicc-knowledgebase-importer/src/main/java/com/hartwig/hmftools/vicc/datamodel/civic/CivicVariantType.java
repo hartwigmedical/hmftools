@@ -6,7 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicVariantTypes {
+public abstract class CivicVariantType {
+
+    @NotNull
+    public abstract String name();
 
     @NotNull
     public abstract String displayName();
@@ -22,7 +25,4 @@ public abstract class CivicVariantTypes {
 
     @NotNull
     public abstract String id();
-
-    @NotNull
-    public abstract String name();
 }
