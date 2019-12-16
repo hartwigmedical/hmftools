@@ -108,10 +108,10 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBGENEBIOLOGICAL.ID);
 
-            for (String geneAliases : oncoKbGene.geneAliases()) {
+            for (String geneAlias : oncoKbGene.geneAliases()) {
                 context.insertInto(ONCOKBGENEALIASBIOLOGICAL,
                         ONCOKBGENEALIASBIOLOGICAL.GENEALIAS,
-                        ONCOKBGENEALIASBIOLOGICAL.ONCOKBGENEBIOLOGICALID).values(geneAliases, idGene);
+                        ONCOKBGENEALIASBIOLOGICAL.ONCOKBGENEBIOLOGICALID).values(geneAlias, idGene);
             }
         }
 
@@ -205,10 +205,10 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBGENECLINICAL.ID);
 
-            for (String geneAliasClinical : geneClinical.geneAliases()) {
+            for (String geneAlias : geneClinical.geneAliases()) {
                 context.insertInto(ONCOKBGENEALIASCLINICAL,
                         ONCOKBGENEALIASCLINICAL.GENEALIAS,
-                        ONCOKBGENEALIASCLINICAL.ONCOKBGENECLINICALID).values(geneAliasClinical, idGeneClinical).execute();
+                        ONCOKBGENEALIASCLINICAL.ONCOKBGENECLINICALID).values(geneAlias, idGeneClinical).execute();
             }
         }
     }
