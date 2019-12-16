@@ -780,6 +780,7 @@ CREATE TABLE civicVariantGroupCoordinates
     variantBases varchar(255),
     representativeTranscript varchar(255),
     ensemblVersion varchar(255),
+    referenceBuild varchar(255),
     chromosome2 varchar(255),
     start2 varchar(255),
     stop2 varchar(255),

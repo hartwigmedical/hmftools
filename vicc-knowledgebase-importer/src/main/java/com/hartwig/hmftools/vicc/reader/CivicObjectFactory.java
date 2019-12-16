@@ -110,6 +110,7 @@ final class CivicObjectFactory {
                 .variantBases(nullableString(coordinatesObject, "variant_bases"))
                 .representativeTranscript(nullableString(coordinatesObject, "representative_transcript"))
                 .ensemblVersion(nullableString(coordinatesObject, "ensembl_version"))
+                .referenceBuild(nullableString(coordinatesObject, "reference_build"))
                 .chromosome2(nullableString(coordinatesObject, "chromosome2"))
                 .start2(nullableString(coordinatesObject, "start2"))
                 .stop2(nullableString(coordinatesObject, "stop2"))
