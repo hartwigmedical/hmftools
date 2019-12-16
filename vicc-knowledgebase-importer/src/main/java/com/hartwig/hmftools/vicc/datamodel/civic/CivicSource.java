@@ -34,7 +34,7 @@ public abstract class CivicSource {
     @NotNull
     public abstract String sourceUrl();
 
-    @Nullable
+    @NotNull
     public abstract List<CivicClinicalTrial> clinicalTrials();
 
     @NotNull

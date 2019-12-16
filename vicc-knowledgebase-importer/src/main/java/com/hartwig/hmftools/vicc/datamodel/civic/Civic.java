@@ -27,13 +27,13 @@ public abstract class Civic implements KbSpecificObject {
     @NotNull
     public abstract CivicCoordinates coordinates();
 
-    @Nullable
+    @NotNull
     public abstract List<CivicSource> sources();
 
     @NotNull
     public abstract List<String> variantAliases();
 
-    @Nullable
+    @NotNull
     public abstract List<CivicVariantGroup> variantGroups();
 
     @NotNull
@@ -52,7 +52,7 @@ public abstract class Civic implements KbSpecificObject {
     public abstract String civicActionabilityScore();
 
     @NotNull
-    public abstract List<String> clinvarEntries();
+    public abstract List<String> clinVarEntries();
 
     @Nullable
     public abstract String alleleRegistryId();

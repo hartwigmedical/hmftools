@@ -84,7 +84,7 @@ final class CivicObjectFactory {
                 .evidenceItems(createEvidenceItems(civicObject.getAsJsonArray("evidence_items")))
                 .assertions(stringList(civicObject, "assertions"))
                 .civicActionabilityScore(nullableString(civicObject, "civic_actionability_score"))
-                .clinvarEntries(stringList(civicObject, "clinvar_entries"))
+                .clinVarEntries(stringList(civicObject, "clinvar_entries"))
                 .alleleRegistryId(nullableString(civicObject, "allele_registry_id"))
                 .provisionalValue(createProvisionalValue(civicObject.getAsJsonObject("provisional_values")))
                 .lifecycleActions(createLifecycleActions(civicObject.getAsJsonObject("lifecycle_actions")))
@@ -145,10 +145,10 @@ final class CivicObjectFactory {
                 .build();
     }
 
-    @Nullable
+    @NotNull
     private static List<CivicVariantGroup> createVariantGroups(@Nullable JsonArray variantGroupArray) {
         if (variantGroupArray == null) {
-            return null;
+            return Lists.newArrayList();
         }
 
         List<CivicVariantGroup> variantGroupList = Lists.newArrayList();
