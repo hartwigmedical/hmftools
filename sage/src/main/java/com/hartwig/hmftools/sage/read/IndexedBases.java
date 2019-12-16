@@ -248,4 +248,8 @@ public class IndexedBases {
         return rightFlankIndex;
     }
 
+    public byte base(int position) {
+        return bases[position - this.position + index];
+    }
+
 }

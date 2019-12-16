@@ -29,15 +29,15 @@ DROP TABLE IF EXISTS sage;
 DROP TABLE IF EXISTS oncokb;
 DROP TABLE IF EXISTS oncokbBiological;
 DROP TABLE IF EXISTS oncokbVariantBiological;
-DROP TABLE IF EXISTS oncokbConsequencesBiological;
+DROP TABLE IF EXISTS oncokbConsequenceBiological;
 DROP TABLE IF EXISTS oncokbGeneBiological;
-DROP TABLE IF EXISTS oncokbGeneAliasesBiological;
+DROP TABLE IF EXISTS oncokbGeneAliasBiological;
 DROP TABLE IF EXISTS oncokbClinical;
-DROP TABLE IF EXISTS oncokbDrugAbstractsClinical;
+DROP TABLE IF EXISTS oncokbDrugAbstractClinical;
 DROP TABLE IF EXISTS oncokbVariantClinical;
-DROP TABLE IF EXISTS oncokbConsequencesClinical;
+DROP TABLE IF EXISTS oncokbConsequenceClinical;
 DROP TABLE IF EXISTS oncokbGeneClinical;
-DROP TABLE IF EXISTS oncokbGeneAliasesClinical;
+DROP TABLE IF EXISTS oncokbGeneAliasClinical;
 DROP TABLE IF EXISTS civic;
 DROP TABLE IF EXISTS civicAssertions;
 DROP TABLE IF EXISTS civicHGVSExpressions;
@@ -241,8 +241,15 @@ DROP TABLE IF EXISTS cgiTranscript;
 DROP TABLE IF EXISTS cgiStrand;
 DROP TABLE IF EXISTS cgiInfo;
 DROP TABLE IF EXISTS cgiRegion;
-DROP TABLE IF EXISTS brcaPart1;
-DROP TABLE IF EXISTS brcaPart2;
+DROP TABLE IF EXISTS brca;
+DROP TABLE IF EXISTS brcaAnnotation1000Genomes;
+DROP TABLE IF EXISTS brcaAnnotationBIC;
+DROP TABLE IF EXISTS brcaAnnotationClinVar;
+DROP TABLE IF EXISTS brcaAnnotationENIGMA;
+DROP TABLE IF EXISTS brcaAnnotationESP;
+DROP TABLE IF EXISTS brcaAnnotationExAC;
+DROP TABLE IF EXISTS brcaAnnotationExLOVD;
+DROP TABLE IF EXISTS brcaAnnotationLOVD;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -500,14 +507,14 @@ CREATE TABLE taxonomy
 CREATE TABLE sage
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
+    gene varchar(255) NOT NULL,
     entrezId varchar(255) NOT NULL,
     clinicalManifestation varchar(255) NOT NULL,
-    publicationUrl varchar(255) NOT NULL,
-    germlineOrSomatic varchar(255) NOT NULL,
-    evidenceLabel varchar(255) NOT NULL,
-    drugLabel varchar(255) NOT NULL,
     responseType varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
+    evidenceLabel varchar(255) NOT NULL,
+    drugLabels varchar(255) NOT NULL,
+    germlineOrSomatic varchar(255) NOT NULL,
+    publicationUrl varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
@@ -521,33 +528,33 @@ CREATE TABLE oncokb
 
 CREATE TABLE oncokbBiological
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    mutationEffectPmids varchar(255) NOT NULL,
+    oncokbId int NOT NULL,
+    gene varchar(255) NOT NULL,
+    entrezGeneId varchar(255) NOT NULL,
     isoform varchar(255) NOT NULL,
-    entrezGeneID varchar(255) NOT NULL,
+    refSeq varchar(255) NOT NULL,
     oncogenic varchar(255) NOT NULL,
     mutationEffect varchar(255) NOT NULL,
-    refSeq varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
+    mutationEffectPmids varchar(255) NOT NULL,
     mutationEffectAbstracts varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (oncokbId) REFERENCES oncokb(id)
 );
 
 CREATE TABLE oncokbVariantBiological
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbBiologicalId int NOT NULL,
-    variantResidues varchar(255),
-    proteinStart varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
+    alteration varchar(255) NOT NULL,
+    proteinStart varchar(255) NOT NULL,
     proteinEnd varchar(255) NOT NULL,
     refResidues varchar(255),
-    alteration varchar(255) NOT NULL,
+    variantResidues varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (oncokbBiologicalId) REFERENCES oncokbBiological(id)
 );
 
-CREATE TABLE oncokbConsequencesBiological
+CREATE TABLE oncokbConsequenceBiological
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbVariantBiologicalId int NOT NULL,
     term varchar(255) NOT NULL,
@@ -559,42 +566,43 @@ CREATE TABLE oncokbConsequencesBiological
 
 CREATE TABLE oncokbGeneBiological
 (   id int NOT NULL AUTO_INCREMENT,
-    oncokbBiologicalId int NOT NULL,
-    oncogene varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
+    oncokbVariantBiologicalId int NOT NULL,
     hugoSymbol varchar(255) NOT NULL,
-    curatedRefSeq varchar(255),
+    name varchar(255) NOT NULL,
     entrezGeneId varchar(255) NOT NULL,
-    tsg varchar(255) NOT NULL,
     curatedIsoform varchar(255),
+    curatedRefSeq varchar(255),
+    oncogene varchar(255) NOT NULL,
+    tsg varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (oncokbBiologicalId) REFERENCES oncokbBiological(id)
+    FOREIGN KEY (oncokbVariantBiologicalId) REFERENCES oncokbVariantBiological(id)
 );
 
-CREATE TABLE oncokbGeneAliasesBiological
+CREATE TABLE oncokbGeneAliasBiological
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbGeneBiologicalId int NOT NULL,
-    geneAliases varchar(255) NOT NULL,
+    geneAlias varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (oncokbGeneBiologicalId) REFERENCES oncokbGeneBiological(id)
 );
 
 CREATE TABLE oncokbClinical
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
+    oncokbId int NOT NULL,
+    gene varchar(255) NOT NULL,
+    entrezGeneId varchar(255) NOT NULL,
+    isoform varchar(255) NOT NULL,
     refSeq varchar(255) NOT NULL,
-    level varchar(255) NOT NULL,
-    entrezGeneID varchar(255) NOT NULL,
-    drugPmids varchar(255) NOT NULL,
     cancerType varchar(255) NOT NULL,
     drug varchar(255) NOT NULL,
-    gene varchar(255) NOT NULL,
+    drugPmids varchar(255) NOT NULL,
+    level varchar(255) NOT NULL,
     levelLabel varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (oncokbId) REFERENCES oncokb(id)
 );
 
-CREATE TABLE oncokbDrugAbstractsClinical
+CREATE TABLE oncokbDrugAbstractClinical
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbClinicalId int NOT NULL,
     text varchar(255) NOT NULL,
@@ -606,17 +614,17 @@ CREATE TABLE oncokbDrugAbstractsClinical
 CREATE TABLE oncokbVariantClinical
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbClinicalId int NOT NULL,
-    variantResidues varchar(255),
-    proteinStart varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
+    alteration varchar(255) NOT NULL,
+    proteinStart varchar(255) NOT NULL,
     proteinEnd varchar(255) NOT NULL,
     refResidues varchar(255),
-    alteration varchar(255) NOT NULL,
+    variantResidues varchar(255),
     PRIMARY KEY (id),
     FOREIGN KEY (oncokbClinicalId) REFERENCES oncokbClinical(id)
 );
 
-CREATE TABLE oncokbConsequencesClinical
+CREATE TABLE oncokbConsequenceClinical
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbVariantClinicalId int NOT NULL,
     term varchar(255) NOT NULL,
@@ -628,22 +636,22 @@ CREATE TABLE oncokbConsequencesClinical
 
 CREATE TABLE oncokbGeneClinical
 (   id int NOT NULL AUTO_INCREMENT,
-    oncokbClinicalId int NOT NULL,
-    oncogene varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
+    oncokbVariantClinicalId int NOT NULL,
     hugoSymbol varchar(255) NOT NULL,
-    curatedRefSeq varchar(255),
+    name varchar(255) NOT NULL,
     entrezGeneId varchar(255) NOT NULL,
-    tsg varchar(255) NOT NULL,
     curatedIsoform varchar(255),
+    curatedRefSeq varchar(255),
+    oncogene varchar(255) NOT NULL,
+    tsg varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (oncokbClinicalId) REFERENCES oncokbClinical(id)
+    FOREIGN KEY (oncokbVariantClinicalId) REFERENCES oncokbVariantClinical(id)
 );
 
-CREATE TABLE oncokbGeneAliasesClinical
+CREATE TABLE oncokbGeneAliasClinical
 (   id int NOT NULL AUTO_INCREMENT,
     oncokbGeneClinicalId int NOT NULL,
-    geneAliases varchar(255) NOT NULL,
+    geneAlias varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (oncokbGeneClinicalId) REFERENCES oncokbGeneClinical(id)
 );
@@ -2832,152 +2840,204 @@ CREATE TABLE cgiRegion
     FOREIGN KEY (cgiId) REFERENCES cgi(id)
 );
 
-CREATE TABLE brcaPart1
+CREATE TABLE brca
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    Variant_frequency_LOVD TINYTEXT NOT NULL,
-    Allele_frequency_FIN_ExAC TINYTEXT NOT NULL,
-    ClinVarAccession_ENIGMA TINYTEXT NOT NULL,
-    Homozygous_count_AFR_ExAC TINYTEXT NOT NULL,
-    BX_ID_ExAC TINYTEXT NOT NULL,
-    Variant_in_LOVD TINYTEXT NOT NULL,
-    Allele_frequency_AFR_ExAC TINYTEXT NOT NULL,
-    DBID_LOVD TINYTEXT NOT NULL,
-    Chr TINYTEXT NOT NULL,
-    BX_ID_ENIGMA TINYTEXT NOT NULL,
-    Co_occurrence_LR_exLOVD TINYTEXT NOT NULL,
-    Homozygous_count_EAS_ExAC TINYTEXT NOT NULL,
-    Submitter_ClinVar TEXT NOT NULL,
-    Allele_frequency_EAS_ExAC TINYTEXT NOT NULL,
-    Hg37_End TINYTEXT NOT NULL,
-    Submitters_LOVD TEXT NOT NULL,
-    Clinical_classification_BIC TINYTEXT NOT NULL,
-    Homozygous_count_NFE_ExAC TINYTEXT NOT NULL,
-    Allele_count_SAS_ExAC TINYTEXT NOT NULL,
-    Method_ClinVar TINYTEXT NOT NULL,
-    Allele_count_NFE_ExAC TINYTEXT NOT NULL,
-    Pathogenicity_all TINYTEXT NOT NULL,
-    Germline_or_Somatic_BIC TINYTEXT NOT NULL,
-    Homozygous_count_SAS_ExAC TINYTEXT NOT NULL,
-    BIC_Nomenclature TINYTEXT NOT NULL,
-    Assertion_method_ENIGMA TINYTEXT NOT NULL,
-    Literature_source_exLOVD TINYTEXT NOT NULL,
-    Change_Type_id TINYTEXT NOT NULL,
-    Collection_method_ENIGMA TINYTEXT NOT NULL,
-    Sum_family_LR_exLOVD TINYTEXT NOT NULL,
-    HGVS_cDNA_LOVD TINYTEXT NOT NULL,
-    Homozygous_count_FIN_ExAC TINYTEXT NOT NULL,
-    EAS_Allele_frequency_1000_Genomes TINYTEXT NOT NULL,
-    Ethnicity_BIC TEXT NOT NULL,
-    Individuals_LOVD TINYTEXT NOT NULL,
-    Variant_in_ExAC TINYTEXT NOT NULL,
-    URL_ENIGMA TINYTEXT NOT NULL,
-    Allele_Origin_ClinVar TINYTEXT NOT NULL,
-    Allele_frequency_AMR_ExAC TINYTEXT NOT NULL,
-    Variant_in_1000_Genomes TINYTEXT NOT NULL,
-    AFR_Allele_frequency_1000_Genomes TINYTEXT NOT NULL,
-    BX_ID_exLOVD TINYTEXT NOT NULL,
-    Source TINYTEXT NOT NULL,
-    Condition_ID_value_ENIGMA TINYTEXT NOT NULL,
-    HGVS_Protein TINYTEXT NOT NULL,
-    Ref TINYTEXT NOT NULL,
-    Allele_number_AFR_ExAC TINYTEXT NOT NULL,
-    Allele_count_AFR_ExAC TINYTEXT NOT NULL,
-    BX_ID_LOVD TINYTEXT NOT NULL,
-    Synonyms TEXT NOT NULL,
-    Gene_Symbol TINYTEXT NOT NULL,
-    Comment_on_clinical_significance_ENIGMA TEXT NOT NULL,
-    Missense_analysis_prior_probability_exLOVD TINYTEXT NOT NULL,
-    Allele_number_FIN_ExAC TINYTEXT NOT NULL,
-    Posterior_probability_exLOVD TINYTEXT NOT NULL,
-    Polyphen_Score TINYTEXT NOT NULL,
-    Reference_Sequence TINYTEXT NOT NULL,
-    Allele_count_EAS_ExAC TINYTEXT NOT NULL,
-    Hg38_End TINYTEXT NOT NULL,
-    HGVS_cDNA TINYTEXT NOT NULL,
-    Functional_analysis_technique_LOVD TINYTEXT NOT NULL,
-    SAS_Allele_frequency_1000_Genomes TINYTEXT NOT NULL,
-    RNA_LOVD TINYTEXT NOT NULL,
-    Combined_prior_probablility_exLOVD TINYTEXT NOT NULL,
-    BX_ID_ClinVar TINYTEXT NOT NULL,
-    IARC_class_exLOVD TINYTEXT NOT NULL,
-    BX_ID_BIC varchar(12500) NOT NULL,
+    geneSymbol varchar(255) NOT NULL,
+    chr varchar(255) NOT NULL,
+    pos varchar(255) NOT NULL,
+    ref varchar(255) NOT NULL,
+    alt varchar(255) NOT NULL,
+    genomicCoordinateHg36 varchar(255) NOT NULL,
+    hg36Start varchar(255) NOT NULL,
+    hg36End varchar(255) NOT NULL,
+    genomicCoordinateHg37 varchar(255) NOT NULL,
+    hg37Start varchar(255) NOT NULL,
+    hg37End varchar(255) NOT NULL,
+    genomicCoordinateHg38 varchar(255) NOT NULL,
+    hg38Start varchar(255) NOT NULL,
+    hg38End varchar(255) NOT NULL,
+    proteinChange varchar(255) NOT NULL,
+    referenceSequence varchar(255) NOT NULL,
+    synonyms varchar(1000) NOT NULL,
+    hgvsCDNA varchar(255) NOT NULL,
+    hgvsProtein varchar(255) NOT NULL,
+    hgvsRNA varchar(255) NOT NULL,
+    siftScore varchar(255) NOT NULL,
+    siftPrediction varchar(255) NOT NULL,
+    polyphenScore varchar(255) NOT NULL,
+    polyphenPrediction varchar(255) NOT NULL,
+    pathogenicityAll varchar(255) NOT NULL,
+    pathogenicityExpert varchar(255) NOT NULL,
+    alleleFrequency varchar(255) NOT NULL,
+    maxAlleleFrequency varchar(255) NOT NULL,
+    discordant varchar(255) NOT NULL,
+    idBrca varchar(255) NOT NULL,
+    changeTypeId varchar(255) NOT NULL,
+    dataReleaseId varchar(255) NOT NULL,
+    source varchar(255) NOT NULL,
+    sourceURL varchar(2500) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-CREATE TABLE brcaPart2
-(   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    Sift_Prediction TINYTEXT NOT NULL,
-    Allele_number_NFE_ExAC TINYTEXT NOT NULL,
-    Allele_origin_ENIGMA TINYTEXT NOT NULL,
-    Allele_number_OTH_ExAC TINYTEXT NOT NULL,
-    Hg36_End TINYTEXT NOT NULL,
-    Allele_frequency_SAS_ExAC TINYTEXT NOT NULL,
-    Date_Last_Updated_ClinVar TEXT NOT NULL,
-    Allele_number_EAS_ExAC TINYTEXT NOT NULL,
-    Allele_frequency_OTH_ExAC TINYTEXT NOT NULL,
-    Source_URL TEXT NOT NULL,
-    SCV_ClinVar TEXT NOT NULL,
-    Pathogenicity_expert TINYTEXT NOT NULL,
-    Allele_frequency_1000_Genomes TINYTEXT NOT NULL,
-    Functional_analysis_result_LOVD TINYTEXT NOT NULL,
-    AMR_Allele_frequency_1000_Genomes TINYTEXT NOT NULL,
-    Variant_in_ESP TINYTEXT NOT NULL,
-    Variant_in_BIC TINYTEXT NOT NULL,
-    Clinical_significance_ENIGMA TINYTEXT NOT NULL,
-    Max_Allele_Frequency TINYTEXT NOT NULL,
-    Allele_count_AMR_ExAC TINYTEXT NOT NULL,
-    Variant_in_ENIGMA TINYTEXT NOT NULL,
-    BX_ID_ESP TINYTEXT NOT NULL,
-    Patient_nationality_BIC TEXT NOT NULL,
-    BX_ID_1000_Genomes TINYTEXT NOT NULL,
-    Genomic_Coordinate_hg37 TINYTEXT NOT NULL,
-    Genomic_Coordinate_hg36 TINYTEXT NOT NULL,
-    EUR_Allele_frequency_1000_Genomes TINYTEXT NOT NULL,
-    Number_of_family_member_carrying_mutation_BIC TINYTEXT NOT NULL,
-    Segregation_LR_exLOVD TINYTEXT NOT NULL,
-    Allele_Frequency TINYTEXT NOT NULL,
-    Minor_allele_frequency_percent_ESP TINYTEXT NOT NULL,
-    Allele_frequency_ExAC TINYTEXT NOT NULL,
-    Mutation_type_BIC TINYTEXT NOT NULL,
-    Assertion_method_citation_ENIGMA TINYTEXT NOT NULL,
-    Condition_ID_type_ENIGMA TINYTEXT NOT NULL,
-    Allele_count_OTH_ExAC TINYTEXT NOT NULL,
-    HGVS_protein_LOVD TINYTEXT NOT NULL,
-    Variant_in_ClinVar TINYTEXT NOT NULL,
-    Clinical_importance_BIC TINYTEXT NOT NULL,
-    Discordant TINYTEXT NOT NULL,
-    Allele_count_FIN_ExAC TINYTEXT NOT NULL,
-    Condition_category_ENIGMA TINYTEXT NOT NULL,
-    Allele_Frequency_ESP TINYTEXT NOT NULL,
-    Homozygous_count_OTH_ExAC TINYTEXT NOT NULL,
-    Genetic_origin_LOVD TINYTEXT NOT NULL,
-    Homozygous_count_AMR_ExAC TINYTEXT NOT NULL,
-    Clinical_Significance_ClinVar TINYTEXT NOT NULL,
-    AA_Allele_Frequency_ESP TINYTEXT NOT NULL,
-    Protein_Change TINYTEXT NOT NULL,
-    Variant_in_exLOVD TINYTEXT NOT NULL,
-    EA_Allele_Frequency_ESP TINYTEXT NOT NULL,
-    HGVS_RNA TINYTEXT NOT NULL,
-    Clinical_significance_citations_ENIGMA TINYTEXT NOT NULL,
-    Variant_effect_LOVD TINYTEXT NOT NULL,
-    Polyphen_Prediction TINYTEXT NOT NULL,
-    Data_Release_id TINYTEXT NOT NULL,
-    Hg37_Start TINYTEXT NOT NULL,
-    Hg36_Start TINYTEXT NOT NULL,
-    Sift_Score TINYTEXT NOT NULL,
-    Genomic_Coordinate_hg38 TINYTEXT NOT NULL,
-    Alt TINYTEXT NOT NULL,
-    Literature_citation_BIC TEXT NOT NULL,
-    Variant_haplotype_LOVD TINYTEXT NOT NULL,
-    Allele_frequency_NFE_ExAC TINYTEXT NOT NULL,
-    Hg38_Start TINYTEXT NOT NULL,
-    Pos TINYTEXT NOT NULL,
-    Date_last_evaluated_ENIGMA TINYTEXT NOT NULL,
-    Allele_number_SAS_ExAC TINYTEXT NOT NULL,
-    Allele_number_AMR_ExAC TINYTEXT NOT NULL,
+CREATE TABLE brcaAnnotation1000Genomes (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantIn1000Genomes varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    alleleFrequency varchar(255) NOT NULL,
+    afrAlleleFrequency varchar(255) NOT NULL,
+    amrAlleleFrequency varchar(255) NOT NULL,
+    easAlleleFrequency varchar(255) NOT NULL,
+    eurAlleleFrequency varchar(255) NOT NULL,
+    sasAlleleFrequency varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
 );
+
+CREATE TABLE brcaAnnotationBIC (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInBIC varchar(255) NOT NULL,
+    bxId varchar(12500) NOT NULL,
+    mutationType varchar(255) NOT NULL,
+    clinicalClassification varchar(255) NOT NULL,
+    clinicalImportance varchar(255) NOT NULL,
+    nomenclature varchar(255) NOT NULL,
+    ethnicity varchar(2500) NOT NULL,
+    patientNationality varchar(500) NOT NULL,
+    germlineOrSomatic varchar(255) NOT NULL,
+    numberOfFamilyMemberCarryingMutation varchar(255) NOT NULL,
+    literatureCitation varchar(1000) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+CREATE TABLE brcaAnnotationClinVar (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInClinVar varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    clinicalSignificance varchar(255) NOT NULL,
+    submitter varchar(2500) NOT NULL,
+    method varchar(255) NOT NULL,
+    alleleOrigin varchar(255) NOT NULL,
+    scv varchar(500) NOT NULL,
+    dateLastUpdated varchar(500) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+CREATE TABLE brcaAnnotationENIGMA (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInENIGMA varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    alleleOrigin varchar(255) NOT NULL,
+    clinVarAccession varchar(255) NOT NULL,
+    assertionMethod varchar(255) NOT NULL,
+    assertionMethodCitation varchar(255) NOT NULL,
+    collectionMethod varchar(255) NOT NULL,
+    conditionCategory varchar(255) NOT NULL,
+    conditionIdValue varchar(255) NOT NULL,
+    conditionIdType varchar(255) NOT NULL,
+    clinicalSignificance varchar(255) NOT NULL,
+    clinicalSignificanceCitations varchar(255) NOT NULL,
+    commentOnClinicalSignificance varchar(500) NOT NULL,
+    dateLastEvaluated varchar(255) NOT NULL,
+    url varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+CREATE TABLE brcaAnnotationESP (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInESP varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    minorAlleleFrequencyPercent varchar(255) NOT NULL,
+    alleleFrequency varchar(255) NOT NULL,
+    aaAlleleFrequency varchar(255) NOT NULL,
+    eaAlleleFrequency varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+CREATE TABLE brcaAnnotationExAC (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInExAC varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    alleleFrequency varchar(255) NOT NULL,
+    alleleFrequencyAFR varchar(255) NOT NULL,
+    alleleFrequencyAMR varchar(255) NOT NULL,
+    alleleFrequencyEAS varchar(255) NOT NULL,
+    alleleFrequencyFIN varchar(255) NOT NULL,
+    alleleFrequencyNFE varchar(255) NOT NULL,
+    alleleFrequencyOTH varchar(255) NOT NULL,
+    alleleFrequencySAS varchar(255) NOT NULL,
+    alleleNumberAFR varchar(255) NOT NULL,
+    alleleNumberAMR varchar(255) NOT NULL,
+    alleleNumberEAS varchar(255) NOT NULL,
+    alleleNumberFIN varchar(255) NOT NULL,
+    alleleNumberNFE varchar(255) NOT NULL,
+    alleleNumberOTH varchar(255) NOT NULL,
+    alleleNumberSAS varchar(255) NOT NULL,
+    homozygousCountAFR varchar(255) NOT NULL,
+    homozygousCountAMR varchar(255) NOT NULL,
+    homozygousCountEAS varchar(255) NOT NULL,
+    homozygousCountFIN varchar(255) NOT NULL,
+    homozygousCountNFE varchar(255) NOT NULL,
+    homozygousCountOTH varchar(255) NOT NULL,
+    homozygousCountSAS varchar(255) NOT NULL,
+    alleleCountAFR varchar(255) NOT NULL,
+    alleleCountAMR varchar(255) NOT NULL,
+    alleleCountEAS varchar(255) NOT NULL,
+    alleleCountFIN varchar(255) NOT NULL,
+    alleleCountNFE varchar(255) NOT NULL,
+    alleleCountOTH varchar(255) NOT NULL,
+    alleleCountSAS varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+CREATE TABLE brcaAnnotationExLOVD (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInExLOVD varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    cooccurrenceLR varchar(255) NOT NULL,
+    sumFamilyLR varchar(255) NOT NULL,
+    segregationLR varchar(255) NOT NULL,
+    posteriorProbability varchar(255) NOT NULL,
+    missenseAnalysisPriorProbability varchar(255) NOT NULL,
+    combinedPriorProbability varchar(255) NOT NULL,
+    iarcClass varchar(255) NOT NULL,
+    literatureSource varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+CREATE TABLE brcaAnnotationLOVD (
+    id int NOT NULL AUTO_INCREMENT,
+    brcaId int NOT NULL,
+    variantInLOVD varchar(255) NOT NULL,
+    bxId varchar(255) NOT NULL,
+    dbId varchar(255) NOT NULL,
+    hgvsCDNA varchar(255) NOT NULL,
+    hgvsProtein varchar(255) NOT NULL,
+    rna varchar(255) NOT NULL,
+    variantEffect varchar(255) NOT NULL,
+    variantFrequency varchar(255) NOT NULL,
+    variantHaplotype varchar(255) NOT NULL,
+    geneticOrigin varchar(255) NOT NULL,
+    functionalAnalysisTechnique varchar(255) NOT NULL,
+    functionalAnalysisResult varchar(255) NOT NULL,
+    submitters varchar(1000) NOT NULL,
+    individuals varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (brcaId) REFERENCES brca(id)
+);
+
+

@@ -7,6 +7,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.Realigned;
 import com.hartwig.hmftools.sage.context.RealignedContext;
 import com.hartwig.hmftools.sage.context.RealignedType;
+import com.hartwig.hmftools.sage.sam.IndelAtLocation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -210,8 +211,10 @@ public class ReadContextCounter implements GenomePosition {
                         break;
                 }
 
+                byte refBase = refSequence.base((int) variant.position());
+                byte readBase = record.getReadBases()[readIndex];
 
-                if (readContext.matchesRef(readIndex, record.getReadBases())) {
+                if (refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
                     reference++;
                     referenceQuality += quality;
                 }

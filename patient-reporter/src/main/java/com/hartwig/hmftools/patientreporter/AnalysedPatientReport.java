@@ -76,6 +76,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
     @NotNull
     public abstract String circosPath();
 
+    public abstract boolean isUnofficialReport();
+
     @Override
     @NotNull
     public abstract Optional<String> comments();

@@ -204,6 +204,158 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker brcaEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("Gene_Symbol", true);
+        map.put("Chr", true);
+        map.put("Pos", true);
+        map.put("Ref", true);
+        map.put("Alt", true);
+        map.put("Genomic_Coordinate_hg36", true);
+        map.put("Hg36_Start", true);
+        map.put("Hg36_End", true);
+        map.put("Genomic_Coordinate_hg37", true);
+        map.put("Hg37_Start", true);
+        map.put("Hg37_End", true);
+        map.put("Genomic_Coordinate_hg38", true);
+        map.put("Hg38_Start", true);
+        map.put("Hg38_End", true);
+        map.put("Protein_Change", true);
+        map.put("Reference_Sequence", true);
+        map.put("Synonyms", true);
+        map.put("HGVS_cDNA", true);
+        map.put("HGVS_Protein", true);
+        map.put("HGVS_RNA", true);
+        map.put("Sift_Score", true);
+        map.put("Sift_Prediction", true);
+        map.put("Polyphen_Score", true);
+        map.put("Polyphen_Prediction", true);
+        map.put("Pathogenicity_all", true);
+        map.put("Pathogenicity_expert", true);
+        map.put("Allele_Frequency", true);
+        map.put("Max_Allele_Frequency", true);
+        map.put("Discordant", true);
+        map.put("id", true);
+        map.put("Change_Type_id", true);
+        map.put("Data_Release_id", true);
+        map.put("Source", true);
+        map.put("Source_URL", true);
+
+        map.put("Variant_in_1000_Genomes", true);
+        map.put("BX_ID_1000_Genomes", true);
+        map.put("Allele_frequency_1000_Genomes", true);
+        map.put("AFR_Allele_frequency_1000_Genomes", true);
+        map.put("AMR_Allele_frequency_1000_Genomes", true);
+        map.put("EAS_Allele_frequency_1000_Genomes", true);
+        map.put("EUR_Allele_frequency_1000_Genomes", true);
+        map.put("SAS_Allele_frequency_1000_Genomes", true);
+
+        map.put("Variant_in_BIC", true);
+        map.put("BX_ID_BIC", true);
+        map.put("Mutation_type_BIC", true);
+        map.put("Clinical_classification_BIC", true);
+        map.put("Clinical_importance_BIC", true);
+        map.put("BIC_Nomenclature", true);
+        map.put("Ethnicity_BIC", true);
+        map.put("Patient_nationality_BIC", true);
+        map.put("Germline_or_Somatic_BIC", true);
+        map.put("Number_of_family_member_carrying_mutation_BIC", true);
+        map.put("Literature_citation_BIC", true);
+
+        map.put("Variant_in_ClinVar", true);
+        map.put("BX_ID_ClinVar", true);
+        map.put("Clinical_Significance_ClinVar", true);
+        map.put("Submitter_ClinVar", true);
+        map.put("Method_ClinVar", true);
+        map.put("Allele_Origin_ClinVar", true);
+        map.put("SCV_ClinVar", true);
+        map.put("Date_Last_Updated_ClinVar", true);
+
+        map.put("Variant_in_ENIGMA", true);
+        map.put("BX_ID_ENIGMA", true);
+        map.put("Allele_origin_ENIGMA", true);
+        map.put("ClinVarAccession_ENIGMA", true);
+        map.put("Assertion_method_ENIGMA", true);
+        map.put("Assertion_method_citation_ENIGMA", true);
+        map.put("Collection_method_ENIGMA", true);
+        map.put("Condition_category_ENIGMA", true);
+        map.put("Condition_ID_value_ENIGMA", true);
+        map.put("Condition_ID_type_ENIGMA", true);
+        map.put("Clinical_significance_ENIGMA", true);
+        map.put("Clinical_significance_citations_ENIGMA", true);
+        map.put("Comment_on_clinical_significance_ENIGMA", true);
+        map.put("Date_last_evaluated_ENIGMA", true);
+        map.put("URL_ENIGMA", true);
+
+        map.put("Variant_in_ESP", true);
+        map.put("BX_ID_ESP", true);
+        map.put("Minor_allele_frequency_percent_ESP", true);
+        map.put("Allele_Frequency_ESP", true);
+        map.put("AA_Allele_Frequency_ESP", true);
+        map.put("EA_Allele_Frequency_ESP", true);
+
+        map.put("Variant_in_ExAC", true);
+        map.put("BX_ID_ExAC", true);
+        map.put("Allele_frequency_ExAC", true);
+        map.put("Allele_frequency_AFR_ExAC", true);
+        map.put("Allele_frequency_AMR_ExAC", true);
+        map.put("Allele_frequency_EAS_ExAC", true);
+        map.put("Allele_frequency_FIN_ExAC", true);
+        map.put("Allele_frequency_NFE_ExAC", true);
+        map.put("Allele_frequency_OTH_ExAC", true);
+        map.put("Allele_frequency_SAS_ExAC", true);
+        map.put("Allele_number_AFR_ExAC", true);
+        map.put("Allele_number_AMR_ExAC", true);
+        map.put("Allele_number_EAS_ExAC", true);
+        map.put("Allele_number_FIN_ExAC", true);
+        map.put("Allele_number_NFE_ExAC", true);
+        map.put("Allele_number_OTH_ExAC", true);
+        map.put("Allele_number_SAS_ExAC", true);
+        map.put("Homozygous_count_AFR_ExAC", true);
+        map.put("Homozygous_count_AMR_ExAC", true);
+        map.put("Homozygous_count_EAS_ExAC", true);
+        map.put("Homozygous_count_FIN_ExAC", true);
+        map.put("Homozygous_count_NFE_ExAC", true);
+        map.put("Homozygous_count_OTH_ExAC", true);
+        map.put("Homozygous_count_SAS_ExAC", true);
+        map.put("Allele_count_AFR_ExAC", true);
+        map.put("Allele_count_AMR_ExAC", true);
+        map.put("Allele_count_EAS_ExAC", true);
+        map.put("Allele_count_FIN_ExAC", true);
+        map.put("Allele_count_NFE_ExAC", true);
+        map.put("Allele_count_OTH_ExAC", true);
+        map.put("Allele_count_SAS_ExAC", true);
+
+        map.put("Variant_in_exLOVD", true);
+        map.put("BX_ID_exLOVD", true);
+        map.put("Co_occurrence_LR_exLOVD", true);
+        map.put("Sum_family_LR_exLOVD", true);
+        map.put("Segregation_LR_exLOVD", true);
+        map.put("Posterior_probability_exLOVD", true);
+        map.put("Missense_analysis_prior_probability_exLOVD", true);
+        map.put("Combined_prior_probablility_exLOVD", true);
+        map.put("IARC_class_exLOVD", true);
+        map.put("Literature_source_exLOVD", true);
+
+        map.put("Variant_in_LOVD", true);
+        map.put("BX_ID_LOVD", true);
+        map.put("DBID_LOVD", true);
+        map.put("HGVS_cDNA_LOVD", true);
+        map.put("HGVS_protein_LOVD", true);
+        map.put("RNA_LOVD", true);
+        map.put("Variant_effect_LOVD", true);
+        map.put("Variant_frequency_LOVD", true);
+        map.put("Variant_haplotype_LOVD", true);
+        map.put("Genetic_origin_LOVD", true);
+        map.put("Functional_analysis_technique_LOVD", true);
+        map.put("Functional_analysis_result_LOVD", true);
+        map.put("Submitters_LOVD", true);
+        map.put("Individuals_LOVD", true);
+
+        return new ViccDatamodelChecker("BrcaEntry", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker jaxEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("responseType", true);
@@ -461,5 +613,19 @@ final class ViccDatamodelCheckerFactory {
         map.put("id", false);
         map.put("manualPriority", false);
         return new ViccDatamodelChecker("MolecularMatchTrialsTagChecker", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker sageChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("gene", true);
+        map.put("entrez_id", true);
+        map.put("clinical_manifestation", true);
+        map.put("response_type", true);
+        map.put("evidence_label", true);
+        map.put("drug_labels", true);
+        map.put("germline_or_somatic", true);
+        map.put("publication_url", true);
+        return new ViccDatamodelChecker("SageChecker", map);
     }
 }

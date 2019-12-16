@@ -34,13 +34,13 @@ final class JaxObjectFactory {
         ViccDatamodelCheckerFactory.jaxEntryChecker().check(jaxEntryObject);
 
         return ImmutableJax.builder()
-                .responseType(string(jaxEntryObject, "responseType"))
-                .approvalStatus(string(jaxEntryObject, "approvalStatus"))
                 .molecularProfile(createMolecularProfile(jaxEntryObject.getAsJsonObject("molecularProfile")))
                 .therapy(createJaxTherapy(jaxEntryObject.getAsJsonObject("therapy")))
+                .responseType(string(jaxEntryObject, "responseType"))
                 .evidenceType(string(jaxEntryObject, "evidenceType"))
-                .indication(createJaxIndication(jaxEntryObject.getAsJsonObject("indication")))
+                .approvalStatus(string(jaxEntryObject, "approvalStatus"))
                 .efficacyEvidence(string(jaxEntryObject, "efficacyEvidence"))
+                .indication(createJaxIndication(jaxEntryObject.getAsJsonObject("indication")))
                 .references(createJaxReferences(optionalJsonArray(jaxEntryObject, "references")))
                 .id(string(jaxEntryObject, "id"))
                 .build();

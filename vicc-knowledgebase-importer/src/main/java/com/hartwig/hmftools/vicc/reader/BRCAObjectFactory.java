@@ -1,192 +1,232 @@
 package com.hartwig.hmftools.vicc.reader;
 
-import java.util.List;
-import java.util.Set;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCA;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCApart1;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCApart2;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCA;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCApart1;
-import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBRCApart2;
+import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotation1000Genomes;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationBIC;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationClinVar;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationENIGMA;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationESP;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationExAC;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationExLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.BrcaAnnotationLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrca;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotation1000Genomes;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationBIC;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationClinVar;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationENIGMA;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationESP;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationExAC;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationExLOVD;
+import com.hartwig.hmftools.vicc.datamodel.brca.ImmutableBrcaAnnotationLOVD;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class BRCAObjectFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(BRCAObjectFactory.class);
-
-    private static final List<Integer> EXPECTED_BRCA_ELEMENT_SIZES = Lists.newArrayList(137);
 
     private BRCAObjectFactory() {
     }
 
     @NotNull
-    static BRCA create(@NotNull JsonObject objectBrca) {
-        Set<String> keysBRCA = objectBrca.keySet();
+    static Brca create(@NotNull JsonObject brcaObject) {
+        ViccDatamodelCheckerFactory.brcaEntryChecker().check(brcaObject);
 
-        if (!EXPECTED_BRCA_ELEMENT_SIZES.contains(keysBRCA.size())) {
-            LOGGER.warn("Found {} in brca rather than the expected {}", keysBRCA.size(), EXPECTED_BRCA_ELEMENT_SIZES);
-            LOGGER.warn(keysBRCA);
-        }
-
-        return ImmutableBRCA.builder().brcApart1(createBRCAPart1(objectBrca)).brcApart2(createBRCAPart2(objectBrca)).build();
-    }
-
-    @NotNull
-    private static BRCApart1 createBRCAPart1(@NotNull JsonObject objectBrca) {
-        return ImmutableBRCApart1.builder()
-                .Variant_frequency_LOVD(objectBrca.getAsJsonPrimitive("Variant_frequency_LOVD").getAsString())
-                .Allele_frequency_FIN_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_FIN_ExAC").getAsString())
-                .ClinVarAccession_ENIGMA(objectBrca.getAsJsonPrimitive("ClinVarAccession_ENIGMA").getAsString())
-                .Homozygous_count_AFR_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_AFR_ExAC").getAsString())
-                .BX_ID_ExAC(objectBrca.getAsJsonPrimitive("BX_ID_ExAC").getAsString())
-                .Variant_in_LOVD(objectBrca.getAsJsonPrimitive("Variant_in_LOVD").getAsString())
-                .Allele_frequency_AFR_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_AFR_ExAC").getAsString())
-                .Chr(objectBrca.getAsJsonPrimitive("Chr").getAsString())
-                .BX_ID_ENIGMA(objectBrca.getAsJsonPrimitive("BX_ID_ENIGMA").getAsString())
-                .Co_occurrence_LR_exLOVD(objectBrca.getAsJsonPrimitive("Co_occurrence_LR_exLOVD").getAsString())
-                .Homozygous_count_EAS_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_EAS_ExAC").getAsString())
-                .Submitter_ClinVar(objectBrca.getAsJsonPrimitive("Submitter_ClinVar").getAsString())
-                .Allele_frequency_EAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_EAS_ExAC").getAsString())
-                .Hg37_End(objectBrca.getAsJsonPrimitive("Hg37_End").getAsString())
-                .Submitters_LOVD(objectBrca.getAsJsonPrimitive("Submitters_LOVD").getAsString())
-                .Clinical_classification_BIC(objectBrca.getAsJsonPrimitive("Clinical_classification_BIC").getAsString())
-                .Homozygous_count_NFE_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_NFE_ExAC").getAsString())
-                .Allele_count_SAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_SAS_ExAC").getAsString())
-                .Method_ClinVar(objectBrca.getAsJsonPrimitive("Method_ClinVar").getAsString())
-                .Allele_count_NFE_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_NFE_ExAC").getAsString())
-                .Pathogenicity_all(objectBrca.getAsJsonPrimitive("Pathogenicity_all").getAsString())
-                .Germline_or_Somatic_BIC(objectBrca.getAsJsonPrimitive("Germline_or_Somatic_BIC").getAsString())
-                .Homozygous_count_SAS_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_SAS_ExAC").getAsString())
-                .BIC_Nomenclature(objectBrca.getAsJsonPrimitive("BIC_Nomenclature").getAsString())
-                .Assertion_method_ENIGMA(objectBrca.getAsJsonPrimitive("Assertion_method_ENIGMA").getAsString())
-                .Literature_source_exLOVD(objectBrca.getAsJsonPrimitive("Literature_source_exLOVD").getAsString())
-                .Change_Type_id(objectBrca.getAsJsonPrimitive("Change_Type_id").getAsString())
-                .Collection_method_ENIGMA(objectBrca.getAsJsonPrimitive("Collection_method_ENIGMA").getAsString())
-                .Sum_family_LR_exLOVD(objectBrca.getAsJsonPrimitive("Sum_family_LR_exLOVD").getAsString())
-                .HGVS_cDNA_LOVD(objectBrca.getAsJsonPrimitive("HGVS_cDNA_LOVD").getAsString())
-                .Homozygous_count_FIN_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_FIN_ExAC").getAsString())
-                .EAS_Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("EAS_Allele_frequency_1000_Genomes").getAsString())
-                .Ethnicity_BIC(objectBrca.getAsJsonPrimitive("Ethnicity_BIC").getAsString())
-                .Individuals_LOVD(objectBrca.getAsJsonPrimitive("Individuals_LOVD").getAsString())
-                .Variant_in_ExAC(objectBrca.getAsJsonPrimitive("Variant_in_ExAC").getAsString())
-                .URL_ENIGMA(objectBrca.getAsJsonPrimitive("URL_ENIGMA").getAsString())
-                .Allele_Origin_ClinVar(objectBrca.getAsJsonPrimitive("Allele_Origin_ClinVar").getAsString())
-                .Allele_frequency_AMR_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_AMR_ExAC").getAsString())
-                .Variant_in_1000_Genomes(objectBrca.getAsJsonPrimitive("Variant_in_1000_Genomes").getAsString())
-                .AFR_Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("AFR_Allele_frequency_1000_Genomes").getAsString())
-                .BX_ID_exLOVD(objectBrca.getAsJsonPrimitive("BX_ID_exLOVD").getAsString())
-                .Source(objectBrca.getAsJsonPrimitive("Source").getAsString())
-                .Condition_ID_value_ENIGMA(objectBrca.getAsJsonPrimitive("Condition_ID_value_ENIGMA").getAsString())
-                .HGVS_Protein(objectBrca.getAsJsonPrimitive("HGVS_Protein").getAsString())
-                .Ref(objectBrca.getAsJsonPrimitive("Ref").getAsString())
-                .Allele_number_AFR_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_AFR_ExAC").getAsString())
-                .Allele_count_AFR_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_AFR_ExAC").getAsString())
-                .BX_ID_LOVD(objectBrca.getAsJsonPrimitive("BX_ID_LOVD").getAsString())
-                .Synonyms(objectBrca.getAsJsonPrimitive("Synonyms").getAsString())
-                .Gene_Symbol(objectBrca.getAsJsonPrimitive("Gene_Symbol").getAsString())
-                .Comment_on_clinical_significance_ENIGMA(objectBrca.getAsJsonPrimitive("Comment_on_clinical_significance_ENIGMA")
-                        .getAsString())
-                .Missense_analysis_prior_probability_exLOVD(objectBrca.getAsJsonPrimitive("Missense_analysis_prior_probability_exLOVD")
-                        .getAsString())
-                .Allele_number_FIN_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_FIN_ExAC").getAsString())
-                .Posterior_probability_exLOVD(objectBrca.getAsJsonPrimitive("Posterior_probability_exLOVD").getAsString())
-                .Polyphen_Score(objectBrca.getAsJsonPrimitive("Polyphen_Score").getAsString())
-                .Reference_Sequence(objectBrca.getAsJsonPrimitive("Reference_Sequence").getAsString())
-                .Allele_count_EAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_EAS_ExAC").getAsString())
-                .Hg38_End(objectBrca.getAsJsonPrimitive("Hg38_End").getAsString())
-                .HGVS_cDNA(objectBrca.getAsJsonPrimitive("HGVS_cDNA").getAsString())
-                .Functional_analysis_technique_LOVD(objectBrca.getAsJsonPrimitive("Functional_analysis_technique_LOVD").getAsString())
-                .SAS_Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("SAS_Allele_frequency_1000_Genomes").getAsString())
-                .RNA_LOVD(objectBrca.getAsJsonPrimitive("RNA_LOVD").getAsString())
-                .Combined_prior_probablility_exLOVD(objectBrca.getAsJsonPrimitive("Combined_prior_probablility_exLOVD").getAsString())
-                .BX_ID_ClinVar(objectBrca.getAsJsonPrimitive("BX_ID_ClinVar").getAsString())
-                .IARC_class_exLOVD(objectBrca.getAsJsonPrimitive("IARC_class_exLOVD").getAsString())
-                .BX_ID_BIC(objectBrca.getAsJsonPrimitive("BX_ID_BIC").getAsString())
-                .Sift_Prediction(objectBrca.getAsJsonPrimitive("Sift_Prediction").getAsString())
-                .Allele_number_NFE_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_NFE_ExAC").getAsString())
-                .Allele_origin_ENIGMA(objectBrca.getAsJsonPrimitive("Allele_origin_ENIGMA").getAsString())
-                .Allele_number_OTH_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_OTH_ExAC").getAsString())
-                .Hg36_End(objectBrca.getAsJsonPrimitive("Hg36_End").getAsString())
-                .Allele_frequency_SAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_SAS_ExAC").getAsString())
-                .Date_Last_Updated_ClinVar(objectBrca.getAsJsonPrimitive("Date_Last_Updated_ClinVar").getAsString())
-                .Allele_number_EAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_EAS_ExAC").getAsString())
-                .Allele_frequency_OTH_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_OTH_ExAC").getAsString())
-                .Source_URL(objectBrca.getAsJsonPrimitive("Source_URL").getAsString())
-                .SCV_ClinVar(objectBrca.getAsJsonPrimitive("SCV_ClinVar").getAsString())
-                .Pathogenicity_expert(objectBrca.getAsJsonPrimitive("Pathogenicity_expert").getAsString())
-                .Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("Allele_frequency_1000_Genomes").getAsString())
-                .Functional_analysis_result_LOVD(objectBrca.getAsJsonPrimitive("Functional_analysis_result_LOVD").getAsString())
-                .AMR_Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("AMR_Allele_frequency_1000_Genomes").getAsString())
-                .Variant_in_ESP(objectBrca.getAsJsonPrimitive("Variant_in_ESP").getAsString())
-                .Variant_in_BIC(objectBrca.getAsJsonPrimitive("Variant_in_BIC").getAsString())
-                .Clinical_significance_ENIGMA(objectBrca.getAsJsonPrimitive("Clinical_significance_ENIGMA").getAsString())
-                .Max_Allele_Frequency(objectBrca.getAsJsonPrimitive("Max_Allele_Frequency").getAsString())
-                .Allele_count_AMR_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_AMR_ExAC").getAsString())
-                .Variant_in_ENIGMA(objectBrca.getAsJsonPrimitive("Variant_in_ENIGMA").getAsString())
-                .BX_ID_ESP(objectBrca.getAsJsonPrimitive("BX_ID_ESP").getAsString())
-                .Patient_nationality_BIC(objectBrca.getAsJsonPrimitive("Patient_nationality_BIC").getAsString())
-                .BX_ID_1000_Genomes(objectBrca.getAsJsonPrimitive("BX_ID_1000_Genomes").getAsString())
-                .Genomic_Coordinate_hg37(objectBrca.getAsJsonPrimitive("Genomic_Coordinate_hg37").getAsString())
-                .Genomic_Coordinate_hg36(objectBrca.getAsJsonPrimitive("Genomic_Coordinate_hg36").getAsString())
-                .EUR_Allele_frequency_1000_Genomes(objectBrca.getAsJsonPrimitive("EUR_Allele_frequency_1000_Genomes").getAsString())
-                .Number_of_family_member_carrying_mutation_BIC(objectBrca.getAsJsonPrimitive("Number_of_family_member_carrying_mutation_BIC")
-                        .getAsString())
-                .Segregation_LR_exLOVD(objectBrca.getAsJsonPrimitive("Segregation_LR_exLOVD").getAsString())
-                .Allele_Frequency(objectBrca.getAsJsonPrimitive("Allele_Frequency").getAsString())
-                .Minor_allele_frequency_percent_ESP(objectBrca.getAsJsonPrimitive("Minor_allele_frequency_percent_ESP").getAsString())
-                .Allele_frequency_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_ExAC").getAsString())
-                .Mutation_type_BIC(objectBrca.getAsJsonPrimitive("Mutation_type_BIC").getAsString())
-                .Assertion_method_citation_ENIGMA(objectBrca.getAsJsonPrimitive("Assertion_method_citation_ENIGMA").getAsString())
-                .Condition_ID_type_ENIGMA(objectBrca.getAsJsonPrimitive("Condition_ID_type_ENIGMA").getAsString())
-                .Allele_count_OTH_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_OTH_ExAC").getAsString())
-                .HGVS_protein_LOVD(objectBrca.getAsJsonPrimitive("HGVS_protein_LOVD").getAsString())
-                .Variant_in_ClinVar(objectBrca.getAsJsonPrimitive("Variant_in_ClinVar").getAsString())
-                .Clinical_importance_BIC(objectBrca.getAsJsonPrimitive("Clinical_importance_BIC").getAsString())
-                .Discordant(objectBrca.getAsJsonPrimitive("Discordant").getAsString())
+        return ImmutableBrca.builder()
+                .geneSymbol(string(brcaObject, "Gene_Symbol"))
+                .chr(string(brcaObject, "Chr"))
+                .pos(string(brcaObject, "Pos"))
+                .ref(string(brcaObject, "Ref"))
+                .alt(string(brcaObject, "Alt"))
+                .genomicCoordinateHg36(string(brcaObject, "Genomic_Coordinate_hg36"))
+                .hg36Start(string(brcaObject, "Hg36_Start"))
+                .hg36End(string(brcaObject, "Hg36_End"))
+                .genomicCoordinateHg37(string(brcaObject, "Genomic_Coordinate_hg37"))
+                .hg37Start(string(brcaObject, "Hg37_Start"))
+                .hg37End(string(brcaObject, "Hg37_End"))
+                .genomicCoordinateHg38(string(brcaObject, "Genomic_Coordinate_hg38"))
+                .hg38Start(string(brcaObject, "Hg38_Start"))
+                .hg38End(string(brcaObject, "Hg38_End"))
+                .proteinChange(string(brcaObject, "Protein_Change"))
+                .referenceSequence(string(brcaObject, "Reference_Sequence"))
+                .synonyms(string(brcaObject, "Synonyms"))
+                .hgvsCDNA(string(brcaObject, "HGVS_cDNA"))
+                .hgvsProtein(string(brcaObject, "HGVS_Protein"))
+                .hgvsRNA(string(brcaObject, "HGVS_RNA"))
+                .siftScore(string(brcaObject, "Sift_Score"))
+                .siftPrediction(string(brcaObject, "Sift_Prediction"))
+                .polyphenScore(string(brcaObject, "Polyphen_Score"))
+                .polyphenPrediction(string(brcaObject, "Polyphen_Prediction"))
+                .pathogenicityAll(string(brcaObject, "Pathogenicity_all"))
+                .pathogenicityExpert(string(brcaObject, "Pathogenicity_expert"))
+                .alleleFrequency(string(brcaObject, "Allele_Frequency"))
+                .maxAlleleFrequency(string(brcaObject, "Max_Allele_Frequency"))
+                .discordant(string(brcaObject, "Discordant"))
+                .id(string(brcaObject, "id"))
+                .changeTypeId(string(brcaObject, "Change_Type_id"))
+                .dataReleaseId(string(brcaObject, "Data_Release_id"))
+                .source(string(brcaObject, "Source"))
+                .sourceURL(string(brcaObject, "Source_URL"))
+                .annotation1000Genomes(createBRCAAnnotation1000Genomes(brcaObject))
+                .annotationBIC(createBRCAAnnotationBIC(brcaObject))
+                .annotationClinVar(createBRCAAnnotationClinVar(brcaObject))
+                .annotationENIGMA(createBRCAAnnotationENIGMA(brcaObject))
+                .annotationESP(createBRCAAnnotationESP(brcaObject))
+                .annotationExAC(createBRCAAnnotationExAC(brcaObject))
+                .annotationExLOVD(createBRCAAnnotationExLOVD(brcaObject))
+                .annotationLOVD(createBRCAAnnotationLOVD(brcaObject))
                 .build();
     }
 
     @NotNull
-    private static BRCApart2 createBRCAPart2(@NotNull JsonObject objectBrca) {
-        return ImmutableBRCApart2.builder()
-                .Allele_count_FIN_ExAC(objectBrca.getAsJsonPrimitive("Allele_count_FIN_ExAC").getAsString())
-                .Condition_category_ENIGMA(objectBrca.getAsJsonPrimitive("Condition_category_ENIGMA").getAsString())
-                .Allele_Frequency_ESP(objectBrca.getAsJsonPrimitive("Allele_Frequency_ESP").getAsString())
-                .Homozygous_count_OTH_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_OTH_ExAC").getAsString())
-                .Genetic_origin_LOVD(objectBrca.getAsJsonPrimitive("Genetic_origin_LOVD").getAsString())
-                .id(objectBrca.getAsJsonPrimitive("id").getAsString())
-                .Homozygous_count_AMR_ExAC(objectBrca.getAsJsonPrimitive("Homozygous_count_AMR_ExAC").getAsString())
-                .Clinical_Significance_ClinVar(objectBrca.getAsJsonPrimitive("Clinical_Significance_ClinVar").getAsString())
-                .AA_Allele_Frequency_ESP(objectBrca.getAsJsonPrimitive("AA_Allele_Frequency_ESP").getAsString())
-                .Protein_Change(objectBrca.getAsJsonPrimitive("Protein_Change").getAsString())
-                .Variant_in_exLOVD(objectBrca.getAsJsonPrimitive("Variant_in_exLOVD").getAsString())
-                .EA_Allele_Frequency_ESP(objectBrca.getAsJsonPrimitive("EA_Allele_Frequency_ESP").getAsString())
-                .HGVS_RNA(objectBrca.getAsJsonPrimitive("HGVS_RNA").getAsString())
-                .Clinical_significance_citations_ENIGMA(objectBrca.getAsJsonPrimitive("Clinical_significance_citations_ENIGMA")
-                        .getAsString())
-                .Variant_effect_LOVD(objectBrca.getAsJsonPrimitive("Variant_effect_LOVD").getAsString())
-                .Polyphen_Prediction(objectBrca.getAsJsonPrimitive("Polyphen_Prediction").getAsString())
-                .Data_Release_id(objectBrca.getAsJsonPrimitive("Data_Release_id").getAsString())
-                .Hg37_Start(objectBrca.getAsJsonPrimitive("Hg37_Start").getAsString())
-                .Hg36_Start(objectBrca.getAsJsonPrimitive("Hg36_Start").getAsString())
-                .Sift_Score(objectBrca.getAsJsonPrimitive("Sift_Score").getAsString())
-                .Genomic_Coordinate_hg38(objectBrca.getAsJsonPrimitive("Genomic_Coordinate_hg38").getAsString())
-                .Alt(objectBrca.getAsJsonPrimitive("Alt").getAsString())
-                .Literature_citation_BIC(objectBrca.getAsJsonPrimitive("Literature_citation_BIC").getAsString())
-                .Variant_haplotype_LOVD(objectBrca.getAsJsonPrimitive("Variant_haplotype_LOVD").getAsString())
-                .Allele_frequency_NFE_ExAC(objectBrca.getAsJsonPrimitive("Allele_frequency_NFE_ExAC").getAsString())
-                .Hg38_Start(objectBrca.getAsJsonPrimitive("Hg38_Start").getAsString())
-                .Pos(objectBrca.getAsJsonPrimitive("Pos").getAsString())
-                .Date_last_evaluated_ENIGMA(objectBrca.getAsJsonPrimitive("Date_last_evaluated_ENIGMA").getAsString())
-                .Allele_number_SAS_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_SAS_ExAC").getAsString())
-                .Allele_number_AMR_ExAC(objectBrca.getAsJsonPrimitive("Allele_number_AMR_ExAC").getAsString())
-                .DBID_LOVD(objectBrca.getAsJsonPrimitive("DBID_LOVD").getAsString())
+    private static BrcaAnnotation1000Genomes createBRCAAnnotation1000Genomes(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotation1000Genomes.builder()
+                .variantIn1000Genomes(string(brcaObject, "Variant_in_1000_Genomes"))
+                .bxId(string(brcaObject, "BX_ID_1000_Genomes"))
+                .alleleFrequency(string(brcaObject, "Allele_frequency_1000_Genomes"))
+                .afrAlleleFrequency(string(brcaObject, "AFR_Allele_frequency_1000_Genomes"))
+                .amrAlleleFrequency(string(brcaObject, "AMR_Allele_frequency_1000_Genomes"))
+                .easAlleleFrequency(string(brcaObject, "EAS_Allele_frequency_1000_Genomes"))
+                .eurAlleleFrequency(string(brcaObject, "EUR_Allele_frequency_1000_Genomes"))
+                .sasAlleleFrequency(string(brcaObject, "SAS_Allele_frequency_1000_Genomes"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationBIC createBRCAAnnotationBIC(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationBIC.builder()
+                .variantInBIC(string(brcaObject, "Variant_in_BIC"))
+                .bxId(string(brcaObject, "BX_ID_BIC"))
+                .mutationType(string(brcaObject, "Mutation_type_BIC"))
+                .clinicalClassification(string(brcaObject, "Clinical_classification_BIC"))
+                .clinicalImportance(string(brcaObject, "Clinical_importance_BIC"))
+                .nomenclature(string(brcaObject, "BIC_Nomenclature"))
+                .ethnicity(string(brcaObject, "Ethnicity_BIC"))
+                .patientNationality(string(brcaObject, "Patient_nationality_BIC"))
+                .germlineOrSomatic(string(brcaObject, "Germline_or_Somatic_BIC"))
+                .numberOfFamilyMemberCarryingMutation(string(brcaObject, "Number_of_family_member_carrying_mutation_BIC"))
+                .literatureCitation(string(brcaObject, "Literature_citation_BIC"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationClinVar createBRCAAnnotationClinVar(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationClinVar.builder()
+                .variantInClinVar(string(brcaObject, "Variant_in_ClinVar"))
+                .bxId(string(brcaObject, "BX_ID_ClinVar"))
+                .clinicalSignificance(string(brcaObject, "Clinical_Significance_ClinVar"))
+                .submitter(string(brcaObject, "Submitter_ClinVar"))
+                .method(string(brcaObject, "Method_ClinVar"))
+                .alleleOrigin(string(brcaObject, "Allele_Origin_ClinVar"))
+                .scv(string(brcaObject, "SCV_ClinVar"))
+                .dateLastUpdated(string(brcaObject, "Date_Last_Updated_ClinVar"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationENIGMA createBRCAAnnotationENIGMA(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationENIGMA.builder()
+                .variantInENIGMA(string(brcaObject, "Variant_in_ENIGMA"))
+                .bxId(string(brcaObject, "BX_ID_ENIGMA"))
+                .alleleOrigin(string(brcaObject, "Allele_origin_ENIGMA"))
+                .clinVarAccession(string(brcaObject, "ClinVarAccession_ENIGMA"))
+                .assertionMethod(string(brcaObject, "Assertion_method_ENIGMA"))
+                .assertionMethodCitation(string(brcaObject, "Assertion_method_citation_ENIGMA"))
+                .collectionMethod(string(brcaObject, "Collection_method_ENIGMA"))
+                .conditionCategory(string(brcaObject, "Condition_category_ENIGMA"))
+                .conditionIdValue(string(brcaObject, "Condition_ID_value_ENIGMA"))
+                .conditionIdType(string(brcaObject, "Condition_ID_type_ENIGMA"))
+                .clinicalSignificance(string(brcaObject, "Clinical_significance_ENIGMA"))
+                .clinicalSignificanceCitations(string(brcaObject, "Clinical_significance_citations_ENIGMA"))
+                .commentOnClinicalSignificance(string(brcaObject, "Comment_on_clinical_significance_ENIGMA"))
+                .dateLastEvaluated(string(brcaObject, "Date_last_evaluated_ENIGMA"))
+                .url(string(brcaObject, "URL_ENIGMA"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationESP createBRCAAnnotationESP(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationESP.builder()
+                .variantInESP(string(brcaObject, "Variant_in_ESP"))
+                .bxId(string(brcaObject, "BX_ID_ESP"))
+                .minorAlleleFrequencyPercent(string(brcaObject, "Minor_allele_frequency_percent_ESP"))
+                .alleleFrequency(string(brcaObject, "Allele_Frequency_ESP"))
+                .aaAlleleFrequency(string(brcaObject, "AA_Allele_Frequency_ESP"))
+                .eaAlleleFrequency(string(brcaObject, "EA_Allele_Frequency_ESP"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationExAC createBRCAAnnotationExAC(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationExAC.builder()
+                .variantInExAC(string(brcaObject, "Variant_in_ExAC"))
+                .bxId(string(brcaObject, "BX_ID_ExAC"))
+                .alleleFrequency(string(brcaObject, "Allele_frequency_ExAC"))
+                .alleleFrequencyAFR(string(brcaObject, "Allele_frequency_AFR_ExAC"))
+                .alleleFrequencyAMR(string(brcaObject, "Allele_frequency_AMR_ExAC"))
+                .alleleFrequencyEAS(string(brcaObject, "Allele_frequency_EAS_ExAC"))
+                .alleleFrequencyFIN(string(brcaObject, "Allele_frequency_FIN_ExAC"))
+                .alleleFrequencyNFE(string(brcaObject, "Allele_frequency_NFE_ExAC"))
+                .alleleFrequencyOTH(string(brcaObject, "Allele_frequency_OTH_ExAC"))
+                .alleleFrequencySAS(string(brcaObject, "Allele_frequency_SAS_ExAC"))
+                .alleleNumberAFR(string(brcaObject, "Allele_number_AFR_ExAC"))
+                .alleleNumberAMR(string(brcaObject, "Allele_number_AMR_ExAC"))
+                .alleleNumberEAS(string(brcaObject, "Allele_number_EAS_ExAC"))
+                .alleleNumberFIN(string(brcaObject, "Allele_number_FIN_ExAC"))
+                .alleleNumberNFE(string(brcaObject, "Allele_number_NFE_ExAC"))
+                .alleleNumberOTH(string(brcaObject, "Allele_number_OTH_ExAC"))
+                .alleleNumberSAS(string(brcaObject, "Allele_number_SAS_ExAC"))
+                .homozygousCountAFR(string(brcaObject, "Homozygous_count_AFR_ExAC"))
+                .homozygousCountAMR(string(brcaObject, "Homozygous_count_AMR_ExAC"))
+                .homozygousCountEAS(string(brcaObject, "Homozygous_count_EAS_ExAC"))
+                .homozygousCountFIN(string(brcaObject, "Homozygous_count_FIN_ExAC"))
+                .homozygousCountNFE(string(brcaObject, "Homozygous_count_NFE_ExAC"))
+                .homozygousCountOTH(string(brcaObject, "Homozygous_count_OTH_ExAC"))
+                .homozygousCountSAS(string(brcaObject, "Homozygous_count_SAS_ExAC"))
+                .alleleCountAFR(string(brcaObject, "Allele_count_AFR_ExAC"))
+                .alleleCountAMR(string(brcaObject, "Allele_count_AMR_ExAC"))
+                .alleleCountEAS(string(brcaObject, "Allele_count_EAS_ExAC"))
+                .alleleCountFIN(string(brcaObject, "Allele_count_FIN_ExAC"))
+                .alleleCountNFE(string(brcaObject, "Allele_count_NFE_ExAC"))
+                .alleleCountOTH(string(brcaObject, "Allele_count_OTH_ExAC"))
+                .alleleCountSAS(string(brcaObject, "Allele_count_SAS_ExAC"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationExLOVD createBRCAAnnotationExLOVD(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationExLOVD.builder()
+                .variantInExLOVD(string(brcaObject, "Variant_in_exLOVD"))
+                .bxId(string(brcaObject, "BX_ID_exLOVD"))
+                .cooccurrenceLR(string(brcaObject, "Co_occurrence_LR_exLOVD"))
+                .sumFamilyLR(string(brcaObject, "Sum_family_LR_exLOVD"))
+                .segregationLR(string(brcaObject, "Segregation_LR_exLOVD"))
+                .posteriorProbability(string(brcaObject, "Posterior_probability_exLOVD"))
+                .missenseAnalysisPriorProbability(string(brcaObject, "Missense_analysis_prior_probability_exLOVD"))
+                .combinedPriorProbability(string(brcaObject, "Combined_prior_probablility_exLOVD"))
+                .iarcClass(string(brcaObject, "IARC_class_exLOVD"))
+                .literatureSource(string(brcaObject, "Literature_source_exLOVD"))
+                .build();
+    }
+
+    @NotNull
+    private static BrcaAnnotationLOVD createBRCAAnnotationLOVD(@NotNull JsonObject brcaObject) {
+        return ImmutableBrcaAnnotationLOVD.builder()
+                .variantInLOVD(string(brcaObject, "Variant_in_LOVD"))
+                .bxId(string(brcaObject, "BX_ID_LOVD"))
+                .dbId(string(brcaObject, "DBID_LOVD"))
+                .hgvsCDNA(string(brcaObject, "HGVS_cDNA_LOVD"))
+                .hgvsProtein(string(brcaObject, "HGVS_protein_LOVD"))
+                .rna(string(brcaObject, "RNA_LOVD"))
+                .variantEffect(string(brcaObject, "Variant_effect_LOVD"))
+                .variantFrequency(string(brcaObject, "Variant_frequency_LOVD"))
+                .variantHaplotype(string(brcaObject, "Variant_haplotype_LOVD"))
+                .geneticOrigin(string(brcaObject, "Genetic_origin_LOVD"))
+                .functionalAnalysisTechnique(string(brcaObject, "Functional_analysis_technique_LOVD"))
+                .functionalAnalysisResult(string(brcaObject, "Functional_analysis_result_LOVD"))
+                .submitters(string(brcaObject, "Submitters_LOVD"))
+                .individuals(string(brcaObject, "Individuals_LOVD"))
                 .build();
     }
 }

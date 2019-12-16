@@ -11,16 +11,16 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Sage implements KbSpecificObject {
 
     @NotNull
+    public abstract String gene();
+
+    @NotNull
     public abstract String entrezId();
 
     @NotNull
     public abstract String clinicalManifestation();
 
     @NotNull
-    public abstract String publicationUrl();
-
-    @NotNull
-    public abstract String germlineOrSomatic();
+    public abstract String responseType();
 
     @NotNull
     public abstract String evidenceLabel();
@@ -29,9 +29,9 @@ public abstract class Sage implements KbSpecificObject {
     public abstract String drugLabels();
 
     @NotNull
-    public abstract String responseType();
+    public abstract String germlineOrSomatic();
 
     @NotNull
-    public abstract String gene();
+    public abstract String publicationUrl();
 
 }

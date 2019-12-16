@@ -47,7 +47,7 @@ import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.brca.BRCA;
+import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
 import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
@@ -489,8 +489,8 @@ public class ViccDAO {
     private void writeKbSpecificObject(int viccEntryId, @NotNull KbSpecificObject object) {
         if (object instanceof Sage) {
             SageDAOFunctions.write(context, viccEntryId, (Sage) object);
-        } else if (object instanceof BRCA) {
-            BRCADAOFunctions.write(context, viccEntryId, (BRCA) object);
+        } else if (object instanceof Brca) {
+            BRCADAOFunctions.write(context, viccEntryId, (Brca) object);
         } else if (object instanceof Cgi) {
             CgiDAOFunctions.write(context, viccEntryId, (Cgi) object);
         } else if (object instanceof Jax) {

@@ -13,17 +13,17 @@ import org.junit.Test;
 
 public class AnalysedPatientReporterTest {
 
-    private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String TUMOR_SAMPLE_ID = "sample";
     private static final String REF_SAMPLE_ID = "ref_sample";
 
+    private static final String BASE_DIRECTORY = Resources.getResource("test_run").getPath();
     private static final String PURPLE_PURITY_TSV = BASE_DIRECTORY + "/purple/sample.purple.purity";
     private static final String PURPLE_QC_FILE = BASE_DIRECTORY + "/purple/sample.purple.qc";
     private static final String PURPLE_GENE_CNV_TSV = BASE_DIRECTORY + "/purple/sample.purple.gene.cnv";
     private static final String SOMATIC_VARIANT_VCF = BASE_DIRECTORY + "/purple/sample.purple.somatic.vcf";
     private static final String BACHELOR_TSV = BASE_DIRECTORY + "/bachelor/sample_germline_variants.tsv";
-    private static final String LINX_FUSIONS_TSV = Resources.getResource("test_run/linx/sample.linx.fusions.tsv").getPath();
-    private static final String LINX_DISRUPTIONS_TSV = Resources.getResource("test_run/linx/sample.linx.disruptions.tsv").getPath();
+    private static final String LINX_FUSIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.fusions.tsv";
+    private static final String LINX_DISRUPTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.disruptions.tsv";
     private static final String LINX_VIRAL_INSERTION_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
     private static final String LINX_DRIVERS_TSV = BASE_DIRECTORY + "/linx/sample.drivers.catalog.tsv";
     private static final String CHORD_PREDICTION_TXT = BASE_DIRECTORY + "/chord/sample_chord_prediction.txt";
@@ -53,7 +53,7 @@ public class AnalysedPatientReporterTest {
                 CHORD_PREDICTION_TXT,
                 CIRCOS_FILE,
                 null,
+                false,
                 false));
     }
-
 }

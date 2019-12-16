@@ -50,12 +50,20 @@ public class CFReportWriter implements ReportWriter {
 
     @Override
     public void writeAnalysedPatientReport(@NotNull AnalysedPatientReport report, @NotNull String outputFilePath) throws IOException {
-        writeReport(report,
-                new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
-                        new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
-                        new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
-                        new DetailsAndDisclaimerChapter(report) },
-                outputFilePath);
+        ReportChapter[] chapters;
+        if (!report.isUnofficialReport()) {
+            chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
+                    new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
+                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter(),
+                    new DetailsAndDisclaimerChapter(report) };
+        } else {
+            // For unofficial reports we dont want to render the details and disclaimers.
+            chapters = new ReportChapter[] { new SummaryChapter(report), new TherapyDetailsChapterOnLabel(report),
+                    new TherapyDetailsChapterOffLabel(report), new GenomicAlterationsChapter(report),
+                    new TumorCharacteristicsChapter(report), new CircosChapter(report), new ExplanationChapter() };
+        }
+
+        writeReport(report, chapters, outputFilePath);
     }
 
     @Override
@@ -65,10 +73,10 @@ public class CFReportWriter implements ReportWriter {
 
     private void writeReport(@NotNull PatientReport patientReport, @NotNull ReportChapter[] chapters, @NotNull String outputFilePath)
             throws IOException {
-        final Document doc = initializeReport(outputFilePath, writeToFile);
-        final PdfDocument pdfDocument = doc.getPdfDocument();
+        Document doc = initializeReport(outputFilePath, writeToFile);
+        PdfDocument pdfDocument = doc.getPdfDocument();
 
-        final PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
+        PageEventHandler pageEventHandler = new PageEventHandler(patientReport);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
         for (int i = 0; i < chapters.length; i++) {
@@ -92,7 +100,7 @@ public class CFReportWriter implements ReportWriter {
         if (writeToFile) {
             LOGGER.info("Created patient report at " + outputFilePath);
         } else {
-            LOGGER.info("Generated in-memory patient report");
+            LOGGER.info("Successfully generated in-memory patient report");
         }
     }
 
@@ -110,12 +118,12 @@ public class CFReportWriter implements ReportWriter {
             writer = new PdfWriter(new ByteArrayOutputStream());
         }
 
-        final PdfDocument pdf = new PdfDocument(writer);
+        PdfDocument pdf = new PdfDocument(writer);
         pdf.setDefaultPageSize(PageSize.A4);
         pdf.getDocumentInfo().setTitle(ReportResources.METADATA_TITLE);
         pdf.getDocumentInfo().setAuthor(ReportResources.METADATA_AUTHOR);
 
-        final Document document = new Document(pdf);
+        Document document = new Document(pdf);
         document.setMargins(ReportResources.PAGE_MARGIN_TOP,
                 ReportResources.PAGE_MARGIN_RIGHT,
                 ReportResources.PAGE_MARGIN_BOTTOM,

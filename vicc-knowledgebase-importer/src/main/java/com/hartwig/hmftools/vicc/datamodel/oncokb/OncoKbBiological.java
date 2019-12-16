@@ -11,16 +11,19 @@ import org.jetbrains.annotations.Nullable;
 public abstract class OncoKbBiological implements KbSpecificObject {
 
     @NotNull
-    public abstract String mutationEffectPmids();
+    public abstract String gene();
+
+    @NotNull
+    public abstract String entrezGeneId();
 
     @NotNull
     public abstract String isoform();
 
     @NotNull
-    public abstract OncokbVariant oncokbVariant();
+    public abstract String refSeq();
 
     @NotNull
-    public abstract String entrezGeneID();
+    public abstract OncokbVariant oncokbVariant();
 
     @NotNull
     public abstract String oncogenic();
@@ -29,10 +32,7 @@ public abstract class OncoKbBiological implements KbSpecificObject {
     public abstract String mutationEffect();
 
     @NotNull
-    public abstract String refSeq();
-
-    @NotNull
-    public abstract String gene();
+    public abstract String mutationEffectPmids();
 
     @NotNull
     public abstract String mutationEffectAbstracts();
