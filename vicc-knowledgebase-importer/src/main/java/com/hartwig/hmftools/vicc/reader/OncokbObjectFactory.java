@@ -16,7 +16,7 @@ import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbConsequence;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbDrugAbstract;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbGene;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncokbVariant2;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.ImmutableOncoKbVariant;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbClinical;
@@ -113,7 +113,7 @@ final class OncokbObjectFactory {
     private static OncoKbVariant createVariant(@NotNull JsonObject variantObject) {
         ViccDatamodelCheckerFactory.oncoKbVariantChecker().check(variantObject);
 
-        return ImmutableOncokbVariant2.builder()
+        return ImmutableOncoKbVariant.builder()
                 .name(string(variantObject, "name"))
                 .alteration(string(variantObject, "alteration"))
                 .consequence(createConsequence(variantObject.getAsJsonObject("consequence")))
