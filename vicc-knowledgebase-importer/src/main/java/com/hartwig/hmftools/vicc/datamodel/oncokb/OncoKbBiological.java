@@ -23,7 +23,7 @@ public abstract class OncoKbBiological implements KbSpecificObject {
     public abstract String refSeq();
 
     @NotNull
-    public abstract OncokbVariant2 oncokbVariant();
+    public abstract OncoKbVariant oncokbVariant();
 
     @NotNull
     public abstract String oncogenic();

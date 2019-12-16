@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Oncokb2 implements KbSpecificObject {
+public abstract class OncoKb implements KbSpecificObject {
 
     @Nullable
     public abstract OncoKbBiological oncoKbBiological();
