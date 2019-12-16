@@ -130,6 +130,7 @@ db_user | None | Database username. Mandatory if db_enabled.
 db_pass | None | Database password. Mandatory if db_enabled.
 db_url | None | Database URL. Should be of format: `mysql://localhost:3306/hmfpatients`. Mandatory if db_enabled.
 no_charts | NA | Disables creation of (non-circos) charts
+tumor_only | NA | [Tumor only mode](#tumor-only-mode)
 
 #### Optional Somatic Fit Arguments
 The following arguments control the somatic fit. Changing these values without a thorough understanding of the system is not recommended.
@@ -263,11 +264,11 @@ It is important to first run AMBER and COBALT in tumor only mode.
 
 AMBER has native support for tumor only as described in the [readme](../amber#tumor-only-mode).
 
-COBALT does not have native support for tumor only mode but this can be circumvented by using another samples normal data. 
+COBALT does not have native support for tumor only mode but this can be circumvented by using another sample's normal data. 
 It is important that the substituted bam is of the same gender as the sample.   
 
 
-## Algorithm
+## Algorithm`
 
 There are 10 key steps in the PURPLE pipeline described in detail below:
 1. Gender determination
@@ -984,7 +985,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.35](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.35)
   - Driver catalog written to DB
   - Tumor only mode (disables somatic fitting)
 - [2.34](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.34)
