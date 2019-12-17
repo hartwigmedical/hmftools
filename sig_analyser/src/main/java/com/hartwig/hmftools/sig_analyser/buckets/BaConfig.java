@@ -29,33 +29,33 @@ public class BaConfig
     public static final double SKIP_ALLOC_FACTOR = 2.0; // skip adding a sample to a group if another candidate not chosen to allocate X times as much
 
     // configuration state
-    public double HighCssThreshold; // CSS level for samples or groups to be consider similar
-    private static String BA_CSS_HIGH_THRESHOLD = "ba_css_high";
+    public final double HighCssThreshold; // CSS level for samples or groups to be consider similar
+    private static final  String BA_CSS_HIGH_THRESHOLD = "ba_css_high";
     public static final double DEFAULT_CSS_THRESHOLD = 0.995;
 
-    public int MutationalLoadCap; // defines the maximum for background counts
-    private static String BA_MUT_LOAD_CAP = "ba_mut_load_cap";
+    public final int MutationalLoadCap; // defines the maximum for background counts
+    private static final  String BA_MUT_LOAD_CAP = "ba_mut_load_cap";
 
-    public int MinBucketCountOverlap; // used for pairings of samples with reduced bucket overlap
-    private static String BA_MIN_BUCKET_COUNT_OVERLAP = "ba_min_bc_overlap";
+    public final int MinBucketCountOverlap; // used for pairings of samples with reduced bucket overlap
+    private static final  String BA_MIN_BUCKET_COUNT_OVERLAP = "ba_min_bc_overlap";
 
-    public int MinSampleAllocCount; // hard lower limit to allocate a sample to a group
-    private static String BA_MIN_SAM_ALLOC_COUNT = "ba_min_sample_alloc_count";
+    public final int MinSampleAllocCount; // hard lower limit to allocate a sample to a group
+    private static final String BA_MIN_SAM_ALLOC_COUNT = "ba_min_sample_alloc_count";
 
-    public boolean ApplyNoise; // whether to factor Poisson noise into the sample counts and fits, default = true
-    public static final double PERMITTED_PROB_NOISE = 1e-4;
+    public final boolean ApplyNoise; // whether to factor Poisson noise into the sample counts and fits, default = true
+    public static final double PERMITTED_PROB_NOISE = 1e-5;
     public static final double MAX_NOISE_TO_SAMPLE_RATIO = 5; // per sample, the sum of potential (unallocated) bucket noise counts cannot exceeds this multiple of variant total
-    public static double MAX_NOISE_ALLOC_PERCENT = 0.25; // per sample, the total vs total variants which can be allocated to noise
-    private static String BA_MAX_NOISE_ALLOC_PERCENT = "ba_max_noise_pct";
+    public static double MAX_NOISE_ALLOC_PERCENT = 0.20; // per sample, the total which can be allocated to noise vs total variants
+    private static final String BA_MAX_NOISE_ALLOC_PERCENT = "ba_max_noise_pct";
 
-    public boolean UseRatioRanges; // default false
-    private static String BA_USE_RATIO_RANGES = "ba_use_ratio_ranges";
-    public double RatioRangeLimit;
-    private static String BA_RATIO_RANGE = "ba_ratio_range";
+    public final boolean UseRatioRanges; // default false
+    private static final  String BA_USE_RATIO_RANGES = "ba_use_ratio_ranges";
+    public final double RatioRangeLimit;
+    private static final  String BA_RATIO_RANGE = "ba_ratio_range";
     public static final double DEFAULT_SIG_RATIO_RANGE_PERCENT = 0.1; // if ratio ranges are used, this percent width can be applied
 
-    public double MutLoadWeightFactor; // how much weight to give a sample's counts towards bucket ratios (1 = full)
-    private static String BA_MUT_LOAD_WEIGHT_FACTOR = "ba_mut_load_wf";
+    public final double MutLoadWeightFactor; // how much weight to give a sample's counts towards bucket ratios (1 = full)
+    private static final  String BA_MUT_LOAD_WEIGHT_FACTOR = "ba_mut_load_wf";
 
     public static final double UNIQUE_SIG_CSS_THRESHOLD = 0.8; // for unique sig discovery, sample's bucket ratios must be no more similar than this to any other sig
     public static final double UNIQUE_SIG_MIN_ALLOC_PERCENT = 0.3; // for unique sig discovery, the unique sig must allocation at least this % to the new sig
@@ -68,65 +68,52 @@ public class BaConfig
 
     public static final double SAMPLE_ALLOCATED_PERCENT = 0.995; // maximum to attempt to allocate a sample to sigs
 
-    public boolean UseBackgroundCounts; // whether to make a distinction between background and elevated counts
-    private static String BA_USE_BACKGROUND_SIGS = "ba_use_background_sigs"; // true by default
+    public final boolean UseBackgroundCounts; // whether to make a distinction between background and elevated counts
+    private static final String BA_USE_BACKGROUND_SIGS = "ba_use_background_sigs"; // true by default
+    public final boolean RunBackgroundAnalysis;
+    private static final  String BA_RUN_BACKGROUND_ANALYSIS = "ba_run_background_analysis"; // false by default
 
-    public int RunCount; //  number of iterations searching for potential bucket groups / sigs
-    private static String BA_RUN_COUNT = "ba_run_count";
+    public final int RunCount; //  number of iterations searching for potential bucket groups / sigs
+    private static final  String BA_RUN_COUNT = "ba_run_count";
 
-    public int ExcessDiscoveryRunId; // run iteration from which to begin discovery using excess-unalloc method
-    private static String BA_EXCESS_GRP_RUN_INDEX = "ba_excess_grp_run_index";
+    public final int ExcessDiscoveryRunId; // run iteration from which to begin discovery using excess-unalloc method
+    private static final  String BA_EXCESS_GRP_RUN_INDEX = "ba_excess_grp_run_index";
 
-    public boolean ThrottleDiscovery; // whether to allow discovery after each run
-    public int UniqueDiscoveryRunId;
+    public final boolean ThrottleDiscovery; // whether to allow discovery after each run
+    public final int UniqueDiscoveryRunId;
 
-    public double GroupMergeScoreThreshold; // after discovery is complete, attempt to merge similar sigs if score exceeds this
-    private static String BA_MERGE_SIG_SCORE = "ba_merge_sig_score";
+    public final double GroupMergeScoreThreshold; // after discovery is complete, attempt to merge similar sigs if score exceeds this
+    private static final  String BA_MERGE_SIG_SCORE = "ba_merge_sig_score";
 
-    public int MaxProposedSigs;
-    private static String BA_MAX_PROPOSED_SIGS = "ba_max_proposed_sigs";
+    public final  int MaxProposedSigs;
+    private static final  String BA_MAX_PROPOSED_SIGS = "ba_max_proposed_sigs";
 
-    public int ApplyPredefinedSigCount; // how many loaded sigs to apply prior to discovery (optimisation)
+    public final  int ApplyPredefinedSigCount; // how many loaded sigs to apply prior to discovery (optimisation)
     public static final String BA_PREDEFINED_SIG_APPLY_COUNT = "ba_predefined_sig_apply_count";
 
+    public static final String CANCER_TYPE_OTHER = "Other";
     // data filters
-    public String SpecificCancer;
-    private static String BA_SPECIFIC_CANCER = "ba_specific_cancer";
+    public final String SpecificCancer;
+    private static final  String BA_SPECIFIC_CANCER = "ba_specific_cancer";
 
-    public String MsiFilter;
-    private static String BA_MSI_FILTER = "ba_msi_filter";
+    public final String MsiFilter;
+    private static final  String BA_MSI_FILTER = "ba_msi_filter";
 
     // performance related
     public static final int MAX_CANDIDATE_GROUPS = 1500; // in place for speed and memory considerations
 
     // logging and debug
-    public List<Integer> SampleWatchList;
-    private static String BA_LOG_SPEC_SAMPLES = "ba_log_sample_ids";
+    public final List<Integer> SampleWatchList;
+    private static final  String BA_LOG_SPEC_SAMPLES = "ba_log_sample_ids";
 
-    public int SpecificSampleId;
     public boolean LogVerbose;
 
-
-    public BaConfig()
+    public BaConfig(final CommandLine cmd)
     {
-        HighCssThreshold = DEFAULT_CSS_THRESHOLD;
-        MaxProposedSigs = 0;
-        MutationalLoadCap = 0;
-        ApplyPredefinedSigCount = 0;
-        ExcessDiscoveryRunId = -1;
-        MinBucketCountOverlap = 3;
-        UseBackgroundCounts = true;
-        ApplyNoise = true;
-        SampleWatchList = Lists.newArrayList();
-        SpecificSampleId = -1;
-        RatioRangeLimit = DEFAULT_SIG_RATIO_RANGE_PERCENT;
-        MutLoadWeightFactor = 1;
         LogVerbose = false;
-    }
 
-    public void load(final CommandLine cmd)
-    {
         UseBackgroundCounts = Boolean.parseBoolean(cmd.getOptionValue(BA_USE_BACKGROUND_SIGS, "true"));
+        RunBackgroundAnalysis = cmd.hasOption(BA_RUN_BACKGROUND_ANALYSIS);
 
         RunCount = Integer.parseInt(cmd.getOptionValue(BA_RUN_COUNT, "25"));
         ExcessDiscoveryRunId = Integer.parseInt(cmd.getOptionValue(BA_EXCESS_GRP_RUN_INDEX, "-1"));
@@ -137,8 +124,7 @@ public class BaConfig
         ApplyPredefinedSigCount = Integer.parseInt(cmd.getOptionValue(BA_PREDEFINED_SIG_APPLY_COUNT, "0"));
         UseRatioRanges = cmd.hasOption(BA_USE_RATIO_RANGES);
 
-        if(cmd.hasOption(BA_MUT_LOAD_WEIGHT_FACTOR))
-            MutLoadWeightFactor = Double.parseDouble(cmd.getOptionValue(BA_MUT_LOAD_WEIGHT_FACTOR));
+        MutLoadWeightFactor = Double.parseDouble(cmd.getOptionValue(BA_MUT_LOAD_WEIGHT_FACTOR, "1"));
 
         MinSampleAllocCount = Integer.parseInt(cmd.getOptionValue(BA_MIN_SAM_ALLOC_COUNT, "1"));
         MinBucketCountOverlap = Integer.parseInt(cmd.getOptionValue(BA_MIN_BUCKET_COUNT_OVERLAP, "3"));
@@ -148,8 +134,7 @@ public class BaConfig
 
         MAX_NOISE_ALLOC_PERCENT = Double.parseDouble(cmd.getOptionValue(BA_MAX_NOISE_ALLOC_PERCENT, String.valueOf(MAX_NOISE_ALLOC_PERCENT)));
 
-        if(MAX_NOISE_ALLOC_PERCENT == 0)
-            ApplyNoise = false;
+        ApplyNoise = MAX_NOISE_ALLOC_PERCENT > 0;
 
         MIN_GROUP_ALLOC_PERCENT = Double.parseDouble(cmd.getOptionValue(BA_MIN_GROUP_ALLOC_PERCENT, String.valueOf(MIN_GROUP_ALLOC_PERCENT)));
         MIN_GROUP_ALLOC_PERCENT_LOWER = Double.parseDouble(cmd.getOptionValue(BA_MIN_GROUP_ALLOC_PERCENT_LOWER, String.valueOf(MIN_GROUP_ALLOC_PERCENT_LOWER)));
@@ -159,11 +144,13 @@ public class BaConfig
         SpecificCancer = cmd.getOptionValue(BA_SPECIFIC_CANCER, "");
         MsiFilter = cmd.getOptionValue(BA_MSI_FILTER, "");
 
+        SampleWatchList = Lists.newArrayList();
+
         if(cmd.hasOption(BA_LOG_SPEC_SAMPLES))
         {
-            SampleWatchList = Arrays.stream(cmd.getOptionValue(BA_LOG_SPEC_SAMPLES).split(";"))
+            SampleWatchList.addAll(Arrays.stream(cmd.getOptionValue(BA_LOG_SPEC_SAMPLES).split(";"))
                     .map(x -> Integer.parseInt(x))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         }
     }
 
@@ -178,6 +165,7 @@ public class BaConfig
     public static void addCmdLineArgs(Options options)
     {
         options.addOption(BA_USE_BACKGROUND_SIGS, true, "Default true. Whether to calculate and use background sigs");
+        options.addOption(BA_RUN_BACKGROUND_ANALYSIS, false, "Analysis background sigs by cancer type");
         options.addOption(BA_EXT_SAMPLE_DATA_FILE, true, "Sample external data");
         options.addOption(BA_CSS_HIGH_THRESHOLD, true, "Cosine sim for high-match test");
         options.addOption(BA_MAX_PROPOSED_SIGS, true, "Maximum number of bucket groups to turn into proposed sigs");

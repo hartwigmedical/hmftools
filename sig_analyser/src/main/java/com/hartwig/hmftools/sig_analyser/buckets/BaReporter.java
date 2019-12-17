@@ -95,7 +95,8 @@ public class BaReporter
     public void setInitialState(
             GenericDataCollection dataCollection, final String outputDir, final String outputFileId,
             final SigMatrix sampleCounts, final List<SampleData> sampleData,
-            final GenericDataCollection extSampleData, final HashMap<String,Integer> extCategoriesMap,final HashMap<String, List<Integer>> cancerSamplesMap,
+            final GenericDataCollection extSampleData, final HashMap<String,Integer> extCategoriesMap,
+            final HashMap<String, List<Integer>> cancerSamplesMap,
             final List<BucketGroup> finalBucketGroups, final List<BucketGroup> backgroundGroups)
     {
         mDataCollection = dataCollection;

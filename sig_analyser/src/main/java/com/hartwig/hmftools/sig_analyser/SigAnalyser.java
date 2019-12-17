@@ -76,13 +76,7 @@ public class SigAnalyser
 
         if(cmd.hasOption(RUN_BA))
         {
-            BucketAnalyser bucketAnalyser = new BucketAnalyser();
-            if(!bucketAnalyser.initialise(collection, cmd))
-            {
-                LOGGER.info("init failed");
-                return;
-            }
-
+            BucketAnalyser bucketAnalyser = new BucketAnalyser(collection, cmd);
             bucketAnalyser.run();
         }
 

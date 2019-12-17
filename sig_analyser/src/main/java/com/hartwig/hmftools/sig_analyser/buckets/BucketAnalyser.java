@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_PREDEFINED_SIGS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.BA_SAMPLE_CALC_DATA_FILE;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DOMINANT_CATEGORY_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAJOR_GROUP_ALLOC_PERC;
@@ -76,22 +77,21 @@ import org.apache.logging.log4j.Logger;
 
 public class BucketAnalyser
 {
-    private GenericDataCollection mDataCollection;
-    private SigDiscovery mSigDiscovery;
-    private BackgroundSigDiscovery mBackgroundSigDiscovery;
-    private BaReporter mReporter;
-    private BaConfig mConfig;
+    private final GenericDataCollection mDataCollection;
+    private final SigDiscovery mSigDiscovery;
+    private final BackgroundSigDiscovery mBackgroundSigDiscovery;
+    private final BaReporter mReporter;
+    private final BaConfig mConfig;
 
-    private SigMatrix mSampleCounts;
+    private final SigMatrix mSampleCounts;
 
     // for convenience
-    private double[] mSampleTotals;
+    private final double[] mSampleTotals;
     private double mTotalCount;
-    private int mBucketCount;
-    private int mSampleCount;
+    private final int mBucketCount;
+    private final int mSampleCount;
     private int mActiveSampleCount; // minus the excluded samples
 
-    private Map<String, double[]> mCancerTypeBucketRatiosMap; // cancer-type to median bucket ratios (ie background sigs)
     private SigMatrix mBucketProbs;
     private SigMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
@@ -106,32 +106,31 @@ public class BucketAnalyser
     private boolean mUsingRefSigs; // using reference sigs as predefined sigs
 
     // external sample data for verification and correlation
-    private List<SampleData> mSampleData;
-    private GenericDataCollection mExtSampleData;
-    private HashMap<String,Integer> mExtCategoriesMap;
+    private final List<SampleData> mSampleData;
+    private final GenericDataCollection mExtSampleData;
+    private final HashMap<String,Integer> mExtCategoriesMap;
     private final HashMap<String, List<Integer>> mCancerSamplesMap;
 
     private int mNextBucketId;
-    private List<BucketGroup> mBucketGroups;
-    private List<BucketGroup> mFinalBucketGroups;
-    private List<BucketGroup> mTopAllocBucketGroups;
-    private List<BucketGroup> mSkippedBucketGroups;
-    private List<Integer> mSkippedSamples;
-    private List<Integer> mReassessSamples;
+    private final List<BucketGroup> mBucketGroups;
+    private final List<BucketGroup> mFinalBucketGroups;
+    private final List<BucketGroup> mTopAllocBucketGroups;
+    private final List<BucketGroup> mSkippedBucketGroups;
+    private final List<Integer> mSkippedSamples;
+    private final List<Integer> mReassessSamples;
     private int mLastRunGroupCount;
 
-    private Map<Integer, Integer> mNoiseRangeMap;
+    private final Map<Integer, Integer> mNoiseRangeMap;
 
-    BufferedWriter mBgInterimFileWriter;
-    BufferedWriter mBgRatioRangeFileWriter;
-    PerformanceCounter mPerfCounter;
+    private BufferedWriter mBgInterimFileWriter;
+    private BufferedWriter mBgRatioRangeFileWriter;
+    private PerformanceCounter mPerfCounter;
 
     // config
     private String mOutputDir;
     private String mOutputFileId;
 
     private int mRunId; // current run iteration
-    private boolean mLogVerbose;
 
     // external data file attributes
     private static int COL_SAMPLE_ID = 0;
@@ -146,76 +145,14 @@ public class BucketAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(BucketAnalyser.class);
 
-    public BucketAnalyser()
+    public BucketAnalyser(GenericDataCollection collection, final CommandLine cmd)
     {
-        mOutputDir = "";
-        mOutputFileId = "";
-        mConfig = new BaConfig();
-        mSigDiscovery = null;
-        mBackgroundSigDiscovery = null;
-        mHasErrors = false;
-
-        mDataCollection = null;
-        mSampleCounts = null;
-        mSampleTotals = null;
-        mTotalCount = 0;
-        mActiveSampleCount = 0;
-        mBucketCount = 0;
-        mSampleCount = 0;
-        mElevatedCounts = null;
-        mElevatedCount = 0;
-        mBackgroundCount = 0;
-        mPermittedElevRange = null;
-        mPermittedBgRange = null;
-        mCancerTypeBucketRatiosMap = null;
-        mNoiseRangeMap = new HashMap();
-
-        mSampleData = Lists.newArrayList();
-
-        mExtSampleData = null;
-        mExtCategoriesMap = null;
-        mCancerSamplesMap = new HashMap();
-        mProposedSigs = null;
-        mSigToBgMapping = Lists.newArrayList();
-
-        mNextBucketId = 0;
-        mBucketGroups = Lists.newArrayList();
-        mTopAllocBucketGroups = Lists.newArrayList();
-        mFinalBucketGroups = Lists.newArrayList();
-        mSkippedSamples = Lists.newArrayList();
-        mReassessSamples = Lists.newArrayList();
-        mSkippedBucketGroups = Lists.newArrayList();
-        mBgInterimFileWriter = null;
-        mBgRatioRangeFileWriter = null;
-
-        mLogVerbose = false;
-        mRunId = 0;
-        mLastRunGroupCount = 0;
-        mFinalFitOnly = false;
-        mUsingRefSigs = false;
-
-        mPerfCounter = new PerformanceCounter("BucketAnalyser");
-    }
-
-    public double getMinSampleAllocCount() { return mConfig.MinSampleAllocCount; }
-    public List<Integer> getReassessSamples() { return mReassessSamples; }
-    public int getNextBucketId() { return mNextBucketId++; }
-    public void addBucketGroup(BucketGroup bucketGroup) { mBucketGroups.add(bucketGroup); }
-
-    public static void addCmdLineArgs(Options options)
-    {
-        BaConfig.addCmdLineArgs(options);
-    }
-
-    public boolean initialise(GenericDataCollection collection, final CommandLine cmd)
-    {
-        mReporter = new BaReporter(this);
-        mSigDiscovery = new SigDiscovery(this);
-        mDataCollection = collection;
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mConfig = new BaConfig(cmd);
 
-        mConfig.load(cmd);
+        // initialise sample counts and related totals
+        mDataCollection = collection;
 
         mSampleCounts = DataUtils.createMatrixFromListData(mDataCollection.getData());
         mSampleCounts.cacheTranspose();
@@ -230,6 +167,46 @@ public class BucketAnalyser
         }
 
         mTotalCount = sumVector(mSampleTotals);
+
+        // initialise components
+        mReporter = new BaReporter(this);
+        mSigDiscovery = new SigDiscovery(this);
+
+        // initialise data stores
+        mCancerSamplesMap = new HashMap();
+
+        // initialise run state
+        mHasErrors = false;
+
+        mActiveSampleCount = 0;
+        mElevatedCounts = null;
+        mElevatedCount = 0;
+        mBackgroundCount = 0;
+        mPermittedElevRange = null;
+        mPermittedBgRange = null;
+        mNoiseRangeMap = new HashMap();
+
+        mSampleData = Lists.newArrayList();
+
+        mProposedSigs = null;
+        mSigToBgMapping = Lists.newArrayList();
+
+        mNextBucketId = 0;
+        mBucketGroups = Lists.newArrayList();
+        mTopAllocBucketGroups = Lists.newArrayList();
+        mFinalBucketGroups = Lists.newArrayList();
+        mSkippedSamples = Lists.newArrayList();
+        mReassessSamples = Lists.newArrayList();
+        mSkippedBucketGroups = Lists.newArrayList();
+        mBgInterimFileWriter = null;
+        mBgRatioRangeFileWriter = null;
+
+        mRunId = 0;
+        mLastRunGroupCount = 0;
+        mFinalFitOnly = false;
+        mUsingRefSigs = false;
+
+        mPerfCounter = new PerformanceCounter("BucketAnalyser");
 
         if(cmd.hasOption(NMF_REF_SIG_FILE))
         {
@@ -305,10 +282,6 @@ public class BucketAnalyser
             {
                 sample.setExcluded(true);
             }
-            else if(mConfig.SpecificSampleId >= 0 && sample.Id != mConfig.SpecificSampleId)
-            {
-                sample.setExcluded(true);
-            }
             else if(!mConfig.MsiFilter.isEmpty())
             {
                 boolean sampleHasMsi = sampleHasFeature(sample, "MSI");
@@ -328,14 +301,22 @@ public class BucketAnalyser
 
         populateCancerSamplesMap();
 
-        mReporter.setInitialState(
-                mDataCollection, mOutputDir, mOutputFileId, mSampleCounts, mSampleData,
-                mExtSampleData, mExtCategoriesMap, mCancerSamplesMap, mFinalBucketGroups, mBackgroundSigDiscovery.getBucketGroups());
-
         mSigDiscovery.setInitialState(mConfig, mSampleData, mSampleCounts);
         mBackgroundSigDiscovery = new BackgroundSigDiscovery(mConfig, mSampleData, mCancerSamplesMap, mNoiseRangeMap);
 
-        return !mHasErrors;
+        mReporter.setInitialState(
+                mDataCollection, mOutputDir, mOutputFileId, mSampleCounts, mSampleData,
+                mExtSampleData, mExtCategoriesMap, mCancerSamplesMap, mFinalBucketGroups, mBackgroundSigDiscovery.getBucketGroups());
+    }
+
+    public double getMinSampleAllocCount() { return mConfig.MinSampleAllocCount; }
+    public List<Integer> getReassessSamples() { return mReassessSamples; }
+    public int getNextBucketId() { return mNextBucketId++; }
+    public void addBucketGroup(BucketGroup bucketGroup) { mBucketGroups.add(bucketGroup); }
+
+    public static void addCmdLineArgs(Options options)
+    {
+        BaConfig.addCmdLineArgs(options);
     }
 
     public void run()
@@ -348,12 +329,24 @@ public class BucketAnalyser
 
         mPerfCounter. start();
 
-        PerformanceCounter perfCounter = new PerformanceCounter("BucketMeanRatios");
+        PerformanceCounter perfCounter = new PerformanceCounter("BackgroundPreCalcs");
 
         perfCounter.start("SplitCounts");
 
         if(mConfig.UseBackgroundCounts)
+        {
             mBackgroundSigDiscovery.createBackgroundSigs();
+
+            if(mConfig.RunCount == 0)
+            {
+                writeBackgroundSigs();
+                mFinalBucketGroups.addAll(mBackgroundSigDiscovery.getBucketGroups());
+                writeSampleContributions();
+
+                mReporter.logOverallStats();
+                return;
+            }
+        }
 
         if(mHasErrors)
             return;
@@ -703,7 +696,7 @@ public class BucketAnalyser
                 // compute a range for Poisson noise around this elevated count
                 elevData[i][j] = elevatedCount;
 
-                int rangeVal = mNoiseRangeMap.get(elevatedCount);
+                int rangeVal = calcRangeValue(mNoiseRangeMap, elevatedCount);
                 permElevRangeData[i][j] = rangeVal;
             }
         }
@@ -2162,15 +2155,18 @@ public class BucketAnalyser
                 sigContribOptimiser.getInstances(), sigContribOptimiser.getAvgIterations(), sigContribOptimiser.getAvgImprovePerc()));
 
         // report range of group counts across the samples
-        double[] groupCounts = listToArray(sampleGroupCounts);
-        List<Integer> sortedIndicesGCs = getSortedVectorIndices(groupCounts, false);
-
-        if(sortedIndicesGCs.size() > 2)
+        if(!sampleGroupCounts.isEmpty())
         {
-            int medianIndex = sortedIndicesGCs.size() /2;
-            double avg = sumVector(groupCounts) / groupCounts.length;
-            LOGGER.debug(String.format("sample group count stats: total(%d) max(%.0f) median(%.0f) avg(%.1f)",
-                    groupCounts.length, groupCounts[sortedIndicesGCs.get(0)], groupCounts[sortedIndicesGCs.get(medianIndex)], avg));
+            double[] groupCounts = listToArray(sampleGroupCounts);
+            List<Integer> sortedIndicesGCs = getSortedVectorIndices(groupCounts, false);
+
+            if (sortedIndicesGCs.size() > 2)
+            {
+                int medianIndex = sortedIndicesGCs.size() / 2;
+                double avg = sumVector(groupCounts) / groupCounts.length;
+                LOGGER.debug(String.format("sample group count stats: total(%d) max(%.0f) median(%.0f) avg(%.1f)",
+                        groupCounts.length, groupCounts[sortedIndicesGCs.get(0)], groupCounts[sortedIndicesGCs.get(medianIndex)], avg));
+            }
         }
     }
 
@@ -2960,9 +2956,7 @@ public class BucketAnalyser
         }
 
         // put all low sample count by cancer type into the 'Other' cancer type mapping group
-        String otherType = "Other";
-
-        List<Integer> otherTypeList = mCancerSamplesMap.get(otherType);
+        List<Integer> otherTypeList = mCancerSamplesMap.get(CANCER_TYPE_OTHER);
         if (otherTypeList == null)
         {
             otherTypeList = Lists.newArrayList();
@@ -2970,7 +2964,7 @@ public class BucketAnalyser
 
         for (final String cancerType : cancerTypes)
         {
-            if (cancerType.equals(otherType))
+            if (cancerType.equals(CANCER_TYPE_OTHER))
                 continue;
 
             List<Integer> samplesList = mCancerSamplesMap.get(cancerType);
@@ -2984,7 +2978,7 @@ public class BucketAnalyser
 
         if (!otherTypeList.isEmpty())
         {
-            mCancerSamplesMap.put(otherType, otherTypeList);
+            mCancerSamplesMap.put(CANCER_TYPE_OTHER, otherTypeList);
         }
 
         // check all samples were allocated

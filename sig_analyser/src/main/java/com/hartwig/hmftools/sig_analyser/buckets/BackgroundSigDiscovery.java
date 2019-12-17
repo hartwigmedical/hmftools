@@ -1,10 +1,18 @@
 package com.hartwig.hmftools.sig_analyser.buckets;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.CANCER_TYPE_OTHER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.DEFAULT_SIG_RATIO_RANGE_PERCENT;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.SIG_SIMILAR_CSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.calcSharedCSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_BACKGROUND;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I1;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
+import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcRangeValue;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
@@ -40,6 +48,7 @@ public class BackgroundSigDiscovery
     private final List<Integer> mAllBuckets;
     private int mNextBucketId;
 
+    private static final String BACKGROUND_SIG_TAG = "background";
 
     private static final Logger LOGGER = LogManager.getLogger(BackgroundSigDiscovery.class);
 
@@ -87,13 +96,25 @@ public class BackgroundSigDiscovery
             // find potential background sigs using a CSS comparison method
             List<BucketGroup> candidateGroups = findCandidateGroups(cancerType, sampleIds);
 
+            BucketGroup medianRatiosGroup = createMedianRatiosGroup(cancerType, sampleIds);
+            candidateGroups.add(medianRatiosGroup);
+
             // find the optimum background sig by testing total allocation across all samples
             BucketGroup topGroup = findTopAllocatedGroup(cancerType, sampleIds, candidateGroups);
+
+            if(topGroup == null)
+                continue;
 
             // allocate each sample to the background group
             allocateSamples(cancerType, sampleIds, topGroup);
 
             mCancerBucketGroups.put(cancerType, topGroup);
+        }
+
+        if(mConfig.RunBackgroundAnalysis)
+        {
+            compareGroups();
+            checkSampleVsOtherSigs();
         }
     }
 
@@ -159,11 +180,73 @@ public class BackgroundSigDiscovery
             mutLoadThreshold = ctSampleTotals[sortedRatioIndices.get(4)];
 
             LOGGER.info("cancerType({}) using higher ML threshold({}) with only {} samples",
-                    cancerType, String.format("%.0f", mutLoadThreshold));
+                    cancerType, String.format("%.0f", mutLoadThreshold), samplesIncluded);
         }
 
         mCancerMutLoadThresholds.put(cancerType, mutLoadThreshold);
         return mutLoadThreshold;
+    }
+
+    private BucketGroup createMedianRatiosGroup(final String cancerType, final List<Integer> sampleIds)
+    {
+        // take the median ratio in each bucket from all samples below the ML threshold
+        double mutLoadThreshold = mCancerMutLoadThresholds.get(cancerType);
+
+        List<double[]> sampleBucketRatios = Lists.newArrayList();
+
+        for (Integer sampleId : sampleIds)
+        {
+            SampleData sample = mSampleData.get(sampleId);
+
+            double sampleTotal = sample.getTotalCount();
+            double[] bucketCounts = sample.getBucketCounts();
+
+            if (sampleTotal > mutLoadThreshold)
+                continue;
+
+            double[] bucketRatios = new double[mBucketCount];
+
+            for (int i = 0; i < mBucketCount; ++i)
+            {
+                bucketRatios[i] = bucketCounts[i] / sampleTotal;
+            }
+
+            sampleBucketRatios.add(bucketRatios);
+        }
+
+        int medianIndex = sampleBucketRatios.size() / 2;
+
+        double[] medianBucketRatios = new double[mBucketCount];
+
+        for (int i = 0; i < mBucketCount; ++i)
+        {
+            double[] bucketRatios = new double[sampleBucketRatios.size()];
+
+            for (int j = 0; j < sampleBucketRatios.size(); ++j)
+            {
+                double[] sampleRatios = sampleBucketRatios.get(j);
+                bucketRatios[j] = sampleRatios[i];
+            }
+
+            // sort these and then take the median
+            List<Integer> sortedRatioIndices = getSortedVectorIndices(bucketRatios, true);
+            int medianRatioIndex = sortedRatioIndices.get(medianIndex);
+            double medianRatio = bucketRatios[medianRatioIndex];
+            medianBucketRatios[i] = medianRatio;
+        }
+
+        // convert to a percent and then add as a group
+        convertToPercentages(medianBucketRatios);
+
+        BucketGroup bucketGroup = new BucketGroup(mNextBucketId++);
+        bucketGroup.setTag("medianRatios");
+        bucketGroup.addBuckets(mAllBuckets);
+        bucketGroup.setBucketRatios(medianBucketRatios);
+
+        if(mConfig.UseRatioRanges)
+            bucketGroup.setRatioRangePerc(DEFAULT_SIG_RATIO_RANGE_PERCENT);
+
+        return bucketGroup;
     }
 
     private List<BucketGroup> findCandidateGroups(final String cancerType, final List<Integer> sampleIds)
@@ -174,7 +257,7 @@ public class BackgroundSigDiscovery
 
         double mutLoadThreshold = mCancerMutLoadThresholds.get(cancerType);
 
-        String bgTag = "background";
+        double maxAnyCss = 0;
 
         for (int samIndex1 = 0; samIndex1 < sampleIds.size() - 1; ++samIndex1)
         {
@@ -187,8 +270,8 @@ public class BackgroundSigDiscovery
             final double[] sc1 = sample1.getBucketCounts();
 
             // record the top matching other sample - this will be used to create the top-allocating group
-            int maxOtherSample = -1;
-            double maxCss = 0;
+            SampleData bestOtherSample = null;
+            double maxSampleCss = 0;
 
             for (int samIndex2 = samIndex1 + 1; samIndex2 < sampleIds.size(); ++samIndex2)
             {
@@ -201,33 +284,33 @@ public class BackgroundSigDiscovery
                 final double[] sc2 = sample2.getBucketCounts();
 
                 double bcCss = calcSharedCSS(sc1, sc2);
+                maxAnyCss = max(maxAnyCss, bcCss);
 
-                if (bcCss < mConfig.HighCssThreshold || bcCss < maxCss)
+                if (bcCss < mConfig.HighCssThreshold || bcCss < maxSampleCss)
                     continue;
 
-                maxOtherSample = sampleId2;
-                maxCss = bcCss;
+                bestOtherSample = sample2;
+                maxSampleCss = bcCss;
             }
 
-            if(maxCss == 0)
+            if(bestOtherSample == null)
                 continue;
 
             // now create a group from the best allocation for this sample
             BucketGroup bucketGroup = new BucketGroup(mNextBucketId++);
-            bucketGroup.setTag(bgTag);
-            bucketGroup.addInitialSample(samIndex1);
-            bucketGroup.addInitialSample(maxOtherSample);
+            bucketGroup.setTag(String.format("samples_%d_%d", sample1.Id, bestOtherSample.Id));
+            bucketGroup.addInitialSample(sample1.Id);
+            bucketGroup.addInitialSample(bestOtherSample.Id);
             bucketGroup.addBuckets(mAllBuckets);
 
             double[] bucketRatios = new double[mBucketCount];
 
-            SampleData sample2 = mSampleData.get(maxOtherSample);
-            double countsTotal = sample1.getTotalCount() + sample2.getTotalCount();
+            double countsTotal = sample1.getTotalCount() + bestOtherSample.getTotalCount();
 
             for (int i = 0; i < mBucketCount; ++i)
             {
-                double combinedCount = sc1[i] + sample2.getBucketCounts()[i];
-                bucketRatios[i] = combinedCount / countsTotal;
+                double combinedBucketCount = sc1[i] + bestOtherSample.getBucketCounts()[i];
+                bucketRatios[i] = combinedBucketCount / countsTotal;
             }
 
             if(!doublesEqual(sumVector(bucketRatios), 1))
@@ -249,13 +332,16 @@ public class BackgroundSigDiscovery
             if(mConfig.LogVerbose)
             {
                 LOGGER.debug(String.format("added bg(%d) samples(%d & %d) totals(%d & %d) css(%.4f)",
-                        bucketGroup.getId(), samIndex1, maxOtherSample, sample1.getTotalCount(), sample2.getTotalCount(), maxCss));
+                        bucketGroup.getId(), sample1.Id, bestOtherSample.Id,
+                        sample1.getTotalCount(), bestOtherSample.getTotalCount(), maxSampleCss));
             }
 
             candidateGroups.add(bucketGroup);
         }
 
-        LOGGER.debug("cancerType({}) created {} candidate bucket groups", cancerType, candidateGroups.size());
+        LOGGER.debug("cancerType({}) created {} candidate bucket groups, maxCss({})",
+                cancerType, candidateGroups.size(), String.format("%.3f", maxAnyCss));
+
         return candidateGroups;
     }
 
@@ -279,8 +365,10 @@ public class BackgroundSigDiscovery
                 double allocCountTotal = sample.getPotentialCounts(bgRatios, mAllBuckets, bucketGroup.getRatioRanges(), allocCounts);
                 double allocPercent = allocCountTotal / sample.getTotalCount();
 
+                boolean highMutLoadSample = allocCountTotal > mutLoadThreshold;
+
                 // adjust allocation down below the ML threshold if required
-                if(allocCountTotal > mutLoadThreshold)
+                if(highMutLoadSample)
                 {
                     double reduceRatio = mutLoadThreshold / allocCountTotal;
                     allocCountTotal = mutLoadThreshold;
@@ -295,8 +383,11 @@ public class BackgroundSigDiscovery
                 bucketGroup.addPotentialAllocation(allocCountTotal);
                 bucketGroup.addPotentialAdjAllocation(allocCountTotal * allocPercent);
 
-                // add sample counts so ratios can be adjusted after the top group is selected
-                bucketGroup.addSample(sampleId, allocCounts);
+                if(!highMutLoadSample)
+                {
+                    // add sample counts so ratios can be adjusted after the top group is selected
+                    bucketGroup.addSample(sampleId, allocCounts);
+                }
             }
 
             if(topGroup == null || bucketGroup.getPotentialAdjAllocation() > topGroup.getPotentialAdjAllocation())
@@ -311,14 +402,15 @@ public class BackgroundSigDiscovery
             return null;
         }
 
-        double[] initialRatios = topGroup.getBucketRatios();
+        double[] initialRatios = new double[mBucketCount];
+        copyVector(topGroup.getBucketRatios(), initialRatios);
 
         topGroup.recalcBucketRatios(mConfig.MutLoadWeightFactor);
 
         double ratioChangeCss = calcSharedCSS(initialRatios, topGroup.getBucketRatios());
 
-        LOGGER.info(String.format("cancerType(%s) top group with allocation(%.0f) ratioChangeCss(%.3f)",
-                cancerType, topGroup.getPotentialAllocation(), ratioChangeCss));
+        LOGGER.info(String.format("cancerType(%s) top group(%d:%s) with allocation(%.0f) ratioChangeCss(%.3f)",
+                cancerType, topGroup.getId(), topGroup.getTag(), topGroup.getPotentialAllocation(), ratioChangeCss));
 
         return topGroup;
     }
@@ -335,6 +427,12 @@ public class BackgroundSigDiscovery
         // first clear all existing allocations of samples to groups and vice versa
         final double[] bgRatios = bucketGroup.getBucketRatios();
 
+        double sampleCountTotal = 0;
+        double groupAllocTotal = 0;
+
+        double lmlSampleCountTotal = 0;
+        double lmlGroupAllocTotal = 0;
+
         for (Integer sampleId : sampleIds)
         {
             final SampleData sample = mSampleData.get(sampleId);
@@ -342,7 +440,9 @@ public class BackgroundSigDiscovery
             double[] allocCounts = new double[mBucketCount];
             double allocCountTotal = sample.getPotentialCounts(bgRatios, mAllBuckets, bucketGroup.getRatioRanges(), allocCounts);
 
-            if(allocCountTotal > mutLoadThreshold)
+            boolean highMutLoadSample = allocCountTotal > mutLoadThreshold;
+
+            if(highMutLoadSample)
             {
                 double reduceRatio = mutLoadThreshold / allocCountTotal;
 
@@ -355,6 +455,15 @@ public class BackgroundSigDiscovery
             allocCountTotal = sample.allocateBucketCounts(allocCounts);
             double allocPercent = allocCountTotal / sample.getTotalCount();
 
+            sampleCountTotal += min(sample.getTotalCount(), mutLoadThreshold);
+            groupAllocTotal += allocCountTotal;
+
+            if(sample.getTotalCount() <= mutLoadThreshold)
+            {
+                lmlSampleCountTotal += min(sample.getTotalCount(), mutLoadThreshold);
+                lmlGroupAllocTotal += allocCountTotal;
+            }
+
             bucketGroup.addSample(sample.Id, allocCounts);
 
             sample.addBucketGroup(bucketGroup, allocPercent);
@@ -366,8 +475,156 @@ public class BackgroundSigDiscovery
                     sampleId, bucketGroup.getId(), sizeToStr(allocCountTotal), allocPercent, sizeToStr(sample.getTotalCount())));
         }
 
+        LOGGER.debug(String.format("cancerType(%s samples=%d) group(%d:%s) low-ML alloc(%s perc=%.3f of %s) all alloc(%s perc=%.3f of %s)",
+                cancerType, sampleIds.size(), bucketGroup.getId(), bucketGroup.getTag(),
+                sizeToStr(lmlGroupAllocTotal), lmlGroupAllocTotal/lmlSampleCountTotal, sizeToStr(lmlSampleCountTotal),
+                sizeToStr(groupAllocTotal), groupAllocTotal/sampleCountTotal, sizeToStr(sampleCountTotal)));
+
         mBackgroundCounts.cacheTranspose();
     }
+
+    private void compareGroups()
+    {
+        final List<BucketGroup> bucketGroups = getBucketGroups();
+
+        if(bucketGroups.size() <= 1)
+            return;
+
+        SigMatrix sigMatrix = new SigMatrix(mBucketCount, bucketGroups.size());
+
+        for(int i = 0; i < bucketGroups.size(); ++i)
+        {
+            sigMatrix.setCol(i, bucketGroups.get(i).getBucketRatios());
+        }
+
+        double internalSigCssThreshold = SIG_SIMILAR_CSS * 0.9;
+
+        // first the internally generated ones
+        List<double[]> cssResults = getTopCssPairs(
+                sigMatrix, sigMatrix, internalSigCssThreshold, true, true, true, false);
+
+        if (cssResults.isEmpty())
+        {
+            LOGGER.debug("no similar proposed sigs from bucket groups");
+        }
+        else
+        {
+            for (final double[] result : cssResults)
+            {
+                double css = result[CSSR_VAL];
+                int sigId1 = (int)result[CSSR_I1];
+                int sigId2 = (int)result[CSSR_I2];
+                final BucketGroup bg1 = bucketGroups.get(sigId1);
+                final BucketGroup bg2 = bucketGroups.get(sigId2);
+
+                LOGGER.debug(String.format("background sig(%d:%s) matches sig(%d:%s) with css(%.6f)",
+                        sigId1, bg1.getCancerType(), bg2.getId(), bg2.getCancerType(), css));
+            }
+        }
+    }
+
+    private void checkSampleVsOtherSigs()
+    {
+        double[] allocCounts = new double[mBucketCount];
+
+        Map<String,Integer> misAllocPairingCounts = Maps.newHashMap();
+        Map<String,Integer> misAllocCancerCounts = Maps.newHashMap();
+
+        for(SampleData sample : mSampleData)
+        {
+            double mutLoadThreshold = mCancerMutLoadThresholds.containsKey(sample.getCancerType()) ?
+                    mCancerMutLoadThresholds.get(sample.getCancerType()) : mCancerMutLoadThresholds.get(CANCER_TYPE_OTHER);
+
+            if(sample.getTotalCount() > mutLoadThreshold)
+                continue;
+
+            double allocPerc = sample.getAllocPercent();
+            double allocTotal = sample.getAllocatedCount();
+            double allocThreshold = allocTotal * 1.1;
+
+            BucketGroup maxOtherGroup = null;
+            double maxOtherAlloc = 0;
+
+            for(Map.Entry<String,BucketGroup> entry : mCancerBucketGroups.entrySet())
+            {
+                final String cancerType = entry.getKey();
+
+                if(cancerType.equals(sample.getCancerType()))
+                    continue;
+
+                final BucketGroup bucketGroup = entry.getValue();
+
+                double sigAllocTotal = sample.getPotentialCounts(
+                        bucketGroup.getBucketRatios(), mAllBuckets, bucketGroup.getRatioRanges(), allocCounts);
+
+                if(sigAllocTotal > allocThreshold && sigAllocTotal > maxOtherAlloc)
+                {
+                    maxOtherAlloc = sigAllocTotal;
+                    maxOtherGroup = bucketGroup;
+                }
+            }
+
+            if(maxOtherGroup != null)
+            {
+                String misAllocTypes = sample.getCancerType() + "_" + maxOtherGroup.getCancerType();
+
+                Integer count = misAllocPairingCounts.get(misAllocTypes);
+                if(count == null)
+                    misAllocPairingCounts.put(misAllocTypes, 1);
+                else
+                    misAllocPairingCounts.put(misAllocTypes, count+1);
+
+                count = misAllocCancerCounts.get(sample.getCancerType());
+
+                if(count == null)
+                    misAllocCancerCounts.put(sample.getCancerType(), 1);
+                else
+                    misAllocCancerCounts.put(sample.getCancerType(), count+1);
+
+                LOGGER.info(String.format("sample(%s) own cancerType(%s alloc=%.3f) less than otherCT(%s alloc=%.3f) of total(%s)",
+                        sample.Id, sample.getCancerType(), allocPerc,
+                        maxOtherGroup.getCancerType(), maxOtherAlloc/sample.getTotalCount(), sizeToStr(sample.getTotalCount())));
+            }
+        }
+
+        for(Map.Entry<String,Integer> entry : misAllocCancerCounts.entrySet())
+        {
+            final String cancerType = entry.getKey();
+
+            int ctSampleCount = mCancerSamplesMap.containsKey(cancerType) ?
+                    mCancerSamplesMap.get(cancerType).size() : mCancerSamplesMap.get(CANCER_TYPE_OTHER).size();
+
+            int misAllocCount = entry.getValue();
+            double misAllocPerc = misAllocCount/(double)ctSampleCount;
+
+            if(misAllocPerc >= 0.05 && misAllocCount >= 5)
+            {
+                LOGGER.info(String.format("mis-allocation cancerType(%s) counts(%s) perc(%.3f of %d)",
+                        cancerType, entry.getValue(), misAllocPerc, ctSampleCount));
+            }
+        }
+
+        for(Map.Entry<String,Integer> entry : misAllocPairingCounts.entrySet())
+        {
+            final String misAllocTypes = entry.getKey();
+            final String[] cancerTypes = misAllocTypes.split("_");
+            final String initCancerType = cancerTypes[0];
+
+            int ctSampleCount = mCancerSamplesMap.containsKey(initCancerType) ?
+                    mCancerSamplesMap.get(initCancerType).size() : mCancerSamplesMap.get(CANCER_TYPE_OTHER).size();
+
+            int misAllocCount = entry.getValue();
+            double misAllocPerc = misAllocCount/(double)ctSampleCount;
+
+            if(misAllocPerc >= 0.05 && misAllocCount >= 5)
+            {
+                LOGGER.info(String.format("mis-allocation combo(%s) counts(%s) perc(%.3f of %d)",
+                        entry.getKey(), entry.getValue(), misAllocPerc, ctSampleCount));
+            }
+        }
+    }
+
+
 
     /* OLD METHODS
 
