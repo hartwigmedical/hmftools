@@ -7,7 +7,7 @@ import com.hartwig.hmftools.sig_analyser.nmf.NmfRun;
 
 import org.junit.Test;
 
-public class SigMatrixTests
+public class SigMatrixTest
 {
     @Test
     public void testSigCompare()

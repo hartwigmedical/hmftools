@@ -54,8 +54,8 @@ public class BucketGroup  {
     private String mEffects;
     private String mGroupLinks;
     private String mRefSigs;
-    private double mMaxSimiliarScore;
-    private BucketGroup mMaxSimiliarGroup;
+    private double mMaxSimilarScore;
+    private BucketGroup mMaxSimilarGroup;
 
     private double mPurity; // for now a percentage of sample buckets that are elevated
 
@@ -94,8 +94,8 @@ public class BucketGroup  {
         mEffects = "";
         mGroupLinks = "";
         mRefSigs = "";
-        mMaxSimiliarScore = 0;
-        mMaxSimiliarGroup = null;
+        mMaxSimilarScore = 0;
+        mMaxSimilarGroup = null;
     }
 
     private void initialise(final double[] counts)
@@ -536,9 +536,9 @@ public class BucketGroup  {
         return fitScore;
     }
 
-    public void setMaxSimiliarScore(double value) { mMaxSimiliarScore = value; }
-    public double getMaxSimiliarScore() { return mMaxSimiliarScore; }
-    public final BucketGroup getMaxSimiliarGroup() { return mMaxSimiliarGroup; }
-    public void setMaxSimiliarGroup(final BucketGroup group ) { mMaxSimiliarGroup = group; }
+    public void setMaxSimilarScore(double value) { mMaxSimilarScore = value; }
+    public double getMaxSimilarScore() { return mMaxSimilarScore; }
+    public final BucketGroup getMaxSimilarGroup() { return mMaxSimilarGroup; }
+    public void setMaxSimilarGroup(final BucketGroup group ) { mMaxSimilarGroup = group; }
 
 }

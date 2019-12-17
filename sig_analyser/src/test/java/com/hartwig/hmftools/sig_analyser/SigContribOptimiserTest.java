@@ -14,11 +14,13 @@ import com.hartwig.hmftools.sig_analyser.buckets.SigContribOptimiser;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.junit.Ignore;
 import org.junit.Test;
 
-public class SigContribOptimiserTests
+public class SigContribOptimiserTest
 {
     @Test
+    @Ignore
     public void testSampleFit1()
     {
         // Configurator.setRootLevel(Level.DEBUG);
@@ -96,6 +98,7 @@ public class SigContribOptimiserTests
     }
 
     @Test
+    @Ignore
     public void testSampleFit2()
     {
         // Configurator.setRootLevel(Level.DEBUG);
@@ -170,6 +173,7 @@ public class SigContribOptimiserTests
     }
 
     @Test
+    @Ignore
     public void testSampleFitWithNoise()
     {
         Configurator.setRootLevel(Level.DEBUG);

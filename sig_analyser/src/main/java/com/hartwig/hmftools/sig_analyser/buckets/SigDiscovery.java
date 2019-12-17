@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
 
 public class SigDiscovery
 {
-    private BucketAnalyser mAnalyser;
+    private final BucketAnalyser mAnalyser;
     private BaConfig mConfig;
     private List<SampleData> mSampleData;
     private SigMatrix mSampleCounts;

@@ -6,9 +6,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
-public class SigOptimiserTests
+public class SigOptimiserTest
 {
-    private static final Logger LOGGER = LogManager.getLogger(SigOptimiserTests.class);
+    private static final Logger LOGGER = LogManager.getLogger(SigOptimiserTest.class);
 
 
     @Test

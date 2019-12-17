@@ -8,12 +8,14 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.PERMITTED_PROB_NOISE;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcLogLikelihood;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.google.common.collect.Lists;
@@ -174,6 +176,18 @@ public class DataUtils {
         {
             counts[i] /= total;
         }
+    }
+
+    public static int calcRangeValue(final Map<Integer,Integer> rangeMap, int value)
+    {
+        Integer rangeVal = rangeMap.get(value);
+        if (rangeVal == null)
+        {
+            rangeVal = CosineSim.calcPoissonRangeGivenProb(value, PERMITTED_PROB_NOISE);
+            rangeMap.put(value, rangeVal);
+        }
+
+        return rangeVal;
     }
 
     public static List<Integer> getMatchingList(final List<Integer> list1, final List<Integer> list2)
@@ -415,7 +429,7 @@ public class DataUtils {
         int iterations = 0;
         int maxIterations = 10;
 
-        double currentAlloc = dataTotal; // (minPosAlloc + lsAlloc) * 0.5;
+        double currentAlloc = dataTotal;
         double lowerAlloc = minPosAlloc;
         double upperAlloc = dataTotal;
         double probDiff = 0;

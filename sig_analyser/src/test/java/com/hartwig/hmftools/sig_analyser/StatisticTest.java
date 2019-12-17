@@ -4,7 +4,7 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.junit.Test;
 
-public class StatisticTests
+public class StatisticTest
 {
     @Test
     public void testExternalFunctions()

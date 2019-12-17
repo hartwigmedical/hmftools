@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sig_analyser;
 
 import org.junit.Test;
 
-public class SigSampleTests
+public class SigSampleTest
 {
     @Test
     public void testSampleAllocActuals()

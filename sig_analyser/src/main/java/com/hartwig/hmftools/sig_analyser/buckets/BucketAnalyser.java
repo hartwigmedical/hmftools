@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAJOR_GROUP_SAM
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_CANDIDATE_GROUPS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_ELEVATED_PROB;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MAX_NOISE_TO_SAMPLE_RATIO;
+import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_CANCER_TYPE_SAMPLES;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT_LOWER;
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.PERMITTED_PROB_NOISE;
@@ -36,6 +37,7 @@ import static com.hartwig.hmftools.sig_analyser.buckets.SigOptimiser.SMALL_RATIO
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.addVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcBestFitWithinProbability;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcRangeValue;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doubleToStr;
@@ -72,12 +74,11 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BucketAnalyser {
-
-    private static final Logger LOGGER = LogManager.getLogger(BucketAnalyser.class);
-
+public class BucketAnalyser
+{
     private GenericDataCollection mDataCollection;
     private SigDiscovery mSigDiscovery;
+    private BackgroundSigDiscovery mBackgroundSigDiscovery;
     private BaReporter mReporter;
     private BaConfig mConfig;
 
@@ -92,13 +93,11 @@ public class BucketAnalyser {
 
     private Map<String, double[]> mCancerTypeBucketRatiosMap; // cancer-type to median bucket ratios (ie background sigs)
     private SigMatrix mBucketProbs;
-    private SigMatrix mBackgroundCounts;
     private SigMatrix mElevatedCounts; // actual - expected, capped at zero
     private double mElevatedCount;
     private double mBackgroundCount;
     private SigMatrix mPermittedElevRange;
     private SigMatrix mPermittedBgRange;
-    private List<Double> mSampleBgAllocations;
 
     private SigMatrix mProposedSigs;
     private List<Integer> mSigToBgMapping; // for each proposed sig, a mapping can be made back to the bucket group that it came from
@@ -110,18 +109,18 @@ public class BucketAnalyser {
     private List<SampleData> mSampleData;
     private GenericDataCollection mExtSampleData;
     private HashMap<String,Integer> mExtCategoriesMap;
-    private HashMap<String, List<Integer>> mCancerSamplesMap;
-    private boolean mLoadedSampleCalcData;
+    private final HashMap<String, List<Integer>> mCancerSamplesMap;
 
     private int mNextBucketId;
     private List<BucketGroup> mBucketGroups;
     private List<BucketGroup> mFinalBucketGroups;
     private List<BucketGroup> mTopAllocBucketGroups;
-    private List<BucketGroup> mBackgroundGroups;
     private List<BucketGroup> mSkippedBucketGroups;
     private List<Integer> mSkippedSamples;
     private List<Integer> mReassessSamples;
     private int mLastRunGroupCount;
+
+    private Map<Integer, Integer> mNoiseRangeMap;
 
     BufferedWriter mBgInterimFileWriter;
     BufferedWriter mBgRatioRangeFileWriter;
@@ -145,12 +144,15 @@ public class BucketAnalyser {
 
     private boolean mHasErrors;
 
+    private static final Logger LOGGER = LogManager.getLogger(BucketAnalyser.class);
+
     public BucketAnalyser()
     {
         mOutputDir = "";
         mOutputFileId = "";
         mConfig = new BaConfig();
         mSigDiscovery = null;
+        mBackgroundSigDiscovery = null;
         mHasErrors = false;
 
         mDataCollection = null;
@@ -160,29 +162,26 @@ public class BucketAnalyser {
         mActiveSampleCount = 0;
         mBucketCount = 0;
         mSampleCount = 0;
-        mBackgroundCounts = null;
         mElevatedCounts = null;
         mElevatedCount = 0;
         mBackgroundCount = 0;
         mPermittedElevRange = null;
         mPermittedBgRange = null;
         mCancerTypeBucketRatiosMap = null;
-        mSampleBgAllocations = Lists.newArrayList();
+        mNoiseRangeMap = new HashMap();
 
         mSampleData = Lists.newArrayList();
 
         mExtSampleData = null;
         mExtCategoriesMap = null;
-        mCancerSamplesMap = null;
+        mCancerSamplesMap = new HashMap();
         mProposedSigs = null;
         mSigToBgMapping = Lists.newArrayList();
-        mLoadedSampleCalcData = false;
 
         mNextBucketId = 0;
         mBucketGroups = Lists.newArrayList();
         mTopAllocBucketGroups = Lists.newArrayList();
         mFinalBucketGroups = Lists.newArrayList();
-        mBackgroundGroups = Lists.newArrayList();
         mSkippedSamples = Lists.newArrayList();
         mReassessSamples = Lists.newArrayList();
         mSkippedBucketGroups = Lists.newArrayList();
@@ -222,6 +221,15 @@ public class BucketAnalyser {
         mSampleCounts.cacheTranspose();
         mSampleCount = mSampleCounts.Cols;
         mBucketCount = mSampleCounts.Rows;
+
+        mSampleTotals = new double[mSampleCount];
+
+        for (int i = 0; i < mSampleCount; ++i)
+        {
+            mSampleTotals[i] = sumVector(mSampleCounts.getCol(i));
+        }
+
+        mTotalCount = sumVector(mSampleTotals);
 
         if(cmd.hasOption(NMF_REF_SIG_FILE))
         {
@@ -320,35 +328,12 @@ public class BucketAnalyser {
 
         populateCancerSamplesMap();
 
-        if(cmd.hasOption(BA_SAMPLE_CALC_DATA_FILE))
-        {
-            final String fileName = cmd.getOptionValue(BA_SAMPLE_CALC_DATA_FILE);
-            GenericDataCollection bgSampleAllocations = GenericDataLoader.loadFile(fileName, GD_TYPE_STRING);
-            List<List<String>> dataSet = bgSampleAllocations.getStringData();
-
-            for(final List<String> sampleData : dataSet)
-            {
-                // first 2 fields are sampleId and sampleName, other fields are data related
-                if(sampleData.size() < 3)
-                {
-                    mHasErrors = true;
-                    break;
-                }
-
-                int sampleId = Integer.parseInt(sampleData.get(SCD_COL_SAMPLE_ID));
-                double bgAllocation = Double.parseDouble(sampleData.get(SCD_COL_BG_ALLOC));
-                mSampleBgAllocations.add(sampleId, bgAllocation);
-            }
-
-            LOGGER.debug("loaded {} sample calc data fields", dataSet.size());
-            mLoadedSampleCalcData = true;
-        }
-
         mReporter.setInitialState(
                 mDataCollection, mOutputDir, mOutputFileId, mSampleCounts, mSampleData,
-                mExtSampleData, mExtCategoriesMap, mCancerSamplesMap, mFinalBucketGroups, mBackgroundGroups);
+                mExtSampleData, mExtCategoriesMap, mCancerSamplesMap, mFinalBucketGroups, mBackgroundSigDiscovery.getBucketGroups());
 
         mSigDiscovery.setInitialState(mConfig, mSampleData, mSampleCounts);
+        mBackgroundSigDiscovery = new BackgroundSigDiscovery(mConfig, mSampleData, mCancerSamplesMap, mNoiseRangeMap);
 
         return !mHasErrors;
     }
@@ -366,20 +351,20 @@ public class BucketAnalyser {
         PerformanceCounter perfCounter = new PerformanceCounter("BucketMeanRatios");
 
         perfCounter.start("SplitCounts");
-        calcBucketMedianData();
+
+        if(mConfig.UseBackgroundCounts)
+            mBackgroundSigDiscovery.createBackgroundSigs();
 
         if(mHasErrors)
             return;
 
-        calcSampleBackgroundCounts();
         splitSampleCounts();
         calcCountsNoise();
         collectElevatedSampleBuckets();
 
-        mReporter.setPreRunState(mSampleTotals, mBackgroundCounts, mElevatedCounts, mTotalCount, mElevatedCount, mActiveSampleCount);
+        mReporter.setPreRunState(
+                mSampleTotals, mBackgroundSigDiscovery.getBackgroundCounts(), mElevatedCounts, mTotalCount, mElevatedCount, mActiveSampleCount);
 
-        // back-ground groups using expected counts
-        formBackgroundBucketGroups();
         mReporter.logOverallStats();
         perfCounter.stop();
 
@@ -479,7 +464,7 @@ public class BucketAnalyser {
 
                 mReporter.logOverallStats();
                 mFinalBucketGroups.add(nextBestGroup);
-                updateGroupSimiliarityData();
+                updateGroupSimilarityData();
 
                 lastGroupWasMajor = isMajorGroup(nextBestGroup);
 
@@ -557,7 +542,7 @@ public class BucketAnalyser {
         writeFinalBucketGroups();
         writeSampleData();
         writeSampleGroupData();
-        writeSampleCalcData();
+        writeBackgroundSigs();
 
         perfCounter.logStats();
 
@@ -594,153 +579,22 @@ public class BucketAnalyser {
         return true;
     }
 
-    private void calcBucketMedianData()
-    {
-        mSampleTotals = new double[mSampleCount];
-
-        for (int i = 0; i < mSampleCount; ++i)
-        {
-            mSampleTotals[i] = sumVector(mSampleCounts.getCol(i));
-        }
-
-        mTotalCount = sumVector(mSampleTotals);
-
-        mCancerTypeBucketRatiosMap = Maps.newHashMap();
-
-        double[][] scData = mSampleCounts.getData();
-
-        for (Map.Entry<String, List<Integer>> entry : mCancerSamplesMap.entrySet())
-        {
-            final String cancerType = entry.getKey();
-            final List<Integer> sampleIds = entry.getValue();
-
-            // add the counts from every sample with mutational load below the threshold
-            // and then infer a background signature (literally bucket ratios) from those only
-            int samplesIncluded = 0;
-
-            List<double[]> sampleBucketRatios = Lists.newArrayList();
-
-            for (int j = 0; j < sampleIds.size(); ++j)
-            {
-                int sampleId = sampleIds.get(j);
-
-                double sampleTotal = mSampleTotals[sampleId];
-
-                if (sampleTotal > mConfig.MutationalLoadCap)
-                    continue;
-
-                ++samplesIncluded;
-
-                double[] bucketRatios = new double[mBucketCount];
-
-                for (int i = 0; i < mBucketCount; ++i)
-                {
-                    bucketRatios[i] = scData[i][sampleId] / sampleTotal;
-                }
-
-                sampleBucketRatios.add(bucketRatios);
-            }
-
-            double includedSamplesPerc = samplesIncluded / (double)sampleIds.size();
-            if(samplesIncluded < 5 || includedSamplesPerc < 0.1)
-            {
-                // now convert back to average counts
-                LOGGER.warn("cancerType({}) has too few({}) low mutational load samples vs total({})", cancerType, samplesIncluded, sampleIds.size());
-
-                if(mConfig.UseBackgroundCounts)
-                {
-                    mHasErrors = true;
-                    break;
-                }
-            }
-
-            if(samplesIncluded > 0)
-            {
-                // now convert back to average counts
-                LOGGER.debug("cancerType({}) has {} low mutational load samples", cancerType, samplesIncluded);
-
-                int medianIndex = samplesIncluded / 2;
-
-                double[] medianBucketRatios = new double[mBucketCount];
-
-                for (int i = 0; i < mBucketCount; ++i)
-                {
-                    double[] bucketRatios = new double[samplesIncluded];
-
-                    for (int j = 0; j < sampleBucketRatios.size(); ++j)
-                    {
-                        double[] sampleRatios = sampleBucketRatios.get(j);
-                        bucketRatios[j] = sampleRatios[i];
-                    }
-
-                    // sort these and then take the median
-                    List<Integer> sortedRatioIndices = getSortedVectorIndices(bucketRatios, true);
-                    int medianRatioIndex = sortedRatioIndices.get(medianIndex);
-                    double medianRatio = bucketRatios[medianRatioIndex];
-                    medianBucketRatios[i] = medianRatio;
-                }
-
-                // convert to a percent
-                convertToPercentages(medianBucketRatios);
-                mCancerTypeBucketRatiosMap.put(cancerType, medianBucketRatios);
-            }
-        }
-    }
-
-    private void calcSampleBackgroundCounts()
-    {
-        if(!mSampleBgAllocations.isEmpty())
-            return;
-
-        LOGGER.debug("calculating sample background counts");
-
-        for(int s = 0; s < mSampleCount; ++s)
-        {
-            mSampleBgAllocations.add(s, 0.0);
-        }
-
-        if(!mConfig.UseBackgroundCounts)
-            return;
-
-        final double[][] scData = mSampleCounts.getData();
-
-        for (Map.Entry<String, double[]> entry : mCancerTypeBucketRatiosMap.entrySet())
-        {
-            final String type = entry.getKey();
-            List<Integer> sampleIds = mCancerSamplesMap.get(type);
-
-            final double[] medianRatios = entry.getValue();
-
-            for (Integer sampleId : sampleIds)
-            {
-                double[] sampleBgCounts = new double[mBucketCount];
-
-                for (int i = 0; i < mBucketCount; ++i)
-                {
-                    int expectedCount = (int) round(medianRatios[i] * min(mSampleTotals[sampleId], mConfig.MutationalLoadCap));
-                    sampleBgCounts[i] = min(expectedCount, scData[i][sampleId]);
-                }
-
-                double optimalBgCount = calcBestFitWithinProbability(sampleId, medianRatios, sampleBgCounts, 0.99, 0.01);
-                mSampleBgAllocations.set(sampleId, optimalBgCount);
-            }
-        }
-    }
-
     private void splitSampleCounts()
     {
+        // split each sample's bucket counts into background and elevated
+        // and additionally calculate a probability for each bucket that it is elevated above the background
         LOGGER.debug("splitting sample counts");
 
         // work out bucket median values (literally 50th percentile values)
         mBucketProbs = new SigMatrix(mBucketCount, mSampleCount);
-        mBackgroundCounts = new SigMatrix(mBucketCount, mSampleCount);
         mElevatedCounts = new SigMatrix(mBucketCount, mSampleCount);
 
         double[][] probData = mBucketProbs.getData();
-        double[][] bgData = mBackgroundCounts.getData();
+        double[][] bgData = mBackgroundSigDiscovery.getBackgroundCounts().getData();
         double[][] elevData = mElevatedCounts.getData();
         final double[][] scData = mSampleCounts.getData();
 
+        // record the frequency of each calculated probability - purely for logging purposes
         int probExpMax = 15;
         int[] probFrequencies = new int[probExpMax+1];
         double minProb = pow(10, -probExpMax);
@@ -748,103 +602,58 @@ public class BucketAnalyser {
 
         int gridSize = mSampleCount * mBucketCount;
 
-        for(Map.Entry<String, double[]> entry: mCancerTypeBucketRatiosMap.entrySet())
+        for (int i = 0; i < mBucketCount; ++i)
         {
-            final String type = entry.getKey();
-
-            double[] medianRatios = entry.getValue();
-
-            List<Integer> sampleIds = mCancerSamplesMap.get(type);
-
-            for (int i = 0; i < mBucketCount; ++i)
+            for(int j = 0; j < mSampleCount; ++j)
             {
-                double bucketMedianRatio = medianRatios[i];
+                int sbCount = (int)scData[i][j];
 
-                for (int samIndex = 0; samIndex < sampleIds.size(); ++samIndex)
+                int backgroundCount = (int)bgData[i][j];
+
+                if(sbCount < backgroundCount) // must be capped by the actual count
+                    backgroundCount = sbCount;
+
+                int elevatedCount = sbCount - backgroundCount;
+
+                // compute a range for Poisson noise around this elevated count
+                if (elevatedCount > 0)
                 {
-                    int j = sampleIds.get(samIndex);
+                    elevData[i][j] = elevatedCount;
+                }
 
-                    double bgAllocation = mSampleBgAllocations.get(samIndex);
+                double prob = 1;
 
-                    int sbCount = (int)scData[i][j];
+                if (backgroundCount == 0)
+                {
+                    prob = 0;
+                }
+                else if (elevatedCount > 0)
+                {
+                    PoissonDistribution poisDist = new PoissonDistribution(backgroundCount);
+                    prob = 1 - poisDist.cumulativeProbability(sbCount - 1);
+                    prob = min(prob * gridSize, 1); // apply false discovery rate being # tests
+                }
 
-                    int backgroundCount = (int)round(bucketMedianRatio * bgAllocation);
+                probData[i][j] = prob;
 
-                    if(sbCount < backgroundCount) // must be capped by the actual count
-                        backgroundCount = sbCount;
+                if (prob > minProb && prob < 0.1)
+                {
+                    int baseProb = -(int) round(log10(prob));
 
-                    bgData[i][j] = backgroundCount;
-
-                    int elevatedCount = sbCount - backgroundCount;
-
-                    // compute a range for Poisson noise around this elevated count
-                    if (elevatedCount > 0)
-                    {
-                        elevData[i][j] = elevatedCount;
-                    }
-
-                    double prob = 1;
-
-                    if (backgroundCount == 0)
-                    {
-                        prob = 0;
-                    }
-                    else if (elevatedCount > 0)
-                    {
-                        PoissonDistribution poisDist = new PoissonDistribution(backgroundCount);
-                        prob = 1 - poisDist.cumulativeProbability(sbCount - 1);
-                        prob = min(prob * gridSize, 1); // apply false discovery rate being # tests
-                    }
-
-                    probData[i][j] = prob;
-
-                    if (prob > minProb && prob < 0.1)
-                    {
-                        int baseProb = -(int) round(log10(prob));
-
-                        if (baseProb >= 0 && baseProb <= probExpMax)
-                            probFrequencies[baseProb] += 1;
-                    }
-                    else if (prob < minProb)
-                    {
-                        // allocate to the last slot
-                        probFrequencies[zeroProbIndex] += 1;
-                    }
+                    if (baseProb >= 0 && baseProb <= probExpMax)
+                        probFrequencies[baseProb] += 1;
+                }
+                else if (prob < minProb)
+                {
+                    // allocate to the last slot
+                    probFrequencies[zeroProbIndex] += 1;
                 }
             }
         }
 
-        // if configured, switch all background counts to elevated
-        if(!mConfig.UseBackgroundCounts)
-        {
-            if(mCancerTypeBucketRatiosMap.isEmpty())
-            {
-                for (int i = 0; i < mBucketCount; ++i)
-                {
-                    for (int j = 0; j < mSampleCount; ++j)
-                    {
-                        elevData[i][j] = scData[i][j];
-                        bgData[i][j] = 0;
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < mBucketCount; ++i)
-                {
-                    for (int j = 0; j < mSampleCount; ++j)
-                    {
-                        elevData[i][j] += bgData[i][j];
-                        bgData[i][j] = 0;
-                    }
-                }
-            }
-        }
-
-        mBackgroundCounts.cacheTranspose();
         mElevatedCounts.cacheTranspose();
 
-        mBackgroundCount = mBackgroundCounts.sum();
+        mBackgroundCount = mBackgroundSigDiscovery.getBackgroundCounts().sum();
         mElevatedCount = mElevatedCounts.sum();
 
         LOGGER.debug(String.format("total counts: background(%s perc=%.3f) elevated(%s perc=%.3f) of total(%s)",
@@ -869,12 +678,10 @@ public class BucketAnalyser {
         if(!mConfig.ApplyNoise)
             return;
 
-        double[][] bgData = mBackgroundCounts.getData();
+        double[][] bgData = mBackgroundSigDiscovery.getBackgroundCounts().getData();
         double[][] elevData = mElevatedCounts.getData();
         double[][] permBgRangeData = mPermittedBgRange.getData();
         double[][] permElevRangeData = mPermittedElevRange.getData();
-
-        Map<Integer, Integer> rangeMap = new HashMap(); // cache range values
 
         for (int i = 0; i < mBucketCount; ++i)
         {
@@ -886,17 +693,8 @@ public class BucketAnalyser {
 
                     if (backgroundCount > 0)
                     {
-                        Integer rangeVal = rangeMap.get(backgroundCount);
-                        if (rangeVal == null)
-                        {
-                            rangeVal = CosineSim.calcPoissonRangeGivenProb(backgroundCount, PERMITTED_PROB_NOISE);
-                            permBgRangeData[i][j] = rangeVal;
-                            rangeMap.put(backgroundCount, rangeVal);
-                        }
-                        else
-                        {
-                            permBgRangeData[i][j] = rangeVal;
-                        }
+                        int rangeVal = calcRangeValue(mNoiseRangeMap, backgroundCount);
+                        permBgRangeData[i][j] = rangeVal;
                     }
                 }
 
@@ -905,17 +703,8 @@ public class BucketAnalyser {
                 // compute a range for Poisson noise around this elevated count
                 elevData[i][j] = elevatedCount;
 
-                Integer rangeVal = rangeMap.get(elevatedCount);
-                if (rangeVal == null)
-                {
-                    rangeVal = CosineSim.calcPoissonRangeGivenProb(elevatedCount, PERMITTED_PROB_NOISE);
-                    permElevRangeData[i][j] = rangeVal;
-                    rangeMap.put(elevatedCount, rangeVal);
-                }
-                else
-                {
-                    permElevRangeData[i][j] = rangeVal;
-                }
+                int rangeVal = mNoiseRangeMap.get(elevatedCount);
+                permElevRangeData[i][j] = rangeVal;
             }
         }
 
@@ -948,9 +737,6 @@ public class BucketAnalyser {
 
         mPermittedElevRange.cacheTranspose();
         mPermittedBgRange.cacheTranspose();
-
-        // TEMP to write out sample noise values
-        // writeSampleCountsNoise();
     }
 
     private void collectElevatedSampleBuckets()
@@ -1011,79 +797,6 @@ public class BucketAnalyser {
         LOGGER.debug(String.format("samples with elevated buckets: count(%d perc=%.2f), buckets(%d perc=%.3f)",
                 elevSampleCount, elevSampleCount/(double)mActiveSampleCount, totalCount, totalCount/(double)(mBucketCount * mActiveSampleCount)));
     }
-
-    private void formBackgroundBucketGroups()
-    {
-        if(!mConfig.UseBackgroundCounts)
-            return;
-
-        for (Map.Entry<String, List<Integer>> entry : mCancerSamplesMap.entrySet())
-        {
-            final String cancerType = entry.getKey();
-            List<Integer> sampleIds = entry.getValue();
-
-            if(!mConfig.SpecificCancer.isEmpty() && !mConfig.SpecificCancer.equals(cancerType))
-                continue;
-
-            assignToBackgroundBucketGroups(cancerType, sampleIds);
-        }
-    }
-
-    private void assignToBackgroundBucketGroups(final String cancerType, final List<Integer> sampleIds)
-    {
-        LOGGER.debug("cancerType({}) creating background groups for {} samples", cancerType, sampleIds.size());
-
-        final double[] bgBucketRatios = mCancerTypeBucketRatiosMap.get(cancerType);
-
-        if(bgBucketRatios == null)
-            return;
-
-        List<Integer> bucketIds = Lists.newArrayList();
-        for (int i = 0; i < mBucketCount; ++i)
-        {
-            if(bgBucketRatios[i] > 0)
-                bucketIds.add(i);
-        }
-
-        BucketGroup bucketGroup = new BucketGroup(mNextBucketId++);
-        bucketGroup.addBuckets(bucketIds);
-        bucketGroup.setCancerType(cancerType);
-        bucketGroup.setGroupType(BG_TYPE_BACKGROUND);
-        // bucketGroup.setTag(BG_TYPE_BACKGROUND);
-        bucketGroup.setBucketRatios(bgBucketRatios);
-
-        if(mConfig.UseRatioRanges)
-        {
-            bucketGroup.setRatioRangePerc(DEFAULT_SIG_RATIO_RANGE_PERCENT);
-        }
-
-        mBackgroundGroups.add(bucketGroup);
-
-        // for now add all samples to a single group per cancer type
-        for (int index = 0; index < sampleIds.size(); ++index)
-        {
-            int sampleId = sampleIds.get(index);
-            SampleData sample = mSampleData.get(sampleId);
-
-            if(sample.isExcluded())
-                continue;
-
-            double[] sampleCounts = mBackgroundCounts.getCol(sampleId);
-            double bgAllocTotal = sumVector(sampleCounts);
-            double allocPerc = bgAllocTotal / sample.getTotalCount();
-            sample.addBucketGroup(bucketGroup, allocPerc);
-
-            LOGGER.debug(String.format("sample(%d) added to background group(%d) alloc(%s perc=%.3f of %s)",
-                    sampleId, bucketGroup.getId(), sizeToStr(bgAllocTotal), allocPerc,
-                    sizeToStr(sample.getTotalCount())));
-
-            bucketGroup.addSample(sampleId, sampleCounts);
-        }
-
-        LOGGER.debug(String.format("background group(%d) samples(%d) totalAlloc(%s)",
-                bucketGroup.getId(), bucketGroup.getSampleCount(), sizeToStr(bucketGroup.getTotalCount())));
-    }
-
 
     private void populateTopBucketGroups()
     {
@@ -1350,19 +1063,19 @@ public class BucketAnalyser {
 
     private boolean similarToExistingGroup(BucketGroup bucketGroup)
     {
-        setGroupSimiliarityData(bucketGroup);
-        return bucketGroup.getMaxSimiliarScore() >= SIG_SIMILAR_CSS;
+        setGroupSimilarityData(bucketGroup);
+        return bucketGroup.getMaxSimilarScore() >= SIG_SIMILAR_CSS;
     }
 
-    private void updateGroupSimiliarityData()
+    private void updateGroupSimilarityData()
     {
         for(final BucketGroup bucketGroup : mFinalBucketGroups)
         {
-            setGroupSimiliarityData(bucketGroup);
+            setGroupSimilarityData(bucketGroup);
         }
     }
 
-    private void setGroupSimiliarityData(BucketGroup bucketGroup)
+    private void setGroupSimilarityData(BucketGroup bucketGroup)
     {
         // find the maximum similarity for a given group
         final List<Integer> bucketIds = bucketGroup.getBucketIds();
@@ -1412,8 +1125,8 @@ public class BucketAnalyser {
             }
         }
 
-        bucketGroup.setMaxSimiliarGroup(maxSimilarGroup);
-        bucketGroup.setMaxSimiliarScore(maxSimilarity);
+        bucketGroup.setMaxSimilarGroup(maxSimilarGroup);
+        bucketGroup.setMaxSimilarScore(maxSimilarity);
     }
 
     private void removeSkippedAllocations(List<BucketGroup> bucketGroups)
@@ -2272,14 +1985,14 @@ public class BucketAnalyser {
 
         if(mConfig.UseBackgroundCounts)
         {
-            LOGGER.debug("including {} background group(s)", mBackgroundGroups.size());
+            LOGGER.debug("including {} background group(s)", mBackgroundSigDiscovery.getBucketGroups().size());
 
             List<BucketGroup> elevatedGroups = Lists.newArrayList();
             elevatedGroups.addAll(mFinalBucketGroups);
 
             // put the BG groups first
             mFinalBucketGroups.clear();
-            mFinalBucketGroups.addAll(mBackgroundGroups);
+            mFinalBucketGroups.addAll(mBackgroundSigDiscovery.getBucketGroups());
             mFinalBucketGroups.addAll(elevatedGroups);
         }
 
@@ -3117,7 +2830,7 @@ public class BucketAnalyser {
 
                 writer.write(String.format(",%s,%s,%s,%d,%.4f",
                         bucketGroup.getRefSigs(), bucketGroup.getGroupLinks(), parentId >= 0 ? String.valueOf(parentId) : "",
-                        bucketGroup.getMaxSimiliarGroup() != null ? bucketGroup.getMaxSimiliarGroup().getId() : -1, bucketGroup.getMaxSimiliarScore()));
+                        bucketGroup.getMaxSimilarGroup() != null ? bucketGroup.getMaxSimilarGroup().getId() : -1, bucketGroup.getMaxSimilarScore()));
 
                 double[] bucketRatios = bucketGroup.getBucketRatios();
 
@@ -3229,8 +2942,6 @@ public class BucketAnalyser {
         if (mSampleData.isEmpty())
             return;
 
-        mCancerSamplesMap = new HashMap();
-
         List<String> cancerTypes = Lists.newArrayList();
 
         for (final SampleData sample : mSampleData)
@@ -3250,7 +2961,6 @@ public class BucketAnalyser {
 
         // put all low sample count by cancer type into the 'Other' cancer type mapping group
         String otherType = "Other";
-        int minSamples = 20;
 
         List<Integer> otherTypeList = mCancerSamplesMap.get(otherType);
         if (otherTypeList == null)
@@ -3265,7 +2975,7 @@ public class BucketAnalyser {
 
             List<Integer> samplesList = mCancerSamplesMap.get(cancerType);
 
-            if (samplesList.size() < minSamples)
+            if (samplesList.size() < MIN_CANCER_TYPE_SAMPLES)
             {
                 otherTypeList.addAll(samplesList);
                 mCancerSamplesMap.remove(cancerType);
@@ -3407,7 +3117,7 @@ public class BucketAnalyser {
 
                 writer.write(String.format("%d,%s,%s", sample.Id, sample.getSampleName(), sample.getCancerType()));
 
-                double bgTotal = sumVector(mBackgroundCounts.getCol(sample.Id));
+                double bgTotal = sumVector(mBackgroundSigDiscovery.getBackgroundCounts().getCol(sample.Id));
 
                 writer.write(String.format(",%.0f,%.0f,%.0f", sample.getTotalCount(), bgTotal, sample.getElevatedCount()));
 
@@ -3559,7 +3269,7 @@ public class BucketAnalyser {
         }
     }
 
-    public void writeSignatures(final SigMatrix signatures, final String fileId, final List<String> sigIds)
+    private void writeSignatures(final SigMatrix signatures, final String fileId, final List<String> sigIds)
     {
         try
         {
@@ -3598,7 +3308,7 @@ public class BucketAnalyser {
         }
     }
 
-    public void writeSampleContributions()
+    private void writeSampleContributions()
     {
         int sigCount = mFinalBucketGroups.size();
 
@@ -3647,7 +3357,7 @@ public class BucketAnalyser {
         }
     }
 
-    public void writeSampleSigBucketCounts()
+    private void writeSampleSigBucketCounts()
     {
         // write out the actual sample bucket allocations for each of a sample's sigs
         try
@@ -3694,7 +3404,7 @@ public class BucketAnalyser {
         }
     }
 
-    public void writeSampleSigAllocations()
+    private void writeSampleSigAllocations()
     {
         // write out the sample bucket group allocations plus excess (from overfitting with ratio ranges) and under allocations
         try
@@ -3750,27 +3460,44 @@ public class BucketAnalyser {
         }
     }
 
-    public void writeSampleCalcData()
+    private void writeBackgroundSigs()
     {
-        if(mLoadedSampleCalcData)
+        if(!mConfig.UseBackgroundCounts)
             return;
 
         try
         {
-            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_sam_calc_data.csv");
+            BufferedWriter writer = getNewFile(mOutputDir, mOutputFileId + "_ba_ct_bg_sigs.csv");
 
-            writer.write("SampleId,SampleName,BgAllocation");
+            final Map<String,BucketGroup> ctBucketGroups = mBackgroundSigDiscovery.getCancerBucketGroups();
+
+            String outputData = "";
+            for(final String cancerType : ctBucketGroups.keySet())
+            {
+                if(outputData.isEmpty())
+                    outputData = cancerType;
+                else
+                    outputData += "," + cancerType;
+            }
+
+            writer.write(outputData);
             writer.newLine();
 
-            for(int sampleId = 0; sampleId < mSampleCount; ++sampleId)
+            for(int bucket = 0; bucket < mBucketCount; ++bucket)
             {
-                final SampleData sample = mSampleData.get(sampleId);
+                outputData = "";
 
-                writer.write(String.format("%d,%s", sampleId, sample.getSampleName()));
+                for(final String cancerType : ctBucketGroups.keySet())
+                {
+                    final double[] ctRatios = ctBucketGroups.get(cancerType).getBucketRatios();
 
-                // computed fields to cache
-                writer.write(String.format(",%.0f", mSampleBgAllocations.get(sampleId)));
+                    if(outputData.isEmpty())
+                        outputData = String.format("%.6f", ctRatios[bucket]);
+                    else
+                        outputData += String.format(",%.6f", ctRatios[bucket]);
+                }
 
+                writer.write(outputData);
                 writer.newLine();
             }
 
@@ -3807,55 +3534,5 @@ public class BucketAnalyser {
             LOGGER.error("error writing sample noise file");
         }
     }
-
-    private boolean isWithinProbability(int sampleId, final double[] ratios, final double[] sampleData, boolean useElevated)
-    {
-        int[] result = checkPermittedSampleCounts(sampleId, ratios, sampleData, useElevated, false);
-        return result[PI_LOW] == 0 && result[PI_HIGH] == 0;
-    }
-
-    private static int PI_COUNT = 0;
-    private static int PI_LOW = 1;
-    private static int PI_HIGH = 2;
-
-    private int[] checkPermittedSampleCounts(int sampleId, final double[] ratios, final double[] sampleData, boolean useElevated, boolean verbose)
-    {
-        double sampleTotal = sumVector(sampleData);
-
-        final double[][] prData = useElevated ? mPermittedElevRange.getData() : mPermittedBgRange.getData();
-        final double[][] countData = useElevated ? mElevatedCounts.getData() : mBackgroundCounts.getData();
-
-        int[] result = new int[3];
-
-        for(int i = 0; i < sampleData.length; ++i)
-        {
-            if(sampleData[i] == 0)
-                continue;
-
-            if(prData[i][sampleId] == 0)
-                continue;
-
-            ++result[PI_COUNT];
-
-            double bucketValue = ratios[i] * sampleTotal;
-            double rangeHigh = countData[i][sampleId] + prData[i][sampleId];
-            double rangeLow = countData[i][sampleId] - prData[i][sampleId];
-
-            if(verbose && (bucketValue > rangeHigh || bucketValue < rangeLow))
-            {
-                LOGGER.debug("sample({}) value({}) vs range({} -> {})", sampleId, round(bucketValue), rangeLow, rangeHigh);
-            }
-
-            if(bucketValue > rangeHigh)
-                ++result[PI_HIGH];
-            else if(bucketValue < rangeLow)
-                ++result[PI_LOW];
-        }
-
-        // double llProb = calcLogLikelihood(sampleData, impliedCounts, false);
-
-        return result;
-    }
-
 
 }

@@ -355,9 +355,9 @@ public class BaReporter
             }
 
             String similarGroup = "";
-            if(bucketGroup.getMaxSimiliarGroup() != null)
+            if(bucketGroup.getMaxSimilarGroup() != null)
             {
-                similarGroup = String.format(" simGroup(%d %.3f)", bucketGroup.getMaxSimiliarGroup().getId(), bucketGroup.getMaxSimiliarScore());
+                similarGroup = String.format(" simGroup(%d %.3f)", bucketGroup.getMaxSimilarGroup().getId(), bucketGroup.getMaxSimilarScore());
             }
 
             LOGGER.debug(String.format("rank %d: bg(%d) %s cancer(%s) samples(%d) variants(avg=%s avgAllocPerc=%.3f total=%s perc=%.3f) buckets(%d: %s) effects(%s)%s",
@@ -793,7 +793,7 @@ public class BaReporter
                             testGroup.getId(), otherGroup.getId(), bucketIds.size(), otherBucketIds.size(),
                             sampleIds.size(), otherSampleIds.size(), commonSamples.size()));
 
-                    if(otherGroup.getMaxSimiliarGroup() != testGroup) // already known
+                    if(otherGroup.getMaxSimilarGroup() != testGroup) // already known
                         otherGroup.addGroupLinks(String.format("corr_bg_%d", testGroup.getId()));
                 }
             }
@@ -805,14 +805,14 @@ public class BaReporter
         // add annotations for very similar group
         for (BucketGroup bucketGroup : mFinalBucketGroups)
         {
-            if (bucketGroup.getMaxSimiliarGroup() == null)
+            if (bucketGroup.getMaxSimilarGroup() == null)
                 continue;
 
-            if (bucketGroup.getMaxSimiliarScore() < SIG_SIMILAR_CSS * 0.9)
+            if (bucketGroup.getMaxSimilarScore() < SIG_SIMILAR_CSS * 0.9)
                 continue;
 
             bucketGroup.addGroupLinks(String.format("sim_bg_%d_%.2f",
-                    bucketGroup.getMaxSimiliarGroup().getId(), bucketGroup.getMaxSimiliarScore()));
+                    bucketGroup.getMaxSimilarGroup().getId(), bucketGroup.getMaxSimilarScore()));
         }
     }
 
@@ -848,10 +848,10 @@ public class BaReporter
                             sigId2, bg2.getId(), bg2.getCancerType(), bg2.getEffects(), bg2.getSampleIds().size(), css));
 
                     // skip these annotation if already known
-                    if(bg1.getMaxSimiliarGroup() != bg2)
+                    if(bg1.getMaxSimilarGroup() != bg2)
                         bg1.addGroupLinks(String.format("css_bg_%d_%.2f", bg2.getId(), css));
 
-                    if(bg2.getMaxSimiliarGroup() != bg1)
+                    if(bg2.getMaxSimilarGroup() != bg1)
                         bg2.addGroupLinks(String.format("css_bg_%d_%.2f", bg1.getId(), css));
                 }
             }

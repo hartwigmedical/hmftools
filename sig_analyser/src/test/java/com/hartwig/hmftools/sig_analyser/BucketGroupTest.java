@@ -7,7 +7,7 @@ import com.hartwig.hmftools.sig_analyser.buckets.SampleData;
 
 import org.junit.Test;
 
-public class BucketGroupTests
+public class BucketGroupTest
 {
 
     @Test
