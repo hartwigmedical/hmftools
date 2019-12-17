@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -8,12 +7,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.SageChromosomeVCF;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
+import com.hartwig.hmftools.sage.vcf.SageChromosomeVCF;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,7 +84,6 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
             phase.flush();
             sageVCF.close();
             LOGGER.info("Finished processing chromosome {}", chromosome);
-            new File(vcfFilename()).deleteOnExit();
             return ChromosomePipeline.this;
         });
 
@@ -105,7 +103,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         }
 
         final AltContext normal = entry.normal();
-        if (normal.rawSupport() > config.filter().hardMaxNormalAltSupport()) {
+        if (normal.rawAltSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }
 

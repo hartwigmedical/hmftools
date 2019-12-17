@@ -76,7 +76,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         if (samRecord.getMappingQuality() >= minQuality) {
             consumerSelector.select(samRecord.getAlignmentStart(),
                     samRecord.getAlignmentEnd(),
-                    x -> x.primaryReadContext().accept(x.readDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig, refBases));
+                    x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig, refBases));
         }
     }
 }

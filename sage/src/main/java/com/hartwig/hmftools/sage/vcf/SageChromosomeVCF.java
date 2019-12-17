@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.vcf;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class SageChromosomeVCF implements AutoCloseable {
                 .modifyOption(Options.USE_ASYNC_IO, true)
                 .modifyOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER, true)
                 .build();
-        final VCFHeader header = SageVCF.header(config.reference(), config.tumor());
+        final VCFHeader header = SageVCF.header(config);
 
         LOGGER.info("Creating temporary file: {}", filename);
         writer.writeHeader(header);
@@ -47,6 +47,7 @@ public class SageChromosomeVCF implements AutoCloseable {
     @Override
     public void close() {
         writer.close();
+        new File(filename).deleteOnExit();
     }
 
 }
