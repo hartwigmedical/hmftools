@@ -32,8 +32,6 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
 
-    //    public final static String REF_CONTEXT = "REF";
-
     public final static String READ_CONTEXT = "RC";
     public final static String PASS = "PASS";
     public final static String MERGE_FILTER = "merge";
@@ -131,7 +129,6 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
-        //        header.addMetaDataLine(new VCFInfoHeaderLine(REF_CONTEXT, 1, VCFHeaderLineType.String, "Ref Context"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DIFFERENCE,
                 1,
