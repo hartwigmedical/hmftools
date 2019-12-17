@@ -37,6 +37,8 @@ final class CheckEvidenceCnv {
             if (!Collections.disjoint(entry.getValue(), allEvidenceForCopyNumbers) && !reportableGenes.contains(geneCopyNumber.gene())) {
                 LOGGER.warn("Copy number with evidence not reported: {}!", geneCopyNumber.gene());
             } else {
+                LOGGER.warn("Copy number is filtered out for: {}", geneCopyNumber.gene());
+
                 filterEvidenceMap.put(entry.getKey(), evidencePerGeneCopyNumber.get(geneCopyNumber));
             }
         }
