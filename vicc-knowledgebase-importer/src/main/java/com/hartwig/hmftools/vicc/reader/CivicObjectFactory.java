@@ -55,10 +55,14 @@ import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariant;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantGroup;
 import com.hartwig.hmftools.vicc.datamodel.civic.ImmutableCivicVariantType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class CivicObjectFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(CivicObjectFactory.class);
 
     private CivicObjectFactory() {
     }
@@ -81,7 +85,7 @@ final class CivicObjectFactory {
                 .variantGroups(createVariantGroups(optionalJsonArray(civicObject, "variant_groups")))
                 .variantTypes(createVariantTypes(civicObject.getAsJsonArray("variant_types")))
                 .hgvsExpressions(stringList(civicObject, "hgvs_expressions"))
-                .evidenceItems(createEvidenceItems(civicObject.getAsJsonArray("evidence_items")))
+                .evidenceItem(createEvidenceItem(civicObject.getAsJsonArray("evidence_items")))
                 .assertions(stringList(civicObject, "assertions"))
                 .civicActionabilityScore(nullableString(civicObject, "civic_actionability_score"))
                 .clinVarEntries(stringList(civicObject, "clinvar_entries"))
@@ -218,7 +222,7 @@ final class CivicObjectFactory {
     }
 
     @NotNull
-    private static List<CivicEvidenceItem> createEvidenceItems(@NotNull JsonArray evidenceItemArray) {
+    private static CivicEvidenceItem createEvidenceItem(@NotNull JsonArray evidenceItemArray) {
         List<CivicEvidenceItem> evidenceItemList = Lists.newArrayList();
         ViccDatamodelChecker evidenceItemChecker = ViccDatamodelCheckerFactory.civicEvidenceItemChecker();
 
@@ -246,7 +250,15 @@ final class CivicObjectFactory {
                     .id(string(evidenceItemObject, "id"))
                     .build());
         }
-        return evidenceItemList;
+
+        // In practice there is a 1-1 relation between civic entry and evidence item even thouygh this is modeled as an array.
+        if (evidenceItemList.isEmpty()) {
+            throw new IllegalStateException("No evidence items found in " + evidenceItemArray);
+        } else if (evidenceItemList.size() > 1) {
+            LOGGER.warn("More than 1 evidence item found for civic record. Count={}", evidenceItemList.size());
+        }
+
+        return evidenceItemList.get(0);
     }
 
     @NotNull

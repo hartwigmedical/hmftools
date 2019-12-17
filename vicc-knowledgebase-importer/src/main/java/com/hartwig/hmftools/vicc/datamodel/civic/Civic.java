@@ -43,7 +43,7 @@ public abstract class Civic implements KbSpecificObject {
     public abstract List<String> hgvsExpressions();
 
     @NotNull
-    public abstract List<CivicEvidenceItem> evidenceItems();
+    public abstract CivicEvidenceItem evidenceItem();
 
     @NotNull
     public abstract List<String> assertions();

@@ -42,7 +42,6 @@ import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicCoordinates;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrug;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItem;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastCommentedOn;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastModified;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastReviewed;
@@ -255,117 +254,115 @@ final class CivicDAOFunctions {
             }
         }
 
-        for (CivicEvidenceItem evidenceItem : civic.evidenceItems()) {
-            int idEvidenceItem = context.insertInto(CIVICEVIDENCEITEM,
-                    CIVICEVIDENCEITEM.NAME,
-                    CIVICEVIDENCEITEM.TYPE,
-                    CIVICEVIDENCEITEM.STATUS,
-                    CIVICEVIDENCEITEM.RATING,
-                    CIVICEVIDENCEITEM.EVIDENCETYPE,
-                    CIVICEVIDENCEITEM.EVIDENCELEVEL,
-                    CIVICEVIDENCEITEM.EVIDENCEDIRECTION,
-                    CIVICEVIDENCEITEM.DRUGINTERACTIONTYPE,
-                    CIVICEVIDENCEITEM.VARIANTORIGIN,
-                    CIVICEVIDENCEITEM.CLINICALSIGNIFICANCE,
-                    CIVICEVIDENCEITEM.OPENCHANGECOUNT,
-                    CIVICEVIDENCEITEM.DESCRIPTION,
-                    CIVICEVIDENCEITEM.VARIANTID,
-                    CIVICEVIDENCEITEM.IDEVIDENCEITEM,
-                    CIVICEVIDENCEITEM.CIVICID)
-                    .values(evidenceItem.name(),
-                            evidenceItem.type(),
-                            evidenceItem.status(),
-                            evidenceItem.rating(),
-                            evidenceItem.evidenceType(),
-                            evidenceItem.evidenceLevel(),
-                            evidenceItem.evidenceDirection(),
-                            evidenceItem.drugInteractionType(),
-                            evidenceItem.variantOrigin(),
-                            evidenceItem.clinicalSignificance(),
-                            evidenceItem.openChangeCount(),
-                            evidenceItem.description(),
-                            evidenceItem.variantId(),
-                            evidenceItem.id(),
-                            id)
-                    .returning(CIVICEVIDENCEITEM.ID)
-                    .fetchOne()
-                    .getValue(CIVICEVIDENCEITEM.ID);
+        int idEvidenceItem = context.insertInto(CIVICEVIDENCEITEM,
+                CIVICEVIDENCEITEM.NAME,
+                CIVICEVIDENCEITEM.TYPE,
+                CIVICEVIDENCEITEM.STATUS,
+                CIVICEVIDENCEITEM.RATING,
+                CIVICEVIDENCEITEM.EVIDENCETYPE,
+                CIVICEVIDENCEITEM.EVIDENCELEVEL,
+                CIVICEVIDENCEITEM.EVIDENCEDIRECTION,
+                CIVICEVIDENCEITEM.DRUGINTERACTIONTYPE,
+                CIVICEVIDENCEITEM.VARIANTORIGIN,
+                CIVICEVIDENCEITEM.CLINICALSIGNIFICANCE,
+                CIVICEVIDENCEITEM.OPENCHANGECOUNT,
+                CIVICEVIDENCEITEM.DESCRIPTION,
+                CIVICEVIDENCEITEM.VARIANTID,
+                CIVICEVIDENCEITEM.IDEVIDENCEITEM,
+                CIVICEVIDENCEITEM.CIVICID)
+                .values(civic.evidenceItem().name(),
+                        civic.evidenceItem().type(),
+                        civic.evidenceItem().status(),
+                        civic.evidenceItem().rating(),
+                        civic.evidenceItem().evidenceType(),
+                        civic.evidenceItem().evidenceLevel(),
+                        civic.evidenceItem().evidenceDirection(),
+                        civic.evidenceItem().drugInteractionType(),
+                        civic.evidenceItem().variantOrigin(),
+                        civic.evidenceItem().clinicalSignificance(),
+                        civic.evidenceItem().openChangeCount(),
+                        civic.evidenceItem().description(),
+                        civic.evidenceItem().variantId(),
+                        civic.evidenceItem().id(),
+                        id)
+                .returning(CIVICEVIDENCEITEM.ID)
+                .fetchOne()
+                .getValue(CIVICEVIDENCEITEM.ID);
 
-            for (CivicDrug drug : evidenceItem.drugs()) {
-                context.insertInto(CIVICDRUG, CIVICDRUG.NAME, CIVICDRUG.PUBCHEMID, CIVICDRUG.IDDRUG, CIVICDRUG.CIVICEVIDENCEITEMID)
-                        .values(drug.name(), drug.pubchemId(), drug.id(), idEvidenceItem)
-                        .execute();
-            }
-
-            context.insertInto(CIVICDISEASE,
-                    CIVICDISEASE.NAME,
-                    CIVICDISEASE.DISPLAYNAME,
-                    CIVICDISEASE.DOID,
-                    CIVICDISEASE.URL,
-                    CIVICDISEASE.IDDISEASE,
-                    CIVICDISEASE.CIVICEVIDENCEITEMID)
-                    .values(evidenceItem.disease().name(),
-                            evidenceItem.disease().displayName(),
-                            evidenceItem.disease().doid(),
-                            evidenceItem.disease().url(),
-                            evidenceItem.disease().id(),
-                            idEvidenceItem)
+        for (CivicDrug drug : civic.evidenceItem().drugs()) {
+            context.insertInto(CIVICDRUG, CIVICDRUG.NAME, CIVICDRUG.PUBCHEMID, CIVICDRUG.IDDRUG, CIVICDRUG.CIVICEVIDENCEITEMID)
+                    .values(drug.name(), drug.pubchemId(), drug.id(), idEvidenceItem)
                     .execute();
+        }
 
-            int idEvidenceItemSource = context.insertInto(CIVICEVIDENCEITEMSOURCE,
-                    CIVICEVIDENCEITEMSOURCE.NAME,
-                    CIVICEVIDENCEITEMSOURCE.STATUS,
-                    CIVICEVIDENCEITEMSOURCE.OPENACCESS,
-                    CIVICEVIDENCEITEMSOURCE.JOURNAL,
-                    CIVICEVIDENCEITEMSOURCE.FULLJOURNALTITLE,
-                    CIVICEVIDENCEITEMSOURCE.CITATION,
-                    CIVICEVIDENCEITEMSOURCE.PMCID,
-                    CIVICEVIDENCEITEMSOURCE.SOURCEURL,
-                    CIVICEVIDENCEITEMSOURCE.PUBMEDID,
-                    CIVICEVIDENCEITEMSOURCE.ISREVIEW,
-                    CIVICEVIDENCEITEMSOURCE.IDSOURCE,
-                    CIVICEVIDENCEITEMSOURCE.CIVICEVIDENCEITEMID)
-                    .values(evidenceItem.source().name(),
-                            evidenceItem.source().status(),
-                            evidenceItem.source().openAccess(),
-                            evidenceItem.source().journal(),
-                            evidenceItem.source().fullJournalTitle(),
-                            evidenceItem.source().citation(),
-                            evidenceItem.source().pmcId(),
-                            evidenceItem.source().sourceUrl(),
-                            evidenceItem.source().pubmedId(),
-                            evidenceItem.source().isReview(),
-                            evidenceItem.source().id(),
-                            idEvidenceItem)
-                    .returning(CIVICEVIDENCEITEMSOURCE.ID)
-                    .fetchOne()
-                    .getValue(CIVICEVIDENCEITEMSOURCE.ID);
+        context.insertInto(CIVICDISEASE,
+                CIVICDISEASE.NAME,
+                CIVICDISEASE.DISPLAYNAME,
+                CIVICDISEASE.DOID,
+                CIVICDISEASE.URL,
+                CIVICDISEASE.IDDISEASE,
+                CIVICDISEASE.CIVICEVIDENCEITEMID)
+                .values(civic.evidenceItem().disease().name(),
+                        civic.evidenceItem().disease().displayName(),
+                        civic.evidenceItem().disease().doid(),
+                        civic.evidenceItem().disease().url(),
+                        civic.evidenceItem().disease().id(),
+                        idEvidenceItem)
+                .execute();
 
-            context.insertInto(CIVICEVIDENCEITEMPUBLICATION,
-                    CIVICEVIDENCEITEMPUBLICATION.YEAR,
-                    CIVICEVIDENCEITEMPUBLICATION.MONTH,
-                    CIVICEVIDENCEITEMPUBLICATION.DAY,
-                    CIVICEVIDENCEITEMPUBLICATION.CIVICEVIDENCEITEMSOURCEID)
-                    .values(evidenceItem.source().publicationDate().year(),
-                            evidenceItem.source().publicationDate().month(),
-                            evidenceItem.source().publicationDate().day(),
+        int idEvidenceItemSource = context.insertInto(CIVICEVIDENCEITEMSOURCE,
+                CIVICEVIDENCEITEMSOURCE.NAME,
+                CIVICEVIDENCEITEMSOURCE.STATUS,
+                CIVICEVIDENCEITEMSOURCE.OPENACCESS,
+                CIVICEVIDENCEITEMSOURCE.JOURNAL,
+                CIVICEVIDENCEITEMSOURCE.FULLJOURNALTITLE,
+                CIVICEVIDENCEITEMSOURCE.CITATION,
+                CIVICEVIDENCEITEMSOURCE.PMCID,
+                CIVICEVIDENCEITEMSOURCE.SOURCEURL,
+                CIVICEVIDENCEITEMSOURCE.PUBMEDID,
+                CIVICEVIDENCEITEMSOURCE.ISREVIEW,
+                CIVICEVIDENCEITEMSOURCE.IDSOURCE,
+                CIVICEVIDENCEITEMSOURCE.CIVICEVIDENCEITEMID)
+                .values(civic.evidenceItem().source().name(),
+                        civic.evidenceItem().source().status(),
+                        civic.evidenceItem().source().openAccess(),
+                        civic.evidenceItem().source().journal(),
+                        civic.evidenceItem().source().fullJournalTitle(),
+                        civic.evidenceItem().source().citation(),
+                        civic.evidenceItem().source().pmcId(),
+                        civic.evidenceItem().source().sourceUrl(),
+                        civic.evidenceItem().source().pubmedId(),
+                        civic.evidenceItem().source().isReview(),
+                        civic.evidenceItem().source().id(),
+                        idEvidenceItem)
+                .returning(CIVICEVIDENCEITEMSOURCE.ID)
+                .fetchOne()
+                .getValue(CIVICEVIDENCEITEMSOURCE.ID);
+
+        context.insertInto(CIVICEVIDENCEITEMPUBLICATION,
+                CIVICEVIDENCEITEMPUBLICATION.YEAR,
+                CIVICEVIDENCEITEMPUBLICATION.MONTH,
+                CIVICEVIDENCEITEMPUBLICATION.DAY,
+                CIVICEVIDENCEITEMPUBLICATION.CIVICEVIDENCEITEMSOURCEID)
+                .values(civic.evidenceItem().source().publicationDate().year(),
+                        civic.evidenceItem().source().publicationDate().month(),
+                        civic.evidenceItem().source().publicationDate().day(),
+                        idEvidenceItemSource)
+                .execute();
+
+        for (CivicClinicalTrial clinicalTrial : civic.evidenceItem().source().clinicalTrials()) {
+            context.insertInto(CIVICEVIDENCEITEMCLINICALTRIAL,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.NAME,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.NCTID,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.CLINICALTRIALURL,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.DESCRIPTION,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.CIVICEVIDENCEITEMSOURCEID)
+                    .values(clinicalTrial.name(),
+                            clinicalTrial.nctId(),
+                            clinicalTrial.clinicalTrialUrl(),
+                            clinicalTrial.description(),
                             idEvidenceItemSource)
                     .execute();
-
-            for (CivicClinicalTrial clinicalTrial : evidenceItem.source().clinicalTrials()) {
-                context.insertInto(CIVICEVIDENCEITEMCLINICALTRIAL,
-                        CIVICEVIDENCEITEMCLINICALTRIAL.NAME,
-                        CIVICEVIDENCEITEMCLINICALTRIAL.NCTID,
-                        CIVICEVIDENCEITEMCLINICALTRIAL.CLINICALTRIALURL,
-                        CIVICEVIDENCEITEMCLINICALTRIAL.DESCRIPTION,
-                        CIVICEVIDENCEITEMCLINICALTRIAL.CIVICEVIDENCEITEMSOURCEID)
-                        .values(clinicalTrial.name(),
-                                clinicalTrial.nctId(),
-                                clinicalTrial.clinicalTrialUrl(),
-                                clinicalTrial.description(),
-                                idEvidenceItemSource)
-                        .execute();
-            }
         }
 
         for (CivicSource source : civic.sources()) {
@@ -634,7 +631,6 @@ final class CivicDAOFunctions {
         }
 
         CivicLastReviewed lastReviewed = civic.lifecycleActions().lastReviewed();
-
         if (lastReviewed != null) {
             int idLastReviewed =
                     context.insertInto(CIVICLASTREVIEWED, CIVICLASTREVIEWED.TIMESTAMP, CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID)
