@@ -23,7 +23,7 @@ public class SomaticVariantsTest {
     @Test
     public void sortCorrectlyOnCodon() {
         ReportableVariant variant1 =
-                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.300T>A").build();
+                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.-300T>A").build();
         ReportableVariant variant2 =
                 PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.4000T>A").build();
         ReportableVariant variant3 =

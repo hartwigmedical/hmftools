@@ -32,7 +32,9 @@ public final class SomaticVariants {
             if (Math.abs(driverLikelihood1 - driverLikelihood2) > 0.001) {
                 return (driverLikelihood1 - driverLikelihood2) < 0 ? 1 : -1;
             } else {
-                if (variant1.gene().equals(variant2.gene())) {
+                if (variant1.canonicalHgvsCodingImpact().startsWith("c.-") || variant2.canonicalHgvsCodingImpact().startsWith("c.-")) {
+                    return variant1.gene().compareTo(variant2.gene());
+                } else if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
                     return extractCodonField(variant1.canonicalHgvsCodingImpact()) - extractCodonField(variant2.canonicalHgvsCodingImpact()) < 0 ? -1 : 1;
                 } else {
