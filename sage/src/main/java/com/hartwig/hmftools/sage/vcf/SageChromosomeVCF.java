@@ -23,7 +23,7 @@ public class SageChromosomeVCF implements AutoCloseable {
     private final VariantContextWriter writer;
 
     public SageChromosomeVCF(@NotNull final String chromosome, @NotNull final SageConfig config) throws IOException {
-        filename = File.createTempFile("sage." + chromosome + ".", ".vcf.gz").toString();
+        filename = File.createTempFile("sage." + chromosome + ".", ".vcf").toString();
         writer = new VariantContextWriterBuilder().setOutputFile(filename)
                 .modifyOption(Options.INDEX_ON_THE_FLY, false)
                 .modifyOption(Options.USE_ASYNC_IO, true)
@@ -31,7 +31,7 @@ public class SageChromosomeVCF implements AutoCloseable {
                 .build();
         final VCFHeader header = SageVCF.header(config);
 
-        LOGGER.info("Creating temporary file: {}", filename);
+        LOGGER.debug("Creating temporary file: {}", filename);
         writer.writeHeader(header);
     }
 
