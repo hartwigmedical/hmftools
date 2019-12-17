@@ -18,6 +18,7 @@ public class SomaticVariantsTest {
         assertEquals(1799, SomaticVariants.extractCodonField("c.1799T>A"));
         assertEquals(423, SomaticVariants.extractCodonField("c.423_427delCCCTG"));
         assertEquals(8390, SomaticVariants.extractCodonField("c.8390delA"));
+        assertEquals(-124, SomaticVariants.extractCodonField("c.-124C>T"));
     }
 
     @Test
