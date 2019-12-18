@@ -29,7 +29,7 @@ public final class ReportableEvidenceItemFactory {
     }
 
     @NotNull
-    public static List<EvidenceItem> toList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
+    private static List<EvidenceItem> toList(@NotNull Map<?, List<EvidenceItem>> evidenceItemMap) {
         List<EvidenceItem> evidenceItemList = Lists.newArrayList();
         for (List<EvidenceItem> items : evidenceItemMap.values()) {
             evidenceItemList.addAll(items);
