@@ -35,7 +35,7 @@ public final class CopyNumberAnalyzer {
         List<EvidenceItem> allEvidence = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
 
         Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
-                CheckEvidenceCnv.checkingForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber, allEvidence);
+                CheckEvidenceCnv.checkingAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber, allEvidence);
 
         List<EvidenceItem> filteredEvidenceItem = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
 

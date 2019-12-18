@@ -21,7 +21,7 @@ final class CheckEvidenceCnv {
     private CheckEvidenceCnv() {
     }
 
-    static Map<GeneCopyNumber, List<EvidenceItem>> checkingForEvidenceInDriverCatalog(@NotNull List<ReportableGainLoss> reportableGainLosses,
+    static Map<GeneCopyNumber, List<EvidenceItem>> checkingAndFilterForEvidenceInDriverCatalog(@NotNull List<ReportableGainLoss> reportableGainLosses,
             Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber, @NotNull List<EvidenceItem> allEvidenceForCopyNumbers) {
         // Check that all copy numbers with evidence are reported (since they are in the driver catalog).
         Set<String> reportableGenes = Sets.newHashSet();
