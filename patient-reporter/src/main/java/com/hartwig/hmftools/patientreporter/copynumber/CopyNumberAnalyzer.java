@@ -35,7 +35,7 @@ public final class CopyNumberAnalyzer {
         Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
                 CheckEvidenceCnv.checkAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber);
 
-        List<EvidenceItem> filteredEvidenceItem = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
+        List<EvidenceItem> filteredEvidenceItems = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
 
         return ImmutableCopyNumberAnalysis.builder()
                 .purity(bestFit.purity())
@@ -44,7 +44,7 @@ public final class CopyNumberAnalyzer {
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
-                .evidenceItems(filteredEvidenceItem)
+                .evidenceItems(filteredEvidenceItems)
                 .build();
     }
 }
