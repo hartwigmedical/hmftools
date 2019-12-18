@@ -29,7 +29,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchExonsInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusionData;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchGRch37Location;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchGRCh37Location;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchMutation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchParent;
@@ -40,10 +40,10 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequence;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequencesGRCH37;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSAData;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSaMap2;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSAMap;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAgreg;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAst;
@@ -59,7 +59,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchExonBoun
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchExonsInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionData;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRch37Location2;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37Location;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchMutation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchParent;
@@ -70,10 +70,10 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTag;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequence;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCH372;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAData;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSaMap2;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -998,8 +998,8 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchWGSaMap2> createWgsaMap(@NotNull JsonArray objectWgsaMap) {
-        List<MolecularMatchWGSaMap2> molecularMatchWGSaMapList = Lists.newArrayList();
+    private static List<MolecularMatchWGSAMap> createWgsaMap(@NotNull JsonArray objectWgsaMap) {
+        List<MolecularMatchWGSAMap> molecularMatchWGSaMapList = Lists.newArrayList();
         for (JsonElement wgsDataMap : objectWgsaMap.getAsJsonArray()) {
             Set<String> keysWgsaMap = wgsDataMap.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES.contains(keysWgsaMap.size())) {
@@ -1009,7 +1009,7 @@ final class MolecularMatchObjectFactory {
                 LOGGER.warn(keysWgsaMap);
             }
 
-            molecularMatchWGSaMapList.add(ImmutableMolecularMatchWGSaMap2.builder()
+            molecularMatchWGSaMapList.add(ImmutableMolecularMatchWGSAMap.builder()
                     .aa(!wgsDataMap.getAsJsonObject().has("AA")
                             ? null
                             : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("AA").getAsString())
@@ -1158,8 +1158,8 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchGRch37Location2> createGRCH37Location(@NotNull JsonArray arrayLocation) {
-        List<MolecularMatchGRch37Location2> grch37LocationList = Lists.newArrayList();
+    private static List<MolecularMatchGRCh37Location> createGRCH37Location(@NotNull JsonArray arrayLocation) {
+        List<MolecularMatchGRCh37Location> grch37LocationList = Lists.newArrayList();
 
         for (JsonElement location : arrayLocation) {
             Set<String> keysLocation = location.getAsJsonObject().keySet();
@@ -1170,7 +1170,7 @@ final class MolecularMatchObjectFactory {
                 LOGGER.warn(keysLocation);
             }
 
-            grch37LocationList.add(ImmutableMolecularMatchGRch37Location.builder()
+            grch37LocationList.add(ImmutableMolecularMatchGRCh37Location.builder()
                     .compositeKey(location.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
                     .ref(location.getAsJsonObject().get("ref").isJsonNull()
                             ? null
@@ -1196,9 +1196,9 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchTranscriptConsequencesGRCH372> createConsequencesGRCH37(
+    private static List<MolecularMatchTranscriptConsequencesGRCh37> createConsequencesGRCH37(
             @NotNull JsonArray arrayTranscriptConsequence) {
-        List<MolecularMatchTranscriptConsequencesGRCH372> transcriptConsequencesGRCH37List = Lists.newArrayList();
+        List<MolecularMatchTranscriptConsequencesGRCh37> transcriptConsequencesGRCH37List = Lists.newArrayList();
         for (JsonElement transcriptConsequences : arrayTranscriptConsequence) {
             Set<String> keysTranscriptConsequences = transcriptConsequences.getAsJsonObject().keySet();
             if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES.contains(keysTranscriptConsequences.size())) {
@@ -1208,7 +1208,7 @@ final class MolecularMatchObjectFactory {
                 LOGGER.warn(keysTranscriptConsequences);
             }
 
-            transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCH37.builder()
+            transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCh37.builder()
                     .aminoAcidChange(transcriptConsequences.getAsJsonObject().get("amino_acid_change").isJsonNull()
                             ? null
                             : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())

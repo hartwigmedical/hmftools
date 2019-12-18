@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchTranscriptConsequencesGRCH372 {
+public abstract class MolecularMatchTranscriptConsequencesGRCh37 {
 
     @NotNull
     public abstract String transcript();

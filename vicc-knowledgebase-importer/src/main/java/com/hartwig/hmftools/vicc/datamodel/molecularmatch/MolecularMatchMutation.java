@@ -38,7 +38,7 @@ public abstract class MolecularMatchMutation {
     public abstract List<MolecularMatchWGSAData> wgsaData();
 
     @Nullable
-    public abstract List<MolecularMatchWGSaMap2> wgsaMaps();
+    public abstract List<MolecularMatchWGSAMap> wgsaMaps();
 
     @Nullable
     public abstract MolecularMatchExonsInfo exonsInfo();
@@ -56,7 +56,7 @@ public abstract class MolecularMatchMutation {
     public abstract List<String> synonyms();
 
     @NotNull
-    public abstract List<MolecularMatchGRch37Location2> grch37Locations();
+    public abstract List<MolecularMatchGRCh37Location> grch37Locations();
 
     @NotNull
     public abstract List<String> pathology();

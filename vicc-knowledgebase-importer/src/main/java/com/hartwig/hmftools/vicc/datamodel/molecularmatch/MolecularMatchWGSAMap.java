@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchWGSaMap2 {
+public abstract class MolecularMatchWGSAMap {
 
     @NotNull
     public abstract String name();
