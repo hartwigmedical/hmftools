@@ -46,7 +46,7 @@ final class CheckEvidenceCnv {
         List<EvidenceItem> evidenceNonReportableItem = ReportableEvidenceItemFactory.toList(evidenceMapNonReportable);
         Set<String> uniqueEventsNonReportableEvidence = Sets.newHashSet();
         for (EvidenceItem item : evidenceNonReportableItem) {
-            if (!item.level().equals(EvidenceLevel.LEVEL_A) || !item.level().equals(EvidenceLevel.LEVEL_B)) {
+            if (item.level().equals(EvidenceLevel.LEVEL_A) || item.level().equals(EvidenceLevel.LEVEL_B)) {
                 uniqueEventsNonReportableEvidence.add(item.event());
             }
         }
