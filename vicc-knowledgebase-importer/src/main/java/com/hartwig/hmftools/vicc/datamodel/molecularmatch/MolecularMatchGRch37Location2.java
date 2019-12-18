@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchGRch37Location {
+public abstract class MolecularMatchGRch37Location2 {
 
     @Nullable
     public abstract String chr();
@@ -29,7 +29,7 @@ public abstract class MolecularMatchGRch37Location {
     public abstract String strand();
 
     @NotNull
-    public abstract List<MolecularMatchTranscriptConsequencesGRCH37> transcriptConsequences();
+    public abstract List<MolecularMatchTranscriptConsequencesGRCH372> transcriptConsequences();
 
     @NotNull
     public abstract String validated();

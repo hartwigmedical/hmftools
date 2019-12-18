@@ -139,7 +139,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchCriteria
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchExonsInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionData;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRch37Location;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRch37Location2;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchMutation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchParent;
@@ -149,10 +149,10 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTag;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequence;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCH37;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCH372;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAData;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSaMap;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSaMap2;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -1095,7 +1095,7 @@ final class MolecularMatchDAOFunctions {
             }
 
             if (mutations.wgsaMaps() != null) {
-                for (MolecularMatchWGSaMap wgSaMap : mutations.wgsaMaps()) {
+                for (MolecularMatchWGSaMap2 wgSaMap : mutations.wgsaMaps()) {
                     int idMap = context.insertInto(MOLECULARMATCHMUTATIONSWGSMAP,
                             MOLECULARMATCHMUTATIONSWGSMAP.AA,
                             MOLECULARMATCHMUTATIONSWGSMAP.NAME,
@@ -1134,7 +1134,7 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            for (MolecularMatchGRch37Location gRch37Location : mutations.grch37Locations()) {
+            for (MolecularMatchGRch37Location2 gRch37Location : mutations.grch37Locations()) {
                 int idLocation = context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCATION,
                         MOLECULARMATCHMUTATIONSGRCH37LOCATION.COMPOSITEKEY,
                         MOLECULARMATCHMUTATIONSGRCH37LOCATION.REF,
@@ -1158,7 +1158,7 @@ final class MolecularMatchDAOFunctions {
                         .fetchOne()
                         .getValue(MOLECULARMATCHMUTATIONSGRCH37LOCATION.ID);
 
-                for (MolecularMatchTranscriptConsequencesGRCH37 transcriptConsequencesGRCH37 : gRch37Location.transcriptConsequences()) {
+                for (MolecularMatchTranscriptConsequencesGRCH372 transcriptConsequencesGRCH37 : gRch37Location.transcriptConsequences()) {
                     int idConsequences = context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES,
                             MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.AMINOACIDCHANGE,
                             MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.INTRONNUMBER,
