@@ -32,8 +32,12 @@ public final class CopyNumberAnalyzer {
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(exomeGeneCopyNumbers, primaryTumorLocation, bestFit.ploidy());
 
+        // TODO: Remove all evidence for unreported genes + WARN if remove A/B evidence
+
+        // TODO: Remove
         List<EvidenceItem> allEvidence = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
 
+        // TODO: Remove allEvidence from input.
         Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
                 CheckEvidenceCnv.checkingAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber, allEvidence);
 
