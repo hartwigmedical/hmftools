@@ -15,7 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 final class ExtractReportableGainsAndLosses {
 
-    private static final Set<String> EXTRA_AMPLIFICATION_TARGETS = Sets.newHashSet("FLT1");
+    // TODO Consider adding FLT1
+    private static final Set<String> EXTRA_AMPLIFICATION_TARGETS = Sets.newHashSet();
 
     private ExtractReportableGainsAndLosses() {
     }
