@@ -13,19 +13,22 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatch implements KbSpecificObject {
 
     @NotNull
-    public abstract List<MolecularMatchCriteriaUnmet> criteriaUnmet();
+    public abstract String direction();
 
     @NotNull
-    public abstract List<MolecularMatchPrevalence> prevalence();
+    public abstract String biomarkerClass();
+
+    @NotNull
+    public abstract List<MolecularMatchMutation> mutations();
+
+    @NotNull
+    public abstract List<MolecularMatchVariantInfo> variantInfos();
+
+    @NotNull
+    public abstract List<MolecularMatchPrevalence> prevalences();
 
     @NotNull
     public abstract String score();
-
-    @NotNull
-    public abstract String autoGenerateNarrative();
-
-    @NotNull
-    public abstract List<MolecularMatchMutations> mutations();
 
     @NotNull
     public abstract List<MolecularMatchSource> sources();
@@ -34,100 +37,82 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract String clinicalSignificance();
 
     @NotNull
-    public abstract String id();
+    public abstract String tier();
 
     @NotNull
-    public abstract List<String> includeCondition0();
+    public abstract List<MolecularMatchTierExplanation> tierExplanations();
 
     @NotNull
-    public abstract List<String> includeCondition1();
-
-    @NotNull
-    public abstract String uniqueKey();
+    public abstract String ampcap();
 
     @NotNull
     public abstract String civicValue();
 
     @NotNull
-    public abstract String hashKey();
+    public abstract String regulatoryBody();
 
     @NotNull
     public abstract String regulatoryBodyApproved();
 
-    @NotNull
-    public abstract String version();
-
-    @Nullable
-    public abstract List<String> includeMutation1();
-
-    @Nullable
-    public abstract List<String> includeMutation0();
-
     @Nullable
     public abstract String guidelineBody();
-
-    @NotNull
-    public abstract String regulatoryBody();
-
-    @NotNull
-    public abstract String customer();
-
-    @NotNull
-    public abstract String direction();
-
-    @NotNull
-    public abstract String ampcap();
-
-    @Nullable
-    public abstract MolecularMatchAst asts();
-
-    @NotNull
-    public abstract List<MolecularMatchVariantInfo> variantInfo();
 
     @Nullable
     public abstract String guidelineVersion();
 
+    @NotNull
+    public abstract List<String> includeCondition1();
+
+    @NotNull
+    public abstract List<String> includeMutation1();
+
+    @NotNull
+    public abstract List<String> includeDrug1();
+
+    @NotNull
+    public abstract List<String> includeStage0();
+
+    @NotNull
+    public abstract List<String> includeGene0();
+
+    @NotNull
+    public abstract List<String> includeCondition0();
+
+    @NotNull
+    public abstract List<String> includeMutation0();
+
+    @NotNull
+    public abstract List<String> criteriaMets();
+
+    @NotNull
+    public abstract List<MolecularMatchCriteriaUnmet> criteriaUnmets();
+
+    @NotNull
+    public abstract MolecularMatchAst ast();
+
     @Nullable
-    public abstract List<String> institution();
+    public abstract List<String> institutions();
 
     @NotNull
-    public abstract String tier();
+    public abstract List<MolecularMatchTag> tags();
 
     @NotNull
-    public abstract List<MolecularMatchTierExplanation> tierExplanation();
+    public abstract List<MolecularMatchClassification> classifications();
+
+    @Nullable
+    public abstract String noTherapyAvailable();
+
+    @NotNull
+    public abstract List<MolecularMatchTherapeuticContext> therapeuticContexts();
+
+    @NotNull
+    public abstract String sixtier();
 
     @NotNull
     public abstract String mvld();
 
     @NotNull
-    public abstract List<MolecularMatchTags> tags();
-
-    @NotNull
-    public abstract List<String> criteriaMet();
-
-    @NotNull
-    public abstract String biomarkerClass();
-
-    @NotNull
-    public abstract List<MolecularMatchClassification> classification();
-
-    @Nullable
-    public abstract List<String> includeDrug1();
-
-    @Nullable
-    public abstract List<String> includeStage0();
-
-    @NotNull
-    public abstract List<MolecularMatchTherapeuticContext> therapeuticContext();
-
-    @NotNull
-    public abstract String sixtier();
-
-    @Nullable
-    public abstract String noTherapyAvailable();
-
-    @Nullable
-    public abstract List<String> external_id();
+    public abstract String autoGenerateNarrative();
 
     @NotNull
     public abstract String narrative();
@@ -135,7 +120,22 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @NotNull
     public abstract String expression();
 
-    @Nullable
-    public abstract List<String> includeGene0();
+    @NotNull
+    public abstract String customer();
+
+    @NotNull
+    public abstract String version();
+
+    @NotNull
+    public abstract String id();
+
+    @NotNull
+    public abstract List<String> externalIds();
+
+    @NotNull
+    public abstract String uniqueKey();
+
+    @NotNull
+    public abstract String hashKey();
 
 }

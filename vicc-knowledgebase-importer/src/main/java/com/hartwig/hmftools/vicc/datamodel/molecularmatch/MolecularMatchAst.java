@@ -14,15 +14,15 @@ public abstract class MolecularMatchAst {
     @Nullable
     public abstract String value();
 
-    @Nullable
-    public abstract String operator();
-
-    @Nullable
-    public abstract MolecularMatchAstRight right();
-
     @NotNull
     public abstract String type();
 
     @Nullable
+    public abstract String operator();
+
+    @Nullable
     public abstract MolecularMatchAstLeft left();
+
+    @Nullable
+    public abstract MolecularMatchAstRight right();
 }

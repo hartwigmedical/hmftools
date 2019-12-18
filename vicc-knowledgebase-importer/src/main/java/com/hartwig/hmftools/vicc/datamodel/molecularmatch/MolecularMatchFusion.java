@@ -6,7 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchFusions {
+public abstract class MolecularMatchFusion {
+
+    @NotNull
+    public abstract String chr();
 
     @NotNull
     public abstract String referenceGenome();
@@ -15,13 +18,10 @@ public abstract class MolecularMatchFusions {
     public abstract String LBPWREP();
 
     @NotNull
+    public abstract String LBPWLEP();
+
+    @NotNull
     public abstract String RBPWREP();
-
-    @NotNull
-    public abstract String exonNumber();
-
-    @NotNull
-    public abstract String chr();
 
     @NotNull
     public abstract String RBPWLEP();
@@ -30,5 +30,5 @@ public abstract class MolecularMatchFusions {
     public abstract String intronNumber();
 
     @NotNull
-    public abstract String LBPWLEP();
+    public abstract String exonNumber();
 }

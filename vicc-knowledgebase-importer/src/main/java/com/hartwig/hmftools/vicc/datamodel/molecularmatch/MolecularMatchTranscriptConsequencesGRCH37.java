@@ -10,6 +10,12 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchTranscriptConsequencesGRCH37 {
 
+    @NotNull
+    public abstract String transcript();
+
+    @Nullable
+    public abstract String cdna();
+
     @Nullable
     public abstract String aminoAcidChange();
 
@@ -17,14 +23,8 @@ public abstract class MolecularMatchTranscriptConsequencesGRCH37 {
     public abstract List<String> txSites();
 
     @Nullable
-    public abstract List<String> exonNumber();
-
-    @Nullable
     public abstract String intronNumber();
 
-    @NotNull
-    public abstract String transcript();
-
     @Nullable
-    public abstract String cdna();
+    public abstract List<String> exonNumbers();
 }

@@ -763,6 +763,54 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker molecularMatchEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("direction", true);
+        map.put("biomarkerClass", true);
+        map.put("mutations", true);
+        map.put("variantInfo", true);
+        map.put("prevalence", true);
+        map.put("_score", true);
+        map.put("sources", true);
+        map.put("clinicalSignificance", true);
+        map.put("tier", true);
+        map.put("tierExplanation", true);
+        map.put("ampcap", true);
+        map.put("civic", true);
+        map.put("regulatoryBody", true);
+        map.put("regulatoryBodyApproved", true);
+        map.put("guidelineBody", true);
+        map.put("guidelineVersion", true);
+        map.put("includeCondition1", false);
+        map.put("includeMutation1", false);
+        map.put("includeDrug1", false);
+        map.put("includeStage0", false);
+        map.put("includeDrug0", false);
+        map.put("includeCondition0", true);
+        map.put("includeMutation0", false);
+        map.put("criteriaMet", true);
+        map.put("criteriaUnmet", true);
+        map.put("ast", true);
+        map.put("institution", false);
+        map.put("tags", true);
+        map.put("classifications", true);
+        map.put("noTherapyAvailable", false);
+        map.put("therapeuticContext", true);
+        map.put("sixtier", true);
+        map.put("mvld", true);
+        map.put("autoGenerateNarrative", true);
+        map.put("narrative", true);
+        map.put("expression", true);
+        map.put("customer", true);
+        map.put("version", true);
+        map.put("id", true);
+        map.put("external_id", false);
+        map.put("uniqueKey", true);
+        map.put("hashKey", true);
+        return new ViccDatamodelChecker("MolecularMatchEntry", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);

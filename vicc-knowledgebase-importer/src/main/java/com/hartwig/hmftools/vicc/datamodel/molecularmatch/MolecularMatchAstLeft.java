@@ -9,14 +9,14 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchAstLeft {
 
     @Nullable
-    public abstract String operator();
+    public abstract String raw();
 
     @Nullable
-    public abstract String raw();
+    public abstract String value();
 
     @NotNull
     public abstract String type();
 
     @Nullable
-    public abstract String value();
+    public abstract String operator();
 }

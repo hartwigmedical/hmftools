@@ -11,50 +11,50 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchTranscriptConsequence {
 
     @Nullable
-    public abstract String aminoAcidChange();
-
-    @NotNull
-    public abstract String compositeKey();
-
-    @Nullable
-    public abstract String intronNumber();
-
-    @Nullable
-    public abstract List<String> exonNumber();
-
-    @NotNull
-    public abstract String suppress();
-
-    @Nullable
-    public abstract String stop();
-
-    @NotNull
-    public abstract String custom();
+    public abstract String chr();
 
     @Nullable
     public abstract String start();
 
     @Nullable
-    public abstract String chr();
-
-    @NotNull
-    public abstract String strand();
-
-    @NotNull
-    public abstract String validated();
-
-    @NotNull
-    public abstract String transcript();
-
-    @Nullable
-    public abstract String cdna();
-
-    @NotNull
-    public abstract String referenceGenome();
+    public abstract String stop();
 
     @Nullable
     public abstract String ref();
 
     @Nullable
     public abstract String alt();
+
+    @NotNull
+    public abstract String referenceGenome();
+
+    @NotNull
+    public abstract String transcript();
+
+    @NotNull
+    public abstract String strand();
+
+    @Nullable
+    public abstract String cdna();
+
+    @Nullable
+    public abstract String aminoAcidChange();
+
+    @Nullable
+    public abstract String intronNumber();
+
+    @NotNull
+    public abstract List<String> exonNumbers();
+
+    @NotNull
+    public abstract String suppress();
+
+    @NotNull
+    public abstract String custom();
+
+    @NotNull
+    public abstract String validated();
+
+    @NotNull
+    public abstract String compositeKey();
 }

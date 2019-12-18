@@ -10,31 +10,31 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class MolecularMatchGRch37Location {
 
-    @NotNull
-    public abstract String compositeKey();
-
     @Nullable
-    public abstract String ref();
-
-    @Nullable
-    public abstract String stop();
+    public abstract String chr();
 
     @Nullable
     public abstract String start();
 
     @Nullable
-    public abstract String chr();
+    public abstract String stop();
+
+    @Nullable
+    public abstract String ref();
 
     @Nullable
     public abstract String alt();
 
     @NotNull
-    public abstract String validated();
+    public abstract String strand();
 
     @NotNull
     public abstract List<MolecularMatchTranscriptConsequencesGRCH37> transcriptConsequences();
 
     @NotNull
-    public abstract String strand();
+    public abstract String validated();
+
+    @NotNull
+    public abstract String compositeKey();
 
 }
