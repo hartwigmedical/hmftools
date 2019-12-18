@@ -19,8 +19,8 @@ public class RefContext implements GenomePosition {
     private final long position;
     private final Map<String, AltContext> alts;
 
-    private int refSupport;
-    private int readDepth;
+    private int rawSupport;
+    private int rawDepth;
 
     public RefContext(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -34,8 +34,8 @@ public class RefContext implements GenomePosition {
         this.chromosome = left.chromosome;
         this.position = left.position;
         this.alts = new HashMap<>();
-        this.refSupport = Math.min(left.refSupport, right.refSupport);
-        this.readDepth = Math.min(left.readDepth, right.readDepth);
+        this.rawSupport = Math.min(left.rawSupport, right.rawSupport);
+        this.rawDepth = Math.min(left.rawDepth, right.rawDepth);
     }
 
     public boolean isAltsEmpty() {
@@ -48,8 +48,8 @@ public class RefContext implements GenomePosition {
     }
 
     public void refRead() {
-        this.refSupport++;
-        this.readDepth++;
+        this.rawSupport++;
+        this.rawDepth++;
     }
 
     @NotNull
@@ -59,14 +59,14 @@ public class RefContext implements GenomePosition {
     }
 
     public void altRead(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext interimReadContext) {
-        this.readDepth++;
+        this.rawDepth++;
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead();
         altContext.addReadContext(interimReadContext);
     }
 
     public void altRead(@NotNull final String ref, @NotNull final String alt) {
-        this.readDepth++;
+        this.rawDepth++;
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead();
     }
@@ -82,16 +82,16 @@ public class RefContext implements GenomePosition {
         return position;
     }
 
-    public int readDepth() {
-        return readDepth;
+    public int rawDepth() {
+        return rawDepth;
     }
 
     public String sample() {
         return sample;
     }
 
-    public int alignerSupport() {
-        return refSupport;
+    public int rawRefSupport() {
+        return rawSupport;
     }
 
     @Override

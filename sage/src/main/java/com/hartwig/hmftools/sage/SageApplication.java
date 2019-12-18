@@ -27,6 +27,7 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.pipeline.PipelineFactory;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
+import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -122,8 +123,8 @@ public class SageApplication implements AutoCloseable {
         //                                        contigContexts.add(runSingleRegion("10", 42350000, 42450000));
         //        contigContexts.add(runSingleRegion("18", 48609831, 48609831));
         //        contigContexts.add(runSingleRegion("12", 50479067, 50479067));
-//                contigContexts.add(runSingleRegion("17", 210598, 210598));
-//                contigContexts.add(runSingleRegion("17", 302, 302));
+//                contigContexts.add(runSingleRegion("17", 103283, 103283));
+//                contigContexts.add(runSingleRegion("17", 1128468, 1128468));
 //                contigContexts.add(runSingleRegion("2", 583000, 584000));
 
         for (Future<ChromosomePipeline> contigContext : contigContexts) {

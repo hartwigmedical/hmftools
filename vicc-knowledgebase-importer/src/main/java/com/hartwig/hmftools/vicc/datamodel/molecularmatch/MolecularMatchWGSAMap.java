@@ -8,32 +8,32 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchWGSaMap {
-
-    @Nullable
-    public abstract String AA();
+public abstract class MolecularMatchWGSAMap {
 
     @NotNull
     public abstract String name();
 
     @NotNull
-    public abstract String GRCh37_Chr_Start_Ref_Alt();
+    public abstract String gene();
 
     @NotNull
-    public abstract List<String> Synonyms();
-
-    @NotNull
-    public abstract List<String> ProtCoords();
-
-    @NotNull
-    public abstract String NucleotideChange();
+    public abstract String transcript();
 
     @Nullable
-    public abstract String Exon();
+    public abstract String exon();
 
     @NotNull
-    public abstract String Gene();
+    public abstract String grch37ChrStartRefAlt();
 
     @NotNull
-    public abstract String Transcript();
+    public abstract String nucleotideChange();
+
+    @Nullable
+    public abstract String aa();
+
+    @NotNull
+    public abstract List<String> synonyms();
+
+    @NotNull
+    public abstract List<String> protCoords();
 }

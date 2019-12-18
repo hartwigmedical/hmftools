@@ -256,7 +256,7 @@ public class ReadContextCounter implements GenomePosition {
     private int baseQuality(int readBaseIndex, SAMRecord record) {
         return variant.ref().length() == variant.alt().length()
                 ? record.getBaseQualities()[readBaseIndex]
-                : readContext.minCentreQuality(readBaseIndex, record);
+                : readContext.avgCentreQuality(readBaseIndex, record);
     }
 
     private int qualityJitterPenalty() {

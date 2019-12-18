@@ -82,6 +82,7 @@ final class JaxObjectFactory {
 
         ViccDatamodelChecker referenceChecker = ViccDatamodelCheckerFactory.jaxReferenceChecker();
         List<JaxReference> referenceList = Lists.newArrayList();
+
         for (JsonElement referenceElement : referenceArray) {
             JsonObject referenceObject = referenceElement.getAsJsonObject();
             referenceChecker.check(referenceObject);

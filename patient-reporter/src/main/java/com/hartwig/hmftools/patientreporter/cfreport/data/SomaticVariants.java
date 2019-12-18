@@ -34,7 +34,8 @@ public final class SomaticVariants {
             } else {
                 if (variant1.gene().equals(variant2.gene())) {
                     // sort on codon position if gene is the same
-                    return extractCodonField(variant1.canonicalHgvsCodingImpact()) - extractCodonField(variant2.canonicalHgvsCodingImpact()) < 0 ? -1 : 1;
+                    return extractCodonField(variant1.canonicalHgvsCodingImpact()) - extractCodonField(variant2.canonicalHgvsCodingImpact())
+                            < 0 ? -1 : 1;
                 } else {
                     return variant1.gene().compareTo(variant2.gene());
                 }
@@ -89,7 +90,7 @@ public final class SomaticVariants {
         // hgvsCoding starts with "c.", we need to skip that...
         int index = 2;
         while (noDigitFound && index < hgvsCoding.length()) {
-            if (Character.isDigit(hgvsCoding.charAt(index))) {
+            if ((Character.toString(hgvsCoding.charAt(index)).equals("-") && index == 2) || Character.isDigit(hgvsCoding.charAt(index))) {
                 codonAppender.append(hgvsCoding.charAt(index));
             } else {
                 noDigitFound = false;
@@ -148,7 +149,7 @@ public final class SomaticVariants {
             return "10-20%";
         } else if (clonalLikelihood > 0.05) {
             return "5-10%";
-        } else  {
+        } else {
             return "<5%";
         }
     }

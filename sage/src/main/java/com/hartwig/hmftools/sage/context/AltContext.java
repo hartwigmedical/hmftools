@@ -22,7 +22,7 @@ public class AltContext implements VariantHotspot {
     private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
 
     private ReadContextCounter readContextCounter;
-    private int altReads;
+    private int rawSupport;
 
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
@@ -42,7 +42,7 @@ public class AltContext implements VariantHotspot {
     }
 
     public void incrementAltRead() {
-        this.altReads++;
+        this.rawSupport++;
     }
 
     public void addReadContext(@NotNull final ReadContext newReadContext) {
@@ -114,13 +114,16 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
-    public int rawSupport() {
-        return altReads;
+    public int rawRefSupport() {
+        return refContext.rawRefSupport();
     }
 
+    public int rawAltSupport() {
+        return rawSupport;
+    }
 
-    public int readDepth() {
-        return refContext.readDepth();
+    public int rawDepth() {
+        return refContext.rawDepth();
     }
 
     @NotNull

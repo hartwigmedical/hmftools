@@ -52,7 +52,5 @@ public class CigarTraversal {
                     throw new IllegalStateException("Case statement didn't deal with op: " + e.getOperator() + "in CIGAR: " + cigar);
             }
         }
-
     }
-
 }

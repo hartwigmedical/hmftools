@@ -1,25 +1,17 @@
 package com.hartwig.hmftools.vicc.datamodel.molecularmatch;
 
-import java.util.List;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchParents {
+public abstract class MolecularMatchPosition {
 
     @NotNull
-    public abstract List<String> transcripts();
-
-    @Nullable
-    public abstract String type();
+    public abstract String start();
 
     @NotNull
-    public abstract String name();
-
-    @Nullable
-    public abstract String actionableParent();
+    public abstract String stop();
 
 }

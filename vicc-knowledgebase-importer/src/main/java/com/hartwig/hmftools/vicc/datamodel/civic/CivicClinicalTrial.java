@@ -9,14 +9,14 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicClinicalTrial {
 
     @NotNull
-    public abstract String nct_id();
+    public abstract String name();
+
+    @NotNull
+    public abstract String nctId();
+
+    @NotNull
+    public abstract String clinicalTrialUrl();
 
     @NotNull
     public abstract String description();
-
-    @NotNull
-    public abstract String clinical_trial_url();
-
-    @NotNull
-    public abstract String name();
 }

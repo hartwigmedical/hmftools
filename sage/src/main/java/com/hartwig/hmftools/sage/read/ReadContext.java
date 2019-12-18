@@ -15,7 +15,6 @@ public class ReadContext {
     private final String repeat;
     private final int repeatCount;
     private final String microhomology;
-    private final IndexedBases refCentre;
     private final IndexedBases readBases;
 
     public ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,
@@ -30,7 +29,6 @@ public class ReadContext {
         this.microhomology = Strings.EMPTY;
         this.repeatCount = 0;
         this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
-        this.refCentre = this.readBases;
     }
 
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
@@ -52,7 +50,6 @@ public class ReadContext {
         this.distanceCigar = distance.cigar();
 
         this.readBases = IndexedBases.resize(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
-        this.refCentre = IndexedBases.refCentre(this.readBases, refSequence);
     }
 
 
@@ -85,6 +82,20 @@ public class ReadContext {
         return quality;
     }
 
+    int avgCentreQuality(int readIndex, @NotNull final SAMRecord record) {
+        int leftOffset = this.readIndex() - readBases.leftCentreIndex();
+        int rightOffset = readBases.rightCentreIndex() - this.readIndex();
+
+        int leftIndex = readIndex - leftOffset;
+        int rightIndex = readIndex + rightOffset;
+
+        float quality = 0;
+        for (int i = leftIndex; i <= rightIndex; i++) {
+            quality += record.getBaseQualities()[i];
+        }
+        return Math.round(quality / (rightIndex - leftIndex + 1));
+    }
+
     public boolean phased(int offset, @NotNull final ReadContext other) {
         return readBases.phased(offset, other.readBases);
     }
@@ -96,10 +107,6 @@ public class ReadContext {
     @NotNull
     public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
         return readBases.matchAtPosition(otherReadIndex, otherBases);
-    }
-
-    public boolean matchesRef(int otherReadIndex, byte[] otherBases) {
-        return refCentre.coreMatch(otherReadIndex, otherBases);
     }
 
     public int readBasesPositionIndex() {
@@ -176,11 +183,6 @@ public class ReadContext {
 
     public int flankSize() {
         return readBases.flankSize();
-    }
-
-    @NotNull
-    public String refContext() {
-        return refCentre.centerString();
     }
 
 }

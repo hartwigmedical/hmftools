@@ -24,7 +24,7 @@ public abstract class MolecularMatchCriteriaUnmet {
     public abstract String manualSuppress();
 
     @Nullable
-    public abstract  String generatedByTerm();
+    public abstract String generatedByTerm();
 
     @NotNull
     public abstract String suppress();

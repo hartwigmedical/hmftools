@@ -41,13 +41,13 @@ public abstract class MolecularMatchClassification {
     public abstract String priority();
 
     @Nullable
-    public abstract List<String> NucleotideChange();
+    public abstract List<String> nucleotideChange();
 
     @Nullable
     public abstract String expandGeneSearch();
 
     @Nullable
-    public abstract List<MolecularMatchParents> parents();
+    public abstract List<MolecularMatchParent> parents();
 
     @Nullable
     public abstract String drugsExperimentalCount();
@@ -98,7 +98,7 @@ public abstract class MolecularMatchClassification {
     public abstract String alias();
 
     @Nullable
-    public abstract List<String> COSMIC_ID();
+    public abstract List<String> cosmicId();
 
     @Nullable
     public abstract List<String> transcripts();

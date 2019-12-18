@@ -1,19 +1,17 @@
 package com.hartwig.hmftools.vicc.dao;
 
 import static com.hartwig.hmftools.vicc.database.Tables.CIVIC;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICASSERTIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICASSERTION;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICCLINICALTRIAL;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICCLINVARENTRIES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICCLINVARENTRY;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICCOORDINATES;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICDESCRIPTION;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICDISEASE;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICDRUGS;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICERROR;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMS;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSCLINICALTRIAL;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSPUBLICATION;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSSOURCE;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICHGVSEXPRESSIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICDRUG;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEM;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMCLINICALTRIAL;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMPUBLICATION;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICEVIDENCEITEMSOURCE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICHGVSEXPRESSION;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDON;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDONAVATARS;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTCOMMENTEDONORGANIZATION;
@@ -30,24 +28,30 @@ import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDORGANIZ
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDPROFILEIMAGE;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICLASTREVIEWEDUSER;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICLIFECYCLEACTIONS;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICPROVISIONALVALUE;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICPUBLICATION;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICSOURCE;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTALIASES;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPS;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSCOORDINATES;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSTYPES;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTSGROUPSVARIANTS;
-import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTTYPES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUP;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUPCOORDINATES;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUPTYPE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUPVARIANT;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTTYPE;
+import static com.hartwig.hmftools.vicc.database.tables.Civicvariantalias.CIVICVARIANTALIAS;
 
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrugs;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicEvidenceItems;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicCoordinates;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicDrug;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastCommentedOn;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastModified;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicLastReviewed;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicProfileImage;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicProvisionalValue;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicSource;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicUser;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariant;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantGroup;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantTypes;
-import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariants;
+import com.hartwig.hmftools.vicc.datamodel.civic.CivicVariantType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -59,717 +63,724 @@ final class CivicDAOFunctions {
 
     static void write(@NotNull DSLContext context, int viccEntryId, @NotNull Civic civic) {
         int id = context.insertInto(CIVIC,
+                CIVIC.ENTREZID,
                 CIVIC.ENTREZNAME,
+                CIVIC.NAME,
+                CIVIC.TYPE,
                 CIVIC.CIVICACTIONABILITYSCORE,
                 CIVIC.ALLELEREGISTRYID,
-                CIVIC.GENEID,
-                CIVIC.NAME,
-                CIVIC.ENTREZID,
-                CIVIC.TYPE,
                 CIVIC.IDCIVIC,
+                CIVIC.GENEID,
                 CIVIC.DESCRIPTION,
                 CIVIC.VICCENTRYID)
-                .values(civic.entrezName(),
+                .values(civic.entrezId(),
+                        civic.entrezName(),
+                        civic.name(),
+                        civic.type(),
                         civic.civicActionabilityScore(),
                         civic.alleleRegistryId(),
-                        civic.geneId(),
-                        civic.name(),
-                        civic.entrezId(),
-                        civic.type(),
                         civic.id(),
+                        civic.geneId(),
                         civic.description(),
                         viccEntryId)
                 .returning(CIVIC.ID)
                 .fetchOne()
                 .getValue(CIVIC.ID);
 
-        for (String assertions : civic.assertions()) {
-            context.insertInto(CIVICASSERTIONS, CIVICASSERTIONS.ASSERTIONS, CIVICASSERTIONS.CIVICID).values(assertions, id).execute();
+        for (String assertion : civic.assertions()) {
+            context.insertInto(CIVICASSERTION, CIVICASSERTION.ASSERTION, CIVICASSERTION.CIVICID).values(assertion, id).execute();
         }
 
-        for (String hgvsExpression : civic.hgvs_expressions()) {
-            context.insertInto(CIVICHGVSEXPRESSIONS, CIVICHGVSEXPRESSIONS.HGVS_EXPRESSIONS, CIVICHGVSEXPRESSIONS.CIVICID)
+        for (String hgvsExpression : civic.hgvsExpressions()) {
+            context.insertInto(CIVICHGVSEXPRESSION, CIVICHGVSEXPRESSION.HGVSEXPRESSION, CIVICHGVSEXPRESSION.CIVICID)
                     .values(hgvsExpression, id)
                     .execute();
         }
 
-        for (String clinvarEntries : civic.clinvarEntries()) {
-            context.insertInto(CIVICCLINVARENTRIES, CIVICCLINVARENTRIES.CLINVARENTRIES, CIVICCLINVARENTRIES.CIVICID)
-                    .values(clinvarEntries, id)
+        for (String clinVarEntry : civic.clinVarEntries()) {
+            context.insertInto(CIVICCLINVARENTRY, CIVICCLINVARENTRY.CLINVARENTRY, CIVICCLINVARENTRY.CIVICID)
+                    .values(clinVarEntry, id)
                     .execute();
         }
 
-        for (String variantAliases : civic.variantAliases()) {
-            context.insertInto(CIVICVARIANTALIASES, CIVICVARIANTALIASES.VARIANTALIASES, CIVICVARIANTALIASES.CIVICID)
-                    .values(variantAliases, id)
+        for (String variantAlias : civic.variantAliases()) {
+            context.insertInto(CIVICVARIANTALIAS, CIVICVARIANTALIAS.VARIANTALIAS, CIVICVARIANTALIAS.CIVICID)
+                    .values(variantAlias, id)
                     .execute();
         }
 
-        for (CivicVariantTypes variantTypes : civic.variantTypes()) {
-            context.insertInto(CIVICVARIANTTYPES,
-                    CIVICVARIANTTYPES.DISPLAYNAME,
-                    CIVICVARIANTTYPES.DESCRIPTION,
-                    CIVICVARIANTTYPES.URL,
-                    CIVICVARIANTTYPES.SOID,
-                    CIVICVARIANTTYPES.IDVARIANTTYPES,
-                    CIVICVARIANTTYPES.NAME,
-                    CIVICVARIANTTYPES.CIVICID)
-                    .values(variantTypes.displayName(),
-                            variantTypes.description(),
-                            variantTypes.url(),
-                            variantTypes.soId(),
-                            variantTypes.id(),
-                            variantTypes.name(),
+        for (CivicVariantType variantType : civic.variantTypes()) {
+            context.insertInto(CIVICVARIANTTYPE,
+                    CIVICVARIANTTYPE.NAME,
+                    CIVICVARIANTTYPE.DISPLAYNAME,
+                    CIVICVARIANTTYPE.DESCRIPTION,
+                    CIVICVARIANTTYPE.URL,
+                    CIVICVARIANTTYPE.SOID,
+                    CIVICVARIANTTYPE.IDVARIANTTYPE,
+                    CIVICVARIANTTYPE.CIVICID)
+                    .values(variantType.name(),
+                            variantType.displayName(),
+                            variantType.description(),
+                            variantType.url(),
+                            variantType.soId(),
+                            variantType.id(),
                             id)
                     .execute();
         }
 
-        if (civic.provisional_values() != null) {
-            context.insertInto(CIVICDESCRIPTION, CIVICDESCRIPTION.REVISIONID, CIVICDESCRIPTION.VALUE, CIVICDESCRIPTION.CIVICID)
-                    .values(civic.provisional_values().revision_id(), civic.provisional_values().value(), id)
-                    .execute();
+        CivicProvisionalValue provisionalValue = civic.provisionalValue();
+        if (provisionalValue != null) {
+            context.insertInto(CIVICPROVISIONALVALUE,
+                    CIVICPROVISIONALVALUE.REVISIONID,
+                    CIVICPROVISIONALVALUE.VALUE,
+                    CIVICPROVISIONALVALUE.CIVICID).values(provisionalValue.revisionId(), provisionalValue.value(), id).execute();
         }
 
         context.insertInto(CIVICCOORDINATES,
-                CIVICCOORDINATES.CHROMOSOME2,
-                CIVICCOORDINATES.REFERENCEBASES,
-                CIVICCOORDINATES.START2,
-                CIVICCOORDINATES.VARIANTBASES,
-                CIVICCOORDINATES.STOP,
-                CIVICCOORDINATES.STOP2,
-                CIVICCOORDINATES.REPRESENTATIVETRANSCRIPT2,
+                CIVICCOORDINATES.CHROMOSOME,
                 CIVICCOORDINATES.START,
+                CIVICCOORDINATES.STOP,
+                CIVICCOORDINATES.REFERENCEBASES,
+                CIVICCOORDINATES.VARIANTBASES,
                 CIVICCOORDINATES.REPRESENTATIVETRANSCRIPT,
                 CIVICCOORDINATES.ENSEMBLVERSION,
-                CIVICCOORDINATES.CHROMOSOME,
                 CIVICCOORDINATES.REFERENCEBUILD,
+                CIVICCOORDINATES.CHROMOSOME2,
+                CIVICCOORDINATES.START2,
+                CIVICCOORDINATES.STOP2,
+                CIVICCOORDINATES.REPRESENTATIVETRANSCRIPT2,
                 CIVICCOORDINATES.CIVICID)
-                .values(civic.coordinates().chromosome2(),
-                        civic.coordinates().referenceBases(),
-                        civic.coordinates().start2(),
-                        civic.coordinates().variantBases(),
-                        civic.coordinates().stop(),
-                        civic.coordinates().stop2(),
-                        civic.coordinates().representativeTranscript2(),
+                .values(civic.coordinates().chromosome(),
                         civic.coordinates().start(),
+                        civic.coordinates().stop(),
+                        civic.coordinates().referenceBases(),
+                        civic.coordinates().variantBases(),
                         civic.coordinates().representativeTranscript(),
                         civic.coordinates().ensemblVersion(),
-                        civic.coordinates().chromosome(),
                         civic.coordinates().referenceBuild(),
+                        civic.coordinates().chromosome2(),
+                        civic.coordinates().start2(),
+                        civic.coordinates().stop2(),
+                        civic.coordinates().representativeTranscript2(),
                         id)
                 .execute();
 
         for (CivicVariantGroup variantGroup : civic.variantGroups()) {
-            int idVariantGroup = context.insertInto(CIVICVARIANTSGROUPS,
-                    CIVICVARIANTSGROUPS.IDVARIANTSGROUPS,
-                    CIVICVARIANTSGROUPS.TYPE,
-                    CIVICVARIANTSGROUPS.DESCRIPTION,
-                    CIVICVARIANTSGROUPS.NAME,
-                    CIVICVARIANTSGROUPS.CIVICID)
-                    .values(variantGroup.id(), variantGroup.type(), variantGroup.description(), variantGroup.name(), id)
-                    .returning(CIVICVARIANTSGROUPS.ID)
+            int idVariantGroup = context.insertInto(CIVICVARIANTGROUP,
+                    CIVICVARIANTGROUP.NAME,
+                    CIVICVARIANTGROUP.TYPE,
+                    CIVICVARIANTGROUP.DESCRIPTION,
+                    CIVICVARIANTGROUP.IDVARIANTGROUP,
+                    CIVICVARIANTGROUP.CIVICID)
+                    .values(variantGroup.name(), variantGroup.type(), variantGroup.description(), variantGroup.id(), id)
+                    .returning(CIVICVARIANTGROUP.ID)
                     .fetchOne()
-                    .getValue(CIVICVARIANTSGROUPS.ID);
+                    .getValue(CIVICVARIANTGROUP.ID);
 
-            for (CivicVariants variants : variantGroup.variants()) {
-                int idVariantGroupVariants = context.insertInto(CIVICVARIANTSGROUPSVARIANTS,
-                        CIVICVARIANTSGROUPSVARIANTS.ENTREZ_NAME,
-                        CIVICVARIANTSGROUPSVARIANTS.DESCRIPTION,
-                        CIVICVARIANTSGROUPSVARIANTS.CIVIC_ACTIONABILITY_SCORE,
-                        CIVICVARIANTSGROUPSVARIANTS.GENE_ID,
-                        CIVICVARIANTSGROUPSVARIANTS.ENTREZ_ID,
-                        CIVICVARIANTSGROUPSVARIANTS.TYPE,
-                        CIVICVARIANTSGROUPSVARIANTS.IDVARIANTS,
-                        CIVICVARIANTSGROUPSVARIANTS.NAME,
-                        CIVICVARIANTSGROUPSVARIANTS.CIVICVARIANTSGROUPSID)
-                        .values(variants.entrez_name(),
-                                variants.description(),
-                                variants.civic_actionability_score(),
-                                variants.gene_id(),
-                                variants.entrez_id(),
-                                variants.type(),
-                                variants.id(),
-                                variants.name(),
+            for (CivicVariant variant : variantGroup.variants()) {
+                int idVariantGroupVariant = context.insertInto(CIVICVARIANTGROUPVARIANT,
+                        CIVICVARIANTGROUPVARIANT.ENTREZID,
+                        CIVICVARIANTGROUPVARIANT.ENTREZNAME,
+                        CIVICVARIANTGROUPVARIANT.NAME,
+                        CIVICVARIANTGROUPVARIANT.TYPE,
+                        CIVICVARIANTGROUPVARIANT.CIVICACTIONABILITYSCORE,
+                        CIVICVARIANTGROUPVARIANT.IDVARIANT,
+                        CIVICVARIANTGROUPVARIANT.GENEID,
+                        CIVICVARIANTGROUPVARIANT.DESCRIPTION,
+                        CIVICVARIANTGROUPVARIANT.CIVICVARIANTGROUPID)
+                        .values(variant.entrezId(),
+                                variant.entrezName(),
+                                variant.name(),
+                                variant.type(),
+                                variant.civicActionabilityScore(),
+                                variant.id(),
+                                variant.geneId(),
+                                variant.description(),
                                 idVariantGroup)
-                        .returning(CIVICVARIANTSGROUPSVARIANTS.ID)
+                        .returning(CIVICVARIANTGROUPVARIANT.ID)
                         .fetchOne()
-                        .getValue(CIVICVARIANTSGROUPSVARIANTS.ID);
+                        .getValue(CIVICVARIANTGROUPVARIANT.ID);
 
-                if (variants.coordinates() != null) {
-                    context.insertInto(CIVICVARIANTSGROUPSCOORDINATES,
-                            CIVICVARIANTSGROUPSCOORDINATES.CHROMOSOME2,
-                            CIVICVARIANTSGROUPSCOORDINATES.REFERENCEBASES,
-                            CIVICVARIANTSGROUPSCOORDINATES.START2,
-                            CIVICVARIANTSGROUPSCOORDINATES.VARIANTBASES,
-                            CIVICVARIANTSGROUPSCOORDINATES.STOP,
-                            CIVICVARIANTSGROUPSCOORDINATES.STOP2,
-                            CIVICVARIANTSGROUPSCOORDINATES.REPRESENTATIVETRANSCRIPT2,
-                            CIVICVARIANTSGROUPSCOORDINATES.START,
-                            CIVICVARIANTSGROUPSCOORDINATES.REPRESENTATIVETRANSCRIPT,
-                            CIVICVARIANTSGROUPSCOORDINATES.ENSEMBLVERSION,
-                            CIVICVARIANTSGROUPSCOORDINATES.CHROMOSOME,
-                            CIVICVARIANTSGROUPSCOORDINATES.REFERENCEBUILD,
-                            CIVICVARIANTSGROUPSCOORDINATES.CIVICVARIANTSGROUPSVARIANTSID)
-                            .values(variants.coordinates().chromosome2(),
-                                    variants.coordinates().referenceBases(),
-                                    variants.coordinates().start2(),
-                                    variants.coordinates().variantBases(),
-                                    variants.coordinates().stop(),
-                                    variants.coordinates().stop2(),
-                                    variants.coordinates().representativeTranscript2(),
-                                    variants.coordinates().start(),
-                                    variants.coordinates().representativeTranscript(),
-                                    variants.coordinates().ensemblVersion(),
-                                    variants.coordinates().chromosome(),
-                                    variants.coordinates().referenceBuild(),
-                                    idVariantGroupVariants)
+                CivicCoordinates coordinates = variant.coordinates();
+                if (coordinates != null) {
+                    context.insertInto(CIVICVARIANTGROUPCOORDINATES,
+                            CIVICVARIANTGROUPCOORDINATES.CHROMOSOME,
+                            CIVICVARIANTGROUPCOORDINATES.START,
+                            CIVICVARIANTGROUPCOORDINATES.STOP,
+                            CIVICVARIANTGROUPCOORDINATES.REFERENCEBASES,
+                            CIVICVARIANTGROUPCOORDINATES.VARIANTBASES,
+                            CIVICVARIANTGROUPCOORDINATES.REPRESENTATIVETRANSCRIPT,
+                            CIVICVARIANTGROUPCOORDINATES.ENSEMBLVERSION,
+                            CIVICVARIANTGROUPCOORDINATES.REFERENCEBUILD,
+                            CIVICVARIANTGROUPCOORDINATES.CHROMOSOME2,
+                            CIVICVARIANTGROUPCOORDINATES.START2,
+                            CIVICVARIANTGROUPCOORDINATES.STOP2,
+                            CIVICVARIANTGROUPCOORDINATES.REPRESENTATIVETRANSCRIPT2,
+                            CIVICVARIANTGROUPCOORDINATES.CIVICVARIANTGROUPVARIANTID)
+                            .values(coordinates.chromosome(),
+                                    coordinates.start(),
+                                    coordinates.stop(),
+                                    coordinates.referenceBases(),
+                                    coordinates.variantBases(),
+                                    coordinates.representativeTranscript(),
+                                    coordinates.ensemblVersion(),
+                                    coordinates.referenceBuild(),
+                                    coordinates.chromosome2(),
+                                    coordinates.start2(),
+                                    coordinates.stop2(),
+                                    coordinates.representativeTranscript2(),
+                                    idVariantGroupVariant)
                             .execute();
                 }
 
-                for (CivicVariantTypes variantTypesGroup : variants.variant_types()) {
-                    context.insertInto(CIVICVARIANTSGROUPSTYPES,
-                            CIVICVARIANTSGROUPSTYPES.DISPLAYNAME,
-                            CIVICVARIANTSGROUPSTYPES.DESCRIPTION,
-                            CIVICVARIANTSGROUPSTYPES.URL,
-                            CIVICVARIANTSGROUPSTYPES.SOID,
-                            CIVICVARIANTSGROUPSTYPES.IDVARIANTTYPES,
-                            CIVICVARIANTSGROUPSTYPES.NAME,
-                            CIVICVARIANTSGROUPSTYPES.CIVICVARIANTSGROUPSVARIANTSID)
-                            .values(variantTypesGroup.displayName(),
-                                    variantTypesGroup.description(),
-                                    variantTypesGroup.url(),
-                                    variantTypesGroup.soId(),
-                                    variantTypesGroup.id(),
-                                    variantTypesGroup.name(),
-                                    idVariantGroupVariants)
+                for (CivicVariantType variantType : variant.variantTypes()) {
+                    context.insertInto(CIVICVARIANTGROUPTYPE,
+                            CIVICVARIANTGROUPTYPE.NAME,
+                            CIVICVARIANTGROUPTYPE.DISPLAYNAME,
+                            CIVICVARIANTGROUPTYPE.DESCRIPTION,
+                            CIVICVARIANTGROUPTYPE.URL,
+                            CIVICVARIANTGROUPTYPE.SOID,
+                            CIVICVARIANTGROUPTYPE.IDVARIANTTYPE,
+                            CIVICVARIANTGROUPTYPE.CIVICVARIANTGROUPVARIANTID)
+                            .values(variantType.name(),
+                                    variantType.displayName(),
+                                    variantType.description(),
+                                    variantType.url(),
+                                    variantType.soId(),
+                                    variantType.id(),
+                                    idVariantGroupVariant)
                             .execute();
                 }
             }
         }
 
-        for (CivicEvidenceItems evidenceItems : civic.evidenceItem()) {
-            int idEvidenceItems = context.insertInto(CIVICEVIDENCEITEMS,
-                    CIVICEVIDENCEITEMS.STATUS,
-                    CIVICEVIDENCEITEMS.RATING,
-                    CIVICEVIDENCEITEMS.DRUGINTERACTIONTYPE,
-                    CIVICEVIDENCEITEMS.DESCRIPTION,
-                    CIVICEVIDENCEITEMS.OPENCHANGECOUNT,
-                    CIVICEVIDENCEITEMS.EVIDENCETYPE,
-                    CIVICEVIDENCEITEMS.VARIANTORIGIN,
-                    CIVICEVIDENCEITEMS.EVIDENCEDIRECTION,
-                    CIVICEVIDENCEITEMS.VARIANTID,
-                    CIVICEVIDENCEITEMS.CLINICALSIGNIFICANCE,
-                    CIVICEVIDENCEITEMS.EVIDENCELEVEL,
-                    CIVICEVIDENCEITEMS.TYPE,
-                    CIVICEVIDENCEITEMS.IDEVIDENCEITEMS,
-                    CIVICEVIDENCEITEMS.NAME,
-                    CIVICEVIDENCEITEMS.CIVICID)
-                    .values(evidenceItems.status(),
-                            evidenceItems.rating(),
-                            evidenceItems.drugInteractionType(),
-                            evidenceItems.description(),
-                            evidenceItems.openChangeCount(),
-                            evidenceItems.evidenceType(),
-                            evidenceItems.variantOrigin(),
-                            evidenceItems.evidenceDirection(),
-                            evidenceItems.variantId(),
-                            evidenceItems.clinicalSignificance(),
-                            evidenceItems.evidenceLevel(),
-                            evidenceItems.type(),
-                            evidenceItems.id(),
-                            evidenceItems.name(),
+        int idEvidenceItem = context.insertInto(CIVICEVIDENCEITEM,
+                CIVICEVIDENCEITEM.NAME,
+                CIVICEVIDENCEITEM.TYPE,
+                CIVICEVIDENCEITEM.STATUS,
+                CIVICEVIDENCEITEM.RATING,
+                CIVICEVIDENCEITEM.EVIDENCETYPE,
+                CIVICEVIDENCEITEM.EVIDENCELEVEL,
+                CIVICEVIDENCEITEM.EVIDENCEDIRECTION,
+                CIVICEVIDENCEITEM.DRUGINTERACTIONTYPE,
+                CIVICEVIDENCEITEM.VARIANTORIGIN,
+                CIVICEVIDENCEITEM.CLINICALSIGNIFICANCE,
+                CIVICEVIDENCEITEM.OPENCHANGECOUNT,
+                CIVICEVIDENCEITEM.DESCRIPTION,
+                CIVICEVIDENCEITEM.VARIANTID,
+                CIVICEVIDENCEITEM.IDEVIDENCEITEM,
+                CIVICEVIDENCEITEM.CIVICID)
+                .values(civic.evidenceItem().name(),
+                        civic.evidenceItem().type(),
+                        civic.evidenceItem().status(),
+                        civic.evidenceItem().rating(),
+                        civic.evidenceItem().evidenceType(),
+                        civic.evidenceItem().evidenceLevel(),
+                        civic.evidenceItem().evidenceDirection(),
+                        civic.evidenceItem().drugInteractionType(),
+                        civic.evidenceItem().variantOrigin(),
+                        civic.evidenceItem().clinicalSignificance(),
+                        civic.evidenceItem().openChangeCount(),
+                        civic.evidenceItem().description(),
+                        civic.evidenceItem().variantId(),
+                        civic.evidenceItem().id(),
+                        id)
+                .returning(CIVICEVIDENCEITEM.ID)
+                .fetchOne()
+                .getValue(CIVICEVIDENCEITEM.ID);
+
+        for (CivicDrug drug : civic.evidenceItem().drugs()) {
+            context.insertInto(CIVICDRUG, CIVICDRUG.NAME, CIVICDRUG.PUBCHEMID, CIVICDRUG.IDDRUG, CIVICDRUG.CIVICEVIDENCEITEMID)
+                    .values(drug.name(), drug.pubchemId(), drug.id(), idEvidenceItem)
+                    .execute();
+        }
+
+        context.insertInto(CIVICDISEASE,
+                CIVICDISEASE.NAME,
+                CIVICDISEASE.DISPLAYNAME,
+                CIVICDISEASE.DOID,
+                CIVICDISEASE.URL,
+                CIVICDISEASE.IDDISEASE,
+                CIVICDISEASE.CIVICEVIDENCEITEMID)
+                .values(civic.evidenceItem().disease().name(),
+                        civic.evidenceItem().disease().displayName(),
+                        civic.evidenceItem().disease().doid(),
+                        civic.evidenceItem().disease().url(),
+                        civic.evidenceItem().disease().id(),
+                        idEvidenceItem)
+                .execute();
+
+        int idEvidenceItemSource = context.insertInto(CIVICEVIDENCEITEMSOURCE,
+                CIVICEVIDENCEITEMSOURCE.NAME,
+                CIVICEVIDENCEITEMSOURCE.STATUS,
+                CIVICEVIDENCEITEMSOURCE.OPENACCESS,
+                CIVICEVIDENCEITEMSOURCE.JOURNAL,
+                CIVICEVIDENCEITEMSOURCE.FULLJOURNALTITLE,
+                CIVICEVIDENCEITEMSOURCE.CITATION,
+                CIVICEVIDENCEITEMSOURCE.PMCID,
+                CIVICEVIDENCEITEMSOURCE.SOURCEURL,
+                CIVICEVIDENCEITEMSOURCE.PUBMEDID,
+                CIVICEVIDENCEITEMSOURCE.ISREVIEW,
+                CIVICEVIDENCEITEMSOURCE.IDSOURCE,
+                CIVICEVIDENCEITEMSOURCE.CIVICEVIDENCEITEMID)
+                .values(civic.evidenceItem().source().name(),
+                        civic.evidenceItem().source().status(),
+                        civic.evidenceItem().source().openAccess(),
+                        civic.evidenceItem().source().journal(),
+                        civic.evidenceItem().source().fullJournalTitle(),
+                        civic.evidenceItem().source().citation(),
+                        civic.evidenceItem().source().pmcId(),
+                        civic.evidenceItem().source().sourceUrl(),
+                        civic.evidenceItem().source().pubmedId(),
+                        civic.evidenceItem().source().isReview(),
+                        civic.evidenceItem().source().id(),
+                        idEvidenceItem)
+                .returning(CIVICEVIDENCEITEMSOURCE.ID)
+                .fetchOne()
+                .getValue(CIVICEVIDENCEITEMSOURCE.ID);
+
+        context.insertInto(CIVICEVIDENCEITEMPUBLICATION,
+                CIVICEVIDENCEITEMPUBLICATION.YEAR,
+                CIVICEVIDENCEITEMPUBLICATION.MONTH,
+                CIVICEVIDENCEITEMPUBLICATION.DAY,
+                CIVICEVIDENCEITEMPUBLICATION.CIVICEVIDENCEITEMSOURCEID)
+                .values(civic.evidenceItem().source().publicationDate().year(),
+                        civic.evidenceItem().source().publicationDate().month(),
+                        civic.evidenceItem().source().publicationDate().day(),
+                        idEvidenceItemSource)
+                .execute();
+
+        for (CivicClinicalTrial clinicalTrial : civic.evidenceItem().source().clinicalTrials()) {
+            context.insertInto(CIVICEVIDENCEITEMCLINICALTRIAL,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.NAME,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.NCTID,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.CLINICALTRIALURL,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.DESCRIPTION,
+                    CIVICEVIDENCEITEMCLINICALTRIAL.CIVICEVIDENCEITEMSOURCEID)
+                    .values(clinicalTrial.name(),
+                            clinicalTrial.nctId(),
+                            clinicalTrial.clinicalTrialUrl(),
+                            clinicalTrial.description(),
+                            idEvidenceItemSource)
+                    .execute();
+        }
+
+        for (CivicSource source : civic.sources()) {
+            int idSource = context.insertInto(CIVICSOURCE,
+                    CIVICSOURCE.NAME,
+                    CIVICSOURCE.STATUS,
+                    CIVICSOURCE.OPENACCESS,
+                    CIVICSOURCE.JOURNAL,
+                    CIVICSOURCE.FULLJOURNALTITLE,
+                    CIVICSOURCE.CITATION,
+                    CIVICSOURCE.PMCID,
+                    CIVICSOURCE.SOURCEURL,
+                    CIVICSOURCE.PUBMEDID,
+                    CIVICSOURCE.ISREVIEW,
+                    CIVICSOURCE.IDSOURCE,
+                    CIVICSOURCE.CIVICID)
+                    .values(source.name(),
+                            source.status(),
+                            source.openAccess(),
+                            source.journal(),
+                            source.fullJournalTitle(),
+                            source.citation(),
+                            source.pmcId(),
+                            source.sourceUrl(),
+                            source.pubmedId(),
+                            source.isReview(),
+                            source.id(),
                             id)
-                    .returning(CIVICEVIDENCEITEMS.ID)
+                    .returning(CIVICSOURCE.ID)
                     .fetchOne()
-                    .getValue(CIVICEVIDENCEITEMS.ID);
+                    .getValue(CIVICSOURCE.ID);
 
-            for (CivicDrugs drugs : evidenceItems.drugs()) {
-                context.insertInto(CIVICDRUGS, CIVICDRUGS.PUBCHEMID, CIVICDRUGS.IDDRUGS, CIVICDRUGS.NAME, CIVICDRUGS.CIVICEVIDENCEITEMSID)
-                        .values(drugs.pubchemId(), drugs.id(), drugs.name(), idEvidenceItems)
-                        .execute();
-            }
-
-            context.insertInto(CIVICDISEASE,
-                    CIVICDISEASE.DOID,
-                    CIVICDISEASE.URL,
-                    CIVICDISEASE.DISPLAYNAME,
-                    CIVICDISEASE.IDDISEASE,
-                    CIVICDISEASE.NAME,
-                    CIVICDISEASE.CIVICEVIDENCEITEMSID)
-                    .values(evidenceItems.disease().doid(),
-                            evidenceItems.disease().url(),
-                            evidenceItems.disease().displayName(),
-                            evidenceItems.disease().id(),
-                            evidenceItems.disease().name(),
-                            idEvidenceItems)
+            context.insertInto(CIVICPUBLICATION,
+                    CIVICPUBLICATION.YEAR,
+                    CIVICPUBLICATION.MONTH,
+                    CIVICPUBLICATION.DAY,
+                    CIVICPUBLICATION.CIVICSOURCEID)
+                    .values(source.publicationDate().year(), source.publicationDate().month(), source.publicationDate().day(), idSource)
                     .execute();
 
-            int idEvidenceItemsSource = context.insertInto(CIVICEVIDENCEITEMSSOURCE,
-                    CIVICEVIDENCEITEMSSOURCE.STATUS,
-                    CIVICEVIDENCEITEMSSOURCE.OPENACCESS,
-                    CIVICEVIDENCEITEMSSOURCE.NAME,
-                    CIVICEVIDENCEITEMSSOURCE.JOURNAL,
-                    CIVICEVIDENCEITEMSSOURCE.CITATION,
-                    CIVICEVIDENCEITEMSSOURCE.PMC_ID,
-                    CIVICEVIDENCEITEMSSOURCE.FULLJOURNALTITLE,
-                    CIVICEVIDENCEITEMSSOURCE.SOURCEURL,
-                    CIVICEVIDENCEITEMSSOURCE.PUBMEDID,
-                    CIVICEVIDENCEITEMSSOURCE.ISREVIEW,
-                    CIVICEVIDENCEITEMSSOURCE.IDSOURCE,
-                    CIVICEVIDENCEITEMSSOURCE.CIVICEVIDENCEITEMSID)
-                    .values(evidenceItems.source().status(),
-                            evidenceItems.source().openAccess(),
-                            evidenceItems.source().name(),
-                            evidenceItems.source().journal(),
-                            evidenceItems.source().citation(),
-                            evidenceItems.source().pmc_Id(),
-                            evidenceItems.source().fullJournalTitle(),
-                            evidenceItems.source().sourceUrl(),
-                            evidenceItems.source().pubmedId(),
-                            evidenceItems.source().isReview(),
-                            evidenceItems.source().id(),
-                            idEvidenceItems)
-                    .returning(CIVICEVIDENCEITEMSSOURCE.ID)
-                    .fetchOne()
-                    .getValue(CIVICEVIDENCEITEMSSOURCE.ID);
-
-            context.insertInto(CIVICEVIDENCEITEMSPUBLICATION,
-                    CIVICEVIDENCEITEMSPUBLICATION.YEAR,
-                    CIVICEVIDENCEITEMSPUBLICATION.DAY,
-                    CIVICEVIDENCEITEMSPUBLICATION.MONTH,
-                    CIVICEVIDENCEITEMSPUBLICATION.CIVICEVIDENCEITEMSSOURCEID)
-                    .values(evidenceItems.source().publicationDate().year(),
-                            evidenceItems.source().publicationDate().day(),
-                            evidenceItems.source().publicationDate().month(),
-                            idEvidenceItemsSource)
-                    .execute();
-
-            for (CivicClinicalTrial clinicalTrial : evidenceItems.source().clinicalTrials()) {
-                context.insertInto(CIVICEVIDENCEITEMSCLINICALTRIAL,
-                        CIVICEVIDENCEITEMSCLINICALTRIAL.NCT_ID,
-                        CIVICEVIDENCEITEMSCLINICALTRIAL.DESCRIPTION,
-                        CIVICEVIDENCEITEMSCLINICALTRIAL.CLINICAL_TRIAL_URL,
-                        CIVICEVIDENCEITEMSCLINICALTRIAL.NAME,
-                        CIVICEVIDENCEITEMSCLINICALTRIAL.CIVICEVIDENCEITEMSSOURCEID)
-                        .values(clinicalTrial.nct_id(),
+            for (CivicClinicalTrial clinicalTrial : source.clinicalTrials()) {
+                context.insertInto(CIVICCLINICALTRIAL,
+                        CIVICCLINICALTRIAL.NAME,
+                        CIVICCLINICALTRIAL.NCTID,
+                        CIVICCLINICALTRIAL.CLINICALTRIALURL,
+                        CIVICCLINICALTRIAL.DESCRIPTION,
+                        CIVICCLINICALTRIAL.CIVICSOURCEID)
+                        .values(clinicalTrial.name(),
+                                clinicalTrial.nctId(),
+                                clinicalTrial.clinicalTrialUrl(),
                                 clinicalTrial.description(),
-                                clinicalTrial.clinical_trial_url(),
-                                clinicalTrial.name(),
-                                idEvidenceItemsSource)
+                                idSource)
                         .execute();
             }
         }
 
-        if (civic.sources() != null) {
-            for (CivicSource source : civic.sources()) {
-                int idSource = context.insertInto(CIVICSOURCE,
-                        CIVICSOURCE.STATUS,
-                        CIVICSOURCE.OPENACCESS,
-                        CIVICSOURCE.NAME,
-                        CIVICSOURCE.JOURNAL,
-                        CIVICSOURCE.CITATION,
-                        CIVICSOURCE.PMC_ID,
-                        CIVICSOURCE.FULLJOURNALTITLE,
-                        CIVICSOURCE.SOURCEURL,
-                        CIVICSOURCE.PUBMEDID,
-                        CIVICSOURCE.ISREVIEW,
-                        CIVICSOURCE.IDSOURCE,
-                        CIVICSOURCE.CIVICID)
-                        .values(source.status(),
-                                source.openAccess(),
-                                source.name(),
-                                source.journal(),
-                                source.citation(),
-                                source.pmc_Id(),
-                                source.fullJournalTitle(),
-                                source.sourceUrl(),
-                                source.pubmedId(),
-                                source.isReview(),
-                                source.id(),
-                                id)
-                        .returning(CIVICSOURCE.ID)
-                        .fetchOne()
-                        .getValue(CIVICSOURCE.ID);
-
-                context.insertInto(CIVICPUBLICATION,
-                        CIVICPUBLICATION.YEAR,
-                        CIVICPUBLICATION.DAY,
-                        CIVICPUBLICATION.MONTH,
-                        CIVICPUBLICATION.CIVICSOURCEID)
-                        .values(source.publicationDate().year(), source.publicationDate().day(), source.publicationDate().month(), idSource)
-                        .execute();
-
-                for (CivicClinicalTrial clinicalTrial : source.clinicalTrials()) {
-                    context.insertInto(CIVICCLINICALTRIAL,
-                            CIVICCLINICALTRIAL.NCT_ID,
-                            CIVICCLINICALTRIAL.DESCRIPTION,
-                            CIVICCLINICALTRIAL.CLINICAL_TRIAL_URL,
-                            CIVICCLINICALTRIAL.NAME,
-                            CIVICCLINICALTRIAL.CIVICSOURCEID)
-                            .values(clinicalTrial.nct_id(),
-                                    clinicalTrial.description(),
-                                    clinicalTrial.clinical_trial_url(),
-                                    clinicalTrial.name(),
-                                    idSource)
-                            .execute();
-                }
-            }
-        }
-
-        context.insertInto(CIVICERROR, CIVICERROR.CIVICID).values(id).execute();
-
-        int idLifeActions = context.insertInto(CIVICLIFECYCLEACTIONS, CIVICLIFECYCLEACTIONS.CIVICID)
+        int idLifecycleActions = context.insertInto(CIVICLIFECYCLEACTIONS, CIVICLIFECYCLEACTIONS.CIVICID)
                 .values(id)
                 .returning(CIVICLIFECYCLEACTIONS.ID)
                 .fetchOne()
                 .getValue(CIVICLIFECYCLEACTIONS.ID);
 
-        if (civic.lifecycleActions().lastCommentedOn() != null) {
-            int idLastCommendOn =
+        CivicLastCommentedOn lastCommentedOn = civic.lifecycleActions().lastCommentedOn();
+        if (lastCommentedOn != null) {
+            int idLastCommentedOn =
                     context.insertInto(CIVICLASTCOMMENTEDON, CIVICLASTCOMMENTEDON.TIMESTAMP, CIVICLASTCOMMENTEDON.CIVICLIFECYCLEACTIONSID)
-                            .values(civic.lifecycleActions().lastCommentedOn().timestamp(), idLifeActions)
+                            .values(lastCommentedOn.timestamp(), idLifecycleActions)
                             .returning(CIVICLASTCOMMENTEDON.ID)
                             .fetchOne()
                             .getValue(CIVICLASTCOMMENTEDON.ID);
 
-            CivicUser userLastCommend = civic.lifecycleActions().lastCommentedOn().user();
-            int idLastCommentUser = context.insertInto(CIVICLASTCOMMENTEDONUSER,
+            CivicUser userLastCommentedOn = lastCommentedOn.user();
+            int idLastCommentedOnUser = context.insertInto(CIVICLASTCOMMENTEDONUSER,
                     CIVICLASTCOMMENTEDONUSER.USERNAME,
-                    CIVICLASTCOMMENTEDONUSER.AREAOFEXPERTISE,
-                    CIVICLASTCOMMENTEDONUSER.TWITTERHANDLE,
                     CIVICLASTCOMMENTEDONUSER.NAME,
+                    CIVICLASTCOMMENTEDONUSER.DISPLAYNAME,
+                    CIVICLASTCOMMENTEDONUSER.ROLE,
+                    CIVICLASTCOMMENTEDONUSER.AFFILIATION,
+                    CIVICLASTCOMMENTEDONUSER.FEATUREDEXPERT,
+                    CIVICLASTCOMMENTEDONUSER.AREAOFEXPERTISE,
                     CIVICLASTCOMMENTEDONUSER.BIO,
                     CIVICLASTCOMMENTEDONUSER.URL,
                     CIVICLASTCOMMENTEDONUSER.CREATEDAT,
-                    CIVICLASTCOMMENTEDONUSER.ACCEPTEDLICENSE,
-                    CIVICLASTCOMMENTEDONUSER.AFFILIATION,
+                    CIVICLASTCOMMENTEDONUSER.LASTSEENAT,
                     CIVICLASTCOMMENTEDONUSER.AVATARURL,
-                    CIVICLASTCOMMENTEDONUSER.ROLE,
+                    CIVICLASTCOMMENTEDONUSER.TWITTERHANDLE,
                     CIVICLASTCOMMENTEDONUSER.FACEBOOKPROFILE,
                     CIVICLASTCOMMENTEDONUSER.LINKEDINPROFILE,
                     CIVICLASTCOMMENTEDONUSER.ORCID,
-                    CIVICLASTCOMMENTEDONUSER.DISPLAYNAME,
-                    CIVICLASTCOMMENTEDONUSER.LASTSEENAT,
-                    CIVICLASTCOMMENTEDONUSER.FEATUREDEXPERT,
-                    CIVICLASTCOMMENTEDONUSER.IDUSER,
                     CIVICLASTCOMMENTEDONUSER.SIGNUPCOMPLETE,
+                    CIVICLASTCOMMENTEDONUSER.ACCEPTEDLICENSE,
+                    CIVICLASTCOMMENTEDONUSER.IDUSER,
                     CIVICLASTCOMMENTEDONUSER.CIVICLASTCOMMENTEDONID)
-                    .values(userLastCommend.username(),
-                            userLastCommend.areaOfExpertise(),
-                            userLastCommend.twitterHandle(),
-                            userLastCommend.name(),
-                            userLastCommend.bio(),
-                            userLastCommend.url(),
-                            userLastCommend.createdAt(),
-                            userLastCommend.acceptedLicense(),
-                            userLastCommend.affiliation(),
-                            userLastCommend.avatarUrl(),
-                            userLastCommend.role(),
-                            userLastCommend.facebookProfile(),
-                            userLastCommend.linkedinProfile(),
-                            userLastCommend.orcid(),
-                            userLastCommend.displayName(),
-                            userLastCommend.lastSeenAt(),
-                            userLastCommend.featuredExpert(),
-                            userLastCommend.id(),
-                            userLastCommend.signupComplete(),
-                            idLastCommendOn)
+                    .values(userLastCommentedOn.username(),
+                            userLastCommentedOn.name(),
+                            userLastCommentedOn.displayName(),
+                            userLastCommentedOn.role(),
+                            userLastCommentedOn.affiliation(),
+                            userLastCommentedOn.featuredExpert(),
+                            userLastCommentedOn.areaOfExpertise(),
+                            userLastCommentedOn.bio(),
+                            userLastCommentedOn.url(),
+                            userLastCommentedOn.createdAt(),
+                            userLastCommentedOn.lastSeenAt(),
+                            userLastCommentedOn.avatarUrl(),
+                            userLastCommentedOn.twitterHandle(),
+                            userLastCommentedOn.facebookProfile(),
+                            userLastCommentedOn.linkedinProfile(),
+                            userLastCommentedOn.orcid(),
+                            userLastCommentedOn.signupComplete(),
+                            userLastCommentedOn.acceptedLicense(),
+                            userLastCommentedOn.id(),
+                            idLastCommentedOn)
                     .returning(CIVICLASTCOMMENTEDONUSER.ID)
                     .fetchOne()
                     .getValue(CIVICLASTCOMMENTEDONUSER.ID);
 
             context.insertInto(CIVICLASTCOMMENTEDONAVATARS,
-                    CIVICLASTCOMMENTEDONAVATARS.X32,
                     CIVICLASTCOMMENTEDONAVATARS.X14,
+                    CIVICLASTCOMMENTEDONAVATARS.X32,
                     CIVICLASTCOMMENTEDONAVATARS.X64,
                     CIVICLASTCOMMENTEDONAVATARS.X128,
                     CIVICLASTCOMMENTEDONAVATARS.CIVICLASTCOMMENTEDONUSERID)
-                    .values(userLastCommend.avatars().x32(),
-                            userLastCommend.avatars().x14(),
-                            userLastCommend.avatars().x64(),
-                            userLastCommend.avatars().x128(),
-                            idLastCommentUser)
+                    .values(userLastCommentedOn.avatars().x14(),
+                            userLastCommentedOn.avatars().x32(),
+                            userLastCommentedOn.avatars().x64(),
+                            userLastCommentedOn.avatars().x128(),
+                            idLastCommentedOnUser)
                     .execute();
 
             int idLastCommentOnOrganization = context.insertInto(CIVICLASTCOMMENTEDONORGANIZATION,
+                    CIVICLASTCOMMENTEDONORGANIZATION.NAME,
                     CIVICLASTCOMMENTEDONORGANIZATION.URL,
                     CIVICLASTCOMMENTEDONORGANIZATION.IDORGANIZATION,
                     CIVICLASTCOMMENTEDONORGANIZATION.DESCRIPTION,
-                    CIVICLASTCOMMENTEDONORGANIZATION.NAME,
                     CIVICLASTCOMMENTEDONORGANIZATION.CIVICLASTCOMMENTEDONUSERID)
-                    .values(userLastCommend.organization().url(),
-                            userLastCommend.organization().id(),
-                            userLastCommend.organization().description(),
-                            userLastCommend.organization().name(),
-                            idLastCommentUser)
+                    .values(userLastCommentedOn.organization().name(),
+                            userLastCommentedOn.organization().url(),
+                            userLastCommentedOn.organization().id(),
+                            userLastCommentedOn.organization().description(),
+                            idLastCommentedOnUser)
                     .returning(CIVICLASTCOMMENTEDONORGANIZATION.ID)
                     .fetchOne()
                     .getValue(CIVICLASTCOMMENTEDONORGANIZATION.ID);
 
-            context.insertInto(CIVICLASTCOMMENTEDONPROFILEIMAGE,
-                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X32,
-                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X256,
-                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X14,
-                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X64,
-                    CIVICLASTCOMMENTEDONPROFILEIMAGE.X128,
-                    CIVICLASTCOMMENTEDONPROFILEIMAGE.CIVICLASTCOMMENTEDONORGANIZATIONID)
-                    .values(userLastCommend.organization().profileImage().x32(),
-                            userLastCommend.organization().profileImage().x256(),
-                            userLastCommend.organization().profileImage().x14(),
-                            userLastCommend.organization().profileImage().x64(),
-                            userLastCommend.organization().profileImage().x128(),
-                            idLastCommentOnOrganization)
-                    .execute();
+            CivicProfileImage userLastCommentedOnProfileImage = userLastCommentedOn.organization().profileImage();
+            if (userLastCommentedOnProfileImage != null) {
+                context.insertInto(CIVICLASTCOMMENTEDONPROFILEIMAGE,
+                        CIVICLASTCOMMENTEDONPROFILEIMAGE.X14,
+                        CIVICLASTCOMMENTEDONPROFILEIMAGE.X32,
+                        CIVICLASTCOMMENTEDONPROFILEIMAGE.X64,
+                        CIVICLASTCOMMENTEDONPROFILEIMAGE.X128,
+                        CIVICLASTCOMMENTEDONPROFILEIMAGE.X256,
+                        CIVICLASTCOMMENTEDONPROFILEIMAGE.CIVICLASTCOMMENTEDONORGANIZATIONID)
+                        .values(userLastCommentedOnProfileImage.x14(),
+                                userLastCommentedOnProfileImage.x32(),
+                                userLastCommentedOnProfileImage.x64(),
+                                userLastCommentedOnProfileImage.x128(),
+                                userLastCommentedOnProfileImage.x256(),
+                                idLastCommentOnOrganization)
+                        .execute();
+            }
         }
 
-        if (civic.lifecycleActions().lastModified() != null) {
+        CivicLastModified lastModified = civic.lifecycleActions().lastModified();
+        if (lastModified != null) {
             int idLastModified =
                     context.insertInto(CIVICLASTMODIFIED, CIVICLASTMODIFIED.TIMESTAMP, CIVICLASTMODIFIED.CIVICLIFECYCLEACTIONSID)
-                            .values(civic.lifecycleActions().lastModified().timestamp(), idLifeActions)
+                            .values(lastModified.timestamp(), idLifecycleActions)
                             .returning(CIVICLASTMODIFIED.ID)
                             .fetchOne()
                             .getValue(CIVICLASTMODIFIED.ID);
 
-            CivicUser userModified = civic.lifecycleActions().lastModified().user();
+            CivicUser userLastModified = lastModified.user();
+
             int idLastModifiedUser = context.insertInto(CIVICLASTMODIFIEDUSER,
                     CIVICLASTMODIFIEDUSER.USERNAME,
-                    CIVICLASTMODIFIEDUSER.AREAOFEXPERTISE,
-                    CIVICLASTMODIFIEDUSER.TWITTERHANDLE,
                     CIVICLASTMODIFIEDUSER.NAME,
+                    CIVICLASTMODIFIEDUSER.DISPLAYNAME,
+                    CIVICLASTMODIFIEDUSER.ROLE,
+                    CIVICLASTMODIFIEDUSER.AFFILIATION,
+                    CIVICLASTMODIFIEDUSER.FEATUREDEXPERT,
+                    CIVICLASTMODIFIEDUSER.AREAOFEXPERTISE,
                     CIVICLASTMODIFIEDUSER.BIO,
                     CIVICLASTMODIFIEDUSER.URL,
                     CIVICLASTMODIFIEDUSER.CREATEDAT,
-                    CIVICLASTMODIFIEDUSER.ACCEPTEDLICENSE,
-                    CIVICLASTMODIFIEDUSER.AFFILIATION,
+                    CIVICLASTMODIFIEDUSER.LASTSEENAT,
                     CIVICLASTMODIFIEDUSER.AVATARURL,
-                    CIVICLASTMODIFIEDUSER.ROLE,
+                    CIVICLASTMODIFIEDUSER.TWITTERHANDLE,
                     CIVICLASTMODIFIEDUSER.FACEBOOKPROFILE,
                     CIVICLASTMODIFIEDUSER.LINKEDINPROFILE,
                     CIVICLASTMODIFIEDUSER.ORCID,
-                    CIVICLASTMODIFIEDUSER.DISPLAYNAME,
-                    CIVICLASTMODIFIEDUSER.LASTSEENAT,
-                    CIVICLASTMODIFIEDUSER.FEATUREDEXPERT,
-                    CIVICLASTMODIFIEDUSER.IDUSER,
                     CIVICLASTMODIFIEDUSER.SIGNUPCOMPLETE,
+                    CIVICLASTMODIFIEDUSER.ACCEPTEDLICENSE,
+                    CIVICLASTMODIFIEDUSER.IDUSER,
                     CIVICLASTMODIFIEDUSER.CIVICLASTMODIFIEDID)
-                    .values(userModified.username(),
-                            userModified.areaOfExpertise(),
-                            userModified.twitterHandle(),
-                            userModified.name(),
-                            userModified.bio(),
-                            userModified.url(),
-                            userModified.createdAt(),
-                            userModified.acceptedLicense(),
-                            userModified.affiliation(),
-                            userModified.avatarUrl(),
-                            userModified.role(),
-                            userModified.facebookProfile(),
-                            userModified.linkedinProfile(),
-                            userModified.orcid(),
-                            userModified.displayName(),
-                            userModified.lastSeenAt(),
-                            userModified.featuredExpert(),
-                            userModified.id(),
-                            userModified.signupComplete(),
+                    .values(userLastModified.username(),
+                            userLastModified.name(),
+                            userLastModified.displayName(),
+                            userLastModified.role(),
+                            userLastModified.affiliation(),
+                            userLastModified.featuredExpert(),
+                            userLastModified.areaOfExpertise(),
+                            userLastModified.bio(),
+                            userLastModified.url(),
+                            userLastModified.createdAt(),
+                            userLastModified.lastSeenAt(),
+                            userLastModified.avatarUrl(),
+                            userLastModified.twitterHandle(),
+                            userLastModified.facebookProfile(),
+                            userLastModified.linkedinProfile(),
+                            userLastModified.orcid(),
+                            userLastModified.signupComplete(),
+                            userLastModified.acceptedLicense(),
+                            userLastModified.id(),
                             idLastModified)
                     .returning(CIVICLASTMODIFIEDUSER.ID)
                     .fetchOne()
                     .getValue(CIVICLASTMODIFIEDUSER.ID);
 
             context.insertInto(CIVICLASTMODIFIEDAVATARS,
-                    CIVICLASTMODIFIEDAVATARS.X32,
                     CIVICLASTMODIFIEDAVATARS.X14,
+                    CIVICLASTMODIFIEDAVATARS.X32,
                     CIVICLASTMODIFIEDAVATARS.X64,
                     CIVICLASTMODIFIEDAVATARS.X128,
                     CIVICLASTMODIFIEDAVATARS.CIVICLASTMODIFIEDID)
-                    .values(userModified.avatars().x32(),
-                            userModified.avatars().x14(),
-                            userModified.avatars().x64(),
-                            userModified.avatars().x128(),
+                    .values(userLastModified.avatars().x14(),
+                            userLastModified.avatars().x32(),
+                            userLastModified.avatars().x64(),
+                            userLastModified.avatars().x128(),
                             idLastModifiedUser)
                     .execute();
 
             int idLastModifiedOrganization = context.insertInto(CIVICLASTMODIFIEDORGANIZATION,
+                    CIVICLASTMODIFIEDORGANIZATION.NAME,
                     CIVICLASTMODIFIEDORGANIZATION.URL,
                     CIVICLASTMODIFIEDORGANIZATION.IDORGANIZATION,
                     CIVICLASTMODIFIEDORGANIZATION.DESCRIPTION,
-                    CIVICLASTMODIFIEDORGANIZATION.NAME,
                     CIVICLASTMODIFIEDORGANIZATION.CIVICLASTMODIFIEDUSERID)
-                    .values(userModified.organization().url(),
-                            userModified.organization().id(),
-                            userModified.organization().description(),
-                            userModified.organization().name(),
+                    .values(userLastModified.organization().name(),
+                            userLastModified.organization().url(),
+                            userLastModified.organization().id(),
+                            userLastModified.organization().description(),
                             idLastModifiedUser)
                     .returning(CIVICLASTMODIFIEDORGANIZATION.ID)
                     .fetchOne()
                     .getValue(CIVICLASTMODIFIEDORGANIZATION.ID);
 
-            if (userModified.organization().profileImage() != null) {
+            CivicProfileImage userLastModifiedProfileImage = userLastModified.organization().profileImage();
+            if (userLastModifiedProfileImage != null) {
                 context.insertInto(CIVICLASTMODIFIEDPROFILEIMAGE,
-                        CIVICLASTMODIFIEDPROFILEIMAGE.X32,
-                        CIVICLASTMODIFIEDPROFILEIMAGE.X256,
                         CIVICLASTMODIFIEDPROFILEIMAGE.X14,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X32,
                         CIVICLASTMODIFIEDPROFILEIMAGE.X64,
                         CIVICLASTMODIFIEDPROFILEIMAGE.X128,
+                        CIVICLASTMODIFIEDPROFILEIMAGE.X256,
                         CIVICLASTMODIFIEDPROFILEIMAGE.CIVICLASTMODIFIEDORGANIZATIONID)
-                        .values(userModified.organization().profileImage().x32(),
-                                userModified.organization().profileImage().x256(),
-                                userModified.organization().profileImage().x14(),
-                                userModified.organization().profileImage().x64(),
-                                userModified.organization().profileImage().x128(),
+                        .values(userLastModifiedProfileImage.x14(),
+                                userLastModifiedProfileImage.x32(),
+                                userLastModifiedProfileImage.x64(),
+                                userLastModifiedProfileImage.x128(),
+                                userLastModifiedProfileImage.x256(),
                                 idLastModifiedOrganization)
                         .execute();
             }
-
         }
 
-        if (civic.lifecycleActions().lastReviewed() != null) {
+        CivicLastReviewed lastReviewed = civic.lifecycleActions().lastReviewed();
+        if (lastReviewed != null) {
             int idLastReviewed =
                     context.insertInto(CIVICLASTREVIEWED, CIVICLASTREVIEWED.TIMESTAMP, CIVICLASTREVIEWED.CIVICLIFECYCLEACTIONSID)
-                            .values(civic.lifecycleActions().lastCommentedOn().timestamp(), idLifeActions)
+                            .values(lastReviewed.timestamp(), idLifecycleActions)
                             .returning(CIVICLASTREVIEWED.ID)
                             .fetchOne()
                             .getValue(CIVICLASTREVIEWED.ID);
 
-            CivicUser userLastReviewed = civic.lifecycleActions().lastReviewed().user();
+            CivicUser userLastReviewed = lastReviewed.user();
             int idLastReviewedUser = context.insertInto(CIVICLASTREVIEWEDUSER,
                     CIVICLASTREVIEWEDUSER.USERNAME,
-                    CIVICLASTREVIEWEDUSER.AREAOFEXPERTISE,
-                    CIVICLASTREVIEWEDUSER.TWITTERHANDLE,
                     CIVICLASTREVIEWEDUSER.NAME,
+                    CIVICLASTREVIEWEDUSER.DISPLAYNAME,
+                    CIVICLASTREVIEWEDUSER.ROLE,
+                    CIVICLASTREVIEWEDUSER.AFFILIATION,
+                    CIVICLASTREVIEWEDUSER.FEATUREDEXPERT,
+                    CIVICLASTREVIEWEDUSER.AREAOFEXPERTISE,
                     CIVICLASTREVIEWEDUSER.BIO,
                     CIVICLASTREVIEWEDUSER.URL,
                     CIVICLASTREVIEWEDUSER.CREATEDAT,
-                    CIVICLASTREVIEWEDUSER.ACCEPTEDLICENSE,
-                    CIVICLASTREVIEWEDUSER.AFFILIATION,
+                    CIVICLASTREVIEWEDUSER.LASTSEENAT,
                     CIVICLASTREVIEWEDUSER.AVATARURL,
-                    CIVICLASTREVIEWEDUSER.ROLE,
+                    CIVICLASTREVIEWEDUSER.TWITTERHANDLE,
                     CIVICLASTREVIEWEDUSER.FACEBOOKPROFILE,
                     CIVICLASTREVIEWEDUSER.LINKEDINPROFILE,
                     CIVICLASTREVIEWEDUSER.ORCID,
-                    CIVICLASTREVIEWEDUSER.DISPLAYNAME,
-                    CIVICLASTREVIEWEDUSER.LASTSEENAT,
-                    CIVICLASTREVIEWEDUSER.FEATUREDEXPERT,
-                    CIVICLASTREVIEWEDUSER.IDUSER,
                     CIVICLASTREVIEWEDUSER.SIGNUPCOMPLETE,
+                    CIVICLASTREVIEWEDUSER.ACCEPTEDLICENSE,
+                    CIVICLASTREVIEWEDUSER.IDUSER,
                     CIVICLASTREVIEWEDUSER.CIVICLASTREVIEWEDID)
                     .values(userLastReviewed.username(),
-                            userLastReviewed.areaOfExpertise(),
-                            userLastReviewed.twitterHandle(),
                             userLastReviewed.name(),
+                            userLastReviewed.displayName(),
+                            userLastReviewed.role(),
+                            userLastReviewed.affiliation(),
+                            userLastReviewed.featuredExpert(),
+                            userLastReviewed.areaOfExpertise(),
                             userLastReviewed.bio(),
                             userLastReviewed.url(),
                             userLastReviewed.createdAt(),
-                            userLastReviewed.acceptedLicense(),
-                            userLastReviewed.affiliation(),
+                            userLastReviewed.lastSeenAt(),
                             userLastReviewed.avatarUrl(),
-                            userLastReviewed.role(),
+                            userLastReviewed.twitterHandle(),
                             userLastReviewed.facebookProfile(),
                             userLastReviewed.linkedinProfile(),
                             userLastReviewed.orcid(),
-                            userLastReviewed.displayName(),
-                            userLastReviewed.lastSeenAt(),
-                            userLastReviewed.featuredExpert(),
-                            userLastReviewed.id(),
                             userLastReviewed.signupComplete(),
+                            userLastReviewed.acceptedLicense(),
+                            userLastReviewed.id(),
                             idLastReviewed)
                     .returning(CIVICLASTREVIEWEDUSER.ID)
                     .fetchOne()
                     .getValue(CIVICLASTREVIEWEDUSER.ID);
 
             context.insertInto(CIVICLASTREVIEWEDAVATARS,
-                    CIVICLASTREVIEWEDAVATARS.X32,
                     CIVICLASTREVIEWEDAVATARS.X14,
+                    CIVICLASTREVIEWEDAVATARS.X32,
                     CIVICLASTREVIEWEDAVATARS.X64,
                     CIVICLASTREVIEWEDAVATARS.X128,
                     CIVICLASTREVIEWEDAVATARS.CIVICLASTREVIEWEDID)
-                    .values(userLastReviewed.avatars().x32(),
-                            userLastReviewed.avatars().x14(),
+                    .values(userLastReviewed.avatars().x14(),
+                            userLastReviewed.avatars().x32(),
                             userLastReviewed.avatars().x64(),
                             userLastReviewed.avatars().x128(),
                             idLastReviewedUser)
                     .execute();
 
             int idLastReviewedOrganization = context.insertInto(CIVICLASTREVIEWEDORGANIZATION,
+                    CIVICLASTREVIEWEDORGANIZATION.NAME,
                     CIVICLASTREVIEWEDORGANIZATION.URL,
                     CIVICLASTREVIEWEDORGANIZATION.IDORGANIZATION,
                     CIVICLASTREVIEWEDORGANIZATION.DESCRIPTION,
-                    CIVICLASTREVIEWEDORGANIZATION.NAME,
                     CIVICLASTREVIEWEDORGANIZATION.CIVICLASTREVIEWEDUSERID)
-                    .values(userLastReviewed.organization().url(),
+                    .values(userLastReviewed.organization().name(),
+                            userLastReviewed.organization().url(),
                             userLastReviewed.organization().id(),
                             userLastReviewed.organization().description(),
-                            userLastReviewed.organization().name(),
                             idLastReviewedUser)
                     .returning(CIVICLASTREVIEWEDORGANIZATION.ID)
                     .fetchOne()
                     .getValue(CIVICLASTREVIEWEDORGANIZATION.ID);
 
-            context.insertInto(CIVICLASTREVIEWEDPROFILEIMAGE,
-                    CIVICLASTREVIEWEDPROFILEIMAGE.X32,
-                    CIVICLASTREVIEWEDPROFILEIMAGE.X256,
-                    CIVICLASTREVIEWEDPROFILEIMAGE.X14,
-                    CIVICLASTREVIEWEDPROFILEIMAGE.X64,
-                    CIVICLASTREVIEWEDPROFILEIMAGE.X128,
-                    CIVICLASTREVIEWEDPROFILEIMAGE.CIVICLASTREVIEWEDORGANIZATIONID)
-                    .values(userLastReviewed.organization().profileImage().x32(),
-                            userLastReviewed.organization().profileImage().x256(),
-                            userLastReviewed.organization().profileImage().x14(),
-                            userLastReviewed.organization().profileImage().x64(),
-                            userLastReviewed.organization().profileImage().x128(),
-                            idLastReviewedOrganization)
-                    .execute();
+            CivicProfileImage userLastReviewedProfileImage = userLastReviewed.organization().profileImage();
+            if (userLastReviewedProfileImage != null) {
+                context.insertInto(CIVICLASTREVIEWEDPROFILEIMAGE,
+                        CIVICLASTREVIEWEDPROFILEIMAGE.X14,
+                        CIVICLASTREVIEWEDPROFILEIMAGE.X32,
+                        CIVICLASTREVIEWEDPROFILEIMAGE.X64,
+                        CIVICLASTREVIEWEDPROFILEIMAGE.X128,
+                        CIVICLASTREVIEWEDPROFILEIMAGE.X256,
+                        CIVICLASTREVIEWEDPROFILEIMAGE.CIVICLASTREVIEWEDORGANIZATIONID)
+                        .values(userLastReviewedProfileImage.x14(),
+                                userLastReviewedProfileImage.x32(),
+                                userLastReviewedProfileImage.x64(),
+                                userLastReviewedProfileImage.x128(),
+                                userLastReviewedProfileImage.x256(),
+                                idLastReviewedOrganization)
+                        .execute();
+            }
         }
     }
 
     static void deleteAll(@NotNull DSLContext context) {
-        // TODO Order from branch to root to avoid constraint violation.
-        context.deleteFrom(CIVICSOURCE).execute();
-        context.deleteFrom(CIVICERROR).execute();
+        // Start with deleting the life cycle action tables
+        context.deleteFrom(CIVICLASTCOMMENTEDONPROFILEIMAGE).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONORGANIZATION).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONAVATARS).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDONUSER).execute();
+        context.deleteFrom(CIVICLASTCOMMENTEDON).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDPROFILEIMAGE).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDORGANIZATION).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDAVATARS).execute();
+        context.deleteFrom(CIVICLASTMODIFIEDUSER).execute();
+        context.deleteFrom(CIVICLASTMODIFIED).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDPROFILEIMAGE).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDORGANIZATION).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDAVATARS).execute();
+        context.deleteFrom(CIVICLASTREVIEWEDUSER).execute();
+        context.deleteFrom(CIVICLASTREVIEWED).execute();
+        context.deleteFrom(CIVICLIFECYCLEACTIONS).execute();
+
+        // Then delete the source information
         context.deleteFrom(CIVICPUBLICATION).execute();
         context.deleteFrom(CIVICCLINICALTRIAL).execute();
-        context.deleteFrom(CIVICLIFECYCLEACTIONS).execute();
-        context.deleteFrom(CIVICLASTCOMMENTEDON).execute();
-        context.deleteFrom(CIVICLASTCOMMENTEDONUSER).execute();
-        context.deleteFrom(CIVICLASTCOMMENTEDONAVATARS).execute();
-        context.deleteFrom(CIVICLASTCOMMENTEDONORGANIZATION).execute();
-        context.deleteFrom(CIVICLASTCOMMENTEDONPROFILEIMAGE).execute();
-        context.deleteFrom(CIVICLASTMODIFIED).execute();
-        context.deleteFrom(CIVICLASTMODIFIEDUSER).execute();
-        context.deleteFrom(CIVICLASTMODIFIEDAVATARS).execute();
-        context.deleteFrom(CIVICLASTMODIFIEDORGANIZATION).execute();
-        context.deleteFrom(CIVICLASTMODIFIEDPROFILEIMAGE).execute();
-        context.deleteFrom(CIVICLASTREVIEWED).execute();
-        context.deleteFrom(CIVICLASTREVIEWEDUSER).execute();
-        context.deleteFrom(CIVICLASTREVIEWEDAVATARS).execute();
-        context.deleteFrom(CIVICLASTREVIEWEDORGANIZATION).execute();
-        context.deleteFrom(CIVICLASTREVIEWEDPROFILEIMAGE).execute();
+        context.deleteFrom(CIVICSOURCE).execute();
 
-        // These tables are part of CIVIC Evidence Items
-        context.deleteFrom(CIVICDRUGS).execute();
+        // Then delete the evidence items
+        context.deleteFrom(CIVICEVIDENCEITEMCLINICALTRIAL).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMPUBLICATION).execute();
+        context.deleteFrom(CIVICEVIDENCEITEMSOURCE).execute();
         context.deleteFrom(CIVICDISEASE).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSSOURCE).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSPUBLICATION).execute();
-        context.deleteFrom(CIVICEVIDENCEITEMSCLINICALTRIAL).execute();
+        context.deleteFrom(CIVICDRUG).execute();
+        context.deleteFrom(CIVICEVIDENCEITEM).execute();
 
-        // Tables are part of CIVIC Group Variant Group
-        context.deleteFrom(CIVICVARIANTSGROUPSTYPES).execute();
+        // Then delete the variant group tables.
+        context.deleteFrom(CIVICVARIANTGROUPCOORDINATES).execute();
+        context.deleteFrom(CIVICVARIANTGROUPTYPE).execute();
+        context.deleteFrom(CIVICVARIANTGROUPVARIANT).execute();
+        context.deleteFrom(CIVICVARIANTGROUP).execute();
 
-        // These tables are part of CIVIC Variant Group
-        context.deleteFrom(CIVICVARIANTSGROUPSVARIANTS).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPSCOORDINATES).execute();
-
-        // These tables are part of CIVIC
-        context.deleteFrom(CIVICEVIDENCEITEMS).execute();
-        context.deleteFrom(CIVICVARIANTSGROUPS).execute();
-        context.deleteFrom(CIVICVARIANTALIASES).execute();
-        context.deleteFrom(CIVICVARIANTTYPES).execute();
-        context.deleteFrom(CIVICDESCRIPTION).execute();
+        // Then delete the tables directly under civic
+        context.deleteFrom(CIVICVARIANTALIAS).execute();
+        context.deleteFrom(CIVICVARIANTTYPE).execute();
+        context.deleteFrom(CIVICPROVISIONALVALUE).execute();
         context.deleteFrom(CIVICCOORDINATES).execute();
-        context.deleteFrom(CIVICASSERTIONS).execute();
-        context.deleteFrom(CIVICHGVSEXPRESSIONS).execute();
-        context.deleteFrom(CIVICCLINVARENTRIES).execute();
+        context.deleteFrom(CIVICASSERTION).execute();
+        context.deleteFrom(CIVICHGVSEXPRESSION).execute();
+        context.deleteFrom(CIVICCLINVARENTRY).execute();
 
+        // Finally, delete the civic table
         context.deleteFrom(CIVIC).execute();
     }
 }

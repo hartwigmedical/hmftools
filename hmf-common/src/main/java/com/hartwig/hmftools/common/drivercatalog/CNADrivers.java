@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
@@ -19,10 +20,15 @@ public class CNADrivers {
     private static final double MIN_COPY_NUMBER_RELATIVE_INCREASE = 3;
     private static final double MAX_COPY_NUMBER_DEL = 0.5;
 
+    @NotNull
     private final Set<String> oncoGenes;
+    @NotNull
     private final Set<String> tsGenes;
+    @NotNull
     private final Set<String> amplificationTargets;
+    @NotNull
     private final Set<String> deletionTargets;
+    @NotNull
     private final Map<String, String> deletionBandMap;
 
     @NotNull
@@ -48,18 +54,30 @@ public class CNADrivers {
         return result;
     }
 
+    @NotNull
+    public static CNADrivers CNADriversWithExtraAmplificationTargets(@NotNull Set<String> extraAmplificationTargets) {
+        return new CNADrivers(extraAmplificationTargets);
+    }
+
     public CNADrivers() {
-        this.amplificationTargets = amplificationTargets();
+        this(Sets.newHashSet());
+    }
+
+    private CNADrivers(@NotNull final Set<String> extraAmplificationTargets) {
         this.oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
+        this.tsGenes = DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet();
 
         Map<String, String> rawMap = deletionTargets();
+        this.deletionTargets = rawMap.keySet();
         this.deletionBandMap = rawMap.entrySet()
                 .stream()
                 .filter(x -> !x.getValue().equals("NA"))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        this.deletionTargets = rawMap.keySet();
-        this.tsGenes = DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet();
+        Set<String> amplificationTargets = amplificationTargets();
+        amplificationTargets.addAll(extraAmplificationTargets);
+
+        this.amplificationTargets = amplificationTargets;
     }
 
     @NotNull

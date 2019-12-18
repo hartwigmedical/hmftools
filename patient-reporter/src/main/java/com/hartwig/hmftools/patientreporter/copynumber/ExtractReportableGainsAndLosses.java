@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.CNADrivers;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
@@ -13,12 +15,15 @@ import org.jetbrains.annotations.NotNull;
 
 final class ExtractReportableGainsAndLosses {
 
+    // TODO Consider adding FLT1
+    private static final Set<String> EXTRA_AMPLIFICATION_TARGETS = Sets.newHashSet();
+
     private ExtractReportableGainsAndLosses() {
     }
 
     @NotNull
     static List<ReportableGainLoss> toReportableGainsAndLosses(@NotNull List<GeneCopyNumber> geneCopyNumbers, double ploidy) {
-        CNADrivers copyNumberDriverModel = new CNADrivers();
+        CNADrivers copyNumberDriverModel = CNADrivers.CNADriversWithExtraAmplificationTargets(EXTRA_AMPLIFICATION_TARGETS);
         List<DriverCatalog> drivers = Lists.newArrayList();
         drivers.addAll(copyNumberDriverModel.amplifications(ploidy, geneCopyNumbers));
         drivers.addAll(copyNumberDriverModel.deletions(geneCopyNumbers));

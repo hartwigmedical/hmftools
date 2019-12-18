@@ -6,26 +6,26 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchExonInfo {
-
-    @NotNull
-    public abstract MolecularMatchExonsBoundries exonBoundaries();
-
-    @Nullable
-    public abstract String txStart();
-
-    @Nullable
-    public abstract String cdsEnd();
+public abstract class MolecularMatchExonsInfo {
 
     @NotNull
     public abstract String chr();
-
-    @Nullable
-    public abstract String cdsStart();
 
     @NotNull
     public abstract String transcript();
 
     @Nullable
+    public abstract String txStart();
+
+    @Nullable
     public abstract String txEnd();
+
+    @Nullable
+    public abstract String cdsStart();
+
+    @Nullable
+    public abstract String cdsEnd();
+
+    @NotNull
+    public abstract MolecularMatchExonBoundaries exonBoundaries();
 }

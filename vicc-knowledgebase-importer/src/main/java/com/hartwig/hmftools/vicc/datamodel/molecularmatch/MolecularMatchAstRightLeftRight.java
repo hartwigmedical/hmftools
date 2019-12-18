@@ -11,10 +11,10 @@ public abstract class MolecularMatchAstRightLeftRight {
     @Nullable
     public abstract String raw();
 
-    @NotNull
-    public abstract String type();
-
     @Nullable
     public abstract String value();
+
+    @NotNull
+    public abstract String type();
 }
 

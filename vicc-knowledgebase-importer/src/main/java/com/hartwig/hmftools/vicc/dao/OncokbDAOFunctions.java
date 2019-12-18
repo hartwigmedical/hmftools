@@ -13,13 +13,13 @@ import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBVARIANTCLINICAL;
 import static com.hartwig.hmftools.vicc.database.tables.Oncokbdrugabstractclinical.ONCOKBDRUGABSTRACTCLINICAL;
 import static com.hartwig.hmftools.vicc.database.tables.Oncokbgenealiasbiological.ONCOKBGENEALIASBIOLOGICAL;
 
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbBiological;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbClinical;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbConsequence;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbDrugAbstract;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.Oncokb;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbGene;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncokbVariant;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbGene;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbVariant;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -29,10 +29,10 @@ final class OncokbDAOFunctions {
     private OncokbDAOFunctions() {
     }
 
-    static void write(@NotNull DSLContext context, int viccEntryId, @NotNull Oncokb oncokb) {
+    static void write(@NotNull DSLContext context, int viccEntryId, @NotNull OncoKb oncoKb) {
         int id = context.insertInto(ONCOKB, ONCOKB.VICCENTRYID).values(viccEntryId).returning(ONCOKB.ID).fetchOne().getValue(ONCOKB.ID);
 
-        OncoKbBiological oncokbBiological = oncokb.oncoKbBiological();
+        OncoKbBiological oncokbBiological = oncoKb.oncoKbBiological();
         if (oncokbBiological != null) {
             int idBiological = context.insertInto(ONCOKBBIOLOGICAL,
                     ONCOKBBIOLOGICAL.GENE,
@@ -57,7 +57,7 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBBIOLOGICAL.ID);
 
-            OncokbVariant oncokbVariant = oncokbBiological.oncokbVariant();
+            OncoKbVariant oncokbVariant = oncokbBiological.oncokbVariant();
             int idVariant = context.insertInto(ONCOKBVARIANTBIOLOGICAL,
                     ONCOKBVARIANTBIOLOGICAL.NAME,
                     ONCOKBVARIANTBIOLOGICAL.ALTERATION,
@@ -86,7 +86,7 @@ final class OncokbDAOFunctions {
                     .values(oncoKbConsequence.term(), oncoKbConsequence.description(), oncoKbConsequence.isGenerallyTruncating(), idVariant)
                     .execute();
 
-            OncokbGene oncoKbGene = oncokbBiological.oncokbVariant().gene();
+            OncoKbGene oncoKbGene = oncokbBiological.oncokbVariant().gene();
             int idGene = context.insertInto(ONCOKBGENEBIOLOGICAL,
                     ONCOKBGENEBIOLOGICAL.HUGOSYMBOL,
                     ONCOKBGENEBIOLOGICAL.NAME,
@@ -108,14 +108,14 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBGENEBIOLOGICAL.ID);
 
-            for (String geneAliases : oncoKbGene.geneAliases()) {
+            for (String geneAlias : oncoKbGene.geneAliases()) {
                 context.insertInto(ONCOKBGENEALIASBIOLOGICAL,
                         ONCOKBGENEALIASBIOLOGICAL.GENEALIAS,
-                        ONCOKBGENEALIASBIOLOGICAL.ONCOKBGENEBIOLOGICALID).values(geneAliases, idGene);
+                        ONCOKBGENEALIASBIOLOGICAL.ONCOKBGENEBIOLOGICALID).values(geneAlias, idGene);
             }
         }
 
-        OncoKbClinical oncokbClinical = oncokb.oncoKbClinical();
+        OncoKbClinical oncokbClinical = oncoKb.oncoKbClinical();
         if (oncokbClinical != null) {
             int idClinical = context.insertInto(ONCOKBCLINICAL,
                     ONCOKBCLINICAL.GENE,
@@ -151,7 +151,7 @@ final class OncokbDAOFunctions {
                         .execute();
             }
 
-            OncokbVariant variantClinical = oncokbClinical.variant();
+            OncoKbVariant variantClinical = oncokbClinical.variant();
             int idClinicalVariant = context.insertInto(ONCOKBVARIANTCLINICAL,
                     ONCOKBVARIANTCLINICAL.NAME,
                     ONCOKBVARIANTCLINICAL.ALTERATION,
@@ -183,7 +183,7 @@ final class OncokbDAOFunctions {
                             idClinicalVariant)
                     .execute();
 
-            OncokbGene geneClinical = oncokbClinical.variant().gene();
+            OncoKbGene geneClinical = oncokbClinical.variant().gene();
             int idGeneClinical = context.insertInto(ONCOKBGENECLINICAL,
                     ONCOKBGENECLINICAL.HUGOSYMBOL,
                     ONCOKBGENECLINICAL.NAME,
@@ -205,10 +205,10 @@ final class OncokbDAOFunctions {
                     .fetchOne()
                     .getValue(ONCOKBGENECLINICAL.ID);
 
-            for (String geneAliasClinical : geneClinical.geneAliases()) {
+            for (String geneAlias : geneClinical.geneAliases()) {
                 context.insertInto(ONCOKBGENEALIASCLINICAL,
                         ONCOKBGENEALIASCLINICAL.GENEALIAS,
-                        ONCOKBGENEALIASCLINICAL.ONCOKBGENECLINICALID).values(geneAliasClinical, idGeneClinical).execute();
+                        ONCOKBGENEALIASCLINICAL.ONCOKBGENECLINICALID).values(geneAlias, idGeneClinical).execute();
             }
         }
     }

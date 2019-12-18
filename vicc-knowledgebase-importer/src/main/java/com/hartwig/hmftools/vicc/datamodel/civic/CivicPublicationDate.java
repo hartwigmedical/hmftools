@@ -12,8 +12,8 @@ public abstract class CivicPublicationDate {
     public abstract String year();
 
     @Nullable
-    public abstract String day();
+    public abstract String month();
 
     @Nullable
-    public abstract String month();
+    public abstract String day();
 }

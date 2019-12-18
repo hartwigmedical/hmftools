@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage;
+package com.hartwig.hmftools.sage.vcf;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
+import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 
@@ -31,19 +32,17 @@ import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
 public class SageVCF implements AutoCloseable {
 
+    public final static String READ_CONTEXT = "RC";
     public final static String PASS = "PASS";
     public final static String MERGE_FILTER = "merge";
     public final static String DEDUP_FILTER = "dedup";
 
-    public final static String REF_CONTEXT = "REF";
-    public final static String READ_CONTEXT = "RC";
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
     public final static String READ_CONTEXT_JITTER = "RC_JIT";
     private final static String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
 
     public final static String READ_CONTEXT_COUNT = "RC_CNT";
-    private final static String READ_CONTEXT_COUNT_DESCRIPTION =
-            "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
+    private final static String READ_CONTEXT_COUNT_DESCRIPTION = "Read context counts [Full, Partial, Core, Realigned, Reference, Total]";
     public static final String READ_CONTEXT_REPEAT_COUNT = "RC_REPC";
     private static final String READ_CONTEXT_REPEAT_COUNT_DESCRIPTION = "Repeat count at read context";
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
@@ -51,7 +50,8 @@ public class SageVCF implements AutoCloseable {
     public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
     private static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
     public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
-    private static final String READ_CONTEXT_QUALITY_DESCRIPTION = "Read context quality [Full, Partial, Core, Realigned, Reference, Total]";
+    private static final String READ_CONTEXT_QUALITY_DESCRIPTION =
+            "Read context quality [Full, Partial, Core, Realigned, Reference, Total]";
     private static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Realigned) / Coverage";
 
@@ -61,9 +61,8 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
-    public static final String RAW_TUMOR_SUPPORT = "RTS";
-//    public static final String ALIGNER_SUPPORT_REF = "ASR";
-
+    public static final String RAW_ALLELIC_DEPTH = "RAD";
+    public static final String RAW_DEPTH = "RDP";
 
     public final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
@@ -73,14 +72,15 @@ public class SageVCF implements AutoCloseable {
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
 
-    SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
+    public SageVCF(@NotNull final IndexedFastaSequenceFile reference, @NotNull final SageConfig config) {
         writer = new VariantContextWriterBuilder().setOutputFile(config.outputFile())
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(reference.getSequenceDictionary())
                 .build();
         refContextEnrichment = new SomaticRefContextEnrichment(reference, this::writeToFile);
-        final VCFHeader header = refContextEnrichment.enrichHeader(header(config.reference(), config.tumor()));
+
+        final VCFHeader header = refContextEnrichment.enrichHeader(header(config));
         header.setSequenceDictionary(reference.getSequenceDictionary());
         writer.writeHeader(header);
     }
@@ -93,16 +93,17 @@ public class SageVCF implements AutoCloseable {
         }
     }
 
-    public void write(@NotNull final VariantContext context) {
-        refContextEnrichment.accept(context);
-    }
-
     private void writeToFile(@NotNull final VariantContext context) {
         writer.add(context);
     }
 
     @NotNull
-    public static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
+    static VCFHeader header(@NotNull final SageConfig config) {
+        return config.germlineOnly() ? header(config.reference(), Collections.emptyList()) : header(config.reference(), config.tumor());
+    }
+
+    @NotNull
+    private static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
         final List<String> allSamples = Lists.newArrayList(normalSample);
         allSamples.addAll(tumorSamples);
 
@@ -116,8 +117,8 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_TUMOR_SUPPORT, 1, VCFHeaderLineType.Integer, "Raw tumor support"));
-//        header.addMetaDataLine(new VCFFormatHeaderLine(ALIGNER_SUPPORT_REF, 1, VCFHeaderLineType.Integer, "Aligned Ref Support"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depths"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,
                 1,
@@ -128,7 +129,6 @@ public class SageVCF implements AutoCloseable {
                 VCFHeaderLineType.Integer,
                 READ_CONTEXT_QUALITY_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(REF_CONTEXT, 1, VCFHeaderLineType.String, "Ref Context"));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT, 1, VCFHeaderLineType.String, READ_CONTEXT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(READ_CONTEXT_DIFFERENCE,
                 1,
@@ -155,6 +155,8 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
+
+        header.addMetaDataLine(new VCFFilterHeaderLine(FilterConfig.MIN_GERMLINE_VAF, "Insufficient germline VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_QUAL, "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_TUMOR_VAF, "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_GERMLINE_DEPTH, "Insufficient germline depth"));

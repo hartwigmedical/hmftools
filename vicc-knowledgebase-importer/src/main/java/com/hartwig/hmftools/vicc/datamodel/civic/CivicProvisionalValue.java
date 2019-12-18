@@ -6,5 +6,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicError {
+public abstract class CivicProvisionalValue {
+
+    @Nullable
+    public abstract String revisionId();
+
+    @Nullable
+    public abstract String value();
 }

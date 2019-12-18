@@ -11,17 +11,26 @@ public abstract class CivicUser {
     @NotNull
     public abstract String username();
 
-    @Nullable
-    public abstract String areaOfExpertise();
+    @NotNull
+    public abstract String name();
+
+    @NotNull
+    public abstract String displayName();
+
+    @NotNull
+    public abstract String role();
 
     @NotNull
     public abstract CivicOrganization organization();
 
     @Nullable
-    public abstract String twitterHandle();
+    public abstract String affiliation();
 
     @NotNull
-    public abstract String name();
+    public abstract String featuredExpert();
+
+    @Nullable
+    public abstract String areaOfExpertise();
 
     @Nullable
     public abstract String bio();
@@ -32,20 +41,17 @@ public abstract class CivicUser {
     @NotNull
     public abstract String createdAt();
 
+    @Nullable
+    public abstract String lastSeenAt();
+
     @NotNull
     public abstract CivicAvatars avatars();
-
-    @Nullable
-    public abstract String acceptedLicense();
-
-    @Nullable
-    public abstract String affiliation();
 
     @NotNull
     public abstract String avatarUrl();
 
-    @NotNull
-    public abstract String role();
+    @Nullable
+    public abstract String twitterHandle();
 
     @Nullable
     public abstract String facebookProfile();
@@ -56,18 +62,12 @@ public abstract class CivicUser {
     @Nullable
     public abstract String orcid();
 
-    @NotNull
-    public abstract String displayName();
+    @Nullable
+    public abstract String signupComplete();
 
     @Nullable
-    public abstract String lastSeenAt();
-
-    @NotNull
-    public abstract String featuredExpert();
+    public abstract String acceptedLicense();
 
     @NotNull
     public abstract String id();
-
-    @Nullable
-    public abstract String signupComplete();
 }

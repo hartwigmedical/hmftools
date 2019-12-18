@@ -9,20 +9,20 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchAstRight {
 
     @Nullable
-    public abstract String operator();
-
-    @Nullable
-    public abstract MolecularMatchAstRightRight right();
-
-    @Nullable
-    public abstract MolecularMatchAstRightLeft left();
-
-    @Nullable
     public abstract String raw();
+
+    @Nullable
+    public abstract String value();
 
     @NotNull
     public abstract String type();
 
     @Nullable
-    public abstract String value();
+    public abstract String operator();
+
+    @Nullable
+    public abstract MolecularMatchAstRightLeft left();
+
+    @Nullable
+    public abstract MolecularMatchAstRightRight right();
 }

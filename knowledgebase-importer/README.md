@@ -10,7 +10,7 @@ The knowledgebase importer reads various knowledgebases and produces one consist
  The following knowledgebases are integrated:
    - COSMIC for fusions (details to come...)
    - CGI for actionability and hotspots/fusions (https://www.cancergenomeinterpreter.org, and  https://doi.org/10.1101/140475)
-   - OncoKB for actionability and hotspots/fusions (http://oncokb.org, and , and https://doi.org/10.1200/PO.17.00011)
+   - OncoKB for actionability and hotspots/fusions (http://oncoKb.org, and , and https://doi.org/10.1200/PO.17.00011)
    - CiViC for actionability and hotspots/fusions (https://civicdb.org, and https://www.ncbi.nlm.nih.gov/pubmed/28138153)
    - iClusion for (Dutch) clinical trials (https://iclusion.org)
    
@@ -19,8 +19,8 @@ The knowledgebase importer reads various knowledgebases and produces one consist
   - CGI catalog of validated oncogenic mutations (https://www.cancergenomeinterpreter.org/mutations): Download the folder and use file "catalog_of_validated_oncogenic_mutations.tsv".
   - CiViC clinical evidence summaries (https://civicdb.org/releases): Use file "ClinicalEvidenceSummaries.tsv".
   - CiViC variant summaries (https://civicdb.org/releases): Use file "VariantSummaries.tsv".
-  - OncoKB actionable variants (http://oncokb.org/#/dataAccess): Use link "actionable alterations".
-  - OncoKB annotated variants (http://oncokb.org/#/dataAccess): Use link "all alterations".
+  - OncoKB actionable variants (http://oncoKb.org/#/dataAccess): Use link "actionable alterations".
+  - OncoKB annotated variants (http://oncoKb.org/#/dataAccess): Use link "all alterations".
   
   # iClusion
   

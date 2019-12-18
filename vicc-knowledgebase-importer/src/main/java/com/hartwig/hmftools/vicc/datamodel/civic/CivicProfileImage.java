@@ -9,17 +9,17 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CivicProfileImage {
 
     @NotNull
-    public abstract String x32();
-
-    @NotNull
-    public abstract String x256();
-
-    @NotNull
     public abstract String x14();
+
+    @NotNull
+    public abstract String x32();
 
     @NotNull
     public abstract String x64();
 
     @NotNull
     public abstract String x128();
+
+    @NotNull
+    public abstract String x256();
 }

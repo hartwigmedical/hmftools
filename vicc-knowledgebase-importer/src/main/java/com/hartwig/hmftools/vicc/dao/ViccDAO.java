@@ -54,7 +54,7 @@ import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.Oncokb;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
 import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
 
@@ -499,8 +499,8 @@ public class ViccDAO {
             JaxTrialsDAOFunctions.write(context, viccEntryId, (JaxTrials) object);
         } else if (object instanceof Pmkb) {
             PmkbDAOFunctions.write(context, viccEntryId, (Pmkb) object);
-        } else if (object instanceof Oncokb) {
-            OncokbDAOFunctions.write(context, viccEntryId, (Oncokb) object);
+        } else if (object instanceof OncoKb) {
+            OncokbDAOFunctions.write(context, viccEntryId, (OncoKb) object);
         } else if (object instanceof MolecularMatchTrials) {
             MolecularMatchTrialsDAOFunctions.write(context, viccEntryId, (MolecularMatchTrials) object);
         } else if (object instanceof Civic) {

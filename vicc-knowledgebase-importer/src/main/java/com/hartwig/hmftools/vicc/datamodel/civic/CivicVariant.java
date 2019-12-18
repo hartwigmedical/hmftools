@@ -8,35 +8,35 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicVariants {
+public abstract class CivicVariant {
 
     @NotNull
-    public abstract String entrez_name();
+    public abstract String entrezId();
 
     @NotNull
-    public abstract List<CivicVariantTypes> variant_types();
+    public abstract String entrezName();
 
     @NotNull
-    public abstract String description();
-
-    @Nullable
-    public abstract String civic_actionability_score();
-
-    @NotNull
-    public abstract String gene_id();
-
-    @NotNull
-    public abstract String entrez_id();
-
-    @Nullable
-    public abstract CivicCoordinates coordinates();
+    public abstract String name();
 
     @NotNull
     public abstract String type();
 
     @NotNull
+    public abstract List<CivicVariantType> variantTypes();
+
+    @Nullable
+    public abstract String civicActionabilityScore();
+
+    @Nullable
+    public abstract CivicCoordinates coordinates();
+
+    @NotNull
     public abstract String id();
 
     @NotNull
-    public abstract String name();
+    public abstract String geneId();
+
+    @NotNull
+    public abstract String description();
 }

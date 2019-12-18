@@ -68,7 +68,7 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
 
         consumerSelector.select(samRecord.getAlignmentStart(),
                 samRecord.getAlignmentEnd(),
-                x -> x.primaryReadContext().accept(x.readDepth() < config.maxReadDepth(), samRecord, config, refBases));
+                x -> x.primaryReadContext().accept(x.rawDepth() < config.maxReadDepth(), samRecord, config, refBases));
     }
 
     @Override
@@ -102,7 +102,7 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
     }
 
     private boolean altSupportPredicate(@NotNull final AltContext altContext) {
-        return altContext.rawSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);
+        return altContext.rawAltSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);
     }
 
     private boolean qualPredicate(@NotNull final AltContext altContext) {

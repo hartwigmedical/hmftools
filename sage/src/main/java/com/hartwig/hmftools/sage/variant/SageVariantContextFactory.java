@@ -1,20 +1,20 @@
 package com.hartwig.hmftools.sage.variant;
 
-import static com.hartwig.hmftools.sage.SageVCF.PASS;
-import static com.hartwig.hmftools.sage.SageVCF.PHASE;
-import static com.hartwig.hmftools.sage.SageVCF.RAW_TUMOR_SUPPORT;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_COUNT;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_DIFFERENCE;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_DISTANCE;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_IMPROPER_PAIR;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_QUALITY;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_REPEAT_COUNT;
-import static com.hartwig.hmftools.sage.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
-import static com.hartwig.hmftools.sage.SageVCF.REF_CONTEXT;
-import static com.hartwig.hmftools.sage.SageVCF.TIER;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.PASS;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASE;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_DIFFERENCE;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_DISTANCE;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_IMPROPER_PAIR;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_JITTER;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.TIER;
 
 import java.util.Collections;
 import java.util.List;
@@ -72,7 +72,7 @@ public class SageVariantContextFactory {
         final VariantContextBuilder builder = new VariantContextBuilder().chr(variant.chromosome())
                 .start(variant.position())
                 .attribute(READ_CONTEXT, counter.readContext().toString())
-                .attribute(REF_CONTEXT, counter.readContext().refContext())
+//                .attribute(REF_CONTEXT, counter.readContext().refContext())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
@@ -115,7 +115,8 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
-                .attribute(RAW_TUMOR_SUPPORT, evidence.rawSupport())
+                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawRefSupport(), evidence.rawAltSupport() })
+                .attribute(RAW_DEPTH, evidence.rawDepth())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();
     }
@@ -128,7 +129,8 @@ public class SageVariantContextFactory {
     }
 
     @NotNull
-    private static List<Allele> createGenotypeAlleles(boolean germline, @NotNull final VariantHotspot variant, @NotNull final ReadContextCounter counter) {
+    private static List<Allele> createGenotypeAlleles(boolean germline, @NotNull final VariantHotspot variant,
+            @NotNull final ReadContextCounter counter) {
         final Allele ref = Allele.create(variant.ref(), true);
         final Allele alt = Allele.create(variant.alt(), false);
 

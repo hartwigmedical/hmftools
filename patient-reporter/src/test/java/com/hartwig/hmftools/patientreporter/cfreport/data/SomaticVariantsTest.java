@@ -18,12 +18,13 @@ public class SomaticVariantsTest {
         assertEquals(1799, SomaticVariants.extractCodonField("c.1799T>A"));
         assertEquals(423, SomaticVariants.extractCodonField("c.423_427delCCCTG"));
         assertEquals(8390, SomaticVariants.extractCodonField("c.8390delA"));
+        assertEquals(-124, SomaticVariants.extractCodonField("c.-124C>T"));
     }
 
     @Test
     public void sortCorrectlyOnCodon() {
         ReportableVariant variant1 =
-                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.300T>A").build();
+                PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.-300T>A").build();
         ReportableVariant variant2 =
                 PatientReporterTestFactory.createTestReportableVariantBuilder().canonicalHgvsCodingImpact("c.4000T>A").build();
         ReportableVariant variant3 =

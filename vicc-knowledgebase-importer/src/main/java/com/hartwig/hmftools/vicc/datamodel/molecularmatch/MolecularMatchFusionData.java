@@ -35,7 +35,7 @@ public abstract class MolecularMatchFusionData {
     public abstract String source();
 
     @Nullable
-    public abstract List<MolecularMatchAreg> Agreg();
+    public abstract List<MolecularMatchAgreg> Agreg();
 
     @Nullable
     public abstract List<String> Bgene();

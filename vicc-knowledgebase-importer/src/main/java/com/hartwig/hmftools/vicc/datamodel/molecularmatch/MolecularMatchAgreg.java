@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.vicc.datamodel.civic;
+package com.hartwig.hmftools.vicc.datamodel.molecularmatch;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -6,11 +6,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CivicDescription {
+public abstract class MolecularMatchAgreg {
 
-    @Nullable
-    public abstract String revision_id();
+    @NotNull
+    public abstract String num();
 
-    @Nullable
-    public abstract String value();
+    @NotNull
+    public abstract String type();
 }
