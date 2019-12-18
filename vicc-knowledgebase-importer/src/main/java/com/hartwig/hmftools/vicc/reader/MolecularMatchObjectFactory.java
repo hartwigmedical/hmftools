@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.vicc.reader;
 
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonArray;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalJsonObject;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalNullableString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
@@ -42,7 +46,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchVariantInfo;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSAData;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSAMap;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAgreg;
@@ -72,12 +76,13 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTierExpl
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantInfo;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAData;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class MolecularMatchObjectFactory {
 
@@ -98,15 +103,11 @@ final class MolecularMatchObjectFactory {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TAGS_SIZES = Lists.newArrayList(3, 8, 9, 12, 13);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TIER_EXPLANATION_SIZES = Lists.newArrayList(4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES = Lists.newArrayList(9, 14, 15, 16);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES = Lists.newArrayList(6);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES = Lists.newArrayList(10);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_PARENTS_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_FUSIONS_SIZES = Lists.newArrayList(8);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_WGSADATA_SIZES = Lists.newArrayList(1);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES = Lists.newArrayList(7, 9);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES =
-            Lists.newArrayList(20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 45);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES = Lists.newArrayList(3, 7);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES =
             Lists.newArrayList(1, 2, 3, 5, 6, 7, 8, 9, 11, 13, 16, 17, 20, 21, 22, 24, 26, 27, 28, 29, 38, 41);
@@ -171,53 +172,139 @@ final class MolecularMatchObjectFactory {
     @NotNull
     private static List<MolecularMatchMutation> createMutations(@NotNull JsonArray mutationArray) {
         List<MolecularMatchMutation> mutationList = Lists.newArrayList();
+        ViccDatamodelChecker mutationChecker = ViccDatamodelCheckerFactory.molecularMatchMutationChecker();
 
-        for (JsonElement mutation : mutationArray) {
-            JsonObject mutationObject = mutation.getAsJsonObject();
+        for (JsonElement mutationElement : mutationArray) {
+            JsonObject mutationObject = mutationElement.getAsJsonObject();
+            mutationChecker.check(mutationObject);
 
             mutationList.add(ImmutableMolecularMatchMutation.builder()
-                    .transcriptConsequences(mutation.getAsJsonObject().get("transcriptConsequence") == null
-                            ? null
-                            : createTranscriptConsequence(mutation.getAsJsonObject().getAsJsonArray("transcriptConsequence")))
-                    .longestTranscript(!mutation.getAsJsonObject().has("longestTranscript")
-                            ? null
-                            : mutation.getAsJsonObject().getAsJsonPrimitive("longestTranscript").getAsString())
-                    .parents(createParents(mutation.getAsJsonObject().getAsJsonArray("parents")))
-                    .wgsaData(!mutation.getAsJsonObject().has("wgsaData")
-                            ? null
-                            : createWgsaData(mutation.getAsJsonObject().getAsJsonObject("wgsaData")))
-                    .wgsaMaps(!mutation.getAsJsonObject().has("wgsaMap")
-                            ? null
-                            : createWgsaMap(mutation.getAsJsonObject().getAsJsonArray("wgsaMap")))
-                    .exonsInfo(!mutation.getAsJsonObject().has("exonsInfo")
-                            ? null
-                            : createExonsInfo(mutation.getAsJsonObject().getAsJsonObject("exonsInfo")))
-                    .fusionData(!mutation.getAsJsonObject().has("fusionData")
-                            ? null
-                            : createFusionData(mutation.getAsJsonObject().getAsJsonArray("fusionData")))
-                    .transcriptRecognized(!mutation.getAsJsonObject().has("transcriptRecognized")
-                            ? null
-                            : mutation.getAsJsonObject().get("transcriptRecognized").getAsString())
-                    .description(mutation.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .mutationTypes(toStringList(mutation.getAsJsonObject().getAsJsonArray("mutation_type")))
-                    .src(mutation.getAsJsonObject().getAsJsonPrimitive("_src").getAsString())
-                    .sources(toStringList(mutation.getAsJsonObject().getAsJsonArray("sources")))
-                    .synonyms(toStringList(mutation.getAsJsonObject().getAsJsonArray("synonyms")))
-                    .grch37Locations(createGRCH37Location(mutation.getAsJsonObject().getAsJsonArray("GRCh37_location")))
-                    .uniprotTranscript(!mutation.getAsJsonObject().has("uniprotTranscript")
-                            ? null
-                            : mutation.getAsJsonObject().getAsJsonPrimitive("uniprotTranscript").getAsString())
-                    .geneSymbol(mutation.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
-                    .pathology(toStringList(mutation.getAsJsonObject().getAsJsonArray("pathology")))
-                    .transcript(!mutation.getAsJsonObject().has("transcript")
-                            ? null
-                            : mutation.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
-                    .id(mutation.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .cDNA(toStringList(mutation.getAsJsonObject().getAsJsonArray("cdna")))
-                    .name(mutation.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .geneSymbol(string(mutationObject, "geneSymbol"))
+                    .name(string(mutationObject, "name"))
+                    .transcriptRecognized(optionalString(mutationObject, "transcriptRecognized"))
+                    .transcript(string(mutationObject, "transcript"))
+                    .longestTranscript(optionalString(mutationObject, "longestTranscript"))
+                    .uniprotTranscript(optionalString(mutationObject, "uniprotTranscript"))
+                    .transcriptConsequences(createTranscriptConsequences(optionalJsonArray(mutationObject, "transcriptConsequence")))
+                    .parents(createParents(mutationObject.getAsJsonArray("parents")))
+                    .wgsaLocations(createWGSALocations(optionalJsonObject(mutationObject, "wgsaData")))
+                    .wgsaMaps(createWGSAMaps(optionalJsonArray(mutationObject, "wgsaMap")))
+                    .exonsInfo(createExonsInfo(optionalJsonObject(mutationObject, "exonsInfo")))
+                    .fusionData(createFusionData(optionalJsonArray(mutationObject, "fusionData")))
+                    .mutationTypes(stringList(mutationObject, "mutation_type"))
+                    .sources(stringList(mutationObject, "sources"))
+                    .synonyms(stringList(mutationObject, "synonyms"))
+                    .grch37Locations(createGRCh37Locations(mutationObject.getAsJsonArray("GRCh37_location")))
+                    .pathology(stringList(mutationObject, "pathology"))
+                    .cDNA(stringList(mutationObject, "cdna"))
+                    .description(string(mutationObject, "description"))
+                    .src(string(mutationObject, "_src"))
+                    .id(string(mutationObject, "id"))
                     .build());
         }
         return mutationList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchTranscriptConsequence> createTranscriptConsequences(@Nullable JsonArray transcriptConsequenceArray) {
+        if (transcriptConsequenceArray == null) {
+            return Lists.newArrayList();
+        }
+
+        List<MolecularMatchTranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
+        ViccDatamodelChecker transcriptConsequenceChecker = ViccDatamodelCheckerFactory.molecularMatchTranscriptConsequenceChecker();
+
+        for (JsonElement transcriptConsequenceElement : transcriptConsequenceArray) {
+            JsonObject transcriptConsequenceObject = transcriptConsequenceElement.getAsJsonObject();
+            transcriptConsequenceChecker.check(transcriptConsequenceObject);
+
+            transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
+                    .chr(optionalString(transcriptConsequenceObject, "chr"))
+                    .start(optionalString(transcriptConsequenceObject, "start"))
+                    .stop(optionalString(transcriptConsequenceObject, "stop"))
+                    .ref(optionalString(transcriptConsequenceObject, "ref"))
+                    .alt(optionalString(transcriptConsequenceObject, "alt"))
+                    .referenceGenome(string(transcriptConsequenceObject, "referenceGenome"))
+                    .transcript(string(transcriptConsequenceObject, "transcript"))
+                    .strand(string(transcriptConsequenceObject, "strand"))
+                    .cdna(optionalString(transcriptConsequenceObject, "cdna"))
+                    .aminoAcidChange(optionalNullableString(transcriptConsequenceObject, "amino_acid_change"))
+                    .intronNumber(nullableString(transcriptConsequenceObject, "intronNumber"))
+                    .exonNumbers(optionalStringList(transcriptConsequenceObject, "exonNumber"))
+                    .suppress(string(transcriptConsequenceObject, "suppress"))
+                    .custom(string(transcriptConsequenceObject, "custom"))
+                    .validated(string(transcriptConsequenceObject, "validated"))
+                    .compositeKey(string(transcriptConsequenceObject, "compositeKey"))
+                    .build());
+        }
+        return transcriptConsequenceList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchWGSALocation> createWGSALocations(@Nullable JsonObject wgsaDataObject) {
+        if (wgsaDataObject == null) {
+            return Lists.newArrayList();
+        }
+        ViccDatamodelCheckerFactory.molecularMatchWGSADataChecker().check(wgsaDataObject);
+
+        List<MolecularMatchWGSALocation> molecularMatchWGSALocationList = Lists.newArrayList();
+        ViccDatamodelChecker wgsaLocationChecker = ViccDatamodelCheckerFactory.molecularMatchWGSALocationChecker();
+
+        for (JsonElement wgsaLocationElement : wgsaDataObject.get("locations").getAsJsonArray()) {
+            JsonObject wgsaLocationObject = wgsaLocationElement.getAsJsonObject();
+            wgsaLocationChecker.check(wgsaLocationObject);
+
+            molecularMatchWGSALocationList.add(ImmutableMolecularMatchWGSALocation.builder()
+                    .genes(stringList(wgsaLocationObject, "Gene"))
+                    .chr(string(wgsaLocationObject, "Chr"))
+                    .start(string(wgsaLocationObject, "Start"))
+                    .end(string(wgsaLocationObject, "End"))
+                    .ref(string(wgsaLocationObject, "Ref"))
+                    .alt(string(wgsaLocationObject, "Alt"))
+                    .chrStartRefAlt(string(wgsaLocationObject, "Chr_Start_Ref_Alt"))
+                    .transcript(string(wgsaLocationObject, "Transcript"))
+                    .nucleotideChange(string(wgsaLocationObject, "NucleotideChange"))
+                    .aa(optionalString(wgsaLocationObject, "AA"))
+                    .fullAAs(stringList(wgsaLocationObject, "FullAA"))
+                    .exonicFunc(optionalString(wgsaLocationObject, "ExonicFunc"))
+                    .popFreqMax(string(wgsaLocationObject, "PopFreqMax"))
+                    .clinVarDiseases(optionalStringList(wgsaLocationObject, "ClinVar_DIS"))
+                    .clinVarSigs(optionalStringList(wgsaLocationObject, "ClinVar_SIG"))
+                    .clinVarStates(optionalStringList(wgsaLocationObject, "ClinVar_STATUS"))
+                    .clinVarDbIds(optionalStringList(wgsaLocationObject, "ClinVar_DBID"))
+                    .exacAFR(optionalString(wgsaLocationObject, "ExAC_AFR"))
+                    .exacAMR(optionalString(wgsaLocationObject, "ExAC_AMR"))
+                    .exacEAS(optionalString(wgsaLocationObject, "ExAC_EAS"))
+                    .exacFIN(optionalString(wgsaLocationObject, "ExAC_FIN"))
+                    .exacNFE(optionalString(wgsaLocationObject, "ExAC_NFE"))
+                    .exacSAS(optionalString(wgsaLocationObject, "ExAC_SAS"))
+                    .exacFreq(optionalString(wgsaLocationObject, "ExAC_Freq"))
+                    .g1000AFR(optionalString(wgsaLocationObject, "1000G_AFR"))
+                    .g1000AMR(optionalString(wgsaLocationObject, "1000G_AMR"))
+                    .g1000EUR(optionalString(wgsaLocationObject, "1000G_EUR"))
+                    .g1000EAS(optionalString(wgsaLocationObject, "1000G_EAS"))
+                    .g1000SAS(optionalString(wgsaLocationObject, "1000G_SAS"))
+                    .g1000ALL(optionalString(wgsaLocationObject, "1000G_ALL"))
+                    .fathmm(string(wgsaLocationObject, "FATHMM"))
+                    .fathmmPred(string(wgsaLocationObject, "FATHMM_Pred"))
+                    .esp6500siAA(optionalString(wgsaLocationObject, "ESP6500si_AA"))
+                    .esp6500siEA(optionalString(wgsaLocationObject, "ESP6500si_EA"))
+                    .dbSNP(optionalString(wgsaLocationObject, "dbSNP"))
+                    .cosmicId(optionalString(wgsaLocationObject, "COSMIC_ID"))
+                    .phyloP46wayPlacental(string(wgsaLocationObject, "phyloP46way_placental"))
+                    .phyloP100wayVertebrate(string(wgsaLocationObject, "phyloP100way_vertebrate"))
+                    .siPhy29wayLogOdds(string(wgsaLocationObject, "SiPhy_29way_logOdds"))
+                    .gwasSNP(optionalString(wgsaLocationObject, "GWAS_SNP"))
+                    .gwasDIS(optionalString(wgsaLocationObject, "GWAS_DIS"))
+                    .gwasPubmed(optionalString(wgsaLocationObject, "GWAS_PUBMED"))
+                    .gerpRS(string(wgsaLocationObject, "GERP++_RS"))
+                    .func(string(wgsaLocationObject, "Func"))
+                    .wgRna(optionalString(wgsaLocationObject, "wgRna"))
+                    .targetScanS(optionalString(wgsaLocationObject, "targetScanS"))
+                    .key(string(wgsaLocationObject, "_key"))
+                    .build());
+        }
+        return molecularMatchWGSALocationList;
     }
 
     @NotNull
@@ -794,7 +881,11 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchFusionData> createFusionData(@NotNull JsonArray arrayFusionData) {
+    private static List<MolecularMatchFusionData> createFusionData(@Nullable JsonArray arrayFusionData) {
+        if (arrayFusionData == null) {
+            return Lists.newArrayList();
+        }
+
         List<MolecularMatchFusionData> fusionDataList = Lists.newArrayList();
         for (JsonElement fusionData : arrayFusionData.getAsJsonArray()) {
             Set<String> keysFusionData = fusionData.getAsJsonObject().keySet();
@@ -818,15 +909,11 @@ final class MolecularMatchObjectFactory {
                     .Agene(!fusionData.getAsJsonObject().has("Agene")
                             ? null
                             : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Agene")))
-                    .Btx(!fusionData.getAsJsonObject().has("Btx")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Btx")))
+                    .Btx(!fusionData.getAsJsonObject().has("Btx") ? null : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Btx")))
                     .Achr(!fusionData.getAsJsonObject().has("Achr")
                             ? null
                             : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Achr")))
-                    .ins(!fusionData.getAsJsonObject().has("ins")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("ins")))
+                    .ins(!fusionData.getAsJsonObject().has("ins") ? null : toStringList(fusionData.getAsJsonObject().getAsJsonArray("ins")))
                     .source(!fusionData.getAsJsonObject().has("source")
                             ? null
                             : fusionData.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
@@ -851,9 +938,7 @@ final class MolecularMatchObjectFactory {
                     .Aori(!fusionData.getAsJsonObject().has("Aori")
                             ? null
                             : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Aori")))
-                    .Atx(!fusionData.getAsJsonObject().has("Atx")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Atx")))
+                    .Atx(!fusionData.getAsJsonObject().has("Atx") ? null : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Atx")))
                     .Bcoord(!fusionData.getAsJsonObject().has("Bcoord")
                             ? null
                             : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bcoord")))
@@ -905,8 +990,11 @@ final class MolecularMatchObjectFactory {
         return bregList;
     }
 
-    @NotNull
-    private static MolecularMatchExonsInfo createExonsInfo(@NotNull JsonObject objectExonsInfo) {
+    @Nullable
+    private static MolecularMatchExonsInfo createExonsInfo(@Nullable JsonObject objectExonsInfo) {
+        if (objectExonsInfo == null) {
+            return null;
+        }
         Set<String> keysExonsInfo = objectExonsInfo.keySet();
         if (!EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES.contains(keysExonsInfo.size())) {
             LOGGER.warn("Found {} in molecular match exon info rather than the expected {}",
@@ -998,7 +1086,11 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchWGSAMap> createWgsaMap(@NotNull JsonArray objectWgsaMap) {
+    private static List<MolecularMatchWGSAMap> createWGSAMaps(@Nullable JsonArray objectWgsaMap) {
+        if (objectWgsaMap == null) {
+            return Lists.newArrayList();
+
+        }
         List<MolecularMatchWGSAMap> molecularMatchWGSaMapList = Lists.newArrayList();
         for (JsonElement wgsDataMap : objectWgsaMap.getAsJsonArray()) {
             Set<String> keysWgsaMap = wgsDataMap.getAsJsonObject().keySet();
@@ -1029,136 +1121,7 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchWGSAData> createWgsaData(@NotNull JsonObject objectWgsaData) {
-        List<MolecularMatchWGSAData> molecularMatchWGSADataList = Lists.newArrayList();
-        Set<String> keysWgsaData = objectWgsaData.keySet();
-        if (!EXPECTED_MOLECULARMATCH_WGSADATA_SIZES.contains(keysWgsaData.size())) {
-            LOGGER.warn("Found {} in molecular match wgsa data rather than the expected {}",
-                    keysWgsaData.size(),
-                    EXPECTED_MOLECULARMATCH_WGSADATA_SIZES);
-            LOGGER.warn(keysWgsaData);
-        }
-
-        for (JsonElement wgsDataLocation : objectWgsaData.get("locations").getAsJsonArray()) {
-            Set<String> keysWgsaDataLocation = wgsDataLocation.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES.contains(keysWgsaDataLocation.size())) {
-                LOGGER.warn("Found {} in molecular match wgsa data locations rather than the expected {}",
-                        keysWgsaDataLocation.size(),
-                        EXPECTED_MOLECULARMATCH_WGSADATA_LOCATION_SIZES);
-                LOGGER.warn(keysWgsaDataLocation);
-            }
-
-            molecularMatchWGSADataList.add(ImmutableMolecularMatchWGSAData.builder()
-                    .ExonicFunc(!wgsDataLocation.getAsJsonObject().has("ExonicFunc")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExonicFunc").getAsString())
-                    .dbSNP(!wgsDataLocation.getAsJsonObject().has("dbSNP")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("dbSNP").getAsString())
-                    .ClinVar_DIS(!wgsDataLocation.getAsJsonObject().has("ClinVar_DIS")
-                            ? null
-                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_DIS")))
-                    .ClinVar_SIG(!wgsDataLocation.getAsJsonObject().has("ClinVar_SIG")
-                            ? null
-                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_SIG")))
-                    .ClinVar_STATUS(!wgsDataLocation.getAsJsonObject().has("ClinVar_STATUS")
-                            ? null
-                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_STATUS")))
-                    .ClinVar_DBID(!wgsDataLocation.getAsJsonObject().has("ClinVar_DBID")
-                            ? null
-                            : toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("ClinVar_DBID")))
-                    .ExAC_NFE(!wgsDataLocation.getAsJsonObject().has("ExAC_NFE")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_NFE").getAsString())
-                    .ExAC_FIN(!wgsDataLocation.getAsJsonObject().has("ExAC_FIN")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_FIN").getAsString())
-                    .G1000_ALL(!wgsDataLocation.getAsJsonObject().has("1000G_ALL")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("1000G_ALL").getAsString())
-                    .G1000_SAS(!wgsDataLocation.getAsJsonObject().has("1000G_SAS")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("1000G_SAS").getAsString())
-                    .G1000_EAS(!wgsDataLocation.getAsJsonObject().has("1000G_EAS")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("1000G_EAS").getAsString())
-                    .G1000_AFR(!wgsDataLocation.getAsJsonObject().has("1000G_AFR")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("1000G_AFR").getAsString())
-                    .ExAC_SAS(!wgsDataLocation.getAsJsonObject().has("ExAC_SAS")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_SAS").getAsString())
-                    .ExAC_EAS(!wgsDataLocation.getAsJsonObject().has("ExAC_EAS")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_EAS").getAsString())
-                    .ExAC_AMR(!wgsDataLocation.getAsJsonObject().has("ExAC_AMR")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_AMR").getAsString())
-                    .ExAC_AFR(!wgsDataLocation.getAsJsonObject().has("ExAC_AFR")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_AFR").getAsString())
-                    .ExAC_Freq(!wgsDataLocation.getAsJsonObject().has("ExAC_Freq")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ExAC_Freq").getAsString())
-                    .End(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("End").getAsString())
-                    .Start(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Start").getAsString())
-                    .SiPhy_29way_logOdds(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("SiPhy_29way_logOdds").getAsString())
-                    .FullAA(toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("FullAA")))
-                    .Ref(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Ref").getAsString())
-                    .GERP_RS(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("GERP++_RS").getAsString())
-                    .FATHMM(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("FATHMM").getAsString())
-                    .NucleotideChange(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("NucleotideChange").getAsString())
-                    .phyloP100way_vertebrate(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("phyloP100way_vertebrate").getAsString())
-                    .Func(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("phyloP100way_vertebrate").getAsString())
-                    .GWAS_PUBMED(!wgsDataLocation.getAsJsonObject().has("GWAS_PUBMED")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("GWAS_PUBMED").getAsString())
-                    .Transcript(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Transcript").getAsString())
-                    .ESP6500si_AA(!wgsDataLocation.getAsJsonObject().has("ESP6500si_AA")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ESP6500si_AA").getAsString())
-                    .ESP6500si_EA(!wgsDataLocation.getAsJsonObject().has("ESP6500si_EA")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("ESP6500si_EA").getAsString())
-                    .G1000_EUR(!wgsDataLocation.getAsJsonObject().has("1000G_EUR")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("1000G_EUR").getAsString())
-                    .G1000_AMR(!wgsDataLocation.getAsJsonObject().has("1000G_AMR")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("1000G_AMR").getAsString())
-                    .Chr_Start_Ref_Alt(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Chr_Start_Ref_Alt").getAsString())
-                    .AA(!wgsDataLocation.getAsJsonObject().has("AA")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("AA").getAsString())
-                    .PopFreqMax(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("PopFreqMax").getAsString())
-                    .FATHMM_Pred(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("FATHMM_Pred").getAsString())
-                    .wgRna(!wgsDataLocation.getAsJsonObject().has("wgRna")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("wgRna").getAsString())
-                    .Gene(toStringList(wgsDataLocation.getAsJsonObject().getAsJsonArray("Gene")))
-                    .phyloP46way_placental(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("phyloP46way_placental").getAsString())
-                    .key(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("_key").getAsString())
-                    .targetScanS(!wgsDataLocation.getAsJsonObject().has("targetScanS")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("targetScanS").getAsString())
-                    .Chr(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Chr").getAsString())
-                    .COSMIC_ID(!wgsDataLocation.getAsJsonObject().has("COSMIC_ID")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("COSMIC_ID").getAsString())
-                    .alt(wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("Alt").getAsString())
-                    .GWAS_DIS(!wgsDataLocation.getAsJsonObject().has("GWAS_DIS")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("GWAS_DIS").getAsString())
-                    .GWAS_SNP(!wgsDataLocation.getAsJsonObject().has("GWAS_SNP")
-                            ? null
-                            : wgsDataLocation.getAsJsonObject().getAsJsonPrimitive("GWAS_SNP").getAsString())
-                    .build());
-        }
-        return molecularMatchWGSADataList;
-    }
-
-    @NotNull
-    private static List<MolecularMatchGRCh37Location> createGRCH37Location(@NotNull JsonArray arrayLocation) {
+    private static List<MolecularMatchGRCh37Location> createGRCh37Locations(@NotNull JsonArray arrayLocation) {
         List<MolecularMatchGRCh37Location> grch37LocationList = Lists.newArrayList();
 
         for (JsonElement location : arrayLocation) {
@@ -1226,59 +1189,5 @@ final class MolecularMatchObjectFactory {
                     .build());
         }
         return transcriptConsequencesGRCH37List;
-    }
-
-    @NotNull
-    private static List<MolecularMatchTranscriptConsequence> createTranscriptConsequence(@NotNull JsonArray arrayTranscriptConsequence) {
-        List<MolecularMatchTranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
-
-        for (JsonElement transcriptConsequence : arrayTranscriptConsequence) {
-            Set<String> keysTranscriptConsequence = transcriptConsequence.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES.contains(keysTranscriptConsequence.size())) {
-                LOGGER.warn("Found {} in molecular match transcript consequence rather than the expected {}",
-                        keysTranscriptConsequence.size(),
-                        EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES_SIZES);
-                LOGGER.warn(keysTranscriptConsequence);
-            }
-
-            transcriptConsequenceList.add(ImmutableMolecularMatchTranscriptConsequence.builder()
-                    .aminoAcidChange(
-                            !transcriptConsequence.getAsJsonObject().has("amino_acid_change") || transcriptConsequence.getAsJsonObject()
-                                    .get("amino_acid_change")
-                                    .isJsonNull() ? null : transcriptConsequence.getAsJsonObject().get("amino_acid_change").getAsString())
-                    .compositeKey(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
-                    .intronNumber(transcriptConsequence.getAsJsonObject().get("intronNumber").isJsonNull()
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
-                    .exonNumbers(transcriptConsequence.getAsJsonObject().get("exonNumber").isJsonNull()
-                            ? null
-                            : createArrayExonNumber(transcriptConsequence))
-                    .suppress(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
-                    .stop(!transcriptConsequence.getAsJsonObject().has("stop")
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
-                    .custom(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
-                    .start(!transcriptConsequence.getAsJsonObject().has("start")
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
-                    .chr(!transcriptConsequence.getAsJsonObject().has("chr")
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
-                    .strand(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
-                    .validated(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("validated").getAsString())
-                    .transcript(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
-                    .cdna(!transcriptConsequence.getAsJsonObject().has("cdna")
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
-                    .referenceGenome(transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("referenceGenome").getAsString())
-                    .ref(!transcriptConsequence.getAsJsonObject().has("ref")
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
-                    .alt(!transcriptConsequence.getAsJsonObject().has("alt")
-                            ? null
-                            : transcriptConsequence.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
-                    .build());
-        }
-        return transcriptConsequenceList;
     }
 }

@@ -811,6 +811,114 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker molecularMatchMutationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("geneSymbol", true);
+        map.put("name", true);
+        map.put("transcriptRecognized", false);
+        map.put("transcript", true);
+        map.put("longestTranscript", false);
+        map.put("uniprotTranscript", false);
+        map.put("transcriptConsequence", false);
+        map.put("parents", true);
+        map.put("wgsaData", false);
+        map.put("wgsaMap", false);
+        map.put("exonsInfo", false);
+        map.put("fusionData", false);
+        map.put("mutation_type", true);
+        map.put("sources", true);
+        map.put("synonyms", true);
+        map.put("GRCh37_location", true);
+        map.put("pathology", true);
+        map.put("cdna", true);
+        map.put("description", true);
+        map.put("_src", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("MolecularMatchMutation", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTranscriptConsequenceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("chr", false);
+        map.put("start", false);
+        map.put("stop", false);
+        map.put("ref", false);
+        map.put("alt", false);
+        map.put("referenceGenome", true);
+        map.put("transcript", true);
+        map.put("strand", true);
+        map.put("cdna", false);
+        map.put("amino_acid_change", false);
+        map.put("intronNumber", true);
+        map.put("exonNumber", false);
+        map.put("suppress", true);
+        map.put("custom", true);
+        map.put("validated", true);
+        map.put("compositeKey", true);
+        return new ViccDatamodelChecker("MolecularMatchTranscriptConsequence", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchWGSADataChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("locations", true);
+        return new ViccDatamodelChecker("MolecularMatchWGSAData", map);
+    }
+    @NotNull
+    static ViccDatamodelChecker molecularMatchWGSALocationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("Gene", true);
+        map.put("Chr", true);
+        map.put("Start", true);
+        map.put("End", true);
+        map.put("Ref", true);
+        map.put("Alt", true);
+        map.put("Chr_Start_Ref_Alt", true);
+        map.put("Transcript", true);
+        map.put("NucleotideChange", true);
+        map.put("AA", false);
+        map.put("FullAA", true);
+        map.put("ExonicFunc", false);
+        map.put("PopFreqMax", true);
+        map.put("ClinVar_DIS", false);
+        map.put("ClinVar_SIG", false);
+        map.put("ClinVar_STATUS", false);
+        map.put("ClinVar_DBID", false);
+        map.put("ExAC_AFR", false);
+        map.put("ExAC_AMR", false);
+        map.put("ExAC_EAS", false);
+        map.put("ExAC_FIN", false);
+        map.put("ExAC_NFE", false);
+        map.put("ExAC_SAS", false);
+        map.put("ExAC_Freq", false);
+        map.put("1000G_AFR", false);
+        map.put("1000G_AMR", false);
+        map.put("1000G_EUR", false);
+        map.put("1000G_EAS", false);
+        map.put("1000G_SAS", false);
+        map.put("1000G_ALL", false);
+        map.put("FATHMM", true);
+        map.put("FATHMM_Pred", true);
+        map.put("ESP6500si_AA", false);
+        map.put("ESP6500si_EA", false);
+        map.put("dbSNP", false);
+        map.put("COSMIC_ID", false);
+        map.put("phyloP46way_placental", true);
+        map.put("phyloP100way_vertebrate", true);
+        map.put("SiPhy_29way_logOdds", true);
+        map.put("GWAS_SNP", false);
+        map.put("GWAS_DIS", false);
+        map.put("GWAS_PUBMED", false);
+        map.put("GERP++_RS", true);
+        map.put("Func", true);
+        map.put("wgRna", false);
+        map.put("targetScanS", false);
+        map.put("_key", true);
+        return new ViccDatamodelChecker("MolecularMatchWGSALocation", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);

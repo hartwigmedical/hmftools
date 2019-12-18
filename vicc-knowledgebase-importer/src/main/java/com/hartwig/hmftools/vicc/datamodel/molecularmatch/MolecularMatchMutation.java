@@ -28,22 +28,22 @@ public abstract class MolecularMatchMutation {
     @Nullable
     public abstract String uniprotTranscript();
 
-    @Nullable
+    @NotNull
     public abstract List<MolecularMatchTranscriptConsequence> transcriptConsequences();
 
-    @Nullable
+    @NotNull
     public abstract List<MolecularMatchParent> parents();
 
-    @Nullable
-    public abstract List<MolecularMatchWGSAData> wgsaData();
+    @NotNull
+    public abstract List<MolecularMatchWGSALocation> wgsaLocations();
 
-    @Nullable
+    @NotNull
     public abstract List<MolecularMatchWGSAMap> wgsaMaps();
 
     @Nullable
     public abstract MolecularMatchExonsInfo exonsInfo();
 
-    @Nullable
+    @NotNull
     public abstract List<MolecularMatchFusionData> fusionData();
 
     @NotNull

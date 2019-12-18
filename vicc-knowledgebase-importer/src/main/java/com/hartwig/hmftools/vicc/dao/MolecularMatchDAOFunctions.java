@@ -151,7 +151,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTierExpl
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantInfo;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAData;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAMap;
 
 import org.jetbrains.annotations.NotNull;
@@ -949,8 +949,8 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            if (mutations.wgsaData() != null) {
-                for (MolecularMatchWGSAData wgsaDataLocation : mutations.wgsaData()) {
+            if (mutations.wgsaLocations() != null) {
+                for (MolecularMatchWGSALocation wgsaDataLocation : mutations.wgsaLocations()) {
                     int idWGSData = context.insertInto(MOLECULARMATCHMUTATIONSWGSDATA,
                             MOLECULARMATCHMUTATIONSWGSDATA.EXONICFUNC,
                             MOLECULARMATCHMUTATIONSWGSDATA.DBSNP,
@@ -994,54 +994,54 @@ final class MolecularMatchDAOFunctions {
                             MOLECULARMATCHMUTATIONSWGSDATA.GWAS_DIS,
                             MOLECULARMATCHMUTATIONSWGSDATA.GWAS_SNP,
                             MOLECULARMATCHMUTATIONSWGSDATA.MOLECULARMATCHMUTATIONSID)
-                            .values(wgsaDataLocation.ExonicFunc(),
+                            .values(wgsaDataLocation.exonicFunc(),
                                     wgsaDataLocation.dbSNP(),
-                                    wgsaDataLocation.ExAC_NFE(),
-                                    wgsaDataLocation.ExAC_FIN(),
-                                    wgsaDataLocation.G1000_ALL(),
-                                    wgsaDataLocation.G1000_SAS(),
-                                    wgsaDataLocation.G1000_EAS(),
-                                    wgsaDataLocation.G1000_AFR(),
-                                    wgsaDataLocation.ExAC_SAS(),
-                                    wgsaDataLocation.ExAC_EAS(),
-                                    wgsaDataLocation.ExAC_AMR(),
-                                    wgsaDataLocation.ExAC_AFR(),
-                                    wgsaDataLocation.ExAC_Freq(),
-                                    wgsaDataLocation.End(),
-                                    wgsaDataLocation.Start(),
-                                    wgsaDataLocation.SiPhy_29way_logOdds(),
-                                    wgsaDataLocation.Ref(),
-                                    wgsaDataLocation.GERP_RS(),
-                                    wgsaDataLocation.FATHMM(),
-                                    wgsaDataLocation.NucleotideChange(),
-                                    wgsaDataLocation.phyloP100way_vertebrate(),
-                                    wgsaDataLocation.Func(),
-                                    wgsaDataLocation.GWAS_PUBMED(),
-                                    wgsaDataLocation.Transcript(),
-                                    wgsaDataLocation.ESP6500si_AA(),
-                                    wgsaDataLocation.ESP6500si_EA(),
-                                    wgsaDataLocation.G1000_EUR(),
-                                    wgsaDataLocation.G1000_AMR(),
-                                    wgsaDataLocation.Chr_Start_Ref_Alt(),
-                                    wgsaDataLocation.AA(),
-                                    wgsaDataLocation.PopFreqMax(),
-                                    wgsaDataLocation.FATHMM_Pred(),
+                                    wgsaDataLocation.exacNFE(),
+                                    wgsaDataLocation.exacFIN(),
+                                    wgsaDataLocation.g1000ALL(),
+                                    wgsaDataLocation.g1000SAS(),
+                                    wgsaDataLocation.g1000EAS(),
+                                    wgsaDataLocation.g1000AFR(),
+                                    wgsaDataLocation.exacSAS(),
+                                    wgsaDataLocation.exacEAS(),
+                                    wgsaDataLocation.exacAMR(),
+                                    wgsaDataLocation.exacAFR(),
+                                    wgsaDataLocation.exacFreq(),
+                                    wgsaDataLocation.end(),
+                                    wgsaDataLocation.start(),
+                                    wgsaDataLocation.siPhy29wayLogOdds(),
+                                    wgsaDataLocation.ref(),
+                                    wgsaDataLocation.gerpRS(),
+                                    wgsaDataLocation.fathmm(),
+                                    wgsaDataLocation.nucleotideChange(),
+                                    wgsaDataLocation.phyloP100wayVertebrate(),
+                                    wgsaDataLocation.func(),
+                                    wgsaDataLocation.gwasPubmed(),
+                                    wgsaDataLocation.transcript(),
+                                    wgsaDataLocation.esp6500siAA(),
+                                    wgsaDataLocation.esp6500siEA(),
+                                    wgsaDataLocation.g1000EUR(),
+                                    wgsaDataLocation.g1000AMR(),
+                                    wgsaDataLocation.chrStartRefAlt(),
+                                    wgsaDataLocation.aa(),
+                                    wgsaDataLocation.popFreqMax(),
+                                    wgsaDataLocation.fathmmPred(),
                                     wgsaDataLocation.wgRna(),
-                                    wgsaDataLocation.phyloP46way_placental(),
+                                    wgsaDataLocation.phyloP46wayPlacental(),
                                     wgsaDataLocation.key(),
                                     wgsaDataLocation.targetScanS(),
-                                    wgsaDataLocation.Chr(),
-                                    wgsaDataLocation.COSMIC_ID(),
+                                    wgsaDataLocation.chr(),
+                                    wgsaDataLocation.cosmicId(),
                                     wgsaDataLocation.alt(),
-                                    wgsaDataLocation.GWAS_DIS(),
-                                    wgsaDataLocation.GWAS_SNP(),
+                                    wgsaDataLocation.gwasDIS(),
+                                    wgsaDataLocation.gwasSNP(),
                                     idMutations)
                             .returning(MOLECULARMATCHMUTATIONSWGSDATA.ID)
                             .fetchOne()
                             .getValue(MOLECULARMATCHMUTATIONSWGSDATA.ID);
 
-                    if (wgsaDataLocation.ClinVar_DIS() != null) {
-                        for (String clinvarDIS : wgsaDataLocation.ClinVar_DIS()) {
+                    if (wgsaDataLocation.clinVarDiseases() != null) {
+                        for (String clinvarDIS : wgsaDataLocation.clinVarDiseases()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARDIS,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARDIS.CLINVARDIS,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARDIS.MOLECULARMATCHMUTATIONSWGSDATAID)
@@ -1050,8 +1050,8 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    if (wgsaDataLocation.ClinVar_SIG() != null) {
-                        for (String clinvarSig : wgsaDataLocation.ClinVar_SIG()) {
+                    if (wgsaDataLocation.clinVarSigs() != null) {
+                        for (String clinvarSig : wgsaDataLocation.clinVarSigs()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARSIG,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARSIG.CLINVARSIG,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARSIG.MOLECULARMATCHMUTATIONSWGSDATAID)
@@ -1060,8 +1060,8 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    if (wgsaDataLocation.ClinVar_STATUS() != null) {
-                        for (String clinvarStatus : wgsaDataLocation.ClinVar_STATUS()) {
+                    if (wgsaDataLocation.clinVarStates() != null) {
+                        for (String clinvarStatus : wgsaDataLocation.clinVarStates()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARSTATUS,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARSTATUS.CLINVARSTATUS,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARSTATUS.MOLECULARMATCHMUTATIONSWGSDATAID)
@@ -1070,8 +1070,8 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    if (wgsaDataLocation.ClinVar_DBID() != null) {
-                        for (String clinvarDBID : wgsaDataLocation.ClinVar_DBID()) {
+                    if (wgsaDataLocation.clinVarDbIds() != null) {
+                        for (String clinvarDBID : wgsaDataLocation.clinVarDbIds()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSWGSDATACLINVARDBID,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARDBID.CLINVARDBID,
                                     MOLECULARMATCHMUTATIONSWGSDATACLINVARDBID.MOLECULARMATCHMUTATIONSWGSDATAID)
@@ -1080,13 +1080,13 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    for (String fullAA : wgsaDataLocation.FullAA()) {
+                    for (String fullAA : wgsaDataLocation.fullAAs()) {
                         context.insertInto(MOLECULARMATCHMUTATIONSWGSDATAFULLAA,
                                 MOLECULARMATCHMUTATIONSWGSDATAFULLAA.MOLECULARMATCHMUTATIONSWGSDATAFULLAA.FULLAA,
                                 MOLECULARMATCHMUTATIONSWGSDATAFULLAA.MOLECULARMATCHMUTATIONSWGSDATAID).values(fullAA, idWGSData).execute();
                     }
 
-                    for (String gene : wgsaDataLocation.Gene()) {
+                    for (String gene : wgsaDataLocation.genes()) {
                         context.insertInto(MOLECULARMATCHMUTATIONSWGSDATAGENE,
                                 MOLECULARMATCHMUTATIONSWGSDATAGENE.GENE,
                                 MOLECULARMATCHMUTATIONSWGSDATAGENE.MOLECULARMATCHMUTATIONSWGSDATAID).values(gene, idWGSData).execute();
