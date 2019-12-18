@@ -31,7 +31,6 @@ public class HomDisruptionsTest
     public void testDelDisruption()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         tester.setNonClusterAllelePloidies(0.2, 0);
 
@@ -127,7 +126,6 @@ public class HomDisruptionsTest
     public void testDupDisruption()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         tester.setNonClusterAllelePloidies(0.2, 0);
 

@@ -35,7 +35,6 @@ public class ChainingActualTest
         // based on COLO829T chromosomes 3 + 6,10,12 and 1
 
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("COLO829T");
 
@@ -221,7 +220,6 @@ public class ChainingActualTest
     {
         // based on a sample where the shortest TI of 76 bases is actually ignored so as to make 2 chains
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("CT_SAMPLE1");
         tester.AllVariants.addAll(svList);
@@ -260,7 +258,6 @@ public class ChainingActualTest
          */
 
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         final List<SvVarData> svList = SampleDataLoader.loadSampleTestData("FB_SAMPLE1");
         tester.AllVariants.addAll(svList);
@@ -288,7 +285,6 @@ public class ChainingActualTest
         // based on an EGFR AMP
 
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 
@@ -337,7 +333,6 @@ public class ChainingActualTest
         // based on an MDM2 AMP - ends up with 1 high-ploidy chain, another with some extra low-ploidy SVs, and 2 more disconnected
 
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         tester.Config.RequiredAnnotations = ALL_ANNOTATIONS;
 

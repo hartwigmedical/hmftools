@@ -101,7 +101,7 @@ public class FilteringTest
     {
         LinxTester tester = new LinxTester();
 
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         SvVarData var0 = createDel(tester.nextVarId(), "1", 1000, 1100);
 

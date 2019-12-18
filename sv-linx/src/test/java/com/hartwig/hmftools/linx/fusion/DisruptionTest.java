@@ -37,7 +37,6 @@ public class DisruptionTest
     public void testSimpleDisruptions()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
         tester.initialiseFusions(geneTransCache);
@@ -137,7 +136,6 @@ public class DisruptionTest
     public void testChainedDisruptions()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
         tester.initialiseFusions(geneTransCache);
@@ -276,7 +274,6 @@ public class DisruptionTest
     public void testChainedDisruptions2()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
         tester.initialiseFusions(geneTransCache);

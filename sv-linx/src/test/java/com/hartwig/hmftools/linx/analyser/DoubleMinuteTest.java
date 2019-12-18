@@ -64,7 +64,7 @@ public class DoubleMinuteTest
         // form a DM from 2 INVs
         LinxTester tester = new LinxTester();
 
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final SvVarData var1 = createTestSv(1,"1","1",1000,6000,-1,-1, INV,8);
         final SvVarData var2 = createTestSv(2,"1","1",3000,8000,1,1, INV,8);
@@ -96,8 +96,6 @@ public class DoubleMinuteTest
     {
         // form a DM from 3 chained SVs, with some other SVs in the cluster having a lower ploidy
         LinxTester tester = new LinxTester();
-
-        tester.logVerbose(true);
 
         // 1 s10100 -> 6 e10600-10500s -> 4 s11500-10100e -> 3 s10200-12000e -> 5 s12100-12200e -> 2 e12500-11200s -> 1 e11000
 
@@ -148,8 +146,6 @@ public class DoubleMinuteTest
     {
         // first a cluster which grows in ploidy evenly
         LinxTester tester = new LinxTester();
-
-        tester.logVerbose(true);
 
         // a cluster with a set of 3 foldbacks which control the ploidies
         SvVarData var1 = createTestSv(1,"1","1",400,500,-1,-1, INV,1);

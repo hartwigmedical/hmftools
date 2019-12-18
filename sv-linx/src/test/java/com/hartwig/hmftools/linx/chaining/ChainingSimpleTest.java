@@ -23,7 +23,6 @@ public class ChainingSimpleTest
     public void testFullyAssembledChain()
     {
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         final SvVarData var1 = createDel(0, "1", 100,200);
         final SvVarData var2 = createDel(1, "1", 300,400);

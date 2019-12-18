@@ -548,6 +548,7 @@ Identify Viable Fusions
 For each single SV and for every facing pair of SVs in the same chain identify all viable fusions which satisfy the following conditions:
 * 5’ and 3’ must be inframe and join appropriate contexts of the gene (see table below). 
 * Chain must be disruptive to the 5’ partner ( ie. the breakend must fall within the transcript bounds of the 5’ partner and not be a DEL or DUP or INS wholly contained within a single intron)
+* Require 5' gene to have specific biotypes: protein_coding, retained_intron, processed_transcript, nonsense_mediated_decay, lincRNA
 * Not disrupted by an intermediate splice acceptor / splice donor. Exceptions: 1. Traversal can be valid even if there are intermediate splice acceptors as long as upstream partner, downstream partner and all intermediaries are 5’ non-coding). 2. Splice donors/acceptors can be skipped within the same gene if there is no inframe valid fusion without skipping (this is to deal with alternative splicing).
 * Not terminated on the 5’ partner side by a chained breakend prior to the start of the 5’ gene
 * Not terminated on the 3’ partner side by a chained breakend prior to the last coding base of the 3’ gene.
@@ -568,8 +569,10 @@ Notes:
 ##### Prioritise Transcripts
 Prioritise transcripts and choose one fusion per cluster per fusion gene pair by the following rules in order
 * Viable non-disrupted fusion
+* Inframe
+* Chain not terminated for known fusions
+* 3’ partner biotype is protein_coding 
 * Fusion without skipped exons
-* Both the 5' and 3’ transcripts are canonical
 * Best 3’ partner, ranked by canonical and then longest (non NMD) protein coding
 * Best 5’ partner out of those ranked by canonical, then longest protein coding
 
@@ -647,7 +650,14 @@ Shown below is an example of a SS18-SSX1 fusion:
     - log and write version file
     - exonic-exonic fusion were incorrectly calculating exact base phase
     - skip fusions which duplicate the first exon since has no splice acceptor
- 
-    
+ - 1.7
+     - new fusion prioritisation: 1. inframe, 2. chain not terminated for known fusions, 3. 3’ partner biotype is protein_coding then 4. No exons skipped
+     - require 5' gene to have specific biotypes: protein_coding,retained_intron,processed_transcript,nonsense_mediated_decay,lincRNA
+     - RNA fusion matching use homology length to adjust position instead of interval offset
+     - RNA matching with DNA - fixed match type bug if only a GENE match found
+     - germline SV parsing and filtering from GRIDSS VCF - annotate assembly and gene overlaps or disruptions
+     - write fusion priority value to verbose output file
+     - optionally write all possible fusion combinations to verbose output, including for single-sample run
+   
     
     

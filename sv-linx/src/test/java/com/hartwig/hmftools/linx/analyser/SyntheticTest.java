@@ -39,7 +39,6 @@ public class SyntheticTest
     public void testSyntheticDelDupFromInvPairs()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         // create 2 INVs with varying positions to check what synthetic DEL or DUP they create
 

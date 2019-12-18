@@ -37,7 +37,6 @@ public class AmpDriversTest
     public void testAmpDrivers()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         tester.setNonClusterAllelePloidies(1, 0);
 

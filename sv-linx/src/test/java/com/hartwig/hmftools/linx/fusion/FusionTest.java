@@ -50,7 +50,6 @@ public class FusionTest
     {
         // test the selection and prioritisation logic for reportable fusions
         LinxTester tester = new LinxTester();
-        // tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
 
@@ -258,7 +257,6 @@ public class FusionTest
     public void testChainedFusions()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
 
         SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
 

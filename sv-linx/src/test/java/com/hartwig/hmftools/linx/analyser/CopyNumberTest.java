@@ -64,7 +64,7 @@ public class CopyNumberTest
     public void testClusterMinMaxCopyNumber()
     {
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         SvVarData var1 = createDel(tester.nextVarId(), "1", 100, 200);
         SvVarData var2 = createDel(tester.nextVarId(), "1", 300, 400);
@@ -107,7 +107,7 @@ public class CopyNumberTest
     {
         // test copy number data re-creation from SVs
         LinxTester tester = new LinxTester();
-        tester.logVerbose(true);
+        // tester.logVerbose(true);
 
         final String chromosome = "1";
 

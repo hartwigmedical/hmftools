@@ -493,7 +493,7 @@ public class GermlineVcfReader
         asmbLinks[SE_START] = asmData.getLinkedSvIds()[SE_START];
         asmbLinks[SE_END] = asmData.getLinkedSvIds()[SE_END];
     }
-    
+
     private void writeSVs()
     {
         for(final StructuralVariant sv : mSvFactory.results())
