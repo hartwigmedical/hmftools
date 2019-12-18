@@ -1,11 +1,9 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
@@ -42,7 +40,6 @@ final class CheckEvidenceCnv {
                 filterEvidenceMap.put(entry.getKey(), evidencePerGeneCopyNumber.get(geneCopyNumber));
             } else {
                 evidenceMapNonReportable.put(entry.getKey(), evidencePerGeneCopyNumber.get(geneCopyNumber));
-
             }
         }
 
