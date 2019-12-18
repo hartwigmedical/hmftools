@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -32,14 +36,8 @@ public final class CopyNumberAnalyzer {
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber =
                 actionabilityAnalyzer.evidenceForCopyNumbers(exomeGeneCopyNumbers, primaryTumorLocation, bestFit.ploidy());
 
-        // TODO: Remove all evidence for unreported genes + WARN if remove A/B evidence
-
-        // TODO: Remove
-        List<EvidenceItem> allEvidence = ReportableEvidenceItemFactory.toReportableFlatList(evidencePerGeneCopyNumber);
-
-        // TODO: Remove allEvidence from input.
         Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
-                CheckEvidenceCnv.checkingAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber, allEvidence);
+                CheckEvidenceCnv.checkingAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber);
 
         List<EvidenceItem> filteredEvidenceItem = ReportableEvidenceItemFactory.toReportableFlatList(filteredEvidenceItemMap);
 

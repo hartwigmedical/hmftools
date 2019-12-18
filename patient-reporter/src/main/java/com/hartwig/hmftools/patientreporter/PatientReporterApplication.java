@@ -37,7 +37,7 @@ public class PatientReporterApplication {
     public static final String VERSION = PatientReporterApplication.class.getPackage().getImplementationVersion();
 
     // Uncomment this line when generating an example report using PDFWriterTest
-    //            public static final String VERSION = "7.8";
+    //            public static final String VERSION = "7.9";
 
     // General params needed for every report
     private static final String REF_SAMPLE_ID = "ref_sample_id";
