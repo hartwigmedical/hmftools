@@ -90,9 +90,7 @@ public final class SomaticVariants {
         // hgvsCoding starts with "c.", we need to skip that...
         int index = 2;
         while (noDigitFound && index < hgvsCoding.length()) {
-            if (Character.toString(hgvsCoding.charAt(2)).startsWith("-") && !Character.isLetterOrDigit(hgvsCoding.charAt(index))) {
-                codonAppender.append(hgvsCoding.charAt(2));
-            } else if (Character.isDigit(hgvsCoding.charAt(index))) {
+            if ((Character.toString(hgvsCoding.charAt(index)).equals("-") && index == 2) || Character.isDigit(hgvsCoding.charAt(index))) {
                 codonAppender.append(hgvsCoding.charAt(index));
             } else {
                 noDigitFound = false;
