@@ -779,13 +779,13 @@ final class ViccDatamodelCheckerFactory {
         map.put("civic", true);
         map.put("regulatoryBody", true);
         map.put("regulatoryBodyApproved", true);
-        map.put("guidelineBody", true);
-        map.put("guidelineVersion", true);
+        map.put("guidelineBody", false);
+        map.put("guidelineVersion", false);
         map.put("includeCondition1", false);
         map.put("includeMutation1", false);
         map.put("includeDrug1", false);
         map.put("includeStage0", false);
-        map.put("includeDrug0", false);
+        map.put("includeGene0", false);
         map.put("includeCondition0", true);
         map.put("includeMutation0", false);
         map.put("criteriaMet", true);
@@ -816,7 +816,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("geneSymbol", true);
         map.put("name", true);
         map.put("transcriptRecognized", false);
-        map.put("transcript", true);
+        map.put("transcript", false);
         map.put("longestTranscript", false);
         map.put("uniprotTranscript", false);
         map.put("transcriptConsequence", false);

@@ -182,7 +182,7 @@ final class MolecularMatchObjectFactory {
                     .geneSymbol(string(mutationObject, "geneSymbol"))
                     .name(string(mutationObject, "name"))
                     .transcriptRecognized(optionalString(mutationObject, "transcriptRecognized"))
-                    .transcript(string(mutationObject, "transcript"))
+                    .transcript(optionalString(mutationObject, "transcript"))
                     .longestTranscript(optionalString(mutationObject, "longestTranscript"))
                     .uniprotTranscript(optionalString(mutationObject, "uniprotTranscript"))
                     .transcriptConsequences(createTranscriptConsequences(optionalJsonArray(mutationObject, "transcriptConsequence")))
