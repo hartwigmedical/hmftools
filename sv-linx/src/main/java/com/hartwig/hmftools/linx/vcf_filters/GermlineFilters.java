@@ -11,7 +11,7 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class GermlineFilters implements VariantContextFilter
 {
-    private FilterConfig mConfig;
+    private GermlineVcfConfig mConfig;
 
     // VCF field identifiers
     public final static String QUAL = "QUAL";
@@ -23,6 +23,7 @@ public class GermlineFilters implements VariantContextFilter
     public final static String REF = "REF";
     public final static String BEID = "BEID";
     public final static String BEIDL = "BEIDL";
+    public final static String HOMSEQ = "HOMSEQ";
 
     public final static String AS = "AS";
     public final static String CAS = "CAS";
@@ -40,7 +41,7 @@ public class GermlineFilters implements VariantContextFilter
     private static final double MAX_ALLOWABLE_SHORT_EVENT_STRAND_BIAS = 0.95;
     private static final double MIN_AF = 0.005;
 
-    public GermlineFilters(final FilterConfig config)
+    public GermlineFilters(final GermlineVcfConfig config)
     {
         mConfig = config;
     }

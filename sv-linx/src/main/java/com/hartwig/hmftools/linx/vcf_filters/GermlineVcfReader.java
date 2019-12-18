@@ -3,16 +3,20 @@ package com.hartwig.hmftools.linx.vcf_filters;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.AS;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.BEID;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.BEIDL;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.CAS;
+import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.HOMSEQ;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.QUAL;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.RAS;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.REF;
@@ -23,11 +27,22 @@ import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.SRQ;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.VF;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.getDoubleValue;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.getIntValue;
+import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_PANEL_FILE;
+import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.loadVcfFiles;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -55,59 +70,44 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class GridssVcfFilters
+public class GermlineVcfReader
 {
-    private final String mSampleId;
-    private final String mOutputDir;
-    private final String mScope;
-    private final String mVcfFile;
-
     private BufferedWriter mCsvWriter;
 
     private final GermlineFilters mFilter;
-    private final StructuralVariantFactory mSvFactory;
-    private final FilterConfig mFilterConfig;
-    private final boolean mLinkByAssembly;
+    private StructuralVariantFactory mSvFactory;
+    private final GermlineVcfConfig mConfig;
 
-    private SvGeneTranscriptCollection mGeneCollection;
+    private final SvGeneTranscriptCollection mGeneCollection;
+    private final Map<String,List<EnsemblGeneData>> mGenePanel;
+
+    private final List<String> mVcfFiles;
 
     private List<AssemblyData> mSvAssemblyData;
     private Map<String,String> mSvFilterReasons;
 
-    private static final String GRIDSS_VCF_FILE = "vcf";
-    private static final String SCOPE = "scope";
-    private static final String SAMPLE = "sample";
-    private static final String REF_GENOME = "ref_genome";
-    private static final String GENE_TRANSCRIPTS_DIR = "gene_trans_dir";
-    private static final String LINK_BY_ASSEMBLY = "link_by_assembly";
-    private static final String OUTPUT_DIR = "output_dir";
-    private static final String LOG_DEBUG = "log_debug";
+    private static final Logger LOGGER = LogManager.getLogger(GermlineVcfReader.class);
 
-    private static final Logger LOGGER = LogManager.getLogger(GridssVcfFilters.class);
-
-    public GridssVcfFilters(final CommandLine cmd)
+    public GermlineVcfReader(final CommandLine cmd)
     {
-        mSampleId = cmd.getOptionValue(SAMPLE);
-        mOutputDir = cmd.getOptionValue(OUTPUT_DIR);
+        mConfig = new GermlineVcfConfig(cmd);
+        mFilter = new GermlineFilters(mConfig);
+        mSvFactory = null;
 
-        mVcfFile = cmd.getOptionValue(GRIDSS_VCF_FILE);
-        mScope = cmd.getOptionValue(SCOPE);
-
-        mFilterConfig = new FilterConfig(cmd);
-
-        mFilter = new GermlineFilters(mFilterConfig);
-        mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
-
+        mVcfFiles = Lists.newArrayList();
         mSvFilterReasons = Maps.newHashMap();
-
         mSvAssemblyData = Lists.newArrayList();
-        mLinkByAssembly = cmd.hasOption(LINK_BY_ASSEMBLY);
+
+        mGenePanel = Maps.newHashMap();
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
             mGeneCollection = new SvGeneTranscriptCollection();
             mGeneCollection.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
             mGeneCollection.loadEnsemblData(true);
+
+            if(cmd.hasOption(GENE_PANEL_FILE))
+                loadGenePanel(cmd.getOptionValue(GENE_PANEL_FILE));
         }
         else
         {
@@ -117,28 +117,125 @@ public class GridssVcfFilters
 
     public void run()
     {
-        LOGGER.info("scope({}) processing VCF({})", mScope, mVcfFile);
+        if(!mConfig.VcfFile.isEmpty())
+        {
+            mVcfFiles.add(mConfig.VcfFile);
+        }
+        else if(!mConfig.VcfsFile.isEmpty())
+        {
+            mVcfFiles.addAll(loadVcfFiles(mConfig.VcfsFile));
+        }
+        else if(!mConfig.BatchRunRootDir.isEmpty())
+        {
+            findVcfFiles();
+        }
+        else
+        {
+            LOGGER.error("missing VCF or batch-run directory");
+            return;
+        }
 
-        processVcf();
+        for(final String vcfFile : mVcfFiles)
+        {
+            processVcf(vcfFile);
 
-        if(mLinkByAssembly)
-            annotateAssembledLinks();
+            mSvAssemblyData.clear();
+            mSvFilterReasons.clear();
+        }
 
-        writeSVs();
+        closeBufferedWriter(mCsvWriter);
     }
 
-    private void processVcf()
+    private void findVcfFiles()
     {
+        // current prod examples
+        // structuralVariants/gridss/CPCT02030278R_CPCT02030278T/CPCT02030278R_CPCT02030278T.gridss.vcf.gz
+        // structural_caller/WIDE01010356T.gridss.unfiltered.vcf.gz
+        final List<String> vcfFiles = Lists.newArrayList();
+
         try
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                    mVcfFile, new VCFCodec(), false);
+            final Stream<Path> stream = Files.walk(Paths.get(mConfig.BatchRunRootDir), 5, FileVisitOption.FOLLOW_LINKS);
 
-            reader.iterator().forEach(x -> processVariant(x));
+            mVcfFiles.addAll(stream.filter(x -> !x.toFile().isDirectory())
+                    .map(x -> x.toFile().toString())
+                    .filter(x -> matchesGridssVcf(x))
+                    .collect(Collectors.toList()));
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("failed find directories for batchDir({}) run: {}", mConfig.BatchRunRootDir, e.toString());
+        }
+
+        LOGGER.info("found {} VCF files", mVcfFiles.size());
+    }
+
+    private static boolean matchesGridssVcf(final String filename)
+    {
+        return filename.endsWith(".gridss.vcf") || filename.endsWith(".gridss.unfiltered.vcf")
+                || filename.endsWith(".gridss.vcf.gz") || filename.endsWith(".gridss.unfiltered.vcf.gz");
+    }
+
+    private void loadGenePanel(final String geneFile)
+    {
+        // gene_panel.csv
+        if (!Files.exists(Paths.get(geneFile)))
+            return;
+
+        try
+        {
+            List<String> fileContents = Files.readAllLines(new File(geneFile).toPath());
+
+            for(final String gene : fileContents)
+            {
+                EnsemblGeneData geneData = mGeneCollection.getGeneDataByName(gene);
+
+                if(geneData == null)
+                {
+                    LOGGER.warn("gene({}) not found in Ensembl data cache", gene);
+                    continue;
+                }
+
+                List<EnsemblGeneData> chrGenesList = mGenePanel.get(geneData.Chromosome);
+
+                if(chrGenesList == null)
+                {
+                    chrGenesList = Lists.newArrayList();
+                    mGenePanel.put(geneData.Chromosome, chrGenesList);
+                }
+
+                chrGenesList.add(geneData);
+            }
+
+            LOGGER.info("loaded genePanelFile({}) with {} genes", geneFile, fileContents.size());
         }
         catch(IOException e)
         {
-            LOGGER.error("error reading vcf({}): {}", mVcfFile, e.toString());
+            LOGGER.error("failed to load gene panel file({}): {}", geneFile, e.toString());
+        }
+    }
+
+    private void processVcf(final String vcfFile)
+    {
+        try
+        {
+            LOGGER.info("processing germline VCF({})", vcfFile);
+
+            mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
+
+            final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
+                    vcfFile, new VCFCodec(), false);
+
+            reader.iterator().forEach(x -> processVariant(x));
+
+            if (mConfig.LinkByAssembly)
+                annotateAssembledLinks();
+
+            writeSVs();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
         }
     }
 
@@ -146,8 +243,11 @@ public class GridssVcfFilters
     {
         LOGGER.trace("id({}) position({}: {})", variant.getID(), variant.getContig(), variant.getStart());
 
-        // early exit
-        if(mFilterConfig.RequirePass && !mFilterConfig.LogFiltered)
+        // early exits
+        if(getDoubleValue(variant.getGenotype(0), QUAL) == 0) // no support in the normal
+            return;
+
+        if(mConfig.RequirePass && !mConfig.LogFiltered)
         {
             if (!variant.getFilters().isEmpty() && !variant.getFilters().contains(PASS))
                 return;
@@ -166,9 +266,24 @@ public class GridssVcfFilters
         if(sv == null)
             return;
 
+        // optionally filter out all but specified chromosomes
+        if(!mConfig.RestrictedChromosomes.isEmpty()
+        && !mConfig.RestrictedChromosomes.contains(sv.chromosome(true))
+        && (sv.type() == SGL || !mConfig.RestrictedChromosomes.contains(sv.chromosome(false))))
+        {
+            purgeLastSv();
+            return;
+        }
+
+        if(mConfig.RequireGene && !hasGeneAnnotation(sv))
+        {
+            purgeLastSv();
+            return;
+        }
+
         final String filterStr = applyFilters(sv, variant);
 
-        if(!filterStr.equals(PASS) && !mFilterConfig.LogFiltered)
+        if(!filterStr.equals(PASS) && !mConfig.LogFiltered)
         {
             purgeLastSv();
             return;
@@ -176,7 +291,7 @@ public class GridssVcfFilters
 
         mSvFilterReasons.put(sv.id(), filterStr);
 
-        if(mLinkByAssembly)
+        if(mConfig.LinkByAssembly)
             cacheAssemblyData(sv);
     }
 
@@ -209,12 +324,13 @@ public class GridssVcfFilters
 
     private String applyFilters(final StructuralVariant sv, final VariantContext variant)
     {
-        if(!variant.getFilters().isEmpty() && mFilterConfig.RequirePass)
+        if(!variant.getFilters().isEmpty() && mConfig.RequirePass)
             return "GRIDSS_FILTERED";
 
         if(GermlineFilters.isImprecise(variant))
             return "IMPRECISE";
 
+        // disabled since always zero - see comments from Daniel
         // if(GermlineFilters.noASRP(variant))
         //    return "NO_ASRP";
 
@@ -265,6 +381,74 @@ public class GridssVcfFilters
         }
     }
 
+    private String annotateWithGenePanel(final StructuralVariant sv)
+    {
+        if(sv.type() != DEL && sv.type() != DUP)
+            return "";
+
+        List<EnsemblGeneData> genesList = mGenePanel.get(sv.chromosome(true));
+
+        if(genesList == null)
+            return "";
+
+        String genesStr = "";
+
+        for(final EnsemblGeneData geneData : genesList)
+        {
+            if(sv.position(true) < geneData.GeneStart && sv.position(false) > geneData.GeneEnd)
+            {
+                genesStr = appendStr(genesStr, geneData.GeneName, ';');
+            }
+        }
+
+        return genesStr;
+    }
+
+    private boolean hasGeneAnnotation(final StructuralVariant sv)
+    {
+        List<EnsemblGeneData> genesList = mGenePanel.get(sv.chromosome(true));
+
+        if(genesList != null)
+        {
+            for (final EnsemblGeneData geneData : genesList)
+            {
+                // fully overlapping DEL or DUP
+                if (sv.type() == DEL || sv.type() == DUP)
+                {
+                    if (sv.position(true) < geneData.GeneStart && sv.position(false) > geneData.GeneEnd)
+                        return true;
+                }
+
+                // breakend falling in the gene
+                if (sv.position(true) > geneData.GeneStart && sv.position(true) < geneData.GeneEnd)
+                    return true;
+
+                if (sv.type() == DEL || sv.type() == DUP | sv.type() == INV)
+                {
+                    if (sv.position(false) > geneData.GeneStart && sv.position(false) < geneData.GeneEnd)
+                        return true;
+                }
+            }
+        }
+
+        // check other end of BND
+        if(sv.type() == BND)
+        {
+            genesList = mGenePanel.get(sv.chromosome(false));
+
+            if(genesList == null)
+                return false;
+
+            for (final EnsemblGeneData geneData : genesList)
+            {
+                if (sv.position(false) > geneData.GeneStart && sv.position(false) < geneData.GeneEnd)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     private void annotateAssembledLinks()
     {
         for(int i = 0; i < mSvAssemblyData.size() - 1; ++i)
@@ -309,18 +493,14 @@ public class GridssVcfFilters
         asmbLinks[SE_START] = asmData.getLinkedSvIds()[SE_START];
         asmbLinks[SE_END] = asmData.getLinkedSvIds()[SE_END];
     }
+    
     private void writeSVs()
     {
-        if(mOutputDir.isEmpty())
-            return;
-
         for(final StructuralVariant sv : mSvFactory.results())
         {
             final String filterStr = mSvFilterReasons.get(sv.id());
             writeCsv(sv, filterStr);
         }
-
-        closeBufferedWriter(mCsvWriter);
     }
 
     private void writeCsv(final StructuralVariant sv, final String filter)
@@ -329,7 +509,12 @@ public class GridssVcfFilters
         {
             if(mCsvWriter == null)
             {
-                String outputFileName = mOutputDir + mSampleId + "_filtered_germline_svs.csv";
+                String outputFileName = mConfig.OutputDir;
+
+                if(!mConfig.VcfFile.isEmpty())
+                    outputFileName += mConfig.SampleId + "_filtered_germline_svs.csv";
+                else
+                    outputFileName += "LNX_GERMLINE_SVS.csv";
 
                 mCsvWriter = createBufferedWriter(outputFileName, false);
 
@@ -337,7 +522,8 @@ public class GridssVcfFilters
                 mCsvWriter.write(",ChrStart,ChrEnd,PosStart,PosEnd,OrientStart,OrientEnd");
                 // mCsvWriter.write(",NormalReadDepth,NormalAltCount,TumorReadDepth,TumorAltCount");
                 mCsvWriter.write(",NormalREF,NormalRP,NormalRPQ,NormalSR,NormalSRQ,NormalVF");
-                mCsvWriter.write(",GenesStart,GenesEnd,AsmbStart,AsmbEnd");
+                mCsvWriter.write(",InsertSequence,Homology");
+                mCsvWriter.write(",GenesStart,GenesEnd,GenePanelOverlaps,AsmbStart,AsmbEnd");
 
                 mCsvWriter.newLine();
             }
@@ -345,10 +531,11 @@ public class GridssVcfFilters
             final VariantContext variant = sv.startContext();
 
             final Genotype normalGenotype = variant.getGenotype(0);
+            final String sampleName = normalGenotype.getSampleName();
             // final Genotype tumorGenotype = variant.getGenotype(1);
 
             mCsvWriter.write(String.format("%s,%s,%s,%s,%f,%s",
-                    mSampleId, sv.id(), filter, sv.filter(),
+                    sampleName, sv.id(), filter, sv.filter(),
                     getDoubleValue(normalGenotype, QUAL), sv.type()));
 
             boolean sglBreakend = sv.type() == SGL;
@@ -365,14 +552,19 @@ public class GridssVcfFilters
                     getIntValue(normalGenotype, REF), getIntValue(normalGenotype, RP), getDoubleValue(normalGenotype, RPQ),
                     getIntValue(normalGenotype, SR), getDoubleValue(normalGenotype, SRQ), getIntValue(normalGenotype, VF)));
 
+            final String homology = variant.getAttributeAsString(HOMSEQ, "");
+            mCsvWriter.write(String.format(",%s,%s", sv.insertSequence(), homology));
+
             String[] geneAnnotations = {"",""};
             annotationWithGenes(sv, geneAnnotations);
 
             String[] asmbSvIds = {"",""};
             populateAssemblyLinks(sv, asmbSvIds);
 
-            mCsvWriter.write(String.format(",%s,%s,%s,%s",
-                    geneAnnotations[SE_START], geneAnnotations[SE_END],
+            String genePanelOverlaps = annotateWithGenePanel(sv);
+
+            mCsvWriter.write(String.format(",%s,%s,%s,%s,%s",
+                    geneAnnotations[SE_START], geneAnnotations[SE_END], genePanelOverlaps,
                     asmbSvIds[SE_START], asmbSvIds[SE_END]));
 
             mCsvWriter.newLine();
@@ -395,35 +587,19 @@ public class GridssVcfFilters
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = createBasicOptions();
+        final Options options = new Options();
+        GermlineVcfConfig.addCommandLineOptions(options);
+
         final CommandLine cmd = createCommandLine(args, options);
 
         if(cmd.hasOption(LOG_DEBUG))
             Configurator.setRootLevel(Level.DEBUG);
 
-        GridssVcfFilters gridssVcfFilters = new GridssVcfFilters(cmd);
+        GermlineVcfReader gridssVcfFilters = new GermlineVcfReader(cmd);
 
         gridssVcfFilters.run();
 
         LOGGER.info("VCF processing complete");
-    }
-
-    @NotNull
-    private static Options createBasicOptions()
-    {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(GRIDSS_VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
-        options.addOption(REF_GENOME, true, "Ref genome fasta file");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
-        options.addOption(LINK_BY_ASSEMBLY, false, "Look for assembled links");
-        options.addOption(SCOPE, true, "Scope: germline or somatic");
-        options.addOption(OUTPUT_DIR, true, "Path to write results");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-
-        FilterConfig.addCommandLineOptions(options);
-
-        return options;
     }
 
     @NotNull
