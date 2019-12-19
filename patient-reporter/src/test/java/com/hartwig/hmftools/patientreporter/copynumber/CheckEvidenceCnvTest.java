@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientreporter.copynumber;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -26,11 +27,10 @@ public class CheckEvidenceCnvTest {
 
     @Test
     public void canFilterOutEvidence() {
+        List<ReportableGainLoss> reportableGainsAndLosses = createTestReportableGainsAndLosses("GENE1");
+        List<EvidenceItem> evidenceItems = createTestEvidenceItems();
 
-        List<ReportableGainLoss> reportableGainsAndLosses = reportableGainsAndLosses("FLT1");
-        List<EvidenceItem> evidenceItems = evidenceItems();
-
-        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder("EGFR").build();
+        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder("GENE2").build();
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = Maps.newHashMap();
         evidencePerGeneCopyNumber.put(geneCopyNumber, evidenceItems);
@@ -38,15 +38,15 @@ public class CheckEvidenceCnvTest {
         Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
                 CheckEvidenceCnv.checkAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber);
 
+        assertTrue(filteredEvidenceItemMap.isEmpty());
     }
 
     @Test
-    public void haveNonFilterOut() {
+    public void doNotFilterEvidenceOnReportableGene() {
+        List<ReportableGainLoss> reportableGainsAndLosses = createTestReportableGainsAndLosses("GENE1");
+        List<EvidenceItem> evidenceItems = createTestEvidenceItems();
 
-        List<ReportableGainLoss> reportableGainsAndLosses = reportableGainsAndLosses("EGFR");
-        List<EvidenceItem> evidenceItems = evidenceItems();
-
-        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder("EGFR").build();
+        GeneCopyNumber geneCopyNumber = createTestCopyNumberBuilder("GENE1").build();
 
         Map<GeneCopyNumber, List<EvidenceItem>> evidencePerGeneCopyNumber = Maps.newHashMap();
         evidencePerGeneCopyNumber.put(geneCopyNumber, evidenceItems);
@@ -54,64 +54,50 @@ public class CheckEvidenceCnvTest {
         Map<GeneCopyNumber, List<EvidenceItem>> filteredEvidenceItemMap =
                 CheckEvidenceCnv.checkAndFilterForEvidenceInDriverCatalog(reportableGainsAndLosses, evidencePerGeneCopyNumber);
 
+        assertEquals(1, filteredEvidenceItemMap.size());
     }
 
     @NotNull
-    private static List<ReportableGainLoss> reportableGainsAndLosses(@NotNull String gene) {
+    private static List<ReportableGainLoss> createTestReportableGainsAndLosses(@NotNull String gene) {
         ReportableGainLoss gainLoss = ImmutableReportableGainLoss.builder()
-                .chromosome("10")
-                .chromosomeBand("q23.31")
+                .chromosome("1")
+                .chromosomeBand("band")
                 .gene(gene)
                 .copies(0)
                 .interpretation(CopyNumberInterpretation.PARTIAL_LOSS)
                 .build();
+
         return Lists.newArrayList(gainLoss);
     }
 
     @NotNull
-    private static List<EvidenceItem> evidenceItems() {
+    private static List<EvidenceItem> createTestEvidenceItems() {
         List<EvidenceItem> evidenceItems = Lists.newArrayList();
 
-        ImmutableEvidenceItem.Builder offLabelBuilder = evidenceBuilder().isOnLabel(true);
-
-        evidenceItems.add(offLabelBuilder.event("FLT1 p.Val600Glu")
-                .drug("Alpelisib + Cetuximab + Encorafenib")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Responsive")
-                .reference("variant:17")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.GENE_LEVEL)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("EGFR p.Val300Glu")
-                .drug("Bevacizumab")
-                .level(EvidenceLevel.LEVEL_B)
-                .response("Resistant")
-                .reference("variant:12")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.SPECIFIC)
-                .build());
-
-        evidenceItems.add(offLabelBuilder.event("PTEN p.Val499Glu")
-                .drug("Alpelisib + Cetuximab + Encorafenib")
-                .level(EvidenceLevel.LEVEL_C)
-                .response("Responsive")
-                .reference("variant:17")
-                .source(ActionabilitySource.CIVIC)
-                .scope(EvidenceScope.GENE_LEVEL)
-                .build());
-
+        evidenceItems.add(createTestEvidenceBuilder().build());
+        evidenceItems.add(createTestEvidenceBuilder().build());
+        evidenceItems.add(createTestEvidenceBuilder().build());
 
         return evidenceItems;
     }
 
     @NotNull
-    private static ImmutableEvidenceItem.Builder evidenceBuilder() {
-        return ImmutableEvidenceItem.builder().drugsType(Strings.EMPTY).cancerType(Strings.EMPTY);
+    private static ImmutableEvidenceItem.Builder createTestEvidenceBuilder() {
+        return ImmutableEvidenceItem.builder()
+                .event(Strings.EMPTY)
+                .level(EvidenceLevel.LEVEL_A)
+                .response(Strings.EMPTY)
+                .reference(Strings.EMPTY)
+                .source(ActionabilitySource.CIVIC)
+                .scope(EvidenceScope.SPECIFIC)
+                .drug(Strings.EMPTY)
+                .drugsType(Strings.EMPTY)
+                .cancerType(Strings.EMPTY)
+                .isOnLabel(false);
     }
 
     @NotNull
-    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull final String gene) {
+    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
         return ImmutableGeneCopyNumber.builder()
                 .start(1)
                 .end(2)
@@ -133,5 +119,4 @@ public class CheckEvidenceCnvTest {
                 .transcriptVersion(0)
                 .minMinorAllelePloidy(0);
     }
-
 }
