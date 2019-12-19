@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class MolecularMatchBreg {
+public abstract class MolecularMatchFusionGenomicRegion {
 
     @NotNull
     public abstract String num();

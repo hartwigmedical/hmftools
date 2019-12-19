@@ -132,13 +132,12 @@ import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHVARIANTINF
 import static com.hartwig.hmftools.vicc.database.Tables.MOLECULARMATCHVARIANTINFOLOCATIONSEXONNUMBER;
 
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAgreg;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchBreg;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchExonsInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionData;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionGenomicRegion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37Location;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchMutation;
@@ -1202,61 +1201,61 @@ final class MolecularMatchDAOFunctions {
                             MOLECULARMATCHMUTATIONSFUSION.SOURCE,
                             MOLECULARMATCHMUTATIONSFUSION.PAPER,
                             MOLECULARMATCHMUTATIONSFUSION.MOLECULARMATCHMUTATIONSID)
-                            .values(fusions.synonym(), fusions.source(), fusions.Paper(), idMutations)
+                            .values(fusions.synonym(), fusions.source(), fusions.paper(), idMutations)
                             .returning(MOLECULARMATCHMUTATIONSFUSION.ID)
                             .fetchOne()
                             .getValue(MOLECULARMATCHMUTATIONSFUSION.ID);
 
-                    if (fusions.Bchr() != null) {
-                        for (String Bchr : fusions.Bchr()) {
+                    if (fusions.bChromosomes() != null) {
+                        for (String Bchr : fusions.bChromosomes()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBCHR,
                                     MOLECULARMATCHMUTATIONSFUSIONBCHR.BRCHR,
                                     MOLECULARMATCHMUTATIONSFUSIONBCHR.MOLECULARMATCHMUTATIONSFUSIONID).values(Bchr, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Agene() != null) {
-                        for (String agene : fusions.Agene()) {
+                    if (fusions.aGenes() != null) {
+                        for (String agene : fusions.aGenes()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONAGENE,
                                     MOLECULARMATCHMUTATIONSFUSIONAGENE.AGENE,
                                     MOLECULARMATCHMUTATIONSFUSIONAGENE.MOLECULARMATCHMUTATIONSFUSIONID).values(agene, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Btx() != null) {
-                        for (String btx : fusions.Btx()) {
+                    if (fusions.bTranscripts() != null) {
+                        for (String btx : fusions.bTranscripts()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBTX,
                                     MOLECULARMATCHMUTATIONSFUSIONBTX.BTX,
                                     MOLECULARMATCHMUTATIONSFUSIONBTX.MOLECULARMATCHMUTATIONSFUSIONID).values(btx, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Achr() != null) {
-                        for (String achr : fusions.Achr()) {
+                    if (fusions.aChromosomes() != null) {
+                        for (String achr : fusions.aChromosomes()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONATX,
                                     MOLECULARMATCHMUTATIONSFUSIONATX.ATX,
                                     MOLECULARMATCHMUTATIONSFUSIONATX.MOLECULARMATCHMUTATIONSFUSIONID).values(achr, idFusions).execute();
                         }
                     }
 
-                    if (fusions.ins() != null) {
-                        for (String ins : fusions.ins()) {
+                    if (fusions.inserts() != null) {
+                        for (String ins : fusions.inserts()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONINS,
                                     MOLECULARMATCHMUTATIONSFUSIONINS.INS,
                                     MOLECULARMATCHMUTATIONSFUSIONINS.MOLECULARMATCHMUTATIONSFUSIONID).values(ins, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Bgene() != null) {
-                        for (String bgene : fusions.Bgene()) {
+                    if (fusions.bGenes() != null) {
+                        for (String bgene : fusions.bGenes()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBGENE,
                                     MOLECULARMATCHMUTATIONSFUSIONBGENE.BGENE,
                                     MOLECULARMATCHMUTATIONSFUSIONBGENE.MOLECULARMATCHMUTATIONSFUSIONID).values(bgene, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Acoord() != null) {
-                        for (String Acoord : fusions.Acoord()) {
+                    if (fusions.aCoords() != null) {
+                        for (String Acoord : fusions.aCoords()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONACOORD,
                                     MOLECULARMATCHMUTATIONSFUSIONACOORD.ACOORD,
                                     MOLECULARMATCHMUTATIONSFUSIONACOORD.MOLECULARMATCHMUTATIONSFUSIONID)
@@ -1265,48 +1264,48 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    if (fusions.Bori() != null) {
-                        for (String bori : fusions.Bori()) {
+                    if (fusions.bOrientations() != null) {
+                        for (String bori : fusions.bOrientations()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBORI,
                                     MOLECULARMATCHMUTATIONSFUSIONBORI.BORI,
                                     MOLECULARMATCHMUTATIONSFUSIONBORI.MOLECULARMATCHMUTATIONSFUSIONID).values(bori, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Aband() != null) {
-                        for (String aband : fusions.Aband()) {
+                    if (fusions.aBands() != null) {
+                        for (String aband : fusions.aBands()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONABAND,
                                     MOLECULARMATCHMUTATIONSFUSIONABAND.ABAND,
                                     MOLECULARMATCHMUTATIONSFUSIONABAND.MOLECULARMATCHMUTATIONSFUSIONID).values(aband, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Bband() != null) {
-                        for (String bband : fusions.Bband()) {
+                    if (fusions.bBands() != null) {
+                        for (String bband : fusions.bBands()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBBAND,
                                     MOLECULARMATCHMUTATIONSFUSIONBBAND.BBAND,
                                     MOLECULARMATCHMUTATIONSFUSIONBBAND.MOLECULARMATCHMUTATIONSFUSIONID).values(bband, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Aori() != null) {
-                        for (String aori : fusions.Aori()) {
+                    if (fusions.aOrientations() != null) {
+                        for (String aori : fusions.aOrientations()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONAORI,
                                     MOLECULARMATCHMUTATIONSFUSIONAORI.AORI,
                                     MOLECULARMATCHMUTATIONSFUSIONAORI.MOLECULARMATCHMUTATIONSFUSIONID).values(aori, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Atx() != null) {
-                        for (String atx : fusions.Atx()) {
+                    if (fusions.aTranscripts() != null) {
+                        for (String atx : fusions.aTranscripts()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONATX,
                                     MOLECULARMATCHMUTATIONSFUSIONATX.ATX,
                                     MOLECULARMATCHMUTATIONSFUSIONATX.MOLECULARMATCHMUTATIONSFUSIONID).values(atx, idFusions).execute();
                         }
                     }
 
-                    if (fusions.Bcoord() != null) {
-                        for (String bcoord : fusions.Bcoord()) {
+                    if (fusions.bCoords() != null) {
+                        for (String bcoord : fusions.bCoords()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBCOORD,
                                     MOLECULARMATCHMUTATIONSFUSIONBCOORD.BCOORD,
                                     MOLECULARMATCHMUTATIONSFUSIONBCOORD.MOLECULARMATCHMUTATIONSFUSIONID)
@@ -1315,8 +1314,8 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    if (fusions.Bgreg() != null) {
-                        for (MolecularMatchBreg breg : fusions.Bgreg()) {
+                    if (fusions.bGenomicRegions() != null) {
+                        for (MolecularMatchFusionGenomicRegion breg : fusions.bGenomicRegions()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONBREG,
                                     MOLECULARMATCHMUTATIONSFUSIONBREG.NUM,
                                     MOLECULARMATCHMUTATIONSFUSIONBREG.TYPE,
@@ -1326,8 +1325,8 @@ final class MolecularMatchDAOFunctions {
                         }
                     }
 
-                    if (fusions.Agreg() != null) {
-                        for (MolecularMatchAgreg areg : fusions.Agreg()) {
+                    if (fusions.aGenomicRegions() != null) {
+                        for (MolecularMatchFusionGenomicRegion areg : fusions.aGenomicRegions()) {
                             context.insertInto(MOLECULARMATCHMUTATIONSFUSIONAREG,
                                     MOLECULARMATCHMUTATIONSFUSIONAREG.NUM,
                                     MOLECULARMATCHMUTATIONSFUSIONAREG.TYPE,

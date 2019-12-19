@@ -11,56 +11,56 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchFusionData {
 
     @Nullable
-    public abstract List<MolecularMatchBreg> Bgreg();
-
-    @Nullable
-    public abstract List<String> Bchr();
+    public abstract String source();
 
     @Nullable
     public abstract String synonym();
 
-    @Nullable
-    public abstract List<String> Agene();
+    @NotNull
+    public abstract List<String> aChromosomes();
+
+    @NotNull
+    public abstract List<String> aBands();
+
+    @NotNull
+    public abstract List<String> aGenes();
+
+    @NotNull
+    public abstract List<String> aCoords();
+
+    @NotNull
+    public abstract List<String> aTranscripts();
+
+    @NotNull
+    public abstract List<String> aOrientations();
+
+    @NotNull
+    public abstract List<MolecularMatchFusionGenomicRegion> aGenomicRegions();
+
+    @NotNull
+    public abstract List<String> bChromosomes();
+
+    @NotNull
+    public abstract List<String> bBands();
+
+    @NotNull
+    public abstract List<String> bGenes();
+
+    @NotNull
+    public abstract List<String> bCoords();
+
+    @NotNull
+    public abstract List<String> bTranscripts();
+
+    @NotNull
+    public abstract List<String> bOrientations();
+
+    @NotNull
+    public abstract List<MolecularMatchFusionGenomicRegion> bGenomicRegions();
+
+    @NotNull
+    public abstract List<String> inserts();
 
     @Nullable
-    public abstract List<String> Btx();
-
-    @Nullable
-    public abstract List<String> Achr();
-
-    @Nullable
-    public abstract List<String> ins();
-
-    @Nullable
-    public abstract String source();
-
-    @Nullable
-    public abstract List<MolecularMatchAgreg> Agreg();
-
-    @Nullable
-    public abstract List<String> Bgene();
-
-    @Nullable
-    public abstract List<String> Acoord();
-
-    @Nullable
-    public abstract List<String> Bori();
-
-    @Nullable
-    public abstract List<String> Aband();
-
-    @Nullable
-    public abstract List<String> Bband();
-
-    @Nullable
-    public abstract List<String> Aori();
-
-    @Nullable
-    public abstract List<String> Atx();
-
-    @Nullable
-    public abstract List<String> Bcoord();
-
-    @Nullable
-    public abstract String Paper();
+    public abstract String paper();
 }

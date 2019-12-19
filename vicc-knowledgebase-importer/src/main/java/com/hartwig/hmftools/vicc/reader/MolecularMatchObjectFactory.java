@@ -19,20 +19,19 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatch;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAgreg;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightRight;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchBreg;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchExonBoundaries;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchExonsInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusionData;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusionGenomicRegion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchGRCh37Location;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchMutation;
@@ -49,20 +48,19 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSAMap;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAgreg;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightRight;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchBreg;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchCriteriaUnmet;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchExonBoundaries;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchExonsInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionData;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionGenomicRegion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37Location;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchMutation;
@@ -107,14 +105,6 @@ final class MolecularMatchObjectFactory {
     private static final List<Integer> EXPECTED_MOLECULARMATCH_VARIANTINFO_SIZES = Lists.newArrayList(10);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_PARENTS_SIZES = Lists.newArrayList(3, 4);
     private static final List<Integer> EXPECTED_MOLECULARMATCH_FUSIONS_SIZES = Lists.newArrayList(8);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES = Lists.newArrayList(7, 9);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES = Lists.newArrayList(3, 7);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES =
-            Lists.newArrayList(1, 2, 3, 5, 6, 7, 8, 9, 11, 13, 16, 17, 20, 21, 22, 24, 26, 27, 28, 29, 38, 41);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_POSITIONS_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES = Lists.newArrayList(1, 2, 15, 17);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_BREG_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_AREG_SIZES = Lists.newArrayList(2);
 
     private MolecularMatchObjectFactory() {
     }
@@ -252,14 +242,14 @@ final class MolecularMatchObjectFactory {
 
         ViccDatamodelCheckerFactory.molecularMatchWGSADataChecker().check(wgsaDataObject);
 
-        List<MolecularMatchWGSALocation> molecularMatchWGSALocationList = Lists.newArrayList();
+        List<MolecularMatchWGSALocation> wgsaLocationList = Lists.newArrayList();
         ViccDatamodelChecker wgsaLocationChecker = ViccDatamodelCheckerFactory.molecularMatchWGSALocationChecker();
 
         for (JsonElement wgsaLocationElement : wgsaDataObject.get("locations").getAsJsonArray()) {
             JsonObject wgsaLocationObject = wgsaLocationElement.getAsJsonObject();
             wgsaLocationChecker.check(wgsaLocationObject);
 
-            molecularMatchWGSALocationList.add(ImmutableMolecularMatchWGSALocation.builder()
+            wgsaLocationList.add(ImmutableMolecularMatchWGSALocation.builder()
                     .genes(stringList(wgsaLocationObject, "Gene"))
                     .chr(string(wgsaLocationObject, "Chr"))
                     .start(string(wgsaLocationObject, "Start"))
@@ -309,42 +299,175 @@ final class MolecularMatchObjectFactory {
                     .key(string(wgsaLocationObject, "_key"))
                     .build());
         }
-        return molecularMatchWGSALocationList;
+        return wgsaLocationList;
     }
 
     @NotNull
-    private static List<MolecularMatchWGSAMap> createWGSAMaps(@Nullable JsonArray objectWgsaMap) {
-        if (objectWgsaMap == null) {
+    private static List<MolecularMatchWGSAMap> createWGSAMaps(@Nullable JsonArray wgsaMapArray) {
+        if (wgsaMapArray == null) {
             return Lists.newArrayList();
         }
 
-        List<MolecularMatchWGSAMap> molecularMatchWGSaMapList = Lists.newArrayList();
-        for (JsonElement wgsDataMap : objectWgsaMap.getAsJsonArray()) {
-            Set<String> keysWgsaMap = wgsDataMap.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES.contains(keysWgsaMap.size())) {
-                LOGGER.warn("Found {} in molecular match wgsa map rather than the expected {}",
-                        keysWgsaMap.size(),
-                        EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES);
-                LOGGER.warn(keysWgsaMap);
-            }
+        List<MolecularMatchWGSAMap> wgsaMapList = Lists.newArrayList();
+        ViccDatamodelChecker wgsaMapChecker = ViccDatamodelCheckerFactory.molecularMatchWGSAMapChecker();
 
-            molecularMatchWGSaMapList.add(ImmutableMolecularMatchWGSAMap.builder()
-                    .aa(!wgsDataMap.getAsJsonObject().has("AA")
-                            ? null
-                            : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("AA").getAsString())
-                    .name(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .grch37ChrStartRefAlt(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("GRCh37_Chr_Start_Ref_Alt").getAsString())
-                    .synonyms(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("Synonyms")))
-                    .protCoords(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("ProtCoords")))
-                    .nucleotideChange(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("NucleotideChange").getAsString())
-                    .exon(!wgsDataMap.getAsJsonObject().has("Exon")
-                            ? null
-                            : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Exon").getAsString())
-                    .gene(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Gene").getAsString())
-                    .transcript(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Transcript").getAsString())
+        for (JsonElement wgsaMapElement : wgsaMapArray) {
+            JsonObject wgsaMapObject = wgsaMapElement.getAsJsonObject();
+            wgsaMapChecker.check(wgsaMapObject);
+
+            wgsaMapList.add(ImmutableMolecularMatchWGSAMap.builder()
+                    .name(string(wgsaMapObject, "name"))
+                    .gene(string(wgsaMapObject, "Gene"))
+                    .transcript(string(wgsaMapObject, "Transcript"))
+                    .exon(optionalString(wgsaMapObject, "Exon"))
+                    .grch37ChrStartRefAlt(string(wgsaMapObject, "GRCh37_Chr_Start_Ref_Alt"))
+                    .nucleotideChange(string(wgsaMapObject, "NucleotideChange"))
+                    .aa(optionalString(wgsaMapObject, "AA"))
+                    .synonyms(stringList(wgsaMapObject, "Synonyms"))
+                    .protCoords(stringList(wgsaMapObject, "ProtCoords"))
                     .build());
         }
-        return molecularMatchWGSaMapList;
+        return wgsaMapList;
+    }
+
+    @Nullable
+    private static MolecularMatchExonsInfo createExonsInfo(@Nullable JsonObject exonsInfoObject) {
+        if (exonsInfoObject == null) {
+            return null;
+        }
+
+        ViccDatamodelCheckerFactory.molecularMatchExonsInfoChecker().check(exonsInfoObject);
+
+        return ImmutableMolecularMatchExonsInfo.builder()
+                .chr(string(exonsInfoObject, "chr"))
+                .transcript(string(exonsInfoObject, "transcript"))
+                .txStart(optionalString(exonsInfoObject, "txStart"))
+                .txEnd(optionalString(exonsInfoObject, "txEnd"))
+                .cdsStart(optionalString(exonsInfoObject, "cdsStart"))
+                .cdsEnd(optionalString(exonsInfoObject, "cdsEnd"))
+                .exonBoundaries(createExonBoundaries(exonsInfoObject.getAsJsonObject("exonBoundaries")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchExonBoundaries createExonBoundaries(@NotNull JsonObject exonBoundariesObject) {
+        ViccDatamodelCheckerFactory.molecularMatchExonBoundariesChecker().check(exonBoundariesObject);
+
+        return ImmutableMolecularMatchExonBoundaries.builder()
+                .exon1(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "1")))
+                .exon2(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "2")))
+                .exon3(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "3")))
+                .exon4(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "4")))
+                .exon5(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "5")))
+                .exon6(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "6")))
+                .exon7(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "7")))
+                .exon8(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "8")))
+                .exon9(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "9")))
+                .exon10(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "10")))
+                .exon11(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "11")))
+                .exon12(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "12")))
+                .exon13(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "13")))
+                .exon14(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "14")))
+                .exon15(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "15")))
+                .exon16(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "16")))
+                .exon17(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "17")))
+                .exon18(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "18")))
+                .exon19(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "19")))
+                .exon20(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "20")))
+                .exon21(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "21")))
+                .exon22(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "22")))
+                .exon23(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "23")))
+                .exon24(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "24")))
+                .exon25(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "25")))
+                .exon26(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "26")))
+                .exon27(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "27")))
+                .exon28(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "28")))
+                .exon29(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "29")))
+                .exon30(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "30")))
+                .exon31(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "31")))
+                .exon32(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "32")))
+                .exon33(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "33")))
+                .exon34(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "34")))
+                .exon35(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "35")))
+                .exon36(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "36")))
+                .exon37(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "37")))
+                .exon38(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "38")))
+                .exon39(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "39")))
+                .exon40(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "40")))
+                .exon41(createMolecularPosition(optionalJsonObject(exonBoundariesObject, "41")))
+                .build();
+    }
+
+    @Nullable
+    private static MolecularMatchPosition createMolecularPosition(@Nullable JsonObject positionObject) {
+        if (positionObject == null) {
+            return null;
+        }
+
+        ViccDatamodelCheckerFactory.molecularMatchPositionChecker().check(positionObject);
+
+        return ImmutableMolecularMatchPosition.builder()
+                .start(string(positionObject, "start"))
+                .stop(string(positionObject, "stop"))
+                .build();
+    }
+
+    @NotNull
+    private static List<MolecularMatchFusionData> createFusionData(@Nullable JsonArray fusionDataArray) {
+        if (fusionDataArray == null) {
+            return Lists.newArrayList();
+        }
+
+        List<MolecularMatchFusionData> fusionDataList = Lists.newArrayList();
+        ViccDatamodelChecker fusionDataChecker = ViccDatamodelCheckerFactory.molecularMatchFusionDataChecker();
+
+        for (JsonElement fusionDataElement : fusionDataArray) {
+            JsonObject fusionDataObject = fusionDataElement.getAsJsonObject();
+            fusionDataChecker.check(fusionDataObject);
+
+            fusionDataList.add(ImmutableMolecularMatchFusionData.builder()
+                    .source(optionalString(fusionDataObject, "source"))
+                    .synonym(optionalString(fusionDataObject, "synonym"))
+                    .aChromosomes(optionalStringList(fusionDataObject, "Achr"))
+                    .aBands(optionalStringList(fusionDataObject, "Aband"))
+                    .aGenes(optionalStringList(fusionDataObject, "Agene"))
+                    .aCoords(optionalStringList(fusionDataObject, "Acoord"))
+                    .aTranscripts(optionalStringList(fusionDataObject, "Atx"))
+                    .aOrientations(optionalStringList(fusionDataObject, "Aori"))
+                    .aGenomicRegions(createFusionGenomicRegions(optionalJsonArray(fusionDataObject, "Agreg")))
+                    .bChromosomes(optionalStringList(fusionDataObject, "Bchr"))
+                    .bBands(optionalStringList(fusionDataObject, "Bband"))
+                    .bGenes(optionalStringList(fusionDataObject, "Bgene"))
+                    .bCoords(optionalStringList(fusionDataObject, "Bcoord"))
+                    .bTranscripts(optionalStringList(fusionDataObject, "Btx"))
+                    .bOrientations(optionalStringList(fusionDataObject, "Bori"))
+                    .bGenomicRegions(createFusionGenomicRegions(optionalJsonArray(fusionDataObject, "Bgreg")))
+                    .inserts(optionalStringList(fusionDataObject, "ins"))
+                    .paper(optionalString(fusionDataObject, "Paper"))
+                    .build());
+        }
+        return fusionDataList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchFusionGenomicRegion> createFusionGenomicRegions(@Nullable JsonArray genomicRegionArray) {
+        if (genomicRegionArray == null) {
+            return Lists.newArrayList();
+        }
+
+        List<MolecularMatchFusionGenomicRegion> genomicRegionList = Lists.newArrayList();
+        ViccDatamodelChecker fusionGenomicRegionChecker = ViccDatamodelCheckerFactory.molecularMatchFusionGenomicRegionChecker();
+
+        for (JsonElement genomicRegionElement : genomicRegionArray) {
+            JsonObject genomicRegionObject = genomicRegionElement.getAsJsonObject();
+            fusionGenomicRegionChecker.check(genomicRegionObject);
+
+            genomicRegionList.add(ImmutableMolecularMatchFusionGenomicRegion.builder()
+                    .num(string(genomicRegionObject, "num"))
+                    .type(string(genomicRegionObject, "type"))
+                    .build());
+        }
+        return genomicRegionList;
     }
 
     @NotNull
@@ -918,211 +1041,6 @@ final class MolecularMatchObjectFactory {
                     .build());
         }
         return prevalenceList;
-    }
-
-    @NotNull
-    private static List<MolecularMatchFusionData> createFusionData(@Nullable JsonArray arrayFusionData) {
-        if (arrayFusionData == null) {
-            return Lists.newArrayList();
-        }
-
-        List<MolecularMatchFusionData> fusionDataList = Lists.newArrayList();
-        for (JsonElement fusionData : arrayFusionData.getAsJsonArray()) {
-            Set<String> keysFusionData = fusionData.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES.contains(keysFusionData.size())) {
-                LOGGER.warn("Found {} in molecular match fusion data rather than the expected {}",
-                        keysFusionData.size(),
-                        EXPECTED_MOLECULARMATCH_FUSIONDATA_SIZES);
-                LOGGER.warn(keysFusionData);
-            }
-
-            fusionDataList.add(ImmutableMolecularMatchFusionData.builder()
-                    .Bgreg(!fusionData.getAsJsonObject().has("Bgreg")
-                            ? null
-                            : createBreg(fusionData.getAsJsonObject().getAsJsonArray("Bgreg")))
-                    .Bchr(!fusionData.getAsJsonObject().has("Bchr")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bchr")))
-                    .synonym(!fusionData.getAsJsonObject().has("synonym")
-                            ? null
-                            : fusionData.getAsJsonObject().getAsJsonPrimitive("synonym").getAsString())
-                    .Agene(!fusionData.getAsJsonObject().has("Agene")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Agene")))
-                    .Btx(!fusionData.getAsJsonObject().has("Btx") ? null : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Btx")))
-                    .Achr(!fusionData.getAsJsonObject().has("Achr")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Achr")))
-                    .ins(!fusionData.getAsJsonObject().has("ins") ? null : toStringList(fusionData.getAsJsonObject().getAsJsonArray("ins")))
-                    .source(!fusionData.getAsJsonObject().has("source")
-                            ? null
-                            : fusionData.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
-                    .Agreg(!fusionData.getAsJsonObject().has("Agreg")
-                            ? null
-                            : createAreg(fusionData.getAsJsonObject().getAsJsonArray("Agreg")))
-                    .Bgene(!fusionData.getAsJsonObject().has("Bgene")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bgene")))
-                    .Acoord(!fusionData.getAsJsonObject().has("Acoord")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Acoord")))
-                    .Bori(!fusionData.getAsJsonObject().has("Bori")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bori")))
-                    .Aband(!fusionData.getAsJsonObject().has("Aband")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Aband")))
-                    .Bband(!fusionData.getAsJsonObject().has("Bband")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bband")))
-                    .Aori(!fusionData.getAsJsonObject().has("Aori")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Aori")))
-                    .Atx(!fusionData.getAsJsonObject().has("Atx") ? null : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Atx")))
-                    .Bcoord(!fusionData.getAsJsonObject().has("Bcoord")
-                            ? null
-                            : toStringList(fusionData.getAsJsonObject().getAsJsonArray("Bcoord")))
-                    .Paper(!fusionData.getAsJsonObject().has("Paper")
-                            ? null
-                            : fusionData.getAsJsonObject().getAsJsonPrimitive("Paper").getAsString())
-                    .build());
-        }
-        return fusionDataList;
-    }
-
-    @NotNull
-    private static List<MolecularMatchAgreg> createAreg(@NotNull JsonArray arrayAreg) {
-        List<MolecularMatchAgreg> aregList = Lists.newArrayList();
-        for (JsonElement areg : arrayAreg.getAsJsonArray()) {
-            Set<String> keysAreg = areg.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_AREG_SIZES.contains(keysAreg.size())) {
-                LOGGER.warn("Found {} in molecular match areg rather than the expected {}",
-                        keysAreg.size(),
-                        EXPECTED_MOLECULARMATCH_AREG_SIZES);
-                LOGGER.warn(keysAreg);
-            }
-
-            aregList.add(ImmutableMolecularMatchAgreg.builder()
-                    .type(areg.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
-                    .num(areg.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
-                    .build());
-        }
-        return aregList;
-    }
-
-    @NotNull
-    private static List<MolecularMatchBreg> createBreg(@NotNull JsonArray arrayBreg) {
-        List<MolecularMatchBreg> bregList = Lists.newArrayList();
-        for (JsonElement breg : arrayBreg.getAsJsonArray()) {
-            Set<String> keysBreg = breg.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_BREG_SIZES.contains(keysBreg.size())) {
-                LOGGER.warn("Found {} in molecular match breg rather than the expected {}",
-                        keysBreg.size(),
-                        EXPECTED_MOLECULARMATCH_BREG_SIZES);
-                LOGGER.warn(keysBreg);
-            }
-
-            bregList.add(ImmutableMolecularMatchBreg.builder()
-                    .type(breg.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
-                    .num(breg.getAsJsonObject().getAsJsonPrimitive("num").getAsString())
-                    .build());
-        }
-        return bregList;
-    }
-
-    @Nullable
-    private static MolecularMatchExonsInfo createExonsInfo(@Nullable JsonObject objectExonsInfo) {
-        if (objectExonsInfo == null) {
-            return null;
-        }
-        Set<String> keysExonsInfo = objectExonsInfo.keySet();
-        if (!EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES.contains(keysExonsInfo.size())) {
-            LOGGER.warn("Found {} in molecular match exon info rather than the expected {}",
-                    keysExonsInfo.size(),
-                    EXPECTED_MOLECULARMATCH_EXONSINFO_SIZES);
-            LOGGER.warn(keysExonsInfo);
-        }
-
-        return ImmutableMolecularMatchExonsInfo.builder()
-                .exonBoundaries(createExonBoundaries(objectExonsInfo.getAsJsonObject("exonBoundaries")))
-                .txStart(!objectExonsInfo.has("txStart") ? null : objectExonsInfo.getAsJsonPrimitive("txStart").getAsString())
-                .cdsEnd(!objectExonsInfo.has("cdsEnd") ? null : objectExonsInfo.getAsJsonPrimitive("cdsEnd").getAsString())
-                .chr(objectExonsInfo.getAsJsonPrimitive("chr").getAsString())
-                .cdsStart(!objectExonsInfo.has("cdsEnd") ? null : objectExonsInfo.getAsJsonPrimitive("cdsEnd").getAsString())
-                .transcript(objectExonsInfo.getAsJsonPrimitive("transcript").getAsString())
-                .txEnd(!objectExonsInfo.has("txEnd") ? null : objectExonsInfo.getAsJsonPrimitive("txEnd").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchPosition createMolecularPositions(@NotNull JsonObject objectPositions) {
-        Set<String> keysPositions = objectPositions.keySet();
-        if (!EXPECTED_MOLECULARMATCH_POSITIONS_SIZES.contains(keysPositions.size())) {
-            LOGGER.warn("Found {} in molecular match positions rather than the expected {}",
-                    keysPositions.size(),
-                    EXPECTED_MOLECULARMATCH_POSITIONS_SIZES);
-            LOGGER.warn(keysPositions);
-        }
-
-        return ImmutableMolecularMatchPosition.builder()
-                .start(objectPositions.getAsJsonPrimitive("start").getAsString())
-                .stop(objectPositions.getAsJsonPrimitive("stop").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchExonBoundaries createExonBoundaries(@NotNull JsonObject objectExonsBoundaries) {
-        Set<String> keysExonsBoundaries = objectExonsBoundaries.keySet();
-        if (!EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES.contains(keysExonsBoundaries.size())) {
-            LOGGER.warn("Found {} in molecular match exons boundaries rather than the expected {}",
-                    keysExonsBoundaries.size(),
-                    EXPECTED_MOLECULARMATCH_EXONSBOUNDARIES_SIZES);
-            LOGGER.warn(keysExonsBoundaries);
-        }
-
-        return ImmutableMolecularMatchExonBoundaries.builder()
-                .exon1(!objectExonsBoundaries.has("1") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("1")))
-                .exon2(!objectExonsBoundaries.has("2") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("2")))
-                .exon3(!objectExonsBoundaries.has("3") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("3")))
-                .exon4(!objectExonsBoundaries.has("4") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("4")))
-                .exon5(!objectExonsBoundaries.has("5") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("5")))
-                .exon6(!objectExonsBoundaries.has("6") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("6")))
-                .exon7(!objectExonsBoundaries.has("7") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("7")))
-                .exon8(!objectExonsBoundaries.has("8") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("8")))
-                .exon9(!objectExonsBoundaries.has("9") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("9")))
-                .exon10(!objectExonsBoundaries.has("10") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("10")))
-                .exon11(!objectExonsBoundaries.has("11") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("11")))
-                .exon12(!objectExonsBoundaries.has("12") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("12")))
-                .exon13(!objectExonsBoundaries.has("13") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("13")))
-                .exon14(!objectExonsBoundaries.has("14") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("14")))
-                .exon15(!objectExonsBoundaries.has("15") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("15")))
-                .exon16(!objectExonsBoundaries.has("16") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("16")))
-                .exon17(!objectExonsBoundaries.has("17") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("17")))
-                .exon18(!objectExonsBoundaries.has("18") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("18")))
-                .exon19(!objectExonsBoundaries.has("19") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("19")))
-                .exon20(!objectExonsBoundaries.has("20") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("20")))
-                .exon21(!objectExonsBoundaries.has("21") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("21")))
-                .exon22(!objectExonsBoundaries.has("22") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("22")))
-                .exon23(!objectExonsBoundaries.has("23") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("23")))
-                .exon24(!objectExonsBoundaries.has("24") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("24")))
-                .exon25(!objectExonsBoundaries.has("25") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("25")))
-                .exon26(!objectExonsBoundaries.has("26") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("26")))
-                .exon27(!objectExonsBoundaries.has("27") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("27")))
-                .exon28(!objectExonsBoundaries.has("28") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("28")))
-                .exon29(!objectExonsBoundaries.has("29") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("29")))
-                .exon30(!objectExonsBoundaries.has("30") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("30")))
-                .exon31(!objectExonsBoundaries.has("31") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("31")))
-                .exon32(!objectExonsBoundaries.has("32") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("32")))
-                .exon33(!objectExonsBoundaries.has("33") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("33")))
-                .exon34(!objectExonsBoundaries.has("34") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("34")))
-                .exon35(!objectExonsBoundaries.has("35") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("35")))
-                .exon36(!objectExonsBoundaries.has("36") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("36")))
-                .exon37(!objectExonsBoundaries.has("37") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("37")))
-                .exon38(!objectExonsBoundaries.has("38") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("38")))
-                .exon39(!objectExonsBoundaries.has("39") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("39")))
-                .exon40(!objectExonsBoundaries.has("40") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("40")))
-                .exon41(!objectExonsBoundaries.has("41") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("41")))
-                .build();
     }
 
     @NotNull

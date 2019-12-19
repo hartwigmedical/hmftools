@@ -869,6 +869,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("locations", true);
         return new ViccDatamodelChecker("MolecularMatchWGSAData", map);
     }
+
     @NotNull
     static ViccDatamodelChecker molecularMatchWGSALocationChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
@@ -920,6 +921,121 @@ final class ViccDatamodelCheckerFactory {
         map.put("targetScanS", false);
         map.put("_key", true);
         return new ViccDatamodelChecker("MolecularMatchWGSALocation", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchWGSAMapChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("Gene", true);
+        map.put("Transcript", true);
+        map.put("Exon", false);
+        map.put("GRCh37_Chr_Start_Ref_Alt", true);
+        map.put("NucleotideChange", true);
+        map.put("AA", false);
+        map.put("Synonyms", true);
+        map.put("ProtCoords", true);
+        return new ViccDatamodelChecker("MolecularMatchWGSAMap", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchExonsInfoChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("chr", true);
+        map.put("transcript", true);
+        map.put("txStart", false);
+        map.put("txEnd", false);
+        map.put("cdsStart", false);
+        map.put("cdsEnd", false);
+        map.put("exonBoundaries", true);
+        return new ViccDatamodelChecker("MolecularMatchExonsInfo", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchExonBoundariesChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("1", false);
+        map.put("2", false);
+        map.put("3", false);
+        map.put("4", false);
+        map.put("5", false);
+        map.put("6", false);
+        map.put("7", false);
+        map.put("8", false);
+        map.put("9", false);
+        map.put("10", false);
+        map.put("11", false);
+        map.put("12", false);
+        map.put("13", false);
+        map.put("14", false);
+        map.put("15", false);
+        map.put("16", false);
+        map.put("17", false);
+        map.put("18", false);
+        map.put("19", false);
+        map.put("20", false);
+        map.put("21", false);
+        map.put("22", false);
+        map.put("23", false);
+        map.put("24", false);
+        map.put("25", false);
+        map.put("26", false);
+        map.put("27", false);
+        map.put("28", false);
+        map.put("29", false);
+        map.put("30", false);
+        map.put("31", false);
+        map.put("32", false);
+        map.put("33", false);
+        map.put("34", false);
+        map.put("35", false);
+        map.put("36", false);
+        map.put("37", false);
+        map.put("38", false);
+        map.put("39", false);
+        map.put("40", false);
+        map.put("41", false);
+        return new ViccDatamodelChecker("MolecularMatchExonBoundaries", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchPositionChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("start", true);
+        map.put("stop", true);
+        return new ViccDatamodelChecker("MolecularMatchPosition", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchFusionDataChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("source", false);
+        map.put("synonym", false);
+        map.put("Achr", false);
+        map.put("Aband", false);
+        map.put("Agene", false);
+        map.put("Acoord", false);
+        map.put("Atx", false);
+        map.put("Aori", false);
+        map.put("Agreg", false);
+        map.put("Bchr", false);
+        map.put("Bband", false);
+        map.put("Bgene", false);
+        map.put("Bcoord", false);
+        map.put("Btx", false);
+        map.put("Bori", false);
+        map.put("Bgreg", false);
+        map.put("ins", false);
+        map.put("Paper", false);
+        return new ViccDatamodelChecker("MolecularMatchFusionData", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchFusionGenomicRegionChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("num", true);
+        map.put("type", true);
+        return new ViccDatamodelChecker("MolecularMatchFusionGenomicRegion", map);
     }
 
     @NotNull
