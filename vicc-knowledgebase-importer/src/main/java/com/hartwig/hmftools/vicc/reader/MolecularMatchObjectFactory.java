@@ -140,9 +140,13 @@ final class MolecularMatchObjectFactory {
                 .regulatoryBodyApproved(string(molecularMatchObject, "regulatoryBodyApproved"))
                 .guidelineBody(optionalString(molecularMatchObject, "guidelineBody"))
                 .guidelineVersion(optionalString(molecularMatchObject, "guidelineVersion"))
+                .includeGene1(stringList(molecularMatchObject, "includeGene1"))
+                .includeFinding1(stringList(molecularMatchObject, "includeFinding1"))
                 .includeCondition1(stringList(molecularMatchObject, "includeCondition1"))
                 .includeMutation1(optionalStringList(molecularMatchObject, "includeMutation1"))
                 .includeDrug1(optionalStringList(molecularMatchObject, "includeDrug1"))
+                .includeDrugClass1(optionalStringList(molecularMatchObject, "includeDrugclass1"))
+                .includeResistance1(optionalStringList(molecularMatchObject, "includeResistance1"))
                 .includeStage0(optionalStringList(molecularMatchObject, "includeStage0"))
                 .includeGene0(optionalStringList(molecularMatchObject, "includeDrug0"))
                 .includeCondition0(stringList(molecularMatchObject, "includeCondition0"))
@@ -245,6 +249,7 @@ final class MolecularMatchObjectFactory {
         if (wgsaDataObject == null) {
             return Lists.newArrayList();
         }
+
         ViccDatamodelCheckerFactory.molecularMatchWGSADataChecker().check(wgsaDataObject);
 
         List<MolecularMatchWGSALocation> molecularMatchWGSALocationList = Lists.newArrayList();
@@ -305,6 +310,41 @@ final class MolecularMatchObjectFactory {
                     .build());
         }
         return molecularMatchWGSALocationList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchWGSAMap> createWGSAMaps(@Nullable JsonArray objectWgsaMap) {
+        if (objectWgsaMap == null) {
+            return Lists.newArrayList();
+        }
+
+        List<MolecularMatchWGSAMap> molecularMatchWGSaMapList = Lists.newArrayList();
+        for (JsonElement wgsDataMap : objectWgsaMap.getAsJsonArray()) {
+            Set<String> keysWgsaMap = wgsDataMap.getAsJsonObject().keySet();
+            if (!EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES.contains(keysWgsaMap.size())) {
+                LOGGER.warn("Found {} in molecular match wgsa map rather than the expected {}",
+                        keysWgsaMap.size(),
+                        EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES);
+                LOGGER.warn(keysWgsaMap);
+            }
+
+            molecularMatchWGSaMapList.add(ImmutableMolecularMatchWGSAMap.builder()
+                    .aa(!wgsDataMap.getAsJsonObject().has("AA")
+                            ? null
+                            : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("AA").getAsString())
+                    .name(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+                    .grch37ChrStartRefAlt(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("GRCh37_Chr_Start_Ref_Alt").getAsString())
+                    .synonyms(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("Synonyms")))
+                    .protCoords(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("ProtCoords")))
+                    .nucleotideChange(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("NucleotideChange").getAsString())
+                    .exon(!wgsDataMap.getAsJsonObject().has("Exon")
+                            ? null
+                            : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Exon").getAsString())
+                    .gene(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Gene").getAsString())
+                    .transcript(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Transcript").getAsString())
+                    .build());
+        }
+        return molecularMatchWGSaMapList;
     }
 
     @NotNull
@@ -1083,41 +1123,6 @@ final class MolecularMatchObjectFactory {
                 .exon40(!objectExonsBoundaries.has("40") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("40")))
                 .exon41(!objectExonsBoundaries.has("41") ? null : createMolecularPositions(objectExonsBoundaries.getAsJsonObject("41")))
                 .build();
-    }
-
-    @NotNull
-    private static List<MolecularMatchWGSAMap> createWGSAMaps(@Nullable JsonArray objectWgsaMap) {
-        if (objectWgsaMap == null) {
-            return Lists.newArrayList();
-
-        }
-        List<MolecularMatchWGSAMap> molecularMatchWGSaMapList = Lists.newArrayList();
-        for (JsonElement wgsDataMap : objectWgsaMap.getAsJsonArray()) {
-            Set<String> keysWgsaMap = wgsDataMap.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES.contains(keysWgsaMap.size())) {
-                LOGGER.warn("Found {} in molecular match wgsa map rather than the expected {}",
-                        keysWgsaMap.size(),
-                        EXPECTED_MOLECULARMATCH_WGSAMAP_SIZES);
-                LOGGER.warn(keysWgsaMap);
-            }
-
-            molecularMatchWGSaMapList.add(ImmutableMolecularMatchWGSAMap.builder()
-                    .aa(!wgsDataMap.getAsJsonObject().has("AA")
-                            ? null
-                            : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("AA").getAsString())
-                    .name(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .grch37ChrStartRefAlt(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("GRCh37_Chr_Start_Ref_Alt").getAsString())
-                    .synonyms(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("Synonyms")))
-                    .protCoords(toStringList(wgsDataMap.getAsJsonObject().getAsJsonArray("ProtCoords")))
-                    .nucleotideChange(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("NucleotideChange").getAsString())
-                    .exon(!wgsDataMap.getAsJsonObject().has("Exon")
-                            ? null
-                            : wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Exon").getAsString())
-                    .gene(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Gene").getAsString())
-                    .transcript(wgsDataMap.getAsJsonObject().getAsJsonPrimitive("Transcript").getAsString())
-                    .build());
-        }
-        return molecularMatchWGSaMapList;
     }
 
     @NotNull

@@ -781,9 +781,13 @@ final class ViccDatamodelCheckerFactory {
         map.put("regulatoryBodyApproved", true);
         map.put("guidelineBody", false);
         map.put("guidelineVersion", false);
+        map.put("includeGene1", false);
+        map.put("includeFinding1", false);
         map.put("includeCondition1", false);
         map.put("includeMutation1", false);
         map.put("includeDrug1", false);
+        map.put("includeDrugclass1", false);
+        map.put("includeResistance1", false);
         map.put("includeStage0", false);
         map.put("includeGene0", false);
         map.put("includeCondition0", true);

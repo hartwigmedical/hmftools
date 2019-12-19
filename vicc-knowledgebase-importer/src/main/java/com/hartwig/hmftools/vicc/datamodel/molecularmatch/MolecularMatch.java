@@ -61,6 +61,12 @@ public abstract class MolecularMatch implements KbSpecificObject {
     public abstract String guidelineVersion();
 
     @NotNull
+    public abstract List<String> includeGene1();
+
+    @NotNull
+    public abstract List<String> includeFinding1();
+
+    @NotNull
     public abstract List<String> includeCondition1();
 
     @NotNull
@@ -68,6 +74,12 @@ public abstract class MolecularMatch implements KbSpecificObject {
 
     @NotNull
     public abstract List<String> includeDrug1();
+
+    @NotNull
+    public abstract List<String> includeDrugClass1();
+
+    @NotNull
+    public abstract List<String> includeResistance1();
 
     @NotNull
     public abstract List<String> includeStage0();

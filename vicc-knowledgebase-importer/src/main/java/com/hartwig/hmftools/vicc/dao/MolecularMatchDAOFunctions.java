@@ -163,6 +163,7 @@ final class MolecularMatchDAOFunctions {
     }
 
     static void write(@NotNull DSLContext context, int viccEntryId, @NotNull MolecularMatch molecularMatch) {
+        // TODO Add gene1, resistance1, finding1 and drugclass1
         int id = context.insertInto(MOLECULARMATCH,
                 MOLECULARMATCH.SCORE,
                 MOLECULARMATCH.AUTOGENERATENARRATIVE,
