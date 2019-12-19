@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
@@ -54,16 +53,7 @@ public class CNADrivers {
         return result;
     }
 
-    @NotNull
-    public static CNADrivers CNADriversWithExtraAmplificationTargets(@NotNull Set<String> extraAmplificationTargets) {
-        return new CNADrivers(extraAmplificationTargets);
-    }
-
     public CNADrivers() {
-        this(Sets.newHashSet());
-    }
-
-    private CNADrivers(@NotNull final Set<String> extraAmplificationTargets) {
         this.oncoGenes = DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet();
         this.tsGenes = DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet();
 
@@ -74,10 +64,7 @@ public class CNADrivers {
                 .filter(x -> !x.getValue().equals("NA"))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        Set<String> amplificationTargets = amplificationTargets();
-        amplificationTargets.addAll(extraAmplificationTargets);
-
-        this.amplificationTargets = amplificationTargets;
+        this.amplificationTargets = amplificationTargets();
     }
 
     @NotNull
