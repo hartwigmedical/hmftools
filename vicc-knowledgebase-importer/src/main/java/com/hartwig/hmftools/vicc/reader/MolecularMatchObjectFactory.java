@@ -33,6 +33,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusionData;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchFusionGenomicRegion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchGRCh37Location;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchGRCh37TranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchMutation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchParent;
@@ -43,7 +44,6 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequence;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchWGSAMap;
@@ -62,6 +62,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionData;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionGenomicRegion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37Location;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37TranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchMutation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchParent;
@@ -72,7 +73,6 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTag;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequence;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAMap;
@@ -468,6 +468,53 @@ final class MolecularMatchObjectFactory {
                     .build());
         }
         return genomicRegionList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchGRCh37Location> createGRCh37Locations(@NotNull JsonArray locationArray) {
+        List<MolecularMatchGRCh37Location> grch37LocationList = Lists.newArrayList();
+        ViccDatamodelChecker grch37LocationChecker = ViccDatamodelCheckerFactory.molecularMatchGRCh37LocationChecker();
+
+        for (JsonElement locationElement : locationArray) {
+            JsonObject locationObject = locationElement.getAsJsonObject();
+            grch37LocationChecker.check(locationObject);
+
+            grch37LocationList.add(ImmutableMolecularMatchGRCh37Location.builder()
+                    .chr(nullableString(locationObject, "chr"))
+                    .start(nullableString(locationObject, "start"))
+                    .stop(nullableString(locationObject, "stop"))
+                    .ref(nullableString(locationObject, "ref"))
+                    .alt(nullableString(locationObject, "alt"))
+                    .strand(string(locationObject, "strand"))
+                    .transcriptConsequences(createGRCh37TranscriptConsequences(locationObject.getAsJsonArray("transcript_consequences")))
+                    .validated(string(locationObject, "validated"))
+                    .compositeKey(string(locationObject, "compositeKey"))
+                    .build());
+        }
+        return grch37LocationList;
+    }
+
+    @NotNull
+    private static List<MolecularMatchGRCh37TranscriptConsequence> createGRCh37TranscriptConsequences(
+            @NotNull JsonArray transcriptConsequenceArray) {
+        List<MolecularMatchGRCh37TranscriptConsequence> transcriptConsequenceList = Lists.newArrayList();
+        ViccDatamodelChecker grch37TranscriptConsequenceChecker =
+                ViccDatamodelCheckerFactory.molecularMatchGRCh37TranscriptConsequenceChecker();
+
+        for (JsonElement transcriptConsequenceElement : transcriptConsequenceArray) {
+            JsonObject transcriptConsequenceObject = transcriptConsequenceElement.getAsJsonObject();
+            grch37TranscriptConsequenceChecker.check(transcriptConsequenceObject);
+
+            transcriptConsequenceList.add(ImmutableMolecularMatchGRCh37TranscriptConsequence.builder()
+                    .transcript(string(transcriptConsequenceObject, "transcript"))
+                    .cdna(nullableString(transcriptConsequenceObject, "cdna"))
+                    .aminoAcidChange(nullableString(transcriptConsequenceObject, "amino_acid_change"))
+                    .txSites(stringList(transcriptConsequenceObject, "txSites"))
+                    .intronNumber(nullableString(transcriptConsequenceObject, "intronNumber"))
+                    .exonNumbers(stringList(transcriptConsequenceObject, "exonNumber"))
+                    .build());
+        }
+        return transcriptConsequenceList;
     }
 
     @NotNull
@@ -1041,76 +1088,5 @@ final class MolecularMatchObjectFactory {
                     .build());
         }
         return prevalenceList;
-    }
-
-    @NotNull
-    private static List<MolecularMatchGRCh37Location> createGRCh37Locations(@NotNull JsonArray arrayLocation) {
-        List<MolecularMatchGRCh37Location> grch37LocationList = Lists.newArrayList();
-
-        for (JsonElement location : arrayLocation) {
-            Set<String> keysLocation = location.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES.contains(keysLocation.size())) {
-                LOGGER.warn("Found {} in molecular match grch37 location rather than the expected {}",
-                        keysLocation.size(),
-                        EXPECTED_MOLECULARMATCH_LOCATIONGRCH37_SIZES);
-                LOGGER.warn(keysLocation);
-            }
-
-            grch37LocationList.add(ImmutableMolecularMatchGRCh37Location.builder()
-                    .compositeKey(location.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
-                    .ref(location.getAsJsonObject().get("ref").isJsonNull()
-                            ? null
-                            : location.getAsJsonObject().getAsJsonPrimitive("ref").getAsString())
-                    .stop(location.getAsJsonObject().get("stop").isJsonNull()
-                            ? null
-                            : location.getAsJsonObject().getAsJsonPrimitive("stop").getAsString())
-                    .start(location.getAsJsonObject().get("start").isJsonNull()
-                            ? null
-                            : location.getAsJsonObject().getAsJsonPrimitive("start").getAsString())
-                    .chr(location.getAsJsonObject().get("chr").isJsonNull()
-                            ? null
-                            : location.getAsJsonObject().getAsJsonPrimitive("chr").getAsString())
-                    .alt(location.getAsJsonObject().get("alt").isJsonNull()
-                            ? null
-                            : location.getAsJsonObject().getAsJsonPrimitive("alt").getAsString())
-                    .validated(location.getAsJsonObject().getAsJsonPrimitive("validated").getAsString())
-                    .transcriptConsequences(createConsequencesGRCH37(location.getAsJsonObject().getAsJsonArray("transcript_consequences")))
-                    .strand(location.getAsJsonObject().getAsJsonPrimitive("strand").getAsString())
-                    .build());
-        }
-        return grch37LocationList;
-    }
-
-    @NotNull
-    private static List<MolecularMatchTranscriptConsequencesGRCh37> createConsequencesGRCH37(
-            @NotNull JsonArray arrayTranscriptConsequence) {
-        List<MolecularMatchTranscriptConsequencesGRCh37> transcriptConsequencesGRCH37List = Lists.newArrayList();
-        for (JsonElement transcriptConsequences : arrayTranscriptConsequence) {
-            Set<String> keysTranscriptConsequences = transcriptConsequences.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES.contains(keysTranscriptConsequences.size())) {
-                LOGGER.warn("Found {} in molecular match transcript consequences grch37 rather than the expected {}",
-                        keysTranscriptConsequences.size(),
-                        EXPECTED_MOLECULARMATCH_TRANSCRIPT_CONSEQUENCES__GRCH37_SIZES);
-                LOGGER.warn(keysTranscriptConsequences);
-            }
-
-            transcriptConsequencesGRCH37List.add(ImmutableMolecularMatchTranscriptConsequencesGRCh37.builder()
-                    .aminoAcidChange(transcriptConsequences.getAsJsonObject().get("amino_acid_change").isJsonNull()
-                            ? null
-                            : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("amino_acid_change").getAsString())
-                    .txSites(toStringList(transcriptConsequences.getAsJsonObject().getAsJsonArray("txSites")))
-                    .exonNumbers(transcriptConsequences.getAsJsonObject().get("exonNumber").isJsonNull()
-                            ? null
-                            : createArrayExonNumber(transcriptConsequences))
-                    .intronNumber(transcriptConsequences.getAsJsonObject().get("intronNumber").isJsonNull()
-                            ? null
-                            : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("intronNumber").getAsString())
-                    .transcript(transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
-                    .cdna(transcriptConsequences.getAsJsonObject().get("cdna").isJsonNull()
-                            ? null
-                            : transcriptConsequences.getAsJsonObject().getAsJsonPrimitive("cdna").getAsString())
-                    .build());
-        }
-        return transcriptConsequencesGRCH37List;
     }
 }

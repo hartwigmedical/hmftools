@@ -29,7 +29,7 @@ public abstract class MolecularMatchGRCh37Location {
     public abstract String strand();
 
     @NotNull
-    public abstract List<MolecularMatchTranscriptConsequencesGRCh37> transcriptConsequences();
+    public abstract List<MolecularMatchGRCh37TranscriptConsequence> transcriptConsequences();
 
     @NotNull
     public abstract String validated();

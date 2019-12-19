@@ -139,6 +139,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionData;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchFusionGenomicRegion;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37Location;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchGRCh37TranscriptConsequence;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchLocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchMutation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchParent;
@@ -148,7 +149,6 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTag;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTherapeuticContext;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTierExplanation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequence;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchTranscriptConsequencesGRCh37;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantInfo;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAMap;
@@ -1158,7 +1158,7 @@ final class MolecularMatchDAOFunctions {
                         .fetchOne()
                         .getValue(MOLECULARMATCHMUTATIONSGRCH37LOCATION.ID);
 
-                for (MolecularMatchTranscriptConsequencesGRCh37 transcriptConsequencesGRCH37 : gRch37Location.transcriptConsequences()) {
+                for (MolecularMatchGRCh37TranscriptConsequence transcriptConsequencesGRCH37 : gRch37Location.transcriptConsequences()) {
                     int idConsequences = context.insertInto(MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES,
                             MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.AMINOACIDCHANGE,
                             MOLECULARMATCHMUTATIONSGRCH37LOCATIONCONSEQUENCES.INTRONNUMBER,

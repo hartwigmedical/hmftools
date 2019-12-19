@@ -1039,6 +1039,34 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker molecularMatchGRCh37LocationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("chr", true);
+        map.put("start", true);
+        map.put("stop", true);
+        map.put("ref", true);
+        map.put("alt", true);
+        map.put("strand", true);
+        map.put("transcript_consequences", true);
+        map.put("validated", true);
+        map.put("compositeKey", true);
+        return new ViccDatamodelChecker("MolecularMatchGRCh37Location", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchGRCh37TranscriptConsequenceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("transcript", true);
+        map.put("cdna", true);
+        map.put("amino_acid_change", true);
+        map.put("txSites", true);
+        map.put("intronNumber", true);
+        map.put("exonNumber", true);
+
+        return new ViccDatamodelChecker("MolecularMatchGRCh37TranscriptConsequence", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);
