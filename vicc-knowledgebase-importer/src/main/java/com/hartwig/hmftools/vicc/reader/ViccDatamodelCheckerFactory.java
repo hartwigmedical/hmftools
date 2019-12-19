@@ -1067,6 +1067,115 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker molecularMatchVariantInfoChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("gene", true);
+        map.put("transcript", true);
+        map.put("classification", true);
+        map.put("consequences", true);
+        map.put("fusions", true);
+        map.put("locations", true);
+        map.put("geneFusionPartner", true);
+        map.put("COSMIC_ID", true);
+        map.put("popFreqMax", true);
+        return new ViccDatamodelChecker("MolecularMatchVariantInfo", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchFusionChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("chr", true);
+        map.put("referenceGenome", true);
+        map.put("LBPWREP", true);
+        map.put("LBPWLEP", true);
+        map.put("RBPWREP", true);
+        map.put("RBPWLEP", true);
+        map.put("intronNumber", true);
+        map.put("exonNumber", true);
+        return new ViccDatamodelChecker("MolecularMatchFusion", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchLocationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("chr", true);
+        map.put("start", true);
+        map.put("stop", true);
+        map.put("ref", false);
+        map.put("alt", false);
+        map.put("cdna", false);
+        map.put("amino_acid_change", false);
+        map.put("referenceGenome", false);
+        map.put("strand", false);
+        map.put("intronNumber", false);
+        map.put("exonNumber", false);
+        return new ViccDatamodelChecker("MolecularMatchLocation", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchPrevalenceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("studyId", true);
+        map.put("count", true);
+        map.put("samples", true);
+        map.put("percent", true);
+        map.put("molecular", false);
+        map.put("condition", false);
+        return new ViccDatamodelChecker("MolecularMatchPrevalence", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchSourceChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("type", true);
+        map.put("subType", false);
+        map.put("valid", true);
+        map.put("pubId", true);
+        map.put("link", true);
+        map.put("trialId", false);
+        map.put("trialPhase", false);
+        map.put("year", true);
+        map.put("functionalConsequence", false);
+        map.put("institution", false);
+        map.put("trustRating", false);
+        map.put("suppress", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("MolecularMatchSource", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTierExplanationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("tier", true);
+        map.put("step", true);
+        map.put("message", true);
+        map.put("success", true);
+        return new ViccDatamodelChecker("MolecularMatchTierExplanation", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchCriteriaUnmetChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("term", true);
+        map.put("filterType", true);
+        map.put("priority", true);
+        map.put("facet", true);
+        map.put("valid", false);
+        map.put("transcript", false);
+        map.put("isNew", false);
+        map.put("generatedBy", false);
+        map.put("generatedByTerm", false);
+        map.put("suppress", true);
+        map.put("manualSuppress", false);
+        map.put("primary", false);
+        map.put("compositeKey", true);
+        map.put("custom", false);
+        return new ViccDatamodelChecker("MolecularMatchCriteriaUnmet", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);
@@ -1085,6 +1194,8 @@ final class ViccDatamodelCheckerFactory {
         map.put("studyType", true);
         return new ViccDatamodelChecker("MolecularMatchTrialsEntry", map);
     }
+
+
 
     @NotNull
     static ViccDatamodelChecker molecularMatchTrialsInterventionChecker() {

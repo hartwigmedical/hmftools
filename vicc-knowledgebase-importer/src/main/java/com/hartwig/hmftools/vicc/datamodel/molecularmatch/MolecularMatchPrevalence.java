@@ -9,16 +9,16 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchPrevalence {
 
     @NotNull
-    public abstract String count();
-
-    @NotNull
-    public abstract String percent();
-
-    @NotNull
     public abstract String studyId();
 
     @NotNull
+    public abstract String count();
+
+    @NotNull
     public abstract String samples();
+
+    @NotNull
+    public abstract String percent();
 
     @Nullable
     public abstract String molecular();

@@ -40,6 +40,6 @@ public abstract class MolecularMatchLocation {
     @Nullable
     public abstract String intronNumber();
 
-    @Nullable
+    @NotNull
     public abstract List<String> exonNumbers();
 }
