@@ -308,7 +308,7 @@ final class MolecularMatchDAOFunctions {
                                 MOLECULARMATCHASTRIGHTLEFTLEFT.TYPE,
                                 MOLECULARMATCHASTRIGHTLEFTLEFT.MOLECULARMATCHASTRIGHTLEFTID)
                                 .values(molecularMatch.ast().right().left().left().raw(),
-                                        molecularMatch.ast().right().left().left().operator(),
+                                        "",
                                         molecularMatch.ast().right().left().left().value(),
                                         molecularMatch.ast().right().left().left().type(),
                                         idRightLeft)

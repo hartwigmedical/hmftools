@@ -22,6 +22,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeft;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeftLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchClassification;
@@ -51,6 +52,7 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeft;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeftLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchClassification;
@@ -680,6 +682,131 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
+    private static MolecularMatchAst createAst(@NotNull JsonObject astObject) {
+        Set<String> keysAst = astObject.keySet();
+        if (!EXPECTED_MOLECULARMATCH_AST_SIZES.contains(keysAst.size())) {
+            LOGGER.warn("Found {} in molecular match ast rather than the expected {}", keysAst.size(), EXPECTED_MOLECULARMATCH_AST_SIZES);
+            LOGGER.warn(keysAst);
+        }
+        return ImmutableMolecularMatchAst.builder()
+                .raw(astObject.get("raw") == null ? null : astObject.getAsJsonPrimitive("raw").getAsString())
+                .value(!astObject.has("value") ? null : astObject.getAsJsonPrimitive("value").getAsString())
+                .operator(!astObject.has("operator") ? null : astObject.getAsJsonPrimitive("operator").getAsString())
+                .right(!astObject.has("right") ? null : createRight(astObject.getAsJsonObject("right")))
+                .type(astObject.getAsJsonPrimitive("type").getAsString())
+                .left(!astObject.has("left") ? null : createLeft(astObject.getAsJsonObject("left")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
+        Set<String> keysLeft = objectLeft.keySet();
+        if (!EXPECTED_MOLECULARMATCH_LEFT_SIZES.contains(keysLeft.size())) {
+            LOGGER.warn("Found {} in molecular match ast left rather than the expected {}",
+                    keysLeft.size(),
+                    EXPECTED_MOLECULARMATCH_LEFT_SIZES);
+            LOGGER.warn(keysLeft);
+        }
+
+        return ImmutableMolecularMatchAstLeft.builder()
+                .operator(!objectLeft.has("operator") ? null : objectLeft.getAsJsonPrimitive("operator").getAsString())
+                .raw(!objectLeft.has("raw") ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
+                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
+                .value(!objectLeft.has("value") ? null : objectLeft.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
+        Set<String> keysRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_SIZES.contains(keysRight.size())) {
+            LOGGER.warn("Found {} in molecular match ast right rather than the expected {}",
+                    keysRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
+            LOGGER.warn(keysRight);
+        }
+
+        return ImmutableMolecularMatchAstRight.builder()
+                .operator(!objectRight.has("operator") ? null : objectRight.getAsJsonPrimitive("operator").getAsString())
+                .left(!objectRight.has("left") ? null : createRightLeft(objectRight.getAsJsonObject("left")))
+                .right(!objectRight.has("right") ? null : createRightRight(objectRight.getAsJsonObject("right")))
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
+        Set<String> keysRightLeft = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRightLeft.size())) {
+            LOGGER.warn("Found {} in molecular match ast right left rather than the expected {}",
+                    keysRightLeft.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
+            LOGGER.warn(keysRightLeft);
+        }
+
+        return ImmutableMolecularMatchAstRightLeft.builder()
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .right(!objectRight.has("right") ? null : createRightLeftRight(objectRight.getAsJsonObject("right")))
+                .left(!objectRight.has("left") ? null : createRightLeftLeft(objectRight.getAsJsonObject("left")))
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightRight createRightRight(@NotNull JsonObject objectRight) {
+        Set<String> keysRightRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRightRight.size())) {
+            LOGGER.warn("Found {} in molecular match ast right right rather than the expected {}",
+                    keysRightRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
+            LOGGER.warn(keysRightRight);
+        }
+
+        return ImmutableMolecularMatchAstRightRight.builder()
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightLeftLeft createRightLeftLeft(@NotNull JsonObject objectLeft) {
+        Set<String> keysLeftRight = objectLeft.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysLeftRight.size())) {
+            LOGGER.warn("Found {} in molecular match ast right left right rather than the expected {}",
+                    keysLeftRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
+            LOGGER.warn(keysLeftRight);
+        }
+
+        return ImmutableMolecularMatchAstRightLeftLeft.builder()
+                .raw(!objectLeft.has("raw") ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
+                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
+                .value(!objectLeft.has("value") ? null : objectLeft.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
+    private static MolecularMatchAstRightLeftRight createRightLeftRight(@NotNull JsonObject objectRight) {
+        Set<String> keysLeftRight = objectRight.keySet();
+        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysLeftRight.size())) {
+            LOGGER.warn("Found {} in molecular match ast right left right rather than the expected {}",
+                    keysLeftRight.size(),
+                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
+            LOGGER.warn(keysLeftRight);
+        }
+
+        return ImmutableMolecularMatchAstRightLeftRight.builder()
+                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
+                .type(objectRight.getAsJsonPrimitive("type").getAsString())
+                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .build();
+    }
+
+    @NotNull
     private static List<MolecularMatchTherapeuticContext> createTherapeuticContexts(@NotNull JsonArray arrayTherapeuticContext) {
         List<MolecularMatchTherapeuticContext> therapeuticContextList = Lists.newArrayList();
         for (JsonElement therapeuticContext : arrayTherapeuticContext) {
@@ -889,113 +1016,5 @@ final class MolecularMatchObjectFactory {
                     .build());
         }
         return tagsList;
-    }
-
-    @NotNull
-    private static MolecularMatchAst createAst(@NotNull JsonObject objectAst) {
-        Set<String> keysAst = objectAst.keySet();
-        if (!EXPECTED_MOLECULARMATCH_AST_SIZES.contains(keysAst.size())) {
-            LOGGER.warn("Found {} in molecular match ast rather than the expected {}", keysAst.size(), EXPECTED_MOLECULARMATCH_AST_SIZES);
-            LOGGER.warn(keysAst);
-        }
-        return ImmutableMolecularMatchAst.builder()
-                .raw(objectAst.get("raw") == null ? null : objectAst.getAsJsonPrimitive("raw").getAsString())
-                .value(!objectAst.has("value") ? null : objectAst.getAsJsonPrimitive("value").getAsString())
-                .operator(!objectAst.has("operator") ? null : objectAst.getAsJsonPrimitive("operator").getAsString())
-                .right(!objectAst.has("right") ? null : createRight(objectAst.getAsJsonObject("right")))
-                .type(objectAst.getAsJsonPrimitive("type").getAsString())
-                .left(!objectAst.has("left") ? null : createLeft(objectAst.getAsJsonObject("left")))
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
-        Set<String> keysLeft = objectLeft.keySet();
-        if (!EXPECTED_MOLECULARMATCH_LEFT_SIZES.contains(keysLeft.size())) {
-            LOGGER.warn("Found {} in molecular match ast left rather than the expected {}",
-                    keysLeft.size(),
-                    EXPECTED_MOLECULARMATCH_LEFT_SIZES);
-            LOGGER.warn(keysLeft);
-        }
-
-        return ImmutableMolecularMatchAstLeft.builder()
-                .operator(!objectLeft.has("operator") ? null : objectLeft.getAsJsonPrimitive("operator").getAsString())
-                .raw(!objectLeft.has("raw") ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
-                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
-                .value(!objectLeft.has("value") ? null : objectLeft.getAsJsonPrimitive("value").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
-        Set<String> keysRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right rather than the expected {}",
-                    keysRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
-            LOGGER.warn(keysRight);
-        }
-
-        return ImmutableMolecularMatchAstRight.builder()
-                .operator(!objectRight.has("operator") ? null : objectRight.getAsJsonPrimitive("operator").getAsString())
-                .left(!objectRight.has("left") ? null : createRightLeft(objectRight.getAsJsonObject("left")))
-                .right(!objectRight.has("right") ? null : createRightRight(objectRight.getAsJsonObject("right")))
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchAstRightRight createRightRight(@NotNull JsonObject objectRight) {
-        Set<String> keysRightRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRightRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right right rather than the expected {}",
-                    keysRightRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
-            LOGGER.warn(keysRightRight);
-        }
-
-        return ImmutableMolecularMatchAstRightRight.builder()
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
-        Set<String> keysRightLeft = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRightLeft.size())) {
-            LOGGER.warn("Found {} in molecular match ast right left rather than the expected {}",
-                    keysRightLeft.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
-            LOGGER.warn(keysRightLeft);
-        }
-
-        return ImmutableMolecularMatchAstRightLeft.builder()
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
-                .right(!objectRight.has("right") ? null : createRightLeftRight(objectRight.getAsJsonObject("right")))
-                .left(!objectRight.has("left") ? null : createLeft(objectRight.getAsJsonObject("left")))
-                .build();
-    }
-
-    @NotNull
-    private static MolecularMatchAstRightLeftRight createRightLeftRight(@NotNull JsonObject objectRight) {
-        Set<String> keysLeftRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysLeftRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right left right rather than the expected {}",
-                    keysLeftRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
-            LOGGER.warn(keysLeftRight);
-        }
-
-        return ImmutableMolecularMatchAstRightLeftRight.builder()
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
-                .build();
     }
 }
