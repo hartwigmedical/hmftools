@@ -683,126 +683,111 @@ final class MolecularMatchObjectFactory {
 
     @NotNull
     private static MolecularMatchAst createAst(@NotNull JsonObject astObject) {
-        Set<String> keysAst = astObject.keySet();
-        if (!EXPECTED_MOLECULARMATCH_AST_SIZES.contains(keysAst.size())) {
-            LOGGER.warn("Found {} in molecular match ast rather than the expected {}", keysAst.size(), EXPECTED_MOLECULARMATCH_AST_SIZES);
-            LOGGER.warn(keysAst);
-        }
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astObject);
+
         return ImmutableMolecularMatchAst.builder()
-                .raw(astObject.get("raw") == null ? null : astObject.getAsJsonPrimitive("raw").getAsString())
-                .value(!astObject.has("value") ? null : astObject.getAsJsonPrimitive("value").getAsString())
-                .operator(!astObject.has("operator") ? null : astObject.getAsJsonPrimitive("operator").getAsString())
-                .right(!astObject.has("right") ? null : createRight(astObject.getAsJsonObject("right")))
-                .type(astObject.getAsJsonPrimitive("type").getAsString())
-                .left(!astObject.has("left") ? null : createLeft(astObject.getAsJsonObject("left")))
+                .type(string(astObject, "type"))
+                .raw(optionalString(astObject, "raw"))
+                .value(optionalString(astObject, "value"))
+                .operator(optionalString(astObject, "operator"))
+                .left(createAstLeft(optionalJsonObject(astObject, "left")))
+                .right(createAstRight(optionalJsonObject(astObject, "right")))
                 .build();
     }
 
-    @NotNull
-    private static MolecularMatchAstLeft createLeft(@NotNull JsonObject objectLeft) {
-        Set<String> keysLeft = objectLeft.keySet();
-        if (!EXPECTED_MOLECULARMATCH_LEFT_SIZES.contains(keysLeft.size())) {
-            LOGGER.warn("Found {} in molecular match ast left rather than the expected {}",
-                    keysLeft.size(),
-                    EXPECTED_MOLECULARMATCH_LEFT_SIZES);
-            LOGGER.warn(keysLeft);
+    @Nullable
+    private static MolecularMatchAstLeft createAstLeft(@Nullable JsonObject astLeftObject) {
+        if (astLeftObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstLeftChecker().check(astLeftObject);
 
         return ImmutableMolecularMatchAstLeft.builder()
-                .operator(!objectLeft.has("operator") ? null : objectLeft.getAsJsonPrimitive("operator").getAsString())
-                .raw(!objectLeft.has("raw") ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
-                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
-                .value(!objectLeft.has("value") ? null : objectLeft.getAsJsonPrimitive("value").getAsString())
+                .type(string(astLeftObject, "type"))
+                .raw(optionalString(astLeftObject, "raw"))
+                .value(optionalString(astLeftObject, "value"))
+                .operator(optionalString(astLeftObject, "operator"))
                 .build();
     }
 
-    @NotNull
-    private static MolecularMatchAstRight createRight(@NotNull JsonObject objectRight) {
-        Set<String> keysRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_SIZES.contains(keysRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right rather than the expected {}",
-                    keysRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_SIZES);
-            LOGGER.warn(keysRight);
+    @Nullable
+    private static MolecularMatchAstRight createAstRight(@Nullable JsonObject astRightObject) {
+        if (astRightObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstRightChecker().check(astRightObject);
 
         return ImmutableMolecularMatchAstRight.builder()
-                .operator(!objectRight.has("operator") ? null : objectRight.getAsJsonPrimitive("operator").getAsString())
-                .left(!objectRight.has("left") ? null : createRightLeft(objectRight.getAsJsonObject("left")))
-                .right(!objectRight.has("right") ? null : createRightRight(objectRight.getAsJsonObject("right")))
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .type(string(astRightObject, "type"))
+                .raw(optionalString(astRightObject, "raw"))
+                .value(optionalString(astRightObject, "value"))
+                .operator(optionalString(astRightObject, "operator"))
+                .left(createAstRightLeft(optionalJsonObject(astRightObject, "left")))
+                .right(createAstRightRight(optionalJsonObject(astRightObject, "right")))
                 .build();
     }
 
-    @NotNull
-    private static MolecularMatchAstRightLeft createRightLeft(@NotNull JsonObject objectRight) {
-        Set<String> keysRightLeft = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES.contains(keysRightLeft.size())) {
-            LOGGER.warn("Found {} in molecular match ast right left rather than the expected {}",
-                    keysRightLeft.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES);
-            LOGGER.warn(keysRightLeft);
+    @Nullable
+    private static MolecularMatchAstRightLeft createAstRightLeft(@Nullable JsonObject astRightLeftObject) {
+        if (astRightLeftObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstRightLeftChecker().check(astRightLeftObject);
 
         return ImmutableMolecularMatchAstRightLeft.builder()
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
-                .right(!objectRight.has("right") ? null : createRightLeftRight(objectRight.getAsJsonObject("right")))
-                .left(!objectRight.has("left") ? null : createRightLeftLeft(objectRight.getAsJsonObject("left")))
+                .type(string(astRightLeftObject, "type"))
+                .raw(optionalString(astRightLeftObject, "raw"))
+                .value(optionalString(astRightLeftObject, "value"))
+                .left(createAstRightLeftLeft(optionalJsonObject(astRightLeftObject, "left")))
+                .right(createAstRightLeftRight(optionalJsonObject(astRightLeftObject, "right")))
                 .build();
     }
 
-    @NotNull
-    private static MolecularMatchAstRightRight createRightRight(@NotNull JsonObject objectRight) {
-        Set<String> keysRightRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES.contains(keysRightRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right right rather than the expected {}",
-                    keysRightRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES);
-            LOGGER.warn(keysRightRight);
+    @Nullable
+    private static MolecularMatchAstRightRight createAstRightRight(@Nullable JsonObject astRightRightObject) {
+        if (astRightRightObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstRightRightChecker().check(astRightRightObject);
 
         return ImmutableMolecularMatchAstRightRight.builder()
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .type(string(astRightRightObject, "type"))
+                .raw(optionalString(astRightRightObject, "raw"))
+                .value(optionalString(astRightRightObject, "value"))
                 .build();
     }
 
-    @NotNull
-    private static MolecularMatchAstRightLeftLeft createRightLeftLeft(@NotNull JsonObject objectLeft) {
-        Set<String> keysLeftRight = objectLeft.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysLeftRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right left right rather than the expected {}",
-                    keysLeftRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
-            LOGGER.warn(keysLeftRight);
+    @Nullable
+    private static MolecularMatchAstRightLeftLeft createAstRightLeftLeft(@Nullable JsonObject astRightLeftLeftObject) {
+        if (astRightLeftLeftObject == null) {
+            return null;
         }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstRightLeftLeftChecker().check(astRightLeftLeftObject);
 
         return ImmutableMolecularMatchAstRightLeftLeft.builder()
-                .raw(!objectLeft.has("raw") ? null : objectLeft.getAsJsonPrimitive("raw").getAsString())
-                .type(objectLeft.getAsJsonPrimitive("type").getAsString())
-                .value(!objectLeft.has("value") ? null : objectLeft.getAsJsonPrimitive("value").getAsString())
+                .type(string(astRightLeftLeftObject, "type"))
+                .raw(optionalString(astRightLeftLeftObject, "raw"))
+                .value(optionalString(astRightLeftLeftObject, "value"))
                 .build();
     }
 
-    @NotNull
-    private static MolecularMatchAstRightLeftRight createRightLeftRight(@NotNull JsonObject objectRight) {
-        Set<String> keysLeftRight = objectRight.keySet();
-        if (!EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES.contains(keysLeftRight.size())) {
-            LOGGER.warn("Found {} in molecular match ast right left right rather than the expected {}",
-                    keysLeftRight.size(),
-                    EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES);
-            LOGGER.warn(keysLeftRight);
+    @Nullable
+    private static MolecularMatchAstRightLeftRight createAstRightLeftRight(@Nullable JsonObject astRightLeftRightObject) {
+        if (astRightLeftRightObject == null) {
+            return null;
         }
 
+        ViccDatamodelCheckerFactory.molecularMatchAstRightLeftRightChecker().check(astRightLeftRightObject);
+
         return ImmutableMolecularMatchAstRightLeftRight.builder()
-                .raw(!objectRight.has("raw") ? null : objectRight.getAsJsonPrimitive("raw").getAsString())
-                .type(objectRight.getAsJsonPrimitive("type").getAsString())
-                .value(!objectRight.has("value") ? null : objectRight.getAsJsonPrimitive("value").getAsString())
+                .type(string(astRightLeftRightObject, "type"))
+                .raw(optionalString(astRightLeftRightObject, "raw"))
+                .value(optionalString(astRightLeftRightObject, "value"))
                 .build();
     }
 

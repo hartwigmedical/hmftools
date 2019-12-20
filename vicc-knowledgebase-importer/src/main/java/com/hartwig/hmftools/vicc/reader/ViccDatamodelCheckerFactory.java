@@ -1176,6 +1176,79 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker molecularMatchAstChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        map.put("operator", false);
+        map.put("left", false);
+        map.put("right", false);
+        return new ViccDatamodelChecker("MolecularMatchAst", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstLeftChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        map.put("operator", false);
+        return new ViccDatamodelChecker("MolecularMatchAstLeft", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstRightChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        map.put("operator", false);
+        map.put("left", false);
+        map.put("right", false);
+        return new ViccDatamodelChecker("MolecularMatchAstRight", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstRightLeftChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        map.put("left", false);
+        map.put("right", false);
+        return new ViccDatamodelChecker("MolecularMatchAstRightLeft", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstRightRightChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        return new ViccDatamodelChecker("MolecularMatchAstRightRight", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstRightLeftLeftChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        return new ViccDatamodelChecker("MolecularMatchAstRightLeftLeft", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstRightLeftRightChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        return new ViccDatamodelChecker("MolecularMatchAstRightLeftRight", map);
+    }
+
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("status", true);
@@ -1194,8 +1267,6 @@ final class ViccDatamodelCheckerFactory {
         map.put("studyType", true);
         return new ViccDatamodelChecker("MolecularMatchTrialsEntry", map);
     }
-
-
 
     @NotNull
     static ViccDatamodelChecker molecularMatchTrialsInterventionChecker() {
