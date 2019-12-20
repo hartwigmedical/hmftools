@@ -1247,6 +1247,82 @@ final class ViccDatamodelCheckerFactory {
         return new ViccDatamodelChecker("MolecularMatchAstRightLeftRight", map);
     }
 
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTagChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("term", true);
+        map.put("facet", true);
+        map.put("filterType", false);
+        map.put("priority", true);
+        map.put("transcript", false);
+        map.put("valid", false);
+        map.put("generatedBy", false);
+        map.put("generatedByTerm", false);
+        map.put("isNew", false);
+        map.put("primary", false);
+        map.put("custom", false);
+        map.put("suppress", false);
+        map.put("manualSuppress", false);
+        map.put("compositeKey", false);
+        return new ViccDatamodelChecker("MolecularMatchTag", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchClassificationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", false);
+        map.put("geneSymbol", false);
+        map.put("expandGeneSearch", false);
+        map.put("transcript", false);
+        map.put("transcripts", false);
+        map.put("Chr", false);
+        map.put("Start", false);
+        map.put("End", false);
+        map.put("Ref", false);
+        map.put("Alt", false);
+        map.put("NucleotideChange", false);
+        map.put("Exon", false);
+        map.put("ExonicFunc", false);
+        map.put("classification", true);
+        map.put("classificationOverride", false);
+        map.put("pathology", false);
+        map.put("copyNumberType", false);
+        map.put("drugsApprovedOnLabelCount", false);
+        map.put("drugsApprovedOffLabelCount", false);
+        map.put("drugsExperimentalCount", false);
+        map.put("trialCount", false);
+        map.put("publicationCount", false);
+        map.put("sources", false);
+        map.put("dbSNP", false);
+        map.put("COSMIC_ID", false);
+        map.put("PopFreqMax", false);
+        map.put("parents", false);
+        map.put("rootTerm", false);
+        map.put("alias", false);
+        map.put("priority", false);
+        map.put("description", false);
+        return new ViccDatamodelChecker("MolecularMatchClassification", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchParentChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("type", false);
+        map.put("actionableParent", false);
+        map.put("transcripts", true);
+        return new ViccDatamodelChecker("MolecularMatchParent", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchTherapeuticContextChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("facet", true);
+        map.put("suppress", true);
+        map.put("valid", false);
+        return new ViccDatamodelChecker("MolecularMatchTherapeuticContext", map);
+    }
 
     @NotNull
     static ViccDatamodelChecker molecularMatchTrialsEntryChecker() {

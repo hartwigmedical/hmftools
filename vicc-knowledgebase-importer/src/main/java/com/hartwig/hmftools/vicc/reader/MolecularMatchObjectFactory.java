@@ -8,10 +8,8 @@ import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalString;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.optionalStringList;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
 import static com.hartwig.hmftools.vicc.reader.JsonFunctions.stringList;
-import static com.hartwig.hmftools.vicc.reader.JsonFunctions.toStringList;
 
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -78,25 +76,10 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchVariantI
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSALocation;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchWGSAMap;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class MolecularMatchObjectFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(MolecularMatchObjectFactory.class);
-
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_AST_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_LEFT_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_RIGHT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_RIGHT_LEFT_RIGHT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES = Lists.newArrayList(3, 29, 30, 31);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_TAGS_SIZES = Lists.newArrayList(3, 8, 9, 12, 13);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES = Lists.newArrayList(3, 4);
-    private static final List<Integer> EXPECTED_MOLECULARMATCH_PARENTS_SIZES = Lists.newArrayList(3, 4);
 
     private MolecularMatchObjectFactory() {
     }
@@ -792,214 +775,119 @@ final class MolecularMatchObjectFactory {
     }
 
     @NotNull
-    private static List<MolecularMatchTherapeuticContext> createTherapeuticContexts(@NotNull JsonArray arrayTherapeuticContext) {
-        List<MolecularMatchTherapeuticContext> therapeuticContextList = Lists.newArrayList();
-        for (JsonElement therapeuticContext : arrayTherapeuticContext) {
-            Set<String> keysTherapeuticContext = therapeuticContext.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES.contains(keysTherapeuticContext.size())) {
-                LOGGER.warn("Found {} in molecular match therapeutic context rather than the expected {}",
-                        keysTherapeuticContext.size(),
-                        EXPECTED_MOLECULARMATCH_THERAPEUTIC_CONTEXT_SIZES);
-                LOGGER.warn(keysTherapeuticContext);
-            }
+    private static List<MolecularMatchTag> createTags(@NotNull JsonArray tagArray) {
+        List<MolecularMatchTag> tagList = Lists.newArrayList();
+        ViccDatamodelChecker tagChecker = ViccDatamodelCheckerFactory.molecularMatchTagChecker();
 
-            therapeuticContextList.add(ImmutableMolecularMatchTherapeuticContext.builder()
-                    .facet(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
-                    .suppress(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
-                    .valid(!therapeuticContext.getAsJsonObject().has("valid")
-                            ? null
-                            : therapeuticContext.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
-                    .name(therapeuticContext.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+        for (JsonElement tagElement : tagArray) {
+            JsonObject tagObject = tagElement.getAsJsonObject();
+            tagChecker.check(tagObject);
+
+            tagList.add(ImmutableMolecularMatchTag.builder()
+                    .term(string(tagObject, "term"))
+                    .facet(string(tagObject, "facet"))
+                    .filterType(optionalString(tagObject, "filterType"))
+                    .priority(string(tagObject, "priority"))
+                    .transcript(optionalString(tagObject, "transcript"))
+                    .valid(optionalString(tagObject, "valid"))
+                    .generatedBy(optionalString(tagObject, "generatedBy"))
+                    .generatedByTerm(optionalString(tagObject, "generatedByTerm"))
+                    .isNew(optionalString(tagObject, "isNew"))
+                    .primary(optionalString(tagObject, "primary"))
+                    .custom(optionalString(tagObject, "custom"))
+                    .suppress(optionalString(tagObject, "suppress"))
+                    .manualSuppress(optionalString(tagObject, "manualSuppress"))
+                    .compositeKey(optionalString(tagObject, "compositeKey"))
                     .build());
         }
-        return therapeuticContextList;
+        return tagList;
     }
 
     @NotNull
-    private static List<MolecularMatchClassification> createClassifications(@NotNull JsonArray objectClassifications) {
+    private static List<MolecularMatchClassification> createClassifications(@NotNull JsonArray classificationArray) {
         List<MolecularMatchClassification> classificationList = Lists.newArrayList();
-        for (JsonElement classification : objectClassifications) {
-            Set<String> keysClassification = classification.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES.contains(keysClassification.size())) {
-                LOGGER.warn("Found {} in molecular match classification rather than the expected {}",
-                        keysClassification.size(),
-                        EXPECTED_MOLECULARMATCH_CLASSIFICATION_SIZES);
-                LOGGER.warn(keysClassification);
-            }
+        ViccDatamodelChecker classificationChecker = ViccDatamodelCheckerFactory.molecularMatchClassificationChecker();
+
+        for (JsonElement classificationElement : classificationArray) {
+            JsonObject classificationObject = classificationElement.getAsJsonObject();
+            classificationChecker.check(classificationObject);
 
             classificationList.add(ImmutableMolecularMatchClassification.builder()
-                    .end(!classification.getAsJsonObject().has("End")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("End")))
-                    .classification(classification.getAsJsonObject().getAsJsonPrimitive("classification").getAsString())
-                    .classificationOverride(
-                            !classification.getAsJsonObject().has("classificationOverride") || classification.getAsJsonObject()
-                                    .get("classificationOverride")
-                                    .isJsonNull()
-                                    ? null
-                                    : classification.getAsJsonObject().getAsJsonPrimitive("classificationOverride").getAsString())
-                    .start(!classification.getAsJsonObject().has("Start")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Start")))
-                    .chr(!classification.getAsJsonObject().has("Chr")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Chr")))
-                    .geneSymbol(!classification.getAsJsonObject().has("geneSymbol")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("geneSymbol").getAsString())
-                    .pathology(!classification.getAsJsonObject().has("pathology")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("pathology")))
-                    .ref(!classification.getAsJsonObject().has("Ref")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Ref")))
-                    .description(!classification.getAsJsonObject().has("description")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("description").getAsString())
-                    .priority(!classification.getAsJsonObject().has("priority")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
-                    .nucleotideChange(!classification.getAsJsonObject().has("NucleotideChange")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("NucleotideChange")))
-                    .parents(!classification.getAsJsonObject().has("parents")
-                            ? null
-                            : createParents(classification.getAsJsonObject().getAsJsonArray("parents")))
-                    .expandGeneSearch(!classification.getAsJsonObject().has("expandGeneSearch")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("expandGeneSearch").getAsString())
-                    .drugsExperimentalCount(!classification.getAsJsonObject().has("drugsExperimentalCount")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("drugsExperimentalCount").getAsString())
-                    .exon(!classification.getAsJsonObject().has("Exon")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Exon")))
-                    .drugsApprovedOffLabelCount(!classification.getAsJsonObject().has("drugsApprovedOffLabelCount")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOffLabelCount").getAsString())
-                    .exonicFunc(!classification.getAsJsonObject().has("ExonicFunc")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("ExonicFunc")))
-                    .popFreqMax(!classification.getAsJsonObject().has("PopFreqMax")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("PopFreqMax")))
-                    .copyNumberType(!classification.getAsJsonObject().has("copyNumberType") || classification.getAsJsonObject()
-                            .get("copyNumberType")
-                            .isJsonNull() ? null : classification.getAsJsonObject().getAsJsonPrimitive("copyNumberType").getAsString())
-                    .publicationCount(!classification.getAsJsonObject().has("publicationCount")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("publicationCount").getAsString())
-                    .transcript(!classification.getAsJsonObject().has("transcript") || classification.getAsJsonObject()
-                            .get("transcript")
-                            .isJsonNull() ? null : classification.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
-                    .dbSNP(!classification.getAsJsonObject().has("dbSNP")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("dbSNP")))
-                    .alt(!classification.getAsJsonObject().has("Alt")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("Alt")))
-                    .name(!classification.getAsJsonObject().has("name")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .rootTerm(!classification.getAsJsonObject().has("rootTerm")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("rootTerm").getAsString())
-                    .sources(!classification.getAsJsonObject().has("sources")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("sources")))
-                    .drugsApprovedOnLabelCount(!classification.getAsJsonObject().has("drugsApprovedOnLabelCount")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("drugsApprovedOnLabelCount").getAsString())
-                    .trialCount(!classification.getAsJsonObject().has("trialCount")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("trialCount").getAsString())
-                    .alias(!classification.getAsJsonObject().has("alias")
-                            ? null
-                            : classification.getAsJsonObject().getAsJsonPrimitive("alias").getAsString())
-                    .cosmicId(!classification.getAsJsonObject().has("COSMIC_ID")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("COSMIC_ID")))
-                    .transcripts(!classification.getAsJsonObject().has("transcripts")
-                            ? null
-                            : toStringList(classification.getAsJsonObject().getAsJsonArray("transcripts")))
+                    .name(optionalString(classificationObject, "name"))
+                    .geneSymbol(optionalString(classificationObject, "geneSymbol"))
+                    .expandGeneSearch(optionalString(classificationObject, "expandGeneSearch"))
+                    .transcript(optionalNullableString(classificationObject, "transcript"))
+                    .transcripts(optionalStringList(classificationObject, "transcripts"))
+                    .chromosomes(optionalStringList(classificationObject, "Chr"))
+                    .starts(optionalStringList(classificationObject, "Start"))
+                    .ends(optionalStringList(classificationObject, "End"))
+                    .refs(optionalStringList(classificationObject, "Ref"))
+                    .alts(optionalStringList(classificationObject, "Alt"))
+                    .nucleotideChanges(optionalStringList(classificationObject, "NucleotideChange"))
+                    .exons(optionalStringList(classificationObject, "Exon"))
+                    .exonicFuncs(optionalStringList(classificationObject, "ExonicFunc"))
+                    .classification(string(classificationObject, "classification"))
+                    .classificationOverride(optionalNullableString(classificationObject, "classificationOverride"))
+                    .pathology(optionalStringList(classificationObject, "pathology"))
+                    .copyNumberType(optionalNullableString(classificationObject, "copyNumberType"))
+                    .drugsApprovedOnLabelCount(optionalString(classificationObject, "drugsApprovedOnLabelCount"))
+                    .drugsApprovedOffLabelCount(optionalString(classificationObject, "drugsApprovedOffLabelCount"))
+                    .drugsExperimentalCount(optionalString(classificationObject, "drugsExperimentalCount"))
+                    .trialCount(optionalString(classificationObject, "trialCount"))
+                    .publicationCount(optionalString(classificationObject, "publicationCount"))
+                    .sources(optionalStringList(classificationObject, "sources"))
+                    .dbSNPs(optionalStringList(classificationObject, "dbSNP"))
+                    .cosmicIds(optionalStringList(classificationObject, "COSMIC_ID"))
+                    .popFreqMaxes(optionalStringList(classificationObject, "PopFreqMax"))
+                    .parents(createParents(optionalJsonArray(classificationObject, "parents")))
+                    .rootTerm(optionalString(classificationObject, "rootTerm"))
+                    .alias(optionalString(classificationObject, "alias"))
+                    .priority(optionalString(classificationObject, "priority"))
+                    .description(optionalString(classificationObject, "description"))
                     .build());
         }
         return classificationList;
     }
 
     @NotNull
-    private static List<MolecularMatchParent> createParents(@NotNull JsonArray arrayParents) {
-        List<MolecularMatchParent> parentsList = Lists.newArrayList();
-        for (JsonElement parents : arrayParents) {
-            Set<String> keysParents = parents.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_PARENTS_SIZES.contains(keysParents.size())) {
-                LOGGER.warn("Found {} in molecular match parents rather than the expected {}",
-                        keysParents.size(),
-                        EXPECTED_MOLECULARMATCH_PARENTS_SIZES);
-                LOGGER.warn(keysParents);
-            }
+    private static List<MolecularMatchParent> createParents(@Nullable JsonArray parentArray) {
+        if (parentArray == null) {
+            return Lists.newArrayList();
+        }
 
-            parentsList.add(ImmutableMolecularMatchParent.builder()
-                    .transcripts(toStringList(parents.getAsJsonObject().getAsJsonArray("transcripts")))
-                    .type(!parents.getAsJsonObject().has("type") || parents.getAsJsonObject().get("type").isJsonNull()
-                            ? null
-                            : parents.getAsJsonObject().getAsJsonPrimitive("type").getAsString())
-                    .name(parents.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .actionableParent(!parents.getAsJsonObject().has("actionableParent")
-                            ? null
-                            : parents.getAsJsonObject().getAsJsonPrimitive("actionableParent").getAsString())
+        List<MolecularMatchParent> parentList = Lists.newArrayList();
+        ViccDatamodelChecker parentChecker = ViccDatamodelCheckerFactory.molecularMatchParentChecker();
+
+        for (JsonElement parentElement : parentArray) {
+            JsonObject parentObject = parentElement.getAsJsonObject();
+            parentChecker.check(parentObject);
+
+            parentList.add(ImmutableMolecularMatchParent.builder()
+                    .name(string(parentObject, "name"))
+                    .type(optionalNullableString(parentObject, "type"))
+                    .actionableParent(optionalString(parentObject, "actionableParent"))
+                    .transcripts(stringList(parentObject, "transcripts"))
                     .build());
         }
-        return parentsList;
+        return parentList;
     }
 
     @NotNull
-    private static List<MolecularMatchTag> createTags(@NotNull JsonArray arrayTags) {
-        List<MolecularMatchTag> tagsList = Lists.newArrayList();
-        for (JsonElement tags : arrayTags) {
-            Set<String> keysTags = tags.getAsJsonObject().keySet();
-            if (!EXPECTED_MOLECULARMATCH_TAGS_SIZES.contains(keysTags.size())) {
-                LOGGER.warn("Found {} in molecular match tags rather than the expected {}",
-                        keysTags.size(),
-                        EXPECTED_MOLECULARMATCH_TAGS_SIZES);
-                LOGGER.warn(keysTags);
-            }
+    private static List<MolecularMatchTherapeuticContext> createTherapeuticContexts(@NotNull JsonArray therapeuticContextArray) {
+        List<MolecularMatchTherapeuticContext> therapeuticContextList = Lists.newArrayList();
+        ViccDatamodelChecker therapeuticContextChecker = ViccDatamodelCheckerFactory.molecularMatchTherapeuticContextChecker();
 
-            tagsList.add(ImmutableMolecularMatchTag.builder()
-                    .priority(tags.getAsJsonObject().getAsJsonPrimitive("priority").getAsString())
-                    .compositeKey(!tags.getAsJsonObject().has("compositeKey")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("compositeKey").getAsString())
-                    .suppress(!tags.getAsJsonObject().has("suppress")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("suppress").getAsString())
-                    .filterType(!tags.getAsJsonObject().has("filterType")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("filterType").getAsString())
-                    .term(tags.getAsJsonObject().getAsJsonPrimitive("term").getAsString())
-                    .primary(!tags.getAsJsonObject().has("primary")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("primary").getAsString())
-                    .facet(tags.getAsJsonObject().getAsJsonPrimitive("facet").getAsString())
-                    .valid(!tags.getAsJsonObject().has("valid") ? null : tags.getAsJsonObject().getAsJsonPrimitive("valid").getAsString())
-                    .custom(!tags.getAsJsonObject().has("custom")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("custom").getAsString())
-                    .isNew(!tags.getAsJsonObject().has("isNew") ? null : tags.getAsJsonObject().getAsJsonPrimitive("isNew").getAsString())
-                    .generatedBy(!tags.getAsJsonObject().has("generatedBy")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("generatedBy").getAsString())
-                    .manualSuppress(!tags.getAsJsonObject().has("manualSuppress")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("manualSuppress").getAsString())
-                    .generatedByTerm(!tags.getAsJsonObject().has("generatedByTerm")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("generatedByTerm").getAsString())
-                    .transcript(!tags.getAsJsonObject().has("transcript")
-                            ? null
-                            : tags.getAsJsonObject().getAsJsonPrimitive("transcript").getAsString())
+        for (JsonElement therapeuticContextElement : therapeuticContextArray) {
+            JsonObject therapeuticContextObject = therapeuticContextElement.getAsJsonObject();
+            therapeuticContextChecker.check(therapeuticContextObject);
+
+            therapeuticContextList.add(ImmutableMolecularMatchTherapeuticContext.builder()
+                    .name(string(therapeuticContextObject, "name"))
+                    .facet(string(therapeuticContextObject, "facet"))
+                    .suppress(string(therapeuticContextObject, "suppress"))
+                    .valid(optionalString(therapeuticContextObject, "valid"))
                     .build());
         }
-        return tagsList;
+        return therapeuticContextList;
     }
 }

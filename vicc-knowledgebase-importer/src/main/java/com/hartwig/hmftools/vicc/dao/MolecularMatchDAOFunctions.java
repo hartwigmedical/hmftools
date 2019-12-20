@@ -623,24 +623,24 @@ final class MolecularMatchDAOFunctions {
                     .fetchOne()
                     .getValue(MOLECULARMATCHCLASSIFICATION.ID);
 
-            if (classification.end() != null) {
-                for (String end : classification.end()) {
+            if (classification.ends() != null) {
+                for (String end : classification.ends()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONEND,
                             MOLECULARMATCHCLASSIFICATIONEND.END,
                             MOLECULARMATCHCLASSIFICATIONEND.MOLECULARMATCHCLASSIFICATIONID).values(end, idClassification).execute();
                 }
             }
 
-            if (classification.start() != null) {
-                for (String start : classification.start()) {
+            if (classification.starts() != null) {
+                for (String start : classification.starts()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONSTART,
                             MOLECULARMATCHCLASSIFICATIONSTART.START,
                             MOLECULARMATCHCLASSIFICATIONSTART.MOLECULARMATCHCLASSIFICATIONID).values(start, idClassification).execute();
                 }
             }
 
-            if (classification.chr() != null) {
-                for (String chr : classification.chr()) {
+            if (classification.chromosomes() != null) {
+                for (String chr : classification.chromosomes()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONCHR,
                             MOLECULARMATCHCLASSIFICATIONCHR.CHROMOSOME,
                             MOLECULARMATCHCLASSIFICATIONCHR.MOLECULARMATCHCLASSIFICATIONID).values(chr, idClassification).execute();
@@ -657,24 +657,24 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            if (classification.ref() != null) {
-                for (String ref : classification.ref()) {
+            if (classification.refs() != null) {
+                for (String ref : classification.refs()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONREF,
                             MOLECULARMATCHCLASSIFICATIONREF.REF,
                             MOLECULARMATCHCLASSIFICATIONREF.MOLECULARMATCHCLASSIFICATIONID).values(ref, idClassification).execute();
                 }
             }
 
-            if (classification.exon() != null) {
-                for (String exon : classification.exon()) {
+            if (classification.exons() != null) {
+                for (String exon : classification.exons()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONEXON,
                             MOLECULARMATCHCLASSIFICATIONEXON.EXON,
                             MOLECULARMATCHCLASSIFICATIONEXON.MOLECULARMATCHCLASSIFICATIONID).values(exon, idClassification).execute();
                 }
             }
 
-            if (classification.alt() != null) {
-                for (String alt : classification.alt()) {
+            if (classification.alts() != null) {
+                for (String alt : classification.alts()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONALT,
                             MOLECULARMATCHCLASSIFICATIONALT.ALT,
                             MOLECULARMATCHCLASSIFICATIONALT.MOLECULARMATCHCLASSIFICATIONID).values(alt, idClassification).execute();
@@ -699,8 +699,8 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            if (classification.cosmicId() != null) {
-                for (String cosmicId : classification.cosmicId()) {
+            if (classification.cosmicIds() != null) {
+                for (String cosmicId : classification.cosmicIds()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONCOSMICID,
                             MOLECULARMATCHCLASSIFICATIONCOSMICID.COSMIC_ID,
                             MOLECULARMATCHCLASSIFICATIONCOSMICID.MOLECULARMATCHCLASSIFICATIONID)
@@ -709,16 +709,16 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            if (classification.dbSNP() != null) {
-                for (String dbSNP : classification.dbSNP()) {
+            if (classification.dbSNPs() != null) {
+                for (String dbSNP : classification.dbSNPs()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONDBSNP,
                             MOLECULARMATCHCLASSIFICATIONDBSNP.DBSNP,
                             MOLECULARMATCHCLASSIFICATIONDBSNP.MOLECULARMATCHCLASSIFICATIONID).values(dbSNP, idClassification).execute();
                 }
             }
 
-            if (classification.popFreqMax() != null) {
-                for (String popFreqMax : classification.popFreqMax()) {
+            if (classification.popFreqMaxes() != null) {
+                for (String popFreqMax : classification.popFreqMaxes()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONPOPFREQMAX,
                             MOLECULARMATCHCLASSIFICATIONPOPFREQMAX.POPFREQMAX,
                             MOLECULARMATCHCLASSIFICATIONPOPFREQMAX.MOLECULARMATCHCLASSIFICATIONID)
@@ -727,8 +727,8 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            if (classification.exonicFunc() != null) {
-                for (String exonicFunc : classification.exonicFunc()) {
+            if (classification.exonicFuncs() != null) {
+                for (String exonicFunc : classification.exonicFuncs()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONEXONICFUNC,
                             MOLECULARMATCHCLASSIFICATIONEXONICFUNC.EXONICFUNC,
                             MOLECULARMATCHCLASSIFICATIONEXONICFUNC.MOLECULARMATCHCLASSIFICATIONID)
@@ -737,8 +737,8 @@ final class MolecularMatchDAOFunctions {
                 }
             }
 
-            if (classification.nucleotideChange() != null) {
-                for (String nucleotideChange : classification.nucleotideChange()) {
+            if (classification.nucleotideChanges() != null) {
+                for (String nucleotideChange : classification.nucleotideChanges()) {
                     context.insertInto(MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE,
                             MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE.NUCLEOTIDECHANGE,
                             MOLECULARMATCHCLASSIFICATIONNUCLEOTIDECHANGE.MOLECULARMATCHCLASSIFICATIONID)
