@@ -22,8 +22,6 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeft;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeftLeft;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchCriteriaUnmet;
@@ -54,8 +52,6 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeftL
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeft;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeftLeft;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchClassification;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchCriteriaUnmet;
@@ -688,7 +684,7 @@ final class MolecularMatchObjectFactory {
             return null;
         }
 
-        ViccDatamodelCheckerFactory.molecularMatchAstLeftChecker().check(astLeftObject);
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astLeftObject);
 
         return ImmutableMolecularMatchAstLeft.builder()
                 .type(string(astLeftObject, "type"))
@@ -706,12 +702,14 @@ final class MolecularMatchObjectFactory {
             return null;
         }
 
-        ViccDatamodelCheckerFactory.molecularMatchAstLeftLeftChecker().check(astLeftLeftObject);
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astLeftLeftObject);
 
+        // We ignore deeper down "left + right". This continues recursively. If operator is present, there is a left/right that is ignored.
         return ImmutableMolecularMatchAstLeftLeft.builder()
                 .type(string(astLeftLeftObject, "type"))
                 .raw(optionalString(astLeftLeftObject, "raw"))
                 .value(optionalString(astLeftLeftObject, "value"))
+                .operator(optionalString(astLeftLeftObject, "operator"))
                 .build();
     }
 
@@ -721,12 +719,14 @@ final class MolecularMatchObjectFactory {
             return null;
         }
 
-        ViccDatamodelCheckerFactory.molecularMatchAstLeftRightChecker().check(astLeftRightObject);
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astLeftRightObject);
 
+        // We ignore deeper down "left + right". This continues recursively. If operator is present, there is a left/right that is ignored.
         return ImmutableMolecularMatchAstLeftRight.builder()
                 .type(string(astLeftRightObject, "type"))
                 .raw(optionalString(astLeftRightObject, "raw"))
                 .value(optionalString(astLeftRightObject, "value"))
+                .operator(optionalString(astLeftRightObject, "operator"))
                 .build();
     }
 
@@ -736,7 +736,7 @@ final class MolecularMatchObjectFactory {
             return null;
         }
 
-        ViccDatamodelCheckerFactory.molecularMatchAstRightChecker().check(astRightObject);
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astRightObject);
 
         return ImmutableMolecularMatchAstRight.builder()
                 .type(string(astRightObject, "type"))
@@ -754,15 +754,14 @@ final class MolecularMatchObjectFactory {
             return null;
         }
 
-        ViccDatamodelCheckerFactory.molecularMatchAstRightLeftChecker().check(astRightLeftObject);
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astRightLeftObject);
 
+        // We ignore deeper down "left + right". This continues recursively. If operator is present, there is a left/right that is ignored.
         return ImmutableMolecularMatchAstRightLeft.builder()
                 .type(string(astRightLeftObject, "type"))
                 .raw(optionalString(astRightLeftObject, "raw"))
                 .value(optionalString(astRightLeftObject, "value"))
                 .operator(optionalString(astRightLeftObject, "operator"))
-                .left(createAstRightLeftLeft(optionalJsonObject(astRightLeftObject, "left")))
-                .right(createAstRightLeftRight(optionalJsonObject(astRightLeftObject, "right")))
                 .build();
     }
 
@@ -772,42 +771,14 @@ final class MolecularMatchObjectFactory {
             return null;
         }
 
-        ViccDatamodelCheckerFactory.molecularMatchAstRightRightChecker().check(astRightRightObject);
+        ViccDatamodelCheckerFactory.molecularMatchAstChecker().check(astRightRightObject);
 
+        // We ignore deeper down "left + right". This continues recursively. If operator is present, there is a left/right that is ignored.
         return ImmutableMolecularMatchAstRightRight.builder()
                 .type(string(astRightRightObject, "type"))
                 .raw(optionalString(astRightRightObject, "raw"))
                 .value(optionalString(astRightRightObject, "value"))
-                .build();
-    }
-
-    @Nullable
-    private static MolecularMatchAstRightLeftLeft createAstRightLeftLeft(@Nullable JsonObject astRightLeftLeftObject) {
-        if (astRightLeftLeftObject == null) {
-            return null;
-        }
-
-        ViccDatamodelCheckerFactory.molecularMatchAstRightLeftLeftChecker().check(astRightLeftLeftObject);
-
-        return ImmutableMolecularMatchAstRightLeftLeft.builder()
-                .type(string(astRightLeftLeftObject, "type"))
-                .raw(optionalString(astRightLeftLeftObject, "raw"))
-                .value(optionalString(astRightLeftLeftObject, "value"))
-                .build();
-    }
-
-    @Nullable
-    private static MolecularMatchAstRightLeftRight createAstRightLeftRight(@Nullable JsonObject astRightLeftRightObject) {
-        if (astRightLeftRightObject == null) {
-            return null;
-        }
-
-        ViccDatamodelCheckerFactory.molecularMatchAstRightLeftRightChecker().check(astRightLeftRightObject);
-
-        return ImmutableMolecularMatchAstRightLeftRight.builder()
-                .type(string(astRightLeftRightObject, "type"))
-                .raw(optionalString(astRightLeftRightObject, "raw"))
-                .value(optionalString(astRightLeftRightObject, "value"))
+                .operator(optionalString(astRightRightObject, "operator"))
                 .build();
     }
 

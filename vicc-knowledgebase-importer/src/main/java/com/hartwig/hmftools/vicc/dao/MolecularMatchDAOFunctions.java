@@ -286,39 +286,8 @@ final class MolecularMatchDAOFunctions {
                             .returning(MOLECULARMATCHASTRIGHTLEFT.ID)
                             .fetchOne()
                             .getValue(MOLECULARMATCHASTRIGHTLEFT.ID);
-
-                    if (molecularMatch.ast().right().left().right() != null) {
-                        context.insertInto(MOLECULARMATCHASTRIGHTLEFTRIGHT,
-                                MOLECULARMATCHASTRIGHTLEFTRIGHT.RAW,
-                                MOLECULARMATCHASTRIGHTLEFTRIGHT.VALUE,
-                                MOLECULARMATCHASTRIGHTLEFTRIGHT.TYPE,
-                                MOLECULARMATCHASTRIGHTLEFTRIGHT.MOLECULARMATCHASTRIGHTLEFTID)
-                                .values(molecularMatch.ast().right().left().right().raw(),
-                                        molecularMatch.ast().right().left().right().value(),
-                                        molecularMatch.ast().right().left().right().type(),
-                                        idRightLeft)
-                                .execute();
-                    }
-
-                    if (molecularMatch.ast().right().left().left() != null) {
-                        context.insertInto(MOLECULARMATCHASTRIGHTLEFTLEFT,
-                                MOLECULARMATCHASTRIGHTLEFTLEFT.RAW,
-                                MOLECULARMATCHASTRIGHTLEFTLEFT.OPERATOR,
-                                MOLECULARMATCHASTRIGHTLEFTLEFT.VALUE,
-                                MOLECULARMATCHASTRIGHTLEFTLEFT.TYPE,
-                                MOLECULARMATCHASTRIGHTLEFTLEFT.MOLECULARMATCHASTRIGHTLEFTID)
-                                .values(molecularMatch.ast().right().left().left().raw(),
-                                        "",
-                                        molecularMatch.ast().right().left().left().value(),
-                                        molecularMatch.ast().right().left().left().type(),
-                                        idRightLeft)
-                                .execute();
-                    }
-
                 }
-
             }
-
         }
 
         if (molecularMatch.institutions() != null) {
@@ -457,6 +426,7 @@ final class MolecularMatchDAOFunctions {
         }
 
         for (MolecularMatchTag tags : molecularMatch.tags()) {
+            // TODO Add composite
             context.insertInto(MOLECULARMATCHTAGS,
                     MOLECULARMATCHTAGS.PRIORITY,
                     MOLECULARMATCHTAGS.COMPOSITEKEY,
