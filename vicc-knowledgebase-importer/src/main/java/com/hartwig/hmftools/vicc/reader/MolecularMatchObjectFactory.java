@@ -18,6 +18,8 @@ import com.google.gson.JsonObject;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeft;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeftLeft;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatchAstRightLeftLeft;
@@ -48,6 +50,8 @@ import com.hartwig.hmftools.vicc.datamodel.molecularmatch.ImmutableMolecularMatc
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAst;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeft;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeftLeft;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstLeftRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRight;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeft;
 import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatchAstRightLeftLeft;
@@ -691,6 +695,38 @@ final class MolecularMatchObjectFactory {
                 .raw(optionalString(astLeftObject, "raw"))
                 .value(optionalString(astLeftObject, "value"))
                 .operator(optionalString(astLeftObject, "operator"))
+                .left(createAstLeftLeft(optionalJsonObject(astLeftObject, "left")))
+                .right(createAstLeftRight(optionalJsonObject(astLeftObject, "right")))
+                .build();
+    }
+
+    @Nullable
+    private static MolecularMatchAstLeftLeft createAstLeftLeft(@Nullable JsonObject astLeftLeftObject) {
+        if (astLeftLeftObject == null) {
+            return null;
+        }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstLeftLeftChecker().check(astLeftLeftObject);
+
+        return ImmutableMolecularMatchAstLeftLeft.builder()
+                .type(string(astLeftLeftObject, "type"))
+                .raw(optionalString(astLeftLeftObject, "raw"))
+                .value(optionalString(astLeftLeftObject, "value"))
+                .build();
+    }
+
+    @Nullable
+    private static MolecularMatchAstLeftRight createAstLeftRight(@Nullable JsonObject astLeftRightObject) {
+        if (astLeftRightObject == null) {
+            return null;
+        }
+
+        ViccDatamodelCheckerFactory.molecularMatchAstLeftRightChecker().check(astLeftRightObject);
+
+        return ImmutableMolecularMatchAstLeftRight.builder()
+                .type(string(astLeftRightObject, "type"))
+                .raw(optionalString(astLeftRightObject, "raw"))
+                .value(optionalString(astLeftRightObject, "value"))
                 .build();
     }
 
@@ -724,6 +760,7 @@ final class MolecularMatchObjectFactory {
                 .type(string(astRightLeftObject, "type"))
                 .raw(optionalString(astRightLeftObject, "raw"))
                 .value(optionalString(astRightLeftObject, "value"))
+                .operator(optionalString(astRightLeftObject, "operator"))
                 .left(createAstRightLeftLeft(optionalJsonObject(astRightLeftObject, "left")))
                 .right(createAstRightLeftRight(optionalJsonObject(astRightLeftObject, "right")))
                 .build();
@@ -797,6 +834,7 @@ final class MolecularMatchObjectFactory {
                     .custom(optionalString(tagObject, "custom"))
                     .suppress(optionalString(tagObject, "suppress"))
                     .manualSuppress(optionalString(tagObject, "manualSuppress"))
+                    .composite(optionalString(tagObject, "composite"))
                     .compositeKey(optionalString(tagObject, "compositeKey"))
                     .build());
         }

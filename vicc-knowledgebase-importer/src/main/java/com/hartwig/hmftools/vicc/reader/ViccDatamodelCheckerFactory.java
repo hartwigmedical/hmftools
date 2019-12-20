@@ -1198,6 +1198,24 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker molecularMatchAstLeftLeftChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        return new ViccDatamodelChecker("MolecularMatchAstLeftLeft", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker molecularMatchAstLeftRightChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("type", true);
+        map.put("raw", false);
+        map.put("value", false);
+        return new ViccDatamodelChecker("MolecularMatchAstLeftRight", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchAstRightChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("type", true);
@@ -1215,6 +1233,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("type", true);
         map.put("raw", false);
         map.put("value", false);
+        map.put("operator", false);
         map.put("left", false);
         map.put("right", false);
         return new ViccDatamodelChecker("MolecularMatchAstRightLeft", map);
@@ -1263,6 +1282,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("custom", false);
         map.put("suppress", false);
         map.put("manualSuppress", false);
+        map.put("composite", false);
         map.put("compositeKey", false);
         return new ViccDatamodelChecker("MolecularMatchTag", map);
     }

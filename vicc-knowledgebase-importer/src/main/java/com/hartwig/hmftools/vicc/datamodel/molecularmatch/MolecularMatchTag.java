@@ -48,5 +48,8 @@ public abstract class MolecularMatchTag {
     public abstract String manualSuppress();
 
     @Nullable
+    public abstract String composite();
+
+    @Nullable
     public abstract String compositeKey();
 }
