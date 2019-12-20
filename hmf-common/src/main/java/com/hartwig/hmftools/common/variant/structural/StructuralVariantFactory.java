@@ -278,7 +278,7 @@ public class StructuralVariantFactory {
         Preconditions.checkArgument(StructuralVariantType.BND.equals(type(context)));
         Preconditions.checkArgument(SINGLE_BREAKEND_REGEX.matcher(context.getAlternateAllele(0).getDisplayString()).matches());
 
-        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
+        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = context.getAlternateAllele(0).getDisplayString();
         // local orientation determined by the positioning of the anchoring bases
