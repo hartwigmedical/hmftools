@@ -783,7 +783,7 @@ final class ViccDatamodelCheckerFactory {
         map.put("guidelineVersion", false);
         map.put("includeGene1", false);
         map.put("includeFinding1", false);
-        map.put("includeCondition1", false);
+        map.put("includeCondition1", true);
         map.put("includeMutation1", false);
         map.put("includeDrug1", false);
         map.put("includeDrugclass1", false);
