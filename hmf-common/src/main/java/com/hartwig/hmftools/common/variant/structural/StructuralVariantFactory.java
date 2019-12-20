@@ -47,6 +47,7 @@ public class StructuralVariantFactory {
     private final static String RIGHT_INS_SEQ = "RIGHT_SVINSSEQ";
     private final static String HOM_SEQ = "HOMSEQ";
     private final static String BPI_AF = "BPI_AF";
+    private final static String TAF = "TAF";
     private final static String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     private final static String IHOMPOS = "IHOMPOS";
     private final static String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
@@ -134,7 +135,7 @@ public class StructuralVariantFactory {
 
         final int start = context.getStart();
         final int end = context.getEnd();
-        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
+        final List<Double> af = context.hasAttribute(BPI_AF) ? context.getAttributeAsDoubleList(BPI_AF, 0.0) : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         byte startOrientation = 0, endOrientation = 0;
         switch (type) {
@@ -214,7 +215,7 @@ public class StructuralVariantFactory {
 
         final int start = first.getStart();
         final int end = second.getStart();
-        final List<Double> af = first.hasAttribute(BPI_AF) ? first.getAttributeAsDoubleList(BPI_AF, 0.0) : Collections.emptyList();
+        final List<Double> af = first.hasAttribute(BPI_AF) ? first.getAttributeAsDoubleList(BPI_AF, 0.0) : first.hasAttribute(TAF) ? first.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = first.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
