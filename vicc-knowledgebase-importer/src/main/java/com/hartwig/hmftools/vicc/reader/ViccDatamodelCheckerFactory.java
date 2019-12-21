@@ -763,6 +763,71 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker pmkbEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("tumor", true);
+        map.put("tissues", true);
+        map.put("variant", true);
+        return new ViccDatamodelChecker("PmkbEntry", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker pmkbTumorChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("PmkbTumor", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker pmkbTissueChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("PmkbTissue", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker pmkbVariantChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("coordinates", true);
+        map.put("chromosome", true);
+        map.put("cytoband", true);
+        map.put("gene", true);
+        map.put("transcript", true);
+        map.put("effect", true);
+        map.put("codons", true);
+        map.put("exons", true);
+        map.put("dna_change", true);
+        map.put("amino_acid_change", true);
+        map.put("germline", true);
+        map.put("partner_gene", true);
+        map.put("cnv_type", true);
+        map.put("chromosome_based_cnv", true);
+        map.put("variant_type", true);
+        map.put("cosmic", true);
+        map.put("description", true);
+        map.put("description_type", true);
+        map.put("notes", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("PmkbVariant", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker pmkbGeneChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("created_at", true);
+        map.put("updated_at", true);
+        map.put("active_ind", true);
+        map.put("description", true);
+        map.put("external_id", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("PmkbGene", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("direction", true);

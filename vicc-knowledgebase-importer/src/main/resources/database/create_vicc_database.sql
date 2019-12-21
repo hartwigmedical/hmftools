@@ -2463,59 +2463,59 @@ CREATE TABLE pmkb
 
 CREATE TABLE pmkbTissue
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    idTissue varchar(255) NOT NULL,
+    pmkbId int NOT NULL,
     name varchar(255) NOT NULL,
+    idTissue varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (pmkbId) REFERENCES pmkb(id)
 );
 
 CREATE TABLE pmkbTumor
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
-    idTumor varchar(255) NOT NULL,
+    pmkbId int NOT NULL,
     name varchar(255) NOT NULL,
+    idTumor varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (pmkbId) REFERENCES pmkb(id)
 );
 
 CREATE TABLE pmkbVariant
 (   id int NOT NULL AUTO_INCREMENT,
-    viccEntryId int NOT NULL,
+    pmkbId int NOT NULL,
+    name varchar(255),
+    coordinates varchar(255),
+    chromosome varchar(255),
+    cytoband varchar(255),
+    transcript varchar(255),
+    effect varchar(255),
+    codons varchar(255),
+    exons varchar(255),
+    dnaChange varchar(255),
     aminoAcidChange varchar(255),
     germline varchar(255),
     partnerGene varchar(255),
-    codons varchar(255),
-    description varchar(255),
-    exons varchar(255),
-    notes varchar(255),
-    cosmic varchar(255),
-    effect varchar(255),
     cnvType varchar(255),
-    idVariant varchar(255),
-    cytoband varchar(255),
-    variantType varchar(255),
-    dnaChange varchar(255),
-    coordinates varchar(255),
     chromosomeBasedCnv varchar(255),
-    transcript varchar(255),
+    variantType varchar(255),
+    cosmic varchar(255),
+    description varchar(255),
     descriptionType varchar(255),
-    chromosome varchar(255),
-    name varchar(255),
+    notes varchar(255),
+    idVariant varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
+    FOREIGN KEY (pmkbId) REFERENCES pmkb(id)
 );
 
 CREATE TABLE pmkbGene
 (   id int NOT NULL AUTO_INCREMENT,
     pmkbVariantId int NOT NULL,
-    description varchar(255),
+    name varchar(255) NOT NULL,
     createdAt varchar(255) NOT NULL,
     updatedAt varchar(255) NOT NULL,
     activeInd varchar(255) NOT NULL,
+    description varchar(255),
     externalId varchar(255) NOT NULL,
     idGene varchar(255) NOT NULL,
-    name varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (pmkbVariantId) REFERENCES pmkbVariant(id)
 );
