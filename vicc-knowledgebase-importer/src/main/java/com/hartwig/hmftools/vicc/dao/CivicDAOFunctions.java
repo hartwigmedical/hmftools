@@ -31,12 +31,12 @@ import static com.hartwig.hmftools.vicc.database.Tables.CIVICLIFECYCLEACTIONS;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICPROVISIONALVALUE;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICPUBLICATION;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICSOURCE;
+import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTALIAS;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUP;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUPCOORDINATES;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUPTYPE;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTGROUPVARIANT;
 import static com.hartwig.hmftools.vicc.database.Tables.CIVICVARIANTTYPE;
-import static com.hartwig.hmftools.vicc.database.tables.Civicvariantalias.CIVICVARIANTALIAS;
 
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
 import com.hartwig.hmftools.vicc.datamodel.civic.CivicClinicalTrial;

@@ -5,13 +5,13 @@ import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBBIOLOGICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBCLINICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBCONSEQUENCEBIOLOGICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBCONSEQUENCECLINICAL;
+import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBDRUGABSTRACTCLINICAL;
+import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBGENEALIASBIOLOGICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBGENEALIASCLINICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBGENEBIOLOGICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBGENECLINICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBVARIANTBIOLOGICAL;
 import static com.hartwig.hmftools.vicc.database.Tables.ONCOKBVARIANTCLINICAL;
-import static com.hartwig.hmftools.vicc.database.tables.Oncokbdrugabstractclinical.ONCOKBDRUGABSTRACTCLINICAL;
-import static com.hartwig.hmftools.vicc.database.tables.Oncokbgenealiasbiological.ONCOKBGENEALIASBIOLOGICAL;
 
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
 import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKbBiological;
