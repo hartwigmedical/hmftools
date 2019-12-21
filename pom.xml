@@ -30,7 +30,7 @@
         <module>stat_calcs</module>
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
-<!--        <module>vicc-knowledgebase-importer</module>-->
+        <module>vicc-knowledgebase-importer</module>
     </modules>
 
     <properties>

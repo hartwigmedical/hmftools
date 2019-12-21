@@ -142,73 +142,71 @@ DROP TABLE IF EXISTS molecularMatchMutationWGSALocationClinVarDisease;
 DROP TABLE IF EXISTS molecularMatchMutationWGSALocationClinVarSig;
 DROP TABLE IF EXISTS molecularMatchMutationWGSALocationClinVarStatus;
 DROP TABLE IF EXISTS molecularMatchMutationWGSALocationClinVarDbId;
-DROP TABLE IF EXISTS molecularMatchMutationWGSMap;
-DROP TABLE IF EXISTS molecularMatchMutationWGSMapSynonyms;
-DROP TABLE IF EXISTS molecularMatchMutationWGSMapProtCoords;
-DROP TABLE IF EXISTS molecularMatchMutationGRCH37Location;
-DROP TABLE IF EXISTS molecularMatchMutationGRCH37LocationConsequences;
-DROP TABLE IF EXISTS molecularMatchMutationGRCH37LocConsequencesTxsites;
-DROP TABLE IF EXISTS molecularMatchMutationGRCH37LocConsequencesExonNumber;
+DROP TABLE IF EXISTS molecularMatchMutationWGSAMap;
+DROP TABLE IF EXISTS molecularMatchMutationWGSAMapSynonym;
+DROP TABLE IF EXISTS molecularMatchMutationWGSAMapProtCoord;
+DROP TABLE IF EXISTS molecularMatchMutationGRCh37Loc;
+DROP TABLE IF EXISTS molecularMatchMutationGRCh37LocConsequence;
+DROP TABLE IF EXISTS molecularMatchMutationGRCh37LocConsequenceTxSite;
+DROP TABLE IF EXISTS molecularMatchMutationGRCh37LocConsequenceExonNumber;
 DROP TABLE IF EXISTS molecularMatchMutationFusion;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBchr;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAgene;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBtx;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAchr;
-DROP TABLE IF EXISTS molecularMatchMutationFusionIns;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBgene;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAcoord;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBori;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAband;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBband;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAori;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAtx;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBcoord;
-DROP TABLE IF EXISTS molecularMatchMutationFusionBreg;
-DROP TABLE IF EXISTS molecularMatchMutationFusionAreg;
+DROP TABLE IF EXISTS molecularMatchMutationFusionAChromosome;
+DROP TABLE IF EXISTS molecularMatchMutationFusionABand;
+DROP TABLE IF EXISTS molecularMatchMutationFusionAGene;
+DROP TABLE IF EXISTS molecularMatchMutationFusionACoord;
+DROP TABLE IF EXISTS molecularMatchMutationFusionATranscript;
+DROP TABLE IF EXISTS molecularMatchMutationFusionAOrientation;
+DROP TABLE IF EXISTS molecularMatchMutationFusionAGenomicRegion;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBChromosome;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBBand;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBGene;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBCoord;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBTranscript;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBOrientation;
+DROP TABLE IF EXISTS molecularMatchMutationFusionBGenomicRegion;
+DROP TABLE IF EXISTS molecularMatchMutationFusionInsert;
 DROP TABLE IF EXISTS molecularMatchMutationExonsInfo;
-DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundries;
-DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundriesExonPosities;
-DROP TABLE IF EXISTS molecularMatchMutationExonPositiesExon1;
-DROP TABLE IF EXISTS molecularMatchMutationExonPositiesExon2;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon3;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon4;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon5;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon6;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon7;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon8;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon9;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon10;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon11;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon12;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon13;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon14;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon15;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon16;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon17;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon18;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon19;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon20;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon21;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon22;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon23;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon24;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon25;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon26;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon27;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon28;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon29;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon30;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon31;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon32;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon33;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon34;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon35;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon36;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon37;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon38;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon39;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon40;
-DROP TABLE IF EXISTS molecularMatchMutationsExonPositiesExon41;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon1;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon2;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon3;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon4;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon5;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon6;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon7;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon8;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon9;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon10;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon11;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon12;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon13;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon14;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon15;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon16;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon17;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon18;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon19;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon20;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon21;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon22;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon23;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon24;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon25;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon26;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon27;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon28;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon29;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon30;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon31;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon32;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon33;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon34;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon35;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon36;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon37;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon38;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon39;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon40;
+DROP TABLE IF EXISTS molecularMatchMutationExonsInfoBoundaryExon41;
 DROP TABLE IF EXISTS pmkb;
 DROP TABLE IF EXISTS pmkbTissue;
 DROP TABLE IF EXISTS pmkbTumor;
@@ -1311,7 +1309,7 @@ CREATE TABLE molecularMatchIncludeDrugClass1
 CREATE TABLE molecularMatchIncludeResistance1
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchId int NOT NULL,
-    includeCondition1 varchar(255) NOT NULL,
+    includeResistance1 varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (molecularMatchId) REFERENCES molecularMatch(id)
 );
@@ -1822,7 +1820,7 @@ CREATE TABLE molecularMatchMutationWGSALocation
     FOREIGN KEY (molecularMatchMutationId) REFERENCES molecularMatchMutation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSALocationGene
+CREATE TABLE molecularMatchMutationWGSALocationGene
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationWGSALocationId int NOT NULL,
     gene varchar(255) NOT NULL,
@@ -1830,7 +1828,7 @@ CREATE TABLE molecularMatchMutationsWGSALocationGene
     FOREIGN KEY (molecularMatchMutationWGSALocationId) REFERENCES molecularMatchMutationWGSALocation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSALocationFullAA
+CREATE TABLE molecularMatchMutationWGSALocationFullAA
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationWGSALocationId int NOT NULL,
     fullAA varchar(255) NOT NULL,
@@ -1846,7 +1844,7 @@ CREATE TABLE molecularMatchMutationWGSALocationClinVarDisease
     FOREIGN KEY (molecularMatchMutationWGSALocationId) REFERENCES molecularMatchMutationWGSALocation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSALocationClinVarSig
+CREATE TABLE molecularMatchMutationWGSALocationClinVarSig
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationWGSALocationId int NOT NULL,
     clinVarSig varchar(255) NOT NULL,
@@ -1854,7 +1852,7 @@ CREATE TABLE molecularMatchMutationsWGSALocationClinVarSig
     FOREIGN KEY (molecularMatchMutationWGSALocationId) REFERENCES molecularMatchMutationWGSALocation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSALocationClinVarStatus
+CREATE TABLE molecularMatchMutationWGSALocationClinVarStatus
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationWGSALocationId int NOT NULL,
     clinVarStatus varchar(255) NOT NULL,
@@ -1862,7 +1860,7 @@ CREATE TABLE molecularMatchMutationsWGSALocationClinVarStatus
     FOREIGN KEY (molecularMatchMutationWGSALocationId) REFERENCES molecularMatchMutationWGSALocation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSALocationClinVarDbId
+CREATE TABLE molecularMatchMutationWGSALocationClinVarDbId
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchMutationWGSALocationId int NOT NULL,
     clinVarDbId varchar(255) NOT NULL,
@@ -1870,604 +1868,590 @@ CREATE TABLE molecularMatchMutationsWGSALocationClinVarDbId
     FOREIGN KEY (molecularMatchMutationWGSALocationId) REFERENCES molecularMatchMutationWGSALocation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSMap
+CREATE TABLE molecularMatchMutationWGSAMap
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsId int NOT NULL,
-    AA varchar(255),
+    molecularMatchMutationId int NOT NULL,
     name varchar(255) NOT NULL,
-    GRCh37_Chr_Start_Ref_Alt varchar(255) NOT NULL,
-    NucleotideChange varchar(255) NOT NULL,
-    Exon varchar(255),
-    Gene varchar(255) NOT NULL,
-    Transcript varchar(255) NOT NULL,
+    gene varchar(255) NOT NULL,
+    transcript varchar(255) NOT NULL,
+    exon varchar(255),
+    grch37ChrStartRefAlt varchar(255) NOT NULL,
+    nucleotideChange varchar(255) NOT NULL,
+    aa varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsId) REFERENCES molecularMatchMutations(id)
+    FOREIGN KEY (molecularMatchMutationId) REFERENCES molecularMatchMutation(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSMapSynonyms
+CREATE TABLE molecularMatchMutationWGSAMapSynonym
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsWGSMapId int NOT NULL,
-    synonyms varchar(255) NOT NULL,
+    molecularMatchMutationWGSAMapId int NOT NULL,
+    synonym varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsWGSMapId) REFERENCES molecularMatchMutationsWGSMap(id)
+    FOREIGN KEY (molecularMatchMutationWGSAMapId) REFERENCES molecularMatchMutationWGSAMap(id)
 );
 
-CREATE TABLE molecularMatchMutationsWGSMapProtCoords
+CREATE TABLE molecularMatchMutationWGSAMapProtCoord
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsWGSMapId int NOT NULL,
-    protCoords varchar(255) NOT NULL,
+    molecularMatchMutationWGSAMapId int NOT NULL,
+    protCoord varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsWGSMapId) REFERENCES molecularMatchMutationsWGSMap(id)
+    FOREIGN KEY (molecularMatchMutationWGSAMapId) REFERENCES molecularMatchMutationWGSAMap(id)
 );
 
-CREATE TABLE molecularMatchMutationsGRCH37Location
+CREATE TABLE molecularMatchMutationGRCh37Loc
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsId int NOT NULL,
-    compositeKey varchar(255) NOT NULL,
-    ref varchar(1000),
-    stop varchar(255),
-    start varchar(255),
+    molecularMatchMutationId int NOT NULL,
     chr varchar(255),
+    start varchar(255),
+    stop varchar(255),
+    ref varchar(1000),
     alt varchar(255),
-    validated varchar(255) NOT NULL,
     strand varchar(255) NOT NULL,
+    validated varchar(255) NOT NULL,
+    compositeKey varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsId) REFERENCES molecularMatchMutations(id)
+    FOREIGN KEY (molecularMatchMutationId) REFERENCES molecularMatchMutation(id)
 );
 
-CREATE TABLE molecularMatchMutationsGRCH37LocationConsequences
+CREATE TABLE molecularMatchMutationGRCh37LocConsequence
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsGRCH37LocationId int NOT NULL,
-    aminoAcidChange varchar(255),
-    intronNumber varchar(255),
+    molecularMatchMutationGRCh37LocId int NOT NULL,
     transcript varchar(255) NOT NULL,
     cdna varchar(255),
+    aminoAcidChange varchar(255),
+    intronNumber varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsGRCH37LocationId) REFERENCES molecularMatchMutationsGRCH37Location(id)
+    FOREIGN KEY (molecularMatchMutationGRCh37LocId) REFERENCES molecularMatchMutationGRCh37Loc(id)
 );
 
-CREATE TABLE molecularMatchMutationsGRCH37LocConsequencesTxsites
+CREATE TABLE molecularMatchMutationGRCh37LocConsequenceTxSite
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsGRCH37LocationConsequencesId int NOT NULL,
-    txSites varchar(255) NOT NULL,
+    molecularMatchMutationGRCh37LocConsequenceId int NOT NULL,
+    txSite varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsGRCH37LocationConsequencesId) REFERENCES molecularMatchMutationsGRCH37LocationConsequences(id)
+    FOREIGN KEY (molecularMatchMutationGRCh37LocConsequenceId) REFERENCES molecularMatchMutationGRCh37LocConsequence(id)
 );
 
-CREATE TABLE molecularMatchMutationsGRCH37LocConsequencesExonNumber
+CREATE TABLE molecularMatchMutationGRCh37LocConsequenceExonNumber
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsGRCH37LocationConsequencesId int NOT NULL,
+    molecularMatchMutationGRCh37LocConsequenceId int NOT NULL,
     exonNumber varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsGRCH37LocationConsequencesId) REFERENCES molecularMatchMutationsGRCH37LocationConsequences(id)
+    FOREIGN KEY (molecularMatchMutationGRCh37LocConsequenceId) REFERENCES molecularMatchMutationGRCh37LocConsequence(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusion
+CREATE TABLE molecularMatchMutationFusion
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsId int NOT NULL,
-    synonym varchar(255),
+    molecularMatchMutationId int NOT NULL,
     source varchar(255),
-    Paper varchar(255),
+    synonym varchar(255),
+    paper varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsId) REFERENCES molecularMatchMutations(id)
+    FOREIGN KEY (molecularMatchMutationId) REFERENCES molecularMatchMutation(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusionBchr
+CREATE TABLE molecularMatchMutationFusionAChromosome
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    Brchr varchar(255) NOT NULL,
+    molecularMatchMutationFusionId int NOT NULL,
+    chromosome varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusionAgene
+CREATE TABLE molecularMatchMutationFusionABand
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    Agene varchar(255) NOT NULL,
+    molecularMatchMutationFusionId int NOT NULL,
+    band varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusionBtx
+CREATE TABLE molecularMatchMutationFusionAGene
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    btx varchar(255) NOT NULL,
+    molecularMatchMutationFusionId int NOT NULL,
+    gene varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusionAchr
+CREATE TABLE molecularMatchMutationFusionACoord
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    achr varchar(255) NOT NULL,
+    molecularMatchMutationFusionId int NOT NULL,
+    coord varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusionIns
+CREATE TABLE molecularMatchMutationFusionATranscript
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
+    molecularMatchMutationFusionId int NOT NULL,
+    transcript varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionAOrientation
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    orientation varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionAGenomicRegion
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    num varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBChromosome
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    chromosome varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBBand
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    band varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBGene
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    gene varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBCoord
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    coord varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBTranscript
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    transcript varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBOrientation
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    orientation varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionBGenomicRegion
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
+    num varchar(255) NOT NULL,
+    type varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
+);
+
+CREATE TABLE molecularMatchMutationFusionInsert
+(   id int NOT NULL AUTO_INCREMENT,
+    molecularMatchMutationFusionId int NOT NULL,
     ins varchar(255) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
+    FOREIGN KEY (molecularMatchMutationFusionId) REFERENCES molecularMatchMutationFusion(id)
 );
 
-CREATE TABLE molecularMatchMutationsFusionBgene
+CREATE TABLE molecularMatchMutationExonsInfo
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    bgene varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionAcoord
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    acoord varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionBori
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    bori varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionAband
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    aband varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionBband
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    bband varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionAori
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    aori varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionAtx
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    atx varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionBcoord
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    bcoord varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionBreg
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    num varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsFusionAreg
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsFusionId int NOT NULL,
-    num varchar(255) NOT NULL,
-    type varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsFusionId) REFERENCES molecularMatchMutationsFusion(id)
-);
-
-CREATE TABLE molecularMatchMutationsExonsInfo
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsId int NOT NULL,
-    txStart varchar(255),
-    cdsEnd varchar(255),
+    molecularMatchMutationId int NOT NULL,
     chr varchar(255) NOT NULL,
-    cdsStart varchar(255),
     transcript varchar(255) NOT NULL,
+    txStart varchar(255),
     txEnd varchar(255),
+    cdsStart varchar(255),
+    cdsEnd varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsId) REFERENCES molecularMatchMutations(id)
+    FOREIGN KEY (molecularMatchMutationId) REFERENCES molecularMatchMutation(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonsInfoBoundries
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon1
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonsInfoId int NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonsInfoId) REFERENCES molecularMatchMutationsExonsInfo(id)
-);
-
-CREATE TABLE molecularMatchMutationsExonsInfoBoundriesExonPosities
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonsInfoBoundriesId int NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonsInfoBoundriesId) REFERENCES molecularMatchMutationsExonsInfoBoundries(id)
-);
-
-CREATE TABLE molecularMatchMutationsExonPositiesExon1
-(   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon2
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon2
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon3
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon3
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon4
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon4
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon5
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon5
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon6
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon6
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon7
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon7
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon8
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon8
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon9
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon9
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon10
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon10
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon11
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon11
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon12
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon12
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon13
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon13
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon14
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon14
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon15
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon15
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon16
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon16
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon17
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon17
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon18
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon18
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon19
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon19
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon20
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon20
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon21
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon21
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon22
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon22
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon23
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon23
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon24
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon24
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon25
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon25
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon26
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon26
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon27
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon27
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon28
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon28
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon29
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon29
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon30
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon30
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon31
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon31
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon32
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon32
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon33
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon33
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon34
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon34
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon35
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon35
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon36
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon36
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon37
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon37
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon38
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon38
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon39
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon39
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon40
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon40
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
-CREATE TABLE molecularMatchMutationsExonPositiesExon41
+CREATE TABLE molecularMatchMutationExonsInfoBoundaryExon41
 (   id int NOT NULL AUTO_INCREMENT,
-    molecularMatchMutationsExonPositiesId int NOT NULL,
+    molecularMatchMutationExonsInfoId int NOT NULL,
     start varchar(255),
     end varchar(255),
     PRIMARY KEY (id),
-    FOREIGN KEY (molecularMatchMutationsExonPositiesId) REFERENCES molecularMatchMutationsExonsInfoBoundriesExonPosities(id)
+    FOREIGN KEY (molecularMatchMutationExonsInfoId) REFERENCES molecularMatchMutationExonsInfo(id)
 );
 
 CREATE TABLE pmkb
