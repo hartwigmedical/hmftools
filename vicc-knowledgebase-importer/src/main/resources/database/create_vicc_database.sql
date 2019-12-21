@@ -225,10 +225,10 @@ DROP TABLE IF EXISTS molecularMatchTrialsGeo;
 DROP TABLE IF EXISTS molecularMatchTrialsSubLocation;
 DROP TABLE IF EXISTS molecularMatchTrialsCoordinates;
 DROP TABLE IF EXISTS jaxTrials;
-DROP TABLE IF EXISTS jaxTrialsIndications;
-DROP TABLE IF EXISTS jaxTrialsVariantRequirementDetails;
 DROP TABLE IF EXISTS jaxTrialsMolecularProfile;
-DROP TABLE IF EXISTS jaxTrialsTherapies;
+DROP TABLE IF EXISTS jaxTrialsTherapy;
+DROP TABLE IF EXISTS jaxTrialsIndication;
+DROP TABLE IF EXISTS jaxTrialsVariantRequirementDetails;
 DROP TABLE IF EXISTS jax;
 DROP TABLE IF EXISTS jaxMolecularProfile;
 DROP TABLE IF EXISTS jaxTherapy;
@@ -2689,11 +2689,11 @@ CREATE TABLE jaxTrials
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-CREATE TABLE jaxTrialsIndications
+CREATE TABLE jaxTrialsIndication
 (   id int NOT NULL AUTO_INCREMENT,
     jaxTrialsId int NOT NULL,
     source varchar(255) NOT NULL,
-    idIndications varchar(255) NOT NULL,
+    idIndication varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (jaxTrialsId) REFERENCES jaxTrials(id)
@@ -2716,10 +2716,10 @@ CREATE TABLE jaxTrialsMolecularProfile
     FOREIGN KEY (jaxTrialsVariantRequirementDetailsId) REFERENCES jaxTrialsVariantRequirementDetails(id)
 );
 
-CREATE TABLE jaxTrialsTherapies
+CREATE TABLE jaxTrialsTherapy
 (   id int NOT NULL AUTO_INCREMENT,
     jaxTrialsId int NOT NULL,
-    idTherapies varchar(255) NOT NULL,
+    idTherapy varchar(255) NOT NULL,
     therapyName varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (jaxTrialsId) REFERENCES jaxTrials(id)

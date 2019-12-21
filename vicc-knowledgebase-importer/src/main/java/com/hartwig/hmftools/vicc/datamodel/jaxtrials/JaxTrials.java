@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class JaxTrials implements KbSpecificObject {
 
     @NotNull
-    public abstract List<JaxTrialsIndications> indications();
+    public abstract List<JaxTrialsIndication> indications();
 
     @NotNull
     public abstract String title();
@@ -43,5 +43,5 @@ public abstract class JaxTrials implements KbSpecificObject {
     public abstract List<JaxTrialsVariantRequirementDetails> variantRequirementDetails();
 
     @NotNull
-    public abstract List<JaxTrialsTherapies> therapies();
+    public abstract List<JaxTrialsTherapy> therapies();
 }

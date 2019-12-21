@@ -8,14 +8,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrials;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsIndications;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsIndication;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsMolecularProfile;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsTherapies;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsTherapy;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsIndications;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsIndication;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsMolecularProfile;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsTherapies;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsTherapy;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsVariantRequirementDetails;
 
 import org.apache.logging.log4j.LogManager;
@@ -60,8 +60,8 @@ final class JaxTrialsObjectFactory {
     }
 
     @NotNull
-    private static List<JaxTrialsIndications> createJaxTrialsIndications(@NotNull JsonArray arrayIndications) {
-        List<JaxTrialsIndications> indicationsList = Lists.newArrayList();
+    private static List<JaxTrialsIndication> createJaxTrialsIndications(@NotNull JsonArray arrayIndications) {
+        List<JaxTrialsIndication> indicationsList = Lists.newArrayList();
 
         for (JsonElement indications : arrayIndications) {
             Set<String> keysIndications = indications.getAsJsonObject().keySet();
@@ -72,7 +72,7 @@ final class JaxTrialsObjectFactory {
                 LOGGER.warn(keysIndications);
             }
 
-            indicationsList.add(ImmutableJaxTrialsIndications.builder()
+            indicationsList.add(ImmutableJaxTrialsIndication.builder()
                     .source(indications.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
                     .id(indications.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .name(indications.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
@@ -123,8 +123,8 @@ final class JaxTrialsObjectFactory {
     }
 
     @NotNull
-    private static List<JaxTrialsTherapies> createJaxTrialsTherapies(@NotNull JsonArray arrayTherapies) {
-        List<JaxTrialsTherapies> jaxTrialsTherapiesList = Lists.newArrayList();
+    private static List<JaxTrialsTherapy> createJaxTrialsTherapies(@NotNull JsonArray arrayTherapies) {
+        List<JaxTrialsTherapy> jaxTrialsTherapyList = Lists.newArrayList();
         for (JsonElement therapies : arrayTherapies) {
             Set<String> keysTherapies = therapies.getAsJsonObject().keySet();
             if (!EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES.contains(keysTherapies.size())) {
@@ -134,11 +134,11 @@ final class JaxTrialsObjectFactory {
                 LOGGER.warn(keysTherapies);
             }
 
-            jaxTrialsTherapiesList.add(ImmutableJaxTrialsTherapies.builder()
+            jaxTrialsTherapyList.add(ImmutableJaxTrialsTherapy.builder()
                     .id(therapies.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
                     .therapyName(therapies.getAsJsonObject().getAsJsonPrimitive("therapyName").getAsString())
                     .build());
         }
-        return jaxTrialsTherapiesList;
+        return jaxTrialsTherapyList;
     }
 }
