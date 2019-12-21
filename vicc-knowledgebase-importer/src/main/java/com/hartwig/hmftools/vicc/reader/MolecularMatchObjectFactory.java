@@ -113,7 +113,7 @@ final class MolecularMatchObjectFactory {
                 .includeDrugClass1(optionalStringList(molecularMatchObject, "includeDrugclass1"))
                 .includeResistance1(optionalStringList(molecularMatchObject, "includeResistance1"))
                 .includeStage0(optionalStringList(molecularMatchObject, "includeStage0"))
-                .includeGene0(optionalStringList(molecularMatchObject, "includeDrug0"))
+                .includeGene0(optionalStringList(molecularMatchObject, "includeGene0"))
                 .includeCondition0(stringList(molecularMatchObject, "includeCondition0"))
                 .includeMutation0(optionalStringList(molecularMatchObject, "includeMutation0"))
                 .criteriaMets(stringList(molecularMatchObject, "criteriaMet"))

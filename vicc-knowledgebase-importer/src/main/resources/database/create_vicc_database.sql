@@ -1198,7 +1198,7 @@ CREATE TABLE molecularMatchAstLeftLeft
     FOREIGN KEY (molecularMatchAstLeftId) REFERENCES molecularMatchAstLeft(id)
 );
 
-CREATE TABLE molecularmatchAstLeftRight
+CREATE TABLE molecularMatchAstLeftRight
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchAstLeftId int NOT NULL,
     type varchar(255) NOT NULL,
@@ -1231,7 +1231,7 @@ CREATE TABLE molecularMatchAstRightLeft
     FOREIGN KEY (molecularMatchAstRightId) REFERENCES molecularMatchAstRight(id)
 );
 
-CREATE TABLE molecularmatchAstRightRight
+CREATE TABLE molecularMatchAstRightRight
 (   id int NOT NULL AUTO_INCREMENT,
     molecularMatchAstRightId int NOT NULL,
     type varchar(255) NOT NULL,

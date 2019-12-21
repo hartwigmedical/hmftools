@@ -1194,9 +1194,9 @@ final class MolecularMatchDAOFunctions {
                     .getValue(MOLECULARMATCHMUTATIONFUSION.ID);
 
             for (String chromosome : fusion.aChromosomes()) {
-                context.insertInto(MOLECULARMATCHMUTATIONFUSIONBCHROMOSOME,
-                        MOLECULARMATCHMUTATIONFUSIONBCHROMOSOME.CHROMOSOME,
-                        MOLECULARMATCHMUTATIONFUSIONBCHROMOSOME.MOLECULARMATCHMUTATIONFUSIONID).values(chromosome, fusionId).execute();
+                context.insertInto(MOLECULARMATCHMUTATIONFUSIONACHROMOSOME,
+                        MOLECULARMATCHMUTATIONFUSIONACHROMOSOME.CHROMOSOME,
+                        MOLECULARMATCHMUTATIONFUSIONACHROMOSOME.MOLECULARMATCHMUTATIONFUSIONID).values(chromosome, fusionId).execute();
             }
 
             for (String band : fusion.aBands()) {
@@ -1613,11 +1613,21 @@ final class MolecularMatchDAOFunctions {
 
         MolecularMatchPosition exon31Position = exonsInfo.exonBoundaries().exon31();
         if (exon31Position != null) {
+            context.insertInto(MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON31,
+                    MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON31.START,
+                    MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON31.END,
+                    MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON31.MOLECULARMATCHMUTATIONEXONSINFOID)
+                    .values(exon31Position.start(), exon31Position.stop(), exonInfoId)
+                    .execute();
+        }
+
+        MolecularMatchPosition exon32Position = exonsInfo.exonBoundaries().exon32();
+        if (exon32Position != null) {
             context.insertInto(MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON32,
                     MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON32.START,
                     MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON32.END,
                     MOLECULARMATCHMUTATIONEXONSINFOBOUNDARYEXON32.MOLECULARMATCHMUTATIONEXONSINFOID)
-                    .values(exon31Position.start(), exon31Position.stop(), exonInfoId)
+                    .values(exon32Position.start(), exon32Position.stop(), exonInfoId)
                     .execute();
         }
 
