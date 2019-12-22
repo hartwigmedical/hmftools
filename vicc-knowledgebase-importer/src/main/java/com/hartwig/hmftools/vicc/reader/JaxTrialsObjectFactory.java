@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.vicc.reader;
 
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
+
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -11,134 +13,91 @@ import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrials;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsIndication;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsMolecularProfile;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsTherapy;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.ImmutableJaxTrialsVariantRequirementDetails;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsIndication;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsMolecularProfile;
 import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsTherapy;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrialsVariantRequirementDetails;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class JaxTrialsObjectFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(JaxTrialsObjectFactory.class);
-
-    private static final List<Integer> EXPECTED_JAX_TRIALS_ELEMENT_SIZES = Lists.newArrayList(11);
-    private static final List<Integer> EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES = Lists.newArrayList(2);
 
     private JaxTrialsObjectFactory() {
     }
 
     @NotNull
-    static JaxTrials create(@NotNull JsonObject objectJaxTrials) {
-        Set<String> keysJaxTrials = objectJaxTrials.keySet();
-        if (!EXPECTED_JAX_TRIALS_ELEMENT_SIZES.contains(keysJaxTrials.size())) {
-            LOGGER.warn("Found {} in jax trials rather than the expected {}", keysJaxTrials.size(), EXPECTED_JAX_TRIALS_ELEMENT_SIZES);
-            LOGGER.warn(keysJaxTrials);
-        }
+    static JaxTrials create(@NotNull JsonObject jaxTrialsObject) {
+        ViccDatamodelCheckerFactory.jaxTrialsEntryChecker().check(jaxTrialsObject);
 
         return ImmutableJaxTrials.builder()
-                .indications(createJaxTrialsIndications(objectJaxTrials.getAsJsonArray("indications")))
-                .title(objectJaxTrials.getAsJsonPrimitive("title").getAsString())
-                .gender(objectJaxTrials.get("gender").isJsonNull() ? null : objectJaxTrials.getAsJsonPrimitive("gender").getAsString())
-                .nctId(objectJaxTrials.getAsJsonPrimitive("nctId").getAsString())
-                .sponsors(objectJaxTrials.getAsJsonPrimitive("sponsors").getAsString())
-                .recruitment(objectJaxTrials.getAsJsonPrimitive("recruitment").getAsString())
-                .variantRequirements(objectJaxTrials.getAsJsonPrimitive("variantRequirements").getAsString())
-                .updateDate(objectJaxTrials.getAsJsonPrimitive("updateDate").getAsString())
-                .phase(objectJaxTrials.getAsJsonPrimitive("phase").getAsString())
-                .variantRequirementDetails(createJaxTrialsVariantRequirementsDetails(objectJaxTrials.getAsJsonArray(
-                        "variantRequirementDetails")))
-                .therapies(createJaxTrialsTherapies(objectJaxTrials.getAsJsonArray("therapies")))
+                .nctId(string(jaxTrialsObject, "nctId"))
+                .title(string(jaxTrialsObject, "title"))
+                .variantRequirements(string(jaxTrialsObject, "variantRequirements"))
+                .molecularProfiles(createMolecularProfiles(jaxTrialsObject.getAsJsonArray("variantRequirementDetails")))
+                .indications(createIndications(jaxTrialsObject.getAsJsonArray("indications")))
+                .therapies(createTherapies(jaxTrialsObject.getAsJsonArray("therapies")))
+                .gender(nullableString(jaxTrialsObject, "gender"))
+                .recruitment(string(jaxTrialsObject, "recruitment"))
+                .phase(string(jaxTrialsObject, "phase"))
+                .sponsors(string(jaxTrialsObject, "sponsors"))
+                .updateDate(string(jaxTrialsObject, "updateDate"))
                 .build();
     }
 
     @NotNull
-    private static List<JaxTrialsIndication> createJaxTrialsIndications(@NotNull JsonArray arrayIndications) {
-        List<JaxTrialsIndication> indicationsList = Lists.newArrayList();
-
-        for (JsonElement indications : arrayIndications) {
-            Set<String> keysIndications = indications.getAsJsonObject().keySet();
-            if (!EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES.contains(keysIndications.size())) {
-                LOGGER.warn("Found {} in jax trials indications rather than the expected {}",
-                        keysIndications.size(),
-                        EXPECTED_JAX_TRIALS_INDICATIONS_ELEMENT_SIZES);
-                LOGGER.warn(keysIndications);
-            }
-
-            indicationsList.add(ImmutableJaxTrialsIndication.builder()
-                    .source(indications.getAsJsonObject().getAsJsonPrimitive("source").getAsString())
-                    .id(indications.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(indications.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
-                    .build());
-        }
-        return indicationsList;
-    }
-
-    @NotNull
-    private static List<JaxTrialsVariantRequirementDetails> createJaxTrialsVariantRequirementsDetails(
-            @NotNull JsonArray arrayVariantRequirementDetails) {
-        List<JaxTrialsVariantRequirementDetails> variantRequirementDetailsList = Lists.newArrayList();
-        for (JsonElement variantRequirementDetails : arrayVariantRequirementDetails) {
-            Set<String> keysRequirementDetails = variantRequirementDetails.getAsJsonObject().keySet();
-            if (!EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES.contains(keysRequirementDetails.size())) {
-                LOGGER.warn("Found {} in jax trials variant requirement details rather than the expected {}",
-                        keysRequirementDetails.size(),
-                        EXPECTED_JAX_TRIALS_VARIANTREQUIREMENTDETAILS_ELEMENT_SIZES);
-                LOGGER.warn(keysRequirementDetails);
-            }
-
-            variantRequirementDetailsList.add(ImmutableJaxTrialsVariantRequirementDetails.builder()
-                    .molecularProfiles(createJaxTrialsMolecularProfile(variantRequirementDetails.getAsJsonObject()
-                            .getAsJsonObject("molecularProfile")))
-                    .requirementType(variantRequirementDetails.getAsJsonObject().getAsJsonPrimitive("requirementType").getAsString())
-                    .build());
-        }
-        return variantRequirementDetailsList;
-    }
-
-    @NotNull
-    private static List<JaxTrialsMolecularProfile> createJaxTrialsMolecularProfile(@NotNull JsonObject objectMolecularProfile) {
+    private static List<JaxTrialsMolecularProfile> createMolecularProfiles(@NotNull JsonArray variantRequirementDetailsArray) {
         List<JaxTrialsMolecularProfile> molecularProfileList = Lists.newArrayList();
+        ViccDatamodelChecker variantRequirementDetailsChecker = ViccDatamodelCheckerFactory.jaxTrialsVariantRequirementDetailsChecker();
+        ViccDatamodelChecker molecularProfileChecker = ViccDatamodelCheckerFactory.jaxTrialsMolecularProfileChecker();
 
-        Set<String> keysMolecularProfile = objectMolecularProfile.keySet();
-        if (!EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES.contains(keysMolecularProfile.size())) {
-            LOGGER.warn("Found {}  in jax trials molecular profile rather than the expected {}",
-                    keysMolecularProfile.size(),
-                    EXPECTED_JAX_TRIALS_MOLECULAIRPROFILE_ELEMENT_SIZES);
-            LOGGER.warn(keysMolecularProfile);
+        for (JsonElement variantRequirementDetailsElement : variantRequirementDetailsArray) {
+            JsonObject variantRequirementDetailsObject = variantRequirementDetailsElement.getAsJsonObject();
+            variantRequirementDetailsChecker.check(variantRequirementDetailsObject);
+
+            JsonObject molecularProfileObject = variantRequirementDetailsObject.getAsJsonObject("molecularProfile");
+            molecularProfileChecker.check(molecularProfileObject);
+
+            molecularProfileList.add(ImmutableJaxTrialsMolecularProfile.builder()
+                    .requirementType(string(variantRequirementDetailsObject, "requirementType"))
+                    .profileName(string(molecularProfileObject, "profileName"))
+                    .id(string(molecularProfileObject, "id"))
+                    .build());
         }
-
-        molecularProfileList.add(ImmutableJaxTrialsMolecularProfile.builder()
-                .profileName(objectMolecularProfile.getAsJsonPrimitive("profileName").getAsString())
-                .id(objectMolecularProfile.getAsJsonPrimitive("id").getAsString())
-                .build());
         return molecularProfileList;
     }
 
     @NotNull
-    private static List<JaxTrialsTherapy> createJaxTrialsTherapies(@NotNull JsonArray arrayTherapies) {
-        List<JaxTrialsTherapy> jaxTrialsTherapyList = Lists.newArrayList();
-        for (JsonElement therapies : arrayTherapies) {
-            Set<String> keysTherapies = therapies.getAsJsonObject().keySet();
-            if (!EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES.contains(keysTherapies.size())) {
-                LOGGER.warn("Found {} in jax trials therapies rather than the expected {}",
-                        keysTherapies.size(),
-                        EXPECTED_JAX_TRIALS_THERAPIES_ELEMENT_SIZES);
-                LOGGER.warn(keysTherapies);
-            }
+    private static List<JaxTrialsIndication> createIndications(@NotNull JsonArray indicationArray) {
+        List<JaxTrialsIndication> indicationList = Lists.newArrayList();
+        ViccDatamodelChecker indicationChecker = ViccDatamodelCheckerFactory.jaxTrialsIndicationChecker();
 
-            jaxTrialsTherapyList.add(ImmutableJaxTrialsTherapy.builder()
-                    .id(therapies.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .therapyName(therapies.getAsJsonObject().getAsJsonPrimitive("therapyName").getAsString())
+        for (JsonElement indicationElement : indicationArray) {
+            JsonObject indicationObject = indicationElement.getAsJsonObject();
+            indicationChecker.check(indicationObject);
+
+            indicationList.add(ImmutableJaxTrialsIndication.builder()
+                    .name(string(indicationObject, "name"))
+                    .source(string(indicationObject, "source"))
+                    .id(string(indicationObject, "id"))
                     .build());
         }
-        return jaxTrialsTherapyList;
+        return indicationList;
+    }
+
+    @NotNull
+    private static List<JaxTrialsTherapy> createTherapies(@NotNull JsonArray therapyArray) {
+        List<JaxTrialsTherapy> therapyList = Lists.newArrayList();
+        ViccDatamodelChecker therapyChecker = ViccDatamodelCheckerFactory.jaxTrialsTherapyChecker();
+
+        for (JsonElement therapyElement : therapyArray) {
+            JsonObject therapyObject = therapyElement.getAsJsonObject();
+            therapyChecker.check(therapyObject);
+
+            therapyList.add(ImmutableJaxTrialsTherapy.builder()
+                    .therapyName(string(therapyObject, "therapyName"))
+                    .id(string(therapyObject, "id"))
+                    .build());
+        }
+        return therapyList;
     }
 }

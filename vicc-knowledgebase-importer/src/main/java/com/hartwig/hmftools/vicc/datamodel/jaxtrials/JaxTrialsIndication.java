@@ -9,11 +9,11 @@ import org.jetbrains.annotations.Nullable;
 public abstract class JaxTrialsIndication {
 
     @NotNull
+    public abstract String name();
+
+    @NotNull
     public abstract String source();
 
     @NotNull
     public abstract String id();
-
-    @NotNull
-    public abstract String name();
 }

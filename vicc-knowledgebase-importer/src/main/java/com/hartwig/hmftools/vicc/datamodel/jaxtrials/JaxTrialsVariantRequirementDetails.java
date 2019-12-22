@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.vicc.datamodel.jaxtrials;
 
-import java.util.List;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,8 +9,11 @@ import org.jetbrains.annotations.Nullable;
 public abstract class JaxTrialsVariantRequirementDetails {
 
     @NotNull
-    public abstract List<JaxTrialsMolecularProfile> molecularProfiles();
+    public abstract String requirementType();
 
     @NotNull
-    public abstract String requirementType();
+    public abstract String molecularProfileName();
+
+    @NotNull
+    public abstract String molecularProfileId();
 }

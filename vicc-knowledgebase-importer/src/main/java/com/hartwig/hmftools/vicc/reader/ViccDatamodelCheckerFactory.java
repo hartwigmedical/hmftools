@@ -857,6 +857,56 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker jaxTrialsEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("nctId", true);
+        map.put("title", true);
+        map.put("variantRequirements", true);
+        map.put("variantRequirementDetails", true);
+        map.put("indications", true);
+        map.put("therapies", true);
+        map.put("gender", true);
+        map.put("recruitment", true);
+        map.put("phase", true);
+        map.put("sponsors", true);
+        map.put("updateDate", true);
+        return new ViccDatamodelChecker("JaxTrialsEntry", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxTrialsVariantRequirementDetailsChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("molecularProfile", true);
+        map.put("requirementType", true);
+        return new ViccDatamodelChecker("JaxTrialsVariantRequirementDetails", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxTrialsMolecularProfileChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("profileName", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("JaxTrialsMolecularProfile", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxTrialsIndicationChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("name", true);
+        map.put("source", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("JaxTrialsIndication", map);
+    }
+
+    @NotNull
+    static ViccDatamodelChecker jaxTrialsTherapyChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("therapyName", true);
+        map.put("id", true);
+        return new ViccDatamodelChecker("JaxTrialsTherapy", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("direction", true);

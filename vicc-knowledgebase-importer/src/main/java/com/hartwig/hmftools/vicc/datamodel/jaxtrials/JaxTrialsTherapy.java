@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class JaxTrialsTherapy {
 
     @NotNull
-    public abstract String id();
+    public abstract String therapyName();
 
     @NotNull
-    public abstract String therapyName();
+    public abstract String id();
 }
