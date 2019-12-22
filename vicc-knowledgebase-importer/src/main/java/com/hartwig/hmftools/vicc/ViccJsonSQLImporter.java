@@ -68,7 +68,7 @@ public class ViccJsonSQLImporter {
     private static boolean validInput(@NotNull CommandLine cmd) {
         String viccJsonPath = cmd.getOptionValue(VICC_JSON);
         if (viccJsonPath == null || !pathExists(viccJsonPath)) {
-            LOGGER.warn(VICC_JSON + " has to be an existing file: " + viccJsonPath);
+            LOGGER.warn("{} has to be an existing file: {}", VICC_JSON, viccJsonPath);
             return false;
         }
 
