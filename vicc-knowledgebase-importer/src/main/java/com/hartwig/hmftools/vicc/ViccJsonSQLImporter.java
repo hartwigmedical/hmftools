@@ -11,7 +11,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -34,8 +33,8 @@ public class ViccJsonSQLImporter {
 
     public static void main(final String... args) throws ParseException, IOException, SQLException {
         LOGGER.info("Running VICC Knowledgebase Importer");
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        Options options = createOptions();
+        CommandLine cmd = createCommandLine(args, options);
 
         if (!validInput(cmd)) {
             printUsageAndExit(options);
@@ -86,7 +85,7 @@ public class ViccJsonSQLImporter {
 
     @NotNull
     private static Options createOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(VICC_JSON, true, "Path towards the vicc json input ");
 
         options.addOption(DB_USER, true, "Database user name.");
@@ -99,14 +98,12 @@ public class ViccJsonSQLImporter {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
-    private static void printUsageAndExit(@NotNull final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("vicc-knowledgebase-importer", options);
+    private static void printUsageAndExit(@NotNull Options options) {
+        new HelpFormatter().printHelp("vicc-knowledgebase-importer", options);
         System.exit(1);
     }
 }
