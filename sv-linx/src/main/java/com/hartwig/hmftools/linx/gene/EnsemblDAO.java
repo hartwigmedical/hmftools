@@ -344,6 +344,8 @@ public class EnsemblDAO
                 + " left join exon ce on ce.exon_id = tl.end_exon_id"
                 + " order by GeneId, TransId, ExonStart";
 
+        LOGGER.debug("transcript query: {}", queryStr);
+
         return mDbContext.fetch(queryStr);
     }
 
