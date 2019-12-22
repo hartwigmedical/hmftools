@@ -192,6 +192,17 @@ public class SvUtilities {
         return dest.isEmpty() ? source : dest + delim + source;
     }
 
+    public static String appendStrList(final List<String> sourceList, char delim)
+    {
+        String combinedStr = "";
+        for(String src : sourceList)
+        {
+            combinedStr = appendStr(combinedStr, src, ';');
+        }
+
+        return combinedStr;
+    }
+
     public static boolean isWithinRange(long pos1, long pos2, int permittedDistance)
     {
         if(pos1 < 0 || pos2 < 0)
