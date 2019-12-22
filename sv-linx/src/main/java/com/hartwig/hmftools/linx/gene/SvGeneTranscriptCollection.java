@@ -45,8 +45,6 @@ public class SvGeneTranscriptCollection
     // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
-    private static final Logger LOGGER = LogManager.getLogger(SvGeneTranscriptCollection.class);
-
     public SvGeneTranscriptCollection()
     {
         mTranscriptDataMap = Maps.newHashMap();
