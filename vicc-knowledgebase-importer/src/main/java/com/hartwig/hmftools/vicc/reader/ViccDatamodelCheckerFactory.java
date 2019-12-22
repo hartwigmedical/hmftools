@@ -828,6 +828,35 @@ final class ViccDatamodelCheckerFactory {
     }
 
     @NotNull
+    static ViccDatamodelChecker cgiEntryChecker() {
+        Map<String, Boolean> map = Maps.newHashMap();
+        map.put("Gene", true);
+        map.put("Biomarker", true);
+        map.put("Alteration", true);
+        map.put("Alteration type", true);
+        map.put("transcript", true);
+        map.put("individual_mutation", true);
+        map.put("gDNA", true);
+        map.put("cDNA", true);
+        map.put("info", true);
+        map.put("region", true);
+        map.put("strand", true);
+        map.put("Association", true);
+        map.put("Drug", true);
+        map.put("Drug family", true);
+        map.put("Drug full name", true);
+        map.put("Drug status", true);
+        map.put("Targeting", true);
+        map.put("Primary Tumor type", true);
+        map.put("Metastatic Tumor Type", true);
+        map.put("Evidence level", true);
+        map.put("Source", true);
+        map.put("Curator", true);
+        map.put("Assay type", true);
+        return new ViccDatamodelChecker("CgiEntry", map);
+    }
+
+    @NotNull
     static ViccDatamodelChecker molecularMatchEntryChecker() {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("direction", true);

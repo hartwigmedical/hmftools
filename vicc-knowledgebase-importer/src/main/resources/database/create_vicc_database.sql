@@ -235,13 +235,13 @@ DROP TABLE IF EXISTS jaxTherapy;
 DROP TABLE IF EXISTS jaxIndication;
 DROP TABLE IF EXISTS jaxReference;
 DROP TABLE IF EXISTS cgi;
-DROP TABLE IF EXISTS cgicDNA;
-DROP TABLE IF EXISTS cgiIndividualMutation;
-DROP TABLE IF EXISTS cgigDNA;
 DROP TABLE IF EXISTS cgiTranscript;
-DROP TABLE IF EXISTS cgiStrand;
+DROP TABLE IF EXISTS cgiIndividualMutation;
+DROP TABLE IF EXISTS cgiGDNA;
+DROP TABLE IF EXISTS cgiCDNA;
 DROP TABLE IF EXISTS cgiInfo;
 DROP TABLE IF EXISTS cgiRegion;
+DROP TABLE IF EXISTS cgiStrand;
 DROP TABLE IF EXISTS brca;
 DROP TABLE IF EXISTS brcaAnnotation1000Genomes;
 DROP TABLE IF EXISTS brcaAnnotationBIC;
@@ -2779,30 +2779,30 @@ CREATE TABLE jaxReference
 CREATE TABLE cgi
 (   id int NOT NULL AUTO_INCREMENT,
     viccEntryId int NOT NULL,
-    targeting varchar(255) NOT NULL,
-    source varchar(255) NOT NULL,
-    primaryTumorType varchar(255) NOT NULL,
-    drugsFullName varchar(255) NOT NULL,
-    curator varchar(255) NOT NULL,
-    drugFamily varchar(255) NOT NULL,
-    alteration varchar(1000) NOT NULL,
-    drug varchar(255) NOT NULL,
-    biomarker varchar(1000) NOT NULL,
-    drugStatus varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
-    assayType varchar(255) NOT NULL,
+    biomarker varchar(1000) NOT NULL,
+    alteration varchar(1000) NOT NULL,
     alterationType varchar(255) NOT NULL,
-    evidenceLevel varchar(255) NOT NULL,
     association varchar(255) NOT NULL,
+    drug varchar(255) NOT NULL,
+    drugFamily varchar(255) NOT NULL,
+    drugFullName varchar(255) NOT NULL,
+    drugStatus varchar(255) NOT NULL,
+    targeting varchar(255) NOT NULL,
+    primaryTumorType varchar(255) NOT NULL,
     metastaticTumorType varchar(255) NOT NULL,
+    evidenceLevel varchar(255) NOT NULL,
+    source varchar(255) NOT NULL,
+    curator varchar(255) NOT NULL,
+    assayType varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (viccEntryId) REFERENCES viccEntry(id)
 );
 
-CREATE TABLE cgicDNA
-(   id int NOT NULL AUTO_INCREMENT,
+CREATE TABLE cgiTranscript
+( id int NOT NULL AUTO_INCREMENT,
     cgiId int NOT NULL,
-    cDNA varchar(255) NOT NULL,
+    transcript varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (cgiId) REFERENCES cgi(id)
 );
@@ -2815,7 +2815,7 @@ CREATE TABLE cgiIndividualMutation
     FOREIGN KEY (cgiId) REFERENCES cgi(id)
 );
 
-CREATE TABLE cgigDNA
+CREATE TABLE cgiGDNA
 (   id int NOT NULL AUTO_INCREMENT,
     cgiId int NOT NULL,
     gDNA varchar(255) NOT NULL,
@@ -2823,18 +2823,10 @@ CREATE TABLE cgigDNA
     FOREIGN KEY (cgiId) REFERENCES cgi(id)
 );
 
-CREATE TABLE cgiTranscript
-( id int NOT NULL AUTO_INCREMENT,
-    cgiId int NOT NULL,
-    transcript varchar(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (cgiId) REFERENCES cgi(id)
-);
-
-CREATE TABLE cgiStrand
+CREATE TABLE cgiCDNA
 (   id int NOT NULL AUTO_INCREMENT,
     cgiId int NOT NULL,
-    strand varchar(255) NOT NULL,
+    cDNA varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (cgiId) REFERENCES cgi(id)
 );
@@ -2851,6 +2843,14 @@ CREATE TABLE cgiRegion
 (   id int NOT NULL AUTO_INCREMENT,
     cgiId int NOT NULL,
     region varchar(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (cgiId) REFERENCES cgi(id)
+);
+
+CREATE TABLE cgiStrand
+(   id int NOT NULL AUTO_INCREMENT,
+    cgiId int NOT NULL,
+    strand varchar(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (cgiId) REFERENCES cgi(id)
 );
