@@ -90,8 +90,8 @@ final class PmkbDAOFunctions {
                         pmkb.variant().gene().createdAt(),
                         pmkb.variant().gene().updatedAt(),
                         pmkb.variant().gene().activeInd(),
-                        pmkb.variant().gene().description(),
                         pmkb.variant().gene().externalId(),
+                        pmkb.variant().gene().description(),
                         pmkb.variant().gene().id(),
                         variantId)
                 .execute();
