@@ -23,6 +23,8 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,14 +53,14 @@ public class ClusterAnalyser {
     private final ComplexClustering mComplexClustering;
 
     private CnDataLoader mCnDataLoader;
-    private DoubleMinuteFinder mDmFinder;
+    private final DoubleMinuteFinder mDmFinder;
     private LineElementAnnotator mLineElementAnnotator;
 
     private String mSampleId;
     private final List<SvCluster> mClusters;
-    private List<SvVarData> mAllVariants;
-    private ChainFinder mChainFinder;
-    private LinkFinder mLinkFinder;
+    private final List<SvVarData> mAllVariants;
+    private final ChainFinder mChainFinder;
+    private final LinkFinder mLinkFinder;
 
     private boolean mRunValidationChecks;
 
@@ -127,13 +129,15 @@ public class ClusterAnalyser {
     // access for unit testing
     public final ChainFinder getChainFinder() { return mChainFinder; }
     public final LinkFinder getLinkFinder() { return mLinkFinder; }
+    public final DoubleMinuteFinder getDmFinder() { return mDmFinder; }
 
     public void setRunValidationChecks(boolean toggle) { mRunValidationChecks = toggle; }
 
     public void setSampleData(final String sampleId, List<SvVarData> allVariants)
     {
         mSampleId = sampleId;
-        mAllVariants = allVariants;
+        mAllVariants.clear();
+        mAllVariants.addAll(allVariants);
         mClusters.clear();
         mSimpleClustering.initialise(sampleId);
         mChainFinder.setSampleId(sampleId);
@@ -415,6 +419,23 @@ public class ClusterAnalyser {
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
             mDmFinder.reportCluster(mSampleId, cluster);
+    }
+
+    public void writeComponentSvHeaders(BufferedWriter writer) throws IOException
+    {
+        // allow specialised sub-components to add per-SV data
+        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+            writer.write(",DMSV");
+    }
+
+    public void writeComponentSvData(BufferedWriter writer, final SvVarData var) throws IOException
+    {
+        if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
+        {
+            final List<SvVarData> svList = mDmFinder.getClusterSVs().get(var.getCluster().id());
+            boolean isDmSv = svList != null && svList.contains(var);
+            writer.write(String.format(",%s", isDmSv));
+        }
     }
 
     public void close()

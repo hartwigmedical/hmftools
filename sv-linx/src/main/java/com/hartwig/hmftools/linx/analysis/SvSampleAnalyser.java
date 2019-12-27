@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -489,6 +491,7 @@ public class SvSampleAnalyser {
                 mSvFileWriter.write(",HomologyStart,HomologyEnd,InsertSeq,Imprecise,QualScore");
                 mSvFileWriter.write(",RefContextStart,RefContextEnd,InsSeqAlignments");
                 mSvFileWriter.write(",Recovered,RepeatClass,RepeatType,AnchorStart,AnchorEnd");
+                mAnalyser.writeComponentSvHeaders(mSvFileWriter);
             }
 
             mSvFileWriter.newLine();
@@ -643,8 +646,9 @@ public class SvSampleAnalyser {
                         mSvFileWriter.write(String.format(",%s,%s,%s,%d,%d",
                                 dbData.recovered(), dbData.insertSequenceRepeatClass(), dbData.insertSequenceRepeatType(),
                                 dbData.startAnchoringSupportDistance(), dbData.endAnchoringSupportDistance()));
-                    }
 
+                        mAnalyser.writeComponentSvData(mSvFileWriter, var);
+                    }
 
                     mSvFileWriter.newLine();
                 }
