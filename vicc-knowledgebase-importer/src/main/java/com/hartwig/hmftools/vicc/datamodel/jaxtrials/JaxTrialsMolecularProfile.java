@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class JaxTrialsMolecularProfile {
 
     @NotNull
+    public abstract String requirementType();
+
+    @NotNull
     public abstract String profileName();
 
     @NotNull

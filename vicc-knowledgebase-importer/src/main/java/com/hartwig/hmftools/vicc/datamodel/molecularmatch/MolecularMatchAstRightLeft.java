@@ -18,8 +18,5 @@ public abstract class MolecularMatchAstRightLeft {
     public abstract String value();
 
     @Nullable
-    public abstract MolecularMatchAstRightLeftLeft left();
-
-    @Nullable
-    public abstract MolecularMatchAstRightLeftRight right();
+    public abstract String operator();
 }

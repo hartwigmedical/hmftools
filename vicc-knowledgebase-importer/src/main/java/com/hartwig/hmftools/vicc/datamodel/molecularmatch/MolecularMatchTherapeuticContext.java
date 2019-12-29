@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchTherapeuticContext {
 
     @NotNull
+    public abstract String name();
+
+    @NotNull
     public abstract String facet();
 
     @NotNull
@@ -16,7 +19,4 @@ public abstract class MolecularMatchTherapeuticContext {
 
     @Nullable
     public abstract String valid();
-
-    @NotNull
-    public abstract String name();
 }

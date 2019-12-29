@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.vicc.reader;
 
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.nullableString;
+import static com.hartwig.hmftools.vicc.reader.JsonFunctions.string;
+
 import java.util.List;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -18,127 +20,92 @@ import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbTissue;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbTumor;
 import com.hartwig.hmftools.vicc.datamodel.pmkb.PmkbVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class PmkbObjectFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(PmkbObjectFactory.class);
-
-    private static final List<Integer> EXPECTED_PMKB_ELEMENT_SIZES = Lists.newArrayList(3);
-    private static final List<Integer> EXPECTED_PMKB_TUMOR_ELEMENT_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_PMKB_TISSUE_ELEMENT_SIZES = Lists.newArrayList(2);
-    private static final List<Integer> EXPECTED_PMKB_VARIANT_ELEMENT_SIZES = Lists.newArrayList(21);
-    private static final List<Integer> EXPECTED_PMKB_GENE_ELEMENT_SIZES = Lists.newArrayList(7);
 
     private PmkbObjectFactory() {
     }
 
     @NotNull
-    static Pmkb create(@NotNull JsonObject objectPmkb) {
-        Set<String> keysPmkb = objectPmkb.keySet();
-        if (!EXPECTED_PMKB_ELEMENT_SIZES.contains(keysPmkb.size())) {
-            LOGGER.warn("Found {} in pmkb rather than the expected {}", keysPmkb.size(), EXPECTED_PMKB_ELEMENT_SIZES);
-            LOGGER.warn(keysPmkb);
-        }
+    static Pmkb create(@NotNull JsonObject pmkbObject) {
+        ViccDatamodelCheckerFactory.pmkbEntryChecker().check(pmkbObject);
 
-        JsonObject tumor = objectPmkb.getAsJsonObject("tumor");
-        JsonArray tissue = objectPmkb.getAsJsonArray("tissues");
-        JsonObject variant = objectPmkb.getAsJsonObject("variant");
-
-        return ImmutablePmkb.builder().tumor(createTumor(tumor)).tissue(createTissue(tissue)).variant(createVariantPmkb(variant)).build();
+        return ImmutablePmkb.builder()
+                .tumor(createTumor(pmkbObject.getAsJsonObject("tumor")))
+                .tissues(createTissues(pmkbObject.getAsJsonArray("tissues")))
+                .variant(createVariant(pmkbObject.getAsJsonObject("variant")))
+                .build();
     }
 
     @NotNull
-    private static List<PmkbTumor> createTumor(@NotNull JsonObject tumor) {
-        Set<String> keysTumor = tumor.keySet();
-        if (!EXPECTED_PMKB_TUMOR_ELEMENT_SIZES.contains(keysTumor.size())) {
-            LOGGER.warn("Found {} in pmkb tumor rather than the expected {}", keysTumor.size(), EXPECTED_PMKB_TUMOR_ELEMENT_SIZES);
-            LOGGER.warn(keysTumor);
-        }
+    private static PmkbTumor createTumor(@NotNull JsonObject tumorObject) {
+        ViccDatamodelCheckerFactory.pmkbTumorChecker().check(tumorObject);
 
-        List<PmkbTumor> listTumor = Lists.newArrayList();
-        listTumor.add(ImmutablePmkbTumor.builder()
-                .id(tumor.getAsJsonPrimitive("id").getAsString())
-                .name(tumor.getAsJsonPrimitive("name").getAsString())
-                .build());
-
-        return listTumor;
+        return ImmutablePmkbTumor.builder()
+                .name(string(tumorObject, "name"))
+                .id(string(tumorObject, "id"))
+                .build();
     }
 
     @NotNull
-    private static List<PmkbTissue> createTissue(@NotNull JsonArray tissues) {
-        List<PmkbTissue> listTissue = Lists.newArrayList();
-        for (JsonElement tissue : tissues) {
-            Set<String> keysTissue = tissue.getAsJsonObject().keySet();
-            if (!EXPECTED_PMKB_TISSUE_ELEMENT_SIZES.contains(keysTissue.size())) {
-                LOGGER.warn("Found {} in pmkb tissue rather than the expected {}", keysTissue.size(), EXPECTED_PMKB_TISSUE_ELEMENT_SIZES);
-                LOGGER.warn(keysTissue);
-            }
-            listTissue.add(ImmutablePmkbTissue.builder()
-                    .id(tissue.getAsJsonObject().getAsJsonPrimitive("id").getAsString())
-                    .name(tissue.getAsJsonObject().getAsJsonPrimitive("name").getAsString())
+    private static List<PmkbTissue> createTissues(@NotNull JsonArray tissueArray) {
+        List<PmkbTissue> tissueList = Lists.newArrayList();
+        ViccDatamodelChecker tissueChecker = ViccDatamodelCheckerFactory.pmkbTissueChecker();
+
+        for (JsonElement tissueElement : tissueArray) {
+            JsonObject tissueObject = tissueElement.getAsJsonObject();
+            tissueChecker.check(tissueObject);
+
+            tissueList.add(ImmutablePmkbTissue.builder()
+                    .name(string(tissueObject, "name"))
+                    .id(string(tissueObject, "id"))
                     .build());
         }
-        return listTissue;
+        return tissueList;
     }
 
     @NotNull
-    private static List<PmkbVariant> createVariantPmkb(@NotNull JsonObject variant) {
-        Set<String> keysVariant = variant.keySet();
-        if (!EXPECTED_PMKB_VARIANT_ELEMENT_SIZES.contains(keysVariant.size())) {
-            LOGGER.warn("Found {} in pmkb variant rather than the expected {}", keysVariant.size(), EXPECTED_PMKB_VARIANT_ELEMENT_SIZES);
-            LOGGER.warn(keysVariant);
-        }
+    private static PmkbVariant createVariant(@NotNull JsonObject variantObject) {
+        ViccDatamodelCheckerFactory.pmkbVariantChecker().check(variantObject);
 
-        return Lists.newArrayList(ImmutablePmkbVariant.builder()
-                .aminoAcidChange(variant.get("amino_acid_change").isJsonNull() ? null : variant.get("amino_acid_change").getAsString())
-                .germline(variant.get("germline").isJsonNull() ? null : variant.get("germline").getAsString())
-                .partnerGene(variant.get("partner_gene").isJsonNull() ? null : variant.get("partner_gene").getAsString())
-                .codons(variant.get("codons").isJsonNull() ? null : variant.get("codons").getAsString())
-                .description(variant.get("description").isJsonNull() ? null : variant.get("description").getAsString())
-                .exons(variant.get("exons").isJsonNull() ? null : variant.get("exons").getAsString())
-                .notes(variant.get("notes").isJsonNull() ? null : variant.get("notes").getAsString())
-                .cosmic(variant.get("cosmic").isJsonNull() ? null : variant.get("cosmic").getAsString())
-                .effect(variant.get("effect").isJsonNull() ? null : variant.get("effect").getAsString())
-                .cnvType(variant.get("cnv_type").isJsonNull() ? null : variant.get("cnv_type").getAsString())
-                .id(variant.get("id").isJsonNull() ? null : variant.get("id").getAsString())
-                .cytoband(variant.get("cytoband").isJsonNull() ? null : variant.get("cytoband").getAsString())
-                .variantType(variant.get("variant_type").isJsonNull() ? null : variant.get("variant_type").getAsString())
-                .dnaChange(variant.get("dna_change").isJsonNull() ? null : variant.get("dna_change").getAsString())
-                .coordinates(variant.get("coordinates").isJsonNull() ? null : variant.get("coordinates").getAsString())
-                .chromosomeBasedCnv(variant.get("chromosome_based_cnv").isJsonNull()
-                        ? null
-                        : variant.get("chromosome_based_cnv").getAsString())
-                .gene(createGene(variant))
-                .transcript(variant.getAsJsonPrimitive("transcript").getAsString())
-                .descriptionType(variant.get("description_type").isJsonNull() ? null : variant.get("description_type").getAsString())
-                .chromosome(variant.get("chromosome").isJsonNull() ? null : variant.get("chromosome").getAsString())
-                .name(variant.get("name").isJsonNull() ? null : variant.get("name").getAsString())
-                .build());
+        return ImmutablePmkbVariant.builder()
+                .name(nullableString(variantObject, "name"))
+                .coordinates(nullableString(variantObject, "coordinates"))
+                .chromosome(nullableString(variantObject, "chromosome"))
+                .cytoband(nullableString(variantObject, "cytoband"))
+                .gene(createGene(variantObject.getAsJsonObject("gene")))
+                .transcript(string(variantObject, "transcript"))
+                .effect(nullableString(variantObject, "effect"))
+                .codons(nullableString(variantObject, "codons"))
+                .exons(nullableString(variantObject, "exons"))
+                .dnaChange(nullableString(variantObject, "dna_change"))
+                .aminoAcidChange(nullableString(variantObject, "amino_acid_change"))
+                .germline(nullableString(variantObject, "germline"))
+                .partnerGene(nullableString(variantObject, "partner_gene"))
+                .cnvType(nullableString(variantObject, "cnv_type"))
+                .chromosomeBasedCnv(nullableString(variantObject, "chromosome_based_cnv"))
+                .variantType(nullableString(variantObject, "variant_type"))
+                .cosmic(nullableString(variantObject, "cosmic"))
+                .description(nullableString(variantObject, "description"))
+                .descriptionType(nullableString(variantObject, "description_type"))
+                .notes(nullableString(variantObject, "notes"))
+                .id(nullableString(variantObject, "id"))
+                .build();
     }
 
     @NotNull
-    private static List<PmkbGene> createGene(@NotNull JsonObject variant) {
-        JsonObject gene = variant.getAsJsonObject("gene");
+    private static PmkbGene createGene(@NotNull JsonObject geneObject) {
+        ViccDatamodelCheckerFactory.pmkbGeneChecker().check(geneObject);
 
-        Set<String> keysGene = gene.keySet();
-        if (!EXPECTED_PMKB_GENE_ELEMENT_SIZES.contains(keysGene.size())) {
-            LOGGER.warn("Found {} in pmkb gene rather than the expected {}", keysGene.size(), EXPECTED_PMKB_GENE_ELEMENT_SIZES);
-            LOGGER.warn(keysGene);
-        }
-
-        List<PmkbGene> listGene = Lists.newArrayList();
-        listGene.add(ImmutablePmkbGene.builder()
-                .description(gene.get("description").isJsonNull() ? null : gene.getAsJsonPrimitive("description").getAsString())
-                .createdAt(gene.getAsJsonPrimitive("created_at").getAsString())
-                .updatedAt(gene.getAsJsonPrimitive("updated_at").getAsString())
-                .activeInd(gene.getAsJsonPrimitive("active_ind").getAsString())
-                .externalId(gene.getAsJsonPrimitive("external_id").getAsString())
-                .id(gene.getAsJsonPrimitive("id").getAsString())
-                .name(gene.getAsJsonPrimitive("name").getAsString())
-                .build());
-        return listGene;
+        return ImmutablePmkbGene.builder()
+                .name(string(geneObject, "name"))
+                .createdAt(string(geneObject, "created_at"))
+                .updatedAt(string(geneObject, "updated_at"))
+                .activeInd(string(geneObject, "active_ind"))
+                .description(nullableString(geneObject, "description"))
+                .externalId(string(geneObject, "external_id"))
+                .id(string(geneObject, "id"))
+                .build();
     }
 }

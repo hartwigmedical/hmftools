@@ -13,35 +13,35 @@ import org.jetbrains.annotations.Nullable;
 public abstract class JaxTrials implements KbSpecificObject {
 
     @NotNull
-    public abstract List<JaxTrialsIndications> indications();
-
-    @NotNull
-    public abstract String title();
-
-    @Nullable
-    public abstract String gender();
-
-    @NotNull
     public abstract String nctId();
 
     @NotNull
-    public abstract String sponsors();
-
-    @NotNull
-    public abstract String recruitment();
+    public abstract String title();
 
     @NotNull
     public abstract String variantRequirements();
 
     @NotNull
-    public abstract String updateDate();
+    public abstract List<JaxTrialsMolecularProfile> molecularProfiles();
+
+    @NotNull
+    public abstract List<JaxTrialsIndication> indications();
+
+    @NotNull
+    public abstract List<JaxTrialsTherapy> therapies();
+
+    @Nullable
+    public abstract String gender();
+
+    @NotNull
+    public abstract String recruitment();
 
     @NotNull
     public abstract String phase();
 
     @NotNull
-    public abstract List<JaxTrialsVariantRequirementDetails> variantRequirementDetails();
+    public abstract String sponsors();
 
     @NotNull
-    public abstract List<JaxTrialsTherapies> therapies();
+    public abstract String updateDate();
 }

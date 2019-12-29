@@ -80,16 +80,6 @@ final class JsonFunctions {
     }
 
     @NotNull
-    @Deprecated
-    static List<String> toStringList(@NotNull JsonArray array) {
-        List<String> values = Lists.newArrayList();
-        for (JsonElement element : array) {
-            values.add(element.getAsString());
-        }
-        return values;
-    }
-
-    @NotNull
     static String string(@NotNull JsonObject object, @NotNull String field) {
         assert object.has(field);
 

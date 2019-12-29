@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class PmkbTissue {
 
     @NotNull
-    public abstract String id();
+    public abstract String name();
 
     @NotNull
-    public abstract String name();
+    public abstract String id();
 }

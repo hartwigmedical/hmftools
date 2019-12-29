@@ -136,8 +136,8 @@ public class ViccDAO {
         context.deleteFrom(EVIDENCEINFO).execute();
         context.deleteFrom(EVIDENCE).execute();
         context.deleteFrom(PUBLICATIONURL).execute();
-        context.deleteFrom(PHENOTYPE).execute();
         context.deleteFrom(PHENOTYPETYPE).execute();
+        context.deleteFrom(PHENOTYPE).execute();
         context.deleteFrom(APPROVEDCOUNTRY).execute();
         context.deleteFrom(TAXONOMY).execute();
         context.deleteFrom(ENVIRONMENTALCONTEXT).execute();

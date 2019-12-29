@@ -11,7 +11,43 @@ import org.jetbrains.annotations.Nullable;
 public abstract class MolecularMatchClassification {
 
     @Nullable
-    public abstract List<String> end();
+    public abstract String name();
+
+    @Nullable
+    public abstract String geneSymbol();
+
+    @Nullable
+    public abstract String expandGeneSearch();
+
+    @Nullable
+    public abstract String transcript();
+
+    @NotNull
+    public abstract List<String> transcripts();
+
+    @NotNull
+    public abstract List<String> chromosomes();
+
+    @NotNull
+    public abstract List<String> starts();
+
+    @NotNull
+    public abstract List<String> ends();
+
+    @NotNull
+    public abstract List<String> refs();
+
+    @NotNull
+    public abstract List<String> alts();
+
+    @NotNull
+    public abstract List<String> nucleotideChanges();
+
+    @NotNull
+    public abstract List<String> exons();
+
+    @NotNull
+    public abstract List<String> exonicFuncs();
 
     @NotNull
     public abstract String classification();
@@ -19,87 +55,51 @@ public abstract class MolecularMatchClassification {
     @Nullable
     public abstract String classificationOverride();
 
-    @Nullable
-    public abstract List<String> start();
-
-    @Nullable
-    public abstract List<String> chr();
-
-    @Nullable
-    public abstract String geneSymbol();
-
-    @Nullable
+    @NotNull
     public abstract List<String> pathology();
-
-    @Nullable
-    public abstract List<String> ref();
-
-    @Nullable
-    public abstract String description();
-
-    @Nullable
-    public abstract String priority();
-
-    @Nullable
-    public abstract List<String> nucleotideChange();
-
-    @Nullable
-    public abstract String expandGeneSearch();
-
-    @Nullable
-    public abstract List<MolecularMatchParent> parents();
-
-    @Nullable
-    public abstract String drugsExperimentalCount();
-
-    @Nullable
-    public abstract List<String> exon();
-
-    @Nullable
-    public abstract String drugsApprovedOffLabelCount();
-
-    @Nullable
-    public abstract List<String> exonicFunc();
-
-    @Nullable
-    public abstract List<String> popFreqMax();
 
     @Nullable
     public abstract String copyNumberType();
 
     @Nullable
-    public abstract String publicationCount();
-
-    @Nullable
-    public abstract String transcript();
-
-    @Nullable
-    public abstract List<String> dbSNP();
-
-    @Nullable
-    public abstract List<String> alt();
-
-    @Nullable
-    public abstract String name();
-
-    @Nullable
-    public abstract String rootTerm();
-
-    @Nullable
-    public abstract List<String> sources();
-
-    @Nullable
     public abstract String drugsApprovedOnLabelCount();
+
+    @Nullable
+    public abstract String drugsApprovedOffLabelCount();
+
+    @Nullable
+    public abstract String drugsExperimentalCount();
 
     @Nullable
     public abstract String trialCount();
 
     @Nullable
+    public abstract String publicationCount();
+
+    @NotNull
+    public abstract List<String> sources();
+
+    @NotNull
+    public abstract List<String> dbSNPs();
+
+    @NotNull
+    public abstract List<String> cosmicIds();
+
+    @NotNull
+    public abstract List<String> popFreqMaxes();
+
+    @NotNull
+    public abstract List<MolecularMatchParent> parents();
+
+    @Nullable
+    public abstract String rootTerm();
+
+    @Nullable
     public abstract String alias();
 
     @Nullable
-    public abstract List<String> cosmicId();
+    public abstract String priority();
 
     @Nullable
-    public abstract List<String> transcripts();
+    public abstract String description();
 }

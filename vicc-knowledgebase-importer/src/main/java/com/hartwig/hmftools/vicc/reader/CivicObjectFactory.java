@@ -251,7 +251,7 @@ final class CivicObjectFactory {
                     .build());
         }
 
-        // In practice there is a 1-1 relation between civic entry and evidence item even thouygh this is modeled as an array.
+        // In practice there is a 1-1 relation between civic entry and evidence item even though this is modeled as an array.
         if (evidenceItemList.isEmpty()) {
             throw new IllegalStateException("No evidence items found in " + evidenceItemArray);
         } else if (evidenceItemList.size() > 1) {

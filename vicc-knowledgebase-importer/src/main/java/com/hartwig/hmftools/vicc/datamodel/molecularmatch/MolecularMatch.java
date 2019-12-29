@@ -102,7 +102,7 @@ public abstract class MolecularMatch implements KbSpecificObject {
     @NotNull
     public abstract MolecularMatchAst ast();
 
-    @Nullable
+    @NotNull
     public abstract List<String> institutions();
 
     @NotNull
