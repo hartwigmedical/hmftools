@@ -99,7 +99,7 @@ public class SvSampleAnalyser {
 
     // data per run (ie sample)
     private String mSampleId;
-    private List<SvVarData> mAllVariants; // the original list to analyse
+    private final List<SvVarData> mAllVariants; // the original list to analyse
 
     private BufferedWriter mSvFileWriter;
     private BufferedWriter mClusterFileWriter;
@@ -202,7 +202,7 @@ public class SvSampleAnalyser {
             return;
 
         mSampleId = sampleId;
-        mAllVariants = Lists.newArrayList(variants);
+        mAllVariants.addAll(variants);
         mVisWriter.setSampleId(sampleId);
 
         if(!mConfig.IsGermline)

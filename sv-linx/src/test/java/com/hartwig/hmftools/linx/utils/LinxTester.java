@@ -127,6 +127,7 @@ public class LinxTester
 
         populateCopyNumberData(includePloidyCalcs);
 
+        Analyser.setSampleData(SampleId, AllVariants);
         Analyser.preClusteringPreparation();
     }
 
