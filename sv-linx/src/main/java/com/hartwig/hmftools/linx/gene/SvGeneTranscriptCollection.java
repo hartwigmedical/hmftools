@@ -40,7 +40,10 @@ public class SvGeneTranscriptCollection
     private Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
 
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
-    private boolean mRequireCodingInfo;
+    private boolean mRequireExons;
+    private boolean mRequireProteinDomains;
+    private boolean mRequireSplicePositions;
+    private boolean mCanonicalTranscriptsOnly;
 
     // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
@@ -53,7 +56,10 @@ public class SvGeneTranscriptCollection
         mTransSpliceAcceptorPosDataMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
         mGeneNameIdMap = Maps.newHashMap();
-        mRequireCodingInfo = true;
+        mRequireExons = true;
+        mRequireProteinDomains = false;
+        mRequireSplicePositions = false;
+        mCanonicalTranscriptsOnly = false;
     }
 
     public void setDataPath(final String dataPath)
@@ -64,7 +70,13 @@ public class SvGeneTranscriptCollection
             mDataPath += File.separator;
     }
 
-    public void setRequireCodingInfo(boolean toggle) { mRequireCodingInfo = toggle; }
+    public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
+    {
+        mRequireExons = exons;
+        mRequireSplicePositions = splicePositions;
+        mRequireProteinDomains = proteinDomains;
+        mCanonicalTranscriptsOnly = canonicalOnly;
+    }
 
     public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
@@ -781,13 +793,13 @@ public class SvGeneTranscriptCollection
 
         if(!delayTranscriptLoading)
         {
-            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, Lists.newArrayList(), mRequireCodingInfo))
+            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, Lists.newArrayList(), mRequireExons, mCanonicalTranscriptsOnly))
                 return false;
 
-            if(mRequireCodingInfo && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
+            if(mRequireProteinDomains && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
                 return false;
 
-            if(mRequireCodingInfo)
+            if(mRequireSplicePositions)
             {
                 final String transSpliceFile = mDataPath + ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
@@ -804,7 +816,7 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblTranscriptData(final List<String> uniqueGeneIds)
     {
-        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, uniqueGeneIds, mRequireCodingInfo))
+        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, uniqueGeneIds, mRequireExons, mCanonicalTranscriptsOnly))
             return false;
 
         List<Integer> uniqueTransIds = Lists.newArrayList();
@@ -818,10 +830,13 @@ public class SvGeneTranscriptCollection
             }
         }
 
-        if(!EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
+        if(mRequireProteinDomains && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
             return false;
 
-        return EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds);
+        if(mRequireSplicePositions && !EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds))
+            return false;
+
+        return true;
     }
 
     public static Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final TranscriptData transData)

@@ -23,8 +23,10 @@ public class GermlineVcfConfig
     public final String Scope;
     public final String VcfFile;
     public final String VcfsFile;
+    public final String ProcessedFile;
     public final String BatchRunRootDir;
     public final boolean LinkByAssembly;
+    public final boolean CheckDisruptions;
 
     // filtering config
     public final boolean RequirePass;
@@ -36,11 +38,14 @@ public class GermlineVcfConfig
     private static final String VCF_FILE = "vcf";
     private static final String VCFS_FILE = "vcfs_file";
     private static final String BATCH_ROOT_DIR = "batch_root_dir";
+    private static final String PROCESSED_FILE = "processed";
+
     private static final String SCOPE = "scope";
     private static final String SAMPLE = "sample";
     public static final String GENE_TRANSCRIPTS_DIR = "gene_trans_dir";
     public static final String GENE_PANEL_FILE = "gene_panel_file";
     private static final String LINK_BY_ASSEMBLY = "link_by_assembly";
+    private static final String CHECK_DISRUPTIONS = "check_disruptions";
     private static final String OUTPUT_DIR = "output_dir";
     public static final String LOG_DEBUG = "log_debug";
 
@@ -60,10 +65,12 @@ public class GermlineVcfConfig
         VcfFile = cmd.getOptionValue(VCF_FILE, "");
         VcfsFile = cmd.getOptionValue(VCFS_FILE, "");
 
-        BatchRunRootDir = cmd.getOptionValue(BATCH_ROOT_DIR);
+        BatchRunRootDir = cmd.getOptionValue(BATCH_ROOT_DIR, "");
+        ProcessedFile = cmd.getOptionValue(PROCESSED_FILE, "");
 
         Scope = cmd.getOptionValue(SCOPE);
         LinkByAssembly = cmd.hasOption(LINK_BY_ASSEMBLY);
+        CheckDisruptions = cmd.hasOption(CHECK_DISRUPTIONS);
 
         RequirePass = cmd.hasOption(REQUIRE_PASS);
         LogFiltered = cmd.hasOption(LOG_FILTERED);
@@ -81,8 +88,10 @@ public class GermlineVcfConfig
         options.addOption(SAMPLE, true, "Name of the tumor sample");
         options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
         options.addOption(BATCH_ROOT_DIR, true, "Path to the root directory for sample runs");
+        options.addOption(PROCESSED_FILE, true, "Path to a previously-run output file");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Ensembl data cache directory");
         options.addOption(GENE_PANEL_FILE, true, "Gene panel file");
+        options.addOption(CHECK_DISRUPTIONS, false, "Check gene disruptions and filter out non-disruptive genes");
         options.addOption(LINK_BY_ASSEMBLY, false, "Look for assembled links");
         options.addOption(SCOPE, true, "Scope: germline or somatic");
         options.addOption(OUTPUT_DIR, true, "Path to write results");

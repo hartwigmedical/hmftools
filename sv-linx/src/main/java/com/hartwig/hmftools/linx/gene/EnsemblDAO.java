@@ -368,7 +368,7 @@ public class EnsemblDAO
     private static int TE_CODING_END = 14;
 
     public static boolean loadTranscriptData(final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
-            List<String> restrictedGeneIds, boolean cacheExons)
+            List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly)
     {
         String filename = dataPath;
 
@@ -381,7 +381,7 @@ public class EnsemblDAO
         {
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
-            String line = fileReader.readLine();
+            String line = fileReader.readLine(); // skip header
 
             if (line == null)
             {
@@ -397,10 +397,13 @@ public class EnsemblDAO
             List<TranscriptData> transDataList = null;
             List<ExonData> exonDataList = null;
 
-            line = fileReader.readLine(); // skip header
-
             while (line != null)
             {
+                line = fileReader.readLine();
+
+                if(line == null)
+                    break;
+
                 // parse CSV data
                 String[] items = line.split(",");
 
@@ -411,7 +414,6 @@ public class EnsemblDAO
                 if(lastSkippedGeneId.equals(geneId) || (!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId)))
                 {
                     lastSkippedGeneId = geneId;
-                    line = fileReader.readLine();
                     continue;
                 }
 
@@ -427,12 +429,16 @@ public class EnsemblDAO
 
                 if(currentTrans == null || currentTrans.TransId != transId)
                 {
+                    int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
+                    boolean isCanonical = (canonicalTransId == transId);
+
+                    if(!isCanonical && canonicalOnly)
+                        continue;
+
                     exonDataList = Lists.newArrayList();
 
                     Long codingStart = !items[TE_CODING_START].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
                     Long codingEnd = !items[TE_CODING_END].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
-                    int canonicalTransId = Integer.parseInt(items[TE_CANONICAL]);
-                    boolean isCanonical = (canonicalTransId == transId);
 
                     currentTrans = new TranscriptData(
                             transId, items[TE_TRANS_NAME], geneId, isCanonical, Byte.parseByte(items[TE_STRAND]),
@@ -454,8 +460,6 @@ public class EnsemblDAO
                     exonDataList.add(exonData);
                     ++exonCount;
                 }
-
-                line = fileReader.readLine();
             }
 
             LOGGER.debug("loaded {} genes with {} transcripts records and {} exons",

@@ -132,9 +132,7 @@ public class SvLinxApplication
         {
             ensemblDataCache = new SvGeneTranscriptCollection();
             ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-
-            if(checkDrivers && !checkFusions)
-                ensemblDataCache.setRequireCodingInfo(false);
+            ensemblDataCache.setRequiredData(true, checkFusions, checkFusions, !checkFusions);
 
             if(!ensemblDataCache.loadEnsemblData(selectiveGeneLoading))
             {

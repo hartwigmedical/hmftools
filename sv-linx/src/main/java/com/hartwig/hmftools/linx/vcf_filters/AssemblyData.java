@@ -3,12 +3,14 @@ package com.hartwig.hmftools.linx.vcf_filters;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 
 public class AssemblyData
 {
@@ -95,4 +97,48 @@ public class AssemblyData
         return hasBeIdlMatch;
     }
 
+    public static void annotateAssembledLinks(final List<AssemblyData> svAssemblyData)
+    {
+        for(int i = 0; i < svAssemblyData.size() - 1; ++i)
+        {
+            AssemblyData asmData1 = svAssemblyData.get(i);
+            boolean linked = false;
+
+            for(int j = i+1; j < svAssemblyData.size(); ++j)
+            {
+                AssemblyData asmData2 = svAssemblyData.get(j);
+
+                for(int se1 = SE_START; se1 <= SE_END; ++se1)
+                {
+                    for(int se2 = SE_START; se2 <= SE_END; ++se2)
+                    {
+                        if(asmData1.hasMatch(asmData2, se1, se2))
+                        {
+                            asmData1.setLinkedData(asmData2.VcfId, isStart(se1));
+                            asmData2.setLinkedData(asmData1.VcfId, isStart(se2));
+                            linked = true;
+                            break;
+                        }
+                    }
+
+                    if(linked)
+                        break;
+                }
+
+                if(linked)
+                    break;
+            }
+        }
+    }
+
+    public static void populateAssemblyLinks(final List<AssemblyData> svAssemblyData, final StructuralVariant sv, final String[] asmbLinks)
+    {
+        final AssemblyData asmData = svAssemblyData.stream().filter(x -> x.VcfId.equals(sv.id())).findFirst().orElse(null);
+
+        if(asmData == null)
+            return;
+
+        asmbLinks[SE_START] = asmData.getLinkedSvIds()[SE_START];
+        asmbLinks[SE_END] = asmData.getLinkedSvIds()[SE_END];
+    }
 }

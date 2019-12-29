@@ -3,15 +3,11 @@ package com.hartwig.hmftools.linx.vcf_filters;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
+import static com.hartwig.hmftools.linx.vcf_filters.AssemblyData.annotateAssembledLinks;
+import static com.hartwig.hmftools.linx.vcf_filters.AssemblyData.populateAssemblyLinks;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.AS;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.BEID;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.BEIDL;
@@ -27,13 +23,13 @@ import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.SRQ;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.VF;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.getDoubleValue;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineFilters.getIntValue;
-import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_PANEL_FILE;
-import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.linx.vcf_filters.GermlineSV.FIELD_COUNT;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.loadVcfFiles;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
@@ -49,8 +45,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -77,14 +72,12 @@ public class GermlineVcfReader
     private final GermlineFilters mFilter;
     private StructuralVariantFactory mSvFactory;
     private final GermlineVcfConfig mConfig;
-
-    private final SvGeneTranscriptCollection mGeneCollection;
-    private final Map<String,List<EnsemblGeneData>> mGenePanel;
+    private final GeneImpact mGeneImpact;
 
     private final List<String> mVcfFiles;
 
-    private List<AssemblyData> mSvAssemblyData;
-    private Map<String,String> mSvFilterReasons;
+    private final List<AssemblyData> mSvAssemblyData;
+    private final Map<String,String> mSvFilterReasons;
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineVcfReader.class);
 
@@ -92,27 +85,12 @@ public class GermlineVcfReader
     {
         mConfig = new GermlineVcfConfig(cmd);
         mFilter = new GermlineFilters(mConfig);
+        mGeneImpact = new GeneImpact(mConfig, cmd);
         mSvFactory = null;
 
         mVcfFiles = Lists.newArrayList();
         mSvFilterReasons = Maps.newHashMap();
         mSvAssemblyData = Lists.newArrayList();
-
-        mGenePanel = Maps.newHashMap();
-
-        if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
-        {
-            mGeneCollection = new SvGeneTranscriptCollection();
-            mGeneCollection.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-            mGeneCollection.loadEnsemblData(true);
-
-            if(cmd.hasOption(GENE_PANEL_FILE))
-                loadGenePanel(cmd.getOptionValue(GENE_PANEL_FILE));
-        }
-        else
-        {
-            mGeneCollection = null;
-        }
     }
 
     public void run()
@@ -124,6 +102,10 @@ public class GermlineVcfReader
         else if(!mConfig.VcfsFile.isEmpty())
         {
             mVcfFiles.addAll(loadVcfFiles(mConfig.VcfsFile));
+        }
+        else if(!mConfig.ProcessedFile.isEmpty())
+        {
+            reprocessVariantsFromFile(mConfig.ProcessedFile);
         }
         else if(!mConfig.BatchRunRootDir.isEmpty())
         {
@@ -176,45 +158,6 @@ public class GermlineVcfReader
                 || filename.endsWith(".gridss.vcf.gz") || filename.endsWith(".gridss.unfiltered.vcf.gz");
     }
 
-    private void loadGenePanel(final String geneFile)
-    {
-        // gene_panel.csv
-        if (!Files.exists(Paths.get(geneFile)))
-            return;
-
-        try
-        {
-            List<String> fileContents = Files.readAllLines(new File(geneFile).toPath());
-
-            for(final String gene : fileContents)
-            {
-                EnsemblGeneData geneData = mGeneCollection.getGeneDataByName(gene);
-
-                if(geneData == null)
-                {
-                    LOGGER.warn("gene({}) not found in Ensembl data cache", gene);
-                    continue;
-                }
-
-                List<EnsemblGeneData> chrGenesList = mGenePanel.get(geneData.Chromosome);
-
-                if(chrGenesList == null)
-                {
-                    chrGenesList = Lists.newArrayList();
-                    mGenePanel.put(geneData.Chromosome, chrGenesList);
-                }
-
-                chrGenesList.add(geneData);
-            }
-
-            LOGGER.info("loaded genePanelFile({}) with {} genes", geneFile, fileContents.size());
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to load gene panel file({}): {}", geneFile, e.toString());
-        }
-    }
-
     private void processVcf(final String vcfFile)
     {
         try
@@ -229,7 +172,7 @@ public class GermlineVcfReader
             reader.iterator().forEach(x -> processVariant(x));
 
             if (mConfig.LinkByAssembly)
-                annotateAssembledLinks();
+                annotateAssembledLinks(mSvAssemblyData);
 
             writeSVs();
         }
@@ -275,7 +218,7 @@ public class GermlineVcfReader
             return;
         }
 
-        if(mConfig.RequireGene && !hasGeneAnnotation(sv))
+        if(mConfig.RequireGene && !mGeneImpact.hasGeneAnnotation(sv))
         {
             purgeLastSv();
             return;
@@ -355,145 +298,6 @@ public class GermlineVcfReader
         return PASS;
     }
 
-    private void annotationWithGenes(final StructuralVariant sv, final String[] geneAnnotations)
-    {
-        if(mGeneCollection == null)
-            return;
-
-        for(int be = SE_START; be <= SE_END; ++be)
-        {
-            if(sv.type() == SGL && be == SE_END)
-                continue;
-
-            final List<EnsemblGeneData> matchedGenes = mGeneCollection.findGenes(sv.chromosome(isStart(be)), sv.position(isStart(be)), 0);
-
-            if(!matchedGenes.isEmpty())
-            {
-                String genesStr = "";
-
-                for(final EnsemblGeneData gene : matchedGenes)
-                {
-                    genesStr = appendStr(genesStr, gene.GeneName, ';');
-                }
-
-                geneAnnotations[be] = genesStr;
-            }
-        }
-    }
-
-    private String annotateWithGenePanel(final StructuralVariant sv)
-    {
-        if(sv.type() != DEL && sv.type() != DUP)
-            return "";
-
-        List<EnsemblGeneData> genesList = mGenePanel.get(sv.chromosome(true));
-
-        if(genesList == null)
-            return "";
-
-        String genesStr = "";
-
-        for(final EnsemblGeneData geneData : genesList)
-        {
-            if(sv.position(true) < geneData.GeneStart && sv.position(false) > geneData.GeneEnd)
-            {
-                genesStr = appendStr(genesStr, geneData.GeneName, ';');
-            }
-        }
-
-        return genesStr;
-    }
-
-    private boolean hasGeneAnnotation(final StructuralVariant sv)
-    {
-        List<EnsemblGeneData> genesList = mGenePanel.get(sv.chromosome(true));
-
-        if(genesList != null)
-        {
-            for (final EnsemblGeneData geneData : genesList)
-            {
-                // fully overlapping DEL or DUP
-                if (sv.type() == DEL || sv.type() == DUP)
-                {
-                    if (sv.position(true) < geneData.GeneStart && sv.position(false) > geneData.GeneEnd)
-                        return true;
-                }
-
-                // breakend falling in the gene
-                if (sv.position(true) > geneData.GeneStart && sv.position(true) < geneData.GeneEnd)
-                    return true;
-
-                if (sv.type() == DEL || sv.type() == DUP | sv.type() == INV)
-                {
-                    if (sv.position(false) > geneData.GeneStart && sv.position(false) < geneData.GeneEnd)
-                        return true;
-                }
-            }
-        }
-
-        // check other end of BND
-        if(sv.type() == BND)
-        {
-            genesList = mGenePanel.get(sv.chromosome(false));
-
-            if(genesList == null)
-                return false;
-
-            for (final EnsemblGeneData geneData : genesList)
-            {
-                if (sv.position(false) > geneData.GeneStart && sv.position(false) < geneData.GeneEnd)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void annotateAssembledLinks()
-    {
-        for(int i = 0; i < mSvAssemblyData.size() - 1; ++i)
-        {
-            AssemblyData asmData1 = mSvAssemblyData.get(i);
-            boolean linked = false;
-
-            for(int j = i+1; j < mSvAssemblyData.size(); ++j)
-            {
-                AssemblyData asmData2 = mSvAssemblyData.get(j);
-
-                for(int se1 = SE_START; se1 <= SE_END; ++se1)
-                {
-                    for(int se2 = SE_START; se2 <= SE_END; ++se2)
-                    {
-                        if(asmData1.hasMatch(asmData2, se1, se2))
-                        {
-                            asmData1.setLinkedData(asmData2.VcfId, isStart(se1));
-                            asmData2.setLinkedData(asmData1.VcfId, isStart(se2));
-                            linked = true;
-                            break;
-                        }
-                    }
-
-                    if(linked)
-                        break;
-                }
-
-                if(linked)
-                    break;
-            }
-        }
-    }
-
-    private void populateAssemblyLinks(final StructuralVariant sv, final String[] asmbLinks)
-    {
-        final AssemblyData asmData = mSvAssemblyData.stream().filter(x -> x.VcfId.equals(sv.id())).findFirst().orElse(null);
-
-        if(asmData == null)
-            return;
-
-        asmbLinks[SE_START] = asmData.getLinkedSvIds()[SE_START];
-        asmbLinks[SE_END] = asmData.getLinkedSvIds()[SE_END];
-    }
-
     private void writeSVs()
     {
         for(final StructuralVariant sv : mSvFactory.results())
@@ -509,22 +313,12 @@ public class GermlineVcfReader
         {
             if(mCsvWriter == null)
             {
-                String outputFileName = mConfig.OutputDir;
-
-                if(!mConfig.VcfFile.isEmpty())
-                    outputFileName += mConfig.SampleId + "_filtered_germline_svs.csv";
-                else
-                    outputFileName += "LNX_GERMLINE_SVS.csv";
+                String outputFileName = !mConfig.VcfFile.isEmpty() ?
+                        GermlineSV.generateFilename(mConfig.OutputDir, mConfig.SampleId)
+                        : mConfig.OutputDir + "LNX_GERMLINE_SVS.csv";
 
                 mCsvWriter = createBufferedWriter(outputFileName, false);
-
-                mCsvWriter.write("SampleId,Id,Filter,GridssFilter,QualScore,Type");
-                mCsvWriter.write(",ChrStart,ChrEnd,PosStart,PosEnd,OrientStart,OrientEnd");
-                // mCsvWriter.write(",NormalReadDepth,NormalAltCount,TumorReadDepth,TumorAltCount");
-                mCsvWriter.write(",NormalREF,NormalRP,NormalRPQ,NormalSR,NormalSRQ,NormalVF");
-                mCsvWriter.write(",InsertSequence,Homology");
-                mCsvWriter.write(",GenesStart,GenesEnd,GenePanelOverlaps,AsmbStart,AsmbEnd");
-
+                mCsvWriter.write(GermlineSV.header());
                 mCsvWriter.newLine();
             }
 
@@ -534,12 +328,35 @@ public class GermlineVcfReader
             final String sampleName = normalGenotype.getSampleName();
             // final Genotype tumorGenotype = variant.getGenotype(1);
 
+            boolean sglBreakend = sv.type() == SGL;
+
+            final String homology = variant.getAttributeAsString(HOMSEQ, "");
+
+            String[] geneAnnotations = {"",""};
+            mGeneImpact.annotationWithGenes(sv, geneAnnotations);
+
+            String[] asmbSvIds = {"",""};
+            populateAssemblyLinks(mSvAssemblyData, sv, asmbSvIds);
+
+            String genePanelOverlaps = mGeneImpact.annotateWithGenePanel(sv);
+
+
+            GermlineSV germlineSV = new GermlineSV(
+                    sampleName, sv.id(), filter, sv.filter(), getDoubleValue(normalGenotype, QUAL), sv.type(),
+                    sv.chromosome(true), !sglBreakend ? sv.chromosome(false) : "0",
+                    sv.position(true), !sglBreakend ? sv.position(false) : -1,
+                    sv.orientation(true), !sglBreakend ? sv.orientation(false) : 0,
+                    getIntValue(normalGenotype, REF), getIntValue(normalGenotype, RP), getDoubleValue(normalGenotype, RPQ),
+                    getIntValue(normalGenotype, SR), getDoubleValue(normalGenotype, SRQ), getIntValue(normalGenotype, VF),
+                    sv.insertSequence(), homology,
+                    geneAnnotations[SE_START], geneAnnotations[SE_END], genePanelOverlaps, asmbSvIds[SE_START], asmbSvIds[SE_END]);
+
+            mCsvWriter.write(germlineSV.toString());
+
+            /*
             mCsvWriter.write(String.format("%s,%s,%s,%s,%f,%s",
                     sampleName, sv.id(), filter, sv.filter(),
                     getDoubleValue(normalGenotype, QUAL), sv.type()));
-
-            boolean sglBreakend = sv.type() == SGL;
-
             mCsvWriter.write(String.format(",%s,%s,%d,%d,%d,%d",
                     sv.chromosome(true), !sglBreakend ? sv.chromosome(false) : 0,
                     sv.position(true), !sglBreakend ? sv.position(false) : -1,
@@ -552,20 +369,13 @@ public class GermlineVcfReader
                     getIntValue(normalGenotype, REF), getIntValue(normalGenotype, RP), getDoubleValue(normalGenotype, RPQ),
                     getIntValue(normalGenotype, SR), getDoubleValue(normalGenotype, SRQ), getIntValue(normalGenotype, VF)));
 
-            final String homology = variant.getAttributeAsString(HOMSEQ, "");
             mCsvWriter.write(String.format(",%s,%s", sv.insertSequence(), homology));
-
-            String[] geneAnnotations = {"",""};
-            annotationWithGenes(sv, geneAnnotations);
-
-            String[] asmbSvIds = {"",""};
-            populateAssemblyLinks(sv, asmbSvIds);
-
-            String genePanelOverlaps = annotateWithGenePanel(sv);
 
             mCsvWriter.write(String.format(",%s,%s,%s,%s,%s",
                     geneAnnotations[SE_START], geneAnnotations[SE_END], genePanelOverlaps,
                     asmbSvIds[SE_START], asmbSvIds[SE_END]));
+
+            */
 
             mCsvWriter.newLine();
         }
@@ -573,6 +383,69 @@ public class GermlineVcfReader
         {
             LOGGER.error("error writing CSV output file: {}", e.toString());
         }
+    }
+
+    private void reprocessVariantsFromFile(final String processedFile)
+    {
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(processedFile));
+
+            String currentSampleId = "";
+            List<GermlineSV> germlineSVs = Lists.newArrayList();
+
+            String line = fileReader.readLine();
+            line = fileReader.readLine(); // skip header
+
+            while (line != null)
+            {
+                final String[] items = line.split(",", -1);
+
+                if(items.length < FIELD_COUNT)
+                {
+                    LOGGER.error("invalid items: {}", line);
+                    return;
+                }
+
+                final String sampleId = items[0];
+
+                if(!sampleId.equals(currentSampleId))
+                {
+                    if(!germlineSVs.isEmpty())
+                    {
+                        reprocessVariants(germlineSVs);
+                        germlineSVs = Lists.newArrayList();
+                    }
+
+                    currentSampleId = sampleId;
+                }
+
+                germlineSVs.add(GermlineSV.fromString(line));
+                line = fileReader.readLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error reading file({}): {}", processedFile, e.toString());
+        }
+    }
+
+    private void reprocessVariants(final List<GermlineSV> germlineSVs)
+    {
+        final List<StructuralVariant> svList = Lists.newArrayList();
+
+        germlineSVs.forEach(x -> svList.add(GermlineSV.convert(x)));
+
+        mGeneImpact.findDisruptiveVariants(svList);
+
+        final Map<StructuralVariant,List<GeneAnnotation>> svGeneDisruptions = mGeneImpact.getGeneDisruptions();
+
+        if(!svGeneDisruptions.isEmpty())
+        {
+            LOGGER.info("sample({}) has {} disruptive SVs from total({})",
+                    germlineSVs.get(0).SampleId, svGeneDisruptions.size(), germlineSVs.size());
+        }
+
     }
 
     private final StructuralVariant getLastSv()
