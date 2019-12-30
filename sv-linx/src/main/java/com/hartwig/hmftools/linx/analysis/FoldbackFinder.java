@@ -29,6 +29,11 @@ public class FoldbackFinder
 
     public static void markFoldbacks(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
+        markFoldbacks(chrBreakendMap, false);
+    }
+
+    public static void markFoldbacks(final Map<String, List<SvBreakend>> chrBreakendMap, boolean recheckChainedSVs)
+    {
         // find all valid consective breakends formed either from a single SV or a chained set
         for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
@@ -39,6 +44,9 @@ public class FoldbackFinder
                 SvBreakend breakend = breakendList.get(i);
 
                 if(breakend.isAssembledLink())
+                    continue;
+
+                if(recheckChainedSVs && (breakend.isFoldback() || breakend.getCluster().getSvCount() == 1))
                     continue;
 
                 SvBreakend nextBreakend = null;
@@ -104,11 +112,14 @@ public class FoldbackFinder
 
                     if(dbLink == null || dbLink.length() > 0)
                     {
-                        foldbackFound = checkFoldbackBreakends(beFront, beBack);
+                        if(!recheckChainedSVs || (beFront.getCluster() == beBack.getCluster() && !beFront.isFoldback() && !beBack.isFoldback()))
+                        {
+                            foldbackFound = checkFoldbackBreakends(beFront, beBack);
+                        }
                     }
                 }
 
-                if(!foldbackFound)
+                if(!foldbackFound && !recheckChainedSVs)
                 {
                     checkReplicatedBreakendFoldback(breakend);
                 }

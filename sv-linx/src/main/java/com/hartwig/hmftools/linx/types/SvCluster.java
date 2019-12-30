@@ -49,40 +49,40 @@ public class SvCluster
     private int mConsistencyCount;
     private boolean mIsConsistent; // follows from telomere to centromere to telomore
     private String mDesc;
-    private int[] mTypeCounts;
+    private final int[] mTypeCounts;
 
     private boolean mIsResolved; // if true, then protect from subsequent merging
     private ResolvedType mResolvedType;
 
-    private List<String> mAnnotationList;
+    private final List<String> mAnnotationList;
 
-    private List<SvVarData> mSVs;
-    private List<SvChain> mChains; // pairs of SVs linked into chains
-    private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
-    private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
-    private List<SvArmGroup> mArmGroups; // organise SVs into a group per chromosomal arm
-    private List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
-    private Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
-    private List<SvVarData> mUnchainedSVs; // includes replicated SVs
-    private List<LohEvent> mLohEvents;
+    private final List<SvVarData> mSVs;
+    private final List<SvChain> mChains; // pairs of SVs linked into chains
+    private final List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
+    private final List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
+    private final List<SvArmGroup> mArmGroups; // organise SVs into a group per chromosomal arm
+    private final List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
+    private final Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
+    private final List<SvVarData> mUnchainedSVs; // includes replicated SVs
+    private final List<LohEvent> mLohEvents;
     private String mClusteringReasons;
 
     private boolean mRequiresReplication;
 
     // cached lists of identified special cases
-    private List<SvVarData> mLongDelDups;
-    private List<SvVarData> mFoldbacks;
-    private List<SvVarData> mDoubleMinuteSVs;
+    private final List<SvVarData> mLongDelDups;
+    private final List<SvVarData> mFoldbacks;
+    private final List<SvVarData> mDoubleMinuteSVs;
+    private final List<SvVarData> mInversions;
     private SvChain mDoubleMinuteChain;
     private boolean mHasLinkingLineElements;
     private boolean mIsSubclonal;
-    private List<SvVarData> mInversions;
     private boolean mRequiresRecalc;
 
     // state for SVs which link different arms or chromosomes
     private boolean mRecalcRemoteSVStatus;
-    private List<SvVarData> mShortTIRemoteSVs;
-    private List<SvVarData> mUnlinkedRemoteSVs;
+    private final List<SvVarData> mShortTIRemoteSVs;
+    private final List<SvVarData> mUnlinkedRemoteSVs;
 
     private double mMinPloidy;
     private double mMaxPloidy;
@@ -92,7 +92,7 @@ public class SvCluster
     private int mFragmentArms;
     private int mConsistentArms;
     private int mComplexArms;
-    private int[] mDeletionData;
+    private final int[] mDeletionData;
 
     public static String CLUSTER_ANNOT_DM = "DM";
     public static String CLUSTER_ANNOT_BFB_AMP = "BFB_AMP";
@@ -284,7 +284,11 @@ public class SvCluster
 
     public final List<SvLinkedPair> getLinkedPairs() { return mLinkedPairs; }
     public final List<SvLinkedPair> getAssemblyLinkedPairs() { return mAssemblyLinkedPairs; }
-    public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs) { mAssemblyLinkedPairs = pairs; }
+    public void setAssemblyLinkedPairs(final List<SvLinkedPair> pairs)
+    {
+        mAssemblyLinkedPairs.clear();
+        mAssemblyLinkedPairs.addAll(pairs);
+    }
 
     public void mergeOtherCluster(final SvCluster other)
     {
@@ -523,6 +527,7 @@ public class SvCluster
 
     public void setDoubleMinuteData(final List<SvVarData> svList, final SvChain chain)
     {
+        mDoubleMinuteSVs.clear();
         mDoubleMinuteSVs.addAll(svList);
         mDoubleMinuteChain = chain;
     }
@@ -570,11 +575,12 @@ public class SvCluster
             }
         }
 
-        mUnlinkedRemoteSVs = mSVs.stream()
+        mUnlinkedRemoteSVs.clear();
+        mUnlinkedRemoteSVs.addAll(mSVs.stream()
                 .filter(x -> x.isCrossArm())
                 .filter(x -> !x.inLineElement())
                 .filter(x -> !mShortTIRemoteSVs.contains(x))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
 
         mRecalcRemoteSVStatus = false;
     }

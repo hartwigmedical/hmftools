@@ -218,10 +218,18 @@ public class ClusterAnalyser {
             }
         }
 
-
         // final clean-up and analysis
+
+        // re-check foldbacks amongst newly formed chains and then DM status
+        FoldbackFinder.markFoldbacks(mState.getChrBreakendMap(), true);
+
         for(SvCluster cluster : mClusters)
         {
+            if(!cluster.getDoubleMinuteSVs().isEmpty() && !cluster.getFoldbacks().isEmpty())
+            {
+                mDmFinder.analyseCluster(cluster, true);
+            }
+
             if(!cluster.isResolved() && cluster.getResolvedType() != NONE)
             {
                 // any cluster with a long DEL or DUP not merged can now be marked as resolved
