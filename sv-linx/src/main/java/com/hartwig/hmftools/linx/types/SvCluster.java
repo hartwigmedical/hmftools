@@ -60,7 +60,7 @@ public class SvCluster
     private List<SvChain> mChains; // pairs of SVs linked into chains
     private List<SvLinkedPair> mLinkedPairs; // final set after chaining and linking
     private List<SvLinkedPair> mAssemblyLinkedPairs; // TIs found during assembly
-    private List<SvArmGroup> mArmGroups;
+    private List<SvArmGroup> mArmGroups; // organise SVs into a group per chromosomal arm
     private List<SvArmCluster> mArmClusters; // clusters of proximate SVs on an arm, currently only used for annotations
     private Map<String, List<SvBreakend>> mChrBreakendMap; // note: does not contain replicated SVs
     private List<SvVarData> mUnchainedSVs; // includes replicated SVs

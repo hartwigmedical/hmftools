@@ -42,6 +42,7 @@ import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -220,26 +221,13 @@ public class DoubleMinuteFinder
             }
         }
 
-        List<String> processedArms = Lists.newArrayList();
-
-        for(SvVarData var : highPloidySVs)
+        // check that no arm has a high telomere or centromere relative to the DM's ploidy
+        if(!amplifiedVsSamplePloidy(cluster, maxClusterPloidy))
         {
-            for(int se = SE_START; se <= SE_END; ++se)
+            for (SvArmGroup armGroup : cluster.getArmGroups())
             {
-                if(se == SE_END && (var.isLocal() || var.isSglBreakend()))
-                    continue;
-
-                final String chrArm = makeChrArmStr(var.chromosome(isStart(se)), var.arm(isStart(se)));
-
-                if(processedArms.contains(chrArm))
-                    continue;
-
-                processedArms.add(chrArm);
-
-                if(!amplifiedVsSampleAndArm(cluster, var.chromosome(isStart(se)), var.arm(isStart(se)), maxClusterPloidy))
-                {
+                if (!amplifiedVsArm(cluster, armGroup.chromosome(), armGroup.arm(), maxClusterPloidy))
                     return;
-                }
             }
         }
 
@@ -315,18 +303,13 @@ public class DoubleMinuteFinder
         return maxRatio;
     }
 
-    private boolean amplifiedVsSampleAndArm(final SvCluster cluster, final String chromosome, final String arm, double dmPloidy)
+    private boolean amplifiedVsArm(final SvCluster cluster, final String chromosome, final String arm, double dmPloidy)
     {
         final TelomereCentromereCnData tcData = mCnAnalyser.getChrTeleCentroData().get(chromosome);
 
         if(tcData == null)
             return false;
 
-        final PurityContext samplePurity = mCnAnalyser.getPurityContext();
-        if(samplePurity == null)
-            return false;
-
-        double samplePloidy = samplePurity.score().maxPloidy();
         double centromereCopyNumber = arm == CHROMOSOME_ARM_P ? tcData.CentromerePArm : tcData.CentromereQArm;
         double telomereCopyNumber = arm == CHROMOSOME_ARM_P ? tcData.TelomerePArm : tcData.TelomereQArm;
 
@@ -334,13 +317,27 @@ public class DoubleMinuteFinder
         {
             return true;
         }
-        else if(dmPloidy > 5 * samplePloidy)
+
+        LOGGER.debug(String.format("cluster(%s) possible DM: not amplified vs telo(%s) centro(%s)",
+                cluster.id(), formatPloidy(telomereCopyNumber),formatPloidy(telomereCopyNumber)));
+
+        return false;
+    }
+
+    private boolean amplifiedVsSamplePloidy(final SvCluster cluster, double dmPloidy)
+    {
+        final PurityContext samplePurity = mCnAnalyser.getPurityContext();
+        if(samplePurity == null)
+            return false;
+
+        double samplePloidy = samplePurity.score().maxPloidy();
+        if(dmPloidy > 50 * samplePloidy) // effectively disabled for now
         {
             return true;
         }
 
-        LOGGER.debug(String.format("cluster(%s) possible DM: not amplified vs telo(%s) centro(%s) sample(%s)",
-                cluster.id(), formatPloidy(telomereCopyNumber),formatPloidy(telomereCopyNumber), formatPloidy(samplePloidy)));
+        LOGGER.debug(String.format("cluster(%s) possible DM: not amplified vs sample(%s)",
+                cluster.id(), formatPloidy(samplePloidy)));
 
         return false;
     }
