@@ -59,7 +59,7 @@ public class LoadPgxData {
             LOGGER.info("Writing pgx into database");
             dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
 
-            LOGGER.info("Extracting and writing pgx for {}", sample);
+            LOGGER.info("Pgx data is writed into database for sample {}", sample);
         }
 
     }
