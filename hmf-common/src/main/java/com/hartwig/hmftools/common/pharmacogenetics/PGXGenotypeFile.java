@@ -39,7 +39,8 @@ public final class PGXGenotypeFile {
                 .function(values[2])
                 .linkedDrugs(values[3])
                 .urlPrescriptionInfo(values[4])
-                .panelVersion(values[5]);
+                .panelVersion(values[5])
+                .repoVersion(values[6]);
 
         return builder.build();
     }

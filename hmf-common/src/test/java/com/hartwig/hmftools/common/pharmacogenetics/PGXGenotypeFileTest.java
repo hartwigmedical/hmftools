@@ -18,6 +18,8 @@ public class PGXGenotypeFileTest {
     private static final String LINKED_DRUGS = "Capecitabine";
     private static final String URL_PRESCRIPTION_INFO = "link";
     private static final String PANEL_VERSION = "panel";
+    private static final String REPO_VERSION = "pilot";
+
 
     @Test
     public void loadPgxGenotypeFile() throws IOException {
@@ -32,6 +34,7 @@ public class PGXGenotypeFileTest {
         assertEquals(LINKED_DRUGS, genotype1.linkedDrugs());
         assertEquals(URL_PRESCRIPTION_INFO, genotype1.urlPrescriptionInfo());
         assertEquals(PANEL_VERSION, genotype1.panelVersion());
+        assertEquals(REPO_VERSION, genotype1.repoVersion());
     }
 
 }

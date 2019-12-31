@@ -27,5 +27,6 @@ CREATE TABLE pgxGenotype
     linkedDrugs varchar(255) NOT NULL,
     urlPrescriptionInfo varchar(255) NOT NULL,
     panelVersion varchar(255) NOT NULL,
+    repoVersion varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );

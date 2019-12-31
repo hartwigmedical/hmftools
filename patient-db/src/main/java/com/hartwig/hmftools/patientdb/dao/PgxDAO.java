@@ -15,7 +15,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep12;
-import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep9;
 
 class PgxDAO {
 
@@ -33,7 +33,7 @@ class PgxDAO {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<PGXGenotype> genotypes : Iterables.partition(pgxGenotype, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep8 inserter = context.insertInto(PGXGENOTYPE,
+            InsertValuesStep9 inserter = context.insertInto(PGXGENOTYPE,
                     PGXGENOTYPE.MODIFIED,
                     PGXGENOTYPE.SAMPLEID,
                     PGXGENOTYPE.GENE,
@@ -41,7 +41,8 @@ class PgxDAO {
                     PGXGENOTYPE.FUNCTION,
                     PGXGENOTYPE.LINKEDDRUGS,
                     PGXGENOTYPE.URLPRESCRIPTIONINFO,
-                    PGXGENOTYPE.PANELVERSION);
+                    PGXGENOTYPE.PANELVERSION,
+                    PGXGENOTYPE.REPOVERSION);
             genotypes.forEach(x -> addGenotype(timestamp, inserter, sample, x));
             inserter.execute();
         }
@@ -65,7 +66,7 @@ class PgxDAO {
         }
     }
 
-    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep8 inserter, @NotNull String sample,
+    private static void addGenotype(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
             @NotNull PGXGenotype genotype) {
         inserter.values(timestamp,
                 sample,
@@ -74,7 +75,8 @@ class PgxDAO {
                 genotype.function(),
                 genotype.linkedDrugs(),
                 genotype.urlPrescriptionInfo(),
-                genotype.panelVersion());
+                genotype.panelVersion(),
+                genotype.repoVersion());
     }
 
     private static void addCalls(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
