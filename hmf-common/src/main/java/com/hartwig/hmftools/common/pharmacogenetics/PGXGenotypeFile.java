@@ -32,7 +32,6 @@ public final class PGXGenotypeFile {
     private static PGXGenotype fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
 
-        // TODO: for now skip the last colum "repo_version" because this is also empty. Fix first in pgx tool and next add to sql table
         final ImmutablePGXGenotype.Builder builder = ImmutablePGXGenotype.builder()
                 .gene(values[0])
                 .haplotype(values[1])
