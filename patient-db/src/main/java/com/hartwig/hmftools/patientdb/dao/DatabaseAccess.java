@@ -255,7 +255,7 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
-    public void writePGX(@NotNull String sample, @NotNull PGXGenotype pgxGenotype, @NotNull PGXCalls pgxCalls) {
+    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
         pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
     }
 
@@ -355,6 +355,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting driver catalog for sample: " + sample);
         driverCatalogDAO.deleteForSample(sample);
+
+        LOGGER.info("Deleting pgg data for sample: " + sample);
+        pgxDAO.deletePgxForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");
     }

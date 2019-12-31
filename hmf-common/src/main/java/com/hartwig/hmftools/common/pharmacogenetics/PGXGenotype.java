@@ -26,6 +26,4 @@ public abstract class PGXGenotype {
     @NotNull
     public abstract String panelVersion();
 
-    @NotNull
-    public abstract String repoVersion();
 }

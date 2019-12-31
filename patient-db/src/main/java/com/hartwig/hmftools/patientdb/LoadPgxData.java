@@ -2,9 +2,8 @@ package com.hartwig.hmftools.patientdb;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCallsFile;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
@@ -31,8 +30,6 @@ public class LoadPgxData {
     private static final String PGX_CALLS_TXT = "pgx_calls_txt";
     private static final String PGX_GENOTYPE_TXT = "pgx_genotype_txt";
 
-
-
     public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
@@ -46,7 +43,7 @@ public class LoadPgxData {
         String pgxCallsFileName = cmd.getOptionValue(PGX_CALLS_TXT);
         String pgxGenotypeFileName = cmd.getOptionValue(PGX_GENOTYPE_TXT);
 
-        if (Utils.anyNull(userName, password, databaseUrl, sample, pgxCallsFileName, pgxGenotypeFileName )) {
+        if (Utils.anyNull(userName, password, databaseUrl, sample, pgxCallsFileName, pgxGenotypeFileName)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
@@ -54,16 +51,15 @@ public class LoadPgxData {
             final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
             LOGGER.info("Reading pgx calls file {}", pgxCallsFileName);
-            PGXCalls pgxCalls = PGXCallsFile.read(pgxCallsFileName);
+            List<PGXCalls> pgxCalls = PGXCallsFile.read(pgxCallsFileName);
 
             LOGGER.info("Reading pgx genotype file {}", pgxGenotypeFileName);
-            PGXGenotype pgxGenotype = PGXGenotypeFile.read(pgxCallsFileName);
+            List<PGXGenotype> pgxGenotype = PGXGenotypeFile.read(pgxGenotypeFileName);
 
             LOGGER.info("Writing pgx into database");
             dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
 
             LOGGER.info("Extracting and writing pgx for {}", sample);
-
         }
 
     }
@@ -83,6 +79,5 @@ public class LoadPgxData {
 
         return options;
     }
-
 
 }
