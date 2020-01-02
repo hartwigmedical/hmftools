@@ -211,7 +211,7 @@ public class DoubleMinuteFinder
 
         // maximum plausible ploidy from BFB = min(2*Sum(FB ploidy) + (2 maximum INF/SGL ploidies), max(4*max(FB ploidy), 2*max(SGL /INF ploidy),HighestTelo/CentromereCN*2^(FBCount+min(2,INF/SGLCount))
         double sumSglPloidy = maxSglPloidies.stream().mapToDouble(x -> x).sum();
-        double maxFbOrSglPloidy = max(4 * maxFbPloidy, maxSglPloidies.isEmpty() ? 0 : 2 * maxSglPloidies.get(0));
+        double maxFbOrSglPloidy = max(6 * maxFbPloidy, maxSglPloidies.isEmpty() ? 0 : 3 * maxSglPloidies.get(0));
 
         double maxArmEndCopyNumber = getMaxArmEndCopyNumber(cluster);
         double armBfbCopyNumber = maxArmEndCopyNumber * pow(2, (foldbackCount + maxSglPloidies.size()));
