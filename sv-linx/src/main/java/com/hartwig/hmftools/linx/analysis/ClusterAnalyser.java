@@ -36,6 +36,7 @@ import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.LinxConfig;
@@ -440,8 +441,8 @@ public class ClusterAnalyser {
     {
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
         {
-            final List<SvVarData> svList = mDmFinder.getClusterSVs().get(var.getCluster().id());
-            boolean isDmSv = svList != null && svList.contains(var);
+            final DoubleMinuteData dmData = mDmFinder.getDoubleMinutes().get(var.getCluster().id());
+            boolean isDmSv = dmData != null && dmData.SVs.contains(var);
             writer.write(String.format(",%s", isDmSv));
         }
     }
