@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -174,6 +175,9 @@ public class GermlineVcfReader
             if (mConfig.LinkByAssembly)
                 annotateAssembledLinks(mSvAssemblyData);
 
+            if(mConfig.CheckDisruptions)
+                mGeneImpact.findDisruptiveVariants(mSvFactory.results());
+
             writeSVs();
         }
         catch(IOException e)
@@ -300,27 +304,12 @@ public class GermlineVcfReader
 
     private void writeSVs()
     {
+        // final Set<StructuralVariant> disruptedSVs = mGeneImpact.getGeneDisruptions().keySet();
+        final Map<StructuralVariant,String> disruptionTypes = mGeneImpact.getDisruptionTypes();
+
         for(final StructuralVariant sv : mSvFactory.results())
         {
             final String filterStr = mSvFilterReasons.get(sv.id());
-            writeCsv(sv, filterStr);
-        }
-    }
-
-    private void writeCsv(final StructuralVariant sv, final String filter)
-    {
-        try
-        {
-            if(mCsvWriter == null)
-            {
-                String outputFileName = !mConfig.VcfFile.isEmpty() ?
-                        GermlineSV.generateFilename(mConfig.OutputDir, mConfig.SampleId)
-                        : mConfig.OutputDir + "LNX_GERMLINE_SVS.csv";
-
-                mCsvWriter = createBufferedWriter(outputFileName, false);
-                mCsvWriter.write(GermlineSV.header());
-                mCsvWriter.newLine();
-            }
 
             final VariantContext variant = sv.startContext();
 
@@ -340,9 +329,8 @@ public class GermlineVcfReader
 
             String genePanelOverlaps = mGeneImpact.annotateWithGenePanel(sv);
 
-
             GermlineSV germlineSV = new GermlineSV(
-                    sampleName, sv.id(), filter, sv.filter(), getDoubleValue(normalGenotype, QUAL), sv.type(),
+                    sampleName, sv.id(), filterStr, sv.filter(), getDoubleValue(normalGenotype, QUAL), sv.type(),
                     sv.chromosome(true), !sglBreakend ? sv.chromosome(false) : "0",
                     sv.position(true), !sglBreakend ? sv.position(false) : -1,
                     sv.orientation(true), !sglBreakend ? sv.orientation(false) : 0,
@@ -351,31 +339,36 @@ public class GermlineVcfReader
                     sv.insertSequence(), homology,
                     geneAnnotations[SE_START], geneAnnotations[SE_END], genePanelOverlaps, asmbSvIds[SE_START], asmbSvIds[SE_END]);
 
-            mCsvWriter.write(germlineSV.toString());
+            if(disruptionTypes.containsKey(sv))
+                germlineSV.setDisruptionType(disruptionTypes.get(sv));
 
-            /*
-            mCsvWriter.write(String.format("%s,%s,%s,%s,%f,%s",
-                    sampleName, sv.id(), filter, sv.filter(),
-                    getDoubleValue(normalGenotype, QUAL), sv.type()));
-            mCsvWriter.write(String.format(",%s,%s,%d,%d,%d,%d",
-                    sv.chromosome(true), !sglBreakend ? sv.chromosome(false) : 0,
-                    sv.position(true), !sglBreakend ? sv.position(false) : -1,
-                    sv.orientation(true), !sglBreakend ? sv.orientation(false) : 0));
+            writeCsv(germlineSV);
+        }
+    }
 
-            // mCsvWriter.write(String.format(",%d,%d,%d,%d",
-            //        normalGenotype.getDP(), normalGenotype.getAD(), tumorGenotype.getDP(), tumorGenotype.getAD()));
+    private void writeCsv(GermlineSV germlineSV)
+    {
+        try
+        {
+            if(mCsvWriter == null)
+            {
+                String outputFileName = !mConfig.VcfFile.isEmpty() ?
+                        GermlineSV.generateFilename(mConfig.OutputDir, mConfig.SampleId)
+                        : mConfig.OutputDir + "LNX_GERMLINE_SVS.csv";
 
-            mCsvWriter.write(String.format(",%d,%d,%.2f,%d,%.2f,%d",
-                    getIntValue(normalGenotype, REF), getIntValue(normalGenotype, RP), getDoubleValue(normalGenotype, RPQ),
-                    getIntValue(normalGenotype, SR), getDoubleValue(normalGenotype, SRQ), getIntValue(normalGenotype, VF)));
+                mCsvWriter = createBufferedWriter(outputFileName, false);
+                mCsvWriter.write(GermlineSV.header());
 
-            mCsvWriter.write(String.format(",%s,%s", sv.insertSequence(), homology));
+                if(mConfig.CheckDisruptions)
+                    mCsvWriter.write(",DisruptionType");
 
-            mCsvWriter.write(String.format(",%s,%s,%s,%s,%s",
-                    geneAnnotations[SE_START], geneAnnotations[SE_END], genePanelOverlaps,
-                    asmbSvIds[SE_START], asmbSvIds[SE_END]));
+                mCsvWriter.newLine();
+            }
 
-            */
+            mCsvWriter.write(GermlineSV.toString(germlineSV));
+
+            if(mConfig.CheckDisruptions)
+                mCsvWriter.write(String.format(",%s", germlineSV.disruptionType()));
 
             mCsvWriter.newLine();
         }
@@ -445,7 +438,6 @@ public class GermlineVcfReader
             LOGGER.info("sample({}) has {} disruptive SVs from total({})",
                     germlineSVs.get(0).SampleId, svGeneDisruptions.size(), germlineSVs.size());
         }
-
     }
 
     private final StructuralVariant getLastSv()

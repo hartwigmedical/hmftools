@@ -41,10 +41,21 @@ public class GeneImpact
     private final SvGeneTranscriptCollection mGeneCollection;
     private final Map<String, List<EnsemblGeneData>> mGenePanel;
 
-    // map of SV Id to a pair of gene annotations (for start and end breakends)
-    private final Map<String,List<List<GeneAnnotation>>> mSvGeneAnnotations;
+    // map of SV to a pair of gene annotations (for start and end breakends)
+    private final Map<StructuralVariant,List<List<GeneAnnotation>>> mSvGeneAnnotations;
 
+    // SV to disrupted genes
     private final Map<StructuralVariant,List<GeneAnnotation>> mSvGeneDisruptions;
+
+    // reason for disruptions or for not being disrupted eg a shard or reciprocal INV
+    private final Map<StructuralVariant,String> mSvDisruptionTypes;
+
+    public static final String DISRUPTION_TYPE_NONE = "NONE";
+    public static final String DISRUPTION_TYPE_ONE_BREAK = "ONE_BREAK";
+    public static final String DISRUPTION_TYPE_TWO_BREAK_COMPLEX = "TWO_BREAK_COMPLEX";
+    public static final String DISRUPTION_TYPE_TWO_BREAK_SIMPLE = "TWO_BREAK_SIMPLE";
+    public static final String DISRUPTION_TYPE_RECIP_INV = "RECIP_INV";
+    public static final String DISRUPTION_TYPE_SHARD = "SHARD";
 
     private static final Logger LOGGER = LogManager.getLogger(GeneImpact.class);
 
@@ -54,6 +65,7 @@ public class GeneImpact
         mGenePanel = Maps.newHashMap();
         mSvGeneAnnotations = Maps.newHashMap();
         mSvGeneDisruptions = Maps.newHashMap();
+        mSvDisruptionTypes = Maps.newHashMap();
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
@@ -78,6 +90,7 @@ public class GeneImpact
     }
 
     public final Map<StructuralVariant,List<GeneAnnotation>> getGeneDisruptions() { return mSvGeneDisruptions; }
+    public final Map<StructuralVariant,String> getDisruptionTypes() { return mSvDisruptionTypes; }
 
     private void loadGenePanel(final String geneFile)
     {
@@ -214,12 +227,14 @@ public class GeneImpact
 
     public void findDisruptiveVariants(final List<StructuralVariant> svList)
     {
+        mSvGeneDisruptions.clear();
+        mSvGeneAnnotations.clear();
+        mSvDisruptionTypes.clear();
+
         // SVs are not disruptive if they:
         // - are outside a gene
         // - form a TI within a single intron and the other breakend is outside a gene
         // - are a DUP or DEL and contained within an intron
-
-        mSvGeneDisruptions.clear();
 
         for(int index = 0; index < svList.size(); ++index)
         {
@@ -237,6 +252,7 @@ public class GeneImpact
                 final List<GeneAnnotation> genesList = !genesStart.isEmpty() ? genesStart : genesEnd;
 
                 addGeneDisruption(var, genesList);
+                mSvDisruptionTypes.put(var, DISRUPTION_TYPE_ONE_BREAK);
 
                 // one breakend disrupts a gene
                 final Transcript trans = genesList.get(0).canonical();
@@ -251,6 +267,7 @@ public class GeneImpact
                 // both ends are in genes and initially are considered disruptive
                 addGeneDisruption(var, genesStart);
                 addGeneDisruption(var, genesEnd);
+                mSvDisruptionTypes.put(var, DISRUPTION_TYPE_TWO_BREAK_COMPLEX);
 
                 final Transcript transStart = !genesStart.isEmpty() ? genesStart.get(0).canonical() : null;
                 final Transcript transEnd = !genesEnd.isEmpty() ? genesEnd.get(0).canonical() : null;
@@ -264,6 +281,7 @@ public class GeneImpact
             {
                 addGeneDisruption(var, genesStart);
                 addGeneDisruption(var, genesEnd);
+                mSvDisruptionTypes.put(var, DISRUPTION_TYPE_TWO_BREAK_SIMPLE);
                 continue;
             }
         }
@@ -334,13 +352,14 @@ public class GeneImpact
 
     private void removeIntronicLinks()
     {
-        final List<StructuralVariant> intronicLinkedSVs = Lists.newArrayList();
+        final List<StructuralVariant> recipInvSVs = Lists.newArrayList();
+        final List<StructuralVariant> intronicShardSVs = Lists.newArrayList();
 
         for(Map.Entry<StructuralVariant,List<GeneAnnotation>> entry1 : mSvGeneDisruptions.entrySet())
         {
             final StructuralVariant var1 = entry1.getKey();
 
-            if(intronicLinkedSVs.contains(var1))
+            if(intronicShardSVs.contains(var1) || recipInvSVs.contains(var1))
                 continue;
 
             final List<GeneAnnotation> genesList1 = entry1.getValue();
@@ -355,7 +374,7 @@ public class GeneImpact
             {
                 final StructuralVariant var2 = entry2.getKey();
 
-                if(intronicLinkedSVs.contains(var2))
+                if(intronicShardSVs.contains(var2) || recipInvSVs.contains(var2))
                     continue;
 
                 if(var1.equals(var2))
@@ -399,8 +418,8 @@ public class GeneImpact
                             LOGGER.info("SVs({} & {}) have facing intronic breakends in gene({}) exons({} -> {}) tiLength({})",
                                     var1.id(), var2.id(), gene1.GeneName, trans1.ExonUpstream, trans1.ExonDownstream, tiLength);
 
-                            intronicLinkedSVs.add(var1);
-                            intronicLinkedSVs.add(var2);
+                            intronicShardSVs.add(var1);
+                            intronicShardSVs.add(var2);
                         }
                     }
                 }
@@ -428,24 +447,19 @@ public class GeneImpact
                                 var1.id(), var2.id(), transStart1.geneName(),
                                 transStart1.ExonUpstream, transStart1.ExonDownstream, dbLength);
 
-                        intronicLinkedSVs.add(var1);
-                        intronicLinkedSVs.add(var2);
+                        recipInvSVs.add(var1);
+                        recipInvSVs.add(var2);
                     }
                 }
             }
         }
 
-        intronicLinkedSVs.stream().forEach(x -> mSvGeneDisruptions.remove(x));
+        intronicShardSVs.stream().forEach(x -> mSvGeneDisruptions.remove(x));
+        recipInvSVs.stream().forEach(x -> mSvGeneDisruptions.remove(x));
+
+        intronicShardSVs.stream().forEach(x -> mSvDisruptionTypes.put(x, DISRUPTION_TYPE_SHARD));
+        recipInvSVs.stream().forEach(x -> mSvDisruptionTypes.put(x, DISRUPTION_TYPE_RECIP_INV));
     }
-
-    private Transcript findMatchingTrans(
-            final List<StructuralVariant> svList, final List<Integer> disruptiveSVs,
-            final Transcript otherTrans, final StructuralVariant otherrVar)
-    {
-
-        return null;
-    }
-
 
     private List<List<GeneAnnotation>> populateGeneAnnotations(final StructuralVariant var, int svIndex)
     {
@@ -471,7 +485,7 @@ public class GeneImpact
                 breakendPairGenesList = Lists.newArrayList();
                 breakendPairGenesList.add(Lists.newArrayList());
                 breakendPairGenesList.add(Lists.newArrayList());
-                mSvGeneAnnotations.put(var.id(), breakendPairGenesList);
+                mSvGeneAnnotations.put(var, breakendPairGenesList);
             }
 
 

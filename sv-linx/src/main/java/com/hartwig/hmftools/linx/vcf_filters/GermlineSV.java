@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.vcf_filters;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.vcf_filters.GeneImpact.DISRUPTION_TYPE_NONE;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class GermlineSV
     public final String AsmbStart;
     public final String AsmbEnd;
 
-    private boolean mDisruptive;
+    private String mDisruptionType;
 
     private static final String DELIMITER = ",";
     public static final int FIELD_COUNT = 25;
@@ -85,11 +86,11 @@ public class GermlineSV
         AsmbStart = asmbStart;
         AsmbEnd = asmbEnd;
 
-        mDisruptive = false;
+        mDisruptionType = DISRUPTION_TYPE_NONE;
     }
 
-    public boolean disruptive() { return mDisruptive; }
-    public void setDisruptive(boolean toggle) { mDisruptive = toggle; }
+    public String disruptionType() { return mDisruptionType; }
+    public void setDisruptionType(final String type) { mDisruptionType = type; }
 
     private static final String FILE_EXTENSION = ".linx.germline_sv.tsv";
 
@@ -158,7 +159,7 @@ public class GermlineSV
     }
 
     @NotNull
-    private static String toString(@NotNull final GermlineSV sv)
+    public static String toString(@NotNull final GermlineSV sv)
     {
         return new StringJoiner(DELIMITER)
                 .add(String.valueOf(sv.SampleId))
