@@ -74,8 +74,9 @@ public class MultipleBiopsyAnalyser
     {
         final Options options = new Options();
         options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
-        options.addOption(SVA_INPUT_FILE, true, "LINX SVs file");
+        options.addOption(SVS_INPUT_FILE, true, "LINX SVs file");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(LOG_DEBUG, false, "Log verbose");
         return options;
     }
 
@@ -97,14 +98,14 @@ public class MultipleBiopsyAnalyser
     }
 
     private static String PATIENT_SAMPLE_IDS_FILE = "patient_ids_file";
-    private static String SVA_INPUT_FILE = "sva_svs_file";
+    private static String SVS_INPUT_FILE = "sv_data_file";
 
     public boolean loadData(final CommandLine cmd, final String outputDir)
     {
         if (!loadPatientSampleData(cmd.getOptionValue(PATIENT_SAMPLE_IDS_FILE)))
             return false;
 
-        if (!loadSampleSVData(cmd.getOptionValue(SVA_INPUT_FILE)))
+        if (!loadSampleSVData(cmd.getOptionValue(SVS_INPUT_FILE)))
             return false;
 
         mOutputDir = outputDir;
@@ -208,7 +209,7 @@ public class MultipleBiopsyAnalyser
         }
         catch (IOException e)
         {
-            LOGGER.error("Failed to load patient sample IDs file({}): {}", filename, e.toString());
+            LOGGER.error("failed to load patient sample IDs file({}): {}", filename, e.toString());
         }
 
         return true;
@@ -233,13 +234,6 @@ public class MultipleBiopsyAnalyser
             for (int i = 0; i < sampleIds.size(); ++i)
             {
                 String sample1 = sampleIds.get(i);
-
-                /*
-                if(sample1.equals("DRUP01050018T"))
-                {
-                    LOGGER.debug("spec sample({})", sample1);
-                }
-                */
 
                 List<MultiBiopsyData> mbDataList1 = mSampleSvData.get(sample1);
 
@@ -552,7 +546,7 @@ public class MultipleBiopsyAnalyser
 
                 mMergeWriter = createBufferedWriter(outputFileName, false);
 
-                mMergeWriter.write("SampleId,ClusterId,SvId1,MatchType1,SvId2Type,MatchType2,ClusterReason");
+                mMergeWriter.write("SampleId,ClusterId,SvId1,MatchType1,SvId2,MatchType2,ClusterReason");
                 mMergeWriter.newLine();
             }
 
