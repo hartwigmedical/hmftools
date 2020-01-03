@@ -61,12 +61,12 @@ public class IclusionImporterApplication {
     private static void connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword,
             @NotNull String iClusionOutputStudies) throws IOException {
-        URL url = new URL(iClusionLink + "oauth/token"); // url iclusion
+        URL url = new URL(iClusionLink + "/oauth/token"); // url iclusion
         BufferedWriter writer = new BufferedWriter(new FileWriter(iClusionOutputStudies));
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        connection.setReadTimeout(100);
-        connection.setConnectTimeout(100);
+        connection.setReadTimeout(1000);
+        connection.setConnectTimeout(1000);
 
         connection.setDoInput(true);
         connection.setDoOutput(true);
@@ -78,10 +78,14 @@ public class IclusionImporterApplication {
         connection.setRequestProperty("client_secret", iClusionClientSecret);
         connection.setRequestProperty("username", iClusionUsername);
         connection.setRequestProperty("password", iClusionPassword);
-        connection.setRequestProperty("Authorization", "Bearer " + "");
+      //  connection.setRequestProperty("Authorization", "Bearer " + "");
         connection.connect();
 
-        writer.write(connection.getResponseMessage());
+        writer.write(connection.toString() + "\n");
+        writer.write(connection.getRequestMethod() + "\n");
+        writer.write(connection.getResponseMessage() + "\n");
+        writer.write(connection.getResponseCode() + "\n");
+        writer.write(connection.getHeaderFields() + "\n");
 
         writer.close();
 
