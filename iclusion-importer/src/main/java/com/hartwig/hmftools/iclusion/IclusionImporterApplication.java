@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class IclusionImporterApplication {
-    private static final Logger LOGGER = LogManager.getLogger(IclusionImporterApplication.class);
+  //  private static final Logger LOGGER = LogManager.getLogger(IclusionImporterApplication.class);
     private static final String ICLUSION_LINK = "iclusion_link";
     private static final String ICLUSION_CLIENT_ID = "iclusion_client_id";
     private static final String ICLUSION_CLIENT_SECRET = "iclusion_client_secret";
@@ -41,15 +41,15 @@ public class IclusionImporterApplication {
         String iClusionPassword = cmd.getOptionValue(ICLUSION_PASSWORD);
         String iClusionOutputStudies = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES);
 
-        LOGGER.info("Connecting with iclusion API on {}", iClusionLink);
+       // LOGGER.info("Connecting with iclusion API on {}", iClusionLink);
 
         connectWithIclusionApi(iClusionLink, iClusionClientId, iClusionClientSecret, iClusionUsername, iClusionPassword);
 
-        LOGGER.info("Reading iclusion study details.....");
-        LOGGER.info("Queried and filtered {} studies from iclusion API", "size study");
+      //  LOGGER.info("Reading iclusion study details.....");
+      //  LOGGER.info("Queried and filtered {} studies from iclusion API", "size study");
 
         writeIclusionOutputStudiesToTSVFile(iClusionOutputStudies);
-        LOGGER.info("Iclusion importer is finished!");
+      //  LOGGER.info("Iclusion importer is finished!");
 
         //        val iclusionApi = IclusionApiWrapper(iclusionEndpoint, cmd.getOptionValue(ICLUSION_CLIENT_ID),
         //                cmd.getOptionValue(ICLUSION_CLIENT_SECRET), cmd.getOptionValue(ICLUSION_USER), cmd.getOptionValue(ICLUSION_PASSWORD))
@@ -65,27 +65,27 @@ public class IclusionImporterApplication {
 
     private static void connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword) throws IOException {
-//        URL url = new URL(iClusionLink + "/oauth/token"); // url iclusion
-//        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-//        connection.setDoInput(true);
-//        connection.setDoOutput(true);
-//        connection.setRequestMethod("POST");
-//        connection.setRequestProperty("Accept", "application/json");
-//        connection.setRequestProperty("Content-type", "multipart/form-data");
-//        connection.setRequestProperty("grant_type", "password");
-//        connection.setRequestProperty("client_id", iClusionClientId);
-//        connection.setRequestProperty("client_secret", iClusionClientSecret);
-//        connection.setRequestProperty("username", iClusionUsername);
-//        connection.setRequestProperty("password", iClusionPassword);
-//        connection.setRequestProperty("Authorization", "Bearer " + "access_token");
-//        connection.connect();
-//        String response = connection.getResponseMessage();
-//        LOGGER.info(response);
+        URL url = new URL(iClusionLink + "/oauth/token"); // url iclusion
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
+        connection.setDoOutput(true);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("Content-type", "multipart/form-data");
+        connection.setRequestProperty("grant_type", "password");
+        connection.setRequestProperty("client_id", iClusionClientId);
+        connection.setRequestProperty("client_secret", iClusionClientSecret);
+        connection.setRequestProperty("username", iClusionUsername);
+        connection.setRequestProperty("password", iClusionPassword);
+        connection.setRequestProperty("Authorization", "Bearer " + "access_token");
+        connection.connect();
+        String response = connection.getResponseMessage();
+      //  LOGGER.info(response);
 
     }
 
     private static void writeIclusionOutputStudiesToTSVFile(@NotNull String iClusionOutputStudies) throws IOException {
-        LOGGER.info("Writing iClusion output to file {}", iClusionOutputStudies);
+      //  LOGGER.info("Writing iClusion output to file {}", iClusionOutputStudies);
         BufferedWriter writer = new BufferedWriter(new FileWriter(iClusionOutputStudies, true));
         writer.write(""); //TODO write real data from iclusion
         writer.close();
@@ -99,7 +99,7 @@ public class IclusionImporterApplication {
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
         String value = cmd.getOptionValue(param);
         if (value == null) {
-              LOGGER.warn(param + " has to be provided");
+           //   LOGGER.warn(param + " has to be provided");
             return false;
         }
         return true;
