@@ -39,7 +39,7 @@ public class IclusionImporterApplication {
         String iClusionClientSecret = cmd.getOptionValue(ICLUSION_CLIENT_SECRET);
         String iClusionUsername = cmd.getOptionValue(ICLUSION_USERNAME);
         String iClusionPassword = cmd.getOptionValue(ICLUSION_PASSWORD);
-        String iClusionOutputStudies = cmd.getOptionValue(ICLUSION_PASSWORD);
+        String iClusionOutputStudies = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES);
 
         LOGGER.info("Connecting with iclusion API on {}", iClusionLink);
 
