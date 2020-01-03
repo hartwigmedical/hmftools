@@ -737,7 +737,6 @@ public class ChainFinder
             return;
 
         // at the moment this logic is problematic and can divide chains repeatedly
-
         // reconcileChains(mChains, true, mLinkAllocator.getNextChainId(), true);
 
         // search for a chain which can be closed if it contains all the DM SVs

@@ -18,7 +18,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -63,14 +63,8 @@ public class DoubleMinuteFinder
     private BufferedWriter mFileWriter;
 
     private static final double PLOIDY_THRESHOLD = 8;
-    private static final double ADJACENT_PLOIDY_RATIO = 2.5;
+    private static final double ADJACENT_PLOIDY_RATIO = 2.3;
     private static final int INF_PAIR_MIN_DISTANCE = 50000;
-
-    /*
-    private static final double DOMINANT_FOLDBACK_RATIO_THRESHOLD = 0.75;
-    private static final double DOMINANT_FOLDBACK_INF_THRESHOLD = 0.5;
-    private static final double DOMINANT_FOLDBACK_PLOIDY_THRESHOLD = 4;
-   */
 
     private static final Logger LOGGER = LogManager.getLogger(DoubleMinuteFinder.class);
 
@@ -109,6 +103,9 @@ public class DoubleMinuteFinder
 
     public void analyseCluster(SvCluster cluster, boolean reassess)
     {
+        // look for DMs and alternatively consider annotating the cluster as BFB
+
+        // don't re-analyse and cluster unless it has changed constituent SVs
         if(mProcessedClusters.contains(cluster.id()))
         {
             if(!reassess)
@@ -121,75 +118,74 @@ public class DoubleMinuteFinder
             mProcessedClusters.add(cluster.id());
         }
 
-        if(cluster.getSvCount() == 1 && cluster.getSV(0).type() != DUP) // early exit - only consider cluster-1 if a DUP
-            return;
-
-        double maxClusterPloidy = 0;
-        double maxInfPloidy = 0;
-
-        for(SvVarData var : cluster.getSVs())
-        {
-            if(var.isSglBreakend())
-                maxClusterPloidy = max(maxClusterPloidy, var.ploidyMin() * 0.5); // in case the SGL is a disguised foldback
-            else
-                maxClusterPloidy = max(maxClusterPloidy, var.ploidyMin());
-
-            if(var.isInferredSgl())
-                maxInfPloidy = max(maxInfPloidy, var.ploidy());
-        }
-
-        // cluster satisfies the ploidy requirements - now attempt to find its boundaries, ie the SVs which
-        // formed the DM by looking at ploidy and its ratio to adjacent major AP
         final List<SvVarData> candidateDMSVs = Lists.newArrayList();
+
+        double clusterMaxPloidy = 0; // the max of the ploidy min values
+        boolean possibleDM = false;
 
         if(cluster.getSvCount() == 1)
         {
             final SvVarData var = cluster.getSV(0);
 
-            if(var.ploidyMin() < PLOIDY_THRESHOLD)
-                return;
-
-            double svAdjMAPRatio = getAdjacentMajorAPRatio(var);
-            if(svAdjMAPRatio < ADJACENT_PLOIDY_RATIO)
-                return;
-
-            candidateDMSVs.add(var);
+            // early exit - only consider cluster-1 if a DUP
+            if(var.type() == DUP && var.ploidyMax() >= PLOIDY_THRESHOLD && getAdjacentMajorAPRatio(var) >= ADJACENT_PLOIDY_RATIO)
+            {
+                candidateDMSVs.add(var);
+                clusterMaxPloidy = var.ploidyMin();
+                possibleDM = true;
+            }
         }
         else
         {
+            double maxInfPloidy = 0;
+            final List<SvVarData> highPloidySVs = Lists.newArrayList();
+
+            for (SvVarData var : cluster.getSVs())
+            {
+                if (var.isSglBreakend())
+                    clusterMaxPloidy = max(clusterMaxPloidy, var.ploidyMin() * 0.5); // in case the SGL is a disguised foldback
+                else
+                    clusterMaxPloidy = max(clusterMaxPloidy, var.ploidyMin());
+
+                if (var.isInferredSgl())
+                    maxInfPloidy = max(maxInfPloidy, var.ploidy());
+
+                if (var.ploidyMax() >= PLOIDY_THRESHOLD)
+                    highPloidySVs.add(var);
+            }
+
+            // now attempt to find its boundaries, ie the SVs which
+            // formed the DM by looking at ploidy and its ratio to adjacent major AP
             boolean hasHighMinPloidy = false;
 
-            for (final SvVarData var : cluster.getSVs())
+            for (final SvVarData var : highPloidySVs)
             {
-                if (var.ploidyMax() < maxClusterPloidy)
+                if (var.ploidyMax() < clusterMaxPloidy && var.isFoldback())
                     continue;
-
-                if(var.type() != DEL && var.ploidyMin() >= PLOIDY_THRESHOLD)
-                    hasHighMinPloidy = true;
 
                 // at least one high-ploidy breakend must have a high ploidy relative to the
                 // adjacent CN segment's major allele ploidy and a min ploidy above the threshold, not including DELs
-                double svAdjMAPRatio = getAdjacentMajorAPRatio(var);
-                boolean hasHighPloidyVsMAP = svAdjMAPRatio >= ADJACENT_PLOIDY_RATIO;
+                if(var.type() != DEL && var.ploidyMin() >= PLOIDY_THRESHOLD)
+                    hasHighMinPloidy = true;
 
-                if(hasHighPloidyVsMAP)
-                {
+                double svAdjMAPRatio = getAdjacentMajorAPRatio(var);
+
+                if(svAdjMAPRatio >= ADJACENT_PLOIDY_RATIO)
                     candidateDMSVs.add(var);
-                }
             }
 
-            if(!hasHighMinPloidy)
-                return;
+            if(hasHighMinPloidy && !candidateDMSVs.isEmpty())
+                possibleDM = true;
         }
 
-        if(candidateDMSVs.isEmpty())
+        if(!possibleDM && cluster.getFoldbacks().isEmpty())
             return;
 
-        // determine whether foldbacks and/or SGLs could explain the amplification
+        // determine whether foldbacks and/or SGLs could explain the amplification, indicating a BFB process
         double sumFbPloidy = 0;
         double maxFbPloidy = 0;
         int foldbackCount = 0;
-        final List<Double> maxSglPloidies = Lists.newArrayList();
+        double maxSglPloidy = 0;
 
         for (final SvVarData var : cluster.getSVs())
         {
@@ -205,51 +201,38 @@ public class DoubleMinuteFinder
             else if(var.isSglBreakend())
             {
                 // limit the SGLs to the top 2 by ploidy
-                captureMaxTwoSglPloidies(var.ploidy(), maxSglPloidies);
+                maxSglPloidy = max(var.ploidy(), maxSglPloidy);
             }
         }
 
-        // maximum plausible ploidy from BFB = min(2*Sum(FB ploidy) + (2 maximum INF/SGL ploidies), max(4*max(FB ploidy), 2*max(SGL /INF ploidy),HighestTelo/CentromereCN*2^(FBCount+min(2,INF/SGLCount))
-        double sumSglPloidy = maxSglPloidies.stream().mapToDouble(x -> x).sum();
-        double maxFbOrSglPloidy = max(6 * maxFbPloidy, maxSglPloidies.isEmpty() ? 0 : 3 * maxSglPloidies.get(0));
-
+        // determine the maximum potential ploidy plausibly explained by BFB - taking the min of:
+        // - 2x sum of FB ploidies + max INF /SGL ploidy
+        // - 6x max FB ploidy
+        // - HighestTelo/CentromereCN x 2^(FBCount + if(SGLPloidy > 10% * highest minPloidy,1,0))
         double maxArmEndCopyNumber = getMaxArmEndCopyNumber(cluster);
-        double armBfbCopyNumber = maxArmEndCopyNumber * pow(2, (foldbackCount + maxSglPloidies.size()));
+        int fbSglCount = foldbackCount + (maxSglPloidy > 0.1 * clusterMaxPloidy ? 1 : 0);
+        double armBfbCopyNumber = maxArmEndCopyNumber * pow(2, fbSglCount);
 
-        double maxBFBPloidy = min(2 * sumFbPloidy + sumSglPloidy, min(maxFbOrSglPloidy, armBfbCopyNumber));
+        double maxBFBPloidy = min(2 * sumFbPloidy + maxSglPloidy, min(6 * maxFbPloidy, armBfbCopyNumber));
+
+        if(maxBFBPloidy > clusterMaxPloidy)
+        {
+            LOGGER.debug(String.format("cluster(%s) BFB maxPloidy(%.1f) plausible ploidy(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
+                    cluster.id(), clusterMaxPloidy, maxBFBPloidy, sumFbPloidy, maxSglPloidy, armBfbCopyNumber));
+
+            cluster.addAnnotation(CLUSTER_ANNOT_BFB);
+            return;
+        }
+
+        if(!possibleDM)
+            return;
 
         LOGGER.debug(String.format("cluster(%s) possible DM: maxPloidy(%.1f) dmSvCount(%d) maxBFBPloidy(%.1f fb=%.1f sgl=%.1f arm=%.1f)",
-                cluster.id(), maxClusterPloidy, candidateDMSVs.size(), maxBFBPloidy, sumFbPloidy, sumSglPloidy, armBfbCopyNumber));
-
-        if(maxBFBPloidy > maxClusterPloidy)
-        {
-            cluster.addAnnotation(CLUSTER_ANNOT_BFB_AMP);
-            return;
-        }
-
-        /*
-        // check plausibility of BFB explaining max observed ploidy allowing for INFs:
-        // - BFB plausible if 2*sum(foldback ploidy) + maxINFPloidy > maxPloidy and maxFBPloidy > 0.15 * maxPloidy
-        // - If foldbacks exist but one foldback is a ‘dominant foldback’  (>75% of the total foldback and 0.5 * maxINFPloidy) then BFB is still implausible
-
-        boolean hasDominantFoldback = (maxFbPloidy > DOMINANT_FOLDBACK_RATIO_THRESHOLD * sumFbPloidy)
-                && (maxFbPloidy >= DOMINANT_FOLDBACK_PLOIDY_THRESHOLD)
-                && (maxFbPloidy > DOMINANT_FOLDBACK_INF_THRESHOLD * maxInfPloidy);
-
-        if(!hasDominantFoldback && sumFbPloidy > 0 && 2 * sumFbPloidy + maxInfPloidy > maxClusterPloidy)
-        {
-            LOGGER.debug(String.format("cluster(%s) maxPloidy(%.1f) foldbacks(%d ploidy(max=%.1f sum=%.1f) explains AMP",
-                    cluster.id(), maxClusterPloidy, cluster.getFoldbacks().size(), maxFbPloidy, sumFbPloidy));
-
-            cluster.addAnnotation(CLUSTER_ANNOT_BFB_AMP);
-            return;
-        }
-
-        */
+                cluster.id(), clusterMaxPloidy, candidateDMSVs.size(), maxBFBPloidy, sumFbPloidy, maxSglPloidy, armBfbCopyNumber));
 
         // other the criteria to be a DM are:
         // - NOT (INF=2) < 50k bases
-        // - NOT amplifying a centromere or telomere
+        // - NOT amplifying a centromere or telomere if not a closed loop
 
         if(candidateDMSVs.size() == 2 && candidateDMSVs.get(0).isInferredSgl() && candidateDMSVs.get(1).isInferredSgl())
         {
@@ -289,9 +272,9 @@ public class DoubleMinuteFinder
             }
         }
         // check that no arm has a high telomere or centromere relative to the DM's ploidy - make an exception for fully chained DMs
-        if(!amplifiedVsSamplePloidy(cluster, maxClusterPloidy) && !fullyChained)
+        if(!amplifiedVsSamplePloidy(cluster, clusterMaxPloidy) && !fullyChained)
         {
-            if(maxClusterPloidy < maxArmEndCopyNumber * ADJACENT_PLOIDY_RATIO)
+            if(clusterMaxPloidy < maxArmEndCopyNumber * ADJACENT_PLOIDY_RATIO)
             {
                 LOGGER.debug("cluster({}}) possible DM: not amplified vs max armEndCopyNumber({}}) centro({}})",
                         cluster.id(), formatPloidy(maxArmEndCopyNumber));
@@ -330,31 +313,7 @@ public class DoubleMinuteFinder
         }
 
         LOGGER.debug(String.format("cluster(%s) identified DM: maxPloidy(%.1f) dmSvCount(%d) fullyChained(%s)",
-                cluster.id(), maxClusterPloidy, candidateDMSVs.size(), fullyChained));
-    }
-
-    private static void captureMaxTwoSglPloidies(double newPloidy, final List<Double> maxSglPloidies)
-    {
-        if(maxSglPloidies.isEmpty())
-        {
-            maxSglPloidies.add(newPloidy);
-        }
-        else if(maxSglPloidies.size() == 1)
-        {
-            if(maxSglPloidies.get(0) > newPloidy)
-                maxSglPloidies.add(newPloidy);
-            else
-                maxSglPloidies.add(0, newPloidy);
-        }
-        else if(newPloidy > maxSglPloidies.get(1))
-        {
-            maxSglPloidies.remove(1);
-
-            if(maxSglPloidies.get(0) > newPloidy)
-                maxSglPloidies.add(newPloidy);
-            else
-                maxSglPloidies.add(0, newPloidy);
-        }
+                cluster.id(), clusterMaxPloidy, candidateDMSVs.size(), fullyChained));
     }
 
     private static double getAdjacentMajorAPRatio(final SvVarData var)
@@ -524,6 +483,7 @@ public class DoubleMinuteFinder
         double maxSglPloidy = 0;
         int nonDmSvsFullPloidy = 0;
         int nonDmSvsHalfPloidy = 0;
+        double minAdjMAPRatio = 0;
 
         for(final SvVarData var : cluster.getSVs())
         {
@@ -552,6 +512,13 @@ public class DoubleMinuteFinder
                 {
                     dmData.CandidateSVs.add(var);
                 }
+            }
+            else
+            {
+                if(minAdjMAPRatio == 0)
+                    minAdjMAPRatio = getAdjacentMajorAPRatio(var);
+                else
+                    minAdjMAPRatio = min(getAdjacentMajorAPRatio(var), minAdjMAPRatio);
             }
         }
 
@@ -619,7 +586,7 @@ public class DoubleMinuteFinder
                 mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes");
                 mFileWriter.write(",MaxCopyNumber,MinPloidy,MaxPloidy,AmpGenes,ChainMinCnPercent,ChainDiffPloidies,ChainNonDMSVs");
                 mFileWriter.write(",MaxBFBPloidy,FbCount,FbSumPloidy,FbMaxPloidy,SglCount,SglSumPloidy,SglMaxPloidy");
-                mFileWriter.write(",MinPosition,MaxPosition,MaxTeloCentroCn,CrossCentro");
+                mFileWriter.write(",MinPosition,MaxPosition,MaxTeloCentroCn,CrossCentro,MinAdjMAPRatio");
                 mFileWriter.write(",PossibleSVs,NonDmSvsGtPloidy,NonDmSvsGtHalfPloidy");
 
                 for(Integer cbr : CN_SEGMENT_BUCKETS)
@@ -656,9 +623,9 @@ public class DoubleMinuteFinder
                     dmData.MaxBFBPloidy, cluster.getFoldbacks().size(), sumFbPloidy, maxFbPloidy,
                     cluster.getSglBreakendCount(), sumSglPloidy, maxSglPloidy));
 
-            mFileWriter.write(String.format(",%d,%d,%.1f,%s",
+            mFileWriter.write(String.format(",%d,%d,%.1f,%s,%.1f",
                     chromosomes.size() == 1 ? minPosition : 0, chromosomes.size() == 1 ? maxPosition : 0,
-                    maxCentroTeloCopyNumber, chainsCentromere));
+                    maxCentroTeloCopyNumber, chainsCentromere, minAdjMAPRatio));
 
             mFileWriter.write(String.format(",%s,%d,%d",
                     possibleSvTypes, nonDmSvsFullPloidy, nonDmSvsHalfPloidy));

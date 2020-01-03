@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
-import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB_AMP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvVarData.NONE_SEGMENT_INFERRED;
 
@@ -169,7 +169,7 @@ public class DoubleMinuteTest
         assertEquals(1, tester.Analyser.getClusters().size());
         SvCluster cluster = tester.Analyser.getClusters().get(0);
         assertFalse(cluster.getAnnotations().contains(CLUSTER_ANNOT_DM));
-        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_BFB_AMP));
+        assertTrue(cluster.getAnnotations().contains(CLUSTER_ANNOT_BFB));
 
         tester.clearClustersAndSVs();
 

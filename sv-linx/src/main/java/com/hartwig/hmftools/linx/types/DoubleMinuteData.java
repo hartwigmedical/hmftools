@@ -11,6 +11,8 @@ public class DoubleMinuteData
     public final List<SvVarData> SVs;
 
     public double MaxBFBPloidy;
+    public double MinAdjacentMARatio;
+
     public final List<SvVarData> CandidateSVs;
     public final List<SvChain> Chains;
     public boolean FullyChained;
@@ -19,6 +21,9 @@ public class DoubleMinuteData
     {
         Cluster = cluster;
         SVs = svList;
+
+        MinAdjacentMARatio = 0;
+        MaxBFBPloidy = 0;
 
         Chains = Lists.newArrayList();
         CandidateSVs = Lists.newArrayList();

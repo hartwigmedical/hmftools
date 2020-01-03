@@ -95,9 +95,9 @@ public class SvCluster
     private final int[] mDeletionData;
 
     public static String CLUSTER_ANNOT_DM = "DM";
-    public static String CLUSTER_ANNOT_BFB_AMP = "BFB_AMP";
-    public static String CLUSTER_ANNOT_SHATTERING = "CHR_THRIP";
-    public static String CLUSTER_ANNOT_CHROM_PLEX = "CHR_PLEX";
+    public static String CLUSTER_ANNOT_BFB = "BFB";
+    public static String CLUSTER_ANNOT_SHATTERING = "CHROMO_THRIP";
+    public static String CLUSTER_ANNOT_CHROMOPLEXY = "CHROMO_PLEX";
 
     private static final Logger LOGGER = LogManager.getLogger(SvCluster.class);
 
