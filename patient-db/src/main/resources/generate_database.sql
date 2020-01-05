@@ -818,7 +818,7 @@ CREATE TABLE pgxGenotype
     sampleId varchar(255) NOT NULL,
     gene varchar(255) NOT NULL,
     haplotype varchar(255) NOT NULL,
-    function varchar(255) NOT NULL,
+    `function` varchar(255) NOT NULL,
     linkedDrugs varchar(255) NOT NULL,
     urlPrescriptionInfo varchar(255) NOT NULL,
     panelVersion varchar(255) NOT NULL,
