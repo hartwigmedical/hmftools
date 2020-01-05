@@ -98,23 +98,19 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public double vaf() {
-        return af(tumorQuality());
+        return af(altSupport());
     }
 
     public double refAllelicFrequency() {
-        return af(refQuality());
-    }
-
-    public int refQuality() {
-        return referenceQuality;
+        return af(refSupport());
     }
 
     private double af(double support) {
-        return coverage == 0 ? 0d : support / totalQuality;
+        return coverage == 0 ? 0d : support / coverage;
     }
 
     public int tumorQuality() {
-        int tumorQuality = fullQuality + partialQuality + coreQuality + realignedQuality;
+        int tumorQuality = fullQuality + partialQuality;
         return Math.max(0, tumorQuality - (int) jitterPenalty);
     }
 
@@ -168,11 +164,7 @@ public class ReadContextCounter implements GenomePosition {
                     return;
                 }
 
-                // TODO: Check if this is okay? Should we check for jitter if quality 0
                 double quality = calculateQualityScore(readIndex, record, qualityConfig, refSequence);
-                if (quality <= 0) {
-                    return;
-                }
 
                 coverage++;
                 totalQuality += quality;
@@ -269,7 +261,7 @@ public class ReadContextCounter implements GenomePosition {
     private int baseQuality(int readBaseIndex, SAMRecord record) {
         return variant.ref().length() == variant.alt().length()
                 ? record.getBaseQualities()[readBaseIndex]
-                : readContext.avgCentreQuality(readBaseIndex, record);
+                : readContext.minCentreQuality(readBaseIndex, record);
     }
 
     private int qualityJitterPenalty() {
