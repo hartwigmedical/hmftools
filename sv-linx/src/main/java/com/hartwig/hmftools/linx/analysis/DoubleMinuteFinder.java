@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LINK_TYPE_TI;
+import static com.hartwig.hmftools.linx.types.SvLinkedPair.copy;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -447,6 +448,7 @@ public class DoubleMinuteFinder
         double minDMPloidy = 0;
         double maxDMPloidy = 0;
         double maxDMCopyNumber = 0;
+        double minDMCopyNumber = 0;
         long minPosition = 0;
         long maxPosition = 0;
 
@@ -458,6 +460,10 @@ public class DoubleMinuteFinder
             maxDMPloidy = max(var.ploidy(), maxDMPloidy);
 
             maxDMCopyNumber = max(maxDMCopyNumber, max(var.copyNumber(true), var.copyNumber(false)));
+
+            double minCopyNumber = var.isSglBreakend() ? var.copyNumber(true) : min(var.copyNumber(true), var.copyNumber(false));
+            if(minDMCopyNumber == 0 || minCopyNumber < minDMCopyNumber)
+                minDMCopyNumber = minCopyNumber;
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
@@ -630,7 +636,7 @@ public class DoubleMinuteFinder
             mFileWriter.write(String.format(",%s,%d,%d",
                     possibleSvTypes, nonDmSvsFullPloidy, nonDmSvsHalfPloidy));
 
-            mFileWriter.write(String.format("%s",getCopyNumberSegmentData(cluster, samplePloidy)));
+            mFileWriter.write(String.format("%s",getCopyNumberSegmentData(cluster, samplePloidy, minDMCopyNumber)));
 
             mFileWriter.newLine();
         }
@@ -725,9 +731,9 @@ public class DoubleMinuteFinder
         return genesStr;
     }
 
-    private static List<Integer> CN_SEGMENT_BUCKETS = Lists.newArrayList(3, 6, 10, 20, 50, 100);
+    private static List<Integer> CN_SEGMENT_BUCKETS = Lists.newArrayList(0, 3, 6, 10, 20, 50, 100);
 
-    private static String getCopyNumberSegmentData(final SvCluster cluster, double samplePloidy)
+    private static String getCopyNumberSegmentData(final SvCluster cluster, double samplePloidy, double minDmCopyNumber)
     {
         final long[] cnSegmentLengths = new long[CN_SEGMENT_BUCKETS.size()];
 
@@ -748,7 +754,7 @@ public class DoubleMinuteFinder
                         {
                             double avgCopyCN = (prevCN + breakend.copyNumber()) * 0.5;
                             long segmentLength = breakend.position() - prevPosition;
-                            addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, avgCopyCN);
+                            addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, avgCopyCN, minDmCopyNumber);
                         }
 
                         continue;
@@ -766,7 +772,7 @@ public class DoubleMinuteFinder
                     if(breakend.orientation() == -1)
                     {
                         // another breakend increasing CN - record segment CN up to this point
-                        addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, prevCN);
+                        addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, prevCN, minDmCopyNumber);
 
                         // move position on
                         prevPosition = breakend.position();
@@ -776,7 +782,7 @@ public class DoubleMinuteFinder
                     else
                     {
                         double avgCopyCN = (prevCN + breakend.copyNumber()) * 0.5;
-                        addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, avgCopyCN);
+                        addCnSegmentData(cnSegmentLengths, segmentLength, samplePloidy, avgCopyCN, minDmCopyNumber);
 
                         netPloidy -= breakend.ploidy();
                         prevPosition = breakend.position();
@@ -798,15 +804,19 @@ public class DoubleMinuteFinder
         return cnSegmentData;
     }
 
-    private static void addCnSegmentData(final long[] cnSegmentLengths, long length, double samplePloidy, double copyNumber)
+    private static void addCnSegmentData(
+            final long[] cnSegmentLengths, long length, double samplePloidy, double copyNumber, double minDmCopyNumber)
     {
         // bucket into maximum 5 multiples of sample ploidy
         double cnRatio = max(copyNumber/samplePloidy, 1);
 
-        if(cnRatio < CN_SEGMENT_BUCKETS.get(0))
+        if(copyNumber >= minDmCopyNumber || copyNumbersEqual(copyNumber, minDmCopyNumber))
+            cnSegmentLengths[0] += length;
+
+        if(cnRatio < CN_SEGMENT_BUCKETS.get(1))
             return;
 
-        int index = 0;
+        int index = 1;
 
         for(; index < cnSegmentLengths.length; ++index)
         {
