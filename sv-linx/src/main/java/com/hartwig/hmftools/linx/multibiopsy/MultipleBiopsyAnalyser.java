@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_PARTIAL;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_PRIVATE;
 import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.MATCH_TYPE_SHARED;
+import static com.hartwig.hmftools.linx.multibiopsy.MultiBiopsyData.areMatched;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -252,6 +253,9 @@ public class MultipleBiopsyAnalyser
                     findSvMatches(mbDataList1, mbDataList2);
                 }
 
+                // cull any partials or non-exact if exact are found
+                mbDataList1.forEach(x -> x.cullNonExactMatches());
+
                 findSharedPrivateMerges(mbDataList1);
 
                 for (int j = 0; j < sampleIds.size(); ++j)
@@ -274,6 +278,7 @@ public class MultipleBiopsyAnalyser
         for (MultiBiopsyData mbData1 : mbDataList1)
         {
             int partialMatches = 0;
+            boolean hasSharedMatch = false;
 
             for (MultiBiopsyData mbData2 : mbDataList2)
             {
@@ -283,9 +288,13 @@ public class MultipleBiopsyAnalyser
                 {
                     mbData1.addMatchType(matchType, mbData2);
                     mbData2.addMatchType(matchType, mbData1);
-                    break;
+                    hasSharedMatch = true;
+
+                    // continue searching for shared matches (even though not expected)
+
+                    // break;
                 }
-                else if (matchType == MATCH_TYPE_PARTIAL)
+                else if (!hasSharedMatch && matchType == MATCH_TYPE_PARTIAL)
                 {
                     mbData1.addMatchType(matchType, mbData2);
                     mbData2.addMatchType(matchType, mbData1);
@@ -333,26 +342,6 @@ public class MultipleBiopsyAnalyser
             return MATCH_TYPE_SHARED;
         else
             return MATCH_TYPE_PRIVATE;
-    }
-
-    private boolean areMatched(String chr1, long pos1, byte orient1, String chr2, long pos2, byte orient2)
-    {
-        return areMatched(chr1, pos1, orient1, chr2, pos2, orient2, false);
-    }
-
-    private static final int MAX_POS_DIFF = 5;
-
-    private boolean areMatched(String chr1, long pos1, byte orient1, String chr2, long pos2, byte orient2, boolean requireExact)
-    {
-        if (!chr1.equals(chr2) || orient1 != orient2)
-            return false;
-
-        long posDiff = abs(pos1 - pos2);
-
-        if (requireExact)
-            return posDiff == 0;
-        else
-            return posDiff <= MAX_POS_DIFF;
     }
 
     private void findSharedPrivateMerges(List<MultiBiopsyData> mbDataList)

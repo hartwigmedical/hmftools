@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.multibiopsy;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.NONE;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 
@@ -27,10 +29,10 @@ public class MultiBiopsyData
     public final int ClusterCount;
     public final String ResolvedType;
 
-    private List<MultiBiopsyData> mSharedMatches;
-    private List<MultiBiopsyData> mPartialMatches;
+    private final List<MultiBiopsyData> mSharedMatches;
+    private final List<MultiBiopsyData> mPartialMatches;
 
-    private List<String> mClusterReasons;
+    private final List<String> mClusterReasons;
 
     public static final String MATCH_TYPE_PRIVATE = "Private";
     public static final String MATCH_TYPE_SHARED = "Shared";
@@ -86,11 +88,67 @@ public class MultiBiopsyData
             mSharedMatches.add(other);
     }
 
+    public long positionDiff(final MultiBiopsyData other)
+    {
+        return abs(PosStart - other.PosStart) + abs(PosEnd - other.PosEnd);
+    }
+
+    private static final int MAX_POS_DIFF = 20;
+
+    public static boolean areMatched(String chr1, long pos1, byte orient1, String chr2, long pos2, byte orient2)
+    {
+        if (!chr1.equals(chr2) || orient1 != orient2)
+            return false;
+
+        long posDiff = abs(pos1 - pos2);
+        return posDiff <= MAX_POS_DIFF;
+    }
+
     public final List<MultiBiopsyData> getSharedMatches() { return mSharedMatches; }
     public final List<MultiBiopsyData> getPartialMatches() { return mPartialMatches; }
-
-
     public final List<String> getClusterReasons() { return mClusterReasons; }
+
+    public void cullNonExactMatches()
+    {
+        // cull any partials or non-exact if exact are found
+        if(mSharedMatches.isEmpty())
+            return;
+
+        mPartialMatches.clear();
+
+        if(mSharedMatches.size() == 1)
+            return;
+
+        // only keep the best shared match
+        MultiBiopsyData bestMatch = mSharedMatches.get(0);
+        long minDiff = positionDiff(bestMatch);
+
+        for(int i = 1; i < mSharedMatches.size(); ++i)
+        {
+            MultiBiopsyData other = mSharedMatches.get(i);
+            long diff = positionDiff(other);
+
+            if(diff < minDiff)
+            {
+                bestMatch = other;
+                minDiff = diff;
+            }
+        }
+
+        int index = 0;
+        while(index < mSharedMatches.size())
+        {
+            if(mSharedMatches.get(index) != bestMatch)
+            {
+                MultiBiopsyData other = mSharedMatches.get(index);
+                mSharedMatches.remove(index);
+                other.getSharedMatches().remove(this);
+                continue;
+            }
+
+            ++index;
+        }
+    }
 
     public String getClusterReasonForId(int otherId)
     {
