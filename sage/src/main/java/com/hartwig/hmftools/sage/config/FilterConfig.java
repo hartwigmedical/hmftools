@@ -40,9 +40,9 @@ public interface FilterConfig {
             .from(NO_FILTER)
             .minTumorQual(100)
             .minTumorVaf(0.015)
-            .maxGermlineVaf(0.05)
-            .maxGermlineRelativeQual(0.05)
-            .maxGermlineRelativeReadContextCount(0.05)
+            .maxGermlineVaf(0.04)
+            .maxGermlineRelativeQual(0.04)
+            .maxGermlineRelativeReadContextCount(0.04)
             .build();
 
     SoftFilterConfig DEFAULT_WIDE_FILTER = ImmutableSoftFilterConfig.builder()
@@ -51,9 +51,9 @@ public interface FilterConfig {
             .minTumorVaf(0.025)
             .minGermlineReadContextCoverage(10)
             .minGermlineReadContextCoverageAllosome(6)
-            .maxGermlineVaf(0.05)
-            .maxGermlineRelativeQual(0.05)
-            .maxGermlineRelativeReadContextCount(0.05)
+            .maxGermlineVaf(0.04)
+            .maxGermlineRelativeQual(0.04)
+            .maxGermlineRelativeReadContextCount(0.04)
             .build();
 
     boolean hardFilter();
