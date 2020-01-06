@@ -56,6 +56,7 @@ public interface SoftFilterConfig {
         final int minTumorQual = defaultIntValue(cmd, prefix + "_" + MIN_TUMOR_QUAL, defaultValue.minTumorQual());
         final double minTumorVaf = defaultDoubleValue(cmd, prefix + "_" + MIN_TUMOR_VAF, defaultValue.minTumorVaf());
         final int minGermlineDepth = defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH, defaultValue.minGermlineReadContextCoverage());
+        final int minGermlineDepthAllosome = defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME, defaultValue.minGermlineReadContextCoverageAllosome());
 
         final double maxGermlineVaf = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
         final double maxGermlineRelativeQual = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_QUAL, defaultValue.maxGermlineRelativeQual());
@@ -65,6 +66,7 @@ public interface SoftFilterConfig {
                 .minTumorQual(minTumorQual)
                 .minTumorVaf(minTumorVaf)
                 .minGermlineReadContextCoverage(minGermlineDepth)
+                .minGermlineReadContextCoverageAllosome(minGermlineDepthAllosome)
                 .maxGermlineVaf(maxGermlineVaf)
                 .maxGermlineRelativeQual(maxGermlineRelativeQual)
                 .maxGermlineRelativeReadContextCount(maxGermlineRelativeReadContextCount)
