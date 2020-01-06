@@ -7,6 +7,8 @@ import java.util.Set;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -87,7 +89,10 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MIN_TUMOR_VAF);
         }
 
-        if (normal.primaryReadContext().coverage() < config.minGermlineReadContextCoverage()) {
+        Chromosome contextChromosome = HumanChromosome.fromString(normal.chromosome());
+        int minGermlineCoverage =
+                contextChromosome.isAllosome() ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
+        if (normal.primaryReadContext().coverage() < minGermlineCoverage) {
             result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
         }
 

@@ -17,6 +17,7 @@ public interface SoftFilterConfig {
     String MIN_TUMOR_QUAL = "min_tumor_qual";
     String MIN_TUMOR_VAF = "min_tumor_vaf";
     String MIN_GERMLINE_DEPTH = "min_germline_depth";
+    String MIN_GERMLINE_DEPTH_ALLOSOME = "min_germline_depth_allosome";
     String MAX_GERMLINE_VAF = "max_germline_vaf";
     String MAX_GERMLINE_REL_QUAL = "max_germline_rel_qual";
     String MAX_GERMLINE_REL_RCC = "max_germline_rel_rcc";
@@ -26,6 +27,8 @@ public interface SoftFilterConfig {
     double minTumorVaf();
 
     int minGermlineReadContextCoverage();
+
+    int minGermlineReadContextCoverageAllosome();
 
     double maxGermlineVaf();
 
@@ -39,6 +42,7 @@ public interface SoftFilterConfig {
         options.addOption(prefix + "_" + MIN_TUMOR_QUAL,true,"Minimum " + prefix + " tumor quality [" + defaultValue.minTumorQual() + "]");
         options.addOption(prefix + "_" + MIN_TUMOR_VAF, true, "Minimum " + prefix + " tumor VAF [" + defaultValue.minTumorVaf() + "]");
         options.addOption(prefix + "_" + MIN_GERMLINE_DEPTH, true, "Minimum " + prefix + " germline depth [" + defaultValue.minGermlineReadContextCoverage() + "]");
+        options.addOption(prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME, true, "Minimum " + prefix + " germline depth [" + defaultValue.minGermlineReadContextCoverageAllosome() + "]");
 
         options.addOption(prefix + "_" + MAX_GERMLINE_VAF,true,"Maximum " + prefix + " germline VAF [" + defaultValue.maxGermlineVaf() + "]");
         options.addOption(prefix + "_" + MAX_GERMLINE_REL_QUAL, true, "Maximum " + prefix + " germline relative quality [" + defaultValue.maxGermlineRelativeQual() + "]");
