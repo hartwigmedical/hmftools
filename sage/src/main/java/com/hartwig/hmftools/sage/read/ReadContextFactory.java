@@ -107,7 +107,7 @@ public class ReadContextFactory {
     }
 
     @NotNull
-    private static ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
+    public static ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
 
         int refIndex = refPosition - refBases.position() + refBases.index();

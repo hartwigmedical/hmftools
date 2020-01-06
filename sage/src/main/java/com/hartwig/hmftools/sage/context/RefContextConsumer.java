@@ -2,11 +2,13 @@ package com.hartwig.hmftools.sage.context;
 
 import static com.hartwig.hmftools.sage.read.ReadContextFactory.createDelContext;
 import static com.hartwig.hmftools.sage.read.ReadContextFactory.createInsertContext;
+import static com.hartwig.hmftools.sage.read.ReadContextFactory.createMNVContext;
 import static com.hartwig.hmftools.sage.read.ReadContextFactory.createSNVContext;
 
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
@@ -74,7 +76,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     }
 
     @Override
-    public void accept(final SAMRecord record) {
+    public void accept(@NotNull final SAMRecord record) {
 
         if (inBounds(record)) {
 
@@ -85,7 +87,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     @Override
                     public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        processAligned(record, readIndex, refPosition, element.getLength(), refBases);
+                        processSnv(record, readIndex, refPosition, element.getLength(), refBases);
                     }
 
                     @Override
@@ -102,10 +104,30 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 };
 
                 CigarTraversal.traverseCigar(record, handler);
-
             }
         }
     }
+
+    public void processTargeted(@NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
+
+        if (inBounds(record)) {
+
+            if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
+                final IndexedBases refBases = refGenome.alignment(record);
+
+                final CigarHandler handler = new CigarHandler() {
+                    @Override
+                    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                            final int refPosition) {
+                        processMnv(hotspot, record, readIndex, refPosition, element.getLength(), refBases);
+                    }
+                };
+
+                CigarTraversal.traverseCigar(record, handler);
+            }
+        }
+    }
+
 
     private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
@@ -145,7 +167,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processAligned(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
+    private void processSnv(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
             final IndexedBases refBases) {
 
         int refIndex = refPositionStart - refBases.position() + refBases.index();
@@ -179,8 +201,35 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 }
             }
         }
-
     }
+
+    private void processMnv(@NotNull final VariantHotspot mnv, @NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength, final IndexedBases refBases) {
+
+        final int refPositionEnd = refPositionStart + alignmentLength - 1;
+        if (refPositionStart <= mnv.position() && refPositionEnd >= mnv.end()) {
+            int indexOffset = (int) (mnv.position() - refPositionStart);
+            int refIndex = refPositionStart - refBases.position() + refBases.index();
+
+            int mnvRefIndex = refIndex + indexOffset;
+            int mnvReadIndex = readBasesStartIndex + indexOffset;
+
+            final String ref = new String(refBases.bases(), mnvRefIndex, mnv.ref().length());
+            final String alt = new String(record.getReadBases(), mnvReadIndex, mnv.ref().length());
+            if (alt.equals(mnv.alt())) {
+
+                final RefContext refContext = candidates.refContext(record.getContig(), mnv.position());
+                if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+                    if (addInterimReadContexts) {
+                        refContext.altRead(ref, alt, createMNVContext((int) mnv.position(), mnvReadIndex, mnv.alt().length(), record, refBases));
+                    } else {
+                        refContext.altRead(ref, alt);
+                    }
+                }
+
+            }
+        }
+    }
+
 
     private boolean inBounds(final SAMRecord record) {
         return record.getEnd() >= bounds.start() && record.getStart() <= bounds.end();
