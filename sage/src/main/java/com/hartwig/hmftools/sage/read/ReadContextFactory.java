@@ -35,8 +35,10 @@ public class ReadContextFactory {
         final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
         if (refRepeatContext.isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
-            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
-            endIndex = Math.max(endIndex, repeat.endIndex() + 1);
+            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
+            endIndex = Math.max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
         final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
@@ -73,8 +75,10 @@ public class ReadContextFactory {
         final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
         if (refRepeatContext.isPresent()) {
             final RepeatContext repeat = refRepeatContext.get();
-            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
-            endIndex = Math.max(endIndex, repeat.endIndex() + 1);
+            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
+            endIndex = Math.max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
         final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
@@ -99,16 +103,33 @@ public class ReadContextFactory {
     @NotNull
     public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
+        return createMNVContext(refPosition, readIndex, 1, record, refBases);
+    }
+
+    @NotNull
+    private static ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
+            final IndexedBases refBases) {
 
         int refIndex = refPosition - refBases.position() + refBases.index();
         int startIndex = readIndex - MIN_CORE_DISTANCE;
-        int endIndex = readIndex + MIN_CORE_DISTANCE;
+        int endIndex = readIndex + length - 1 + MIN_CORE_DISTANCE;
 
-        final Optional<RepeatContext> refRepeatContext = RepeatContextFactory.repeats(refIndex + 1, refBases.bases());
-        if (refRepeatContext.isPresent()) {
-            final RepeatContext repeat = refRepeatContext.get();
-            startIndex = Math.min(startIndex, repeat.startIndex() - 1);
-            endIndex = Math.max(endIndex, repeat.endIndex() + 1);
+        final Optional<RepeatContext> refPriorRepeatContext = RepeatContextFactory.repeats(refIndex - 1, refBases.bases());
+        if (refPriorRepeatContext.isPresent()) {
+            final RepeatContext repeat = refPriorRepeatContext.get();
+            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
+            endIndex = Math.max(endIndex, repeatEndIndexInReadSpace + 1);
+        }
+
+        final Optional<RepeatContext> refPostRepeatContext = RepeatContextFactory.repeats(refIndex + length, refBases.bases());
+        if (refPostRepeatContext.isPresent()) {
+            final RepeatContext repeat = refPostRepeatContext.get();
+            int repeatStartIndexInReadSpace = repeat.startIndex() - refIndex + readIndex;
+            int repeatEndIndexInReadSpace = repeat.endIndex() - refIndex + readIndex;
+            startIndex = Math.min(startIndex, repeatStartIndexInReadSpace - 1);
+            endIndex = Math.max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
         final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex, record.getReadBases());
