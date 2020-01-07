@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.pipeline;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -9,6 +10,10 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.AltContextSupplier;
+import com.hartwig.hmftools.sage.context.MnvContextSupplier;
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.phase.LocalPhaseSetAltContext;
 import com.hartwig.hmftools.sage.phase.MnvCandidate;
 import com.hartwig.hmftools.sage.phase.MnvCandidates;
@@ -21,9 +26,9 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class TumorAltContexts {
+public class TumorPipeline {
 
-    private static final Logger LOGGER = LogManager.getLogger(TumorAltContexts.class);
+    private static final Logger LOGGER = LogManager.getLogger(TumorPipeline.class);
 
     private final String sample;
     private final String bamFile;
@@ -34,12 +39,11 @@ public class TumorAltContexts {
     private final List<GenomeRegion> panelRegions;
     private final SamSlicerFactory samSlicerFactory;
     private final IndexedFastaSequenceFile refGenome;
-    private final List<AltContext> mnv = Lists.newArrayList();
     private final List<AltContext> result = Lists.newArrayList();
 
     private final List<CompletableFuture<List<AltContext>>> regions = Lists.newArrayList();
 
-    public TumorAltContexts(int sample, @NotNull final String chromosome, @NotNull final SageConfig config,
+    public TumorPipeline(int sample, @NotNull final String chromosome, @NotNull final SageConfig config,
             @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final List<VariantHotspot> hotspots,
             @NotNull final List<GenomeRegion> panelRegions, final Executor executor) {
         this.chromosome = chromosome;
@@ -47,19 +51,15 @@ public class TumorAltContexts {
         this.executor = executor;
         this.sample = config.tumor().get(sample);
         this.bamFile = config.tumorBam().get(sample);
-        this.refGenome = refGenome;
         this.samSlicerFactory = new SamSlicerFactoryChromImpl(config, panelRegions);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
+        this.refGenome = refGenome;
+
     }
 
     @NotNull
-    public CompletableFuture<TumorAltContexts> submit() {
-        return submit(1, refGenome.getSequence(chromosome).length());
-    }
-
-    @NotNull
-    public CompletableFuture<TumorAltContexts> submit(int minPosition, int maxPosition) {
+    public CompletableFuture<TumorPipeline> submit(int minPosition, int maxPosition) {
 
         for (int i = 0; ; i++) {
             int start = 1 + i * config.regionSliceSize();
@@ -80,7 +80,6 @@ public class TumorAltContexts {
             final MnvCandidates mnvCandidates = new MnvCandidates(config, result::add, refGenome, panelRegions, hotspots);
             final LocalPhaseSetAltContext phase = new LocalPhaseSetAltContext(mnvCandidates);
 
-            LOGGER.info("Mnv candidates {} chromosome {}", sample, chromosome);
             for (CompletableFuture<List<AltContext>> region : regions) {
                 region.join().forEach(phase);
             }
@@ -88,14 +87,24 @@ public class TumorAltContexts {
             phase.flush();
             mnvCandidates.flush();
 
-            MnvContextSupplier mnvContextSupplier =
-                    new MnvContextSupplier(config, sample, bamFile, samSlicerFactory, hotspots, panelRegions, refGenome);
-            for (MnvCandidate mnvCandidate : mnvCandidates.mvnCandidates()) {
-                mnv.addAll(mnvContextSupplier.get(mnvCandidate));
+            if (config.mnvDetection()) {
+                LOGGER.info("Mnv candidates {} chromosome {}", sample, chromosome);
+                MnvContextSupplier mnvContextSupplier =
+                        new MnvContextSupplier(config, sample, bamFile, samSlicerFactory, hotspots, panelRegions, refGenome);
+                for (MnvCandidate mnvCandidate : mnvCandidates.mvnCandidates()) {
+                    result.addAll(mnvContextSupplier.get(mnvCandidate));
+                }
+
+                Collections.sort(result);
             }
 
-            return TumorAltContexts.this;
+            return TumorPipeline.this;
         });
+    }
+
+    @NotNull
+    public List<AltContext> candidates() {
+        return result;
     }
 
     private void addRegion(@NotNull final GenomeRegion region) {
