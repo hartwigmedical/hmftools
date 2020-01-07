@@ -2,6 +2,13 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -115,4 +122,42 @@ public interface FilterConfig {
                 .build();
 
     }
+
+    @NotNull
+    default Set<String> tumorFilters(@NotNull final SageVariantTier tier, @NotNull final AltContext context) {
+
+        final Set<String> result = Sets.newHashSet();
+        final SoftFilterConfig config = softConfig(tier);
+
+        final boolean skipTumorTests = skipMinTumorQualTest(tier, context);
+
+        if (!skipTumorTests && context.primaryReadContext().tumorQuality() < config.minTumorQual()) {
+            result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
+        }
+
+        if (!skipTumorTests && Doubles.lessThan(context.primaryReadContext().vaf(), config.minTumorVaf())) {
+            result.add(SoftFilterConfig.MIN_TUMOR_VAF);
+        }
+
+        return result;
+    }
+
+    @NotNull
+    default SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
+        switch (tier) {
+            case HOTSPOT:
+                return softHotspotFilter();
+            case PANEL:
+                return softPanelFilter();
+            default:
+                return softWideFilter();
+        }
+    }
+
+    default boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
+        return tier.equals(SageVariantTier.HOTSPOT)
+                && primaryTumor.rawAltSupport() >= hotspotMinTumorReadContextSupportToSkipQualCheck();
+    }
+
+
 }

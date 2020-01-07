@@ -79,7 +79,6 @@ class MnvFactory {
             LOGGER.error("Unable to merge {}:{} with {}", left.chromosome(), left.position(), right.position());
             throw e;
         }
-
     }
 
 }

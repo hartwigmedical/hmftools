@@ -44,23 +44,12 @@ public class SageVariantFactory {
     public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
 
         final SageVariantTier tier = tierSelector.tier(normal);
-        final SoftFilterConfig softConfig = softConfig(tier);
+        final SoftFilterConfig softConfig = config.softConfig(tier);
         final Set<String> filters = filters(tier, softConfig, normal, tumorAltContexts.get(0));
 
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
 
-    @NotNull
-    private SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
-        switch (tier) {
-            case HOTSPOT:
-                return config.softHotspotFilter();
-            case PANEL:
-                return config.softPanelFilter();
-            default:
-                return config.softWideFilter();
-        }
-    }
 
     @NotNull
     private Set<String> germlineOnlyFilters(@NotNull final AltContext germline) {
@@ -77,18 +66,9 @@ public class SageVariantFactory {
     private Set<String> filters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
             @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
+        result.addAll(this.config.tumorFilters(tier, primaryTumor));
 
         final ReadContextCounter normalCounter = normal.primaryReadContext();
-        final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
-
-        if (!skipTumorTests && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
-            result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
-        }
-
-        if (!skipTumorTests && Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
-            result.add(SoftFilterConfig.MIN_TUMOR_VAF);
-        }
-
         Chromosome contextChromosome = HumanChromosome.fromString(normal.chromosome());
         int minGermlineCoverage =
                 contextChromosome.isAllosome() ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
@@ -118,10 +98,4 @@ public class SageVariantFactory {
 
         return result;
     }
-
-    private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawAltSupport() >= config.hotspotMinTumorReadContextSupportToSkipQualCheck();
-    }
-
 }

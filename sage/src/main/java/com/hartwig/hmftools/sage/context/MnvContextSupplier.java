@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
@@ -11,6 +10,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.phase.MnvCandidate;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
@@ -33,7 +33,7 @@ public class MnvContextSupplier {
     private final String bamFile;
     private final SageConfig config;
     private final SamSlicerFactory samSlicerFactory;
-    private final TumorRefContextCandidates candidates;
+
     private final TierSelector tierSelector;
     private final IndexedFastaSequenceFile refGenome;
 
@@ -44,16 +44,14 @@ public class MnvContextSupplier {
         this.sample = sample;
         this.bamFile = bamFile;
         this.samSlicerFactory = samSlicerFactory;
-
-        this.candidates = new TumorRefContextCandidates(sample);
         this.tierSelector = new TierSelector(panelRegions, hotspots);
         this.refGenome = refGenome;
-
     }
 
     @NotNull
-    public List<AltContext> get(@NotNull final VariantHotspot mnv) {
+    public List<AltContext> get(@NotNull final MnvCandidate mnv) {
 
+        final TumorRefContextCandidates candidates = new TumorRefContextCandidates(sample);
         final List<AltContext> altContexts = Lists.newArrayList();
         final PositionSelector<AltContext> consumerSelector = new PositionSelector<>(altContexts);
 
@@ -80,11 +78,11 @@ public class MnvContextSupplier {
 
             });
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new CompletionException(e);
         }
 
-        return altContexts.stream().filter(this::qualPredicate).collect(Collectors.toList());
+        return altContexts.stream().peek(x -> x.localPhaseSet(mnv.lps())).filter(this::qualPredicate).collect(Collectors.toList());
 
     }
 
