@@ -328,7 +328,7 @@ public class PairResolution
         long otherLength = getSyntheticTiLength(cluster);
         long gapLength = getSyntheticGapLength(cluster);
 
-        cluster.addAnnotation(String.format("%d;%d;%d", syntheticLength, otherLength, gapLength));
+        cluster.addAnnotation(String.format("PairLen=%d;%d;%d", syntheticLength, otherLength, gapLength));
     }
 
     private static boolean isLohBoundedTi(final SvLinkedPair pair)
@@ -417,7 +417,7 @@ public class PairResolution
             resolvedType = RECIP_TRANS;
             isResolved = (arm1Db1.length() <= longDelThreshold && arm2Db1.length() <= longDelThreshold);
 
-            cluster.addAnnotation(String.format("%d;%d;%d", arm1Db1.length(), arm2Db1.length(), NO_LENGTH));
+            cluster.addAnnotation(String.format("PairLen=%d;%d;%d", arm1Db1.length(), arm2Db1.length(), NO_LENGTH));
         }
         else
         {
@@ -528,7 +528,7 @@ public class PairResolution
         {
             boolean isResolved = (lowerDb1.length() <= longDelThreshold && upperDb1.length() <= longDelThreshold);
             cluster.setResolved(isResolved, RECIP_INV);
-            cluster.addAnnotation(String.format("%d;%d;%d", lowerDb1.length(), upperDb1.length(), NO_LENGTH));
+            cluster.addAnnotation(String.format("PairLen=%d;%d;%d", lowerDb1.length(), upperDb1.length(), NO_LENGTH));
             return;
         }
 

@@ -29,6 +29,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -113,6 +114,8 @@ public class DoubleMinuteFinder
                 return;
 
             cluster.setDoubleMinuteData(Lists.newArrayList(), null); // clear any previous DM data
+            cluster.getAnnotationList().remove(CLUSTER_ANNOT_BFB);
+            cluster.getAnnotationList().remove(CLUSTER_ANNOT_DM);
         }
         else
         {
@@ -559,7 +562,7 @@ public class DoubleMinuteFinder
         // get amplified genes list by looking at all section traversed by this chain or breakends with genes in them?
         final String amplifiedGenesStr = chain != null ? getAmplifiedGenesList(chain) : "";
 
-        final double chainData[] = chain != null ? getChainCharacteristics(cluster, chain, maxDMPloidy) : null;
+        final double chainData[] = chain != null ? getChainCharacteristics(cluster, chain, maxDMPloidy, dmData.SVs) : null;
 
         final String chromosomeStr = appendStrList(chromosomes, ';');
 
@@ -590,7 +593,8 @@ public class DoubleMinuteFinder
                 mFileWriter.write("SampleId,ClusterId,ClusterDesc,ResolvedType,ClusterCount");
                 mFileWriter.write(",SamplePurity,SamplePloidy,DMSvCount,DMSvTypes");
                 mFileWriter.write(",FullyChained,ChainLength,ChainCount,SvIds,Chromosomes");
-                mFileWriter.write(",MaxCopyNumber,MinPloidy,MaxPloidy,AmpGenes,ChainMinCnPercent,ChainDiffPloidies,ChainNonDMSVs");
+                mFileWriter.write(",MaxCopyNumber,MinPloidy,MaxPloidy,AmpGenes");
+                mFileWriter.write(",ChainMinCnPercent,ChainDiffPloidies,ChainNonDMSVs,ChainNonDMSvDBs,UnchainedDBs");
                 mFileWriter.write(",MaxBFBPloidy,FbCount,FbSumPloidy,FbMaxPloidy,SglCount,SglSumPloidy,SglMaxPloidy");
                 mFileWriter.write(",MinPosition,MaxPosition,MaxTeloCentroCn,CrossCentro,MinAdjMAPRatio");
                 mFileWriter.write(",PossibleSVs,NonDmSvsGtPloidy,NonDmSvsGtHalfPloidy");
@@ -617,12 +621,13 @@ public class DoubleMinuteFinder
 
             if(chainData != null)
             {
-                mFileWriter.write(String.format(",%.2f,%.0f,%.0f",
-                        chainData[CHAIN_DATA_MIN_CN], chainData[CHAIN_DATA_DIFF_PLOIDIES], chainData[CHAIN_DATA_NON_DM_SVS]));
+                mFileWriter.write(String.format(",%.2f,%.0f,%.0f,%.0f,%.0f",
+                        chainData[CHAIN_DATA_MIN_CN], chainData[CHAIN_DATA_DIFF_PLOIDIES],
+                        chainData[CHAIN_DATA_NON_DM_SVS], chainData[CHAIN_DATA_NON_DM_DBS], chainData[CHAIN_DATA_UNCHAINED_DBS]));
             }
             else
             {
-                mFileWriter.write(",0,0,0");
+                mFileWriter.write(",0,0,0,0,0");
             }
 
             mFileWriter.write(String.format(",%.1f,%d,%.1f,%.1f,%d,%.1f,%.1f",
@@ -649,10 +654,12 @@ public class DoubleMinuteFinder
     private static int CHAIN_DATA_MIN_CN = 0;
     private static int CHAIN_DATA_NON_DM_SVS = 1;
     private static int CHAIN_DATA_DIFF_PLOIDIES = 2;
+    private static int CHAIN_DATA_NON_DM_DBS = 3;
+    private static int CHAIN_DATA_UNCHAINED_DBS = 4;
 
-    private double[] getChainCharacteristics(final SvCluster cluster, final SvChain chain, double maxDMPloidy)
+    private double[] getChainCharacteristics(final SvCluster cluster, final SvChain chain, double maxDMPloidy, final List<SvVarData> dmSVs)
     {
-        final double[] chainData = {1.0, 0, 0};
+        final double[] chainData = {1.0, 0, 0, 0, 0};
 
         if(cluster.getSvCount() == 1)
             return chainData;
@@ -702,6 +709,38 @@ public class DoubleMinuteFinder
         chainData[CHAIN_DATA_MIN_CN] = minCopyNumber / maxDMPloidy;
         chainData[CHAIN_DATA_DIFF_PLOIDIES] = diffPloidies.size();
         chainData[CHAIN_DATA_NON_DM_SVS] = nonDmSVs.size();
+
+        // check for DBs between non-DM SVs in segments of the chain
+        long dbCount = nonDmSVs.stream()
+                .filter(x -> x.getDBLink(true) != null)
+                .filter(x -> nonDmSVs.contains(x.getDBLink(true).getOtherSV(x)))
+                .count();
+
+        dbCount += nonDmSVs.stream()
+                .filter(x -> x.getDBLink(false) != null)
+                .filter(x -> nonDmSVs.contains(x.getDBLink(false).getOtherSV(x)))
+                .count();
+
+        if(dbCount > 0)
+            chainData[CHAIN_DATA_NON_DM_DBS] = dbCount * 0.5;
+
+        List<SvVarData> unchainedSVs = cluster.getSVs().stream()
+                .filter(x -> !dmSVs.contains(x))
+                .filter(x -> !nonDmSVs.contains(x))
+                .collect(Collectors.toList());
+
+        dbCount = unchainedSVs.stream()
+                .filter(x -> x.getDBLink(true) != null)
+                .filter(x -> unchainedSVs.contains(x.getDBLink(true).getOtherSV(x)))
+                .count();
+
+        dbCount += unchainedSVs.stream()
+                .filter(x -> x.getDBLink(false) != null)
+                .filter(x -> unchainedSVs.contains(x.getDBLink(false).getOtherSV(x)))
+                .count();
+
+        if(dbCount > 0)
+            chainData[CHAIN_DATA_UNCHAINED_DBS] = dbCount * 0.5;
 
         return chainData;
     }
