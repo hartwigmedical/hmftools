@@ -14,6 +14,8 @@ import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
+import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurity;
@@ -66,6 +68,8 @@ public class DatabaseAccess implements AutoCloseable {
     @NotNull
     private final MetricDAO metricDAO;
     @NotNull
+    private final PgxDAO pgxDAO;
+    @NotNull
     private final CopyNumberDAO copyNumberDAO;
     @NotNull
     private final DriverCatalogDAO driverCatalogDAO;
@@ -101,6 +105,7 @@ public class DatabaseAccess implements AutoCloseable {
         purityDAO = new PurityDAO(context);
         amberDAO = new AmberDAO(context);
         metricDAO = new MetricDAO(context);
+        pgxDAO = new PgxDAO(context);
         copyNumberDAO = new CopyNumberDAO(context);
         geneCopyNumberDAO = new GeneCopyNumberDAO(context);
         somaticVariantDAO = new SomaticVariantDAO(context);
@@ -250,6 +255,10 @@ public class DatabaseAccess implements AutoCloseable {
         metricDAO.writeMetrics(sample, metrics);
     }
 
+    public void writePGX(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
+        pgxDAO.writePgx(sample, pgxGenotype, pgxCalls);
+    }
+
     public void writeChord(@NotNull String sample, @NotNull ChordAnalysis chordAnalysis) {
         chordDAO.writeChord(sample, chordAnalysis);
     }
@@ -346,6 +355,9 @@ public class DatabaseAccess implements AutoCloseable {
 
         LOGGER.info("Deleting driver catalog for sample: " + sample);
         driverCatalogDAO.deleteForSample(sample);
+
+        LOGGER.info("Deleting pgg data for sample: " + sample);
+        pgxDAO.deletePgxForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");
     }

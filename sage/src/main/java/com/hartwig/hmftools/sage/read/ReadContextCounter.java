@@ -9,12 +9,17 @@ import com.hartwig.hmftools.sage.context.RealignedContext;
 import com.hartwig.hmftools.sage.context.RealignedType;
 import com.hartwig.hmftools.sage.sam.IndelAtLocation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements GenomePosition {
+    private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
+
+
     private final VariantHotspot variant;
     private final ReadContext readContext;
 
@@ -93,23 +98,19 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public double vaf() {
-        return af(tumorQuality());
+        return af(altSupport());
     }
 
     public double refAllelicFrequency() {
-        return af(refQuality());
-    }
-
-    public int refQuality() {
-        return referenceQuality;
+        return af(refSupport());
     }
 
     private double af(double support) {
-        return coverage == 0 ? 0d : support / totalQuality;
+        return coverage == 0 ? 0d : support / coverage;
     }
 
     public int tumorQuality() {
-        int tumorQuality = fullQuality + partialQuality + coreQuality + realignedQuality;
+        int tumorQuality = fullQuality + partialQuality;
         return Math.max(0, tumorQuality - (int) jitterPenalty);
     }
 
@@ -151,43 +152,47 @@ public class ReadContextCounter implements GenomePosition {
                     return;
                 }
 
+                boolean baseDeleted = false;
                 int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                if (readIndex == -1) {
+                    baseDeleted = true;
+                    readIndex = record.getReadPositionAtReferencePosition(readContext.position(), true) - 1;
+                }
+
                 boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
                 if (!covered) {
                     return;
                 }
 
-                // TODO: Check if this is okay? Should we check for jitter if quality 0
                 double quality = calculateQualityScore(readIndex, record, qualityConfig, refSequence);
-                if (quality <= 0) {
-                    return;
-                }
 
                 coverage++;
                 totalQuality += quality;
 
                 // Check if FULL, PARTIAL, OR CORE
-                final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
-                if (!match.equals(ReadContextMatch.NONE)) {
-                    switch (match) {
-                        case FULL:
-                            incrementQualityFlags(record);
-                            full++;
-                            fullQuality += quality;
-                            break;
-                        case PARTIAL:
-                            incrementQualityFlags(record);
-                            partial++;
-                            partialQuality += quality;
-                            break;
-                        case CORE:
-                            incrementQualityFlags(record);
-                            core++;
-                            coreQuality += quality;
-                            break;
-                    }
+                if (!baseDeleted) {
+                    final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                    if (!match.equals(ReadContextMatch.NONE)) {
+                        switch (match) {
+                            case FULL:
+                                incrementQualityFlags(record);
+                                full++;
+                                fullQuality += quality;
+                                break;
+                            case PARTIAL:
+                                incrementQualityFlags(record);
+                                partial++;
+                                partialQuality += quality;
+                                break;
+                            case CORE:
+                                incrementQualityFlags(record);
+                                core++;
+                                coreQuality += quality;
+                                break;
+                        }
 
-                    return;
+                        return;
+                    }
                 }
 
                 // Check if realigned
@@ -214,13 +219,13 @@ public class ReadContextCounter implements GenomePosition {
                 byte refBase = refSequence.base((int) variant.position());
                 byte readBase = record.getReadBases()[readIndex];
 
-                if (refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
+                if (!baseDeleted && refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
                     reference++;
                     referenceQuality += quality;
                 }
             }
         } catch (Exception e) {
-            System.out.println("Error at chromosome: " + chromosome() + ", position: " + position());
+            LOGGER.error("Error at chromosome: {}, position: {}", chromosome(),  position());
             throw e;
         }
     }
@@ -232,7 +237,7 @@ public class ReadContextCounter implements GenomePosition {
         }
 
         int indelLength = indelLength(record);
-        return new Realigned().realignedAroundIndex(readContext,
+        return Realigned.realignedAroundIndex(readContext,
                 readIndex,
                 record.getReadBases(),
                 Math.max(indelLength, Realigned.MAX_REPEAT_SIZE));
@@ -256,7 +261,7 @@ public class ReadContextCounter implements GenomePosition {
     private int baseQuality(int readBaseIndex, SAMRecord record) {
         return variant.ref().length() == variant.alt().length()
                 ? record.getBaseQualities()[readBaseIndex]
-                : readContext.avgCentreQuality(readBaseIndex, record);
+                : readContext.minCentreQuality(readBaseIndex, record);
     }
 
     private int qualityJitterPenalty() {

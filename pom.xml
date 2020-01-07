@@ -31,6 +31,7 @@
         <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
         <module>vicc-knowledgebase-importer</module>
+        <module>iclusion-importer</module>
     </modules>
 
     <properties>
