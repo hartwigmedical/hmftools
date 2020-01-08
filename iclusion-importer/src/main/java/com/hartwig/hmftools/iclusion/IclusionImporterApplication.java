@@ -61,7 +61,7 @@ public class IclusionImporterApplication {
     private static void connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword,
             @NotNull String iClusionOutputStudies) throws IOException {
-        URL url = new URL(iClusionLink + "/oauth/token"); // url iclusion
+        URL url = new URL(iClusionLink + "oauth/token"); // url iclusion
         BufferedWriter writer = new BufferedWriter(new FileWriter(iClusionOutputStudies));
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
