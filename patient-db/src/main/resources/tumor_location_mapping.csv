@@ -175,7 +175,7 @@ searchTerm,primaryTumorLocation,subType
 "neuroendocrine carcinoma",NET,""
 "Neuroendocrine tumor",NET,""
 "non-HIV Kaposisarcoom",Skin,"Other"
-"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis "lung carcinoma"",Lung,"Lung Cancer: Non-Small Cell"
+"Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,"Lung Cancer: Non-Small Cell"
 "Not in dropdown list (please specify below)_adenocarcinoom van de klier van Bartholin vulva links",Vulva,"Adenocarcinoma"
 "Not in dropdown list (please specify below)_squamous cell carcinoma of the bladder",Urinary tract,"Bladder"
 "Not in dropdown list (please specify below)_Unknown",Unknown,"Unknown"
