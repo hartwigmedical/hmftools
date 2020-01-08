@@ -384,6 +384,7 @@ public class ChainingComplexTest
 
     @Ignore
     @Test
+    // difficult for chaining to make the correct links
     public void testBFBChainWithComplexDup()
     {
         // BFB of the form centromere - 1 - 2 - 1 - 3 - 1 - 4-DUP - 2 - 1 - 3 - 1 - 2 - 5R - telomere,

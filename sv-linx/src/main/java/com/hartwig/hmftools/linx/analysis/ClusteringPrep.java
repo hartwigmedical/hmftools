@@ -5,8 +5,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
@@ -171,6 +173,7 @@ public class ClusteringPrep
                 final SvBreakend prevBreakend = (i > 0) ? breakendList.get(i - 1) : null;
                 final SvBreakend nextBreakend = (i < breakendCount-1) ? breakendList.get(i + 1) : null;
 
+                // work out closest distance to breakends before and after if not the same SV
                 long closestDistance = -1;
                 if(prevBreakend != null && prevBreakend.getSV() != var)
                 {
@@ -185,16 +188,27 @@ public class ClusteringPrep
                         closestDistance = distance;
                 }
 
-                if(closestDistance >= 0 && (var.getNearestSvDistance() == -1 || closestDistance < var.getNearestSvDistance()))
-                    var.setNearestSvDistance(closestDistance);
+                if(closestDistance < 0)
+                    continue;
 
-                String relationType = "";
-                if((prevBreakend != null && prevBreakend.getSV() == var) || (nextBreakend != null && nextBreakend.getSV() == var))
-                    relationType = RELATION_TYPE_NEIGHBOUR;
+                if(var.getNearestSvDistance() >= 0 && closestDistance >= var.getNearestSvDistance())
+                    continue;
+
+                // a new closest breakend
+                var.setNearestSvDistance(closestDistance);
+
+                if (var.type() == BND || var.isSglBreakend() || var.type() == INS)
+                {
+                    // cannot overlap for these types
+                    var.setNearestSvRelation(RELATION_TYPE_NEIGHBOUR);
+                }
                 else
-                    relationType = RELATION_TYPE_OVERLAP;
-
-                var.setNearestSvRelation(relationType);
+                {
+                    if ((nextBreakend != null && nextBreakend.getSV() == var) || (prevBreakend != null && prevBreakend.getSV() == var))
+                        var.setNearestSvRelation(RELATION_TYPE_NEIGHBOUR);
+                    else
+                        var.setNearestSvRelation(RELATION_TYPE_OVERLAP);
+                }
             }
         }
     }

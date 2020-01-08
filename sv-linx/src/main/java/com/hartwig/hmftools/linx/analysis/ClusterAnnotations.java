@@ -4,7 +4,9 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
@@ -12,9 +14,12 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
+import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
+import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_BOUNDARY_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
@@ -33,6 +38,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
@@ -123,7 +129,7 @@ public class ClusterAnnotations
                     chainEndsCNMatch = copyNumbersEqual(chainStartCN, chainEndCN);
 
                     if(chainEndsCNMatch)
-                        chainEndsCN = chainStartCN;
+                        chainEndsCN = max(chainStartCN, chainEndCN);
                 }
 
                 for(final SvLinkedPair pair : chain.getLinkedPairs())
@@ -133,7 +139,7 @@ public class ClusterAnnotations
 
                     SvBreakend pairLowerBe = pair.getBreakend(true);
                     SvBreakend pairUpperBe = pair.getBreakend(false);
-                    double pairCN = (pairLowerBe.copyNumber() + pairUpperBe.copyNumber()) * 0.5;
+                    double pairCN = getLinkPairCopyNumber(pair);
                     boolean pairCNExceedsChainEnds = chainEndsCNMatch && pairCN > chainEndsCN && !copyNumbersEqual(pairCN, chainEndsCN);
 
                     if(pairCNExceedsChainEnds)
@@ -224,6 +230,24 @@ public class ClusterAnnotations
                 }
             }
         }
+    }
+
+    private static double getLinkPairCopyNumber(final SvLinkedPair pair)
+    {
+        // skip past any DBs
+        double[] breakendCN = {0, 0};
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            SvBreakend breakend = pair.getBreakend(se);
+
+            if(breakend.getDBLink() != null && breakend.getDBLink().length() < 1)
+                breakendCN[se] = max(breakend.copyNumber() - breakend.getDBLink().getOtherBreakend(breakend).ploidy(), 0);
+            else
+                breakendCN[se] = breakend.copyNumber();
+        }
+
+        return (breakendCN[SE_START] + breakendCN[SE_END]) * 0.5;
     }
 
     private static int getTraversedSvCount(final SvCluster cluster, final List<SvBreakend> breakendList, int lowerIndex, int upperIndex)
@@ -654,10 +678,145 @@ public class ClusterAnnotations
         }
     }
 
+    public static void annotateReplicationBeforeRepair(final SvCluster cluster)
+    {
+        if(cluster.getSvCount() == 1 || cluster.getSvCount() > 100)
+            return;
+
+        if(cluster.getResolvedType() == LINE || cluster.getResolvedType() == DOUBLE_MINUTE || cluster.getResolvedType().isSimple())
+            return;
+
+        // criteria:
+        // - uniform ploidy within a chain
+        // - at least one overlapping TI
+        // - copy number gain between the chain ends, not explained by another chain or SV
+
+        for(SvChain chain : cluster.getChains())
+        {
+            if(!chain.isConsistent() || chain.isClosedLoop())
+                continue;
+
+            final SvBreakend chainStart = chain.getOpenBreakend(true);
+            final SvBreakend chainEnd = chain.getOpenBreakend(false);
+
+            if(chainStart == null || chainEnd == null || !chainEnd.getChrArm().equals(chainStart.getChrArm()))
+                continue;
+
+            // check for any repeated SV
+            if(chain.hasRepeatedSV())
+                continue;
+
+            final ChainMetrics chainMetrics = chain.extractChainMetrics();
+
+            // require internal TIs with gain, which mandates chain ends are on the same arm
+            if (chainMetrics.ChainEndsAway != 1 || chainMetrics.InternalTICnGain == 0 || chainMetrics.OverlappingTIs == 0)
+                continue;
+
+            long internalGainLength = getCopyNumberGainLength(cluster, chain);
+
+            if(internalGainLength == 0)
+                continue;
+
+            long chainRange = abs(chainEnd.position() - chainStart.position());
+            double chainEndsCN = max(chainStart.copyNumber(), chainEnd.copyNumber());
+            double gainPercent = internalGainLength / (double) chainRange;
+
+            if (gainPercent >= 0.05 && chainRange >= 1000)
+            {
+                cluster.addAnnotation(CLUSTER_ANNOT_REP_REPAIR);
+
+                LOGGER.info("cluster({} desc={} type={}) chain({} cn={}) rep-repair: links({} internal={} withGain={} overlaps={}) length(chain={} gain={} perc={})",
+                        cluster.id(), cluster.getDesc(), cluster.getResolvedType(), chain.id(), formatPloidy(chainEndsCN),
+                        chain.getLinkCount(), chainMetrics.InternalTIs, chainMetrics.InternalTICnGain, chainMetrics.OverlappingTIs,
+                        chainRange, internalGainLength, String.format("%.2f", gainPercent));
+            }
+        }
+    }
+
+    private static long getCopyNumberGainLength(final SvCluster cluster, final SvChain chain)
+    {
+        final SvBreakend chainStart = chain.getOpenBreakend(true);
+        final SvBreakend chainEnd = chain.getOpenBreakend(false);
+        int lowerIndex = min(chainStart.getClusterChrPosIndex(), chainEnd.getClusterChrPosIndex());
+        int upperIndex = max(chainStart.getClusterChrPosIndex(), chainEnd.getClusterChrPosIndex());
+        double chainEndsCN = max(chainStart.copyNumber(), chainEnd.copyNumber());
+        long internalGainLength = 0;
+
+        // sum of segments of CN gain between the chain ends
+        final List<SvBreakend> breakendList = cluster.getChrBreakendMap().get(chainStart.chromosome());
+
+        long prevPosition = 0;
+        double prevCN = 0;
+        boolean inSegment = false;
+        double netPloidy = 0;
+
+        for(int i = lowerIndex + 1; i < upperIndex - 1; ++i)
+        {
+            SvBreakend breakend = breakendList.get(i);
+
+            // if a breakend from another chain is encountered then exit due to the uncertainty around chaining
+            if(!chain.getSvList().contains(breakend.getSV()))
+                return 0;
+
+            if(!inSegment)
+            {
+                if(breakend.orientation() == 1)
+                {
+                    if(prevPosition > 0)
+                    {
+                        if(breakend.copyNumber() > chainEndsCN && !copyNumbersEqual(breakend.copyNumber(), chainEndsCN))
+                        {
+                            internalGainLength += breakend.position() - prevPosition;
+                        }
+                    }
+
+                    continue;
+                }
+
+                inSegment = true;
+                prevPosition = breakend.position();
+                prevCN = breakend.copyNumber();
+                netPloidy = breakend.ploidy();
+            }
+            else
+            {
+                long segmentLength = breakend.position() - prevPosition;
+
+                if(breakend.orientation() == -1)
+                {
+                    // another breakend increasing CN - record segment CN up to this point
+                    if(prevCN > chainEndsCN && !copyNumbersEqual(prevCN, chainEndsCN))
+                    {
+                        internalGainLength += segmentLength;
+                    }
+
+                    // move position on
+                    prevPosition = breakend.position();
+                    prevCN = breakend.copyNumber();
+                    netPloidy += breakend.ploidy();
+                }
+                else
+                {
+                    if(breakend.copyNumber() > chainEndsCN && !copyNumbersEqual(breakend.copyNumber(), chainEndsCN))
+                    {
+                        internalGainLength += segmentLength;
+                    }
+
+                    netPloidy -= breakend.ploidy();
+                    prevPosition = breakend.position();
+
+                    if(copyNumbersEqual(netPloidy, 0))
+                        inSegment = false;
+                }
+            }
+        }
+
+        return internalGainLength;
+    }
+
     public static void annotateFoldbacks(final List<SvCluster> clusters)
     {
         // now foldbacks are known, add other annotations about them
-        // FIXME: the foldback info is not being set on both SVs for chained foldbacks, nor on the correct end
         for(final SvCluster cluster : clusters)
         {
             final Map<String, List<SvBreakend>> chrBreakendMap = cluster.getChrBreakendMap();

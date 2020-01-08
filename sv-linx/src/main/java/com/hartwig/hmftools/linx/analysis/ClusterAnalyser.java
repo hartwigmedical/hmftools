@@ -7,6 +7,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.UNDER_CLUSTERING;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateClusterDeletions;
+import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateReplicationBeforeRepair;
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.reportUnderclustering;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.annotateNearestSvData;
 import static com.hartwig.hmftools.linx.analysis.ClusteringPrep.associateBreakendCnEvents;
@@ -22,6 +23,9 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -315,47 +319,72 @@ public class ClusterAnalyser {
         }
     }
 
+    private static final int SHORT_DB_LENGTH = 100;
+
     private void dissolveSimpleGroups()
     {
         // break apart any clusters of simple SVs which aren't likely or required to be chained
         List<SvCluster> simpleGroups = mClusters.stream().filter(x -> x.getResolvedType() == SIMPLE_GRP).collect(Collectors.toList());
 
-        // if all links are assembled or joined in an LOH then keep the group
+        // if all links are assembled or joined in an LOH or have a short DB then keep the group
         for(SvCluster cluster : simpleGroups)
         {
-            boolean allLinkedByAssembly = cluster.getAssemblyLinkedPairs().size() == cluster.getSvCount() - 1;
+            boolean allSVsLinked = true;
 
-            boolean allSVsInLOH = true;
+            final List<LohEvent> lohEvents = cluster.getLohEvents().stream()
+                    .filter(x -> x.doubleSvEvent())
+                    .filter(x -> x.StartSV != x.EndSV)
+                    .collect(Collectors.toList());
 
-            if(!allLinkedByAssembly)
+            int assemblyLinks = 0;
+            int lohLinks = 0;
+            int dbLinks = 0;
+
+            for(SvVarData var : cluster.getSVs())
             {
-                final List<LohEvent> lohEvents = cluster.getLohEvents().stream()
-                        .filter(x -> x.doubleSvEvent())
-                        .filter(x -> x.StartSV != x.EndSV)
-                        .collect(Collectors.toList());
-
-                if(lohEvents.isEmpty())
+                // assembled
+                if(!var.getAssembledLinkedPairs(true).isEmpty() || !var.getAssembledLinkedPairs(false).isEmpty())
                 {
-                    allSVsInLOH = false;
+                    ++assemblyLinks;
+                    continue;
                 }
-                else
+
+                // in an LOH
+                if(!lohEvents.isEmpty() && lohEvents.stream().anyMatch(x -> x.StartSV == var.id() || x.EndSV == var.id()))
                 {
-                    for(final SvVarData var : cluster.getSVs())
+                    ++lohLinks;
+                    continue;
+                }
+
+                // in a short DB with another SV in this cluster
+                boolean inShortDB = false;
+
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    boolean isStart = isStart(se);
+
+                    if (var.getDBLink(isStart) != null && var.getDBLink(isStart).length() <= SHORT_DB_LENGTH
+                            && cluster.getSVs().contains(var.getDBLink(isStart).getOtherSV(var)))
                     {
-                        if(!lohEvents.stream()
-                                .anyMatch(x -> x.StartSV == var.id() || x.EndSV == var.id()))
-                        {
-                            allSVsInLOH = false;
-                            break;
-                        }
+                        inShortDB = true;
+                        break;
                     }
                 }
+
+                if(inShortDB)
+                {
+                    ++dbLinks;
+                    continue;
+                }
+
+                allSVsLinked = false;
+                break;
             }
 
-            if(allLinkedByAssembly || allSVsInLOH)
+            if(allSVsLinked)
             {
-                LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({})",
-                        cluster.id(), cluster.getDesc(), allLinkedByAssembly, allSVsInLOH);
+                LOGGER.debug("cluster({}: {}) simple group kept: assembled({}) inLOH({}) shortDB({})",
+                        cluster.id(), cluster.getDesc(), assemblyLinks, lohLinks, dbLinks);
                 continue;
             }
 
@@ -408,9 +437,9 @@ public class ClusterAnalyser {
     public void annotateClusters()
     {
         // final clean-up and analysis
-        mClusters.forEach(this::reportClusterFeatures);
-
         annotateTemplatedInsertions(mClusters, mState.getChrBreakendMap());
+
+        mClusters.forEach(this::reportClusterFeatures);
 
         if(runAnnotation(mConfig.RequiredAnnotations, UNDER_CLUSTERING))
         {
@@ -422,6 +451,7 @@ public class ClusterAnalyser {
     {
         annotateClusterChains(cluster);
         annotateClusterDeletions(cluster);
+        annotateReplicationBeforeRepair(cluster);
 
         // if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
         //    findIncompleteFoldbackCandidates(mSampleId, cluster, mState.getChrBreakendMap(), mCnDataLoader);

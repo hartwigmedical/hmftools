@@ -761,6 +761,14 @@ public class SvChain {
         return varIndices;
     }
 
+    public boolean hasRepeatedSV()
+    {
+        if(mIsClosedLoop)
+            return mLinkedPairs.size() > mSvList.size();
+        else
+            return mLinkedPairs.size() >= mSvList.size();
+    }
+
     public int getAssemblyLinkCount()
     {
         int count = 0;

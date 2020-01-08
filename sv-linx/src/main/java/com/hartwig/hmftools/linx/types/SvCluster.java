@@ -96,6 +96,7 @@ public class SvCluster
 
     public static String CLUSTER_ANNOT_DM = "DM";
     public static String CLUSTER_ANNOT_BFB = "BFB";
+    public static String CLUSTER_ANNOT_REP_REPAIR = "REP_REPAIR";
     public static String CLUSTER_ANNOT_SHATTERING = "CHROMO_THRIP";
     public static String CLUSTER_ANNOT_CHROMOPLEXY = "CHROMO_PLEX";
 
