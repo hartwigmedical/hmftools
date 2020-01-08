@@ -7,6 +7,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.phase.Phase;
@@ -32,16 +34,21 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
     private final SageVariantFactory sageVariantFactory;
     private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
+    private final List<VariantHotspot> hotspots;
+    private final List<GenomeRegion> panelRegions;
 
     ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
             @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
-            @NotNull final Function<SageVariant, VariantContext> variantContextFactory) throws IOException {
+            @NotNull final Function<SageVariant, VariantContext> variantContextFactory, @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.reference = reference;
         this.sageVariantFactory = sageVariantFactory;
         this.variantContextFactory = variantContextFactory;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
+        this.hotspots = hotspots;
+        this.panelRegions = panelRegions;
     }
 
     @NotNull
@@ -68,19 +75,18 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
                 sageVCF.write(context);
             }
         };
-        final Phase phase = new Phase(config, reference, sageVariantFactory, phasedConsumer);
+        final Phase phase = new Phase(config, reference, sageVariantFactory, hotspots, panelRegions, phasedConsumer);
 
-        // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
-        // It is not necessary to wait for the entire chromosome to be finished to start.
-        CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        for (final CompletableFuture<List<SageVariant>> region : regions) {
-            done = done.thenCombine(region, (aVoid, sageVariants) -> {
-                sageVariants.forEach(phase);
-                return null;
-            });
-        }
+        final CompletableFuture<Void> done = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
 
         return done.thenApply(aVoid -> {
+            LOGGER.info("Phasing chromosome {}", chromosome);
+
+            // Phasing must be done in a separate thread as we re-query the MNVs
+            for (final CompletableFuture<List<SageVariant>> region : regions) {
+                region.join().forEach(phase);
+            }
+
             phase.flush();
             sageVCF.close();
             LOGGER.info("Finished processing chromosome {}", chromosome);

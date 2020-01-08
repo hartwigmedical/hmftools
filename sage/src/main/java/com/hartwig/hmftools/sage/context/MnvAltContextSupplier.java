@@ -10,10 +10,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.phase.MnvCandidate;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
-import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
@@ -25,44 +23,39 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class MnvContextSupplier {
+public class MnvAltContextSupplier {
 
-    private static final Logger LOGGER = LogManager.getLogger(MnvContextSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(MnvAltContextSupplier.class);
 
-    private final String sample;
-    private final String bamFile;
     private final SageConfig config;
-    private final SamSlicerFactory samSlicerFactory;
-
     private final TierSelector tierSelector;
     private final IndexedFastaSequenceFile refGenome;
 
-    public MnvContextSupplier(@NotNull final SageConfig config, @NotNull final String sample, @NotNull final String bamFile,
-            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions, final IndexedFastaSequenceFile refGenome) {
+    public MnvAltContextSupplier(
+            @NotNull final SageConfig config,
+            @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions,
+            @NotNull final IndexedFastaSequenceFile refGenome) {
         this.config = config;
-        this.sample = sample;
-        this.bamFile = bamFile;
-        this.samSlicerFactory = samSlicerFactory;
         this.tierSelector = new TierSelector(panelRegions, hotspots);
         this.refGenome = refGenome;
     }
 
     @NotNull
-    public List<AltContext> get(@NotNull final MnvCandidate mnv) {
+    public List<AltContext> get(@NotNull final String sample, @NotNull final  String bamFile, @NotNull final VariantHotspot target) {
 
         final TumorRefContextCandidates candidates = new TumorRefContextCandidates(sample);
         final List<AltContext> altContexts = Lists.newArrayList();
         final PositionSelector<AltContext> consumerSelector = new PositionSelector<>(altContexts);
 
-        GenomeRegion bounds = GenomeRegions.create(mnv.chromosome(), mnv.position(), mnv.end());
-        RefSequence refSequence = new RefSequence(mnv, refGenome);
+        GenomeRegion bounds = GenomeRegions.create(target.chromosome(), target.position(), target.end());
+        RefSequence refSequence = new RefSequence(target, refGenome);
         RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
-        final SamSlicer slicer = samSlicerFactory.create(bounds);
+        final SamSlicer slicer = new SamSlicer(config.minMapQuality(), bounds);
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
 
-            slicer.slice(tumorReader, x -> refContextConsumer.processTargeted(mnv, x));
+            slicer.slice(tumorReader, x -> refContextConsumer.processTargeted(target, x));
 
             // Add all valid alt contexts
             candidates.refContexts().stream().flatMap(x -> x.alts().stream()).filter(this::altSupportPredicate).forEach(x -> {
@@ -82,7 +75,7 @@ public class MnvContextSupplier {
             throw new CompletionException(e);
         }
 
-        return altContexts.stream().peek(x -> x.localPhaseSet(mnv.lps())).filter(this::qualPredicate).collect(Collectors.toList());
+        return altContexts.stream().filter(this::qualPredicate).collect(Collectors.toList());
 
     }
 

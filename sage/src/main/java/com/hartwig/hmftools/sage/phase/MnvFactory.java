@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.sage.phase;
 
+import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.MnvAltContextSupplier;
+import com.hartwig.hmftools.sage.context.MnvRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
+import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -17,63 +23,65 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-class MnvFactory {
+public class MnvFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(MnvFactory.class);
 
-    @NotNull
-    private final IndexedFastaSequenceFile reference;
+    private final SageConfig config;
     private final SageVariantFactory sageVariantFactory;
+    private final IndexedFastaSequenceFile refGenome;
+    private final MnvAltContextSupplier altContextSupplier;
+    private final MnvRefContextSupplier refContextSupplier;
 
-    MnvFactory(@NotNull final IndexedFastaSequenceFile reference, final SageVariantFactory sageVariantFactory) {
-        this.reference = reference;
+    public MnvFactory(@NotNull final SageConfig config, @NotNull final SageVariantFactory sageVariantFactory,
+            @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final List<VariantHotspot> hotspots,
+            @NotNull final List<GenomeRegion> panelRegions) {
+        this.config = config;
         this.sageVariantFactory = sageVariantFactory;
+        this.refGenome = refGenome;
+        this.altContextSupplier = new MnvAltContextSupplier(config, hotspots, panelRegions, refGenome);
+        this.refContextSupplier = new MnvRefContextSupplier(config, refGenome);
     }
 
     @NotNull
-    public SageVariant createMNV(@NotNull final SageVariant left, @NotNull final SageVariant right) {
+    public SageVariant mnv(int lps, @NotNull final VariantHotspot mnv) {
 
-        final VariantHotspot variant = createMnv(left.normal(), right.normal());
-        final AltContext normal = merge(variant, left.normal(), right.normal());
+        final List<AltContext> tumorAltContexts = Lists.newArrayList();
+        for (int sampleNumber = 0; sampleNumber < config.tumor().size(); sampleNumber++) {
 
-        final List<AltContext> alts = Lists.newArrayList();
-        for (int i = 0; i < left.tumorAltContexts().size(); i++) {
-            final AltContext leftTumor = left.tumorAltContexts().get(i);
-            final AltContext rightTumor = right.tumorAltContexts().get(i);
-            alts.add(merge(variant, leftTumor, rightTumor));
+            String sample = config.tumor().get(sampleNumber);
+            String bamFile = config.tumorBam().get(sampleNumber);
+
+            final List<AltContext> sampleMnv = altContextSupplier.get(sample, bamFile, mnv);
+            AltContext altContext = sampleMnv.isEmpty() ? new AltContext(sample, mnv) : sampleMnv.get(0);
+            tumorAltContexts.add(altContext);
         }
 
-        SageVariant result = sageVariantFactory.create(normal, alts);
-        result.localPhaseSet(left.localPhaseSet());
-        result.synthetic(true);
+        final ReadContext primaryReadContext = tumorAltContexts.stream()
+                .map(AltContext::primaryReadContext)
+                .sorted(Comparator.comparingInt(ReadContextCounter::altSupport).reversed())
+                .map(ReadContextCounter::readContext)
+                .findFirst()
+                .orElse(tumorAltContexts.get(0).primaryReadContext().readContext());
 
-        if (left.isPassing() && right.isPassing()) {
-            result.filters().clear();
-        }
+        final List<RefContext> normalRefContexts =
+                refContextSupplier.get(config.reference(), config.referenceBam(), mnv, primaryReadContext);
+        final AltContext normalAltContext =
+                normalRefContexts.stream().flatMap(x -> x.alts().stream()).findFirst().orElse(new AltContext(config.reference(), mnv));
 
-        return result;
-
-    }
-
-    @NotNull
-    private AltContext merge(@NotNull final VariantHotspot variant, @NotNull final AltContext left, @NotNull final AltContext right) {
-        final RefContext mergedRefContext = new RefContext(left.refContext(), right.refContext());
-
-        final ReadContextCounter mergedReadContextCounter = new ReadContextCounter(variant, left.primaryReadContext(), right.primaryReadContext());
-        final AltContext result = new AltContext(mergedRefContext, variant.ref(), variant.alt());
-        result.setPrimaryReadContext(mergedReadContextCounter);
-
+        final SageVariant result = sageVariantFactory.create(normalAltContext, tumorAltContexts);
+        result.localPhaseSet(lps);
         return result;
     }
 
     @NotNull
-    private VariantHotspot createMnv(@NotNull final AltContext left, @NotNull final AltContext right) {
+    public VariantHotspot merge(@NotNull final AltContext left, @NotNull final AltContext right) {
         int mnvLength = (int) (right.position() - left.position() + 1);
         int additionalLength = mnvLength - left.alt().length();
 
         try {
             final String alt = left.alt() + right.primaryReadContext().readContext().mnvAdditionalAlt(additionalLength);
-            final String ref = reference.getSubsequenceAt(left.chromosome(), left.position(), right.position()).getBaseString();
+            final String ref = refGenome.getSubsequenceAt(left.chromosome(), left.position(), right.position()).getBaseString();
             return ImmutableVariantHotspotImpl.builder().from(left).ref(ref).alt(alt).build();
         } catch (Exception e) {
             LOGGER.error("Unable to merge {}:{} with {}", left.chromosome(), left.position(), right.position());

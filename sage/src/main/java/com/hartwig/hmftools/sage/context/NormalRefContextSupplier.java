@@ -37,8 +37,8 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     private final RefSequence refSequence;
 
     public NormalRefContextSupplier(final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final String bamFile,
-            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates,
-            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final RefSequence refSequence) {
+            @NotNull final RefSequence refSequence, @NotNull final RefContextCandidates candidates,
+            @NotNull final SamSlicerFactory samSlicerFactory) {
         this.minQuality = config.minMapQuality();
         this.bounds = bounds;
         this.candidates = candidates;
@@ -46,10 +46,9 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
         this.refSequence = refSequence;
-        refContextConsumer = new RefContextConsumer(false, config, bounds, refGenome, candidates);
+        refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
         consumerSelector =
                 new PositionSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
-
     }
 
     @Override
@@ -69,9 +68,7 @@ public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Con
     @Override
     public void accept(final SAMRecord samRecord) {
         refContextConsumer.accept(samRecord);
-
         final IndexedBases refBases = refSequence.alignment(samRecord);
-
 
         if (samRecord.getMappingQuality() >= minQuality) {
             consumerSelector.select(samRecord.getAlignmentStart(),

@@ -94,8 +94,7 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
                     config.referenceBam(),
                     refSequence,
                     somaticPipelineData.normalCandidates(),
-                    samSlicerFactory,
-                    refSequence).get();
+                    samSlicerFactory).get();
         });
 
         return normalFuture.thenApply(aVoid -> {

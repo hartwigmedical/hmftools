@@ -45,17 +45,11 @@ public class PipelineFactory {
                 config.germlineOnly() ? SageVariantContextFactory::germlineOnly : SageVariantContextFactory::pairedTumorNormal;
     }
 
-    public TumorNormalPairedPipeline testPipeline(@NotNull final String contig, @NotNull final Executor executor) throws IOException {
-        final Chromosome chromosome = HumanChromosome.fromString(contig);
-        return new TumorNormalPairedPipeline(contig, config, refSequence, hotspots.get(chromosome), panel.get(chromosome), executor);
-    }
-
     public ChromosomePipeline create(@NotNull final String contig) throws IOException {
         final Chromosome chromosome = HumanChromosome.fromString(contig);
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots.get(chromosome), panel.get(chromosome));
 
-        return new ChromosomePipeline(contig, config, refSequence, variantFactory, variantContextFactory);
-
+        return new ChromosomePipeline(contig, config, refSequence, variantFactory, variantContextFactory, hotspots.get(chromosome), panel.get(chromosome));
     }
 
     @NotNull

@@ -23,7 +23,6 @@ public class AltContext implements VariantHotspot {
 
     private ReadContextCounter readContextCounter;
     private int rawSupport;
-    private int localPhaseSet;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
         refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
@@ -129,14 +128,6 @@ public class AltContext implements VariantHotspot {
     @NotNull
     public String sample() {
         return refContext.sample();
-    }
-
-    public int localPhaseSet() {
-        return localPhaseSet;
-    }
-
-    public void localPhaseSet(final int localPhaseSet) {
-        this.localPhaseSet = localPhaseSet;
     }
 
     @Override
