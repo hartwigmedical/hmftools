@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-public class MnvFactory {
+class MnvFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(MnvFactory.class);
 
@@ -33,7 +33,7 @@ public class MnvFactory {
     private final MnvAltContextSupplier altContextSupplier;
     private final MnvRefContextSupplier refContextSupplier;
 
-    public MnvFactory(@NotNull final SageConfig config, @NotNull final SageVariantFactory sageVariantFactory,
+    MnvFactory(@NotNull final SageConfig config, @NotNull final SageVariantFactory sageVariantFactory,
             @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final List<VariantHotspot> hotspots,
             @NotNull final List<GenomeRegion> panelRegions) {
         this.config = config;
@@ -71,6 +71,7 @@ public class MnvFactory {
 
         final SageVariant result = sageVariantFactory.create(normalAltContext, tumorAltContexts);
         result.localPhaseSet(lps);
+        result.synthetic(true);
         return result;
     }
 

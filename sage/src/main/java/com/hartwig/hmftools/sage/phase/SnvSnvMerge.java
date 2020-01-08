@@ -47,18 +47,21 @@ class SnvSnvMerge implements Consumer<SageVariant> {
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);
                 if (isMnv(oldEntry, newEntry)) {
+                    final VariantHotspot candidate = factory.merge(oldEntry.primaryTumor(), newEntry.primaryTumor());
                     boolean bothEntriesPass = newEntry.isPassing() && oldEntry.isPassing();
-                    final VariantHotspot mnvCandidate = factory.merge(oldEntry.primaryTumor(), newEntry.primaryTumor());
-                    if (bothEntriesPass || tierSelector.isHotspot(mnvCandidate)) {
-                        SageVariant mnv = factory.mnv(newEntry.localPhaseSet(), mnvCandidate);
+                    boolean candidateIsHotspot = tierSelector.isHotspot(candidate);
 
-                        newEntry.filters().add(SageVCF.MERGE_FILTER);
-                        oldEntry.filters().add(SageVCF.MERGE_FILTER);
-                        if (oldEntry.isSynthetic()) {
-                            list.set(i, mnv);
-                        } else {
-                            list.add(i, mnv);
-                            i++;
+                    if (bothEntriesPass || candidateIsHotspot) {
+                        SageVariant mnv = factory.mnv(newEntry.localPhaseSet(), candidate);
+                        if (isPassingWithNoSupportInNormal(mnv) ||  candidateIsHotspot) {
+                            newEntry.filters().add(SageVCF.MERGE_FILTER);
+                            oldEntry.filters().add(SageVCF.MERGE_FILTER);
+                            if (oldEntry.isSynthetic()) {
+                                list.set(i, mnv);
+                            } else {
+                                list.add(i, mnv);
+                                i++;
+                            }
                         }
                     }
                 }
@@ -66,6 +69,10 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         }
 
         list.add(newEntry);
+    }
+
+    private boolean isPassingWithNoSupportInNormal(@NotNull final SageVariant mnv) {
+        return mnv.isPassing() && mnv.normal().primaryReadContext().altSupport() == 0;
     }
 
     private void flush(@NotNull final GenomePosition position) {
