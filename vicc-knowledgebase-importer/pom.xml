@@ -11,7 +11,7 @@
     <artifactId>vicc-knowledgebase-importer</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - VICC knowledgebase importer</name>
+    <name>HMF Tools - VICC Knowledgebase Importer</name>
 
     <dependencies>
         <dependency>
