@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDu
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
+import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
 import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -388,6 +389,20 @@ public class ClusterAnalyser {
                 continue;
             }
 
+            // check for replication before repair and if found, keep the group
+            if(cluster.isFullyChained(true))
+            {
+                annotateTemplatedInsertions(cluster, mState.getChrBreakendMap());
+                annotateReplicationBeforeRepair(cluster);
+
+                if (cluster.hasAnnotation(CLUSTER_ANNOT_REP_REPAIR))
+                {
+                    LOGGER.debug("cluster({}: {}) simple group kept with rep-repair",
+                            cluster.id(), cluster.getDesc());
+                    continue;
+                }
+            }
+
             mClusters.remove(cluster);
 
             LOGGER.debug("cluster({}: {}) de-merged into simple SVs", cluster.id(), cluster.getDesc());
@@ -437,7 +452,7 @@ public class ClusterAnalyser {
     public void annotateClusters()
     {
         // final clean-up and analysis
-        annotateTemplatedInsertions(mClusters, mState.getChrBreakendMap());
+        mClusters.forEach(x -> annotateTemplatedInsertions(x, mState.getChrBreakendMap()));
 
         mClusters.forEach(this::reportClusterFeatures);
 

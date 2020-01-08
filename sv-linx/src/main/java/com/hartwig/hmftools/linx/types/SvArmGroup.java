@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.types;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
@@ -103,8 +104,6 @@ public class SvArmGroup {
         return mBreakends.stream().mapToInt(x -> calcConsistency(x)).sum();
     }
 
-    public boolean isConsistent() { return consistency() == 0; }
-
     public static final int DB_DATA_COUNT = 0;
     public static final int DB_DATA_CLUSTER_COUNT = 1;
     public static final int DB_DATA_SHORT_COUNT = 2;
@@ -113,10 +112,30 @@ public class SvArmGroup {
 
     public void populateDbData(final int[] data)
     {
-        List<SvLinkedPair> processedDBs = Lists.newArrayList();
+        final List<SvLinkedPair> processedDBs = Lists.newArrayList();
 
-        for(final SvBreakend breakend : mBreakends)
+        for(int i = 0; i < mBreakends.size(); ++i)
         {
+            final SvBreakend breakend = mBreakends.get(i);
+
+            if(breakend.getSV().type() == DEL && breakend.orientation() == 1)
+            {
+                // check for stand-alone DELs
+                if(i < mBreakends.size() - 1 && mBreakends.get(i + 1).getSV() == breakend.getSV())
+                {
+                    ++data[DB_DATA_COUNT];
+                    ++data[DB_DATA_CLUSTER_COUNT];
+
+                    data[DB_DATA_TOTAL_LENGTH] += breakend.getSV().length();
+
+                    if(breakend.getSV().length() < 100)
+                        ++data[DB_DATA_SHORT_COUNT];
+
+                    ++i;
+                    continue;
+                }
+            }
+
             final SvLinkedPair dbLink = breakend.getDBLink();
 
             if(dbLink == null || processedDBs.contains(dbLink))

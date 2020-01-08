@@ -580,18 +580,19 @@ public class SvSampleAnalyser {
 
                     mSvFileWriter.write(chainStr);
 
+                    // only log DB lengths if the partner is in the cluster
                     final SvLinkedPair dbStart = var.getDBLink(true);
                     final SvLinkedPair dbEnd = var.getDBLink(false);
 
                     int dbLenStart = NO_DB_MARKER;
                     int dbLenEnd = NO_DB_MARKER;
 
-                    if(dbStart != null)
+                    if(dbStart != null && cluster.getSVs().contains(dbStart.getOtherSV(var)))
                     {
                         dbLenStart = (!var.isInferredSgl() && !dbStart.getOtherSV(var).isInferredSgl()) ? dbStart.length() : INF_DB_MARKER;
                     }
 
-                    if(dbEnd != null)
+                    if(dbEnd != null && cluster.getSVs().contains(dbEnd.getOtherSV(var)))
                     {
                         dbLenEnd = (!var.isInferredSgl() && !dbEnd.getOtherSV(var).isInferredSgl()) ? dbEnd.length() : INF_DB_MARKER;
                     }

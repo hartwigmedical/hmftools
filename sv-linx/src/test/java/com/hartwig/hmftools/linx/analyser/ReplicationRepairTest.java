@@ -24,7 +24,7 @@ import org.junit.Test;
 public class ReplicationRepairTest
 {
     @Test
-    public void testReplicationRepairOneBreak()
+    public void testReplicationRepairOneBreakSimpleGroup()
     {
         // a single section if replicated and connected back in correct orientations, looking like DEL-DUP-DEL
         LinxTester tester = new LinxTester();
@@ -34,11 +34,11 @@ public class ReplicationRepairTest
         final SvVarData var3 = createDel(  3, "1", 9500, 10100);
 
         // add assembly since for now simple groups are dissolved
-        var1.setAssemblyData(false, "asmb12");
-        var2.setAssemblyData(false, "asmb12");
+        // var1.setAssemblyData(false, "asmb12");
+        // var2.setAssemblyData(false, "asmb12");
 
-        var2.setAssemblyData(true, "asmb23");
-        var3.setAssemblyData(true, "asmb23");
+        // var2.setAssemblyData(true, "asmb23");
+        // var3.setAssemblyData(true, "asmb23");
 
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
