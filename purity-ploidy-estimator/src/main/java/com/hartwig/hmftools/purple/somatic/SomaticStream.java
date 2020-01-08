@@ -23,8 +23,6 @@ import com.hartwig.hmftools.purple.config.SomaticConfig;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.index.tabix.TabixFormat;
-import htsjdk.tribble.index.tabix.TabixIndexCreator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -78,8 +76,6 @@ public class SomaticStream {
             try (IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomeData.refGenome()));
                     VCFFileReader vcfReader = new VCFFileReader(new File(inputVCF), false);
                     VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(outputVCF)
-                            .setReferenceDictionary(vcfReader.getFileHeader().getSequenceDictionary())
-                            .setIndexCreator(new TabixIndexCreator(vcfReader.getFileHeader().getSequenceDictionary(), new TabixFormat()))
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
