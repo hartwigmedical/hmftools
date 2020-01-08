@@ -16,6 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import sun.net.www.http.HttpClient;
+
 public class IclusionImporterApplication {
    // private static final Logger LOGGER = LogManager.getLogger(IclusionImporterApplication.class);
     private static final String ICLUSION_LINK = "iclusion_link";
@@ -61,25 +63,26 @@ public class IclusionImporterApplication {
     private static void connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword,
             @NotNull String iClusionOutputStudies) throws IOException {
-        URL url = new URL(iClusionLink + "oauth/token"); // url iclusion
+
+        URL url = new URL(iClusionLink); // url iclusion
         BufferedWriter writer = new BufferedWriter(new FileWriter(iClusionOutputStudies));
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        connection.setReadTimeout(1000);
-        connection.setConnectTimeout(1000);
-
-        connection.setDoInput(true);
-        connection.setDoOutput(true);
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("Content-type", "multipart/form-data");
-        connection.setRequestProperty("grant_type", "password");
-        connection.setRequestProperty("client_id", iClusionClientId);
-        connection.setRequestProperty("client_secret", iClusionClientSecret);
-        connection.setRequestProperty("username", iClusionUsername);
-        connection.setRequestProperty("password", iClusionPassword);
-      //  connection.setRequestProperty("Authorization", "Bearer " + "");
-        connection.connect();
+//        connection.setReadTimeout(1000);
+//        connection.setConnectTimeout(1000);
+//
+//        connection.setDoInput(true);
+//        connection.setDoOutput(true);
+//        connection.setRequestMethod("POST");
+//        connection.setRequestProperty("Accept", "application/json");
+//        connection.setRequestProperty("content-type", "multipart/form-data");
+//        connection.setRequestProperty("grant_type", "password");
+//        connection.setRequestProperty("client_id", iClusionClientId);
+//        connection.setRequestProperty("client_secret", iClusionClientSecret);
+//        connection.setRequestProperty("username", iClusionUsername);
+//        connection.setRequestProperty("password", iClusionPassword);
+//        //  connection.setRequestProperty("Authorization", "Bearer " + "");
+//        connection.connect();
 
         writer.write(connection.toString() + "\n");
         writer.write(connection.getRequestMethod() + "\n");
