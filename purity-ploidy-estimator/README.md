@@ -985,6 +985,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [2.37](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.37)
+  - Remove requirement of chromosome lengths in somatic VCF 
+- [2.36](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.36)
+  - Support for new GRIDSS fields
 - [2.35](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.35)
   - Driver catalog written to DB
   - Tumor only mode (disables somatic fitting)
