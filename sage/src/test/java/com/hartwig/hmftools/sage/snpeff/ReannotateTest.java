@@ -4,6 +4,7 @@ import static java.util.Collections.singletonList;
 
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.sufferConsequences;
 
 import static org.junit.Assert.assertEquals;
@@ -21,6 +22,12 @@ public class ReannotateTest {
 
         assertEquals(CodingEffect.MISSENSE, CodingEffect.effect("Gene", singletonList(INFRAME_INSERTION)));
         assertEquals(CodingEffect.MISSENSE, CodingEffect.effect("Gene", singletonList(INFRAME_DELETION)));
+    }
+
+    @Test
+    public void testSpliceDonorStringsProduceExpectedCodingEffect() {
+        assertEquals(SPLICE_DONOR_VARIANT, sufferConsequences(singletonList(Reannotate.SPLICE_DONOR_VARIANT)).get(0));
+        assertEquals(CodingEffect.SPLICE, CodingEffect.effect("Gene", singletonList(SPLICE_DONOR_VARIANT)));
     }
 
 }

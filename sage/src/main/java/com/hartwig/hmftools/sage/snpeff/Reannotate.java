@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
@@ -28,7 +28,7 @@ public class Reannotate implements AutoCloseable, Consumer<VariantContext> {
     private static final int BUFFER_DISTANCE = 10_000;
     static final String INFRAME_INSERTION = "inframe_insertion";
     static final String INFRAME_DELETION = "inframe_deletion";
-
+    static final String SPLICE_DONOR_VARIANT = "splice_donor_variant";
 
     private final Consumer<VariantContext> consumer;
     private final List<VariantContext> buffer = Lists.newArrayList();
@@ -65,8 +65,31 @@ public class Reannotate implements AutoCloseable, Consumer<VariantContext> {
             final SnpEffAnnotation canonical = optionalCanonical.get();
             final CodingEffect codingEffect = effect(canonical.gene(), canonical.consequences());
 
+            spliceDonorPlus5(context, canonical);
             inframeIndelWithMH(context, canonical, codingEffect);
 
+        }
+    }
+
+    private void spliceDonorPlus5(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical) {
+
+        if (!context.isSNP() || !canonical.effects().contains("splice_region_variant")) {
+            return;
+        }
+
+        final HmfTranscriptRegion transcript = allGenesMap.get(canonical.gene());
+        if (transcript != null) {
+            boolean forward = transcript.strand() == Strand.FORWARD;
+            for (int i = 0; i < transcript.exome().size() - 1; i++) {
+
+                final HmfExonRegion exon = transcript.exonByIndex(i);
+                if (exon != null) {
+                    if (forward && context.getStart() == exon.end() + 5 || !forward && context.getStart() == exon.start() - 5) {
+                        insertEffectBeforeCanonicalAnnotation(context, canonical, SPLICE_DONOR_VARIANT);
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -81,10 +104,10 @@ public class Reannotate implements AutoCloseable, Consumer<VariantContext> {
         long rightAlignedIndelStart = context.getStart() + microhomologyLength + 1;
         long rightAlignedIndelEnd = context.getEnd() + microhomologyLength + 1;
 
-        HmfTranscriptRegion transcriptRegion = allGenesMap.get(canonical.gene());
+        final HmfTranscriptRegion transcriptRegion = allGenesMap.get(canonical.gene());
         if (transcriptRegion != null && rightAlignedIndelStart >= transcriptRegion.codingStart() && rightAlignedIndelEnd <= transcriptRegion
                 .codingEnd()) {
-            for (int i = 1; i < transcriptRegion.exome().size() - 1; i++) {
+            for (int i = 1; i < transcriptRegion.exome().size(); i++) {
 
                 final HmfExonRegion exon = transcriptRegion.exonByIndex(i);
                 if (exon != null && rightAlignedIndelStart >= exon.start() && rightAlignedIndelEnd <= exon.end()) {
@@ -97,17 +120,22 @@ public class Reannotate implements AutoCloseable, Consumer<VariantContext> {
 
     }
 
-    @VisibleForTesting
-    static void addInframeIndelEffectToCanonicalAnnotation(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical) {
-
+    private static void addInframeIndelEffectToCanonicalAnnotation(@NotNull final VariantContext context,
+            @NotNull final SnpEffAnnotation canonical) {
         String effect = context.getReference().length() > context.getAlternateAllele(0).length() ? INFRAME_INSERTION : INFRAME_INSERTION;
+        insertEffectBeforeCanonicalAnnotation(context, canonical, effect);
+    }
+
+    private static void insertEffectBeforeCanonicalAnnotation(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical,
+            @NotNull final String newEffect) {
 
         final List<String> snpEffAnnotations = context.getAttributeAsStringList("ANN", "");
         for (int i = 0; i < snpEffAnnotations.size(); i++) {
             final String annotation = snpEffAnnotations.get(i);
             if (annotation.contains(canonical.effects()) && annotation.contains(canonical.transcript())) {
-                final String updatedAnnotation = annotation.replace(canonical.effects(), effect);
-                snpEffAnnotations.add(i, updatedAnnotation);
+                final String updatedAnnotation = annotation.replace(canonical.effects(), newEffect);
+                final String hmgTag = updatedAnnotation.charAt(updatedAnnotation.length() -1) == '|' ? "HMF" : "&HMF";
+                snpEffAnnotations.add(i, updatedAnnotation + hmgTag);
                 context.getCommonInfo().putAttribute("ANN", snpEffAnnotations, true);
                 return;
             }
