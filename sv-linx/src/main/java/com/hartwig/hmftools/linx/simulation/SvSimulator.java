@@ -47,6 +47,7 @@ public class SvSimulator
     {
         final Options options = new Options();
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
+        options.addOption(LOG_DEBUG, false, "Verbose logging");
         ShatteringConfig.addCommandLineOptions(options);
         return options;
     }

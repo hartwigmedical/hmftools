@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.linx.simulation;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -27,16 +25,20 @@ public class ShatteringSim
     // state and results
     private final List<Segment> mSegments;
     private int mSegmentCount;
-    private int mRemainingLinkCount;
-    private Random mRandom;
+    private int mMaxLinkIndex;
+    private final List<Integer> mRemainingLinks; // list of integers representing the unlinked segment start & end points
+    private final Random mRandom;
     private int mRunIndex;
     private boolean mValidRun;
     private ShatteringResult mLatestResult;
 
     private BufferedWriter mResultsWriter;
 
-    // testing
-    private final List<Integer> mSpecifiedOrder;
+    // to be deprecated
+    private int mRemainingLinkCount;
+
+    // for unit testing only - the order in which to add links
+    private final List<Integer> mSpecifiedLinkOrder;
 
     private static final Logger LOGGER = LogManager.getLogger(ShatteringSim.class);
 
@@ -47,13 +49,14 @@ public class ShatteringSim
         initialiseWriter();
 
         mSegments = Lists.newArrayList();
+        mRemainingLinks = Lists.newArrayList();
         mSegmentCount = 0;
         mRemainingLinkCount = 0;
         mValidRun = true;
         mLatestResult = null;
 
         mRandom = new Random(123456);
-        mSpecifiedOrder = Lists.newArrayList();
+        mSpecifiedLinkOrder = Lists.newArrayList();
     }
 
     public boolean validRun() { return mValidRun; }
@@ -84,7 +87,7 @@ public class ShatteringSim
             writeResults();
             ++mRunIndex;
 
-            if(mConfig.Iterations > 10000 && (i % 10000) == 1)
+            if(mConfig.Iterations > 10000 && i > 0 && (i % 10000) == 0)
             {
                 LOGGER.info("run index {}", i);
             }
@@ -101,7 +104,8 @@ public class ShatteringSim
         mSegments.clear();
         mValidRun = true;
 
-        // create a set of segments with 2 unconnected ends, and 2 bounding segments with a single exposed end
+        // create a set of N segments with 2 unconnected ends, and 2 bounding segments with a single exposed end
+        // so in total there are N+2 segments
         mSegments.add(new Segment(0, false, true));
 
         for(int i = 0; i < mSegmentCount; ++i)
@@ -117,6 +121,15 @@ public class ShatteringSim
         int breakendCount = mSegmentCount * 2 + 2; // each segment has 2 ends plus the start and end bounding ends
         mRemainingLinkCount = breakendCount;
 
+        // for segments 0, 1, 2 and 3, there will be index 0, 1-2, 3-4 and 5
+        mMaxLinkIndex = (mSegments.size() - 1) * 2 - 1;
+        mRemainingLinks.clear();
+
+        for(int linkIndex = 0; linkIndex <= mMaxLinkIndex; ++linkIndex)
+        {
+            mRemainingLinks.add(linkIndex);
+        }
+
         mSegments.stream().forEach(x -> x.clearLinks());
     }
 
@@ -124,15 +137,37 @@ public class ShatteringSim
     {
         clearRunState();
 
-        boolean foundLink = true;
+        // boolean foundLink = true;
 
-        while(mRemainingLinkCount > 0 && foundLink)
+        while(mRemainingLinks.size() >= 2)
+        // while(mRemainingLinkCount > 0 && foundLink)
         {
             // randomly find the next 2 ends to connect
-            int[] nextIndices = getNextIndexPair(mRemainingLinkCount);
+            int[] nextIndices = getNextSegmentLinks();
+            // int[] nextIndices = getNextIndexPair(mRemainingLinkCount);
             int nextIndex1 = nextIndices[0];
             int nextIndex2 = nextIndices[1];
 
+            Segment nextSegment1 = getSegmentByLinkIndex(nextIndex1);
+            boolean seg1LinkOnStart = isSegmentStartByLinkIndex(nextIndex1);
+            Segment nextSegment2 = getSegmentByLinkIndex(nextIndex2);
+            boolean seg2LinkOnStart = isSegmentStartByLinkIndex(nextIndex2);
+
+            if(nextSegment1 == null || nextSegment2 == null)
+            {
+                LOGGER.error("invalid segment lookup with nextIndex({} & {})", nextIndex1, nextIndex2);
+                mValidRun = false;
+                break;
+            }
+
+            nextSegment1.setLink(nextSegment2, seg1LinkOnStart);
+            nextSegment2.setLink(nextSegment1, seg2LinkOnStart);
+
+            LOGGER.debug("linked indices({}-{} to {}-{}) remaining({})",
+                    nextSegment1.Id, seg1LinkOnStart ? "start" : "end", nextSegment2.Id, seg2LinkOnStart ? "start" : "end",
+                    mRemainingLinks.size());
+
+            /*
             Segment nextSegment1 = null;
             boolean seg1LinkOnStart = false;
             Segment nextSegment2 = null;
@@ -176,6 +211,8 @@ public class ShatteringSim
                     nextSegment1.setLink(nextSegment2, seg1LinkOnStart);
                     nextSegment2.setLink(nextSegment1, seg2LinkOnStart);
                     mRemainingLinkCount -= 2;
+
+                    LOGGER.debug("linked indices({} - {}) remaining({})", nextSegment1.Id, nextSegment2.Id, mRemainingLinkCount);
                     break;
                 }
             }
@@ -186,9 +223,13 @@ public class ShatteringSim
                 mValidRun = false;
                 break;
             }
+            */
 
             if(!moreLinksPossible())
+            {
+                LOGGER.debug("exiting with no more possible links, remainingLinks({})", nextIndex1, nextIndex2, mRemainingLinks.size());
                 break;
+            }
         }
     }
 
@@ -204,7 +245,7 @@ public class ShatteringSim
         if(last.isLinkOpen(true))
             return true;
 
-        // see a path can be traced from first to last
+        // see if a path can be traced from first to last
         Segment currentSegment = first;
         boolean nextLinkOnStart = false;
 
@@ -323,39 +364,104 @@ public class ShatteringSim
         LOGGER.debug("run({}) results: links({}) exact({}) adj({})", mRunIndex, segmentsLinked, exactMatchCount, adjacentPairs);
     }
 
-    private int[] getNextIndexPair(int bounds)
+    private int[] getNextSegmentLinks()
     {
         int[] indices = new int[2];
 
-        if(mSpecifiedOrder.size() >= 2)
+        if(mSpecifiedLinkOrder.size() >= 2)
         {
-            indices[0] = min(mSpecifiedOrder.get(0), mRemainingLinkCount);
-            mSpecifiedOrder.remove(0);
-            indices[1] = min(mSpecifiedOrder.get(0), mRemainingLinkCount);
-            mSpecifiedOrder.remove(0);
+            indices[0] = mSpecifiedLinkOrder.get(0);
+            mSpecifiedLinkOrder.remove(0);
+            indices[1] = mSpecifiedLinkOrder.get(0);
+            mSpecifiedLinkOrder.remove(0);
         }
         else
         {
-            if(bounds <= 1)
+            if (mRemainingLinks.size() == 2)
+            {
+                indices[0] = mRemainingLinks.get(0);
+                indices[1] = mRemainingLinks.get(1);
+                mRemainingLinks.clear();
+            }
+            else
+            {
+                int index = mRandom.nextInt(mRemainingLinks.size());
+                Integer index0 = mRemainingLinks.get(index);
+                mRemainingLinks.remove(index0);
+                indices[0] = index0;
+
+                index = mRandom.nextInt(mRemainingLinks.size());
+                Integer index1 = mRemainingLinks.get(index);
+                mRemainingLinks.remove(index1);
+                indices[1] = index1;
+            }
+        }
+
+        return indices;
+    }
+
+    private Segment getSegmentByLinkIndex(int linkIndex)
+    {
+        if(linkIndex < 0 || linkIndex > mMaxLinkIndex)
+        {
+            LOGGER.error("invalid linkIndex({}) vs segmentCount({})", linkIndex, mSegments.size());
+            return null;
+        }
+
+        if(linkIndex == 0)
+            return mSegments.get(0);
+
+        int segIndex = linkIndex / 2;
+
+        if((linkIndex % 2) == 1)
+            ++segIndex;
+
+        return mSegments.get(segIndex);
+    }
+
+    private boolean isSegmentStartByLinkIndex(int linkIndex)
+    {
+        if(linkIndex == 0)
+            return false;
+        else if(linkIndex == mMaxLinkIndex)
+            return true;
+        else
+            return (linkIndex % 2) == 1;
+    }
+
+    private int[] getNextIndexPair(int remainingLinks)
+    {
+        int[] indices = new int[2];
+
+        if(mSpecifiedLinkOrder.size() >= 2)
+        {
+            indices[0] = min(mSpecifiedLinkOrder.get(0), mRemainingLinkCount);
+            mSpecifiedLinkOrder.remove(0);
+            indices[1] = min(mSpecifiedLinkOrder.get(0), mRemainingLinkCount);
+            mSpecifiedLinkOrder.remove(0);
+        }
+        else
+        {
+            if(remainingLinks <= 1)
             {
                 mValidRun = false;
                 LOGGER.error("request for random ints below bound of 1");
                 return indices;
             }
 
-            if(bounds <= 2)
+            if(remainingLinks <= 2)
             {
                 indices[0] = 0;
                 indices[1] = 1;
             }
             else
             {
-                indices[0] = mRandom.nextInt(bounds);
-                indices[1] = mRandom.nextInt(bounds);
+                indices[0] = mRandom.nextInt(remainingLinks);
+                indices[1] = mRandom.nextInt(remainingLinks);
 
                 while(indices[1] == indices[0])
                 {
-                    indices[1] = mRandom.nextInt(bounds);
+                    indices[1] = mRandom.nextInt(remainingLinks);
                 }
             }
         }
@@ -375,7 +481,7 @@ public class ShatteringSim
 
         try
         {
-            String outputFileName = mOutputDir + "SIM_RESULTS.csv";
+            String outputFileName = mOutputDir + "LNX_SIM_RESULTS.csv";
 
             mResultsWriter = createBufferedWriter(outputFileName, false);
 
@@ -416,8 +522,8 @@ public class ShatteringSim
 
     public void setSpecifiedOrder(final List<Integer> order)
     {
-        mSpecifiedOrder.clear();
-        mSpecifiedOrder.addAll(order);
+        mSpecifiedLinkOrder.clear();
+        mSpecifiedLinkOrder.addAll(order);
     }
 
 }
