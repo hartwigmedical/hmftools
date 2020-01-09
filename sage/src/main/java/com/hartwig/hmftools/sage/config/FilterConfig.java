@@ -78,7 +78,7 @@ public interface FilterConfig {
         return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
     }
 
-    default int hotspotMinTumorReadContextSupportToSkipQualCheck() {
+    default int hotspotMinRawTumorVafToSkipQualCheck() {
         return 5;
     }
 
@@ -156,7 +156,7 @@ public interface FilterConfig {
 
     default boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
         return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawAltSupport() >= hotspotMinTumorReadContextSupportToSkipQualCheck();
+                && primaryTumor.rawVaf() >= hotspotMinRawTumorVafToSkipQualCheck();
     }
 
 

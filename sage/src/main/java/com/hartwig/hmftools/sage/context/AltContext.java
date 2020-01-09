@@ -125,6 +125,10 @@ public class AltContext implements VariantHotspot {
         return refContext.rawDepth();
     }
 
+    public double rawVaf() {
+        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupport) / rawDepth();
+    }
+
     @NotNull
     public String sample() {
         return refContext.sample();
