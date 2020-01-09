@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class Reannotate implements AutoCloseable, Consumer<VariantContext> {
+public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> {
 
     private static final int BUFFER_DISTANCE = 10_000;
     static final String INFRAME_INSERTION = "inframe_insertion";
@@ -35,7 +35,7 @@ public class Reannotate implements AutoCloseable, Consumer<VariantContext> {
     private final CanonicalAnnotation canonicalAnnotation = new CanonicalAnnotation();
     private final Map<String, HmfTranscriptRegion> allGenesMap;
 
-    public Reannotate(@NotNull final Map<String, HmfTranscriptRegion> allGenesMap, @NotNull final Consumer<VariantContext> consumer) {
+    public SagePostProcess(@NotNull final Map<String, HmfTranscriptRegion> allGenesMap, @NotNull final Consumer<VariantContext> consumer) {
         this.consumer = consumer;
         this.allGenesMap = allGenesMap;
     }

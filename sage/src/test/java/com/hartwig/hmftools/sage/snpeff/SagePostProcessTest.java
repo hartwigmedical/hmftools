@@ -13,12 +13,12 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 
 import org.junit.Test;
 
-public class ReannotateTest {
+public class SagePostProcessTest {
 
     @Test
     public void testInframeIndelStringsProduceExpectedCodingEffect() {
-        assertEquals(INFRAME_INSERTION, sufferConsequences(singletonList(Reannotate.INFRAME_INSERTION)).get(0));
-        assertEquals(INFRAME_DELETION, sufferConsequences(singletonList(Reannotate.INFRAME_DELETION)).get(0));
+        assertEquals(INFRAME_INSERTION, sufferConsequences(singletonList(SagePostProcess.INFRAME_INSERTION)).get(0));
+        assertEquals(INFRAME_DELETION, sufferConsequences(singletonList(SagePostProcess.INFRAME_DELETION)).get(0));
 
         assertEquals(CodingEffect.MISSENSE, CodingEffect.effect("Gene", singletonList(INFRAME_INSERTION)));
         assertEquals(CodingEffect.MISSENSE, CodingEffect.effect("Gene", singletonList(INFRAME_DELETION)));
@@ -26,7 +26,7 @@ public class ReannotateTest {
 
     @Test
     public void testSpliceDonorStringsProduceExpectedCodingEffect() {
-        assertEquals(SPLICE_DONOR_VARIANT, sufferConsequences(singletonList(Reannotate.SPLICE_DONOR_VARIANT)).get(0));
+        assertEquals(SPLICE_DONOR_VARIANT, sufferConsequences(singletonList(SagePostProcess.SPLICE_DONOR_VARIANT)).get(0));
         assertEquals(CodingEffect.SPLICE, CodingEffect.effect("Gene", singletonList(SPLICE_DONOR_VARIANT)));
     }
 

@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
-import com.hartwig.hmftools.sage.snpeff.Reannotate;
+import com.hartwig.hmftools.sage.snpeff.SagePostProcess;
+import com.hartwig.hmftools.sage.snpeff.SagePostProcessVCF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -12,12 +13,16 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
-public class SagePostSnfEffApplication implements AutoCloseable {
+public class SagePostProcessApplication implements AutoCloseable {
+
+    private static final Logger LOGGER = LogManager.getLogger(SagePostProcessApplication.class);
 
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
@@ -28,32 +33,35 @@ public class SagePostSnfEffApplication implements AutoCloseable {
         final String inputFilePath = cmd.getOptionValue(IN_VCF);
         final String outputFilePath = cmd.getOptionValue(OUT_VCF);
 
-        if (outputFilePath == null || inputFilePath == null ) {
+        if (outputFilePath == null || inputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageHotspotAnnotation", options);
+            formatter.printHelp("SagePostProcessApplication", options);
             System.exit(1);
         }
 
-        try (SagePostSnfEffApplication app = new SagePostSnfEffApplication(inputFilePath)) {
+        try (SagePostProcessApplication app = new SagePostProcessApplication(inputFilePath, outputFilePath)) {
             app.run();
         }
     }
 
-    private final String inputVcf;
-    private final Reannotate reannotate;
+    private final SagePostProcess postProcess;
+    private final VCFFileReader fileReader;
+    private final SagePostProcessVCF fileWriter;
 
-    private SagePostSnfEffApplication(final String inputVcf) {
+    private SagePostProcessApplication(final String inputVCF, final String outputVCF) {
+        LOGGER.info("Input: {}", inputVCF);
+        LOGGER.info("Output: {}", outputVCF);
 
-        this.reannotate = new Reannotate(HmfGenePanelSupplier.allGenesMap37(), x -> {
-//            System.out.println(x);
-        });
-        this.inputVcf = inputVcf;
+        this.fileReader = new VCFFileReader(new File(inputVCF), false);
+        this.fileWriter = new SagePostProcessVCF(outputVCF);
+        this.postProcess = new SagePostProcess(HmfGenePanelSupplier.allGenesMap37(), fileWriter::writeVariant);
     }
 
-    private void run() {
-        final VCFFileReader inputReader = new VCFFileReader(new File(inputVcf), false);
-        for (VariantContext context : inputReader) {
-            reannotate.accept(context);
+    private void run()  {
+        fileWriter.writeHeader(fileReader.getFileHeader());
+
+        for (VariantContext context : fileReader) {
+            postProcess.accept(context);
         }
     }
 
@@ -72,7 +80,11 @@ public class SagePostSnfEffApplication implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
-        reannotate.close();
+    public void close() {
+        fileReader.close();
+        postProcess.close();
+        fileWriter.close();
+
+        LOGGER.info("Post process complete");
     }
 }
