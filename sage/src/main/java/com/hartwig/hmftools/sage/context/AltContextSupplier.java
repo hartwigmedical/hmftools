@@ -89,7 +89,9 @@ public class AltContextSupplier implements Supplier<List<AltContext>> {
             // Add all valid alt contexts
             candidates.refContexts().stream().flatMap(x -> x.alts().stream()).filter(this::altSupportPredicate).forEach(x -> {
                 x.setPrimaryReadCounterFromInterim();
-                altContexts.add(x);
+                if (x.primaryReadContext().readContext().isComplete()) {
+                    altContexts.add(x);
+                }
             });
 
             slicer.slice(tumorReader, this::processSecondPass);
