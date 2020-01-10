@@ -8,11 +8,13 @@ public class ShatteringConfig
     public final int Iterations;
     public final int SegmentCountMin;
     public final int SegmentCountMax;
+    public final boolean GroupResults;
 
     private static final String SEG_COUNT = "sh_seg_count";
     private static final String SEG_COUNT_MIN = "sh_seg_count_min";
     private static final String SEG_COUNT_MAX = "sh_seg_count_max";
     private static final String ITERATIONS = "sh_iterations";
+    private static final String COMBINE_RESULTS = "sh_group_results";
 
     public ShatteringConfig(final CommandLine cmd)
     {
@@ -32,12 +34,15 @@ public class ShatteringConfig
         {
             SegmentCountMin = SegmentCountMax = 0;
         }
+
+        GroupResults = cmd.hasOption(COMBINE_RESULTS);
     }
 
     public ShatteringConfig(int segments, int iterations)
     {
         Iterations = iterations;
         SegmentCountMin = SegmentCountMax = segments;
+        GroupResults = false;
     }
 
     public boolean isValid()
@@ -51,6 +56,7 @@ public class ShatteringConfig
         options.addOption(SEG_COUNT_MIN, true, "Shattering segments range min");
         options.addOption(SEG_COUNT_MAX, true, "Shattering segments range max");
         options.addOption(ITERATIONS, true, "Shattering test iterations");
+        options.addOption(COMBINE_RESULTS, false, "Shattering group like results");
     }
 
 }

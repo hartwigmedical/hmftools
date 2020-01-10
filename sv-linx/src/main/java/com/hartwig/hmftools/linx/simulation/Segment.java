@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
 public class Segment
 {
     public final int Id;
+    public final boolean EndSegment; // either the start or end of the chain, always retained and only linked on one end
 
     private final boolean[] mHasLink;
     private final Segment[] mLinks;
@@ -17,6 +18,8 @@ public class Segment
         Id = id;
         mLinks = new Segment[SE_PAIR];
         mHasLink = new boolean[] {hasStart, hasEnd};
+
+        EndSegment = !hasStart || !hasEnd;
     }
 
     public boolean fullyLinked() { return !isLinkOpen(true) && !isLinkOpen(false); }

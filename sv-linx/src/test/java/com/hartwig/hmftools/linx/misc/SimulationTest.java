@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.linx.misc;
 
+import static com.hartwig.hmftools.linx.simulation.ShatteringSim.calcLinkCount;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +31,7 @@ public class SimulationTest
 
         // linking order
         List<Integer> linkOrder = Lists.newArrayList();
-        int linkCount = (segCount + 2 - 1) * 2 - 1;
+        int linkCount = calcLinkCount(segCount + 2);
 
         for(int i = 0; i <= linkCount; ++i)
         {
@@ -46,8 +48,10 @@ public class SimulationTest
         // assertEquals(0, results[SS_RESULTS_TEST_RUN]);
         assertEquals(4, result.segments());
         assertEquals(4, result.linkedSegments());
-        assertEquals(5, result.exactMatches());
+        assertEquals(5, result.exactRepairs());
         assertEquals(5, result.adjacentSegments());
+        assertEquals(0, result.inferredLinks());
+        assertEquals(0, result.inferredLost());
 
         // test all segments added last to first
         linkOrder.clear();
@@ -66,8 +70,27 @@ public class SimulationTest
 
         assertEquals(4, result.segments());
         assertEquals(4, result.linkedSegments());
-        assertEquals(5, result.exactMatches());
+        assertEquals(5, result.exactRepairs());
         assertEquals(5, result.adjacentSegments());
+        assertEquals(0, result.inferredLinks());
+        assertEquals(0, result.inferredLost());
+
+        // test no segments added
+        linkOrder.clear();
+        linkOrder.add(0);
+        linkOrder.add(9);
+
+        shatteringSim.setSpecifiedOrder(linkOrder);
+
+        shatteringSim.run();
+        assertTrue(shatteringSim.validRun());
+
+        result = shatteringSim.getLatestResults();
+
+        assertEquals(0, result.linkedSegments());
+        assertEquals(0, result.exactRepairs());
+        assertEquals(0, result.adjacentSegments());
+        assertEquals(1, result.inferredLost());
 
         // test only 2 segs added
         linkOrder.clear();
@@ -88,8 +111,10 @@ public class SimulationTest
 
         assertEquals(4, result.segments());
         assertEquals(2, result.linkedSegments());
-        assertEquals(1, result.exactMatches());
+        assertEquals(1, result.exactRepairs());
         assertEquals(1, result.adjacentSegments());
+        assertEquals(1, result.inferredLinks());
+        assertEquals(2, result.inferredLost());
 
         // leave a single fully open link
         linkOrder.clear();
@@ -111,7 +136,9 @@ public class SimulationTest
         result = shatteringSim.getLatestResults();
 
         assertEquals(3, result.linkedSegments());
-        assertEquals(1, result.exactMatches());
+        assertEquals(1, result.exactRepairs());
         assertEquals(3, result.adjacentSegments());
+        assertEquals(2, result.inferredLinks());
+        assertEquals(1, result.inferredLost());
     }
 }
