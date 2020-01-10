@@ -62,7 +62,7 @@ public class SigIndelLoader
     {
         mSampleBucketCounts = new SigMatrix(mBucketStringToIndex.size(), mConfig.SampleIds.size());
 
-        LOGGER.info("retrieving SNV data for {} samples", mConfig.SampleIds.size());
+        LOGGER.info("retrieving INDEL data for {} samples", mConfig.SampleIds.size());
 
         for(int sampleIndex = 0; sampleIndex < mConfig.SampleIds.size(); ++sampleIndex)
         {
@@ -157,7 +157,10 @@ public class SigIndelLoader
         int length = abs(altLength - refLength);
         int lengthGroup = min(length, MAX_GROUP_COUNT);
         boolean highRepeatCount = variant.repeatCount() >= 4;
-        boolean microhomology = subtype == SUBTYPE_DEL && highRepeatCount && !variant.microhomology().isEmpty();
+
+        boolean hasMicrohomology = !variant.microhomology().isEmpty() && !variant.microhomology().equals(".");
+
+        boolean microhomology = subtype == SUBTYPE_DEL && highRepeatCount && hasMicrohomology;
 
         // make a combined bucket name
         return String.format("%s_%d_%s_%s", subtype, lengthGroup, microhomology ? "MH" : "NoMH", highRepeatCount ? "RCH" : "RCL");
