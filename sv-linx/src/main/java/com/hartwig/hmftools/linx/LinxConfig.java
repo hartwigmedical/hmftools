@@ -39,6 +39,7 @@ public class LinxConfig
     final public boolean WriteVisualisationData;
     final public int ChainingSvLimit; // for analysis and chaining
     final public boolean IsGermline;
+    final public boolean IndelAnnotation;
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
@@ -67,6 +68,8 @@ public class LinxConfig
     public static final int REF_GENOME_HG38 = 38;
     public static final int REF_GENOME_HG37 = 37;
     public static int RG_VERSION = REF_GENOME_HG37;
+
+    private static final String INDEL_ANNOTATIONS = "indel_annotations";
 
     // reference files
     public static final String REF_GENOME_FILE = "ref_genome";
@@ -141,6 +144,7 @@ public class LinxConfig
         LineElementFile = cmd.getOptionValue(LINE_ELEMENT_FILE, "");
         ViralHostsFile = cmd.getOptionValue(VIRAL_HOSTS_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
+        IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
 
@@ -205,6 +209,7 @@ public class LinxConfig
         LineElementFile = "";
         ViralHostsFile = "";
         ReplicationOriginsFile = "";
+        IndelAnnotation = false;
         RequiredAnnotations = "";
         mSampleIds = Lists.newArrayList();
         MaxSamples = 0;
@@ -238,6 +243,7 @@ public class LinxConfig
         options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
+        options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");

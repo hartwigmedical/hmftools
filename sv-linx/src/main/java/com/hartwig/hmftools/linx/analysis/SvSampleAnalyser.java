@@ -66,6 +66,7 @@ import com.hartwig.hmftools.common.variant.structural.linx.LinxSvDataFile;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.annotators.FragileSiteAnnotator;
+import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
 import com.hartwig.hmftools.linx.annotators.KataegisAnnotator;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.annotators.PseudoGeneFinder;
@@ -113,6 +114,7 @@ public class SvSampleAnalyser {
     private final KataegisAnnotator mKataegisAnnotator;
     private CnDataLoader mCnDataLoader;
     private final PseudoGeneFinder mPseudoGeneFinder;
+    private IndelAnnotator mIndelAnnotator;
 
     private boolean mIsValid;
 
@@ -159,6 +161,8 @@ public class SvSampleAnalyser {
         mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
 
+        mIndelAnnotator = null;
+
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
         mPcAnnotation = new PerformanceCounter("Annotation");
@@ -177,6 +181,11 @@ public class SvSampleAnalyser {
     {
         mCnDataLoader = cnAnalyser;
         mAnalyser.setCnDataLoader(cnAnalyser);
+    }
+
+    public void setIndelAnnotator(IndelAnnotator indelAnnotator)
+    {
+        mIndelAnnotator = indelAnnotator;
     }
 
     public void setGeneCollection(final SvGeneTranscriptCollection geneCollection)

@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
+import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
@@ -110,11 +111,16 @@ public class SvLinxApplication
             config.setSampleIds(samplesList);
         }
 
-        CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
-
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config);
 
+        CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
         sampleAnalyser.setCnDataLoader(cnDataLoader);
+
+        if(config.IndelAnnotation && dbAccess != null)
+        {
+            IndelAnnotator indelAnnotator = new IndelAnnotator(dbAccess);
+            sampleAnalyser.setIndelAnnotator(indelAnnotator);
+        }
 
         DriverGeneAnnotator driverGeneAnnotator = null;
         boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);
