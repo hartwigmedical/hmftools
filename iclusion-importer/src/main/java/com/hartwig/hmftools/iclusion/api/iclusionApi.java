@@ -24,7 +24,6 @@ public final class iclusionApi {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         connection.setRequestProperty("Accept", "application/json");
-        connection.setRequestProperty("content-type", "multipart/form-data");
         connection.setRequestProperty("grant_type", "password");
         connection.setRequestProperty("client_id", iClusionClientId);
         connection.setRequestProperty("client_secret", iClusionClientSecret);
@@ -33,6 +32,8 @@ public final class iclusionApi {
 
         List<String> setCookie = connection.getHeaderFields().get("Set-Cookie");
         int tokenEnd = setCookie.get(1).indexOf(";");
+
+        //TODO create access with token
         return setCookie.get(1).substring(0, tokenEnd).split("=")[1];
 
     }
