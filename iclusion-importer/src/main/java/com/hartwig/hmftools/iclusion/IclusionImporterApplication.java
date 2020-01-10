@@ -16,6 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import com.hartwig.hmftools.iclusion.api.iclusionApi;
+
 public class IclusionImporterApplication {
     private static final Logger LOGGER = LogManager.getLogger(IclusionImporterApplication.class);
     private static final String ICLUSION_LINK = "iclusion_link";
@@ -43,9 +45,7 @@ public class IclusionImporterApplication {
         String iClusionOutputStudiesRaw = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_RAW);
         String iClusionOutputStudiesProcessed = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_PROCESSED);
 
-        LOGGER.info("Connecting with iclusion API on {}", iClusionLink);
-
-        connectWithIclusionApi(iClusionLink, iClusionClientId, iClusionClientSecret, iClusionUsername, iClusionPassword);
+        iclusionApi.connectWithIclusionApi(iClusionLink, iClusionClientId, iClusionClientSecret, iClusionUsername, iClusionPassword);
 
         LOGGER.info("Reading iclusion study details.....");
         LOGGER.info("Queried and filtered {} studies from iclusion API", "size study");
@@ -54,30 +54,6 @@ public class IclusionImporterApplication {
         writeIclusionOutputStudiesProcessedToTSVFile(iClusionOutputStudiesProcessed);
 
         LOGGER.info("Iclusion importer is finished!");
-
-    }
-
-    private static void connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
-            @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword) throws IOException {
-
-        URL url = new URL(iClusionLink); // url iclusion
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-        //        connection.setReadTimeout(1000);
-        //        connection.setConnectTimeout(1000);
-        //
-        //        connection.setDoInput(true);
-        //        connection.setDoOutput(true);
-        //        connection.setRequestMethod("POST");
-        //        connection.setRequestProperty("Accept", "application/json");
-        //        connection.setRequestProperty("content-type", "multipart/form-data");
-        //        connection.setRequestProperty("grant_type", "password");
-        //        connection.setRequestProperty("client_id", iClusionClientId);
-        //        connection.setRequestProperty("client_secret", iClusionClientSecret);
-        //        connection.setRequestProperty("username", iClusionUsername);
-        //        connection.setRequestProperty("password", iClusionPassword);
-        //        //  connection.setRequestProperty("Authorization", "Bearer " + "");
-        //        connection.connect();
 
     }
 
