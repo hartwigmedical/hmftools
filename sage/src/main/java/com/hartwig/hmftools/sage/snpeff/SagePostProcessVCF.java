@@ -6,8 +6,13 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SagePostProcessVCF implements AutoCloseable {
+
+    public static String PHASED_INFRAME_INDEL = "PII";
+    public static String RIGHT_INFRAME_INDEL = "RII";
 
     private final VariantContextWriter writer;
 
@@ -15,7 +20,9 @@ public class SagePostProcessVCF implements AutoCloseable {
         writer = new VariantContextWriterBuilder().setOutputFile(outputVCF).build();
     }
 
-    public void writeHeader(VCFHeader header) {
+    public void writeHeader(@NotNull final VCFHeader header) {
+        header.addMetaDataLine(new VCFInfoHeaderLine(PHASED_INFRAME_INDEL, 1, VCFHeaderLineType.Flag, "Phased inframe indel"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(RIGHT_INFRAME_INDEL, 1, VCFHeaderLineType.Flag, "Right aligned inframe indel"));
         writer.writeHeader(header);
     }
 
