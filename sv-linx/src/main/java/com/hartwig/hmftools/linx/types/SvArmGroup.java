@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_DB_LENGTH;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -95,16 +97,54 @@ public class SvArmGroup {
         return mChromosome.equals(other.chromosome()) && mArm.equals(other.arm());
     }
 
-    public int consistency()
-    {
-        return mBreakends.stream().mapToInt(x -> calcConsistency(x)).sum();
-    }
-
-    public void populateDbData(final ClusterMetrics data)
+    public void populateClusterMetrics(final ClusterMetrics data)
     {
         final List<SvLinkedPair> processedDBs = Lists.newArrayList();
 
-        for(int i = 0; i < mBreakends.size(); ++i)
+        // sum up the lengths of deletion bridges, but ignore any which are between remote, short TIs
+
+        // first set bounding indices to ignore any short TIs
+        int startIndex = 0;
+        for(; startIndex < mBreakends.size() - 1; )
+        {
+            final SvBreakend lowerBreakend = mBreakends.get(startIndex);
+            final SvBreakend upperBreakend = mBreakends.get(startIndex + 1);
+
+            if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
+            && lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1
+            && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
+            {
+                startIndex += 2;
+                continue;
+            }
+
+            break;
+        }
+
+        int endIndex = mBreakends.size() - 1;
+
+        for(; endIndex >= 1;)
+        {
+            final SvBreakend lowerBreakend = mBreakends.get(endIndex - 1);
+            final SvBreakend upperBreakend = mBreakends.get(endIndex);
+
+            if(upperBreakend.position() - lowerBreakend.position() <= SHORT_TI_LENGTH
+            && lowerBreakend.orientation() == -1 && upperBreakend.orientation() == 1
+            && lowerBreakend.getLinkedPairs().stream().anyMatch(x -> upperBreakend.getLinkedPairs().contains(x)))
+            {
+                endIndex -= 2;
+                continue;
+            }
+
+            break;
+        }
+
+        if(startIndex < endIndex)
+        {
+            data.TotalRange += mBreakends.get(endIndex).position() - mBreakends.get(startIndex).position();
+        }
+
+        for(int i = startIndex; i < endIndex; ++i)
         {
             final SvBreakend breakend = mBreakends.get(i);
 
@@ -118,13 +158,16 @@ public class SvArmGroup {
 
                     data.TotalDBLength += breakend.getSV().length();
 
-                    if(breakend.getSV().length() < 100)
+                    if(breakend.getSV().length() <= SHORT_DB_LENGTH)
                         ++data.ShortDBCount;
 
                     ++i;
                     continue;
                 }
             }
+
+            if(breakend.orientation() == -1)
+                continue;
 
             final SvLinkedPair dbLink = breakend.getDBLink();
 
@@ -134,7 +177,7 @@ public class SvArmGroup {
             processedDBs.add(dbLink);
             ++data.DBCount;
 
-            if(dbLink.length() < 100)
+            if(dbLink.length() <= SHORT_DB_LENGTH)
                 ++data.ShortDBCount;
 
             if(dbLink.getOtherBreakend(breakend).getCluster() == mCluster)

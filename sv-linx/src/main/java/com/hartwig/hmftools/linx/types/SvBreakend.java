@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.types;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 
+import java.util.List;
+
 import com.hartwig.hmftools.linx.cn.SvCNData;
 
 public class SvBreakend {
@@ -122,6 +124,7 @@ public class SvBreakend {
     }
 
     public final SvLinkedPair getDBLink() { return mSV.getDBLink(mUsesStart); }
+    public final List<SvLinkedPair> getLinkedPairs() { return mSV.getLinkedPairs(mUsesStart); }
 
     public boolean isFoldback()
     {

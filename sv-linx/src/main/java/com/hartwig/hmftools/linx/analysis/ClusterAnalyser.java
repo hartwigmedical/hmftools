@@ -25,6 +25,7 @@ import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
+import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -322,8 +323,6 @@ public class ClusterAnalyser {
         }
     }
 
-    private static final int SHORT_DB_LENGTH = 100;
-
     private void dissolveSimpleGroups()
     {
         // break apart any clusters of simple SVs which aren't likely or required to be chained
@@ -452,7 +451,7 @@ public class ClusterAnalyser {
         if(rangeData != null)
         {
             cluster.getMetrics().ValidAllelePloidySegmentPerc = mChainFinder.getValidAllelePloidySegmentPerc();
-            cluster.getMetrics().TotalRange = rangeData[RANGE_TOTAL];
+            cluster.getMetrics().TraversedRange = rangeData[RANGE_TOTAL];
             cluster.getMetrics().TotalDeleted = rangeData[DELETED_TOTAL];
         }
 
@@ -480,25 +479,8 @@ public class ClusterAnalyser {
 
         ClusterMetrics metrics = cluster.getMetrics();
 
-        if(metrics.TotalRange == 0)
-        {
-            long armBoundaryLength = cluster.getArmGroups().stream()
-                    .filter(x -> x.hasEndsSet())
-                    .mapToLong(x -> x.posEnd() - x.posStart()).sum();
-
+        if(metrics.TotalDeleted == 0)
             metrics.TotalDeleted = metrics.TotalDBLength;
-
-            // if not set from the cluster ploidies calculated by the chaining, use the chained length if available
-            if(cluster.isFullyChained(true))
-            {
-                metrics.TotalRange = metrics.ChainedLength;
-            }
-            else
-            {
-                // this will be valid as long as no TIs traverse centromeres
-                metrics.TotalRange = armBoundaryLength;
-            }
-        }
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
             mDmFinder.reportCluster(mSampleId, cluster);

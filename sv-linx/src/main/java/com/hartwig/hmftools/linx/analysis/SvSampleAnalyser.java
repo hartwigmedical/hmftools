@@ -714,7 +714,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain");
             mClusterFileWriter.write(",ExtTIsCnGain,OverlapTIs,ChainEndsFace,ChainEndsAway,UnchainedSVs");
 
-            mClusterFileWriter.write(",DBs,ClusterDBs,ShortDBs,TotalDBLength,TotalDeleted,TotalRange,ChainedLength,IndelCount");
+            mClusterFileWriter.write(",DBs,ShortDBs,TotalDBLength,TotalDeleted,TotalRange,ChainedLength,IndelCount");
 
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
@@ -784,9 +784,9 @@ public class SvSampleAnalyser {
 
                     int totalIndelCount = cluster.getLinkedPairs().stream().mapToInt(x -> x.getIndelCount()).sum();
 
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
-                            metrics.DBCount, metrics.ClusterDBCount, metrics.ShortDBCount,
-                            metrics.TotalDBLength, metrics.TotalDeleted, metrics.TotalRange, metrics.ChainedLength, totalIndelCount));
+                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
+                            metrics.ClusterDBCount, metrics.ShortDBCount, metrics.TotalDBLength, metrics.TotalDeleted,
+                            metrics.TotalRange, metrics.ChainedLength, totalIndelCount));
 
                     final int[] armClusterData = getArmClusterData(cluster);
                     long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();

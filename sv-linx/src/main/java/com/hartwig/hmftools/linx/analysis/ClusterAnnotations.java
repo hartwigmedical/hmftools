@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -25,7 +25,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.types.SvConstants.MAX_MERGE_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,12 +32,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
-import com.hartwig.hmftools.linx.cn.CnDataLoader;
-import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
+import com.hartwig.hmftools.linx.types.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
-import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -515,7 +512,32 @@ public class ClusterAnnotations
         if(cluster.getSvCount() == 1 || cluster.getResolvedType() == LINE)
             return;
 
-        cluster.getArmGroups().forEach(x -> x.populateDbData(cluster.getMetrics()));
+        cluster.getArmGroups().forEach(x -> x.populateClusterMetrics(cluster.getMetrics()));
+
+        // factor total range going across the centromere
+        ClusterMetrics metrics = cluster.getMetrics();
+
+        for(final List<SvBreakend> breakendList : cluster.getChrBreakendMap().values())
+        {
+            for(int i = 0; i < breakendList.size() - 1; ++i)
+            {
+                final SvBreakend breakend = breakendList.get(i);
+
+                if(breakend.arm() == CHROMOSOME_ARM_Q)
+                    break;
+
+                final SvBreakend nextBreakend = breakendList.get(i+1);
+
+                if(nextBreakend.arm() == CHROMOSOME_ARM_Q)
+                {
+                    // if either breakends point across the centromere then include it
+                    if(breakend.orientation() == -1 || nextBreakend.orientation() == 1)
+                        metrics.TotalRange += nextBreakend.position() - breakend.position();
+
+                    break;
+                }
+            }
+        }
     }
 
     private static final int INCONSISTENT_ARM = -2;
