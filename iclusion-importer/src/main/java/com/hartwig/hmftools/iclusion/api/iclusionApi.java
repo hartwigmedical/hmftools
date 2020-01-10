@@ -3,6 +3,7 @@ package com.hartwig.hmftools.iclusion.api;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +16,7 @@ public final class iclusionApi {
     private iclusionApi() {
     }
 
-    public static void connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
+    public static String connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword) throws IOException {
 
         LOGGER.info("Connecting with iclusion API on {}", iClusionLink);
@@ -29,14 +30,10 @@ public final class iclusionApi {
         connection.setRequestProperty("client_secret", iClusionClientSecret);
         connection.setRequestProperty("username", iClusionUsername);
         connection.setRequestProperty("password", iClusionPassword);
-        //  connection.setRequestProperty("Authorization", "Bearer " + "");
-        connection.connect();
 
-        LOGGER.info("headerField set cookie" + connection.getHeaderFields().get("Set-Cookie"));
-        LOGGER.info("");
-        LOGGER.info("headerField specific" + connection.getHeaderFields().get("Set-Cookie").get(1));
-
-
+        List<String> setCookie = connection.getHeaderFields().get("Set-Cookie");
+        int tokenEnd = setCookie.get(1).indexOf(";");
+        return setCookie.get(1).substring(0, tokenEnd).split("=")[1];
 
     }
 }

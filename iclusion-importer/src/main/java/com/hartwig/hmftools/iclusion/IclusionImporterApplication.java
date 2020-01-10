@@ -3,8 +3,6 @@ package com.hartwig.hmftools.iclusion;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -45,7 +43,11 @@ public class IclusionImporterApplication {
         String iClusionOutputStudiesRaw = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_RAW);
         String iClusionOutputStudiesProcessed = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_PROCESSED);
 
-        iclusionApi.connectWithIclusionApi(iClusionLink, iClusionClientId, iClusionClientSecret, iClusionUsername, iClusionPassword);
+        String token = iclusionApi.connectWithIclusionApi(iClusionLink,
+                iClusionClientId,
+                iClusionClientSecret,
+                iClusionUsername,
+                iClusionPassword);
 
         LOGGER.info("Reading iclusion study details.....");
         LOGGER.info("Queried and filtered {} studies from iclusion API", "size study");
