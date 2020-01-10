@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.stripChromosome;
 import static com.hartwig.hmftools.linx.annotators.LineElementAnnotator.NO_LINE_ELEMENT;
-import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_SV_ID;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_TEMPLATED_INSERTION_LENGTH;
 
 import java.util.List;
@@ -628,13 +627,4 @@ public class SvVarData
 
         return false;
     }
-
-    public static boolean isSpecificSV(final SvVarData var)
-    {
-        if(var.id() == SPECIFIC_SV_ID)
-            return true;
-
-        return false;
-    }
-
 }

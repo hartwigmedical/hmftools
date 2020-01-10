@@ -302,7 +302,7 @@ public class PairResolution
 
         boolean faceAway = (chainStart.position() < chainEnd.position()) == (chainStart.orientation() == 1);
 
-        int totalChainLength = chain.getLength(false);
+        long totalChainLength = chain.getLength(false);
         long syntheticLength = abs(chainStart.position() - chainEnd.position());
 
         ResolvedType resolvedType = faceAway ? ResolvedType.DEL : ResolvedType.DUP;

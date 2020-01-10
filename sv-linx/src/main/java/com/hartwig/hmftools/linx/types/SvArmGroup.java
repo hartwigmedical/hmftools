@@ -9,14 +9,10 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 
 import com.google.common.collect.Lists;
 
 import java.util.List;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 // contains all the SVs for an arm within a cluster
 public class SvArmGroup {
@@ -104,13 +100,7 @@ public class SvArmGroup {
         return mBreakends.stream().mapToInt(x -> calcConsistency(x)).sum();
     }
 
-    public static final int DB_DATA_COUNT = 0;
-    public static final int DB_DATA_CLUSTER_COUNT = 1;
-    public static final int DB_DATA_SHORT_COUNT = 2;
-    public static final int DB_DATA_TOTAL_LENGTH = 3;
-    public static final int DB_DATA_BOUNDARY_LENGTH = 4;
-
-    public void populateDbData(final int[] data)
+    public void populateDbData(final ClusterMetrics data)
     {
         final List<SvLinkedPair> processedDBs = Lists.newArrayList();
 
@@ -123,13 +113,13 @@ public class SvArmGroup {
                 // check for stand-alone DELs
                 if(i < mBreakends.size() - 1 && mBreakends.get(i + 1).getSV() == breakend.getSV())
                 {
-                    ++data[DB_DATA_COUNT];
-                    ++data[DB_DATA_CLUSTER_COUNT];
+                    ++data.DBCount;
+                    ++data.ClusterDBCount;
 
-                    data[DB_DATA_TOTAL_LENGTH] += breakend.getSV().length();
+                    data.TotalDBLength += breakend.getSV().length();
 
                     if(breakend.getSV().length() < 100)
-                        ++data[DB_DATA_SHORT_COUNT];
+                        ++data.ShortDBCount;
 
                     ++i;
                     continue;
@@ -142,22 +132,16 @@ public class SvArmGroup {
                 continue;
 
             processedDBs.add(dbLink);
-            ++data[DB_DATA_COUNT];
+            ++data.DBCount;
 
             if(dbLink.length() < 100)
-                ++data[DB_DATA_SHORT_COUNT];
+                ++data.ShortDBCount;
 
             if(dbLink.getOtherBreakend(breakend).getCluster() == mCluster)
             {
-                ++data[DB_DATA_CLUSTER_COUNT];
-                data[DB_DATA_TOTAL_LENGTH] += max(dbLink.length(), 0);
+                ++data.ClusterDBCount;
+                data.TotalDBLength += max(dbLink.length(), 0);
             }
-        }
-
-        // if this cluster has DBs between variants on the arm, then report the total width covered by the breakends
-        if(data[DB_DATA_CLUSTER_COUNT] > 0)
-        {
-            data[DB_DATA_BOUNDARY_LENGTH] += (int)(mEndPos - mStartPos);
         }
     }
 

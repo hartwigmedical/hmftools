@@ -19,11 +19,12 @@ import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.annotateTemp
 import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SimpleClustering.checkClusterDuplicates;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.DELETED_TOTAL;
+import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.RANGE_TOTAL;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -445,7 +447,15 @@ public class ClusterAnalyser {
         if(!assembledLinksOnly)
             mChainFinder.getDiagnostics().diagnoseChains();
 
-        cluster.setValidAllelePloidySegmentPerc(mChainFinder.getValidAllelePloidySegmentPerc());
+        final long[] rangeData = mChainFinder.calcRangeData();
+
+        if(rangeData != null)
+        {
+            cluster.getMetrics().ValidAllelePloidySegmentPerc = mChainFinder.getValidAllelePloidySegmentPerc();
+            cluster.getMetrics().TotalRange = rangeData[RANGE_TOTAL];
+            cluster.getMetrics().TotalDeleted = rangeData[DELETED_TOTAL];
+        }
+
         mChainFinder.clear(); // release any refs to clusters and SVs
     }
 
@@ -468,8 +478,27 @@ public class ClusterAnalyser {
         annotateClusterDeletions(cluster);
         annotateReplicationBeforeRepair(cluster);
 
-        // if(runAnnotation(mConfig.RequiredAnnotations, FOLDBACK_MATCHES))
-        //    findIncompleteFoldbackCandidates(mSampleId, cluster, mState.getChrBreakendMap(), mCnDataLoader);
+        ClusterMetrics metrics = cluster.getMetrics();
+
+        if(metrics.TotalRange == 0)
+        {
+            long armBoundaryLength = cluster.getArmGroups().stream()
+                    .filter(x -> x.hasEndsSet())
+                    .mapToLong(x -> x.posEnd() - x.posStart()).sum();
+
+            metrics.TotalDeleted = metrics.TotalDBLength;
+
+            // if not set from the cluster ploidies calculated by the chaining, use the chained length if available
+            if(cluster.isFullyChained(true))
+            {
+                metrics.TotalRange = metrics.ChainedLength;
+            }
+            else
+            {
+                // this will be valid as long as no TIs traverse centromeres
+                metrics.TotalRange = armBoundaryLength;
+            }
+        }
 
         if(runAnnotation(mConfig.RequiredAnnotations, DOUBLE_MINUTES))
             mDmFinder.reportCluster(mSampleId, cluster);

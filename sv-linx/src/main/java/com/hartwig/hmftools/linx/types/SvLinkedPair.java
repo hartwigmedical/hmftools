@@ -27,6 +27,7 @@ public class SvLinkedPair {
     private String mLocationType;
     private int mOverlapCount;
     private boolean mHasCopyNumberGain;
+    private int mIndelCount;
 
     private String mExonMatchData;
 
@@ -55,6 +56,7 @@ public class SvLinkedPair {
         mLocationType = LOCATION_TYPE_UNCLEAR;
         mOverlapCount = 0;
         mHasCopyNumberGain = false;
+        mIndelCount = 0;
         mExonMatchData = "";
 
         int length = (int) (first.position(firstLinkOnStart) - second.position(secondLinkOnStart));
@@ -165,6 +167,9 @@ public class SvLinkedPair {
 
     public void setTraversedSVCount(int count) { mTraversedSVCount = count; }
     public int getTraversedSVCount() { return mTraversedSVCount; }
+
+    public void setIndelCount(final int count) { mIndelCount = count; }
+    public int getIndelCount() { return mIndelCount; }
 
     public void setExonMatchData(final String data) { mExonMatchData = data; }
     public final String getExonMatchData() { return mExonMatchData; }

@@ -56,6 +56,30 @@ public class ChainPloidyLimits
         mValidAllelePloidySegmentPerc = 0;
     }
 
+    public static final int RANGE_TOTAL = 0;
+    public static final int DELETED_TOTAL = 1;
+
+    public final long[] calcRangeData()
+    {
+        if(mChrAllelePloidies.isEmpty())
+            return null;
+
+        long[] rangeData = {0, 0};
+
+        for (final List<SegmentPloidy> segmentList : mChrAllelePloidies.values())
+        {
+            for(final SegmentPloidy segment : segmentList)
+            {
+                if(segment.clusterPloidy() >= CLUSTER_ALLELE_PLOIDY_MIN)
+                    rangeData[RANGE_TOTAL] += segment.length();
+                else
+                    rangeData[DELETED_TOTAL] += segment.length();
+            }
+        }
+
+        return rangeData;
+    }
+
     public void determineBreakendPloidies()
     {
         int totalSegCount = 0;
@@ -79,9 +103,11 @@ public class ChainPloidyLimits
             for (int i = 0; i < breakendList.size(); ++i)
             {
                 SvBreakend breakend = breakendList.get(i);
+                SvBreakend nextBreakend = i < breakendList.size() - 1 ? breakendList.get(i + 1) : null;
 
                 allelePloidies.add(
-                        new SegmentPloidy(breakend.majorAllelePloidy(false), breakend.minorAllelePloidy(false)));
+                        new SegmentPloidy(breakend.position(), nextBreakend != null ? nextBreakend.position() : breakend.position(),
+                                breakend.majorAllelePloidy(false), breakend.minorAllelePloidy(false)));
 
                 if(!inSegment)
                 {
@@ -91,7 +117,6 @@ public class ChainPloidyLimits
                 }
                 else
                 {
-                    SvBreakend nextBreakend = (i < breakendList.size() - 1) ? breakendList.get(i + 1) : null;
                     if(nextBreakend == null || nextBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 1)
                     {
                         // a gap in the cluster so need to evaluate this contiguous section
@@ -216,14 +241,6 @@ public class ChainPloidyLimits
     private boolean calculateClusterSegmentPloidies(List<SegmentPloidy> allelePloidies)
     {
         // first establish the non-disrupted B ploidy across all segments
-        /*
-        double bNonClusterPloidyMin = allelePloidies.get(0).BUndisruptedAP;
-        for(int i = 1; i < allelePloidies.size(); ++i)
-        {
-            bNonClusterPloidyMin = min(bNonClusterPloidyMin, allelePloidies.get(i).BUndisruptedAP);
-        }
-        */
-
         double bNonClusterPloidyMin = allelePloidies.stream()
                 .filter(x -> x.isValid())
                 .mapToDouble(x -> x.BUndisruptedAP).min().orElse(0);
@@ -330,27 +347,6 @@ public class ChainPloidyLimits
 
             segment.addLinkPloidy(ploidy);
         }
-    }
-
-    public double getMinClusterLinkPloidy(final SvLinkedPair pair)
-    {
-        final SvBreakend lowerBreakend = pair.getBreakend(true);
-        final SvBreakend upperBreakend = pair.getBreakend(false);
-
-        final List<SegmentPloidy> segments = mChrAllelePloidies.get(pair.chromosome());
-
-        if(segments == null || segments.isEmpty())
-            return 0;
-
-        int startIndex = lowerBreakend.getClusterChrPosIndex();
-        double minPloidy = segments.get(startIndex).unlinkedPloidy();
-
-        for(int i = startIndex + 1; i < upperBreakend.getClusterChrPosIndex(); ++i)
-        {
-            minPloidy = min(minPloidy, segments.get(i).unlinkedPloidy());
-        }
-
-        return minPloidy;
     }
 
     public static PloidyCalcData calcPloidyUncertainty(final PloidyCalcData data1, final PloidyCalcData data2)

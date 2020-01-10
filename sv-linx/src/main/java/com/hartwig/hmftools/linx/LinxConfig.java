@@ -40,6 +40,7 @@ public class LinxConfig
     final public int ChainingSvLimit; // for analysis and chaining
     final public boolean IsGermline;
     final public boolean IndelAnnotation;
+    final public String IndelFile;
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
@@ -69,13 +70,14 @@ public class LinxConfig
     public static final int REF_GENOME_HG37 = 37;
     public static int RG_VERSION = REF_GENOME_HG37;
 
-    private static final String INDEL_ANNOTATIONS = "indel_annotations";
+    private static final String INDEL_ANNOTATIONS = "indel_annotation";
 
     // reference files
     public static final String REF_GENOME_FILE = "ref_genome";
     public static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String KATAEGIS_FILE = "kataegis_file";
+    private static final String INDEL_FILE = "indel_input_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
     private static final String VIRAL_HOSTS_FILE = "viral_hosts_file";
     private static final String REPLICATION_ORIGINS_FILE = "replication_origins_file";
@@ -86,15 +88,10 @@ public class LinxConfig
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_VERBOSE = "log_verbose";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
-    private static final String LOG_CLUSTER_ID = "log_cluster_id"; // for logging and breakends
-    private static final String LOG_SV_ID = "log_sv_id";
     private static final String WRITE_SV_DATA = "write_sv_data";
 
     // for testing only
     private static final String MAX_SAMPLES = "max_samples";
-
-    public static int SPECIFIC_CLUSTER_ID = -1;
-    public static int SPECIFIC_SV_ID = -1;
 
     private static final Logger LOGGER = LogManager.getLogger(LinxConfig.class);
 
@@ -145,6 +142,7 @@ public class LinxConfig
         ViralHostsFile = cmd.getOptionValue(VIRAL_HOSTS_FILE, "");
         ReplicationOriginsFile = cmd.getOptionValue(REPLICATION_ORIGINS_FILE, "");
         IndelAnnotation = cmd.hasOption(INDEL_ANNOTATIONS);
+        IndelFile = cmd.getOptionValue(INDEL_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
 
@@ -155,9 +153,6 @@ public class LinxConfig
         WriteSvData = cmd.hasOption(WRITE_SV_DATA);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
-
-        SPECIFIC_CLUSTER_ID = Integer.parseInt(cmd.getOptionValue(LOG_CLUSTER_ID, "-1"));
-        SPECIFIC_SV_ID = Integer.parseInt(cmd.getOptionValue(LOG_SV_ID, "-1"));
     }
 
     public static final String formOutputPath(final String dir)
@@ -208,6 +203,7 @@ public class LinxConfig
         KataegisFile = "";
         LineElementFile = "";
         ViralHostsFile = "";
+        IndelFile = "";
         ReplicationOriginsFile = "";
         IndelAnnotation = false;
         RequiredAnnotations = "";
@@ -244,11 +240,10 @@ public class LinxConfig
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
+        options.addOption(INDEL_FILE, true, "Optional: cached set of INDELs");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
         options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
-        options.addOption(LOG_CLUSTER_ID, true, "Optional: log specific cluster details");
-        options.addOption(LOG_SV_ID, true, "Optional: log specific SV details");
         options.addOption(WRITE_SV_DATA, false, "Optional: include all SV table fields in cohort output");
     }
 

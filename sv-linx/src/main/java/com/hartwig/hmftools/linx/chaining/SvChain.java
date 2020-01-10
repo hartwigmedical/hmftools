@@ -161,15 +161,45 @@ public class SvChain {
         return getOpenBreakend(seIndex(isStart));
     }
 
-    public boolean isConsistent()
+    public boolean isConsistent() { return isConsistent(false); }
+
+    public boolean isConsistent(boolean checkCentromere)
     {
         if(getFirstSV().isSglBreakend() || getLastSV().isSglBreakend())
             return false;
 
-        // treat the start and end breakends like those of a single SV
-        int consistency = calcConsistency(getOpenBreakend(SE_START));
-        consistency += calcConsistency(getOpenBreakend(SE_END));
-        return consistency == 0;
+        if(checkCentromere)
+        {
+            // criteria for consistency - either starts and ends on same arm with consistent breakends OR
+            // if ends on a different arm it needs to go through a centromere once and have 2 telomeres
+            boolean traversesCentromere = false;
+
+            for (final SvLinkedPair pair : mLinkedPairs)
+            {
+                if (pair.firstBreakend().arm() != pair.secondBreakend().arm())
+                {
+                    if (traversesCentromere)
+                        return false;
+
+                    traversesCentromere = true;
+                }
+            }
+
+            if (traversesCentromere) // orientations don't matter if exactly one centromere is included
+                return true;
+
+            // must start and end on same arm with consistent breakends
+            if (!mOpenBreakends[SE_START].getChrArm().equals(mOpenBreakends[SE_END].getChrArm()))
+                return false;
+
+            return mOpenBreakends[SE_START].orientation() != mOpenBreakends[SE_END].orientation();
+        }
+        else
+        {
+            return calcConsistency(mOpenBreakends[SE_START]) + calcConsistency(mOpenBreakends[SE_END]) == 0;
+        }
+
+
     }
 
     public boolean canAddLinkedPairToStart(final SvLinkedPair pair)
@@ -693,10 +723,10 @@ public class SvChain {
         }
     }
 
-    public int getLength(boolean closeEnds)
+    public long getLength(boolean closeEnds)
     {
         // defined as the sum of the TI lengths
-        int length = mLinkedPairs.stream().mapToInt(x -> abs(x.length())).sum();
+        long length = mLinkedPairs.stream().mapToLong(x -> abs(x.length())).sum();
 
         if(closeEnds)
         {

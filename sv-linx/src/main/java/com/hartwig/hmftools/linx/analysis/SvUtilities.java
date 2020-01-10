@@ -298,7 +298,7 @@ public class SvUtilities {
 
     public static int calcConsistency(final SvBreakend breakend)
     {
-        return (breakend.arm() == CHROMOSOME_ARM_P ? 1 : -1) * breakend.orientation() * 1;
+        return (breakend.arm() == CHROMOSOME_ARM_P ? 1 : -1) * breakend.orientation();
     }
 
     public static double MAX_COPY_NUM_DIFF = 0.5;

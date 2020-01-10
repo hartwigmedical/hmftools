@@ -33,13 +33,6 @@ public class ReplicationRepairTest
         final SvVarData var2 = createDup(2, "1", 1500, 10000);
         final SvVarData var3 = createDel(  3, "1", 9500, 10100);
 
-        // add assembly since for now simple groups are dissolved
-        // var1.setAssemblyData(false, "asmb12");
-        // var2.setAssemblyData(false, "asmb12");
-
-        // var2.setAssemblyData(true, "asmb23");
-        // var3.setAssemblyData(true, "asmb23");
-
         tester.AllVariants.add(var1);
         tester.AllVariants.add(var2);
         tester.AllVariants.add(var3);

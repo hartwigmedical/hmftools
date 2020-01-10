@@ -9,20 +9,13 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
-import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
-import static com.hartwig.hmftools.linx.types.ResolvedType.RESOLVED_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_BOUNDARY_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_REP_REPAIR;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_SHATTERING;
-import static com.hartwig.hmftools.linx.types.SvCluster.isSpecificCluster;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
@@ -522,7 +515,7 @@ public class ClusterAnnotations
         if(cluster.getSvCount() == 1 || cluster.getResolvedType() == LINE)
             return;
 
-        cluster.getArmGroups().forEach(x -> x.populateDbData(cluster.getDeletionData()));
+        cluster.getArmGroups().forEach(x -> x.populateDbData(cluster.getMetrics()));
     }
 
     private static final int INCONSISTENT_ARM = -2;
@@ -552,6 +545,8 @@ public class ClusterAnnotations
         for (final SvChain chain : cluster.getChains())
         {
             boolean chainConsistent = chain.isConsistent();
+
+            cluster.getMetrics().ChainedLength += chain.getLength(false);
 
             for(final SvLinkedPair pair : chain.getLinkedPairs())
             {

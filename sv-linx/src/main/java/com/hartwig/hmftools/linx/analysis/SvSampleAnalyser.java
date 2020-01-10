@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.DOUBLE_MINUTES;
-import static com.hartwig.hmftools.linx.analysis.ClusterAnnotations.runAnnotation;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -30,11 +28,6 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SAME_ORIENT;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_SIMPLE_DUP;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_BOUNDARY_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_CLUSTER_COUNT;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_COUNT;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_SHORT_COUNT;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_TOTAL_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -79,6 +72,7 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -317,6 +311,14 @@ public class SvSampleAnalyser {
         mAnalyser.annotateClusters();
 
         mPseudoGeneFinder.checkPseudoGeneAnnotations(getClusters());
+
+        if(mIndelAnnotator != null)
+        {
+            mIndelAnnotator.loadIndels(mSampleId);
+
+            if(!mIndelAnnotator.exceedsThresholds())
+                getClusters().forEach(x -> mIndelAnnotator.annotateCluster(x));
+        }
 
         mPcAnnotation.stop();
     }
@@ -712,7 +714,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain");
             mClusterFileWriter.write(",ExtTIsCnGain,OverlapTIs,ChainEndsFace,ChainEndsAway,UnchainedSVs");
 
-            mClusterFileWriter.write(",DBs,ClusterDBs,ShortDBs,TotalDeleted,TotalRange");
+            mClusterFileWriter.write(",DBs,ClusterDBs,ShortDBs,TotalDBLength,TotalDeleted,TotalRange,ChainedLength,IndelCount");
 
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
@@ -762,9 +764,11 @@ public class SvSampleAnalyser {
                             cluster.getClusteringReasons(), cluster.getConsistencyCount(), cluster.hasLinkingLineElements(),
                             cluster.requiresReplication(), cluster.getMinPloidy(), cluster.getMaxPloidy(), foldbackCount));
 
+                    final ClusterMetrics metrics = cluster.getMetrics();
+
                     mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%s,%.2f",
                             cluster.getArmCount(), cluster.getOriginArms(), cluster.getFragmentArms(), cluster.getConsistentArms(),
-                            cluster.getComplexArms(), cluster.getAnnotations(), cluster.getValidAllelePloidySegmentPerc()));
+                            cluster.getComplexArms(), cluster.getAnnotations(), metrics.ValidAllelePloidySegmentPerc));
 
                     long shortTIs = cluster.getLinkedPairs().stream().filter(x -> x.length() <= SHORT_TI_LENGTH).count();
 
@@ -778,11 +782,11 @@ public class SvSampleAnalyser {
                             chainMetrics.InternalTICnGain, chainMetrics.ExternalTICnGain, chainMetrics.OverlappingTIs,
                             chainMetrics.ChainEndsFace, chainMetrics.ChainEndsAway, cluster.getUnlinkedSVs().size()));
 
-                    final int[] dbData = cluster.getDeletionData();
+                    int totalIndelCount = cluster.getLinkedPairs().stream().mapToInt(x -> x.getIndelCount()).sum();
 
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d",
-                            dbData[DB_DATA_COUNT], dbData[DB_DATA_CLUSTER_COUNT], dbData[DB_DATA_SHORT_COUNT],
-                            dbData[DB_DATA_TOTAL_LENGTH], dbData[DB_DATA_BOUNDARY_LENGTH]));
+                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d",
+                            metrics.DBCount, metrics.ClusterDBCount, metrics.ShortDBCount,
+                            metrics.TotalDBLength, metrics.TotalDeleted, metrics.TotalRange, metrics.ChainedLength, totalIndelCount));
 
                     final int[] armClusterData = getArmClusterData(cluster);
                     long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();

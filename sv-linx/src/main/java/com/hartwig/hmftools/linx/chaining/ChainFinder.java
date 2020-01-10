@@ -263,6 +263,7 @@ public class ChainFinder
         return mUniqueChains;
     }
     public double getValidAllelePloidySegmentPerc() { return mClusterPloidyLimits.getValidAllelePloidySegmentPerc(); }
+    public final long[] calcRangeData() { return mClusterPloidyLimits.calcRangeData(); }
     public final ChainDiagnostics getDiagnostics() { return mDiagnostics; }
 
     public void formChains(boolean assembledLinksOnly)

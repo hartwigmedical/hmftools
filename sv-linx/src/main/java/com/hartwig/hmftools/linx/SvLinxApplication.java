@@ -116,9 +116,9 @@ public class SvLinxApplication
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
         sampleAnalyser.setCnDataLoader(cnDataLoader);
 
-        if(config.IndelAnnotation && dbAccess != null)
+        if(config.IndelAnnotation)
         {
-            IndelAnnotator indelAnnotator = new IndelAnnotator(dbAccess);
+            IndelAnnotator indelAnnotator = new IndelAnnotator(dbAccess, config.IndelFile);
             sampleAnalyser.setIndelAnnotator(indelAnnotator);
         }
 

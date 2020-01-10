@@ -9,7 +9,6 @@ public class IndelData
     public final String Ref;
     public final String Alt;
     public final String Microhomology;
-    public final String RepeatSequence;
     public final int RepeatCount;
     public final double Ploidy;
 
@@ -21,14 +20,13 @@ public class IndelData
 
     public IndelData(
             final String chromosome, long position, final String ref, final String alt, final String microhomology,
-            final String repeatSequence, int repeatCount, double ploidy)
+            int repeatCount, double ploidy)
     {
         Chromosome = chromosome;
         Position = position;
         Ref = ref;
         Alt = alt;
         Microhomology = microhomology;
-        RepeatSequence = repeatSequence;
         RepeatCount = repeatCount;
         Ploidy = ploidy;
 
@@ -48,6 +46,12 @@ public class IndelData
     }
 
     public boolean highRepeatCount() { return RepeatCount >= HIGH_REPEAT_COUNT; }
+
     public boolean microhology() { return IsDelete && highRepeatCount() && !Microhomology.isEmpty(); }
 
+    public String toString()
+    {
+        return String.format("indel(%s %s:%d) repeat(%d) microhomology(%s) ploidy(%.2f)",
+                IsDelete ? "DEL" : "INS", Chromosome, Position, RepeatCount, microhology(), Ploidy);
+    }
 }

@@ -18,11 +18,9 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
 import static com.hartwig.hmftools.linx.types.ResolvedType.NONE;
-import static com.hartwig.hmftools.linx.types.SvArmGroup.DB_DATA_BOUNDARY_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.LinxConfig.SPECIFIC_CLUSTER_ID;
 import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_PROXIMITY_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
@@ -86,13 +84,12 @@ public class SvCluster
 
     private double mMinPloidy;
     private double mMaxPloidy;
-    private double mValidAllelePloidySegmentPerc;
 
     private int mOriginArms;
     private int mFragmentArms;
     private int mConsistentArms;
     private int mComplexArms;
-    private final int[] mDeletionData;
+    private ClusterMetrics mMetrics;
 
     public static String CLUSTER_ANNOT_DM = "DM";
     public static String CLUSTER_ANNOT_BFB = "BFB";
@@ -142,14 +139,13 @@ public class SvCluster
 
         mMinPloidy = 0;
         mMaxPloidy = 0;
-        mValidAllelePloidySegmentPerc = 1.0;
         mClusteringReasons = "";
 
         mOriginArms = 0;
         mFragmentArms = 0;
         mConsistentArms = 0;
         mComplexArms= 0;
-        mDeletionData = new int[DB_DATA_BOUNDARY_LENGTH+1];
+        mMetrics = new ClusterMetrics();
     }
 
     public int id() { return mId; }
@@ -266,7 +262,7 @@ public class SvCluster
         {
             for (final SvChain chain : mChains)
             {
-                if (!chain.isConsistent())
+                if (!chain.isConsistent(requireConsistency))
                     return false;
             }
         }
@@ -709,9 +705,6 @@ public class SvCluster
         return (mMaxPloidy > mMinPloidy && mMinPloidy >= 0);
     }
 
-    public double getValidAllelePloidySegmentPerc() { return mValidAllelePloidySegmentPerc; }
-    public void setValidAllelePloidySegmentPerc(double percent) { mValidAllelePloidySegmentPerc = percent; }
-
     private void resetBreakendMapIndices()
     {
         for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
@@ -891,21 +884,13 @@ public class SvCluster
     public int getConsistentArms() { return mConsistentArms; }
     public int getComplexArms() { return mComplexArms; }
 
-    public final int[] getDeletionData() { return mDeletionData; }
+    public ClusterMetrics getMetrics() { return mMetrics; }
 
     public ChainMetrics getLinkMetrics()
     {
         ChainMetrics chainMetrics = new ChainMetrics();
         mChains.stream().forEach(x -> chainMetrics.add(x.extractChainMetrics()));
         return chainMetrics;
-    }
-
-    public static boolean isSpecificCluster(final SvCluster cluster)
-    {
-        if(cluster.id() == SPECIFIC_CLUSTER_ID)
-            return true;
-
-        return false;
     }
 
     public final List<String> getAnnotationList() { return mAnnotationList; }
