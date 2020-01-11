@@ -88,8 +88,8 @@ public class SageVariantFactory {
             }
         }
 
-        double tumorQual = primaryTumor.primaryReadContext().tumorQuality();
-        double germlineQual = normal.primaryReadContext().tumorQuality();
+        double tumorQual = primaryTumor.rawAltSupportBaseQuality();
+        double germlineQual = normal.rawAltSupportBaseQuality();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
                 result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);

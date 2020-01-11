@@ -19,8 +19,8 @@ public interface SoftFilterConfig {
     String MIN_GERMLINE_DEPTH = "min_germline_depth";
     String MIN_GERMLINE_DEPTH_ALLOSOME = "min_germline_depth_allosome";
     String MAX_GERMLINE_VAF = "max_germline_vaf";
-    String MAX_GERMLINE_REL_QUAL = "max_germline_rel_qual";
-    String MAX_GERMLINE_REL_RCC = "max_germline_rel_rcc";
+    String MAX_GERMLINE_REL_QUAL = "max_germline_rel_base_qual";
+    String MAX_GERMLINE_REL_RCC = "max_germline_rel_rcc"; //TODO: REMOVE
 
     int minTumorQual();
 
@@ -35,6 +35,7 @@ public interface SoftFilterConfig {
     double maxGermlineRelativeQual();
 
     double maxGermlineRelativeReadContextCount();
+
 
     @NotNull
     static Options createOptions(@NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue) {

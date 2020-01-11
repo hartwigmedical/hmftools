@@ -128,7 +128,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-
     private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
         int refIndex = refPosition - refBases.position() + refBases.index();
@@ -139,10 +138,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+                int baseQuality = baseQuality(readIndex, record, alt.length());
                 if (addInterimReadContexts) {
-                    refContext.altRead(ref, alt, createInsertContext(alt, refPosition, readIndex, record, refBases));
+                    refContext.altRead(ref, alt, baseQuality, createInsertContext(alt, refPosition, readIndex, record, refBases));
                 } else {
-                    refContext.altRead(ref, alt);
+                    refContext.altRead(ref, alt, baseQuality);
                 }
             }
         }
@@ -158,10 +158,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+                int baseQuality = baseQuality(readIndex, record, 2);
                 if (addInterimReadContexts) {
-                    refContext.altRead(ref, alt, createDelContext(ref, refPosition, readIndex, record, refBases));
+                    refContext.altRead(ref, alt, baseQuality, createDelContext(ref, refPosition, readIndex, record, refBases));
                 } else {
-                    refContext.altRead(ref, alt);
+                    refContext.altRead(ref, alt, baseQuality);
                 }
             }
         }
@@ -189,11 +190,12 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
                 if (readByte != refByte) {
+                    int baseQuality = record.getBaseQualities()[readBaseIndex];
                     final String alt = String.valueOf((char) readByte);
                     if (addInterimReadContexts) {
-                        refContext.altRead(ref, alt, createSNVContext(refPosition, readBaseIndex, record, refBases));
+                        refContext.altRead(ref, alt, baseQuality, createSNVContext(refPosition, readBaseIndex, record, refBases));
                     } else {
-                        refContext.altRead(ref, alt);
+                        refContext.altRead(ref, alt, baseQuality);
                     }
 
                 } else {
@@ -203,7 +205,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processMnv(@NotNull final VariantHotspot mnv, @NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength, final IndexedBases refBases) {
+    private void processMnv(@NotNull final VariantHotspot mnv, @NotNull final SAMRecord record, int readBasesStartIndex,
+            int refPositionStart, int alignmentLength, final IndexedBases refBases) {
 
         final int refPositionEnd = refPositionStart + alignmentLength - 1;
         if (refPositionStart <= mnv.position() && refPositionEnd >= mnv.end()) {
@@ -219,10 +222,14 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
                 final RefContext refContext = candidates.refContext(record.getContig(), mnv.position());
                 if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+                    int baseQuality = baseQuality(mnvReadIndex, record, mnv.alt().length());
                     if (addInterimReadContexts) {
-                        refContext.altRead(ref, alt, createMNVContext((int) mnv.position(), mnvReadIndex, mnv.alt().length(), record, refBases));
+                        refContext.altRead(ref,
+                                alt,
+                                baseQuality,
+                                createMNVContext((int) mnv.position(), mnvReadIndex, mnv.alt().length(), record, refBases));
                     } else {
-                        refContext.altRead(ref, alt);
+                        refContext.altRead(ref, alt, baseQuality);
                     }
                 }
 
@@ -230,6 +237,14 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
+    private int baseQuality(int readIndex, SAMRecord record, int length) {
+        int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
+        int quality = Integer.MAX_VALUE;
+        for (int i = readIndex; i <= maxIndex; i++) {
+            quality = Math.min(quality, record.getBaseQualities()[i]);
+        }
+        return quality;
+    }
 
     private boolean inBounds(final SAMRecord record) {
         return record.getEnd() >= bounds.start() && record.getStart() <= bounds.end();

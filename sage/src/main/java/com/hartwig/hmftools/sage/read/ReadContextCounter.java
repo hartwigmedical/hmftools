@@ -49,27 +49,6 @@ public class ReadContextCounter implements GenomePosition {
         this.readContext = readContext;
     }
 
-    public ReadContextCounter(@NotNull final VariantHotspot variant, @NotNull final ReadContextCounter left,
-            @NotNull final ReadContextCounter right) {
-        this.variant = variant;
-        this.readContext = left.readContext;
-        this.full = Math.min(left.full, right.full);
-        this.partial = Math.min(left.partial, right.partial);
-        this.core = Math.min(left.core, right.core);
-        this.reference = Math.min(left.reference, right.reference);
-        this.realigned = Math.min(left.realigned, right.realigned);
-        this.lengthened = Math.min(left.lengthened, right.lengthened);
-        this.shortened = Math.min(left.shortened, right.shortened);
-        this.coverage = Math.min(left.coverage, right.coverage);
-        this.fullQuality = Math.min(left.fullQuality, right.fullQuality);
-        this.partialQuality = Math.min(left.partialQuality, right.partialQuality);
-        this.coreQuality = Math.min(left.coreQuality, right.coreQuality);
-        this.realignedQuality = Math.min(left.realignedQuality, right.realignedQuality);
-        this.referenceQuality = Math.min(left.referenceQuality, right.referenceQuality);
-        this.totalQuality = Math.min(left.totalQuality, right.totalQuality);
-        this.jitterPenalty = Math.min(left.jitterPenalty, right.jitterPenalty);
-    }
-
     @NotNull
     @Override
     public String chromosome() {
