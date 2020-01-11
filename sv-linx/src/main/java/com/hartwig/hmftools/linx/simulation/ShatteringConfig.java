@@ -9,12 +9,16 @@ public class ShatteringConfig
     public final int SegmentCountMin;
     public final int SegmentCountMax;
     public final boolean GroupResults;
+    public final boolean RandomLinkSelection;
+    public final boolean ExhuastiveSearch;
 
     private static final String SEG_COUNT = "sh_seg_count";
     private static final String SEG_COUNT_MIN = "sh_seg_count_min";
     private static final String SEG_COUNT_MAX = "sh_seg_count_max";
     private static final String ITERATIONS = "sh_iterations";
     private static final String COMBINE_RESULTS = "sh_group_results";
+    private static final String RANDOM_SELECTION = "sh_random";
+    private static final String EXHAUSTIVE_SEARCH = "sh_exhaustive";
 
     public ShatteringConfig(final CommandLine cmd)
     {
@@ -36,6 +40,8 @@ public class ShatteringConfig
         }
 
         GroupResults = cmd.hasOption(COMBINE_RESULTS);
+        RandomLinkSelection = cmd.hasOption(RANDOM_SELECTION);
+        ExhuastiveSearch = cmd.hasOption(EXHAUSTIVE_SEARCH);
     }
 
     public ShatteringConfig(int segments, int iterations)
@@ -43,6 +49,8 @@ public class ShatteringConfig
         Iterations = iterations;
         SegmentCountMin = SegmentCountMax = segments;
         GroupResults = false;
+        RandomLinkSelection = false;
+        ExhuastiveSearch = false;
     }
 
     public boolean isValid()
@@ -57,6 +65,8 @@ public class ShatteringConfig
         options.addOption(SEG_COUNT_MAX, true, "Shattering segments range max");
         options.addOption(ITERATIONS, true, "Shattering test iterations");
         options.addOption(COMBINE_RESULTS, false, "Shattering group like results");
+        options.addOption(RANDOM_SELECTION, false, "Shattering use random selection of next link");
+        options.addOption(EXHAUSTIVE_SEARCH, false, "Shattering find all possible link combinations");
     }
 
 }

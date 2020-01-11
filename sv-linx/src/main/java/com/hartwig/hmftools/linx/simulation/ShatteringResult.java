@@ -25,6 +25,9 @@ public abstract class ShatteringResult
     // segments lost after counting contiguous lost sections as a single unit
     public abstract int inferredLost();
 
+    // string representation of the links made between segments
+    public abstract String linkStr();
+
     public boolean equals(final ShatteringResult other)
     {
         return segments() == other.segments() && linkedSegments() == other.linkedSegments()

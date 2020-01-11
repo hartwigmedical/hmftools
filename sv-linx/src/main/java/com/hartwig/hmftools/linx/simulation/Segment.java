@@ -22,6 +22,11 @@ public class Segment
         EndSegment = !hasStart || !hasEnd;
     }
 
+    public static Segment from(final Segment other)
+    {
+        return new Segment(other.Id, other.hasLink(true), other.hasLink(false));
+    }
+
     public boolean fullyLinked() { return !isLinkOpen(true) && !isLinkOpen(false); }
 
     public void clearLinks()
@@ -30,6 +35,10 @@ public class Segment
         mLinks[SE_END] = null;
     }
 
+    public boolean hasLink(boolean isStart)
+    {
+        return mHasLink[seIndex(isStart)];
+    }
     public boolean isLinkOpen(boolean isStart)
     {
         return mHasLink[seIndex(isStart)] && mLinks[seIndex(isStart)] == null;
