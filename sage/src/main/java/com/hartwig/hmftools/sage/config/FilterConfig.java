@@ -129,11 +129,11 @@ public interface FilterConfig {
         final boolean skipTumorTests = skipMinTumorQualTest(tier, context);
 
         if (!skipTumorTests && context.primaryReadContext().tumorQuality() < config.minTumorQual()) {
-            result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
+            result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
         }
 
         if (!skipTumorTests && Doubles.lessThan(context.primaryReadContext().vaf(), config.minTumorVaf())) {
-            result.add(SoftFilterConfig.MIN_TUMOR_VAF);
+            result.add(SoftFilter.MIN_TUMOR_VAF.toString());
         }
 
         return result;

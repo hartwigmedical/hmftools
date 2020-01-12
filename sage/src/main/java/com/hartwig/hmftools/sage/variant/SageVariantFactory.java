@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.FilterConfig;
+import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
@@ -73,18 +74,18 @@ public class SageVariantFactory {
         int minGermlineCoverage =
                 contextChromosome.isAllosome() ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
         if (normal.primaryReadContext().coverage() < minGermlineCoverage) {
-            result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
+            result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
 
         if (Doubles.greaterThan(normalCounter.vaf(), config.maxGermlineVaf())) {
-            result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
+            result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
 
         double tumorQual = primaryTumor.rawAltSupportBaseQuality();
         double germlineQual = normal.rawAltSupportBaseQuality();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);
+                result.add(SoftFilter.MAX_GERMLINE_REL_BASE_QUAL.toString());
             }
         }
 
