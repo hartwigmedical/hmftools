@@ -17,12 +17,12 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 // contains all the SVs for an arm within a cluster
-public class SvArmGroup {
-
+public class SvArmGroup
+{
     private final String mId;
     private List<SvVarData> mSVs;
     private List<SvBreakend> mBreakends;
-    final SvCluster mCluster;
+    private final SvCluster mCluster;
 
     private final String mChromosome;
     private final String mArm;

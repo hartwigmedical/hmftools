@@ -208,6 +208,9 @@ public class SimpleClustering
 
     protected void logClusteringDetails(final SvVarData var1, final SvVarData var2, final String reason)
     {
+        if(!mConfig.Output.WriteClusterHistory)
+            return;
+        
         try
         {
             if(mClusterHistoryWriter == null)

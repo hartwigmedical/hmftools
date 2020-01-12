@@ -125,7 +125,7 @@ public class SvSampleAnalyser {
         mSampleId = "";
 
         mAnalyser = new ClusterAnalyser(config);
-        mVisWriter = new VisualiserWriter(config.OutputDataPath, config.WriteVisualisationData, config.hasMultipleSamples());
+        mVisWriter = new VisualiserWriter(config.OutputDataPath, config.Output.WriteVisualisationData, config.hasMultipleSamples());
 
         mAllVariants = Lists.newArrayList();
         mCnDataLoader = null;
@@ -493,7 +493,7 @@ public class SvSampleAnalyser {
             // gene & replication info
             mSvFileWriter.write(",GeneStart,GeneEnd,RepOriginStart,RepOriginEnd,VirusName");
 
-            if(mConfig.WriteSvData)
+            if(mConfig.Output.WriteSvData)
             {
                 // extra copy number info
                 mSvFileWriter.write(",MinorAPStartPrev,MinorAPStartPost,MinorAPEndPrev,MinorAPEndPost,AFStart,AFEnd");
@@ -639,7 +639,7 @@ public class SvSampleAnalyser {
                             var.getGeneInBreakend(true, true), var.getGeneInBreakend(false, true),
                             var.getReplicationOrigin(true), var.getReplicationOrigin(false), virusName));
 
-                    if(mConfig.WriteSvData)
+                    if(mConfig.Output.WriteSvData)
                     {
                         mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                                 var.getBreakend(true).minorAllelePloidy(true),
@@ -734,6 +734,9 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getSvCount();
 
+                if(clusterSvCount == 1 && mConfig.Output.WriteSingleSVClusters)
+                    continue;
+
                 ResolvedType resolvedType = cluster.getResolvedType();
 
                 final String superType = getSuperType(cluster);
@@ -822,6 +825,9 @@ public class SvSampleAnalyser {
 
     private void createLinksFile()
     {
+        if(!mConfig.Output.WriteLinks)
+            return;
+
         try
         {
             String outputFileName = mConfig.OutputDataPath + "LNX_LINKS.csv";
@@ -839,11 +845,13 @@ public class SvSampleAnalyser {
         {
             LOGGER.error("error writing links to outputFile: {}", e.toString());
         }
-
     }
 
     private void generateLinksOutput(@Nullable List<LinxLink> linksData)
     {
+        if(!mConfig.Output.WriteLinks)
+            return;
+
         try
         {
             for(final SvCluster cluster : getClusters())

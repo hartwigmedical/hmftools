@@ -100,7 +100,8 @@ public class ClusterAnalyser {
 
         if(mConfig.hasMultipleSamples())
         {
-            mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath, mConfig.LogChainingMaxSize);
+            mChainFinder.getDiagnostics().setOutputDir(mConfig.OutputDataPath, mConfig.Output.LogChainingMaxSize);
+
             mDmFinder.setOutputDir(mConfig.OutputDataPath);
         }
 

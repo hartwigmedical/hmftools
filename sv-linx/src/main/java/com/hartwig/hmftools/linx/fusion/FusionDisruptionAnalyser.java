@@ -1023,7 +1023,7 @@ public class FusionDisruptionAnalyser
 
     private void addVisualisationData(final List<GeneFusion> fusionList)
     {
-        if(mVisWriter == null || !mConfig.WriteVisualisationData)
+        if(mVisWriter == null || !mConfig.Output.WriteVisualisationData)
             return;
 
         final List<VisFusionFile> visFusions = Lists.newArrayList();

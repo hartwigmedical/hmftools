@@ -25,27 +25,26 @@ import org.jetbrains.annotations.NotNull;
 
 public class LinxConfig
 {
-    final public int ProximityDistance;
-    final public String OutputDataPath;
-    final public String PurpleDataPath;
-    final public String SvDataPath;
-    final public boolean UploadToDB;
-    final public String FragileSiteFile;
-    final public String KataegisFile;
-    final public String LineElementFile;
-    final public String ReplicationOriginsFile;
-    final public String ViralHostsFile;
-    final public int MaxSamples;
-    final public boolean WriteVisualisationData;
-    final public int ChainingSvLimit; // for analysis and chaining
-    final public boolean IsGermline;
-    final public boolean IndelAnnotation;
-    final public String IndelFile;
+    public final int ProximityDistance;
+    public final String OutputDataPath;
+    public final String PurpleDataPath;
+    public final String SvDataPath;
+    public final boolean UploadToDB;
+    public final String FragileSiteFile;
+    public final String KataegisFile;
+    public final String LineElementFile;
+    public final String ReplicationOriginsFile;
+    public final String ViralHostsFile;
+    public final int MaxSamples;
+    public final int ChainingSvLimit; // for analysis and chaining
+    public final boolean IsGermline;
+    public final boolean IndelAnnotation;
+    public final String IndelFile;
 
     public boolean LogVerbose;
     public String RequiredAnnotations;
-    public int LogChainingMaxSize;
-    public boolean WriteSvData; // all SV table fields to cohort file
+
+    public final LinxOutput Output;
 
     private List<String> mSampleIds;
 
@@ -84,11 +83,9 @@ public class LinxConfig
     private static final String GERMLINE = "germline";
 
     // logging options
-    private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_VERBOSE = "log_verbose";
-    private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
-    private static final String WRITE_SV_DATA = "write_sv_data";
+
 
     // for testing only
     private static final String MAX_SAMPLES = "max_samples";
@@ -116,6 +113,7 @@ public class LinxConfig
             dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
         OutputDataPath = formOutputPath(dataOutputDir);
+        Output = new LinxOutput(cmd);
 
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
@@ -146,11 +144,8 @@ public class LinxConfig
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
 
-        LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
-        WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
-        WriteSvData = cmd.hasOption(WRITE_SV_DATA);
 
         ChainingSvLimit = cmd.hasOption(CHAINING_SV_LIMIT) ? Integer.parseInt(cmd.getOptionValue(CHAINING_SV_LIMIT)) : DEFAULT_CHAINING_SV_LIMIT;
     }
@@ -210,9 +205,8 @@ public class LinxConfig
         mSampleIds = Lists.newArrayList();
         MaxSamples = 0;
         LogVerbose = false;
-        WriteVisualisationData = false;
+        Output = new LinxOutput();
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
-        WriteSvData = false;
     }
 
     public boolean hasValidPaths()
@@ -236,15 +230,14 @@ public class LinxConfig
         options.addOption(REPLICATION_ORIGINS_FILE, true, "Origins of replication file");
         options.addOption(GERMLINE, false, "Process germline SVs");
         options.addOption(MAX_SAMPLES, true, "Limit to X samples for testing");
-        options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos");
         options.addOption(CHAINING_SV_LIMIT, true, "Optional: max cluster size for chaining");
         options.addOption(REQUIRED_ANNOTATIONS, true, "Optional: string list of annotations");
         options.addOption(INDEL_ANNOTATIONS, false, "Optional: annotate clusters and TIs with INDELs");
         options.addOption(INDEL_FILE, true, "Optional: cached set of INDELs");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
         options.addOption(LOG_VERBOSE, false, "Log extra detail");
-        options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
-        options.addOption(WRITE_SV_DATA, false, "Optional: include all SV table fields in cohort output");
+
+        LinxOutput.addCmdLineArgs(options);
     }
 
     @NotNull
