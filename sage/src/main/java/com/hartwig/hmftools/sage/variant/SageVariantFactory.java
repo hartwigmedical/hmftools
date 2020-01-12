@@ -80,14 +80,6 @@ public class SageVariantFactory {
             result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
         }
 
-        double tumorReadContextSupport = primaryTumor.primaryReadContext().altSupport();
-        double germlineReadContextSupport = normal.primaryReadContext().altSupport();
-        if (Doubles.positive(tumorReadContextSupport)) {
-            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
-            }
-        }
-
         double tumorQual = primaryTumor.rawAltSupportBaseQuality();
         double germlineQual = normal.rawAltSupportBaseQuality();
         if (Doubles.positive(tumorQual)) {

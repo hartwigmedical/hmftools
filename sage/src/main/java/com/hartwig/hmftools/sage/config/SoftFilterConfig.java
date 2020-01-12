@@ -20,7 +20,6 @@ public interface SoftFilterConfig {
     String MIN_GERMLINE_DEPTH_ALLOSOME = "min_germline_depth_allosome";
     String MAX_GERMLINE_VAF = "max_germline_vaf";
     String MAX_GERMLINE_REL_QUAL = "max_germline_rel_base_qual";
-    String MAX_GERMLINE_REL_RCC = "max_germline_rel_rcc"; //TODO: REMOVE
 
     int minTumorQual();
 
@@ -34,9 +33,6 @@ public interface SoftFilterConfig {
 
     double maxGermlineRelativeQual();
 
-    double maxGermlineRelativeReadContextCount();
-
-
     @NotNull
     static Options createOptions(@NotNull final String prefix, @NotNull final SoftFilterConfig defaultValue) {
         final Options options = new Options();
@@ -47,7 +43,6 @@ public interface SoftFilterConfig {
 
         options.addOption(prefix + "_" + MAX_GERMLINE_VAF,true,"Maximum " + prefix + " germline VAF [" + defaultValue.maxGermlineVaf() + "]");
         options.addOption(prefix + "_" + MAX_GERMLINE_REL_QUAL, true, "Maximum " + prefix + " germline relative quality [" + defaultValue.maxGermlineRelativeQual() + "]");
-        options.addOption(prefix + "_" + MAX_GERMLINE_REL_RCC, true, "Maximum " + prefix + " germline relative read context count [" + defaultValue.maxGermlineRelativeReadContextCount() + "]");
 
         return options;
     }
@@ -61,7 +56,6 @@ public interface SoftFilterConfig {
 
         final double maxGermlineVaf = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
         final double maxGermlineRelativeQual = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_QUAL, defaultValue.maxGermlineRelativeQual());
-        final double maxGermlineRelativeReadContextCount = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RCC, defaultValue.maxGermlineRelativeReadContextCount());
 
         return ImmutableSoftFilterConfig.builder()
                 .minTumorQual(minTumorQual)
@@ -70,7 +64,6 @@ public interface SoftFilterConfig {
                 .minGermlineReadContextCoverageAllosome(minGermlineDepthAllosome)
                 .maxGermlineVaf(maxGermlineVaf)
                 .maxGermlineRelativeQual(maxGermlineRelativeQual)
-                .maxGermlineRelativeReadContextCount(maxGermlineRelativeReadContextCount)
                 .build();
     }
 

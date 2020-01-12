@@ -164,8 +164,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MIN_GERMLINE_DEPTH, "Insufficient germline depth"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_VAF, "Excess germline VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_REL_QUAL, "Excess germline relative quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilterConfig.MAX_GERMLINE_REL_RCC,
-                "Excess germline relative read context count"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         return header;
