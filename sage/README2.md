@@ -143,17 +143,37 @@ If SAGE finds two phased INDELs of the same type at the same position where one 
 
 ## Hard Filters
 
+To reduce processing time there are two hard filters that are eagerly applied.  
+
+Filter | Default Value | Field
+---|---|---
+hard_min_tumor_qual | 1| `QUAL`
+hard_min_tumor_alt_support |2| Normal `AD[1]`
+
+There are two more 'hard' filters that are lazily applied at the end of the process just before writing to file. 
+These do not save any processing time but do reduce the output file size. 
+
+Filter | Default Value | Field
+---|---|---
+hard_min_tumor_qual_vcf | 30 | `QUAL`
+hard_max_normal_alt_support |2| Normal `AD[1]`
+
+Including the `hard_filter` flag will turn all the soft filters below into (lazily applied) hard filters.
+
 ## Soft Filters
 
+The following filters are applied after collecting evidence about a variant. 
+The filters are applied according to the `TIER` of the variant. 
+The `TIER` can be one of `HOTSPOT`, `PANEL` or `WIDE` as determined by the supplied hotspot and panel locations. 
 
-Filter  | Hotspot | Panel | Wide
----|---|---|---
-min_tumor_qual|35|100|150
-min_tumor_vaf|0.5%|1.5%|2.5%
-min_germline_depth|0|0|10
-min_germline_depth_allosome|0|0|6
-max_germline_vaf|10%|4%|4%
-max_germline_rel_base_qual|100%|4%|4%
+Filter  | Hotspot | Panel | Wide | Field
+---|---|---|---|---
+min_tumor_qual|35|100|150|`QUAL`
+min_tumor_vaf|0.5%|1.5%|2.5%|`AF`
+min_germline_depth|0|0|10 | ?
+min_germline_depth_allosome|0|0|6 | ?
+max_germline_vaf|10%|4%|4% | ?
+max_germline_rel_base_qual|100%|4%|4% | ?
 
 
 
