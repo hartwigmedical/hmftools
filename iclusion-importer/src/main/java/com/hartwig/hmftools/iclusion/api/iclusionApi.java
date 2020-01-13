@@ -23,7 +23,9 @@ public final class iclusionApi {
         URL url = new URL(iClusionLink); // url iclusion
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        connection.setRequestProperty("Accept", "application/json");
+      //  connection.setRequestMethod("POST");
+       // connection.setRequestProperty("Accept", "application/json");
+       // connection.setRequestProperty("content-type", "multipart/form-data");
         connection.setRequestProperty("grant_type", "password");
         connection.setRequestProperty("client_id", iClusionClientId);
         connection.setRequestProperty("client_secret", iClusionClientSecret);
