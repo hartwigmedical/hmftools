@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
-import com.hartwig.hmftools.linx.types.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -507,37 +506,15 @@ public class ClusterAnnotations
         }
     }
 
-    public static void annotateClusterDeletions(final SvCluster cluster)
+    public static void annotateClusterDeletions(final SvCluster cluster, final Map<String, List<SvBreakend>> chrBreakendMap)
     {
         if(cluster.getSvCount() == 1 || cluster.getResolvedType() == LINE)
             return;
 
-        cluster.getArmGroups().forEach(x -> x.populateClusterMetrics(cluster.getMetrics()));
+        // cluster.getArmGroups().forEach(x -> x.populateClusterMetrics(cluster.getMetrics()));
 
-        // factor total range going across the centromere
-        ClusterMetrics metrics = cluster.getMetrics();
+        cluster.getMetrics().populate(cluster, chrBreakendMap);
 
-        for(final List<SvBreakend> breakendList : cluster.getChrBreakendMap().values())
-        {
-            for(int i = 0; i < breakendList.size() - 1; ++i)
-            {
-                final SvBreakend breakend = breakendList.get(i);
-
-                if(breakend.arm() == CHROMOSOME_ARM_Q)
-                    break;
-
-                final SvBreakend nextBreakend = breakendList.get(i+1);
-
-                if(nextBreakend.arm() == CHROMOSOME_ARM_Q)
-                {
-                    // if either breakends point across the centromere then include it
-                    if(breakend.orientation() == -1 || nextBreakend.orientation() == 1)
-                        metrics.TotalRange += nextBreakend.position() - breakend.position();
-
-                    break;
-                }
-            }
-        }
     }
 
     private static final int INCONSISTENT_ARM = -2;

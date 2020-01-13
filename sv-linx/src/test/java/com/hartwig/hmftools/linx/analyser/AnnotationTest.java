@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.linx.types.SvArmCluster.getArmClusterData;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -116,6 +117,57 @@ public class AnnotationTest
         }
 
         assertTrue(hasDoubleTI);
+    }
+
+    @Test
+    public void testClusterMetrics()
+    {
+        LinxTester tester = new LinxTester();
+
+        final SvVarData var1 = createInv(tester.nextVarId(), "1", 1000, 49000,1);
+        final SvVarData var2 = createInv(tester.nextVarId(), "1", 10000, 50000,-1);
+
+        // DELs unclustered over TI
+        final SvVarData del1 = createDel(tester.nextVarId(), "1", 20000, 20100);
+        final SvVarData del2 = createDel(tester.nextVarId(), "1", 30000, 30100);
+
+        final SvVarData bnd1 = createBnd(tester.nextVarId(), "1", 52000, 1, "2", 100, -1);
+        final SvVarData bnd2 = createBnd(tester.nextVarId(), "1", 52050, -1, "2", 200, 1); // short DB
+
+        final SvVarData del3 = createDel(tester.nextVarId(), "1", 60000, 60100); // unclustered over TI
+
+        final SvVarData bnd3 = createBnd(tester.nextVarId(), "1", 74000, 1, "2", 10000, -1);
+        final SvVarData bnd4 = createBnd(tester.nextVarId(), "1", 75000, -1, "2", 11000, 1);
+
+        final SvVarData var3 = createDel(tester.nextVarId(), "1", 76000, 90000);
+        final SvVarData var4 = createDup(tester.nextVarId(), "1", 77000, 90100);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(del1);
+        tester.AllVariants.add(del2);
+        tester.AllVariants.add(del3);
+        tester.AllVariants.add(bnd1);
+        tester.AllVariants.add(bnd2);
+        tester.AllVariants.add(bnd3);
+        tester.AllVariants.add(bnd4);
+
+        tester.preClusteringInit();
+        tester.Analyser.clusterAndAnalyse();
+
+        assertEquals(4, tester.Analyser.getClusters().size());
+        SvCluster cluster = tester.Analyser.getClusters().get(0);
+
+        final ClusterMetrics metrics = cluster.getMetrics();
+        metrics.populate(cluster, tester.Analyser.getState().getChrBreakendMap());
+
+        assertEquals(5, metrics.DBCount);
+        assertEquals(1, metrics.ShortDBCount);
+        assertEquals(76000, metrics.TotalRange);
+        assertEquals(3, metrics.TraversedDelCount);
+        assertEquals(300, metrics.TraversedDelLength);
     }
 
 }
