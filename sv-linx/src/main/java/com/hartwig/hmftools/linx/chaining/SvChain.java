@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
 import static com.hartwig.hmftools.linx.chaining.ChainPloidyLimits.ploidyMatch;
+import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_EXTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_INTERNAL;
 import static com.hartwig.hmftools.linx.types.SvLinkedPair.LOCATION_TYPE_REMOTE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -1090,7 +1091,7 @@ public class SvChain {
                 if(pair.hasCopyNumberGain())
                     ++metrics.InternalTICnGain;
             }
-            else if(pair.locationType() == LOCATION_TYPE_REMOTE)
+            else if(pair.locationType() == LOCATION_TYPE_REMOTE || pair.locationType() == LOCATION_TYPE_EXTERNAL)
             {
                 ++metrics.ExternalTIs;
 

@@ -128,8 +128,8 @@ public class AnnotationTest
         final SvVarData var2 = createInv(tester.nextVarId(), "1", 10000, 50000,-1);
 
         // DELs unclustered over TI
-        final SvVarData del1 = createDel(tester.nextVarId(), "1", 20000, 20100);
-        final SvVarData del2 = createDel(tester.nextVarId(), "1", 30000, 30100);
+        final SvVarData del1 = createDel(tester.nextVarId(), "1", 20000, 20200);
+        final SvVarData del2 = createDel(tester.nextVarId(), "1", 30000, 30200);
 
         final SvVarData bnd1 = createBnd(tester.nextVarId(), "1", 52000, 1, "2", 100, -1);
         final SvVarData bnd2 = createBnd(tester.nextVarId(), "1", 52050, -1, "2", 200, 1); // short DB
@@ -167,7 +167,9 @@ public class AnnotationTest
         assertEquals(1, metrics.ShortDBCount);
         assertEquals(76000, metrics.TotalRange);
         assertEquals(3, metrics.TraversedDelCount);
-        assertEquals(300, metrics.TraversedDelLength);
+        assertEquals(1, metrics.TraversedShortDelCount);
+        assertEquals(5, metrics.ImpliedTICount);
+        assertEquals(500, metrics.TraversedDelLength);
     }
 
 }

@@ -28,6 +28,8 @@ public class ClusterMetrics
     // an indication that the cluster could have included these in shattering events
     public int TraversedDelLength;
     public int TraversedDelCount;
+    public int TraversedShortDelCount;
+    public int ImpliedTICount; // from traversed DELs
 
     public long ChainedLength; // sum of chain lengths, allowing for traversal of the same genomic region (ie from a DUP)
 
@@ -45,6 +47,8 @@ public class ClusterMetrics
         TotalDBLength = 0;
         TraversedDelLength = 0;
         TraversedDelCount = 0;
+        TraversedShortDelCount = 0;
+        ImpliedTICount = 0;
         ChainedLength = 0;
         TotalRange = 0;
         TraversedRange = 0;
@@ -106,6 +110,8 @@ public class ClusterMetrics
                 else if(nextBreakend.getChrPosIndex() > breakend.getChrPosIndex() + 2 && breakend.orientation() == -1 && nextBreakend.orientation() == 1)
                 {
                     // a gap in the cluster breakends - check for DELs from other clusters
+                    int impliedTICount = 0;
+
                     for(int j = breakend.getChrPosIndex() + 1; j < nextBreakend.getChrPosIndex() - 1; ++j)
                     {
                         final SvBreakend ncBreakend = chrBreakendList.get(j);
@@ -114,9 +120,22 @@ public class ClusterMetrics
                         {
                             TraversedDelLength += ncVar.length();
                             ++TraversedDelCount;
+
+                            if(ncVar.length() <= SHORT_DB_LENGTH)
+                            {
+                                ++TraversedShortDelCount;
+                                ++impliedTICount;
+                            }
+                            else
+                            {
+                                impliedTICount += 2;
+                            }
+
                             ++j; // past this DEL
                         }
                     }
+
+                    ImpliedTICount += impliedTICount;
                 }
 
                 if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
