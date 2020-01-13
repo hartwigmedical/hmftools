@@ -27,6 +27,7 @@ searchTerm,primaryTumorLocation,subType
 "Breast Cancer: ER-positive/HER2-negative_",Breast,"ER-positive/HER2-negative"
 "Breast Cancer: ER-positive/HER2-positive",Breast,"ER-positive/HER2-positive"
 "Breast Cancer: subtype unknown",Breast,"Subtype unknown"
+"Breast Cancer: subtype unknown_",Breast,"Subtype unknown"
 "Breast Cancer: triple negative",Breast,"Triple negative"
 "Breast Cancer: triple negative_",Breast,"Triple negative"
 "Carcinoma NOS ex pleimorf adenoma",Head and neck,"Salivary Gland"
