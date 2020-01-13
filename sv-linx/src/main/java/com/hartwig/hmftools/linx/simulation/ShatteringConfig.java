@@ -40,7 +40,7 @@ public class ShatteringConfig
         }
 
         GroupResults = cmd.hasOption(COMBINE_RESULTS);
-        RandomLinkSelection = cmd.hasOption(RANDOM_SELECTION);
+        RandomLinkSelection = true; // cmd.hasOption(RANDOM_SELECTION);
         ExhuastiveSearch = cmd.hasOption(EXHAUSTIVE_SEARCH);
     }
 
