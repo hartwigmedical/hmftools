@@ -16,10 +16,11 @@ public class SoftFilterTest {
 
     @Test
     public void testIsGermlineAndNotTumorFiltered() {
-        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet()));
 
         assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString())));
         assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString(), MAX_GERMLINE_VAF.toString())));
+
+        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet()));
         assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString(), MIN_TUMOR_QUAL.toString())));
         assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString(), "Random Filter")));
     }

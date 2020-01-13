@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.select.TierSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -33,12 +34,6 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         this.tierSelector = new TierSelector(panel, hotspots);
     }
 
-    //    SnvSnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory2 factory) {
-    //        this.enabled = true;
-    //        this.consumer = consumer;
-    //        this.factory = factory;
-    //    }
-
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
         flush(newEntry);
@@ -48,10 +43,12 @@ class SnvSnvMerge implements Consumer<SageVariant> {
                 final SageVariant oldEntry = list.get(i);
                 if (isMnv(oldEntry, newEntry)) {
                     final VariantHotspot candidate = factory.merge(oldEntry.primaryTumor(), newEntry.primaryTumor());
-                    boolean bothEntriesPass = newEntry.isPassing() && oldEntry.isPassing();
-                    boolean candidateIsHotspot = tierSelector.isHotspot(candidate);
 
-                    if (bothEntriesPass || candidateIsHotspot) {
+                    boolean candidateIsHotspot = tierSelector.isHotspot(candidate);
+                    boolean bothEntriesPass = newEntry.isPassing() && oldEntry.isPassing();
+                    boolean onePassingOneGermlineFiltered = onePassingOneGermlineFiltered(oldEntry, newEntry);
+
+                    if (bothEntriesPass || candidateIsHotspot || onePassingOneGermlineFiltered) {
                         SageVariant mnv = factory.mnv(newEntry.localPhaseSet(), candidate);
                         if (isPassingWithNoSupportInNormal(mnv) ||  candidateIsHotspot) {
                             newEntry.filters().add(SageVCF.MERGE_FILTER);
@@ -62,6 +59,10 @@ class SnvSnvMerge implements Consumer<SageVariant> {
                                 list.add(i, mnv);
                                 i++;
                             }
+                        } else if (onePassingOneGermlineFiltered) {
+                            mnv.filters().add(SageVCF.GERMLINE_MVN);
+                            list.add(i, mnv);
+                            i++;
                         }
                     }
                 }
@@ -69,6 +70,11 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         }
 
         list.add(newEntry);
+    }
+
+    private boolean onePassingOneGermlineFiltered(SageVariant oldVariant, SageVariant newVariant) {
+        return oldVariant.isPassing() && SoftFilter.isGermlineAndNotTumorFiltered(newVariant.filters())
+                || newVariant.isPassing() && SoftFilter.isGermlineAndNotTumorFiltered(oldVariant.filters());
     }
 
     private boolean isPassingWithNoSupportInNormal(@NotNull final SageVariant mnv) {
