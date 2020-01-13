@@ -20,7 +20,7 @@ public class SamSlicer {
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
-    SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice) {
+    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice) {
         this.minMappingQuality = minMappingQuality;
         this.regions = Collections.singletonList(slice);
     }

@@ -49,8 +49,7 @@ public class PipelineFactory {
         final Chromosome chromosome = HumanChromosome.fromString(contig);
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots.get(chromosome), panel.get(chromosome));
 
-        return new ChromosomePipeline(contig, config, refSequence, variantFactory, variantContextFactory);
-
+        return new ChromosomePipeline(contig, config, refSequence, variantFactory, variantContextFactory, hotspots.get(chromosome), panel.get(chromosome));
     }
 
     @NotNull

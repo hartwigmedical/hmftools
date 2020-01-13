@@ -11,7 +11,7 @@
     <artifactId>iclusion-importer</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HMF Tools - iClusion importer</name>
+    <name>HMF Tools - iClusion Importer</name>
 
     <dependencies>
         <dependency>
@@ -27,14 +27,14 @@
             <artifactId>log4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

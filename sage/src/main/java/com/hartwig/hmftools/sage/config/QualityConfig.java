@@ -27,7 +27,7 @@ public interface QualityConfig {
     int DEFAULT_READ_EDGE_FIXED_PENALTY = 6;
     int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    int DEFAULT_MAP_QUAL_DISTANCE_FROM_REF = 8;
+    int DEFAULT_MAP_QUAL_DISTANCE_FROM_REF = 10;
 
     double jitterPenalty();
 

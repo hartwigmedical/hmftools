@@ -23,7 +23,7 @@ public class AltContext implements VariantHotspot {
 
     private ReadContextCounter readContextCounter;
     private int rawSupport;
-
+    private int rawSupportBaseQuality;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
         refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
@@ -37,12 +37,10 @@ public class AltContext implements VariantHotspot {
         this.alt = alt;
     }
 
-    public RefContext refContext() {
-        return refContext;
-    }
 
-    public void incrementAltRead() {
+    public void incrementAltRead(int baseQuality) {
         this.rawSupport++;
+        this.rawSupportBaseQuality += baseQuality;
     }
 
     public void addReadContext(@NotNull final ReadContext newReadContext) {
@@ -126,11 +124,18 @@ public class AltContext implements VariantHotspot {
         return refContext.rawDepth();
     }
 
+    public double rawVaf() {
+        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupport) / rawDepth();
+    }
+
+    public int rawAltSupportBaseQuality() {
+        return rawSupportBaseQuality;
+    }
+
     @NotNull
     public String sample() {
         return refContext.sample();
     }
-
 
     @Override
     public boolean equals(@Nullable Object another) {

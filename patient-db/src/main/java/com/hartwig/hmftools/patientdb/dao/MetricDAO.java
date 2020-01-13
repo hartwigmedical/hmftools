@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.dao;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.METRIC;
 
+import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,12 +17,13 @@ class MetricDAO {
         this.context = context;
     }
 
-    void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
+    void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {
         deleteMetricForSample(sample);
 
-        Double tumorMeanCoverage = metrics.tumorMeanCoverage();
-        Double tumor30xCoveragePercentage = metrics.tumor30xCoveragePercentage();
-        Double tumor60xCoveragePercentage = metrics.tumor60xCoveragePercentage();
+        WGSMetrics wgsMetrics = metrics.wgsMetrics();
+        Double tumorMeanCoverage = wgsMetrics.tumorMeanCoverage();
+        Double tumor30xCoveragePercentage = wgsMetrics.tumor30xCoveragePercentage();
+        Double tumor60xCoveragePercentage = wgsMetrics.tumor60xCoveragePercentage();
 
         // We only write metrics for somatic runs.
         assert tumorMeanCoverage != null;
@@ -35,14 +37,16 @@ class MetricDAO {
                 METRIC.REFCOVERAGE20XPERCENTAGE,
                 METRIC.TUMORMEANCOVERAGE,
                 METRIC.TUMORCOVERAGE30XPERCENTAGE,
-                METRIC.TUMORCOVERAGE60XPERCENTAGE)
+                METRIC.TUMORCOVERAGE60XPERCENTAGE,
+                METRIC.METRICQC)
                 .values(sample,
-                        DatabaseUtil.decimal(metrics.refMeanCoverage()),
-                        DatabaseUtil.decimal(metrics.ref10xCoveragePercentage()),
-                        DatabaseUtil.decimal(metrics.ref20xCoveragePercentage()),
+                        DatabaseUtil.decimal(wgsMetrics.refMeanCoverage()),
+                        DatabaseUtil.decimal(wgsMetrics.ref10xCoveragePercentage()),
+                        DatabaseUtil.decimal(wgsMetrics.ref20xCoveragePercentage()),
                         DatabaseUtil.decimal(tumorMeanCoverage),
                         DatabaseUtil.decimal(tumor30xCoveragePercentage),
-                        DatabaseUtil.decimal(tumor60xCoveragePercentage))
+                        DatabaseUtil.decimal(tumor60xCoveragePercentage),
+                        metrics.qcMetric() ? (byte) 1 : (byte) 0)
                 .execute();
     }
 

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.context;
 import java.util.Arrays;
 import java.util.EnumSet;
 
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 
@@ -22,6 +23,13 @@ public class RefSequence {
     private final int sequenceLength;
     private final int actualStart;
     private final ReferenceSequence sequence;
+
+    public RefSequence(@NotNull final GenomePosition position, @NotNull final IndexedFastaSequenceFile refGenome) {
+        sequenceLength = refGenome.getSequenceDictionary().getSequence(position.chromosome()).getSequenceLength();
+        actualStart = Math.max(1, (int) position.position() - BUFFER);
+        final int actualEnd = Math.min(sequenceLength, (int) position.position() + BUFFER);
+        this.sequence = refGenome.getSubsequenceAt(position.chromosome(), actualStart, actualEnd);
+    }
 
     public RefSequence(@NotNull final GenomeRegion region, @NotNull final IndexedFastaSequenceFile refGenome) {
         sequenceLength = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();

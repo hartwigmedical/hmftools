@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
+import static com.hartwig.hmftools.common.variant.VariantConsequence.sufferConsequences;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -7,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.VariantConsequence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,7 +72,7 @@ public final class SnpEffAnnotationFactory {
         return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
                 .effects(parts[1])
-                .consequences(toConsequences(toEffects(parts[1])))
+                .consequences(sufferConsequences(toEffects(parts[1])))
                 .severity(parts[2])
                 .gene(parts[3])
                 .geneID(parts[4])
@@ -109,21 +110,5 @@ public final class SnpEffAnnotationFactory {
         return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
     }
 
-    @NotNull
-    private static List<VariantConsequence> toConsequences(@NotNull final List<String> effects) {
-        final List<VariantConsequence> consequences = Lists.newArrayList();
-        for (final String part : effects) {
-            boolean found = false;
-            for (final VariantConsequence consequence : VariantConsequence.values()) {
-                if (consequence.isParentTypeOf(part)) {
-                    found = true;
-                    consequences.add(consequence);
-                }
-            }
-            if (!found) {
-                consequences.add(VariantConsequence.OTHER);
-            }
-        }
-        return consequences;
-    }
+
 }

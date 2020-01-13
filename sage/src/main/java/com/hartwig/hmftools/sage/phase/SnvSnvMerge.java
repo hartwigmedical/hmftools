@@ -6,7 +6,10 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.select.TierSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
 
@@ -20,19 +23,21 @@ class SnvSnvMerge implements Consumer<SageVariant> {
     private final MnvFactory factory;
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> list = Lists.newLinkedList();
+    private final TierSelector tierSelector;
 
-    SnvSnvMerge(final SageConfig config, @NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
+    SnvSnvMerge(final SageConfig config, @NotNull final Consumer<SageVariant> consumer, @NotNull final MnvFactory factory,
+            @NotNull final List<GenomeRegion> panel, @NotNull final List<VariantHotspot> hotspots) {
         this.enabled = config.mnvDetection();
         this.consumer = consumer;
         this.factory = factory;
+        this.tierSelector = new TierSelector(panel, hotspots);
     }
 
-    SnvSnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory factory) {
-        this.enabled = true;
-        this.consumer = consumer;
-        this.factory = factory;
-    }
-
+    //    SnvSnvMerge(@NotNull final Consumer<SageVariant> consumer, MnvFactory2 factory) {
+    //        this.enabled = true;
+    //        this.consumer = consumer;
+    //        this.factory = factory;
+    //    }
 
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
@@ -42,16 +47,21 @@ class SnvSnvMerge implements Consumer<SageVariant> {
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);
                 if (isMnv(oldEntry, newEntry)) {
+                    final VariantHotspot candidate = factory.merge(oldEntry.primaryTumor(), newEntry.primaryTumor());
                     boolean bothEntriesPass = newEntry.isPassing() && oldEntry.isPassing();
-                    final SageVariant mnv = factory.createMNV(oldEntry, newEntry);
-                    if (bothEntriesPass || mnv.isPassing()) {
-                        newEntry.filters().add(SageVCF.MERGE_FILTER);
-                        oldEntry.filters().add(SageVCF.MERGE_FILTER);
-                        if (oldEntry.isSynthetic()) {
-                            list.set(i, mnv);
-                        } else {
-                            list.add(i, mnv);
-                            i++;
+                    boolean candidateIsHotspot = tierSelector.isHotspot(candidate);
+
+                    if (bothEntriesPass || candidateIsHotspot) {
+                        SageVariant mnv = factory.mnv(newEntry.localPhaseSet(), candidate);
+                        if (isPassingWithNoSupportInNormal(mnv) ||  candidateIsHotspot) {
+                            newEntry.filters().add(SageVCF.MERGE_FILTER);
+                            oldEntry.filters().add(SageVCF.MERGE_FILTER);
+                            if (oldEntry.isSynthetic()) {
+                                list.set(i, mnv);
+                            } else {
+                                list.add(i, mnv);
+                                i++;
+                            }
                         }
                     }
                 }
@@ -59,6 +69,10 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         }
 
         list.add(newEntry);
+    }
+
+    private boolean isPassingWithNoSupportInNormal(@NotNull final SageVariant mnv) {
+        return mnv.isPassing() && mnv.normal().primaryReadContext().altSupport() == 0;
     }
 
     private void flush(@NotNull final GenomePosition position) {

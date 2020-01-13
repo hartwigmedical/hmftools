@@ -13,23 +13,23 @@
         <module>hmf-extensions</module>
         <module>api-clients</module>
         <module>ensembl-db</module>
+        <module>hmf-gene-panel-builder</module>
         <module>patient-db</module>
+        <module>bam-slicer</module>
         <module>patient-reporter</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
         <module>amber</module>
-        <module>sage</module>
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
-        <module>hmf-gene-panel-builder</module>
+        <module>sage</module>
         <module>strelka-post-process</module>
-        <module>bam-slicer</module>
         <module>bachelor</module>
         <module>hmf-id-generator</module>
         <module>sv-linx</module>
         <module>stat_calcs</module>
-        <module>knowledgebase-importer</module>
         <module>sig_analyser</module>
+        <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
     </modules>
@@ -55,7 +55,7 @@
         <sv-linx.version>1.7</sv-linx.version>
         <amber.version>3.1</amber.version>
         <cobalt.version>1.8</cobalt.version>
-        <purple.version>2.36</purple.version>
+        <purple.version>2.37</purple.version>
         <sage.version>1.1</sage.version>
         <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>

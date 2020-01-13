@@ -7,10 +7,13 @@ import java.util.Set;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.FilterConfig;
+import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
@@ -42,23 +45,12 @@ public class SageVariantFactory {
     public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
 
         final SageVariantTier tier = tierSelector.tier(normal);
-        final SoftFilterConfig softConfig = softConfig(tier);
+        final SoftFilterConfig softConfig = config.softConfig(tier);
         final Set<String> filters = filters(tier, softConfig, normal, tumorAltContexts.get(0));
 
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
 
-    @NotNull
-    private SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
-        switch (tier) {
-            case HOTSPOT:
-                return config.softHotspotFilter();
-            case PANEL:
-                return config.softPanelFilter();
-            default:
-                return config.softWideFilter();
-        }
-    }
 
     @NotNull
     private Set<String> germlineOnlyFilters(@NotNull final AltContext germline) {
@@ -75,48 +67,28 @@ public class SageVariantFactory {
     private Set<String> filters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
             @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
+        result.addAll(this.config.tumorFilters(tier, primaryTumor));
 
         final ReadContextCounter normalCounter = normal.primaryReadContext();
-        final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
-
-        if (!skipTumorTests && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
-            result.add(SoftFilterConfig.MIN_TUMOR_QUAL);
-        }
-
-        if (!skipTumorTests && Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
-            result.add(SoftFilterConfig.MIN_TUMOR_VAF);
-        }
-
-        if (normal.primaryReadContext().coverage() < config.minGermlineReadContextCoverage()) {
-            result.add(SoftFilterConfig.MIN_GERMLINE_DEPTH);
+        Chromosome contextChromosome = HumanChromosome.fromString(normal.chromosome());
+        int minGermlineCoverage =
+                contextChromosome.isAllosome() ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
+        if (normal.primaryReadContext().coverage() < minGermlineCoverage) {
+            result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
 
         if (Doubles.greaterThan(normalCounter.vaf(), config.maxGermlineVaf())) {
-            result.add(SoftFilterConfig.MAX_GERMLINE_VAF);
+            result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
 
-        double tumorReadContextSupport = primaryTumor.primaryReadContext().altSupport();
-        double germlineReadContextSupport = normal.primaryReadContext().altSupport();
-        if (Doubles.positive(tumorReadContextSupport)) {
-            if (Doubles.greaterThan(germlineReadContextSupport / tumorReadContextSupport, config.maxGermlineRelativeReadContextCount())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_RCC);
-            }
-        }
-
-        double tumorQual = primaryTumor.primaryReadContext().tumorQuality();
-        double germlineQual = normal.primaryReadContext().tumorQuality();
+        double tumorQual = primaryTumor.rawAltSupportBaseQuality();
+        double germlineQual = normal.rawAltSupportBaseQuality();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
-                result.add(SoftFilterConfig.MAX_GERMLINE_REL_QUAL);
+                result.add(SoftFilter.MAX_GERMLINE_REL_BASE_QUAL.toString());
             }
         }
 
         return result;
     }
-
-    private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawAltSupport() >= config.hotspotMinTumorReadContextSupportToSkipQualCheck();
-    }
-
 }

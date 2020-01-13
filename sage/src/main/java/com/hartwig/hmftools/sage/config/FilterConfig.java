@@ -2,6 +2,13 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -27,9 +34,9 @@ public interface FilterConfig {
             .minTumorQual(0)
             .minTumorVaf(0)
             .minGermlineReadContextCoverage(0)
+            .minGermlineReadContextCoverageAllosome(0)
             .maxGermlineVaf(1d)
             .maxGermlineRelativeQual(1d)
-            .maxGermlineRelativeReadContextCount(1d)
             .build();
 
     SoftFilterConfig DEFAULT_HOTSPOT_FILTER =
@@ -39,19 +46,18 @@ public interface FilterConfig {
             .from(NO_FILTER)
             .minTumorQual(100)
             .minTumorVaf(0.015)
-            .maxGermlineVaf(0.05)
-            .maxGermlineRelativeQual(0.05)
-            .maxGermlineRelativeReadContextCount(0.05)
+            .maxGermlineVaf(0.04)
+            .maxGermlineRelativeQual(0.04)
             .build();
 
     SoftFilterConfig DEFAULT_WIDE_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
             .minTumorQual(150)
             .minTumorVaf(0.025)
-            .minGermlineReadContextCoverage(7)
-            .maxGermlineVaf(0.05)
-            .maxGermlineRelativeQual(0.05)
-            .maxGermlineRelativeReadContextCount(0.05)
+            .minGermlineReadContextCoverage(10)
+            .minGermlineReadContextCoverageAllosome(6)
+            .maxGermlineVaf(0.04)
+            .maxGermlineRelativeQual(0.04)
             .build();
 
     boolean hardFilter();
@@ -69,7 +75,7 @@ public interface FilterConfig {
         return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
     }
 
-    default int hotspotMinTumorReadContextSupportToSkipQualCheck() {
+    default int hotspotMinRawTumorVafToSkipQualCheck() {
         return 5;
     }
 
@@ -113,4 +119,42 @@ public interface FilterConfig {
                 .build();
 
     }
+
+    @NotNull
+    default Set<String> tumorFilters(@NotNull final SageVariantTier tier, @NotNull final AltContext context) {
+
+        final Set<String> result = Sets.newHashSet();
+        final SoftFilterConfig config = softConfig(tier);
+
+        final boolean skipTumorTests = skipMinTumorQualTest(tier, context);
+
+        if (!skipTumorTests && context.primaryReadContext().tumorQuality() < config.minTumorQual()) {
+            result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
+        }
+
+        if (!skipTumorTests && Doubles.lessThan(context.primaryReadContext().vaf(), config.minTumorVaf())) {
+            result.add(SoftFilter.MIN_TUMOR_VAF.toString());
+        }
+
+        return result;
+    }
+
+    @NotNull
+    default SoftFilterConfig softConfig(@NotNull final SageVariantTier tier) {
+        switch (tier) {
+            case HOTSPOT:
+                return softHotspotFilter();
+            case PANEL:
+                return softPanelFilter();
+            default:
+                return softWideFilter();
+        }
+    }
+
+    default boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
+        return tier.equals(SageVariantTier.HOTSPOT)
+                && primaryTumor.rawVaf() >= hotspotMinRawTumorVafToSkipQualCheck();
+    }
+
+
 }

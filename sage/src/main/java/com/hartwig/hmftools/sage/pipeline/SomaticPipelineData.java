@@ -84,6 +84,11 @@ class SomaticPipelineData {
 
     @NotNull
     public List<SageVariant> results() {
+        return results(variantFactory);
+    }
+
+    @NotNull
+    public List<SageVariant> results(@NotNull final SageVariantFactory variantFactory) {
         List<SageVariant> result = Lists.newArrayList();
 
         final Comparator<VariantHotspot> hotspotComparator = (o1, o2) -> {

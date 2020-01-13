@@ -11,7 +11,7 @@
     <artifactId>hmf-id-generator</artifactId>
     <packaging>jar</packaging>
     <version>2.1</version>
-    <name>HMF Tools - Id Generator</name>
+    <name>HMF Tools - HMF ID Generator</name>
 
     <dependencies>
         <dependency>

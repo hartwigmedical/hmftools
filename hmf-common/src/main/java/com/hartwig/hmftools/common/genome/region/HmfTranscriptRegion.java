@@ -36,7 +36,7 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
 
     @Value.Derived
     @Nullable
-    HmfExonRegion exonByIndex(int index) {
+    public HmfExonRegion exonByIndex(int index) {
         int effectiveIndex = index - 1;
         List<HmfExonRegion> strandSortedExome = strandSortedExome();
 
