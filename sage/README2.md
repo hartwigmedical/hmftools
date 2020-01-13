@@ -95,7 +95,7 @@ This is demonstrated in the example below where two SNVs share an identical sequ
 
 <pre>
 REF: CAACAATCGAACGATATAAATCTGAAA
-A>T: CAACAATCGA<b>T</b>CGATAAAATC
+A>T: CAACAATCGA<b>T</b>CGATACAATC
 T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 </pre>
 
@@ -107,8 +107,19 @@ Phasing variants opens up a number of algorithmic possibilities including MNV de
 
 ### MNV Detection
 
-If two SNVs are separated by no more than one base, they will be merged together to form a MNV.  
-For example, the following phased SNVs will me merged to give the resultant MNV `TCGA > CGGT`:
+Phased SNVs separated by no more than one base may indicate the existence of a MNV. 
+To confirm the existence of a MNV we re-examine the bam files, but only if:
+  1. the SNVs are unfiltered;
+  2. the resultant MNV is a hotspot; or
+  3. one of the SNVs is unfiltered and the other is a germline variant (ie, soft-filtered by the germline criteria only).
+
+Once the evidence is collected, the MNV is included if it is either unfiltered with <b> NO SUPPORT IN THE NORMAL </b> or it's a hotpot. 
+In either case, the constituent SNVs are filtered with `merge`.   
+
+If the MNV contains a germline variant (case 3 above) it is filtered with `germline_mnv` before being written to file and the constituent SNVs remain unchanged.
+The purpose of this is to capture the impact of the germline variant together with the somatic variant. 
+
+The following example shows unfiltered, phased, SNVs that produce the MNV `TCGA > CGGT`:
 <pre>
 REF: CAACAATCGATCGATATAAATCTGA
 T>C: CAACAA<b>C</b>GGTTCGATATAAATC
@@ -117,21 +128,6 @@ A>T:    CAACGG<b>T</b>TCGATATAAATCTGA
 
 MNV: CAACAA<b>CG</b>G<b>T</b>TCGATATAAATCTGA
 </pre>
-
-The smallest value of each of the SNV properties (ie ref support, alt support, read context full match etc) is used to construct the MNV.
-The merged SNVs are filtered with `merge`.
-
-### SNV De-duplication
-
-By convention, INDELs start one base to the left of the actual insert or delete. 
-If this base is also a SNV, this will result in 2 variants, 1 for the SNV and 1 for the INDEL, ie:
-
-```
-C > T
-C > TCAA
-```
-
-If the two variants are phased, the SNV is superfluous, and is thus filtered with `dedup`. 
 
 
 ### INDEL De-duplication
@@ -158,3 +154,6 @@ min_germline_depth|0|0|10
 min_germline_depth_allosome|0|0|6
 max_germline_vaf|10%|4%|4%
 max_germline_rel_base_qual|100%|4%|4%
+
+
+
