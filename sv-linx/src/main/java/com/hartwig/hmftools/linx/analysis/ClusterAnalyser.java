@@ -43,7 +43,6 @@ import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.linx.types.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -198,7 +197,7 @@ public class ClusterAnalyser {
         mPcChaining.pause();
 
         mPcClustering.resume();
-        mSimpleClustering.mergeClusters(mSampleId, mClusters);
+        mSimpleClustering.mergeClusters(mClusters);
         mPcClustering.pause();
 
         // log basic clustering details
@@ -212,6 +211,7 @@ public class ClusterAnalyser {
 
         mPcClustering.resume();
         mComplexClustering.applyRules(mSampleId);
+        mSimpleClustering.mergeLongDelDupClusters(mClusters);
         mPcClustering.stop();
 
         mPcChaining.resume();
@@ -475,7 +475,7 @@ public class ClusterAnalyser {
     private void reportClusterFeatures(final SvCluster cluster)
     {
         annotateClusterChains(cluster);
-        annotateClusterDeletions(cluster);
+        annotateClusterDeletions(cluster, mState.getChrBreakendMap());
         annotateReplicationBeforeRepair(cluster);
 
         ClusterMetrics metrics = cluster.getMetrics();

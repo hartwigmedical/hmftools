@@ -3,6 +3,8 @@ package com.hartwig.hmftools.linx.analyser;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_INV;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -13,7 +15,6 @@ import static com.hartwig.hmftools.linx.utils.SvTestUtils.createTestSv;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_FOLDBACKS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP_OR_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_CONSECUTIVE_BREAKENDS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_STRADDLING_FOLDBACK_BREAKENDS;
@@ -156,8 +157,8 @@ public class MergeRuleTest
 
         SvCluster cluster = tester.getClusters().get(0);
 
-        assertTrue(var1.getClusterReason().contains(CR_LONG_DEL_DUP_OR_INV));
-        assertTrue(cluster.getClusteringReasons().contains(CR_LONG_DEL_DUP_OR_INV));
+        assertTrue(var1.getClusterReason().contains(CR_LONG_INV));
+        assertTrue(cluster.getClusteringReasons().contains(CR_LONG_INV));
 
         // test again with some very distance but overlapping SVs ignored, and others in a DB included
         tester.clearClustersAndSVs();
@@ -179,6 +180,36 @@ public class MergeRuleTest
 
         tester.Analyser.clusterAndAnalyse();
         assertEquals(3, tester.getClusters().size());
+
+        tester.clearClustersAndSVs();
+
+        // a group of 3 DELs even if far apart will be merged if they overlap with with another group of DUPs 3 or more times
+        var1 = createDup(tester.nextVarId(), "1", 10000000, 30001000);
+        var2 = createDup(tester.nextVarId(), "1", 30000000, 50001000);
+        var3 = createDup(tester.nextVarId(), "1", 50000000, 70001000);
+        SvVarData var4 = createInv(tester.nextVarId(), "1", 70000000, 71000000, -1);
+
+        SvVarData var5 = createDel(tester.nextVarId(), "1", 1000000, 20000000);
+        SvVarData var6 = createDel(tester.nextVarId(), "1", 20001000, 40000000);
+        SvVarData var7 = createDel(tester.nextVarId(), "1", 40001000, 60000000);
+
+        tester.AllVariants.add(var1);
+        tester.AllVariants.add(var2);
+        tester.AllVariants.add(var3);
+        tester.AllVariants.add(var4);
+        tester.AllVariants.add(var5);
+        tester.AllVariants.add(var6);
+        tester.AllVariants.add(var7);
+
+        tester.preClusteringInit();
+
+        tester.Analyser.clusterAndAnalyse();
+        assertEquals(1, tester.getClusters().size());
+
+        cluster = tester.getClusters().get(0);
+
+        assertTrue(tester.AllVariants.stream().anyMatch(x -> x.getClusterReason().contains(CR_LONG_DEL_DUP)));
+        assertTrue(cluster.getClusteringReasons().contains(CR_LONG_DEL_DUP));
     }
 
     @Test

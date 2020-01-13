@@ -72,7 +72,6 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.linx.types.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -714,7 +713,7 @@ public class SvSampleAnalyser {
             mClusterFileWriter.write(",TotalTIs,AssemblyTIs,ShortTIs,IntTIs,ExtTIs,IntShortTIs,ExtShortTIs,IntTIsCnGain");
             mClusterFileWriter.write(",ExtTIsCnGain,OverlapTIs,ChainEndsFace,ChainEndsAway,UnchainedSVs");
 
-            mClusterFileWriter.write(",DBs,ShortDBs,TotalDBLength,TotalDeleted,TotalRange,ChainedLength,IndelCount");
+            mClusterFileWriter.write(",DBs,ShortDBs,TotalDBLength,TotalDeleted,TravDelCount,TravDelLength,TotalRange,ChainedLength,IndelCount");
 
             mClusterFileWriter.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             mClusterFileWriter.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
@@ -734,7 +733,7 @@ public class SvSampleAnalyser {
             {
                 int clusterSvCount = cluster.getSvCount();
 
-                if(clusterSvCount == 1 && mConfig.Output.WriteSingleSVClusters)
+                if(clusterSvCount == 1 && !mConfig.Output.WriteSingleSVClusters)
                     continue;
 
                 ResolvedType resolvedType = cluster.getResolvedType();
@@ -787,8 +786,11 @@ public class SvSampleAnalyser {
 
                     int totalIndelCount = cluster.getLinkedPairs().stream().mapToInt(x -> x.getIndelCount()).sum();
 
-                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
-                            metrics.ClusterDBCount, metrics.ShortDBCount, metrics.TotalDBLength, metrics.TotalDeleted,
+                    mClusterFileWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
+                            metrics.DBCount, metrics.ShortDBCount, metrics.TotalDBLength,
+                            metrics.TotalDeleted, metrics.TraversedDelCount, metrics.TraversedDelLength));
+
+                    mClusterFileWriter.write(String.format(",%d,%d,%d",
                             metrics.TotalRange, metrics.ChainedLength, totalIndelCount));
 
                     final int[] armClusterData = getArmClusterData(cluster);

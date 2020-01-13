@@ -11,7 +11,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_HOM_LOSS;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LOH_CHAIN;
-import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP_OR_INV;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_DEL_DUP;
+import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_LONG_INV;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_MAJOR_AP_PLOIDY;
 import static com.hartwig.hmftools.linx.analysis.ClusteringState.CR_PROXIMITY;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSyntheticLength;
@@ -210,7 +211,7 @@ public class SimpleClustering
     {
         if(!mConfig.Output.WriteClusterHistory)
             return;
-        
+
         try
         {
             if(mClusterHistoryWriter == null)
@@ -250,7 +251,7 @@ public class SimpleClustering
         closeBufferedWriter(mClusterHistoryWriter);
     }
 
-    public void mergeClusters(final String sampleId, List<SvCluster> clusters)
+    public void mergeClusters(List<SvCluster> clusters)
     {
         // first apply replication rules since this can affect consistency
         for(SvCluster cluster : clusters)
@@ -279,7 +280,7 @@ public class SimpleClustering
         {
             foundMerges = false;
 
-            if(mergeOnOverlappingInvDupDels(clusters))
+            if(mergeOnOverlappingInvDupDels(clusters, false))
                 foundMerges = true;
 
             ++iterations;
@@ -576,20 +577,49 @@ public class SimpleClustering
         }
     }
 
-    private boolean mergeOnOverlappingInvDupDels(List<SvCluster> clusters)
+    public void mergeLongDelDupClusters(List<SvCluster> clusters)
+    {
+        boolean foundMerges = true;
+        int iterations = 0;
+
+        while(foundMerges)
+        {
+            foundMerges = false;
+
+            if(mergeOnOverlappingInvDupDels(clusters, true))
+                foundMerges = true;
+
+            ++iterations;
+
+            if(iterations >= 5)
+            {
+                if(foundMerges)
+                    LOGGER.warn("sample({}) exiting simple merge loop after {} iterations with merge just found", mSampleId, iterations);
+                break;
+            }
+        }
+    }
+
+    private boolean mergeOnOverlappingInvDupDels(List<SvCluster> clusters, boolean allowDelDupOverlaps)
     {
         // merge any clusters with overlapping inversions, long dels or long dups on the same arm
-        List<SvCluster> mergedClusters = Lists.newArrayList();
-
-        List<SvCluster> clustersWithIDD = clusters.stream()
+        List<SvCluster> longDDIClusters = clusters.stream()
                 .filter(x -> !x.getInversions().isEmpty() || !x.getLongDelDups().isEmpty())
                 .filter(x -> !x.hasLinkingLineElements())
                 .collect(Collectors.toList());
 
+        if(longDDIClusters.size() <= 1)
+            return false;
+
+        LOGGER.debug("checking long {}} overlaps for {} clusters",
+                !allowDelDupOverlaps ? "DEL_DUP-requiring-INV" : "multiple DDI overlaps", longDDIClusters.size());
+
+        List<SvCluster> mergedClusters = Lists.newArrayList();
+
         int index1 = 0;
-        while(index1 < clustersWithIDD.size())
+        while(index1 < longDDIClusters.size())
         {
-            SvCluster cluster1 = clustersWithIDD.get(index1);
+            SvCluster cluster1 = longDDIClusters.get(index1);
 
             if(mergedClusters.contains(cluster1))
             {
@@ -598,14 +628,15 @@ public class SimpleClustering
             }
 
             boolean mergedOtherClusters = false;
+            String mergeReason = "";
 
             List<SvVarData> cluster1Svs = Lists.newArrayList(cluster1.getLongDelDups());
             cluster1Svs.addAll(cluster1.getInversions());
 
             int index2 = index1 + 1;
-            while(index2 < clustersWithIDD.size())
+            while(index2 < longDDIClusters.size())
             {
-                SvCluster cluster2 = clustersWithIDD.get(index2);
+                SvCluster cluster2 = longDDIClusters.get(index2);
 
                 if(mergedClusters.contains(cluster2))
                 {
@@ -616,18 +647,28 @@ public class SimpleClustering
                 List<SvVarData> cluster2Svs = Lists.newArrayList(cluster2.getLongDelDups());
                 cluster2Svs.addAll(cluster2.getInversions());
 
+                int delDupOverlapCount = 0;
+                int closeLinkPairs = 0;
+
                 for (final SvVarData var1 : cluster1Svs)
                 {
                     for (final SvVarData var2 : cluster2Svs)
                     {
-                        // cannot be a DEL and a DUP overlapping - one must be an INV
-                        if(var1.type() != INV && var2.type() != INV)
+                        boolean pairContainsInv = var1.type() == INV || var2.type() == INV;
+
+                        if(!allowDelDupOverlaps && !pairContainsInv)
                             continue;
 
                         if(!var1.chromosome(true).equals(var2.chromosome(true)))
                             continue;
 
                         if(var1.position(false) < var2.position(true) || var1.position(true) > var2.position(false))
+                            continue;
+
+                        boolean enclosed = (var1.position(true) < var2.position(true) && var1.position(false) > var2.position(false))
+                                || (var2.position(true) < var1.position(true) && var2.position(false) > var1.position(false));
+
+                        if(allowDelDupOverlaps && enclosed)
                             continue;
 
                         // check for conflicting LOH / hom-loss events
@@ -641,16 +682,46 @@ public class SimpleClustering
                         if(variantsHaveDifferentPloidy(var1, var2))
                             continue;
 
-                        if(!breakendsInCloseLink(var1, var2))
+                        if(allowDelDupOverlaps && (!(copyNumbersEqual(var1.copyNumber(true), var2.copyNumber(true)))
+                                || !copyNumbersEqual(var1.copyNumber(false), var2.copyNumber(false))))
+                        {
                             continue;
+                        }
 
-                        LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have inversion or longDelDup overlap",
-                                cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
+                        if(!pairContainsInv)
+                            ++delDupOverlapCount;
 
-                        addClusterReasons(var1, var2, CR_LONG_DEL_DUP_OR_INV);
+                        boolean[] closeLinkData = breakendsInCloseLink(var1, var2);
 
-                        mergedOtherClusters = true;
-                        break;
+                        if(closeLinkData[CLOSE_BREAKS_TI_DB])
+                            ++closeLinkPairs;
+
+                        boolean closeLink = closeLinkData[CLOSE_BREAKS_PROXIMATE];
+
+                        // either require an INV to be a part of the overlap, or at least 3 DELs or DUPS
+                        // and either 1 closer TI or DB link or at least 3 outside the range
+
+                        if((closeLink && pairContainsInv) || (delDupOverlapCount >= 3 && closeLinkPairs >= 3))
+                        {
+                            if(closeLink && pairContainsInv)
+                            {
+                                LOGGER.debug("cluster({}) SV({} {}) and cluster({}) SV({} {}) have INV-DEL-DUP overlap",
+                                        cluster1.id(), var1.posId(), var1.type(), cluster2.id(), var2.posId(), var2.type());
+
+                                mergeReason = CR_LONG_INV;
+                            }
+                            else
+                            {
+                                LOGGER.debug("cluster({}) and cluster({}) have {} DEL-DUP overlaps and {} close pairs",
+                                        cluster1.id(), cluster2.id(), delDupOverlapCount, closeLinkPairs);
+
+                                mergeReason = CR_LONG_DEL_DUP;
+                            }
+
+                            addClusterReasons(var1, var2, mergeReason);
+                            mergedOtherClusters = true;
+                            break;
+                        }
                     }
 
                     if(mergedOtherClusters)
@@ -660,7 +731,7 @@ public class SimpleClustering
                 if(mergedOtherClusters)
                 {
                     cluster1.mergeOtherCluster(cluster2);
-                    cluster1.addClusterReason(CR_LONG_DEL_DUP_OR_INV);
+                    cluster1.addClusterReason(mergeReason);
                     mergedClusters.add(cluster2);
                     break;
                 }
@@ -762,9 +833,14 @@ public class SimpleClustering
             return false;
     }
 
-    protected static boolean breakendsInCloseLink(final SvVarData var1, final SvVarData var2)
+    private static int CLOSE_BREAKS_TI_DB = 0;
+    private static int CLOSE_BREAKS_PROXIMATE = 1;
+
+    private static boolean[] breakendsInCloseLink(final SvVarData var1, final SvVarData var2)
     {
         // test whether the breakends form a DB or TI within the long distance threshold
+        boolean[] data = {false, false};
+
         for(int se1 = SE_START; se1 <= SE_END; ++se1)
         {
             if(se1 == SE_END && var1.isSglBreakend())
@@ -774,24 +850,25 @@ public class SimpleClustering
 
             for(int se2 = SE_START; se2 <= SE_END; ++se2)
             {
-                if(se2 == SE_END && var2.isSglBreakend())
-                    continue;
-
                 final SvBreakend breakend2 = var2.getBreakend(se2);
 
                 if(!breakend1.getChrArm().equals(breakend2.getChrArm()))
                     continue;
 
-                if(abs(breakend1.position() - breakend2.position()) > MAX_MERGE_DISTANCE)
-                    continue;
-
-                // either a TI or DB
                 if(breakend1.orientation() != breakend2.orientation())
-                    return true;
+                {
+                    data[CLOSE_BREAKS_TI_DB] = true;
+
+                    if(abs(breakend1.position() - breakend2.position()) < MAX_MERGE_DISTANCE)
+                    {
+                        data[CLOSE_BREAKS_PROXIMATE] = true;
+                        return data;
+                    }
+                }
            }
         }
 
-        return false;
+        return data;
     }
 
     protected static boolean skipClusterType(final SvCluster cluster)

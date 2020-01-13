@@ -203,14 +203,6 @@ public class SvUtilities {
         return combinedStr;
     }
 
-    public static boolean isWithinRange(long pos1, long pos2, int permittedDistance)
-    {
-        if(pos1 < 0 || pos2 < 0)
-            return false;
-
-        return abs(pos1 - pos2) <= permittedDistance;
-    }
-
     public static boolean isWithin(final SvVarData variant, final String chromosome, final long position)
     {
         if(!variant.chromosome(true).equals(chromosome) || !variant.chromosome(false).equals(chromosome))

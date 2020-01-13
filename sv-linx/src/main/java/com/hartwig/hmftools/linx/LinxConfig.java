@@ -86,8 +86,7 @@ public class LinxConfig
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_VERBOSE = "log_verbose";
 
-
-    // for testing only
+    // limit batch run to first X samples
     private static final String MAX_SAMPLES = "max_samples";
 
     private static final Logger LOGGER = LogManager.getLogger(LinxConfig.class);

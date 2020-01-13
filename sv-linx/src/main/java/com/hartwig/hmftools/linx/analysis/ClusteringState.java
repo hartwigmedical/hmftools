@@ -31,7 +31,8 @@ public class ClusteringState
     public static String CR_STRADDLING_CONSECUTIVE_BREAKENDS = "StradBEs";
     public static String CR_STRADDLING_FOLDBACK_BREAKENDS = "StradFBs";
     public static String CR_LOH_CHAIN = "LOHChain";
-    public static String CR_LONG_DEL_DUP_OR_INV = "DelDupInv";
+    public static String CR_LONG_DEL_DUP = "LongDelDup";
+    public static String CR_LONG_INV = "LongInv";
     public static String CR_SATELLITE_SGL = "SatelliteSgl";
     public static String CR_MAJOR_AP_PLOIDY = "MajorAP";
     public static String CR_TI_PLOIDY_MATCH = "TiPloidyMatch";
