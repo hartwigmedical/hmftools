@@ -30,3 +30,6 @@ CREATE TABLE pgxGenotype
     repoVersion varchar(255) NOT NULL,
     PRIMARY KEY (id)
 );
+
+ALTER TABLE metric
+    ADD metricQC BOOLEAN NOT NULL after tumorCoverage60xPercentage;

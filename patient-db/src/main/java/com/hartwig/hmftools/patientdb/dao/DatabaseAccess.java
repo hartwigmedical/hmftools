@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
-import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
 import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
@@ -251,7 +251,7 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO.write(sample, driverCatalog);
     }
 
-    public void writeMetrics(@NotNull String sample, @NotNull WGSMetrics metrics) {
+    public void writeMetrics(@NotNull String sample, @NotNull WGSMetricWithQC metrics) {
         metricDAO.writeMetrics(sample, metrics);
     }
 
@@ -356,7 +356,7 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info("Deleting driver catalog for sample: " + sample);
         driverCatalogDAO.deleteForSample(sample);
 
-        LOGGER.info("Deleting pgg data for sample: " + sample);
+        LOGGER.info("Deleting pgx data for sample: " + sample);
         pgxDAO.deletePgxForSample(sample);
 
         LOGGER.info("All data for sample: " + sample + " has been deleted");

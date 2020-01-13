@@ -3,6 +3,8 @@ package com.hartwig.hmftools.patientdb;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import com.hartwig.hmftools.common.metrics.WGSMetricQC;
+import com.hartwig.hmftools.common.metrics.WGSMetricWithQC;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -51,7 +53,8 @@ public final class LoadMetricsData {
             LOGGER.info("Extracting and writing metrics for {}", sample);
 
             WGSMetrics metrics = WGSMetricsFile.read(refMetricsFile, tumorMetricsFile);
-            dbWriter.writeMetrics(sample, metrics);
+            WGSMetricWithQC wgsMetricWithQC = WGSMetricQC.checkQCMetric(metrics);
+            dbWriter.writeMetrics(sample, wgsMetricWithQC);
         }
     }
 
