@@ -137,6 +137,13 @@ for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/", pattern = "
   sagePanelResult = bind_rows(sagePanelResult, vcfDF)
 }
 
+jon = sagePanelResult %>% filter(grepl("germline_mnv", filter))
+jon = sagePanelResult %>% filter(nchar(ref) ==1, nchar(alt) == 1, phase > 0,  !grepl("tumor", filter) & grepl("germline", filter) | filter == 'PASS' | filter == 'merge') %>%
+  mutate(leadPos = lead(pos), lagPos = lag(pos)) %>%
+  mutate(leadPos = ifelse(is.na(leadPos), 0, leadPos), lagPos = ifelse(is.na(lagPos), 0, lagPos)) %>%
+  filter(abs(pos - leadPos) < 5 | abs(pos - lagPos) < 5)
+  
+
 save(sagePanelResult, file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
 
 load( file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")

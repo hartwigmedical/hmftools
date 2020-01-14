@@ -77,8 +77,22 @@ Variant quality and VAF are determined using counts of the read context rather t
 Type  | Description
 ---|---
 FULL | Core and both flanks match all match at same position. 
-PARTIAL  | Core and at least one flank match fully at same position. Remaining flank matches but is truncated.
-REALIGNED  | Core and both flanks match exactly but at a different position. 
+PARTIAL | Core and at least one flank match fully at same position. Remaining flank matches but is truncated.
+CORE | Core matches but neither flank does.
+REALIGNED | Core and both flanks match exactly but at offset from the expected position. 
+REFERENCE | Read matches the reference at the position. 
+TOTAL | Total number of reads that cover the read context (excluding flanks).
+
+
+Using these values we can calculate the following derived fields:
+
+Field | Formula
+---|---
+AD\[0,1\] | \[REFERENCE, FULL + PARTIAL + CORE + REALIGNED\]
+DP | TOTAL
+AF | AD\[1\] / DP
+
+
 SHORTENED | Core and both flanks match with the removal of one repeat. Can be at same or realigned position.
 LENGTHENED | Core and both flanks match with the addition of one repeat. Can be at same or realigned position.
 

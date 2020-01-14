@@ -90,7 +90,6 @@ class MnvFactory {
             return ImmutableVariantHotspotImpl.builder().from(left).ref(ref).alt(alt).build();
         } catch (Exception e) {
             LOGGER.error("Unable to merge {}:{} with {}", left.chromosome(), left.position(), right.position());
-            LOGGER.error(e);
             throw e;
         }
     }
