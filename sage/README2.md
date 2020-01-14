@@ -5,24 +5,37 @@ SAGE is a somatic SNV, MNV and small INDEL caller.
 
 # Algorithm
 
-SAGE parses the tumor bam twice. The first time to get a list of candidate variants and determine a unique read context of each variant. 
+SAGE parses the tumor bam twice. The first to get a list of candidate variants and determine a unique read context of each variant. 
 The second pass counts the number of full, partial and realigned matches of the read context.
 
 Finally, SAGE parses the normal bam once to get germline statistics on the variants.  
 
-## Variant Support
+## Tumor First Pass - Candidates
 
-In the first pass of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs. 
-To find SNVs, SAGE compares the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome. 
-MNVs are not included at this stage, but are determined after phasing. Only records meeting the `min_map_quality` requirement are processed. 
-There is no base quality requirement. 
+In the first pass of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs and compares the bases in every aligned 
+region (flags `M`, `X` or `=`) with the provided reference genome to find SNVs. 
+Note that there are no base quality or mapping quality requirements when looking for candidates.
 
-The output of this stage is a set of candidate variants with counts of the ref support, alt support and read depth. 
-This corresponds to the AD and DP fields found in the final VCF. 
-Note these values do not contribute to the quality or VAF calculations. These are calculated in the next step. 
+SAGE tallies the raw ref/alt support and base quality and collects the read contexts of each variant.
+Once finished, each variant is assigned its most frequently found read context as its primary one. 
+If a variant does not have at least one complete read context (including flanks) it is discarded.
+All remaining variants are then considered candidates for processing in the second pass. 
+
+The variants at this stage have the following properties available in the VCF:
+
+Field | Description
+---|---
+RC | Read context (core only without flanks)
+RDP | Raw depth
+RAD\[0,1\] | Raw allelic depth \[Ref,Alt\]
+RABQ\[0,1\] | Raw allelic base quality \[Ref,Alt\]
+
+Note that these values do NOT contribute to the AD, DP, QUAL or AF fields. These are calculated in the second pass. 
+
+## Tumor Second Pass - Counts and Quality
 
 
-## Read Context
+# Read Context
 
 The read context is a sequence of bases comprised of a core flanked on either side by an additional 25 bases. 
 A read context must be complete to be eligible as the primary read context of a variant. 
@@ -84,13 +97,14 @@ REFERENCE | Read matches the reference at the position.
 TOTAL | Total number of reads that cover the read context (excluding flanks).
 
 
-Using these values we can calculate the following derived fields:
+These values are found in the `RCC` field in the VCF output along with the following derived fields:
 
 Field | Formula
 ---|---
-AD\[0,1\] | \[REFERENCE, FULL + PARTIAL + CORE + REALIGNED\]
-DP | TOTAL
-AF | AD\[1\] / DP
+`RC_CNT\[0,1,2,3,4,5\]` | \[FULL, PARTIAL, CORE, REALIGNED, REFERENCE, TOTAL\]
+`AD\[0,1\]` | \[REFERENCE, FULL + PARTIAL + CORE + REALIGNED\]
+`DP` | TOTAL
+`AF` | AD\[1\] / DP
 
 
 SHORTENED | Core and both flanks match with the removal of one repeat. Can be at same or realigned position.
