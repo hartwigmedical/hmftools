@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.common.metrics;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricQC {
+
+    private static final Logger LOGGER = LogManager.getLogger(WGSMetricQC.class);
 
     private WGSMetricQC() {
     }
@@ -25,6 +29,8 @@ public final class WGSMetricQC {
             if (ref10xCoverage < 0.9 || ref20xCoverage < 0.7 || tumor30xCoverage < 0.8 || tumor60xCoverage < 0.65) {
                 WGSqc = false;
             }
+        } else if (tumor30xCoverage == null && tumor60xCoverage == null) {
+            LOGGER.error("No tumor coverage are known");
         }
 
         return ImmutableWGSMetricWithQC.builder().wgsMetrics(metrics).qcMetric(WGSqc).build();
