@@ -61,7 +61,7 @@
         <health-checker.version>3.1</health-checker.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <patient-reporter.version>7.9</patient-reporter.version>
-        <patient-db.version>3.37</patient-db.version>
+        <patient-db.version>3.38</patient-db.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
