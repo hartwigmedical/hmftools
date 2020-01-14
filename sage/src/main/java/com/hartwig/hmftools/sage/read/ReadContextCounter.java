@@ -198,6 +198,7 @@ public class ReadContextCounter implements GenomePosition {
                 byte refBase = refSequence.base((int) variant.position());
                 byte readBase = record.getReadBases()[readIndex];
 
+                //TODO: Shouldn't this check all the bases in the REF ie for MNV and DELS
                 if (!baseDeleted && refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
                     reference++;
                     referenceQuality += quality;
