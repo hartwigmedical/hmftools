@@ -33,6 +33,7 @@ public class BachelorConfig
     public final String BamFile;
     public final String RefGenomeFile;
     public final String PurpleDataDir;
+    public final boolean SkipEnrichment;
 
     public final boolean IsBatchMode;
     public final BatchRunData BatchRun;
@@ -54,6 +55,7 @@ public class BachelorConfig
     private static final String TUMOR_BAM_FILE = "tumor_bam_file";
     private static final String OUTPUT_DIR = "output_dir";
     private static final String PURPLE_DATA_DIRECTORY = "purple_data_dir"; // path to purple data directory
+    private static final String SKIP_ENRICHMENT = "skip_enrichment";
 
     public static final String LOG_DEBUG = "log_debug";
     public static final String BATCH_FILE = "BATCH";
@@ -87,6 +89,8 @@ public class BachelorConfig
         }
 
         GermlineVcf = cmd.getOptionValue(GERMLINE_VCF);
+
+        SkipEnrichment = cmd.hasOption(SKIP_ENRICHMENT);
         BamFile = cmd.getOptionValue(TUMOR_BAM_FILE);
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
 
@@ -101,10 +105,21 @@ public class BachelorConfig
 
         PurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIRECTORY, "");
 
-        if(GermlineVcf == null || BamFile == null || RefGenomeFile == null)
+        if(GermlineVcf == null)
         {
-            LOGGER.error("missing input files");
+            LOGGER.error("missing germline VCF file");
             mIsValid = false;
+        }
+
+        if(!SkipEnrichment)
+        {
+            if (BamFile == null || RefGenomeFile == null || PurpleDataDir.isEmpty())
+            {
+                LOGGER.error("missing input files: BAM({}) refGenome({}) purpleDataDir({})",
+                        BamFile == null || RefGenomeFile == null || PurpleDataDir.isEmpty());
+
+                mIsValid = false;
+            }
         }
     }
 
@@ -144,9 +159,6 @@ public class BachelorConfig
         return true;
     }
 
-
-
-
     @NotNull
     public static Options createOptions()
     {
@@ -159,6 +171,7 @@ public class BachelorConfig
         options.addOption(SAMPLE, true, "Sample Id (not applicable for batch mode)");
         options.addOption(REF_GENOME, true, "Path to the ref genome fasta file");
         options.addOption(PURPLE_DATA_DIRECTORY, true, "Sub-directory with sample path for purple data");
+        options.addOption(SKIP_ENRICHMENT, false, "Only search for variants but skip Purple enrichment");
 
         options.addOption(DB_USER, true, "Database user name");
         options.addOption(DB_PASS, true, "Database password");

@@ -70,11 +70,10 @@ class VariantEnricher
         mConfig = config;
         mBachRecords = Lists.newArrayList();
 
-        mBamCountReader = new BamCountReader();
-
         mDbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
         mIndexedFastaSeqFile = null;
+        mBamCountReader = null;
 
         if (cmd.hasOption(REF_GENOME))
         {
@@ -84,6 +83,8 @@ class VariantEnricher
             {
                 LOGGER.debug("Loading indexed fasta reference file");
                 mIndexedFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
+
+                mBamCountReader = new BamCountReader();
                 mBamCountReader.initialise(config.RefGenomeFile, mIndexedFastaSeqFile);
             }
             catch (IOException e)
@@ -119,7 +120,7 @@ class VariantEnricher
 
         long recordsWithTumorData = bachRecords.stream().filter(x -> x.isReadDataSet()).count();
 
-        if(recordsWithTumorData < bachRecords.size())
+        if(mBamCountReader != null && recordsWithTumorData < bachRecords.size())
         {
             mBamCountReader.readBamCounts(mConfig.BamFile, bachRecords);
         }
@@ -159,7 +160,10 @@ class VariantEnricher
             // create variant objects for VCF file writing and enrichment, and cache against bachelor record
             buildVariants(specificSample, sampleRecords);
 
-            annotateRecords(specificSample, sampleRecords);
+            if(!mConfig.SkipEnrichment)
+            {
+                annotateRecords(specificSample, sampleRecords);
+            }
 
             filterRecords(sampleRecords);
 
@@ -323,6 +327,8 @@ class VariantEnricher
         }
     }
 
+    private static final int HIGH_INDEL_REPEAT_COUNT = 8;
+
     private void filterRecords(final List<BachelorGermlineVariant> bachRecords)
     {
         // currently the only filter is on INDELs with either microhomology matching the gain or loss, or with high repeat count
@@ -331,19 +337,19 @@ class VariantEnricher
         {
             BachelorGermlineVariant bachRecord = bachRecords.get(index);
 
-            if (!bachRecord.isValid())
+            if (!bachRecord.isValid(false))
             {
                 bachRecords.remove(index);
                 continue;
             }
 
-            final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
+            final SomaticVariant somaticVariant = bachRecord.getSomaticVariant();
 
-            if(enrichedVariant.type() == INDEL && (bachRecord.CodingEffect == SPLICE || bachRecord.CodingEffect == NONE))
+            if(somaticVariant.type() == INDEL && (bachRecord.CodingEffect == SPLICE || bachRecord.CodingEffect == NONE))
             {
-                int repeatCount = enrichedVariant.repeatCount();
+                int repeatCount = somaticVariant.repeatCount();
 
-                if(repeatCount > 8)
+                if(repeatCount > HIGH_INDEL_REPEAT_COUNT)
                 {
                     LOGGER.debug("Filtered var({}) indel {} with high repeatCount({})",
                             bachRecord.asString(), bachRecord.CodingEffect, repeatCount);
@@ -351,7 +357,7 @@ class VariantEnricher
                     continue;
                 }
 
-                final String microhomology = enrichedVariant.microhomology();
+                final String microhomology = somaticVariant.microhomology();
                 final String ref = bachRecord.Ref;
                 final String alt = bachRecord.Alts;
 
@@ -396,21 +402,22 @@ class VariantEnricher
 
         for(final BachelorGermlineVariant bachRecord : bachRecords)
         {
-            if (!bachRecord.isValid())
+            if (!bachRecord.isValid(!mConfig.SkipEnrichment))
                 continue;
 
+            final SomaticVariant somaticVariant = bachRecord.getSomaticVariant();
             final EnrichedSomaticVariant enrichedVariant = bachRecord.getEnrichedVariant();
 
-            final String cosmicId = enrichedVariant.canonicalCosmicID();
-            final String dbsnpId = enrichedVariant.dbsnpID();
+            final String cosmicId = somaticVariant.canonicalCosmicID();
+            final String dbsnpId = somaticVariant.dbsnpID();
 
             germlineVariants.add(ImmutableGermlineVariant.builder()
                     .chromosome(bachRecord.Chromosome)
                     .position(bachRecord.Position)
                     .filter(bachRecord.isLowScore() ? "ARTEFACT" : "PASS")
-                    .type(enrichedVariant.type().toString())
-                    .ref(enrichedVariant.ref())
-                    .alts(enrichedVariant.alt())
+                    .type(somaticVariant.type().toString())
+                    .ref(somaticVariant.ref())
+                    .alts(somaticVariant.alt())
                     .gene(bachRecord.Gene)
                     .cosmicId(cosmicId != null ? cosmicId : Strings.EMPTY)
                     .dbsnpId(dbsnpId != null ? dbsnpId : Strings.EMPTY)
@@ -419,16 +426,16 @@ class VariantEnricher
                     .transcriptId(bachRecord.TranscriptId)
                     .alleleReadCount(bachRecord.getTumorAltCount())
                     .totalReadCount(bachRecord.getTumorReadDepth())
-                    .adjustedCopyNumber(enrichedVariant.adjustedCopyNumber())
+                    .adjustedCopyNumber(enrichedVariant != null ? enrichedVariant.adjustedCopyNumber() : somaticVariant.adjustedCopyNumber())
                     .adjustedVaf(bachRecord.getAdjustedVaf())
-                    .trinucleotideContext(enrichedVariant.trinucleotideContext())
-                    .microhomology(enrichedVariant.microhomology())
-                    .repeatSequence(enrichedVariant.repeatSequence())
-                    .repeatCount(enrichedVariant.repeatCount())
+                    .trinucleotideContext(somaticVariant.trinucleotideContext())
+                    .microhomology(somaticVariant.microhomology())
+                    .repeatSequence(somaticVariant.repeatSequence())
+                    .repeatCount(somaticVariant.repeatCount())
                     .hgvsProtein(bachRecord.HgvsProtein)
                     .hgvsCoding(bachRecord.HgvsCoding)
                     .biallelic(bachRecord.isBiallelic())
-                    .minorAllelePloidy(enrichedVariant.minorAllelePloidy())
+                    .minorAllelePloidy(enrichedVariant != null ? enrichedVariant.minorAllelePloidy() : somaticVariant.minorAllelePloidy())
                     .program(bachRecord.Program)
                     .variantId(bachRecord.VariantId)
                     .annotations(bachRecord.Annotations)

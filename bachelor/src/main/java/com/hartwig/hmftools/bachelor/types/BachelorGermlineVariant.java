@@ -36,12 +36,11 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
     private String mClinvarSig;
     private String mClinvarSigInfo;
 
-    public int mGermlineAltCount;
-    public int mGermlineReadDepth;
-    public int mTumorAltCount;
-    public int mTumorReadDepth;
+    private int mGermlineAltCount;
+    private int mGermlineReadDepth;
+    private int mTumorAltCount;
+    private int mTumorReadDepth;
     private boolean mReadDataSet;
-    public final List<String> mEffectsList;
 
     private double mAdjustedVaf;
 
@@ -81,8 +80,6 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
 
         CodingEffect = codingEffect;
         Effects = effects;
-
-        mEffectsList = Arrays.stream(effects.split("&")).collect(Collectors.toList());
 
         mGermlineAltCount = 0;
         mTumorAltCount = 0;
@@ -191,9 +188,9 @@ public class BachelorGermlineVariant implements Comparable<BachelorGermlineVaria
         return (minorAllelePloidy < 0.5);
     }
 
-    public boolean isValid()
+    public boolean isValid(boolean requireEnrichment)
     {
-        return mSomaticVariant != null && mEnrichedVariant != null && mVariantContext != null;
+        return mSomaticVariant != null && (!requireEnrichment || mEnrichedVariant != null) && mVariantContext != null;
     }
 
     public boolean isLowScore()
