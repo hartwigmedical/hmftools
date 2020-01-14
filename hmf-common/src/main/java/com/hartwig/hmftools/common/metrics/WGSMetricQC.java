@@ -19,9 +19,11 @@ public final class WGSMetricQC {
         // We only write metrics for somatic runs.
         assert metrics.tumor30xCoveragePercentage() != null;
         assert metrics.tumor60xCoveragePercentage() != null;
+        assert metrics.tumorMeanCoverage() != null;
 
         Double tumor30xCoverage = metrics.tumor30xCoveragePercentage();
         Double tumor60xCoverage = metrics.tumor60xCoveragePercentage();
+        Double tumorMeanCoverage = metrics.tumorMeanCoverage();
 
         boolean WGSqc = true;
 
@@ -29,7 +31,7 @@ public final class WGSMetricQC {
             if (ref10xCoverage < 0.9 || ref20xCoverage < 0.7 || tumor30xCoverage < 0.8 || tumor60xCoverage < 0.65) {
                 WGSqc = false;
             }
-        } else if (tumor30xCoverage == null && tumor60xCoverage == null) {
+        } else if (tumor30xCoverage == null && tumor60xCoverage == null && tumorMeanCoverage == null) {
             LOGGER.error("No tumor coverage are known");
         }
 
