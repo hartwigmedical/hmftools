@@ -62,9 +62,9 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
-    public static final String RAW_ALLELIC_DEPTH = "RAD";
     public static final String RAW_DEPTH = "RDP";
-    public static final String RAW_ALT_BASE_QUALITY = "RABQ";
+    public static final String RAW_ALLELIC_DEPTH = "RAD";
+    public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
 
     public final static String TIER = "TIER";
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
@@ -120,7 +120,7 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depths"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALT_BASE_QUALITY, 1, VCFHeaderLineType.Integer, "Raw alt base quality"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_IMPROPER_PAIR,

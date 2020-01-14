@@ -189,8 +189,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+                int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
-                    int baseQuality = record.getBaseQualities()[readBaseIndex];
                     final String alt = String.valueOf((char) readByte);
                     if (addInterimReadContexts) {
                         refContext.altRead(ref, alt, baseQuality, createSNVContext(refPosition, readBaseIndex, record, refBases));
@@ -199,7 +199,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     }
 
                 } else {
-                    refContext.refRead();
+                    refContext.refRead(baseQuality);
                 }
             }
         }

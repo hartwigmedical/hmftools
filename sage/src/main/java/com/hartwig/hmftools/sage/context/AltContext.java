@@ -116,6 +116,10 @@ public class AltContext implements VariantHotspot {
         return refContext.rawRefSupport();
     }
 
+    public int rawRefSupportBaseQuality() {
+        return refContext.rawRefSupportBaseQuality();
+    }
+
     public int rawAltSupport() {
         return rawSupport;
     }

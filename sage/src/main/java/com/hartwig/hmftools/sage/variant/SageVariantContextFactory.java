@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.variant;
 
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PASS;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASE;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALT_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_COUNT;
@@ -117,8 +117,8 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawRefSupport(), evidence.rawAltSupport() })
+                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[]{evidence.rawRefSupportBaseQuality(), evidence.rawAltSupportBaseQuality()})
                 .attribute(RAW_DEPTH, evidence.rawDepth())
-                .attribute(RAW_ALT_BASE_QUALITY, evidence.rawAltSupportBaseQuality())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();
     }
