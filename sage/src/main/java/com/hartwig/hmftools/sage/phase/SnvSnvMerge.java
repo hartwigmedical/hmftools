@@ -50,19 +50,21 @@ class SnvSnvMerge implements Consumer<SageVariant> {
 
                     if (bothEntriesPass || candidateIsHotspot || onePassingOneGermlineFiltered) {
                         SageVariant mnv = factory.mnv(newEntry.localPhaseSet(), candidate);
-                        if (isPassingWithNoSupportInNormal(mnv) ||  candidateIsHotspot) {
-                            newEntry.filters().add(SageVCF.MERGE_FILTER);
-                            oldEntry.filters().add(SageVCF.MERGE_FILTER);
-                            if (oldEntry.isSynthetic()) {
-                                list.set(i, mnv);
-                            } else {
+                        if (mnv != null) {
+                            if (isPassingWithNoSupportInNormal(mnv) || candidateIsHotspot) {
+                                newEntry.filters().add(SageVCF.MERGE_FILTER);
+                                oldEntry.filters().add(SageVCF.MERGE_FILTER);
+                                if (oldEntry.isSynthetic()) {
+                                    list.set(i, mnv);
+                                } else {
+                                    list.add(i, mnv);
+                                    i++;
+                                }
+                            } else if (onePassingOneGermlineFiltered) {
+                                mnv.filters().add(SageVCF.GERMLINE_MVN);
                                 list.add(i, mnv);
                                 i++;
                             }
-                        } else if (onePassingOneGermlineFiltered) {
-                            mnv.filters().add(SageVCF.GERMLINE_MVN);
-                            list.add(i, mnv);
-                            i++;
                         }
                     }
                 }
