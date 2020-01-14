@@ -32,6 +32,7 @@
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
+        <module>protect</module>
     </modules>
 
     <properties>
