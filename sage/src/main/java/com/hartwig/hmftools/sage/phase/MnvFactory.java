@@ -20,6 +20,7 @@ import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -43,7 +44,7 @@ class MnvFactory {
         this.refContextSupplier = new MnvRefContextSupplier(config, refGenome);
     }
 
-    @NotNull
+    @Nullable
     public SageVariant mnv(int lps, @NotNull final VariantHotspot mnv) {
 
         final List<AltContext> tumorAltContexts = Lists.newArrayList();
@@ -53,8 +54,11 @@ class MnvFactory {
             String bamFile = config.tumorBam().get(sampleNumber);
 
             final List<AltContext> sampleMnv = altContextSupplier.get(sample, bamFile, mnv);
-            AltContext altContext = sampleMnv.isEmpty() ? new AltContext(sample, mnv) : sampleMnv.get(0);
-            tumorAltContexts.add(altContext);
+            if (sampleMnv.isEmpty()) {
+                return null;
+            }
+
+            tumorAltContexts.add(sampleMnv.get(0));
         }
 
         final ReadContext primaryReadContext = tumorAltContexts.stream()

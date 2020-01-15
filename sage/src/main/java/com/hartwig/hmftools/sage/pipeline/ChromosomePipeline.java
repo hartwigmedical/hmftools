@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,32 +24,34 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageVariant>>> {
+public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageVariant>>>, AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
 
     private final String chromosome;
     private final SageConfig config;
     private final SageChromosomeVCF sageVCF;
-    private final IndexedFastaSequenceFile reference;
     private final SageVariantFactory sageVariantFactory;
     private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panelRegions;
+    private final IndexedFastaSequenceFile refGenome;
 
-    ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config,
-            @NotNull final IndexedFastaSequenceFile reference, @NotNull final SageVariantFactory sageVariantFactory,
-            @NotNull final Function<SageVariant, VariantContext> variantContextFactory, @NotNull final List<VariantHotspot> hotspots,
+    ChromosomePipeline(@NotNull final String chromosome,
+            @NotNull final SageConfig config,
+            @NotNull final SageVariantFactory sageVariantFactory,
+            @NotNull final Function<SageVariant, VariantContext> variantContextFactory,
+            @NotNull final List<VariantHotspot> hotspots,
             @NotNull final List<GenomeRegion> panelRegions) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
-        this.reference = reference;
         this.sageVariantFactory = sageVariantFactory;
         this.variantContextFactory = variantContextFactory;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
+        this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
     }
 
     @NotNull
@@ -75,7 +78,7 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
                 sageVCF.write(context);
             }
         };
-        final Phase phase = new Phase(config, reference, sageVariantFactory, hotspots, panelRegions, phasedConsumer);
+        final Phase phase = new Phase(config, refGenome, sageVariantFactory, hotspots, panelRegions, phasedConsumer);
 
         final CompletableFuture<Void> done = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
 
@@ -116,4 +119,8 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         return entry.primaryTumor().primaryReadContext().tumorQuality() >= config.filter().hardMinTumorQualFiltered();
     }
 
+    @Override
+    public void close() throws IOException {
+        refGenome.close();
+    }
 }

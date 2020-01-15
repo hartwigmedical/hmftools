@@ -133,6 +133,7 @@ public class SageApplication implements AutoCloseable {
         for (Future<ChromosomePipeline> contigContext : contigContexts) {
             final ChromosomePipeline chromosomePipeline = contigContext.get();
             vcf.addVCF(chromosomePipeline.vcfFilename());
+            chromosomePipeline.close();
             LOGGER.info("Finished writing chromosome  {} ", chromosomePipeline.chromosome());
         }
 
