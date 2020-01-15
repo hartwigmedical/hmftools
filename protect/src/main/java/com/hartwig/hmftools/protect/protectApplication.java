@@ -52,7 +52,7 @@ public class protectApplication {
 
     private static void printUsageAndExit(@NotNull Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Iclusion-Importer", options);
+        formatter.printHelp("Protect", options);
         System.exit(1);
     }
 
