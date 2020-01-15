@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.healthchecker.runners;
+package com.hartwig.hmftools.common.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,14 +6,14 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.result.QCValueType;
+import com.hartwig.hmftools.common.healthchecker.result.QCValue;
+import com.hartwig.hmftools.common.healthchecker.result.QCValueType;
 
 import org.junit.Test;
 
 public class MetricsCheckerTest {
 
-    private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
+    private static final String METRICS_DIRECTORY = Resources.getResource("healthchecker/metrics").getPath();
 
     @Test
     public void extractDataFromMetricsWorksForSomatic() throws IOException {

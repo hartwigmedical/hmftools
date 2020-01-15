@@ -7,11 +7,12 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
-import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
-import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
+import com.hartwig.hmftools.common.healthchecker.HealthCheckEvaluation;
+import com.hartwig.hmftools.common.healthchecker.result.QCValue;
+import com.hartwig.hmftools.common.healthchecker.runners.AmberChecker;
+import com.hartwig.hmftools.common.healthchecker.runners.HealthChecker;
+import com.hartwig.hmftools.common.healthchecker.runners.MetricsChecker;
+import com.hartwig.hmftools.common.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
