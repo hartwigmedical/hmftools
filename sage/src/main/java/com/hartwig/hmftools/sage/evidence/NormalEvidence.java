@@ -12,14 +12,11 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.read.IndexedBases;
-import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
@@ -49,18 +46,15 @@ public class NormalEvidence {
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds, @NotNull final RefContextCandidates candidates) {
+    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
+            @NotNull final RefContextCandidates candidates) {
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
         return get(bamFile, refSequence, bounds, refContextConsumer, candidates);
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
-            @NotNull final VariantHotspot target, @NotNull final ReadContext readContext) {
-
-        final NormalRefContextCandidates candidates = new NormalRefContextCandidates(sample);
-        RefContext refContext = candidates.add(target.chromosome(), target.position());
-        refContext.altContext(target.ref(), target.alt()).setPrimaryReadContext(new ReadContextCounter(target, readContext));
+    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final VariantHotspot target,
+            @NotNull final RefContextCandidates candidates) {
 
         final GenomeRegion bounds = GenomeRegions.create(target.chromosome(), target.position(), target.end());
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
@@ -70,7 +64,7 @@ public class NormalEvidence {
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
+    private List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
             @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
