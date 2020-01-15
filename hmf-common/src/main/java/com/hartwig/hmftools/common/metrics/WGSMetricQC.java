@@ -37,10 +37,17 @@ public final class WGSMetricQC {
                 "Tumor 60x",
                 HealthCheckEvaluation.MIN_TUMOR_60X_COVERAGE);
 
-        String WGSqc = "PASS";
+        boolean WGSqc = true;
         if (!WGSqcRef10 || !WGSqcRef20 || !WGSqcTumor30 || !WGSqcTumor60) {
-            WGSqc = "FAIL";
+            WGSqc = false;
         }
+
+        if (WGSqc) {
+            LOGGER.info("PASS - The run has enough coverage ");
+        } else {
+            LOGGER.info("FAIL - The run has not enough coverage ");
+        }
+
 
         return ImmutableWGSMetricWithQC.builder().wgsMetrics(metrics).qcMetric(WGSqc).build();
     }

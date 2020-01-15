@@ -46,7 +46,7 @@ class MetricDAO {
                         DatabaseUtil.decimal(tumorMeanCoverage),
                         DatabaseUtil.decimal(tumor30xCoveragePercentage),
                         DatabaseUtil.decimal(tumor60xCoveragePercentage),
-                        metrics.qcMetric())
+                        metrics.qcMetric() ? (byte) 1 : (byte) 0)
                 .execute();
     }
 

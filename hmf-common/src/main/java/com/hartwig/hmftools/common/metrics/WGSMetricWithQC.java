@@ -11,6 +11,5 @@ public abstract class WGSMetricWithQC {
     @NotNull
     public abstract WGSMetrics wgsMetrics();
 
-    @NotNull
-    public abstract String qcMetric();
+    public abstract boolean qcMetric();
 }

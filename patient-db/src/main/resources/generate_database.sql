@@ -259,7 +259,7 @@ CREATE TABLE metric
     tumorMeanCoverage DOUBLE PRECISION NOT NULL,
     tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
     tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
-    sufficientCoverage varchar(255) NOT NULL,
+    sufficientCoverage BOOLEAN NOT NULL,
     PRIMARY KEY (sampleId)
 );
 

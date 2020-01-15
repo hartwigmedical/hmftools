@@ -1,2 +1,2 @@
 ALTER TABLE metric
-    MODIFY sufficientCoverage varchar(255) NOT NULL;
+    CHANGE metricQC sufficientCoverage BOOLEAN NOT NULL;
