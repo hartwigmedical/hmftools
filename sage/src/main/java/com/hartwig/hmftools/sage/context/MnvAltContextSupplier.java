@@ -23,6 +23,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
+@Deprecated
 public class MnvAltContextSupplier {
 
     private static final Logger LOGGER = LogManager.getLogger(MnvAltContextSupplier.class);

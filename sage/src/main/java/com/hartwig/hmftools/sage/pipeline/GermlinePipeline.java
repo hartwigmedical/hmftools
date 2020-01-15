@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.AltContextSupplier;
 import com.hartwig.hmftools.sage.context.RefSequence;
+import com.hartwig.hmftools.sage.evidence.PrimaryEvidence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -50,15 +50,11 @@ class GermlinePipeline implements Supplier<CompletableFuture<List<SageVariant>>>
     @NotNull
     public CompletableFuture<List<SageVariant>> submit() {
 
-        final CompletableFuture<List<AltContext>> candidates = CompletableFuture.supplyAsync(new AltContextSupplier(config,
-                config.reference(),
-                region,
-                config.referenceBam(),
-                refSequence,
-                samSlicerFactory,
-                refSequence,
-                hotspots,
-                panelRegions), executor);
+        final PrimaryEvidence primaryEvidence = new PrimaryEvidence(config, hotspots, panelRegions, samSlicerFactory);
+
+        final CompletableFuture<List<AltContext>> candidates =
+                CompletableFuture.supplyAsync(() -> primaryEvidence.get(config.reference(), config.referenceBam(), refSequence, region),
+                        executor);
 
         return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
     }

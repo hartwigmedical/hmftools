@@ -25,6 +25,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
+@Deprecated
 public class AltContextSupplier implements Supplier<List<AltContext>> {
 
     private static final Logger LOGGER = LogManager.getLogger(AltContextSupplier.class);

@@ -1,59 +1,79 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.evidence;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletionException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
+import com.hartwig.hmftools.sage.context.RefContext;
+import com.hartwig.hmftools.sage.context.RefContextCandidates;
+import com.hartwig.hmftools.sage.context.RefContextConsumer;
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
+import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-@Deprecated
-public class MnvRefContextSupplier {
+public class NormalEvidence {
 
-    private static final Logger LOGGER = LogManager.getLogger(MnvRefContextSupplier.class);
+    private static final Logger LOGGER = LogManager.getLogger(NormalEvidence.class);
 
-    private final SageConfig config;
-    private final IndexedFastaSequenceFile refGenome;
     private final int minQuality;
+    private final SageConfig config;
     private final SageConfig sageConfig;
+    private final SamSlicerFactory samSlicerFactory;
 
-    public MnvRefContextSupplier(@NotNull final SageConfig config, @NotNull final IndexedFastaSequenceFile refGenome) {
+    public NormalEvidence(@NotNull final SageConfig config, final SamSlicerFactory samSlicerFactory) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
-        this.refGenome = refGenome;
         this.config = config;
-
+        this.samSlicerFactory = samSlicerFactory;
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final VariantHotspot target,
-            @NotNull final ReadContext readContext) {
+    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds, @NotNull final RefContextCandidates candidates) {
+        final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
+        return get(bamFile, refSequence, bounds, refContextConsumer, candidates);
+    }
+
+    @NotNull
+    public List<RefContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
+            @NotNull final VariantHotspot target, @NotNull final ReadContext readContext) {
 
         final NormalRefContextCandidates candidates = new NormalRefContextCandidates(sample);
         RefContext refContext = candidates.add(target.chromosome(), target.position());
         refContext.altContext(target.ref(), target.alt()).setPrimaryReadContext(new ReadContextCounter(target, readContext));
 
         final GenomeRegion bounds = GenomeRegions.create(target.chromosome(), target.position(), target.end());
-        final RefSequence refSequence = new RefSequence(target, refGenome);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
-        final SamSlicer slicer = new SamSlicer(config.minMapQuality(), bounds);
+        final Consumer<SAMRecord> samRecordConsumer = x -> refContextConsumer.processTargeted(target, x);
+
+        return get(bamFile, refSequence, bounds, samRecordConsumer, candidates);
+    }
+
+    @NotNull
+    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
+            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
+
+        final SamSlicer slicer = samSlicerFactory.create(bounds);
 
         final PositionSelector<AltContext> consumerSelector =
                 new PositionSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
@@ -61,7 +81,7 @@ public class MnvRefContextSupplier {
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
             slicer.slice(tumorReader, samRecord -> {
 
-                refContextConsumer.processTargeted(target, samRecord);
+                recordConsumer.accept(samRecord);
                 final IndexedBases refBases = refSequence.alignment(samRecord);
 
                 if (samRecord.getMappingQuality() >= minQuality) {

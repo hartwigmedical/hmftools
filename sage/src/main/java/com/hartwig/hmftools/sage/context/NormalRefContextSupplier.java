@@ -22,6 +22,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
+@Deprecated
 public class NormalRefContextSupplier implements Supplier<List<RefContext>>, Consumer<SAMRecord> {
 
     private static final Logger LOGGER = LogManager.getLogger(NormalRefContextSupplier.class);

@@ -10,10 +10,10 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.AltContextSupplier;
-import com.hartwig.hmftools.sage.context.NormalRefContextSupplier;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefSequence;
+import com.hartwig.hmftools.sage.evidence.NormalEvidence;
+import com.hartwig.hmftools.sage.evidence.PrimaryEvidence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -58,6 +58,9 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
     @NotNull
     public CompletableFuture<List<SageVariant>> submit() {
 
+        final NormalEvidence normalEvidence = new NormalEvidence(config, samSlicerFactory);
+        final PrimaryEvidence primaryEvidence = new PrimaryEvidence(config, hotspots, panelRegions, samSlicerFactory);
+
         final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
@@ -67,15 +70,8 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
             final String sample = samples.get(i);
             final String bam = bams.get(i);
 
-            CompletableFuture<List<AltContext>> candidateFuture = CompletableFuture.supplyAsync(new AltContextSupplier(config,
-                    sample,
-                    region,
-                    bam,
-                    refSequence,
-                    samSlicerFactory,
-                    refSequence,
-                    hotspots,
-                    panelRegions), executor);
+            CompletableFuture<List<AltContext>> candidateFuture =
+                    CompletableFuture.supplyAsync(() -> primaryEvidence.get(sample, bam, refSequence, region), executor);
 
             tumorFutures.add(candidateFuture);
         }
@@ -89,12 +85,7 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
                 somaticPipelineData.addTumor(i, future.join());
             }
 
-            return new NormalRefContextSupplier(config,
-                    region,
-                    config.referenceBam(),
-                    refSequence,
-                    somaticPipelineData.normalCandidates(),
-                    samSlicerFactory).get();
+            return normalEvidence.get(config.referenceBam(), refSequence, region, somaticPipelineData.normalCandidates());
         });
 
         return normalFuture.thenApply(aVoid -> {

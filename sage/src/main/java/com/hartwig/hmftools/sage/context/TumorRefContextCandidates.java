@@ -15,7 +15,7 @@ public class TumorRefContextCandidates implements RefContextCandidates {
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<RefContext> savedCandidates = Lists.newArrayList();
 
-    public TumorRefContextCandidates(String sample) {
+    public TumorRefContextCandidates(@NotNull final String sample) {
         this.sample = sample;
         final Consumer<RefContext> evictionHandler = (refContext) -> {
             if (!refContext.isAltsEmpty()) {
