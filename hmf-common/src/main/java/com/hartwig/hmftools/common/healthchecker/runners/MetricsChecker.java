@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.healthchecker.runners;
+package com.hartwig.hmftools.common.healthchecker.runners;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
-import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.result.QCValueType;
+import com.hartwig.hmftools.common.healthchecker.result.QCValue;
+import com.hartwig.hmftools.common.healthchecker.result.QCValueType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

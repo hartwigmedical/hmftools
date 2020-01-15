@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.healthchecker;
+package com.hartwig.hmftools.common.healthchecker;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
-import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.result.QCValueType;
+import com.hartwig.hmftools.common.healthchecker.result.ImmutableQCValue;
+import com.hartwig.hmftools.common.healthchecker.result.QCValue;
+import com.hartwig.hmftools.common.healthchecker.result.QCValueType;
 
 import org.junit.Test;
 
@@ -70,4 +69,5 @@ public class HealthCheckEvaluationTest {
         assertTrue(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleQCCheckCorrect)));
         assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(purpleQCCheckFail)));
     }
+
 }

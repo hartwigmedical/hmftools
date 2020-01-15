@@ -1,21 +1,21 @@
-package com.hartwig.hmftools.healthchecker;
+package com.hartwig.hmftools.common.healthchecker;
 
 import java.util.List;
 
-import com.hartwig.hmftools.healthchecker.result.QCValue;
+import com.hartwig.hmftools.common.healthchecker.result.QCValue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class HealthCheckEvaluation {
+public final class HealthCheckEvaluation {
 
     private static final Logger LOGGER = LogManager.getLogger(HealthCheckEvaluation.class);
 
-    private static final double MIN_REF_10X_COVERAGE = 0.9;
-    private static final double MIN_REF_20X_COVERAGE = 0.7;
-    private static final double MIN_TUMOR_30X_COVERAGE = 0.8;
-    private static final double MIN_TUMOR_60X_COVERAGE = 0.65;
+    public static final double MIN_REF_10X_COVERAGE = 0.9;
+    public static final double MIN_REF_20X_COVERAGE = 0.7;
+    public static final double MIN_TUMOR_30X_COVERAGE = 0.8;
+    public static final double MIN_TUMOR_60X_COVERAGE = 0.65;
 
     // Complete sample swap  =>  <0.4
     // 10%+ contamination in tumor =>  < 0.486
@@ -30,7 +30,7 @@ final class HealthCheckEvaluation {
     private HealthCheckEvaluation() {
     }
 
-    static boolean isPass(@NotNull List<QCValue> qcValues) {
+    public static boolean isPass(@NotNull List<QCValue> qcValues) {
         boolean success = true;
         for (QCValue qcValue : qcValues) {
             if (!succeed(qcValue)) {
@@ -40,16 +40,20 @@ final class HealthCheckEvaluation {
         return success;
     }
 
+    public static boolean succeedCoverage(@NotNull String qcValue, @NotNull String coverage, Double coverageValue) {
+        return checkCoverage(qcValue, coverage, coverageValue);
+    }
+
     private static boolean succeed(@NotNull QCValue qcValue) {
         switch (qcValue.type()) {
             case REF_COVERAGE_10X:
-                return checkCoverage(qcValue.value(), "Ref 10x", MIN_REF_10X_COVERAGE);
+                return succeedCoverage(qcValue.value(), "Ref 10x", HealthCheckEvaluation.MIN_REF_10X_COVERAGE);
             case REF_COVERAGE_20X:
-                return checkCoverage(qcValue.value(), "Ref 20x", MIN_REF_20X_COVERAGE);
+                return succeedCoverage(qcValue.value(), "Ref 20x", HealthCheckEvaluation.MIN_REF_20X_COVERAGE);
             case TUMOR_COVERAGE_30X:
-                return checkCoverage(qcValue.value(), "Tumor 30x", MIN_TUMOR_30X_COVERAGE);
+                return succeedCoverage(qcValue.value(), "Tumor 30x", HealthCheckEvaluation.MIN_TUMOR_30X_COVERAGE);
             case TUMOR_COVERAGE_60X:
-                return checkCoverage(qcValue.value(), "Tumor 60x", MIN_TUMOR_60X_COVERAGE);
+                return succeedCoverage(qcValue.value(), "Tumor 60x", HealthCheckEvaluation.MIN_TUMOR_60X_COVERAGE);
             case AMBER_MEAN_BAF:
                 return checkAmberMeanBAF(qcValue.value());
             case AMBER_CONTAMINATION:

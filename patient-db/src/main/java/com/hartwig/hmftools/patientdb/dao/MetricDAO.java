@@ -38,7 +38,7 @@ class MetricDAO {
                 METRIC.TUMORMEANCOVERAGE,
                 METRIC.TUMORCOVERAGE30XPERCENTAGE,
                 METRIC.TUMORCOVERAGE60XPERCENTAGE,
-                METRIC.METRICQC)
+                METRIC.SUFFICIENTCOVERAGE)
                 .values(sample,
                         DatabaseUtil.decimal(wgsMetrics.refMeanCoverage()),
                         DatabaseUtil.decimal(wgsMetrics.ref10xCoveragePercentage()),
