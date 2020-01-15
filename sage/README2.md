@@ -1,7 +1,15 @@
 
 # Somatic Alterations in Genome (SAGE)
-SAGE is a somatic SNV, MNV and small INDEL caller.
+SAGE is a somatic SNV, MNV and small INDEL caller. 
 
+SAGE features include:
+  - kmer based model which determines a unique [read context](#read-context) for the variant + 25 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
+  - modified [quality score](#quality) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair,distance from ref genome, repeat sequencing errors) without hard cutoffs
+  - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatelites while ignoring common sequencing errors
+  - no cutoff for homopolymer repeat length for improved INDEL handling 
+  - 3 tiered (Hotspot,Panel,Wide) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
+  - Native [MNV handling](#mnv-handling) 
+  - [Phasing](#Phasing) of somatic + somatic and somatic + germline up to 25 bases
 
 # Algorithm
 
@@ -10,51 +18,19 @@ The second pass counts the number of full, partial and realigned matches of the 
 
 Finally, SAGE parses the normal bam once to get germline statistics on the variants.  
 
-## Tumor First Pass - Candidates
+## Read context 
 
-In the first pass of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs and compares the bases in every aligned 
-region (flags `M`, `X` or `=`) with the provided reference genome to find SNVs. 
-Note that there are no base quality or mapping quality requirements when looking for candidates.
-
-SAGE tallies the raw ref/alt support and base quality and collects the read contexts of each variant.
-Once finished, each variant is assigned its most frequently found read context as its primary one. 
-If a variant does not have at least one complete read context (including flanks) it is discarded.
-All remaining variants are then considered candidates for processing in the second pass. 
-
-The variants at this stage have the following properties available in the VCF:
-
-Field | Description
----|---
-RC | Read context (core only without flanks)
-RDP | Raw depth
-RAD\[0,1\] | Raw allelic depth \[Ref,Alt\]
-RABQ\[0,1\] | Raw allelic base quality \[Ref,Alt\]
-
-Note that these values do NOT contribute to the AD, DP, QUAL or AF fields. These are calculated in the second pass. 
-
-## Tumor Second Pass - Counts and Quality
-
-
-# Read Context
-
-The read context is a sequence of bases comprised of a core flanked on either side by an additional 25 bases. 
-A read context must be complete to be eligible as the primary read context of a variant. 
-If a single flank is incomplete (such as when a variant is too close to a read edge), the read context can partially match with a complete read context.
-If both flanks are incomplete (such as when the majority of a read is in a repeat sequence), the read context cannot match with another read context.
-
-
-### Read Context Core
-
-The read context core is the distinct set of bases surrounding the variant after accounting for any repeats and microhomology in the read sequence (not ref sequence). 
+The read context core is the distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in the read or reference.
 In this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
+The core is a minimum of 5 bases long.  
 
-For a SNV in a non-repeat sequence this will just be the single alternate base. 
+For a SNV in a non-repeat sequence this will just be the single alternate base with 2 bases either side. 
 For a SNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAC'.
 
-A DEL will always include the bases on either side of the deleted sequence. 
-If the deleted read sequence is part of a microhomology or repeat sequence, this will also be included in the read context.
+A DEL always includes the bases on either side of the deleted sequence. 
+If the delete is part of a microhomology or repeat sequence, this will also be included in the read context.
 
-An INSERT will always include the base to the left of the insert as well as the new sequence. 
+An INSERT always includes the base to the left of the insert as well as the new sequence. 
 As with a DEL, the read context will be extended to include any repeats and/or microhomology.
 
 The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is  
@@ -82,6 +58,68 @@ ALT:   GTCT<b>CAAAAACAAACAAACAA    T</b>AAAAAAC
 </pre>
 
 A similar principle applies to any repeat sequences. Spanning them in the read context permits matching alternate alignments.
+
+The complete read context is the core read context flanked on either side by an additional 25 bases. 
+
+
+## Tumor First Pass - Candidates
+
+In the first pass of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs and compares the bases in every aligned 
+region (flags `M`, `X` or `=`) with the provided reference genome to find SNVs. 
+Note that there are no base quality or mapping quality requirements when looking for candidates.
+
+SAGE tallies the raw ref/alt support and base quality and collects the read contexts of each variant.
+Once finished, each variant is assigned its most frequently found read context as its primary one. 
+If a variant does not have at least one complete read context (including flanks) it is discarded.
+All remaining variants are then considered candidates for processing in the second pass. 
+
+The variants at this stage have the following properties available in the VCF:
+
+Field | Description
+---|---
+RC | (Core) Read Context
+RDP | Raw Depth
+RAD\[0,1\] | Raw Allelic Depth \[Ref,Alt\]
+RABQ\[0,1\] | Raw Allelic Base Quality \[Ref,Alt\]
+
+Note that these values do NOT contribute to the AD, DP, QUAL or AF fields. These are calculated in the second pass. 
+
+## Tumor Second Pass - Counts and Quality
+
+
+### Jitter
+
+Jitter is defined 
+
+
+### Quality
+
+Only full and partial read context matches contribute to the quality. There are a number of additional constraints to penalise a match if it:
+  1. approaches the edge of a read,
+  2. encompasses more than one variant, or
+  3. has the ImproperPair flag set 
+
+The quality of an individual read is assesed according to the following formula:
+
+distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
+baseQuality (SNV) = BASEQ at variant location  
+baseQuality (MNV/Indel) = min BASEQ over core read context  
+modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty`, distanceFromReadEdge = `distanceFromReadEdgeFixedPenalty`) 
+
+improperPairPenalty = if SAM improperPairFlag set then `mapQualityImproperPaidPenalty` else 0  
+distanceFromReference = number of somatic alterations to get to reference from the complete read context  
+distanceFromReferencePenalty =  (distanceFromReference - 1) * `mapQualityAdditionalDistanceFromRefPenalty`  
+modifiedMapQuality = MAPQ - `mapQualityFixedPenalty` - improperPairPenalty - distanceFromReferencePenalty  
+
+quality = max(0, min(modifiedMapQuality, modifiedBaseQuality))
+
+
+# Read Context
+
+The read context is a sequence of bases comprised of a core flanked on either side by an additional 25 bases. 
+If a single flank is incomplete (such as when a variant is too close to a read edge), the read context can partially match with a complete read context.
+If both flanks are incomplete (such as when the majority of a read is in a repeat sequence), the read context cannot match with another read context.
+
 
 ### Read Context Counts
 
@@ -111,13 +149,8 @@ SHORTENED | Core and both flanks match with the removal of one repeat. Can be at
 LENGTHENED | Core and both flanks match with the addition of one repeat. Can be at same or realigned position.
 
 
-## Quality Score
 
-Full and partial read context matches both contribute to the quality score. Realigned matches do not. Lengthened and shortened realigned matches subtract from the score.
-
-
-
-## Phased Variants
+## Phasing
 Two variants are considered phased if their read contexts are identical after adjusting for their relative position.
 This is demonstrated in the example below where two SNVs share an identical sequence of bases.
 
@@ -133,7 +166,7 @@ Any variants that are phased together will be given a shared local phase set (`L
 
 Phasing variants opens up a number of algorithmic possibilities including MNV detection and de-duplication as explained below.
 
-### MNV Detection
+### MNV Handling
 
 Phased SNVs separated by no more than one base may indicate the existence of a MNV. 
 To confirm the existence of a MNV we re-examine the bam files, but only if:
