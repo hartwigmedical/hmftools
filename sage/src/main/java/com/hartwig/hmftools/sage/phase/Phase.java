@@ -28,7 +28,7 @@ public class Phase implements Consumer<SageVariant> {
             @NotNull final Consumer<SageVariant> consumer) {
         final MnvFactory mnvFactory = new MnvFactory(config, sageVariantFactory, reference, hotspots, panelRegions);
         dedupIndel = new DedupIndel(consumer);
-        mnvMerge = new SnvSnvMerge(config, dedupIndel, mnvFactory, panelRegions, hotspots);
+        mnvMerge = new SnvSnvMerge(config, dedupIndel, mnvFactory, panelRegions, hotspots, reference);
         localPhaseSet = new LocalPhaseSet(config.germlineOnly(), mnvMerge);
 
     }

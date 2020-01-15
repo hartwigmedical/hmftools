@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -21,16 +20,12 @@ import com.hartwig.hmftools.sage.sam.SamSlicerFactoryChromImpl;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class MnvFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(MnvFactory.class);
 
     private final SageConfig config;
     private final SageVariantFactory sageVariantFactory;
@@ -87,21 +82,6 @@ class MnvFactory {
         result.localPhaseSet(lps);
         result.synthetic(true);
         return result;
-    }
-
-    @NotNull
-    public VariantHotspot merge(@NotNull final AltContext left, @NotNull final AltContext right) {
-        int mnvLength = (int) (right.position() - left.position() + 1);
-        int additionalLength = mnvLength - left.alt().length();
-
-        try {
-            final String alt = left.alt() + right.primaryReadContext().readContext().mnvAdditionalAlt(additionalLength);
-            final String ref = refGenome.getSubsequenceAt(left.chromosome(), left.position(), right.position()).getBaseString();
-            return ImmutableVariantHotspotImpl.builder().from(left).ref(ref).alt(alt).build();
-        } catch (Exception e) {
-            LOGGER.error("Unable to merge {}:{} with {}", left.chromosome(), left.position(), right.position());
-            throw e;
-        }
     }
 
 }
