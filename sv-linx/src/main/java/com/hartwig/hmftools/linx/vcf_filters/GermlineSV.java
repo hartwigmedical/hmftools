@@ -167,7 +167,9 @@ public class GermlineSV
 
     public static String stripBam(final String sampleId)
     {
-        return sampleId.replaceAll("_dedup.realigned.bam","").replaceAll(".bam", "");
+        return sampleId.replaceAll("_dedup.realigned.bam","")
+                .replaceAll(".sorted", "")
+                .replaceAll(".bam", "");
     }
 
     @NotNull
