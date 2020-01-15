@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.vcf_filters;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -15,6 +17,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_PANEL_FILE;
 import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_TRANSCRIPTS_DIR;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +33,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
@@ -39,18 +43,11 @@ public class GeneImpact
 {
     private final GermlineVcfConfig mConfig;
     private final SvGeneTranscriptCollection mGeneCollection;
-    private final Map<String, List<EnsemblGeneData>> mGenePanel;
 
-    // map of SV to a pair of gene annotations (for start and end breakends)
-    private final Map<StructuralVariant,List<List<GeneAnnotation>>> mSvGeneAnnotations;
-
-    // SV to disrupted genes
-    private final Map<StructuralVariant,List<GeneAnnotation>> mSvGeneDisruptions;
-
-    // reason for disruptions or for not being disrupted eg a shard or reciprocal INV
-    private final Map<StructuralVariant,String> mSvDisruptionTypes;
+    private BufferedWriter mWriter;
 
     public static final String DISRUPTION_TYPE_NONE = "NONE";
+    public static final String DISRUPTION_TYPE_OVERLAP = "OVERLAP";
     public static final String DISRUPTION_TYPE_ONE_BREAK = "ONE_BREAK";
     public static final String DISRUPTION_TYPE_TWO_BREAK_COMPLEX = "TWO_BREAK_COMPLEX";
     public static final String DISRUPTION_TYPE_TWO_BREAK_SIMPLE = "TWO_BREAK_SIMPLE";
@@ -62,65 +59,58 @@ public class GeneImpact
     public GeneImpact(final GermlineVcfConfig config, final CommandLine cmd)
     {
         mConfig = config;
-        mGenePanel = Maps.newHashMap();
-        mSvGeneAnnotations = Maps.newHashMap();
-        mSvGeneDisruptions = Maps.newHashMap();
-        mSvDisruptionTypes = Maps.newHashMap();
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
+            final List<String> genePanelIds = cmd.hasOption(GENE_PANEL_FILE) ?
+                    loadGenePanel(cmd.getOptionValue(GENE_PANEL_FILE)) : Lists.newArrayList();
+
             mGeneCollection = new SvGeneTranscriptCollection();
             mGeneCollection.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+            mGeneCollection.setRestrictedGeneIdList(genePanelIds);
             mGeneCollection.loadEnsemblData(true);
 
             mGeneCollection.setRequiredData(config.CheckDisruptions, false, false, true);
 
             if(config.CheckDisruptions)
             {
-                mGeneCollection.loadEnsemblTranscriptData(Lists.newArrayList());
+                mGeneCollection.loadEnsemblTranscriptData(genePanelIds);
             }
-
-            if(cmd.hasOption(GENE_PANEL_FILE))
-                loadGenePanel(cmd.getOptionValue(GENE_PANEL_FILE));
         }
         else
         {
             mGeneCollection = null;
         }
+
+        mWriter = null;
     }
 
-    public final Map<StructuralVariant,List<GeneAnnotation>> getGeneDisruptions() { return mSvGeneDisruptions; }
-    public final Map<StructuralVariant,String> getDisruptionTypes() { return mSvDisruptionTypes; }
+    public void close() { closeBufferedWriter(mWriter); }
 
-    private void loadGenePanel(final String geneFile)
+    private final List<String> loadGenePanel(final String geneFile)
     {
-        // gene_panel.csv
+        final List<String> genePanelIds = Lists.newArrayList();
+
         if (!Files.exists(Paths.get(geneFile)))
-            return;
+            return genePanelIds;
 
         try
         {
             List<String> fileContents = Files.readAllLines(new File(geneFile).toPath());
 
-            for(final String gene : fileContents)
+            for(final String geneData : fileContents)
             {
-                EnsemblGeneData geneData = mGeneCollection.getGeneDataByName(gene);
-
-                if(geneData == null)
-                {
-                    LOGGER.warn("gene({}) not found in Ensembl data cache", gene);
+                if(geneData.contains("GeneId"))
                     continue;
-                }
 
-                List<EnsemblGeneData> chrGenesList = mGenePanel.get(geneData.Chromosome);
-
-                if(chrGenesList == null)
+                String[] items = geneData.split(",");
+                if(items.length != 2)
                 {
-                    chrGenesList = Lists.newArrayList();
-                    mGenePanel.put(geneData.Chromosome, chrGenesList);
+                    LOGGER.error("invalid geneData({}) - expected 'GeneId,GeneName'");
+                    return genePanelIds;
                 }
 
-                chrGenesList.add(geneData);
+                genePanelIds.add(items[0]);
             }
 
             LOGGER.info("loaded genePanelFile({}) with {} genes", geneFile, fileContents.size());
@@ -129,178 +119,112 @@ public class GeneImpact
         {
             LOGGER.error("failed to load gene panel file({}): {}", geneFile, e.toString());
         }
+
+        return genePanelIds;
     }
 
-    public void annotationWithGenes(final StructuralVariant sv, final String[] geneAnnotations)
+    public static final int OVERLAPPED_GENES = 2;
+
+    public void populateGeneAnnotations(
+            final StructuralVariant sv, int svIndex, List<List<GeneAnnotation>> breakendPairGenes, List<GeneAnnotation> overlapGenes)
     {
         if(mGeneCollection == null)
             return;
 
-        for(int be = SE_START; be <= SE_END; ++be)
+        // find any gene overlapped by a DEL or with a breakend in it
+        if(sv.type() == DEL)
         {
-            if(sv.type() == SGL && be == SE_END)
+            overlapGenes.addAll(mGeneCollection.findGeneAnnotationsByOverlap(
+                    svIndex, sv.chromosome(true), sv.position(true), sv.position(false)));
+
+            if(!overlapGenes.isEmpty())
+            {
+                overlapGenes.stream().forEach(x -> x.setPositionalData(sv.chromosome(true), sv.position(true), sv.orientation(true)));
+            }
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(sv.type() == SGL && se == SE_END)
                 continue;
 
-            final List<EnsemblGeneData> matchedGenes = mGeneCollection.findGenes(sv.chromosome(isStart(be)), sv.position(isStart(be)), 0);
+            boolean isStart = isStart(se);
 
-            if(!matchedGenes.isEmpty())
+            List<GeneAnnotation> svGenes = breakendPairGenes.get(se);
+
+            svGenes.addAll(mGeneCollection.findGeneAnnotationsBySv(
+                    svIndex, isStart, sv.chromosome(isStart), sv.position(isStart), sv.orientation(isStart), 0)
+                    .stream().filter(x -> x.canonical() != null).collect(Collectors.toList()));
+
+            if(!svGenes.isEmpty())
             {
-                String genesStr = "";
-
-                for(final EnsemblGeneData gene : matchedGenes)
-                {
-                    genesStr = appendStr(genesStr, gene.GeneName, ';');
-                }
-
-                geneAnnotations[be] = genesStr;
+                svGenes.stream().forEach(x -> x.setPositionalData(sv.chromosome(isStart), sv.position(isStart), sv.orientation(isStart)));
             }
         }
     }
 
-    public String annotateWithGenePanel(final StructuralVariant sv)
+    public void findDisruptiveVariants(final String sampleId, final List<GermlineSV> germlineSVs)
     {
-        if(sv.type() != DEL && sv.type() != DUP)
-            return "";
-
-        List<EnsemblGeneData> genesList = mGenePanel.get(sv.chromosome(true));
-
-        if(genesList == null)
-            return "";
-
-        String genesStr = "";
-
-        for(final EnsemblGeneData geneData : genesList)
-        {
-            if(sv.position(true) < geneData.GeneStart && sv.position(false) > geneData.GeneEnd)
-            {
-                genesStr = appendStr(genesStr, geneData.GeneName, ';');
-            }
-        }
-
-        return genesStr;
-    }
-
-    public boolean hasGeneAnnotation(final StructuralVariant sv)
-    {
-        List<EnsemblGeneData> genesList = mGenePanel.get(sv.chromosome(true));
-
-        if(genesList != null)
-        {
-            for (final EnsemblGeneData geneData : genesList)
-            {
-                // fully overlapping DEL or DUP
-                if (sv.type() == DEL || sv.type() == DUP)
-                {
-                    if (sv.position(true) < geneData.GeneStart && sv.position(false) > geneData.GeneEnd)
-                        return true;
-                }
-
-                // breakend falling in the gene
-                if (sv.position(true) > geneData.GeneStart && sv.position(true) < geneData.GeneEnd)
-                    return true;
-
-                if (sv.type() == DEL || sv.type() == DUP | sv.type() == INV)
-                {
-                    if (sv.position(false) > geneData.GeneStart && sv.position(false) < geneData.GeneEnd)
-                        return true;
-                }
-            }
-        }
-
-        // check other end of BND
-        if(sv.type() == BND)
-        {
-            genesList = mGenePanel.get(sv.chromosome(false));
-
-            if(genesList == null)
-                return false;
-
-            for (final EnsemblGeneData geneData : genesList)
-            {
-                if (sv.position(false) > geneData.GeneStart && sv.position(false) < geneData.GeneEnd)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    public void findDisruptiveVariants(final List<StructuralVariant> svList)
-    {
-        mSvGeneDisruptions.clear();
-        mSvGeneAnnotations.clear();
-        mSvDisruptionTypes.clear();
-
         // SVs are not disruptive if they:
-        // - are outside a gene
+        // - are outside a gene unless an overlapping DEL
         // - form a TI within a single intron and the other breakend is outside a gene
         // - are a DUP or DEL and contained within an intron
 
-        for(int index = 0; index < svList.size(); ++index)
+        for(GermlineSV var : germlineSVs)
         {
-            final StructuralVariant var = svList.get(index);
-            List<List<GeneAnnotation>> breakendPairGenesList = populateGeneAnnotations(var, index);
+            final StructuralVariant sv = var.sv();
 
-            if(breakendPairGenesList == null)
+            final Map<GeneAnnotation,String> svDisruptions = var.getDisruptions();
+
+            var.getOverlappedGenes().forEach(x -> svDisruptions.put(x, DISRUPTION_TYPE_OVERLAP));
+
+            final List<GeneAnnotation> genesStart = var.getBreakendGenes(SE_START);
+            final List<GeneAnnotation> genesEnd = var.getBreakendGenes(SE_END);
+
+            if(genesStart.isEmpty() && genesEnd.isEmpty())
                 continue;
-
-            final List<GeneAnnotation> genesStart = breakendPairGenesList.get(SE_START);
-            final List<GeneAnnotation> genesEnd = breakendPairGenesList.get(SE_END);
 
             if(genesStart.isEmpty() || genesEnd.isEmpty())
             {
                 final List<GeneAnnotation> genesList = !genesStart.isEmpty() ? genesStart : genesEnd;
 
-                addGeneDisruption(var, genesList);
-                mSvDisruptionTypes.put(var, DISRUPTION_TYPE_ONE_BREAK);
-
                 // one breakend disrupts a gene
+                genesList.forEach(x -> svDisruptions.put(x, DISRUPTION_TYPE_ONE_BREAK));
+
                 final Transcript trans = genesList.get(0).canonical();
 
                 LOGGER.debug("var({}:{} {}:{} -> {}:{}) gene({}) disrupted by {} breakend exons({} & {})",
-                        var.id(), var.type(), var.chromosome(true), var.position(true),
-                        var.end() != null ? var.chromosome(false) : "0", var.end() != null ? var.position(false) : -1,
-                        trans.geneName(), !genesStart.isEmpty() ? "start" : "end", trans.ExonUpstream, trans.ExonDownstream);
+                        sv.id(), sv.type(), sv.chromosome(true), sv.position(true),
+                        sv.end() != null ? sv.chromosome(false) : "0", sv.end() != null ? sv.position(false) : -1,
+                        trans.geneName(), !genesList.isEmpty() ? "start" : "end", trans.ExonUpstream, trans.ExonDownstream);
             }
-            else if(var.type() == BND || var.type() == INV)
+            else if(var.Type == BND || var.Type == INV)
             {
                 // both ends are in genes and initially are considered disruptive
-                addGeneDisruption(var, genesStart);
-                addGeneDisruption(var, genesEnd);
-                mSvDisruptionTypes.put(var, DISRUPTION_TYPE_TWO_BREAK_COMPLEX);
+                genesStart.forEach(x -> svDisruptions.put(x, DISRUPTION_TYPE_TWO_BREAK_COMPLEX));
+                genesEnd.forEach(x -> svDisruptions.put(x, DISRUPTION_TYPE_TWO_BREAK_COMPLEX));
 
-                final Transcript transStart = !genesStart.isEmpty() ? genesStart.get(0).canonical() : null;
-                final Transcript transEnd = !genesEnd.isEmpty() ? genesEnd.get(0).canonical() : null;
+                final Transcript transStart = genesStart.get(0).canonical();
+                final Transcript transEnd = genesEnd.get(0).canonical();
 
                 LOGGER.debug("var({}:{} {}:{} -> {}:{}) genes({} & {}) disrupted",
-                        var.id(), var.type(), var.chromosome(true), var.position(true),
-                        var.end() != null ? var.chromosome(false) : "0", var.end() != null ? var.position(false) : -1,
+                        sv.id(), sv.type(), sv.chromosome(true), sv.position(true),
+                        sv.end() != null ? sv.chromosome(false) : "0", sv.end() != null ? sv.position(false) : -1,
                         transStart != null ? transStart.geneName() : "none", transEnd != null ? transEnd.geneName() : "none");
             }
-            else if(isDisruptiveSV(var, genesStart, genesEnd))
+            else if(isDisruptiveSV(sv, genesStart, genesEnd))
             {
-                addGeneDisruption(var, genesStart);
-                addGeneDisruption(var, genesEnd);
-                mSvDisruptionTypes.put(var, DISRUPTION_TYPE_TWO_BREAK_SIMPLE);
+                genesStart.forEach(x -> svDisruptions.put(x, DISRUPTION_TYPE_TWO_BREAK_SIMPLE));
+                genesEnd.forEach(x -> svDisruptions.put(x, DISRUPTION_TYPE_TWO_BREAK_SIMPLE));
                 continue;
             }
         }
 
         // check for SVs linked within the same intron
-        removeIntronicLinks();
-    }
+        removeIntronicLinks(germlineSVs);
 
-    private void addGeneDisruption(final StructuralVariant var, final List<GeneAnnotation> genesList)
-    {
-        List<GeneAnnotation> geneDisruptions = mSvGeneDisruptions.get(var);
-
-        if(geneDisruptions == null)
-        {
-            geneDisruptions = Lists.newArrayList();
-            mSvGeneDisruptions.put(var, geneDisruptions);
-        }
-
-        geneDisruptions.addAll(genesList);
+        // write output to file
+        germlineSVs.stream().filter(x -> !x.getDisruptions().isEmpty()).forEach(x -> writeDisruptions(sampleId, x));
     }
 
     private boolean isDisruptiveSV(final StructuralVariant var, final List<GeneAnnotation> genesStart, final List<GeneAnnotation> genesEnd)
@@ -350,42 +274,46 @@ public class GeneImpact
         return false;
     }
 
-    private void removeIntronicLinks()
+    private void removeIntronicLinks(final List<GermlineSV> germlineSVs)
     {
-        final List<StructuralVariant> recipInvSVs = Lists.newArrayList();
-        final List<StructuralVariant> intronicShardSVs = Lists.newArrayList();
+        final List<GermlineSV> recipInvSVs = Lists.newArrayList();
+        final List<GermlineSV> intronicShardSVs = Lists.newArrayList();
 
-        for(Map.Entry<StructuralVariant,List<GeneAnnotation>> entry1 : mSvGeneDisruptions.entrySet())
+        for(int i = 0; i < germlineSVs.size() - 1; ++i)
         {
-            final StructuralVariant var1 = entry1.getKey();
+            final GermlineSV var1 = germlineSVs.get(i);
 
             if(intronicShardSVs.contains(var1) || recipInvSVs.contains(var1))
                 continue;
 
-            final List<GeneAnnotation> genesList1 = entry1.getValue();
+            final List<GeneAnnotation> genesStart1 = var1.getBreakendGenes(SE_START);
+            final List<GeneAnnotation> genesEnd1 = var1.getBreakendGenes(SE_END);
 
-            // ignore SVs with both breakends in genes since any possibility of chaining is too difficult to establish
-            boolean dualBreakends1 = genesList1.stream().anyMatch(x -> x.isStart()) && genesList1.stream().anyMatch(x -> !x.isStart());
+            boolean dualBreakends1 = !genesStart1.isEmpty() && !genesEnd1.isEmpty();
 
-            if(dualBreakends1 && var1.type() != INV)
+            if(dualBreakends1 && var1.Type != INV)
                 continue;
 
-            for (Map.Entry<StructuralVariant, List<GeneAnnotation>> entry2 : mSvGeneDisruptions.entrySet())
+            final List<GeneAnnotation> genesList1 = Lists.newLinkedList(genesStart1);
+            genesList1.addAll(genesEnd1);
+
+            for(int j = i + 1; j < germlineSVs.size(); ++j)
             {
-                final StructuralVariant var2 = entry2.getKey();
+                final GermlineSV var2 = germlineSVs.get(j);
 
                 if(intronicShardSVs.contains(var2) || recipInvSVs.contains(var2))
                     continue;
 
-                if(var1.equals(var2))
+                final List<GeneAnnotation> genesStart2 = var2.getBreakendGenes(SE_START);
+                final List<GeneAnnotation> genesEnd2 = var2.getBreakendGenes(SE_END);
+
+                boolean dualBreakends2 = !genesStart2.isEmpty() && !genesEnd2.isEmpty();
+
+                if(dualBreakends2 && var2.Type != INV)
                     continue;
 
-                final List<GeneAnnotation> genesList2 = entry2.getValue();
-
-                boolean dualBreakends2 = genesList2.stream().anyMatch(x -> x.isStart()) && genesList2.stream().anyMatch(x -> !x.isStart());
-
-                if(dualBreakends2 && var2.type() != INV)
-                    continue;
+                final List<GeneAnnotation> genesList2 = Lists.newLinkedList(genesStart2);
+                genesList2.addAll(genesEnd2);
 
                 // first check if the 2 breakend transcripts are facing within the same intron
                 if(!dualBreakends1 && !dualBreakends2)
@@ -411,89 +339,120 @@ public class GeneImpact
                             continue;
 
                         if ((gene1.orientation() == -1 && gene1.position() < gene2.position())
-                                || (gene2.orientation() == -1 && gene2.position() < gene1.position()))
+                        || (gene2.orientation() == -1 && gene2.position() < gene1.position()))
                         {
                             long tiLength = abs(gene2.position() - gene1.position());
 
-                            LOGGER.info("SVs({} & {}) have facing intronic breakends in gene({}) exons({} -> {}) tiLength({})",
-                                    var1.id(), var2.id(), gene1.GeneName, trans1.ExonUpstream, trans1.ExonDownstream, tiLength);
+                            LOGGER.debug("SVs({} & {}) have facing intronic breakends in gene({}) exons({} -> {}) tiLength({})",
+                                    var1.Id, var2.Id, gene1.GeneName, trans1.ExonUpstream, trans1.ExonDownstream, tiLength);
 
                             intronicShardSVs.add(var1);
                             intronicShardSVs.add(var2);
+
+                            var1.getDisruptions().put(gene1, DISRUPTION_TYPE_SHARD);
+                            var2.getDisruptions().put(gene2, DISRUPTION_TYPE_SHARD);
                         }
                     }
                 }
                 else if(dualBreakends1 && dualBreakends2)
                 {
-                    final Transcript transStart1 = genesList1.stream().filter(x -> x.isStart()).findFirst().orElse(null).canonical();
-                    final Transcript transEnd1 = genesList1.stream().filter(x -> !x.isStart()).findFirst().orElse(null).canonical();
-                    final Transcript transStart2 = genesList2.stream().filter(x -> x.isStart()).findFirst().orElse(null).canonical();
-                    final Transcript transEnd2 = genesList2.stream().filter(x -> !x.isStart()).findFirst().orElse(null).canonical();
-
-                    if(!transStart1.isIntronic() || !transEnd1.isIntronic() || !transStart2.isIntronic() || !transEnd2.isIntronic())
-                        continue;
-
-                    // check orientations are opposite
-                    if(transStart1.gene().orientation() == transStart2.gene().orientation())
-                        continue;
-
-                    if(transStart1.geneName().equals(transEnd1.geneName()) && transStart1.ExonDownstream == transEnd1.ExonDownstream
-                    && transStart1.geneName().equals(transStart2.geneName()) && transStart1.ExonDownstream == transStart2.ExonDownstream
-                    && transStart1.geneName().equals(transEnd2.geneName()) && transStart1.ExonDownstream == transEnd2.ExonDownstream)
+                    for (final GeneAnnotation gene1 : genesStart1)
                     {
-                        long dbLength = abs(transStart1.gene().position() - transStart2.gene().position());
+                        final GeneAnnotation geneEnd1 = genesEnd1.stream()
+                                .filter(x -> x.StableId.equals(gene1.StableId)).findFirst().orElse(null);
 
-                        LOGGER.info("SVs({} & {}) form reciprocal INV in gene({}) exons({} -> {}) dbLength({})",
-                                var1.id(), var2.id(), transStart1.geneName(),
-                                transStart1.ExonUpstream, transStart1.ExonDownstream, dbLength);
+                        if (geneEnd1 == null)
+                            continue;
 
-                        recipInvSVs.add(var1);
-                        recipInvSVs.add(var2);
+                        final GeneAnnotation gene2 =
+                                genesStart2.stream().filter(x -> x.StableId.equals(gene1.StableId)).findFirst().orElse(null);
+
+                        final GeneAnnotation geneEnd2 =
+                                genesEnd2.stream().filter(x -> x.StableId.equals(gene1.StableId)).findFirst().orElse(null);
+
+                        if (gene2 == null || geneEnd2 == null)
+                            continue;
+
+                        final Transcript transEnd1 = geneEnd1.canonical();
+                        final Transcript transStart1 = gene1.canonical();
+                        final Transcript transStart2 = gene2.canonical();
+                        final Transcript transEnd2 = geneEnd2.canonical();
+
+                        if (!transStart1.isIntronic() || !transEnd1.isIntronic() || !transStart2.isIntronic() || !transEnd2.isIntronic())
+                            continue;
+
+                        // check orientations are opposite
+                        if (transStart1.gene().orientation() == transStart2.gene().orientation())
+                            continue;
+
+                        if (transStart1.geneName().equals(transEnd1.geneName()) && transStart1.ExonDownstream == transEnd1.ExonDownstream
+                                && transStart1.geneName().equals(transStart2.geneName())
+                                && transStart1.ExonDownstream == transStart2.ExonDownstream
+                                && transStart1.geneName().equals(transEnd2.geneName())
+                                && transStart1.ExonDownstream == transEnd2.ExonDownstream)
+                        {
+                            long dbLength = abs(transStart1.gene().position() - transStart2.gene().position());
+
+                            LOGGER.debug("SVs({} & {}) form reciprocal INV in gene({}) exons({} -> {}) dbLength({})",
+                                    var1.Id, var2.Id, transStart1.geneName(),
+                                    transStart1.ExonUpstream, transStart1.ExonDownstream, dbLength);
+
+                            var1.getDisruptions().put(gene1, DISRUPTION_TYPE_RECIP_INV);
+                            var1.getDisruptions().put(geneEnd1, DISRUPTION_TYPE_RECIP_INV);
+                            var2.getDisruptions().put(gene2, DISRUPTION_TYPE_RECIP_INV);
+                            var2.getDisruptions().put(geneEnd2, DISRUPTION_TYPE_RECIP_INV);
+
+                            recipInvSVs.add(var1);
+                            recipInvSVs.add(var2);
+                        }
                     }
                 }
             }
         }
-
-        intronicShardSVs.stream().forEach(x -> mSvGeneDisruptions.remove(x));
-        recipInvSVs.stream().forEach(x -> mSvGeneDisruptions.remove(x));
-
-        intronicShardSVs.stream().forEach(x -> mSvDisruptionTypes.put(x, DISRUPTION_TYPE_SHARD));
-        recipInvSVs.stream().forEach(x -> mSvDisruptionTypes.put(x, DISRUPTION_TYPE_RECIP_INV));
     }
 
-    private List<List<GeneAnnotation>> populateGeneAnnotations(final StructuralVariant var, int svIndex)
+    private void writeDisruptions(final String sampleId, final GermlineSV germlineSV)
     {
-        List<List<GeneAnnotation>> breakendPairGenesList = null;
-
-        for(int se = SE_START; se <= SE_END; ++se)
+        try
         {
-            boolean isStart = isStart(se);
-
-            List<GeneAnnotation> genesList = mGeneCollection.findGeneAnnotationsBySv(
-                    svIndex, isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), 0);
-
-            // check for presence of a canonical transcript for each gene
-            genesList = genesList.stream().filter(x -> x.canonical() != null).collect(Collectors.toList());
-
-            if(genesList.isEmpty())
-                continue;
-
-            genesList.stream().forEach(x -> x.setPositionalData(var.chromosome(isStart), var.position(isStart), var.orientation(isStart)));
-
-            if(breakendPairGenesList == null)
+            if(mWriter == null)
             {
-                breakendPairGenesList = Lists.newArrayList();
-                breakendPairGenesList.add(Lists.newArrayList());
-                breakendPairGenesList.add(Lists.newArrayList());
-                mSvGeneAnnotations.put(var, breakendPairGenesList);
+                String outputFilename = mConfig.OutputDir + "LNX_GERMLINE_DISRUPTIONS.csv";
+
+                mWriter = createBufferedWriter(outputFilename, false);
+
+                mWriter.write("SampleId,SvId,IsStart,Type,Chromosome,Position,Orientation");
+                mWriter.write(",GeneId,GeneName,TransId,ExonUp,ExonDown,CodingType,RegionType,DisruptionType");
+                mWriter.newLine();
             }
 
+            final Map<GeneAnnotation,String> svDisruptions = germlineSV.getDisruptions();
 
-            List<GeneAnnotation> svGenes = breakendPairGenesList.get(se);
-            svGenes.addAll(genesList);
+            if(svDisruptions.isEmpty())
+                return;
+
+            for(Map.Entry<GeneAnnotation,String> entry : svDisruptions.entrySet())
+            {
+                final GeneAnnotation gene = entry.getKey();
+                final String disruptionType = entry.getValue();
+                final Transcript transcript = gene.canonical();
+
+                mWriter.write(String.format("%s,%s,%s,%s,%s,%d,%d",
+                        sampleId, germlineSV.Id, gene.isStart(), germlineSV.Type,
+                        gene.chromosome(), gene.position(), gene.orientation()));
+
+                mWriter.write(String.format(",%s,%s,%s,%d,%d,%s,%s,%s",
+                        gene.StableId, gene.GeneName, transcript.StableId,
+                        transcript.ExonUpstream, transcript.ExonDownstream, transcript.codingType(), transcript.regionType(),
+                        disruptionType));
+
+                mWriter.newLine();
+           }
         }
-
-        return breakendPairGenesList;
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing disruptions: {}", e.toString());
+        }
     }
 
 }

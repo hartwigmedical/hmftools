@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -45,6 +46,8 @@ public class SvGeneTranscriptCollection
     private boolean mRequireSplicePositions;
     private boolean mCanonicalTranscriptsOnly;
 
+    private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
+
     // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
     public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
 
@@ -68,6 +71,12 @@ public class SvGeneTranscriptCollection
 
         if(!mDataPath.endsWith(File.separator))
             mDataPath += File.separator;
+    }
+
+    public void setRestrictedGeneIdList(final List<String> geneIds)
+    {
+        mRestrictedGeneIdList.clear();
+        mRestrictedGeneIdList.addAll(geneIds);
     }
 
     public void setRequiredData(boolean exons, boolean proteinDomains, boolean splicePositions, boolean canonicalOnly)
@@ -146,7 +155,7 @@ public class SvGeneTranscriptCollection
         return mTranscriptDataMap.get(geneId);
     }
 
-    public void populateGeneIdList(List<String> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
+    public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, long position, int upstreamDistance)
     {
         // find the unique set of geneIds
         final List<EnsemblGeneData> geneRegions = mChrGeneDataMap.get(chromosome);
@@ -250,7 +259,6 @@ public class SvGeneTranscriptCollection
             currentGene.setGeneData(geneData);
 
             // collect up all the relevant exons for each unique transcript to analyse as a collection
-
             for(TranscriptData transData : transcriptDataList)
             {
                 Transcript transcript = extractTranscriptExonData(transData, position, currentGene);
@@ -267,6 +275,46 @@ public class SvGeneTranscriptCollection
                         setPrecedingGeneDistance(transcript, position);
                     }
                 }
+            }
+
+            geneAnnotations.add(currentGene);
+        }
+
+        return geneAnnotations;
+    }
+
+    public List<GeneAnnotation> findGeneAnnotationsByOverlap(int svId, final String chromosome, long posStart, long posEnd)
+    {
+        // create gene and transcript data for any gene fully overlapped by the SV
+        List<GeneAnnotation> geneAnnotations = Lists.newArrayList();
+
+        final List<EnsemblGeneData> chrGeneList = mChrGeneDataMap.get(chromosome);
+
+        if(chrGeneList == null)
+            return geneAnnotations;
+
+        for(final EnsemblGeneData geneData : chrGeneList)
+        {
+            if(!(posStart < geneData.GeneStart && posEnd > geneData.GeneEnd))
+                continue;
+
+            GeneAnnotation currentGene = new GeneAnnotation(svId, true, geneData.GeneName, geneData.GeneId,
+                    geneData.Strand, geneData.KaryotypeBand);
+
+            currentGene.setGeneData(geneData);
+
+            final TranscriptData transcriptData = mTranscriptDataMap.get(geneData.GeneId).stream()
+                    .filter(x -> x.IsCanonical)
+                    .findFirst().orElse(null);
+
+            if (transcriptData == null)
+                continue;
+
+            Transcript transcript = extractTranscriptExonData(transcriptData, transcriptData.TransStart, currentGene);
+
+            if(transcript != null)
+            {
+                currentGene.addTranscript(transcript);
             }
 
             geneAnnotations.add(currentGene);
@@ -788,12 +836,12 @@ public class SvGeneTranscriptCollection
 
     public boolean loadEnsemblData(boolean delayTranscriptLoading)
     {
-        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mChrGeneDataMap))
+        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mRestrictedGeneIdList, mChrGeneDataMap))
             return false;
 
         if(!delayTranscriptLoading)
         {
-            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, Lists.newArrayList(), mRequireExons, mCanonicalTranscriptsOnly))
+            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly))
                 return false;
 
             if(mRequireProteinDomains && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
@@ -814,9 +862,9 @@ public class SvGeneTranscriptCollection
         return true;
     }
 
-    public boolean loadEnsemblTranscriptData(final List<String> uniqueGeneIds)
+    public boolean loadEnsemblTranscriptData(final List<String> restrictedGeneIds)
     {
-        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, uniqueGeneIds, mRequireExons, mCanonicalTranscriptsOnly))
+        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly))
             return false;
 
         List<Integer> uniqueTransIds = Lists.newArrayList();

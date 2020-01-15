@@ -207,7 +207,8 @@ public class EnsemblDAO
     private static int GD_BAND = 7;
     private static int GD_SYN = 8; // currently unused
 
-    public static boolean loadEnsemblGeneData(final String dataPath, Map<String, List<EnsemblGeneData>> chrGeneDataMap)
+    public static boolean loadEnsemblGeneData(
+            final String dataPath, final List<String> restrictedGeneIds, final Map<String, List<EnsemblGeneData>> chrGeneDataMap)
     {
         String filename = dataPath;
 
@@ -239,6 +240,13 @@ public class EnsemblDAO
                 String[] items = line.split(",");
 
                 final String geneId = items[GD_ID];
+
+                if(!restrictedGeneIds.isEmpty() && !restrictedGeneIds.contains(geneId))
+                {
+                    line = fileReader.readLine();
+                    continue;
+                }
+
                 final String chromosome = refGenomeChromosome(items[GD_CHR]);
 
                 EnsemblGeneData geneData = new EnsemblGeneData(

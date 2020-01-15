@@ -131,14 +131,15 @@ public class AssemblyData
         }
     }
 
-    public static void populateAssemblyLinks(final List<AssemblyData> svAssemblyData, final StructuralVariant sv, final String[] asmbLinks)
+    public static void populateAssemblyLinks(final List<AssemblyData> svAssemblyData, final GermlineSV germlineSV)
     {
+        final StructuralVariant sv = germlineSV.sv();
         final AssemblyData asmData = svAssemblyData.stream().filter(x -> x.VcfId.equals(sv.id())).findFirst().orElse(null);
 
         if(asmData == null)
             return;
 
-        asmbLinks[SE_START] = asmData.getLinkedSvIds()[SE_START];
-        asmbLinks[SE_END] = asmData.getLinkedSvIds()[SE_END];
+        germlineSV.setAssemblySvId(SE_START, asmData.getLinkedSvIds()[SE_START]);
+        germlineSV.setAssemblySvId(SE_END, asmData.getLinkedSvIds()[SE_END]);
     }
 }

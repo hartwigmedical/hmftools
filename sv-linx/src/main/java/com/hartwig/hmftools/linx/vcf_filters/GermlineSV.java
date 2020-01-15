@@ -3,20 +3,28 @@ package com.hartwig.hmftools.linx.vcf_filters;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
 import static com.hartwig.hmftools.linx.vcf_filters.GeneImpact.DISRUPTION_TYPE_NONE;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantLeg;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -42,13 +50,16 @@ public class GermlineSV
     public final int NormalVF;
     public final String InsertSequence;
     public final String Homology;
-    public final String GenesStart;
-    public final String GenesEnd;
-    public final String GenePanelOverlaps;
-    public final String AsmbStart;
-    public final String AsmbEnd;
 
-    private String mDisruptionType;
+    private StructuralVariant mSV;
+
+    private final String mAffectedGenes;
+
+    private String[] mAsmbSvIds;
+
+    private final List<List<GeneAnnotation>> mBreakendGenes; // genes affected by start and end breakends
+    private final List<GeneAnnotation> mOverlappedGenes; // genes fully overlapped by SV
+    private final Map<GeneAnnotation,String> mDisruptions; // gene and the type of disruption
 
     private static final String DELIMITER = ",";
     public static final int FIELD_COUNT = 25;
@@ -58,7 +69,7 @@ public class GermlineSV
             final StructuralVariantType type, final String chrStart, final String chrEnd, long posStart, long posEnd,
             int orientStart, int orientEnd, int normalREF, int normalRP, double normalRPQ,
             int normalSR, double normalSRQ, int normalVF, final String insertSequence, final String homology,
-            final String genesStart, final String genesEnd, final String genePanelOverlaps, final String asmbStart, final String asmbEnd)
+            final String affectedGenes, final String asmbStart, final String asmbEnd)
     {
         SampleId = sampleId;
         Id = id;
@@ -80,17 +91,45 @@ public class GermlineSV
         NormalVF = normalVF;
         InsertSequence = insertSequence;
         Homology = homology;
-        GenesStart = genesStart;
-        GenesEnd = genesEnd;
-        GenePanelOverlaps = genePanelOverlaps;
-        AsmbStart = asmbStart;
-        AsmbEnd = asmbEnd;
+        mAffectedGenes = affectedGenes;
 
-        mDisruptionType = DISRUPTION_TYPE_NONE;
+        mAsmbSvIds = new String[SE_PAIR];
+        mAsmbSvIds[SE_START] = asmbStart;
+        mAsmbSvIds[SE_END] = asmbEnd;
+
+        mSV = null;
+        mBreakendGenes = Lists.newArrayListWithExpectedSize(2);
+        mBreakendGenes.add(Lists.newArrayList());
+        mBreakendGenes.add(Lists.newArrayList());
+
+        mOverlappedGenes = Lists.newArrayList();
+
+        mDisruptions = Maps.newHashMap();
     }
 
-    public String disruptionType() { return mDisruptionType; }
-    public void setDisruptionType(final String type) { mDisruptionType = type; }
+    public String affectedGenes()
+    {
+        String affectedGenes = "";
+
+        final List<String> uniqueGenes = mOverlappedGenes.stream().map(x -> x.GeneName).collect(toList());
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            mBreakendGenes.get(se).stream().filter(x -> !uniqueGenes.contains(x.GeneName)).forEach(x -> uniqueGenes.add(x.GeneName));
+        }
+
+        return appendStrList(uniqueGenes, ';');
+    }
+
+    public String assemblySvIds(boolean isStart) { return mAsmbSvIds[seIndex(isStart)]; }
+    public void setAssemblySvId(int seIndex, final String svId) { mAsmbSvIds[seIndex] = svId; }
+
+    public StructuralVariant sv() { return mSV; }
+
+    public final List<List<GeneAnnotation>> getBreakendGenes() { return mBreakendGenes; };
+    public final List<GeneAnnotation> getOverlappedGenes() { return mOverlappedGenes; };
+    public final List<GeneAnnotation> getBreakendGenes(int seIndex) { return mBreakendGenes.get(seIndex); };
+    public final Map<GeneAnnotation,String> getDisruptions() { return mDisruptions; }
 
     private static final String FILE_EXTENSION = ".linx.germline_sv.tsv";
 
@@ -123,7 +162,12 @@ public class GermlineSV
     @NotNull
     private static List<GermlineSV> fromLines(@NotNull List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(GermlineSV::fromString).collect(toList());
+        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(x -> fromString(x, false)).collect(toList());
+    }
+
+    public static String stripBam(final String sampleId)
+    {
+        return sampleId.replaceAll("_dedup.realigned.bam","").replaceAll(".bam", "");
     }
 
     @NotNull
@@ -150,9 +194,7 @@ public class GermlineSV
             .add("NormalVF")
             .add("InsertSequence")
             .add("Homology")
-            .add("GenesStart")
-            .add("GenesEnd")
-            .add("GenePanelOverlaps")
+            .add("AffectedGenes")
             .add("AsmbStart")
             .add("AsmbEnd")
             .toString();
@@ -182,22 +224,20 @@ public class GermlineSV
                 .add(String.valueOf(sv.NormalVF))
                 .add(String.valueOf(sv.InsertSequence))
                 .add(String.valueOf(sv.Homology))
-                .add(String.valueOf(sv.GenesStart))
-                .add(String.valueOf(sv.GenesEnd))
-                .add(String.valueOf(sv.GenePanelOverlaps))
-                .add(String.valueOf(sv.AsmbStart))
-                .add(String.valueOf(sv.AsmbEnd))
+                .add(String.valueOf(sv.affectedGenes()))
+                .add(String.valueOf(sv.assemblySvIds(true)))
+                .add(String.valueOf(sv.assemblySvIds(false)))
                 .toString();
     }
 
     @NotNull
-    public static GermlineSV fromString(@NotNull final String sv)
+    public static GermlineSV fromString(@NotNull final String sv, boolean reprocess)
     {
         String[] values = sv.split(DELIMITER, -1);
         int index = 0;
 
         return new GermlineSV(
-                values[index++],
+                stripBam(values[index++]),
                 values[index++],
                 values[index++],
                 values[index++],
@@ -217,41 +257,38 @@ public class GermlineSV
                 Integer.parseInt(values[index++]),
                 values[index++],
                 values[index++],
-                values[index++],
-                values[index++],
-                values[index++],
-                values[index++],
-                values[index++]);
+                reprocess ? "" : values[index++],
+                reprocess ? "" : values[index++],
+                reprocess ? "" : values[index++]);
     }
 
-    public static StructuralVariant convert(final GermlineSV sv)
+    public void createSV()
     {
         StructuralVariantLeg start = ImmutableStructuralVariantLegImpl.builder()
-                .chromosome(sv.ChrStart)
-                .position(sv.PosStart)
-                .orientation((byte)sv.OrientStart)
-                .homology(sv.Homology)
+                .chromosome(ChrStart)
+                .position(PosStart)
+                .orientation((byte)OrientStart)
+                .homology(Homology)
                 .anchoringSupportDistance(0)
                 .build();
 
-        StructuralVariantLeg end = sv.Type != SGL ? ImmutableStructuralVariantLegImpl.builder()
-                .chromosome(sv.ChrEnd)
-                .position(sv.PosEnd)
-                .orientation((byte)sv.OrientEnd)
-                .homology(sv.Homology)
+        StructuralVariantLeg end = Type != SGL ? ImmutableStructuralVariantLegImpl.builder()
+                .chromosome(ChrEnd)
+                .position(PosEnd)
+                .orientation((byte)OrientEnd)
+                .homology(Homology)
                 .anchoringSupportDistance(0)
                 .build() : null;
 
-        return ImmutableStructuralVariantImpl.builder()
-                .id(sv.Id)
-                .type(sv.Type)
+        mSV = ImmutableStructuralVariantImpl.builder()
+                .id(Id)
+                .type(Type)
                 .start(start)
                 .end(end)
-                .qualityScore(sv.QualScore)
-                .insertSequence(sv.InsertSequence)
+                .qualityScore(QualScore)
+                .insertSequence(InsertSequence)
                 .recovered(false)
                 .build();
-
     }
 
     public String toString()
