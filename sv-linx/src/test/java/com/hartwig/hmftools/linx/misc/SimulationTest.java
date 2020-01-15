@@ -25,7 +25,7 @@ public class SimulationTest
         ShatteringConfig config = new ShatteringConfig(segCount, 1);
         ShatteringSim shatteringSim = new ShatteringSim(config, "");
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
 
         // first test all segments added first to last
 
