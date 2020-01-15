@@ -19,6 +19,10 @@ public class protectApplication {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
+        LOGGER.info("Create actionability for patient report");
+
+        LOGGER.info("Create actionability for database");
+
         if (!validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
         }
