@@ -91,31 +91,42 @@ public class protectApplication {
                 geneCopyNumbers,
                 geneFusions);
 
+        LOGGER.info("Write actionability for patient report");
+        writeActionabilityForPatientReport(outputReportTsv, combinedEvidence);
+
+        LOGGER.info("Create actionability for database");
+        writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
+    }
+
+    private static void writeActionabilityForPatientReport(@NotNull String outputReportTsv, @NotNull List<EvidenceItem> combinedEvidence)
+            throws IOException {
         //TODO filter actionability
-        LOGGER.info("Create actionability for patient report");
         BufferedWriter writerReport = new BufferedWriter(new FileWriter(outputReportTsv, false));
         writerReport.write(
                 "event" + "\t" + "source" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugsType" + "\t" + "level" + "\t" + "response"
                         + "\t" + "isOnLabel" + "\t" + "cancerType" + "\t" + "scope" + "\n");
         for (EvidenceItem item : combinedEvidence) {
-            writerReport.write(item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
-                    + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + item.scope()
-                    + "\n");
+            writerReport.write(
+                    item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
+                            + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t"
+                            + item.scope() + "\n");
         }
         writerReport.close();
+    }
 
-        LOGGER.info("Create actionability for database");
+    private static void writeActionabilityForDatabase(@NotNull String outputDatabaseTsv, @NotNull List<EvidenceItem> combinedEvidence)
+            throws IOException {
         BufferedWriter writerDatabase = new BufferedWriter(new FileWriter(outputDatabaseTsv, false));
         writerDatabase.write(
                 "event" + "\t" + "source" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugsType" + "\t" + "level" + "\t" + "response"
                         + "\t" + "isOnLabel" + "\t" + "cancerType" + "\t" + "scope" + "\n");
         for (EvidenceItem item : combinedEvidence) {
-            writerDatabase.write(item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
-                    + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + item.scope()
-                    + "\n");
+            writerDatabase.write(
+                    item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
+                            + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t"
+                            + item.scope() + "\n");
         }
         writerDatabase.close();
-
     }
 
     private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException {
