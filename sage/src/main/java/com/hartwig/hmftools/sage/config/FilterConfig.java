@@ -83,6 +83,10 @@ public interface FilterConfig {
         return 0;
     }
 
+    default int minGermlineBaseQual() {
+        return 30;
+    }
+
     @NotNull
     SoftFilterConfig softHotspotFilter();
 

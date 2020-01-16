@@ -73,7 +73,6 @@ public class SageVariantContextFactory {
         final VariantContextBuilder builder = new VariantContextBuilder().chr(variant.chromosome())
                 .start(variant.position())
                 .attribute(READ_CONTEXT, counter.readContext().toString())
-//                .attribute(REF_CONTEXT, counter.readContext().refContext())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())

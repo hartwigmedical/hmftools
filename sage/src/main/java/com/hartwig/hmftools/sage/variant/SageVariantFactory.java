@@ -18,6 +18,7 @@ import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.TierSelector;
+import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +58,11 @@ public class SageVariantFactory {
         final Set<String> result = Sets.newHashSet();
 
         if (Doubles.lessThan(germline.primaryReadContext().vaf(), config.minGermlineVaf())) {
-            result.add(FilterConfig.MIN_GERMLINE_VAF);
+            result.add(SageVCF.MIN_GERMLINE_VAF);
+        }
+
+        if (germline.rawAltSupportBaseQuality() < config.minGermlineBaseQual()) {
+            result.add(SageVCF.MIN_GERMLINE_BASE_QUAL);
         }
 
         return result;

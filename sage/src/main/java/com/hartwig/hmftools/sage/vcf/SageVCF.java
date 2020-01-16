@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
-import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 
@@ -38,6 +37,9 @@ public class SageVCF implements AutoCloseable {
     public final static String DEDUP_FILTER = "dedup";
     public final static String GERMLINE_MVN = "mnv_germline";
     public final static String NORMAL_SUPPORT = "mnv_normal_support";
+    public final static String MIN_GERMLINE_VAF = "min_germline_vaf";
+    public final static String MIN_GERMLINE_BASE_QUAL = "min_germline_base_qual";
+
 
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
     public final static String READ_CONTEXT_JITTER = "RC_JIT";
@@ -120,7 +122,7 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depths"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, 6, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
@@ -161,8 +163,9 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_MVN, "MNV contains germline SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(MIN_GERMLINE_VAF, "Insufficient germline VAF"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(MIN_GERMLINE_BASE_QUAL, "Insufficient germline base qual"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(FilterConfig.MIN_GERMLINE_VAF, "Insufficient germline VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));
