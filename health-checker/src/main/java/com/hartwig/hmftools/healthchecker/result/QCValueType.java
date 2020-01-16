@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.healthchecker.result;
+package com.hartwig.hmftools.healthchecker.result;
 
 public enum QCValueType {
     REF_COVERAGE_10X,

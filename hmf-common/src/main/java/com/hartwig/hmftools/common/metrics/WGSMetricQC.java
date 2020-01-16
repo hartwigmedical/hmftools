@@ -1,54 +1,32 @@
 package com.hartwig.hmftools.common.metrics;
 
-import com.hartwig.hmftools.common.healthchecker.HealthCheckEvaluation;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class WGSMetricQC {
 
-    private static final Logger LOGGER = LogManager.getLogger(WGSMetricQC.class);
+    public static final double MIN_REF_10X_COVERAGE = 0.9;
+    public static final double MIN_REF_20X_COVERAGE = 0.7;
+    public static final double MIN_TUMOR_30X_COVERAGE = 0.8;
+    public static final double MIN_TUMOR_60X_COVERAGE = 0.65;
 
     private WGSMetricQC() {
     }
 
-    public static ImmutableWGSMetricWithQC checkQCMetric(@NotNull WGSMetrics metrics) {
+    public static ImmutableWGSMetricWithQC buildWithQCMetric(@NotNull WGSMetrics metrics) {
+        // This function is only expected to be called for somatic runs.
+        Double tumor30xCoveragePercentage = metrics.tumor30xCoveragePercentage();
+        Double tumor60xCoveragePercentage = metrics.tumor60xCoveragePercentage();
 
-        // We only write metrics for somatic runs.
-        assert metrics.tumor30xCoveragePercentage() != null;
-        assert metrics.tumor60xCoveragePercentage() != null;
-        assert metrics.tumorMeanCoverage() != null;
+        assert tumor30xCoveragePercentage != null;
+        assert tumor60xCoveragePercentage != null;
 
-        if (metrics.tumor30xCoveragePercentage() == null || metrics.tumor60xCoveragePercentage() == null) {
-            LOGGER.error("No somatic run");
-        }
+        boolean wgsQCRef10 = metrics.ref10xCoveragePercentage() >= MIN_REF_10X_COVERAGE;
+        boolean wgsQCRef20 = metrics.ref20xCoveragePercentage() >= MIN_REF_20X_COVERAGE;
+        boolean wgsQCTumor30 = tumor30xCoveragePercentage >= MIN_TUMOR_30X_COVERAGE;
+        boolean wgsQCTumor60 = tumor60xCoveragePercentage >= MIN_TUMOR_60X_COVERAGE;
 
-        boolean WGSqcRef10 = HealthCheckEvaluation.succeedCoverage(Double.toString(metrics.ref10xCoveragePercentage()),
-                "Ref 10x",
-                HealthCheckEvaluation.MIN_REF_10X_COVERAGE);
-        boolean WGSqcRef20 = HealthCheckEvaluation.succeedCoverage(Double.toString(metrics.ref20xCoveragePercentage()),
-                "Ref 20x",
-                HealthCheckEvaluation.MIN_REF_20X_COVERAGE);
-        boolean WGSqcTumor30 = HealthCheckEvaluation.succeedCoverage(Double.toString(metrics.tumor30xCoveragePercentage()),
-                "Tumor 30x",
-                HealthCheckEvaluation.MIN_TUMOR_30X_COVERAGE);
-        boolean WGSqcTumor60 = HealthCheckEvaluation.succeedCoverage(Double.toString(metrics.tumor60xCoveragePercentage()),
-                "Tumor 60x",
-                HealthCheckEvaluation.MIN_TUMOR_60X_COVERAGE);
+        boolean wgsQC = wgsQCRef10 && wgsQCRef20 && wgsQCTumor30 && wgsQCTumor60;
 
-        boolean WGSqc = true;
-        if (!WGSqcRef10 || !WGSqcRef20 || !WGSqcTumor30 || !WGSqcTumor60) {
-            WGSqc = false;
-        }
-
-        if (WGSqc) {
-            LOGGER.info("PASS - The run has enough coverage ");
-        } else {
-            LOGGER.info("FAIL - The run has not enough coverage ");
-        }
-
-
-        return ImmutableWGSMetricWithQC.builder().wgsMetrics(metrics).qcMetric(WGSqc).build();
+        return ImmutableWGSMetricWithQC.builder().wgsMetrics(metrics).qcMetric(wgsQC).build();
     }
 }

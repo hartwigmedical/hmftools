@@ -7,12 +7,11 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.healthchecker.HealthCheckEvaluation;
-import com.hartwig.hmftools.common.healthchecker.result.QCValue;
-import com.hartwig.hmftools.common.healthchecker.runners.AmberChecker;
-import com.hartwig.hmftools.common.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.common.healthchecker.runners.MetricsChecker;
-import com.hartwig.hmftools.common.healthchecker.runners.PurpleChecker;
+import com.hartwig.hmftools.healthchecker.result.QCValue;
+import com.hartwig.hmftools.healthchecker.runners.AmberChecker;
+import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
+import com.hartwig.hmftools.healthchecker.runners.MetricsChecker;
+import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -61,12 +60,12 @@ public final class HealthChecksApplication {
     }
 
     public static void main(final String... args) throws ParseException, IOException {
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(options, args);
+        Options options = createOptions();
+        CommandLine cmd = createCommandLine(options, args);
 
-        final String refSample = cmd.getOptionValue(REF_SAMPLE);
-        final String metricsDir = cmd.getOptionValue(METRICS_DIR);
-        final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
+        String refSample = cmd.getOptionValue(REF_SAMPLE);
+        String metricsDir = cmd.getOptionValue(METRICS_DIR);
+        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
         if (refSample == null || metricsDir == null || outputDir == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -74,16 +73,16 @@ public final class HealthChecksApplication {
             System.exit(1);
         }
 
-        final String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
-        final String amberDir = cmd.hasOption(AMBER_DIR) ? cmd.getOptionValue(AMBER_DIR) : null;
-        final String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
+        String tumorSample = cmd.hasOption(TUMOR_SAMPLE) ? cmd.getOptionValue(TUMOR_SAMPLE) : null;
+        String amberDir = cmd.hasOption(AMBER_DIR) ? cmd.getOptionValue(AMBER_DIR) : null;
+        String purpleDir = cmd.hasOption(PURPLE_DIR) ? cmd.getOptionValue(PURPLE_DIR) : null;
 
         new HealthChecksApplication(refSample, tumorSample, metricsDir, amberDir, purpleDir, outputDir).run(true);
     }
 
     @NotNull
     private static Options createOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(REF_SAMPLE, true, "The name of the reference sample");
         options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
         options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
@@ -96,13 +95,13 @@ public final class HealthChecksApplication {
 
     @NotNull
     private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
+        CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
 
     @VisibleForTesting
     void run(boolean writeOutput) throws IOException {
-        final List<HealthChecker> checkers;
+        List<HealthChecker> checkers;
         if (tumorSample == null || amberDirectory == null || purpleDirectory == null) {
             LOGGER.info("Running in SingleSample mode");
             checkers = Lists.newArrayList(new MetricsChecker(refSample, null, metricsDirectory));
@@ -113,7 +112,7 @@ public final class HealthChecksApplication {
                     new PurpleChecker(tumorSample, purpleDirectory));
         }
 
-        final List<QCValue> qcValues = Lists.newArrayList();
+        List<QCValue> qcValues = Lists.newArrayList();
         for (final HealthChecker checker : checkers) {
             qcValues.addAll(checker.run());
         }

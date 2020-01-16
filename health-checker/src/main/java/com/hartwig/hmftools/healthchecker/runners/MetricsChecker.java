@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.common.healthchecker.runners;
+package com.hartwig.hmftools.healthchecker.runners;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
-import com.hartwig.hmftools.common.healthchecker.result.QCValue;
-import com.hartwig.hmftools.common.healthchecker.result.QCValueType;
+import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
+import com.hartwig.hmftools.healthchecker.result.QCValue;
+import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,7 @@ public class MetricsChecker implements HealthChecker {
     @NotNull
     @Override
     public List<QCValue> run() throws IOException {
-        final WGSMetrics metrics = extractMetrics();
+        WGSMetrics metrics = extractMetrics();
 
         List<QCValue> qcValues = Lists.newArrayList();
         qcValues.add(ImmutableQCValue.of(QCValueType.REF_COVERAGE_10X, String.valueOf(metrics.ref10xCoveragePercentage())));

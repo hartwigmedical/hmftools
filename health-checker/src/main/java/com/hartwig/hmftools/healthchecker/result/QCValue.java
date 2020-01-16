@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.healthchecker.result;
+package com.hartwig.hmftools.healthchecker.result;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.healthchecker.runners;
+package com.hartwig.hmftools.healthchecker.runners;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,19 +6,19 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.healthchecker.result.QCValue;
-import com.hartwig.hmftools.common.healthchecker.result.QCValueType;
+import com.hartwig.hmftools.healthchecker.result.QCValue;
+import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
 import org.junit.Test;
 
 public class MetricsCheckerTest {
 
-    private static final String METRICS_DIRECTORY = Resources.getResource("healthchecker/metrics").getPath();
+    private static final String METRICS_DIRECTORY = Resources.getResource("metrics").getPath();
 
     @Test
     public void extractDataFromMetricsWorksForSomatic() throws IOException {
-        final MetricsChecker checker = new MetricsChecker("reference", "tumor", METRICS_DIRECTORY);
-        final List<QCValue> values = checker.run();
+        MetricsChecker checker = new MetricsChecker("reference", "tumor", METRICS_DIRECTORY);
+        List<QCValue> values = checker.run();
 
         assertEquals(4, values.size());
         for (QCValue value : values) {
@@ -36,8 +36,8 @@ public class MetricsCheckerTest {
 
     @Test
     public void extractDataFromMetricsWorksForSingleSample() throws IOException {
-        final MetricsChecker checker = new MetricsChecker("reference", null, METRICS_DIRECTORY);
-        final List<QCValue> values = checker.run();
+        MetricsChecker checker = new MetricsChecker("reference", null, METRICS_DIRECTORY);
+        List<QCValue> values = checker.run();
 
         assertEquals(2, values.size());
         for (QCValue value : values) {
@@ -51,13 +51,13 @@ public class MetricsCheckerTest {
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        final MetricsChecker checker = new MetricsChecker("malformed", null, METRICS_DIRECTORY);
+        MetricsChecker checker = new MetricsChecker("malformed", null, METRICS_DIRECTORY);
         checker.run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        final MetricsChecker checker = new MetricsChecker("missing", null, METRICS_DIRECTORY);
+        MetricsChecker checker = new MetricsChecker("missing", null, METRICS_DIRECTORY);
         checker.run();
     }
 }
