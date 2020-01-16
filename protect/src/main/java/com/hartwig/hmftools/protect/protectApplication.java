@@ -47,7 +47,7 @@ public class protectApplication {
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
 
     private static final String OUTPUT_DATABASE_TSV = "output_database_tsv";
-
+    private static final String OUTPUT_REPORT_TSV = "output_report_tsv";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
         final Options options = createBasicOptions();
@@ -67,7 +67,7 @@ public class protectApplication {
 
         // Params output file
         final String outputDatabaseTsv = cmd.getOptionValue(OUTPUT_DATABASE_TSV);
-
+        final String outputReportTsv = cmd.getOptionValue(OUTPUT_REPORT_TSV);
 
         if (!validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
@@ -92,14 +92,28 @@ public class protectApplication {
                 geneFusions);
 
         LOGGER.info("Create actionability for patient report");
+        BufferedWriter writerReport = new BufferedWriter(new FileWriter(outputReportTsv, false));
+        writerReport.write(
+                "event" + "\t" + "source" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugsType" + "\t" + "level" + "\t" + "response"
+                        + "\t" + "isOnLabel" + "\t" + "cancerType" + "\t" + "scope" + "\n");
+        for (EvidenceItem item : combinedEvidence) {
+            writerReport.write(item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
+                    + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + item.scope()
+                    + "\n");
+        }
+        writerReport.close();
 
         LOGGER.info("Create actionability for database");
-        BufferedWriter writer = new BufferedWriter(new FileWriter(outputDatabaseTsv, false));
+        BufferedWriter writerDatabase = new BufferedWriter(new FileWriter(outputDatabaseTsv, false));
+        writerDatabase.write(
+                "event" + "\t" + "source" + "\t" + "reference" + "\t" + "drug" + "\t" + "drugsType" + "\t" + "level" + "\t" + "response"
+                        + "\t" + "isOnLabel" + "\t" + "cancerType" + "\t" + "scope" + "\n");
         for (EvidenceItem item : combinedEvidence) {
-            writer.write(item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
-                    + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + item.scope());
-
-        } writer.close();
+            writerDatabase.write(item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
+                    + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + item.scope()
+                    + "\n");
+        }
+        writerDatabase.close();
 
     }
 
@@ -249,6 +263,7 @@ public class protectApplication {
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
 
         options.addOption(OUTPUT_DATABASE_TSV, true, "Path towards the output file for the database TSV.");
+        options.addOption(OUTPUT_REPORT_TSV, true, "Path towards the output file for the report TSV.");
 
         return parser.parse(options, args);
     }
