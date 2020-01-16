@@ -91,6 +91,7 @@ public class protectApplication {
                 geneCopyNumbers,
                 geneFusions);
 
+        //TODO filter actionability
         LOGGER.info("Create actionability for patient report");
         BufferedWriter writerReport = new BufferedWriter(new FileWriter(outputReportTsv, false));
         writerReport.write(
