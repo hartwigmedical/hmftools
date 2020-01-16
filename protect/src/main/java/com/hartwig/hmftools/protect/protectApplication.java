@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.actionability.ActionabilityAnalyzer;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
+import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
