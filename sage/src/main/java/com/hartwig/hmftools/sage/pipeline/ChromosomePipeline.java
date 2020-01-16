@@ -18,7 +18,6 @@ import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
-import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 import com.hartwig.hmftools.sage.vcf.SageChromosomeVCF;
 
 import org.apache.logging.log4j.LogManager;
@@ -53,8 +52,8 @@ public class ChromosomePipeline implements AutoCloseable {
         this.panelRegions = panelRegions;
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.sageVariantPipeline = config.germlineOnly()
-                ? new SageVariantGermlinePipeline(config, executor, hotspots, panelRegions)
-                : new SageVariantSomaticPipeline(config, executor, hotspots, panelRegions);
+                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions, refGenome)
+                : new SomaticPipeline(config, executor, hotspots, panelRegions, refGenome);
     }
 
     @NotNull
@@ -102,9 +101,8 @@ public class ChromosomePipeline implements AutoCloseable {
                 sageVCF.write(context);
             }
         };
-        final SageVariantFactory sageVariantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
-        final Phase phase = new Phase(config, refGenome, sageVariantFactory, hotspots, panelRegions, phasedConsumer);
 
+        final Phase phase = new Phase(config, hotspots, panelRegions, sageVariantPipeline, phasedConsumer);
         final CompletableFuture<Void> done = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
 
         return done.thenApply(aVoid -> {
