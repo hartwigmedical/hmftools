@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.protect;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -44,6 +46,9 @@ public class protectApplication {
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
 
+    private static final String OUTPUT_DATABASE_TSV = "output_database_tsv";
+
+
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
         final Options options = createBasicOptions();
         final CommandLine cmd = createCommandLine(args, options);
@@ -60,6 +65,10 @@ public class protectApplication {
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
 
+        // Params output file
+        final String outputDatabaseTsv = cmd.getOptionValue(OUTPUT_DATABASE_TSV);
+
+
         if (!validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
         }
@@ -73,6 +82,8 @@ public class protectApplication {
         List<GeneCopyNumber> geneCopyNumbers = readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = readGeneFusions(linxFusionTsv);
 
+        LOGGER.info("Create actionability for sample {}", tumorSampleId);
+
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
                 passSomaticVariants,
@@ -80,11 +91,15 @@ public class protectApplication {
                 geneCopyNumbers,
                 geneFusions);
 
-        LOGGER.info("Create actionability for sample {}", tumorSampleId);
-
         LOGGER.info("Create actionability for patient report");
 
         LOGGER.info("Create actionability for database");
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputDatabaseTsv, false));
+        for (EvidenceItem item : combinedEvidence) {
+            writer.write(item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
+                    + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + item.scope());
+
+        } writer.close();
 
     }
 
@@ -175,9 +190,9 @@ public class protectApplication {
     }
 
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
-        return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV) && fileExists(cmd,
-                SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV)
-                && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV);
+        return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
+                && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
+                && fileExists(cmd, LINX_FUSION_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -232,6 +247,8 @@ public class protectApplication {
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+
+        options.addOption(OUTPUT_DATABASE_TSV, true, "Path towards the output file for the database TSV.");
 
         return parser.parse(options, args);
     }
