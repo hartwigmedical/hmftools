@@ -16,7 +16,6 @@ import com.hartwig.hmftools.sage.evidence.PrimaryEvidence;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
-import com.hartwig.hmftools.sage.sam.SamSlicerFactoryChromImpl;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
@@ -36,7 +35,7 @@ class MnvFactory {
     MnvFactory(@NotNull final SageConfig config, @NotNull final SageVariantFactory sageVariantFactory,
             @NotNull final IndexedFastaSequenceFile refGenome, @NotNull final List<VariantHotspot> hotspots,
             @NotNull final List<GenomeRegion> panelRegions) {
-        final SamSlicerFactory slicerFactory = new SamSlicerFactoryChromImpl(config, panelRegions);
+        final SamSlicerFactory slicerFactory = new SamSlicerFactory(config, panelRegions);
         this.config = config;
         this.sageVariantFactory = sageVariantFactory;
         this.refGenome = refGenome;

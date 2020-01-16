@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.pipeline;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -22,44 +21,32 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+public class SageVariantSomaticPipeline implements SageVariantPipeline {
 
-public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVariant>>> {
+    private static final Logger LOGGER = LogManager.getLogger(SageVariantSomaticPipeline.class);
 
-    private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
-
-    private final GenomeRegion region;
     private final SageConfig config;
     private final Executor executor;
-    private final RefSequence refSequence;
-    private final SageVariantFactory variantFactory;
-    private final SamSlicerFactory samSlicerFactory;
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panelRegions;
+    private final PrimaryEvidence primaryEvidence;
+    private final NormalEvidence normalEvidence;
 
-    SomaticPipeline(final GenomeRegion region, final SageConfig config, final Executor executor, final IndexedFastaSequenceFile refGenome,
-            final SamSlicerFactory samSlicerFactory, @NotNull final List<VariantHotspot> hotspots,
+    SageVariantSomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final List<VariantHotspot> hotspots,
             @NotNull final List<GenomeRegion> panelRegions) {
-        this.region = region;
         this.config = config;
         this.executor = executor;
-        this.variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
-        this.samSlicerFactory = samSlicerFactory;
-        this.refSequence = new RefSequence(region, refGenome);
+        SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
-    }
-
-    @Override
-    public CompletableFuture<List<SageVariant>> get() {
-        return submit();
+        this.primaryEvidence = new PrimaryEvidence(config, hotspots, panelRegions, samSlicerFactory);
+        this.normalEvidence = new NormalEvidence(config, samSlicerFactory);
     }
 
     @NotNull
-    public CompletableFuture<List<SageVariant>> submit() {
+    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region, @NotNull final RefSequence refSequence) {
 
-        final NormalEvidence normalEvidence = new NormalEvidence(config, samSlicerFactory);
-        final PrimaryEvidence primaryEvidence = new PrimaryEvidence(config, hotspots, panelRegions, samSlicerFactory);
+        final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
 
         final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
@@ -95,5 +82,4 @@ public class SomaticPipeline implements Supplier<CompletableFuture<List<SageVari
             return somaticPipelineData.results();
         });
     }
-
 }
