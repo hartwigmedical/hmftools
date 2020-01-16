@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.filtering;
+package com.hartwig.hmftools.protect.report;
 
 import java.util.List;
 import java.util.Map;
