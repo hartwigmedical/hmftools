@@ -174,7 +174,7 @@ public class CopyNumberAnalyser
         {
             if (mCnSegmentWriter == null)
             {
-                String outputFileName = mOutputPath + "CN_CHANGE_SEGMENTS.csv";
+                String outputFileName = mOutputPath + "LNX_CN_CHANGE_SEGMENTS.csv";
 
                 mCnSegmentWriter = createBufferedWriter(outputFileName, false);
 
@@ -334,7 +334,7 @@ public class CopyNumberAnalyser
         {
             if (mChrArmWriter == null)
             {
-                String outputFileName = mOutputPath + "CN_CHR_ARM_DATA.csv";
+                String outputFileName = mOutputPath + "LNX_CN_CHR_ARM_DATA.csv";
 
                 mChrArmWriter = createBufferedWriter(outputFileName, false);
 
@@ -544,7 +544,7 @@ public class CopyNumberAnalyser
         {
             if (mLohEventWriter == null)
             {
-                String outputFileName = mOutputPath + "CN_LOH_EVENTS.csv";
+                String outputFileName = mOutputPath + "LNX_CN_LOH_EVENTS.csv";
 
                 mLohEventWriter = createBufferedWriter(outputFileName, false);
 
@@ -585,7 +585,7 @@ public class CopyNumberAnalyser
         {
             if (mPloidyCalcWriter == null)
             {
-                String outputFileName = mOutputPath + "CN_PLOIDY_CALC_DATA.csv";
+                String outputFileName = mOutputPath + "LNX_CN_PLOIDY_CALC_DATA.csv";
 
                 mPloidyCalcWriter = createBufferedWriter(outputFileName, false);
 
