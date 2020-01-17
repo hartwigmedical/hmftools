@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -145,7 +146,12 @@ public class IndelAnnotator
 
         if(totalIndels > 1 && !cluster.hasVariedPloidy())
         {
-            long clusterRange = cluster.getMetrics().TotalRange;
+            ClusterMetrics metrics = cluster.getMetrics();
+
+            metrics.IndelCount = totalIndels;
+            metrics.IndelProbability = 1;
+
+            long clusterRange = metrics.TotalRange;
 
             if (clusterRange > 0)
             {
@@ -155,8 +161,9 @@ public class IndelAnnotator
                 {
                     PoissonDistribution poisson = new PoissonDistribution(expectedIndelCount);
                     double indelProbability = 1 - poisson.cumulativeProbability(totalIndels - 1);
+                    metrics.IndelProbability = indelProbability;
 
-                    if(indelProbability < 0.001)
+                    if(indelProbability < 0.01)
                     {
                         LOGGER.debug(String.format("cluster(%d) indelCount(%d) range(%d) expected(%.1f) probability(%.9f)",
                                 cluster.id(), totalIndels, clusterRange, expectedIndelCount, indelProbability));

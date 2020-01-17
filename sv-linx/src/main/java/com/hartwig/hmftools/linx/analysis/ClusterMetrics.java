@@ -40,6 +40,9 @@ public class ClusterMetrics
     // output from chaining routine - % of copy number segments had discernable A, B and cluster ploidy
     public double ValidAllelePloidySegmentPerc;
 
+    public int IndelCount; // count of indels on TIs
+    public double IndelProbability; // of seeing X indels within the range of the cluster
+
     public ClusterMetrics()
     {
         DBCount = 0;
@@ -54,6 +57,8 @@ public class ClusterMetrics
         TraversedRange = 0;
         TotalDeleted = 0;
         ValidAllelePloidySegmentPerc = 1;
+        IndelCount = 0;
+        IndelProbability = 0;
     }
 
     public void populate(final SvCluster cluster, final Map<String, List<SvBreakend>> chrBreakendMap)
