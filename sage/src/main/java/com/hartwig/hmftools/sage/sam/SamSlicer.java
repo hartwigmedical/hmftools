@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +21,7 @@ public class SamSlicer {
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
-    public SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice) {
+    SamSlicer(final int minMappingQuality, @NotNull final GenomeRegion slice) {
         this.minMappingQuality = minMappingQuality;
         this.regions = Collections.singletonList(slice);
     }
@@ -30,8 +31,14 @@ public class SamSlicer {
         this.regions = Lists.newArrayList();
 
         for (final GenomeRegion panelRegion : panel) {
-            if (slice.chromosome().equals(panelRegion.chromosome()) && panelRegion.start() <= slice.end() && panelRegion.end() >= slice.start()) {
-                regions.add(panelRegion);
+            if (slice.chromosome().equals(panelRegion.chromosome()) && panelRegion.start() <= slice.end()
+                    && panelRegion.end() >= slice.start()) {
+
+                final GenomeRegion overlap = GenomeRegions.create(slice.chromosome(),
+                        Math.max(panelRegion.start(), slice.start()),
+                        Math.min(panelRegion.end(), slice.end()));
+
+                regions.add(overlap);
             }
         }
     }
@@ -64,8 +71,7 @@ public class SamSlicer {
 
     private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record) {
         return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
-                .isSecondaryOrSupplementary()
-                ;
+                .isSecondaryOrSupplementary();
     }
 
 }
