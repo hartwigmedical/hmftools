@@ -18,7 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadEvidenceDataPilot {
+public class LoadEvidenceDataProtect {
     private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
 
     private static final String SAMPLE = "sample";
