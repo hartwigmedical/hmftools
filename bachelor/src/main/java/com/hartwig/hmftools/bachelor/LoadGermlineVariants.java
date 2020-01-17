@@ -51,11 +51,14 @@ public class LoadGermlineVariants
 
         try
         {
-            List<GermlineVariant> germlineVariants = GermlineVariantFile.read(GermlineVariantFile.generateFilename(dataPath, sampleId));
+            final List<GermlineVariant> germlineVariants = GermlineVariantFile.read(GermlineVariantFile.generateFilename(dataPath, sampleId));
 
-            LOGGER.info("sample({}) loading {} germline records", sampleId, germlineVariants.size());
-            final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
-            germlineDAO.write(sampleId, germlineVariants);
+            if(!germlineVariants.isEmpty())
+            {
+                LOGGER.info("sample({}) loading {} germline records", sampleId, germlineVariants.size());
+                final GermlineVariantDAO germlineDAO = new GermlineVariantDAO(dbAccess.context());
+                germlineDAO.write(sampleId, germlineVariants);
+            }
         }
         catch(Exception e)
         {
