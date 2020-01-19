@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.cobalt;
 
 import static java.util.stream.Collectors.toList;
 
-import java.util.Collections;
+import static com.hartwig.hmftools.common.utils.Doubles.median;
+
 import java.util.List;
 import java.util.function.Function;
 
@@ -43,9 +44,4 @@ public final class ReferenceRatioStatisticsFactory {
         return ImmutableReferenceRatioStatistics.builder().xCount(xCount).xMedian(xMedian).yCount(yCount).yMedian(yMedian).build();
     }
 
-    private static double median(@NotNull List<Double> ratios) {
-        Collections.sort(ratios);
-        int count = ratios.size();
-        return ratios.size() % 2 == 0 ? (ratios.get(count / 2) + ratios.get(count / 2 - 1)) / 2 : ratios.get(count / 2);
-    }
 }

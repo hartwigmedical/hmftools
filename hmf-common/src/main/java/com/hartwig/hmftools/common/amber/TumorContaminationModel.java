@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.Integers;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.logging.log4j.LogManager;
@@ -95,12 +96,6 @@ public class TumorContaminationModel {
 
     @VisibleForTesting
     static int medianDepth(@NotNull final List<TumorContamination> contamination) {
-        final List<Integer> reads = contamination.stream().map(x -> x.tumor().readDepth()).filter(x -> x > 0).sorted().collect(Collectors.toList());
-        int count = reads.size();
-        if (count == 0) {
-            return 0;
-        }
-
-        return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
+        return Integers.medianPositiveValue(contamination.stream().map(x -> x.tumor().readDepth()).collect(Collectors.toList()));
     }
 }
