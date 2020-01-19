@@ -111,16 +111,10 @@ public class SvLinxApplication
             config.setSampleIds(samplesList);
         }
 
-        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config);
+        SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config, dbAccess);
 
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
         sampleAnalyser.setCnDataLoader(cnDataLoader);
-
-        if(config.IndelAnnotation)
-        {
-            IndelAnnotator indelAnnotator = new IndelAnnotator(dbAccess, config.IndelFile);
-            sampleAnalyser.setIndelAnnotator(indelAnnotator);
-        }
 
         DriverGeneAnnotator driverGeneAnnotator = null;
         boolean checkDrivers = cmd.hasOption(DRIVERS_CHECK);

@@ -54,4 +54,22 @@ public class IndelData
         return String.format("indel(%s %s:%d) repeat(%d) microhomology(%s) ploidy(%.2f)",
                 IsDelete ? "DEL" : "INS", Chromosome, Position, RepeatCount, microhology(), Ploidy);
     }
+
+    public static final int CSV_REQUIRED_FIELDS = 8;
+    public static final int INDEL_COL_SAMPLE = 0;
+
+    public static IndelData fromString(final String[] indelData)
+    {
+        // parse CSV data
+        int index = INDEL_COL_SAMPLE+1;
+
+        return new IndelData(indelData[index++],
+                Long.parseLong(indelData[index++]),
+                indelData[index++],
+                indelData[index++],
+                indelData[index++],
+                Integer.parseInt(indelData[index++]),
+                Double.parseDouble(indelData[index++]));
+    }
+
 }

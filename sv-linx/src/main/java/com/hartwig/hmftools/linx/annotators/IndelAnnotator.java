@@ -1,12 +1,19 @@
 package com.hartwig.hmftools.linx.annotators;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.annotators.IndelData.CSV_REQUIRED_FIELDS;
+import static com.hartwig.hmftools.linx.annotators.IndelData.INDEL_COL_SAMPLE;
+import static com.hartwig.hmftools.linx.annotators.IndelData.fromString;
 import static com.hartwig.hmftools.linx.types.ResolvedType.COMPLEX;
 import static com.hartwig.hmftools.linx.types.ResolvedType.RECIP_INV;
 import static com.hartwig.hmftools.linx.types.ResolvedType.SIMPLE_GRP;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -17,8 +24,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.types.ResolvedType;
+import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
@@ -36,25 +45,32 @@ public class IndelAnnotator
     private final Map<String,List<IndelData>> mSampleChrIndelData;
     private int mIndelCount;
     private int mMsiIndelCount;
+    private BufferedWriter mFileWriter;
 
     private static final int INDEL_THRESHOLD = 500;
     private static final int MSI_THRESHOLD = 250;
 
     private static final Logger LOGGER = LogManager.getLogger(IndelAnnotator.class);
 
-    public IndelAnnotator(final DatabaseAccess dbAccess, final String indelFile)
+    public IndelAnnotator(final DatabaseAccess dbAccess, final LinxConfig config)
     {
         mDbAccess = dbAccess;
         mSampleIndelData = Maps.newHashMap();
         mSampleChrIndelData = Maps.newHashMap();
 
-        if(indelFile != null && !indelFile.isEmpty())
+        if(config.IndelFile != null && !config.IndelFile.isEmpty())
         {
-            loadIndelsFromFile(indelFile);
+            loadIndelsFromFile(config.IndelFile);
+        }
+        else if(mDbAccess != null && config.Output.WriteAll)
+        {
+            createOutputFile(config.OutputDataPath);
         }
     }
 
     public final Map<String,List<IndelData>> getSampleIndelData() { return mSampleIndelData; }
+
+    public void close() { closeBufferedWriter(mFileWriter);}
 
     public void loadIndels(final String sampleId)
     {
@@ -71,6 +87,7 @@ public class IndelAnnotator
         else if(mDbAccess != null)
         {
             sampleIndelData.addAll(loadIndelsFromDatabase(sampleId));
+            writeIndexData(sampleId, sampleIndelData);
         }
 
         if(sampleIndelData.isEmpty())
@@ -144,44 +161,30 @@ public class IndelAnnotator
             }
         }
 
-        if(totalIndels > 1 && !cluster.hasVariedPloidy())
+        ClusterMetrics metrics = cluster.getMetrics();
+        metrics.IndelCount = totalIndels;
+        metrics.IndelProbability = 1; // default indicates nothing unexpected
+
+        if(!cluster.hasVariedPloidy() && metrics.TotalRange > 0 && metrics.TotalDeleted < metrics.TotalRange)
         {
-            ClusterMetrics metrics = cluster.getMetrics();
+            long clusterRange = metrics.TotalRange - metrics.TotalDeleted;
+            double expectedIndelCount = min(clusterRange / GENOME_LENGTH, 1) * (mIndelCount - mMsiIndelCount);
 
-            metrics.IndelCount = totalIndels;
-            metrics.IndelProbability = 1;
-
-            long clusterRange = metrics.TotalRange;
-
-            if (clusterRange > 0)
+            if (totalIndels > expectedIndelCount)
             {
-                double expectedIndelCount = min(clusterRange / GENOME_LENGTH, 1) * (mIndelCount - mMsiIndelCount);
+                PoissonDistribution poisson = new PoissonDistribution(expectedIndelCount);
+                double indelProbability = 1 - poisson.cumulativeProbability(totalIndels - 1);
+                metrics.IndelProbability = indelProbability;
 
-                if (totalIndels > expectedIndelCount)
+                if(indelProbability < 0.01)
                 {
-                    PoissonDistribution poisson = new PoissonDistribution(expectedIndelCount);
-                    double indelProbability = 1 - poisson.cumulativeProbability(totalIndels - 1);
-                    metrics.IndelProbability = indelProbability;
-
-                    if(indelProbability < 0.01)
-                    {
-                        LOGGER.debug(String.format("cluster(%d) indelCount(%d) range(%d) expected(%.1f) probability(%.9f)",
-                                cluster.id(), totalIndels, clusterRange, expectedIndelCount, indelProbability));
-                    }
+                    LOGGER.debug(String.format("cluster(%d) indelCount(%d) range(%d) expected(%.1f) probability(%.9f)",
+                            cluster.id(), totalIndels, clusterRange, expectedIndelCount, indelProbability));
                 }
             }
         }
     }
 
-    private static final int CSV_REQUIRED_FIELDS = 8;
-    private final static int INDEL_COL_SAMPLE = 0;
-    private final static int INDEL_COL_CHR = 1;
-    private final static int INDEL_COL_POS = 2;
-    private final static int INDEL_COL_REF = 3;
-    private final static int INDEL_COL_ALT = 4;
-    private final static int INDEL_COL_MH = 5;
-    private final static int INDEL_COL_RC = 6;
-    private final static int INDEL_COL_PLOIDY = 7;
 
     private void loadIndelsFromFile(final String filename)
     {
@@ -213,9 +216,7 @@ public class IndelAnnotator
 
                 final String sampleId = items[INDEL_COL_SAMPLE];
 
-                IndelData indel = new IndelData(items[INDEL_COL_CHR], Long.parseLong(items[INDEL_COL_POS]),
-                        items[INDEL_COL_REF], items[INDEL_COL_ALT], items[INDEL_COL_MH],
-                        Integer.parseInt(items[INDEL_COL_RC]), Double.parseDouble(items[INDEL_COL_PLOIDY]));
+                IndelData indel = fromString(items);
 
                 ++recordCount;
 
@@ -255,5 +256,44 @@ public class IndelAnnotator
 
         return sampleIndelList;
     }
+
+    private void createOutputFile(final String outputDir)
+    {
+        try
+        {
+            String outputFileName = outputDir + "LNX_INDELS.csv";
+
+            mFileWriter = createBufferedWriter(outputFileName, false);
+            mFileWriter.write("SampleId,Chromosome,Position,Ref,Alt,Microhomology,RepeatCount,Ploidy");
+            mFileWriter.newLine();
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing indel output file: {}", e.toString());
+        }
+    }
+
+    private void writeIndexData(final String sampleId, final List<IndelData> indelDataList)
+    {
+        if(mFileWriter == null)
+            return;
+
+        try
+        {
+            for(final IndelData data : indelDataList)
+            {
+                // SampleId,Chromosome,Position,Ref,Alt,Microhomology,RepeatCount,Ploidy
+                mFileWriter.write(String.format("%s,%s,%d,%s,%s,%s,%d,%.4f",
+                        sampleId, data.Chromosome, data.Position, data.Ref, data.Alt,
+                        data.Microhomology, data.RepeatCount, data.Ploidy));
+                mFileWriter.newLine();
+            }
+        }
+        catch (final IOException e)
+        {
+            LOGGER.error("error writing indel output file: {}", e.toString());
+        }
+    }
+
 
 }

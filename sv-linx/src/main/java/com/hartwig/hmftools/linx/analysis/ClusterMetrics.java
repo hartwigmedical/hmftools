@@ -58,7 +58,7 @@ public class ClusterMetrics
         TotalDeleted = 0;
         ValidAllelePloidySegmentPerc = 1;
         IndelCount = 0;
-        IndelProbability = 0;
+        IndelProbability = 1;
     }
 
     public void populate(final SvCluster cluster, final Map<String, List<SvBreakend>> chrBreakendMap)

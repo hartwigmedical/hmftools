@@ -5,6 +5,7 @@ import org.apache.commons.cli.Options;
 
 public class LinxOutput
 {
+    public final boolean WriteAll;
     public final boolean WriteSvData; // all SV table fields to cohort file
     public final boolean WriteVisualisationData;
 
@@ -24,7 +25,9 @@ public class LinxOutput
 
     public LinxOutput(final CommandLine cmd)
     {
-        if(cmd.hasOption(WRITE_ALL))
+        WriteAll = cmd.hasOption(WRITE_ALL);
+
+        if(WriteAll)
         {
             WriteSvData = true;
             WriteVisualisationData = true;
@@ -57,6 +60,7 @@ public class LinxOutput
 
     public LinxOutput()
     {
+        WriteAll = false;
         WriteSvData = false;
         WriteVisualisationData = false;
         WriteClusterHistory = false;

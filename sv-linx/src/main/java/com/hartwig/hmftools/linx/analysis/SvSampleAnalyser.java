@@ -118,7 +118,7 @@ public class SvSampleAnalyser {
 
     private static final Logger LOGGER = LogManager.getLogger(SvSampleAnalyser.class);
 
-    public SvSampleAnalyser(final LinxConfig config)
+    public SvSampleAnalyser(final LinxConfig config, DatabaseAccess dbAccess)
     {
         mConfig = config;
         mSampleId = "";
@@ -154,7 +154,10 @@ public class SvSampleAnalyser {
         mKataegisAnnotator = new KataegisAnnotator(mConfig.OutputDataPath);
         mKataegisAnnotator.loadKataegisData(mConfig.KataegisFile);
 
-        mIndelAnnotator = null;
+        if(config.IndelAnnotation)
+        {
+            mIndelAnnotator = new IndelAnnotator(dbAccess, config);
+        }
 
         mPcPrep = new PerformanceCounter("Preparation");
         mPcClusterAnalyse = new PerformanceCounter("ClusterAndAnalyse");
@@ -174,11 +177,6 @@ public class SvSampleAnalyser {
     {
         mCnDataLoader = cnAnalyser;
         mAnalyser.setCnDataLoader(cnAnalyser);
-    }
-
-    public void setIndelAnnotator(IndelAnnotator indelAnnotator)
-    {
-        mIndelAnnotator = indelAnnotator;
     }
 
     public void setGeneCollection(final SvGeneTranscriptCollection geneCollection)
@@ -995,5 +993,8 @@ public class SvSampleAnalyser {
         mKataegisAnnotator.close();
         mVisWriter.close();
         mAnalyser.close();
+
+        if(mIndelAnnotator != null)
+            mIndelAnnotator.close();
     }
 }
