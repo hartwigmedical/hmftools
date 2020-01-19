@@ -4,17 +4,20 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
-import com.hartwig.hmftools.sage.variant.SageVariantFactory;
+import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.vcf.SageChromosomeVCF;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,34 +27,33 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageVariant>>>, AutoCloseable {
+public class ChromosomePipeline implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
 
     private final String chromosome;
     private final SageConfig config;
     private final SageChromosomeVCF sageVCF;
-    private final SageVariantFactory sageVariantFactory;
     private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panelRegions;
     private final IndexedFastaSequenceFile refGenome;
+    private final SageVariantPipeline sageVariantPipeline;
 
-    ChromosomePipeline(@NotNull final String chromosome,
-            @NotNull final SageConfig config,
-            @NotNull final SageVariantFactory sageVariantFactory,
-            @NotNull final Function<SageVariant, VariantContext> variantContextFactory,
-            @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions) throws IOException {
+    public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
+            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
-        this.sageVariantFactory = sageVariantFactory;
-        this.variantContextFactory = variantContextFactory;
+        this.variantContextFactory =
+                config.germlineOnly() ? SageVariantContextFactory::germlineOnly : SageVariantContextFactory::pairedTumorNormal;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
+        this.sageVariantPipeline = config.germlineOnly()
+                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions, refGenome)
+                : new SomaticPipeline(config, executor, hotspots, panelRegions, refGenome);
     }
 
     @NotNull
@@ -64,9 +66,30 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
         return sageVCF.filename();
     }
 
-    @Override
-    public void accept(final CompletableFuture<List<SageVariant>> regionData) {
-        regions.add(regionData);
+    public void addAllRegions() {
+        int maxPosition = refGenome.getSequence(chromosome).length();
+        addAllRegions(maxPosition);
+    }
+
+    public void addAllRegions(int maxPosition) {
+        int regionSliceSize = config.regionSliceSize();
+
+        for (int i = 0; ; i++) {
+            int start = 1 + i * regionSliceSize;
+            int end = Math.min(start + regionSliceSize, maxPosition);
+            addRegion(start, end);
+
+            if (end >= maxPosition) {
+                break;
+            }
+        }
+    }
+
+    public void addRegion(int start, int end) {
+        final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
+
+        final RefSequence refSequence = new RefSequence(region, refGenome);
+        regions.add(sageVariantPipeline.variants(region, refSequence));
     }
 
     @NotNull
@@ -78,8 +101,8 @@ public class ChromosomePipeline implements Consumer<CompletableFuture<List<SageV
                 sageVCF.write(context);
             }
         };
-        final Phase phase = new Phase(config, refGenome, sageVariantFactory, hotspots, panelRegions, phasedConsumer);
 
+        final Phase phase = new Phase(config, hotspots, panelRegions, sageVariantPipeline, phasedConsumer);
         final CompletableFuture<Void> done = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
 
         return done.thenApply(aVoid -> {

@@ -35,8 +35,9 @@ public class SageVCF implements AutoCloseable {
     public final static String READ_CONTEXT = "RC";
     public final static String PASS = "PASS";
     public final static String MERGE_FILTER = "merge";
-    public final static String GERMLINE_MVN = "germline_mnv";
     public final static String DEDUP_FILTER = "dedup";
+    public final static String GERMLINE_MVN = "mnv_germline";
+    public final static String NORMAL_SUPPORT = "mnv_normal_support";
 
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
     public final static String READ_CONTEXT_JITTER = "RC_JIT";
@@ -156,7 +157,8 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_MVN, "Variant was merged into another variant"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(NORMAL_SUPPORT, "MNV has support in normal"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_MVN, "MNV contains germline SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
 

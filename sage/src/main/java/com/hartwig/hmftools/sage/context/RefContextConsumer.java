@@ -64,7 +64,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private final RefSequence refGenome;
     private final RefContextCandidates candidates;
 
-    RefContextConsumer(boolean addInterimReadContexts, @NotNull final SageConfig config, @NotNull final GenomeRegion bounds,
+    public RefContextConsumer(boolean addInterimReadContexts, @NotNull final SageConfig config, @NotNull final GenomeRegion bounds,
             @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;

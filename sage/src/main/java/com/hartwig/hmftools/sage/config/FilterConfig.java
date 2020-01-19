@@ -80,7 +80,7 @@ public interface FilterConfig {
     }
 
     default double minGermlineVaf() {
-        return 0.1;
+        return 0;
     }
 
     @NotNull

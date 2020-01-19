@@ -10,28 +10,33 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SoftFilter;
+import com.hartwig.hmftools.sage.pipeline.MnvPipeline;
 import com.hartwig.hmftools.sage.select.TierSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 class SnvSnvMerge implements Consumer<SageVariant> {
 
+    private static final Logger LOGGER = LogManager.getLogger(SnvSnvMerge.class);
+
     private static final int BUFFER = 2;
 
     private final boolean enabled;
-    private final MnvFactory factory;
     private final Consumer<SageVariant> consumer;
     private final List<SageVariant> list = Lists.newLinkedList();
     private final TierSelector tierSelector;
+    private final MnvPipeline pipeline;
 
-    SnvSnvMerge(final SageConfig config, @NotNull final Consumer<SageVariant> consumer, @NotNull final MnvFactory factory,
-            @NotNull final List<GenomeRegion> panel, @NotNull final List<VariantHotspot> hotspots) {
+    SnvSnvMerge(final SageConfig config, @NotNull final Consumer<SageVariant> consumer, @NotNull final List<GenomeRegion> panel,
+            @NotNull final List<VariantHotspot> hotspots, @NotNull final MnvPipeline pipeline) {
         this.enabled = config.mnvDetection();
         this.consumer = consumer;
-        this.factory = factory;
         this.tierSelector = new TierSelector(panel, hotspots);
+        this.pipeline = pipeline;
     }
 
     @Override
@@ -42,16 +47,16 @@ class SnvSnvMerge implements Consumer<SageVariant> {
             for (int i = 0; i < list.size(); i++) {
                 final SageVariant oldEntry = list.get(i);
                 if (isMnv(oldEntry, newEntry)) {
-                    final VariantHotspot candidate = factory.merge(oldEntry.primaryTumor(), newEntry.primaryTumor());
+                    final VariantHotspot candidate = pipeline.combined(oldEntry, newEntry);
 
                     boolean candidateIsHotspot = tierSelector.isHotspot(candidate);
                     boolean bothEntriesPass = newEntry.isPassing() && oldEntry.isPassing();
                     boolean onePassingOneGermlineFiltered = onePassingOneGermlineFiltered(oldEntry, newEntry);
 
                     if (bothEntriesPass || candidateIsHotspot || onePassingOneGermlineFiltered) {
-                        SageVariant mnv = factory.mnv(newEntry.localPhaseSet(), candidate);
+                        SageVariant mnv = pipeline.mnv(newEntry.localPhaseSet(), candidate);
                         if (mnv != null) {
-                            if (isPassingWithNoSupportInNormal(mnv) || candidateIsHotspot) {
+                            if (mnv.isPassing() || candidateIsHotspot) {
                                 newEntry.filters().add(SageVCF.MERGE_FILTER);
                                 oldEntry.filters().add(SageVCF.MERGE_FILTER);
                                 if (oldEntry.isSynthetic()) {
@@ -77,10 +82,6 @@ class SnvSnvMerge implements Consumer<SageVariant> {
     private boolean onePassingOneGermlineFiltered(SageVariant oldVariant, SageVariant newVariant) {
         return oldVariant.isPassing() && SoftFilter.isGermlineAndNotTumorFiltered(newVariant.filters())
                 || newVariant.isPassing() && SoftFilter.isGermlineAndNotTumorFiltered(oldVariant.filters());
-    }
-
-    private boolean isPassingWithNoSupportInNormal(@NotNull final SageVariant mnv) {
-        return mnv.isPassing() && mnv.normal().primaryReadContext().altSupport() == 0;
     }
 
     private void flush(@NotNull final GenomePosition position) {
@@ -111,4 +112,5 @@ class SnvSnvMerge implements Consumer<SageVariant> {
         return isPhasedSnv(existingEntry) && existingEntry.localPhaseSet() == newEntry.localPhaseSet()
                 && newEntry.position() - existingEntryEndPosition <= BUFFER;
     }
+
 }
