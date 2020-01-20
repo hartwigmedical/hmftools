@@ -34,13 +34,23 @@ public enum EvidenceLevel {
         switch (level.toUpperCase()) {
             case "A":
                 return LEVEL_A;
+            case "LEVEL_A":
+                return LEVEL_A;
             case "B":
+                return LEVEL_B;
+            case "LEVEL_B":
                 return LEVEL_B;
             case "C":
                 return LEVEL_C;
+            case "LEVEL_C":
+                return LEVEL_C;
             case "D":
                 return LEVEL_D;
+            case "LEVEL_D":
+                return LEVEL_D;
             case "E":
+                return LEVEL_E;
+            case "LEVEL_E":
                 return LEVEL_E;
             default:
                     throw new IllegalArgumentException("Unrecognized evidence level item: " + level);
