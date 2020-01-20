@@ -16,11 +16,11 @@ public final class iclusionApi {
     private iclusionApi() {
     }
 
-    public static String connectWithIclusionApi(@NotNull String iClusionLink, @NotNull String iClusionClientId,
+    public static String connectWithIclusionApi(@NotNull String iClusionEndpoint, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword) throws IOException {
+        LOGGER.info("Connecting with iClusion API on {}", iClusionEndpoint);
 
-        LOGGER.info("Connecting with iclusion API on {}", iClusionLink);
-        URL url = new URL(iClusionLink); // url iclusion
+        URL url = new URL(iClusionEndpoint); // url iclusion
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
       //  connection.setRequestMethod("POST");

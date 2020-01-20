@@ -4,8 +4,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import com.hartwig.hmftools.iclusion.api.iclusionApi;
+
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -14,11 +15,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import com.hartwig.hmftools.iclusion.api.iclusionApi;
-
 public class IclusionImporterApplication {
+
     private static final Logger LOGGER = LogManager.getLogger(IclusionImporterApplication.class);
-    private static final String ICLUSION_LINK = "iclusion_link";
+
+    private static final String ICLUSION_ENDPOINT = "iclusion_endpoint";
     private static final String ICLUSION_CLIENT_ID = "iclusion_client_id";
     private static final String ICLUSION_CLIENT_SECRET = "iclusion_client_secret";
     private static final String ICLUSION_USERNAME = "iclusion_username";
@@ -28,35 +29,35 @@ public class IclusionImporterApplication {
     private static final String ICLUSION_OUTPUT_STUDIES_PROCESSED = "iclusion_output_studies_processed";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        Options options = createBasicOptions();
+        CommandLine cmd = createCommandLine(args, options);
 
-        if (!validInputForBaseReport(cmd)) {
+        if (!validInputForIclusionConnection(cmd)) {
             printUsageAndExit(options);
         }
 
-        String iClusionLink = cmd.getOptionValue(ICLUSION_LINK);
+        String iClusionEndpoint = cmd.getOptionValue(ICLUSION_ENDPOINT);
         String iClusionClientId = cmd.getOptionValue(ICLUSION_CLIENT_ID);
         String iClusionClientSecret = cmd.getOptionValue(ICLUSION_CLIENT_SECRET);
         String iClusionUsername = cmd.getOptionValue(ICLUSION_USERNAME);
         String iClusionPassword = cmd.getOptionValue(ICLUSION_PASSWORD);
-        String iClusionOutputStudiesRaw = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_RAW);
-        String iClusionOutputStudiesProcessed = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_PROCESSED);
 
-        String token = iclusionApi.connectWithIclusionApi(iClusionLink,
+        String token = iclusionApi.connectWithIclusionApi(iClusionEndpoint,
                 iClusionClientId,
                 iClusionClientSecret,
                 iClusionUsername,
                 iClusionPassword);
 
-        LOGGER.info("Reading iclusion study details.....");
-        LOGGER.info("Queried and filtered {} studies from iclusion API", "size study");
+        String iClusionOutputStudiesRaw = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_RAW);
+        String iClusionOutputStudiesProcessed = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_PROCESSED);
+
+        LOGGER.info("Reading iClusion study details.....");
+        LOGGER.info("Queried and filtered {} studies from iClusion API", "size study");
 
         writeIclusionOutputStudiesRawToTSVFile(iClusionOutputStudiesRaw);
         writeIclusionOutputStudiesProcessedToTSVFile(iClusionOutputStudiesProcessed);
 
         LOGGER.info("Iclusion importer is finished!");
-
     }
 
     private static void writeIclusionOutputStudiesRawToTSVFile(@NotNull String iClusionOutputStudiesRaw) throws IOException {
@@ -75,15 +76,14 @@ public class IclusionImporterApplication {
         writer.close();
     }
 
-    private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
-        return valueExists(cmd, ICLUSION_LINK) && valueExists(cmd, ICLUSION_CLIENT_ID) && valueExists(cmd, ICLUSION_CLIENT_SECRET)
+    private static boolean validInputForIclusionConnection(@NotNull CommandLine cmd) {
+        return valueExists(cmd, ICLUSION_ENDPOINT) && valueExists(cmd, ICLUSION_CLIENT_ID) && valueExists(cmd, ICLUSION_CLIENT_SECRET)
                 && valueExists(cmd, ICLUSION_USERNAME) && valueExists(cmd, ICLUSION_PASSWORD);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
-        String value = cmd.getOptionValue(param);
-        if (value == null) {
-            LOGGER.warn(param + " has to be provided");
+        if (!cmd.hasOption(param)) {
+            LOGGER.warn("{} has to be provided", param);
             return false;
         }
         return true;
@@ -91,18 +91,18 @@ public class IclusionImporterApplication {
 
     @NotNull
     private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
-        options.addOption(ICLUSION_LINK, true, "iClusion link");
+        Options options = new Options();
+
+        options.addOption(ICLUSION_ENDPOINT, true, "iClusion endpoint URL");
         options.addOption(ICLUSION_CLIENT_ID, true, "iClusion client id");
         options.addOption(ICLUSION_CLIENT_SECRET, true, "iClusion client secret");
         options.addOption(ICLUSION_USERNAME, true, "iClusion username");
-        options.addOption(ICLUSION_PASSWORD, true, "iClusion passsword");
+        options.addOption(ICLUSION_PASSWORD, true, "iClusion password");
         options.addOption(ICLUSION_OUTPUT_STUDIES_RAW, true, "iClusion output studies raw");
         options.addOption(ICLUSION_OUTPUT_STUDIES_PROCESSED, true, "iClusion output studies processed");
 
