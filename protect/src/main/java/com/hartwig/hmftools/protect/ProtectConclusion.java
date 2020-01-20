@@ -8,10 +8,14 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.common.GenomicData;
-import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
+import com.hartwig.hmftools.protect.report.Microsatellite.MicrosatelliteAnalyzer;
+import com.hartwig.hmftools.protect.report.MutationalBurden.MutationalBurdenAnalyzer;
+import com.hartwig.hmftools.protect.report.MutationalLoad.MutationalLoadAnalyzer;
 import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -57,15 +61,18 @@ public class ProtectConclusion {
             printUsageAndExit(options);
         }
 
+        //Extract genomic alterations
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
-        int tumorMTL = 0;
-        int tumorMSI = 0;
+        // Extract tumor characteristics
+        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
+        double tumorMTL = MutationalLoadAnalyzer.determineTumorMutationalLoad(variants);
+        double tumorMSI = MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants);
         double chordScore = ChordFileReader.read(chordTxt).hrdValue();
-        int tumorMTB = 0;
+        double tumorMTB = MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants);
 
         LOGGER.info("Create conclusion for sample");
         writeConclusionOfSample(OutputConclusionTsv, "");
