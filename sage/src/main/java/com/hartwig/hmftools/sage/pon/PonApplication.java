@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.pon;
+package com.hartwig.hmftools.sage.pon;
 
 import java.io.File;
 import java.io.IOException;

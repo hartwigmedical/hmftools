@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.pon;
+package com.hartwig.hmftools.sage.pon;
 
 import java.util.Comparator;
 import java.util.List;
@@ -9,10 +9,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
@@ -23,7 +25,14 @@ public class PonBuilder {
     public void add(@NotNull final VariantContext context) {
         final VariantHotspot hotspot = hotspot(context);
         final Counter counter = map.computeIfAbsent(hotspot, Counter::new);
-        counter.increment();
+        final Genotype genotype = context.getGenotype(0);
+        if (genotype.hasExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH)) {
+            String rawDepth = (String) genotype.getExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH);
+            int allelicDepth = Integer.valueOf(rawDepth.split(",")[1]);
+            if (allelicDepth >= 3) {
+                counter.increment(allelicDepth);
+            }
+        }
     }
 
     @NotNull
@@ -55,6 +64,8 @@ public class PonBuilder {
         return new VariantContextBuilder().chr(counter.hotspot.chromosome())
                 .start(counter.hotspot.position())
                 .attribute(PonVCF.PON_COUNT, counter.counter)
+                .attribute(PonVCF.PON_TOTAL, counter.total)
+                .attribute(PonVCF.PON_MAX, counter.max)
                 .alleles(alleles)
                 .computeEndFromAlleles(alleles, (int) counter.hotspot.position())
                 .make();
@@ -63,13 +74,17 @@ public class PonBuilder {
     static class Counter {
         private final VariantHotspot hotspot;
         private int counter;
+        private int total;
+        private int max = 0;
 
         Counter(final VariantHotspot hotspot) {
             this.hotspot = hotspot;
         }
 
-        void increment() {
+        void increment(int depth) {
             counter++;
+            total += depth;
+            max = Integer.max(max, depth);
         }
     }
 

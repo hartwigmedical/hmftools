@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.pon;
+package com.hartwig.hmftools.sage.pon;
 
 import java.util.List;
 
@@ -14,6 +14,8 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class PonVCF implements AutoCloseable {
 
     public static final String PON_COUNT = "PON_COUNT";
+    public static final String PON_TOTAL = "PON_TOTAL";
+    public static final String PON_MAX = "PON_MAX";
 
     private final VariantContextWriter writer;
 
@@ -30,6 +32,8 @@ public class PonVCF implements AutoCloseable {
 
         final VCFHeader header = new VCFHeader();
         header.addMetaDataLine(new VCFInfoHeaderLine(PON_COUNT, 1, VCFHeaderLineType.Integer, "how many samples had the variant"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PON_TOTAL, 1, VCFHeaderLineType.Integer, "total depth"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PON_MAX, 1, VCFHeaderLineType.Integer, "max depth"));
         header.addMetaDataLine(new VCFHeaderLine("PonInputSampleCount", String.valueOf(samples)));
         writer.writeHeader(header);
 
