@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.common.GenomicData;
+import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
+import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -30,6 +32,8 @@ public class ProtectConclusion {
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
+    private static final String CHORD_TXT = "chord_txt";
+
 
     private static final String CONCLUSION_TSV = "conclusion_tsv";
 
@@ -44,6 +48,8 @@ public class ProtectConclusion {
         final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
+        final String chordTxt = cmd.getOptionValue(CHORD_TXT);
+
 
         final String OutputConclusionTsv = cmd.getOptionValue(CONCLUSION_TSV);
 
@@ -58,7 +64,7 @@ public class ProtectConclusion {
 
         int tumorMTL = 0;
         int tumorMSI = 0;
-        int chordScore = 0;
+        double chordScore = ChordFileReader.read(chordTxt).hrdValue();
         int tumorMTB = 0;
 
         LOGGER.info("Create conclusion for sample");
@@ -77,7 +83,7 @@ public class ProtectConclusion {
 
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV)
-                && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV);
+                && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -114,6 +120,8 @@ public class ProtectConclusion {
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+        options.addOption(CHORD_TXT, true, "Path towards the chord txt file.");
+
         options.addOption(CONCLUSION_TSV, true, "Path towards the conclusion TSV.");
 
         return parser.parse(options, args);
