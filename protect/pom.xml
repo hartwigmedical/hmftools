@@ -11,7 +11,7 @@
     <artifactId>protect</artifactId>
     <version>${protect.version}</version>
     <packaging>jar</packaging>
-    <name>HMF Tools - protect</name>
+    <name>HMF Tools - PROTECT</name>
 
     <dependencies>
         <dependency>
