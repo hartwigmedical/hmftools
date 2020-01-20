@@ -69,7 +69,7 @@ public class ProtectDataLoader {
 
     private static void printUsageAndExit(@NotNull final Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("patient-db - load evidence data", options);
+        formatter.printHelp("protect - evidence data loader", options);
         System.exit(1);
     }
 

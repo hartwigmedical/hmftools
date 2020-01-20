@@ -14,13 +14,9 @@ import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
-import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
-import com.hartwig.hmftools.common.purple.purity.PurityContext;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.protect.common.GenomicData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,8 +29,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class protectApplication {
-    private static final Logger LOGGER = LogManager.getLogger(protectApplication.class);
+public class ProtectActionability {
+    private static final Logger LOGGER = LogManager.getLogger(ProtectActionability.class);
 
     private static final String TUMOR_SAMPLE_ID = "tumor_sample_id";
 
@@ -77,10 +73,10 @@ public class protectApplication {
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
-        List<? extends Variant> passSomaticVariants = readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
-        double ploidy = extractPloidy(purplePurityTsv);
-        List<GeneCopyNumber> geneCopyNumbers = readGeneCopyNumbers(purpleGeneCnvTsv);
-        List<ReportableGeneFusion> geneFusions = readGeneFusions(linxFusionTsv);
+        List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
+        double ploidy = GenomicData.extractPloidy(purplePurityTsv);
+        List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
+        List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
         LOGGER.info("Create actionability for sample {}", tumorSampleId);
 
@@ -97,13 +93,9 @@ public class protectApplication {
         LOGGER.info("Create actionability for database");
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
 
-        LOGGER.info("Create conclusion for sample");
-        writeConclusionOfSample();
+
     }
 
-    private static void writeConclusionOfSample() {
-        //TODO create conclusion
-    }
     private static void writeActionabilityForPatientReport(@NotNull String outputReportTsv, @NotNull List<EvidenceItem> combinedEvidence)
             throws IOException {
         //TODO filter actionability
@@ -134,14 +126,6 @@ public class protectApplication {
                             + item.scope() + "\n");
         }
         writerDatabase.close();
-    }
-
-    private static double extractPloidy(@NotNull String purplePurityTsv) throws IOException {
-        LOGGER.info("Reading purple purity from {}", purplePurityTsv);
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        double ploidy = purityContext.bestFit().ploidy();
-        LOGGER.info(" Sample ploidy: {}", ploidy);
-        return ploidy;
     }
 
     @NotNull
@@ -195,31 +179,6 @@ public class protectApplication {
         LOGGER.info(" Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);
 
         return patientPrimaryTumorLocation;
-    }
-
-    @NotNull
-    private static List<? extends Variant> readPassSomaticVariants(@NotNull String sampleId, @NotNull String somaticVariantVcf)
-            throws IOException {
-        LOGGER.info("Reading somatic variants from {}", somaticVariantVcf);
-        List<? extends Variant> passSomaticVariants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sampleId, somaticVariantVcf);
-        LOGGER.info(" Loaded {} PASS somatic variants", passSomaticVariants.size());
-        return passSomaticVariants;
-    }
-
-    @NotNull
-    private static List<GeneCopyNumber> readGeneCopyNumbers(@NotNull String purpleGeneCnvTsv) throws IOException {
-        LOGGER.info("Reading gene copy numbers from {}", purpleGeneCnvTsv);
-        List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(purpleGeneCnvTsv);
-        LOGGER.info(" Loaded {} gene copy numbers", geneCopyNumbers.size());
-        return geneCopyNumbers;
-    }
-
-    @NotNull
-    private static List<ReportableGeneFusion> readGeneFusions(@NotNull String linxFusionTsv) throws IOException {
-        LOGGER.info("Reading gene fusions from {}", linxFusionTsv);
-        List<ReportableGeneFusion> fusions = ReportableGeneFusionFile.read(linxFusionTsv);
-        LOGGER.info(" Loaded {} fusions", fusions.size());
-        return fusions;
     }
 
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
