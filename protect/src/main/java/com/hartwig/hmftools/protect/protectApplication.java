@@ -97,8 +97,14 @@ public class protectApplication {
 
         LOGGER.info("Create actionability for database");
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
+
+        LOGGER.info("Create conclusion for sample");
+        writeConclusionOfSample();
     }
 
+    private static void writeConclusionOfSample() {
+        //TODO create conclusion
+    }
     private static void writeActionabilityForPatientReport(@NotNull String outputReportTsv, @NotNull List<EvidenceItem> combinedEvidence)
             throws IOException {
         //TODO filter actionability

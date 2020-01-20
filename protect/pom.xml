@@ -9,8 +9,8 @@
     </parent>
 
     <artifactId>protect</artifactId>
+    <version>${protect.version}</version>
     <packaging>jar</packaging>
-    <version>1.0</version>
     <name>HMF Tools - protect</name>
 
     <dependencies>

@@ -89,7 +89,8 @@ public class DatabaseAccess implements AutoCloseable {
     private final ChordDAO chordDAO;
     @NotNull
     private final ClinicalEvidenceDAO clinicalEvidenceDAO;
-
+    @NotNull
+    private final ClinicalEvidenceDAOProtect clinicalEvidenceDAOProtect;
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
@@ -116,6 +117,7 @@ public class DatabaseAccess implements AutoCloseable {
         driverCatalogDAO = new DriverCatalogDAO(context);
         chordDAO = new ChordDAO(context);
         clinicalEvidenceDAO = new ClinicalEvidenceDAO(context);
+        clinicalEvidenceDAOProtect = new ClinicalEvidenceDAOProtect(context);
     }
 
     @NotNull
@@ -265,6 +267,10 @@ public class DatabaseAccess implements AutoCloseable {
 
     public void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> items) {
         clinicalEvidenceDAO.writeClinicalEvidence(sample, items);
+    }
+
+    public void writeClinicalEvidenceProtect(@NotNull String sample, @NotNull List<com.hartwig.hmftools.protect.actionability.EvidenceItem> items) {
+        clinicalEvidenceDAOProtect.writeClinicalEvidence(sample, items);
     }
 
     public void writeRNA(@NotNull Set<String> samples) {

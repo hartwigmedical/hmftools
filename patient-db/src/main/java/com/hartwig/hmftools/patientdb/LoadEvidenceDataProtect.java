@@ -5,7 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.protect.actionability.EvidenceItem;
+import com.hartwig.hmftools.protect.common.ActionabilityFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -24,7 +25,6 @@ public class LoadEvidenceDataProtect {
     private static final String SAMPLE = "sample";
 
     private static final String ACTIONABILITY_TSV = "knowledgebase_dir";
-
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -50,10 +50,10 @@ public class LoadEvidenceDataProtect {
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading actionability for sample {}", sampleId);
+        List<EvidenceItem> combinedEvidence = ActionabilityFile.read(actionabilityTsv);
 
         LOGGER.info("Writing evidence items into db");
-        List<EvidenceItem> combinedEvidence = Lists.newArrayList();
-        dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
+        dbAccess.writeClinicalEvidenceProtect(sampleId, combinedEvidence);
         LOGGER.info("Finished");
     }
 
