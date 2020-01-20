@@ -39,7 +39,6 @@
         <Gene name="BRIP1" ensembl="ENST00000259008"/>
         <Gene name="CDK12" ensembl="ENST00000447079"/>
         <Gene name="CHEK1" ensembl="ENST00000534070"/>
-        <Gene name="CHEK2" ensembl="ENST00000328354"/>
         <Gene name="FANCL" ensembl="ENST00000233741"/>
         <Gene name="PALB2" ensembl="ENST00000261584"/>
         <Gene name="PPP2R2A" ensembl="ENST00000380737"/>
@@ -105,6 +104,13 @@
             <Gene name="WT1"/>
             <Position>11:32413573:C:CA</Position>
         </Exclusion>
+
+        <!-- The following variants are blacklisted based on manual curation by AVL -->
+        <Exclusion>
+            <Gene name="FANCL"/>
+            <Position>2:58386928:G:GTAAT</Position>
+        </Exclusion>
+
     </Blacklist>
 
     <Whitelist>
