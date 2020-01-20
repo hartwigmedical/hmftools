@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.purple.qc.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,6 +68,10 @@ class PurityDAO {
                 .wholeGenomeDuplication(result.getValue(PURITY.WHOLEGENOMEDUPLICATION) == 1)
                 .microsatelliteStatus(MicrosatelliteStatus.valueOf(result.getValue(PURITY.MSSTATUS)))
                 .microsatelliteIndelsPerMb(result.getValue(PURITY.MSINDELSPERMB))
+                .tumorMutationalBurdenPerMb(result.getValue(PURITY.TMBPERMB))
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(result.getValue(PURITY.TMBSTATUS)))
+                .tumorMutationalLoad(result.getValue(PURITY.TML))
+                .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(result.getValue(PURITY.TMLSTATUS)))
                 .version(result.getValue(PURITY.VERSION))
                 .gender(Gender.valueOf(result.getValue(PURITY.GENDER)))
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
@@ -134,6 +139,10 @@ class PurityDAO {
                 PURITY.WHOLEGENOMEDUPLICATION,
                 PURITY.MSINDELSPERMB,
                 PURITY.MSSTATUS,
+                PURITY.TMBPERMB,
+                PURITY.TMBSTATUS,
+                PURITY.TML,
+                PURITY.TMLSTATUS,
                 PURITY.MODIFIED)
                 .values(purity.version(),
                         sample,
@@ -156,6 +165,10 @@ class PurityDAO {
                         purity.wholeGenomeDuplication() ? (byte) 1 : (byte) 0,
                         DatabaseUtil.decimal(purity.microsatelliteIndelsPerMb()),
                         purity.microsatelliteStatus().toString(),
+                        DatabaseUtil.decimal(purity.tumorMutationalBurdenPerMb()),
+                        purity.tumorMutationalBurdenStatus().toString(),
+                        DatabaseUtil.decimal(purity.tumorMutationalLoad()),
+                        purity.tumorMutationalLoadStatus().toString(),
                         timestamp)
                 .execute();
     }

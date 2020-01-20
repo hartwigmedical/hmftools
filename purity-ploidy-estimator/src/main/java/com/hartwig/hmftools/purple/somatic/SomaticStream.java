@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.variant.clonality.PeakModel;
 import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentPurple;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.CommonConfig;
 import com.hartwig.hmftools.purple.config.RefGenomeData;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
@@ -37,6 +39,7 @@ public class SomaticStream {
     private final String inputVCF;
     private final String outputVCF;
     private final boolean enabled;
+    private final TumorMutationalLoad tumorMutationalLoad;
     private final MicrosatelliteIndels microsatelliteIndels;
     private final SomaticVariantDrivers drivers;
     private final SomaticVariantFactory somaticVariantFactory;
@@ -48,6 +51,7 @@ public class SomaticStream {
         this.inputVCF = enabled ? somaticConfig.file().get().toString() : "";
         this.refGenomeData = refGenomeData;
         this.somaticConfig = somaticConfig;
+        this.tumorMutationalLoad = new TumorMutationalLoad();
         this.microsatelliteIndels = new MicrosatelliteIndels();
         this.drivers = new SomaticVariantDrivers();
         this.somaticVariantFactory = SomaticVariantFactory.passOnlyInstance();
@@ -62,6 +66,24 @@ public class SomaticStream {
         return enabled ? MicrosatelliteStatus.fromIndelsPerMb(microsatelliteIndelsPerMb()) : MicrosatelliteStatus.UNKNOWN;
     }
 
+    public double tumorMutationalBurdenPerMb() {
+        return tumorMutationalLoad.burdenPerMb();
+    }
+
+    public int tumorMutationalLoad() {
+        return tumorMutationalLoad.load();
+    }
+
+    @NotNull
+    public TumorMutationalStatus tumorMutationalBurdenPerMbStatus() {
+        return enabled ? TumorMutationalStatus.fromBurdenPerMb(tumorMutationalBurdenPerMb()) : TumorMutationalStatus.UNKNOWN;
+    }
+
+    @NotNull
+    public TumorMutationalStatus tumorMutationalLoadStatus() {
+        return enabled ? TumorMutationalStatus.fromLoad(tumorMutationalLoad()) : TumorMutationalStatus.UNKNOWN;
+    }
+
     @NotNull
     public List<DriverCatalog> drivers(@NotNull final List<GeneCopyNumber> geneCopyNumbers) {
         return drivers.build(geneCopyNumbers);
@@ -70,7 +92,10 @@ public class SomaticStream {
     public void processAndWrite(@NotNull final PurityAdjuster purityAdjuster, @NotNull final List<PurpleCopyNumber> copyNumbers,
             @NotNull final List<FittedRegion> fittedRegions, @NotNull final List<PeakModel> somaticPeaks) throws IOException {
         final Consumer<VariantContext> driverConsumer =
-                x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(drivers::add);
+                x -> somaticVariantFactory.createVariant(commonConfig.tumorSample(), x).ifPresent(somatic -> {
+                    tumorMutationalLoad.accept(somatic);
+                    drivers.add(somatic);
+                });
 
         if (enabled) {
             try (IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomeData.refGenome()));
@@ -79,7 +104,8 @@ public class SomaticStream {
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
-                final Consumer<VariantContext> consumer = microsatelliteIndels.andThen(writer::add).andThen(driverConsumer);
+                final Consumer<VariantContext> consumer =
+                        microsatelliteIndels.andThen(writer::add).andThen(driverConsumer);
 
                 final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(somaticConfig.clonalityMaxPloidy(),
                         somaticConfig.clonalityBinWidth(),

@@ -14,6 +14,7 @@ import java.util.Random;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -33,6 +34,10 @@ public class FittedPurityFileTest {
                 .wholeGenomeDuplication(random.nextBoolean())
                 .microsatelliteIndelsPerMb(random.nextDouble())
                 .microsatelliteStatus(MicrosatelliteStatus.MSI)
+                .tumorMutationalBurdenPerMb(random.nextDouble())
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.HIGH)
+                .tumorMutationalLoad(random.nextDouble())
+                .tumorMutationalLoadStatus(TumorMutationalStatus.LOW)
                 .build();
 
         final List<String> lines = toLines(input);

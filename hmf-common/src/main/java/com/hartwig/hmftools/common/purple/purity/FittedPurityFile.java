@@ -11,6 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.gender.Gender;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -51,6 +52,10 @@ public final class FittedPurityFile {
                 .version(values[14])
                 .microsatelliteIndelsPerMb(0)
                 .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
+                .tumorMutationalLoad(0)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalBurdenPerMb(0)
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .wholeGenomeDuplication(false);
 
         if (values.length > 16) {
@@ -60,6 +65,13 @@ public final class FittedPurityFile {
         if (values.length > 18) {
             builder.microsatelliteIndelsPerMb(Double.parseDouble(values[17]));
             builder.microsatelliteStatus(MicrosatelliteStatus.valueOf(values[18]));
+        }
+
+        if (values.length > 22) {
+            builder.tumorMutationalLoad(Double.parseDouble(values[19]));
+            builder.tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(values[20]));
+            builder.tumorMutationalBurdenPerMb(Double.parseDouble(values[21]));
+            builder.tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(values[22]));
         }
 
         return builder.build();
@@ -108,6 +120,10 @@ public final class FittedPurityFile {
                 .add("wholeGenomeDuplication")
                 .add("msIndelsPerMb")
                 .add("msStatus")
+                .add("tml")
+                .add("tmlStatus")
+                .add("tmbPerMb")
+                .add("tmbStatus")
                 .toString();
     }
 
@@ -134,6 +150,10 @@ public final class FittedPurityFile {
                 .add(String.valueOf(context.wholeGenomeDuplication()))
                 .add(String.valueOf(context.microsatelliteIndelsPerMb()))
                 .add(String.valueOf(context.microsatelliteStatus()))
+                .add(String.valueOf(context.tumorMutationalLoad()))
+                .add(String.valueOf(context.tumorMutationalLoadStatus()))
+                .add(String.valueOf(context.tumorMutationalBurdenPerMb()))
+                .add(String.valueOf(context.tumorMutationalBurdenStatus()))
                 .toString();
     }
 

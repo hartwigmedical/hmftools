@@ -2,7 +2,6 @@ package com.hartwig.hmftools.linx.cn;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.purple.gender.Gender.MALE;
 import static com.hartwig.hmftools.common.purple.purity.FittedPurityStatus.NORMAL;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
@@ -25,6 +24,7 @@ import com.hartwig.hmftools.common.purple.purity.ImmutableFittedPurityScore;
 import com.hartwig.hmftools.common.purple.purity.ImmutablePurityContext;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -275,6 +275,10 @@ public class CnSegmentBuilder
                 .status(NORMAL)
                 .version("1.0")
                 .wholeGenomeDuplication(false)
+                .tumorMutationalLoad(0)
+                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalBurdenPerMb(0)
+                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                 .build();
 
         cnDataLoader.setPurityContext(purityContext);
