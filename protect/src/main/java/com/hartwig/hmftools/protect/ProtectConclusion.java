@@ -61,7 +61,7 @@ public class ProtectConclusion {
             printUsageAndExit(options);
         }
 
-        //Extract genomic alterations
+        // Extract genomic alterations
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
