@@ -1,18 +1,23 @@
 
 # Somatic Alterations in Genome (SAGE)
-SAGE is a somatic SNV, MNV and small INDEL caller with features including:
+
+SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller 
+
+Key features include:
+  - 3 tiered (Hotspot,Panel,Wide) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
   - kmer based model which determines a unique [read context](#read-context) for the variant + 25 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
   - modified [quality score](#quality) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
   - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatelites while ignoring common sequencing errors
   - no cutoff for homopolymer repeat length for improved INDEL handling 
-  - 3 tiered (Hotspot,Panel,Wide) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
   - [Phasing](#6.-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native [MNV handling](#mnv-handling) 
 
  # Read context 
  
- The core read context is the distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in the read or ref genome.
- In this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
+ SAGE defines a core read context around each candidate point mutation position which uniquely identifies the variant from both the reference and other possible variants at that location regardless of local alignment.  This read context is used to search for evidence supporting the variant and also to calculate the allelic depth and frewuency.
+ 
+ The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome.
+ A 'repeat' in this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
  The core is a minimum of 5 bases long.  
  
  For a SNV in a non-repeat sequence this will just be the single alternate base with 2 bases either side. 
@@ -88,7 +93,7 @@ RDP | Raw Depth
 RAD\[0,1\] | Raw Allelic Depth \[Ref,Alt\]
 RABQ\[0,1\] | Raw Allelic Base Quality \[Ref,Alt\]
 
-Note that these values do NOT contribute to the AD, DP, QUAL or AF fields. These are calculated in the second pass. 
+Note that these raw depth values do NOT contribute to the AD, DP, QUAL or AF fields. These are calculated in the second pass. 
 
 ## 2. Tumor Counts and Quality
 
@@ -101,7 +106,7 @@ A match can be:
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
 
 Failing any of the above matches, SAGE searches for matches that would occur if a microsatellite in the complete read context was extended or retracted. 
-Matches of this type we call jitter and are tallied as `LENGTHENED` or `SHORTENED`.  
+Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
 Lastly, if the base the variant location matches the ref genome, the `REFERENCE` tally is incremented while any read which spans the core read context increments the `TOTAL` tally. 
 
@@ -128,7 +133,7 @@ modifiedMapQuality = MAPQ - `mapQualityFixedPenalty` - improperPairPenalty - dis
 
 matchQuality += max(0, min(modifiedMapQuality, modifiedBaseQuality))
 
-If a `LENGTHENED` or `SHORTENED` jitter match is made we increment the jitter penalty as a function of the count of the repeat sequence in the microsatellite:
+A 'jitter penalty' is also calculated.  The jitter penalty is meant to model common sequencing errors whereby a repeat can be extended or contracted by 1 repeat unit.  Weakly supported variants with read contexts which differ by only 1 repeat from a true read context found in the tumor with a lot of support may be artefacts of these sequencing errors and are penalised.  If a `LENGTHENED` or `SHORTENED` jitter match is made we increment the jitter penalty as a function of the count of the repeat sequence in the microsatellite:
 
 `JITTER_PENALTY` += `jitterPenalty` * max(0, repeatCount - `jitterMinRepeatCount`)
 
@@ -151,7 +156,7 @@ QUAL | Variant Quality
 
 ## 3. Hard Filters
 
-To reduce processing time there are two hard filters that are eagerly applied at this stage. 
+To reduce processing time there are two hard filters that are applied at this stage. 
 
 Filter | Default Value | Field
 ---|---|---
