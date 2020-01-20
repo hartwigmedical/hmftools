@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
-import com.hartwig.hmftools.protect.report.ReportableEvidenceItemFactory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -108,8 +107,6 @@ public class protectApplication {
     private static void writeActionabilityForPatientReport(@NotNull String outputReportTsv, @NotNull List<EvidenceItem> combinedEvidence)
             throws IOException {
         //TODO filter actionability
-        List<EvidenceItem> nonTrials = ReportableEvidenceItemFactory.extractNonTrials(combinedEvidence);
-
 
         BufferedWriter writerReport = new BufferedWriter(new FileWriter(outputReportTsv, false));
         writerReport.write(

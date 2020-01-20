@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.protect;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.common.ActionabilityFile;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -19,8 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadEvidenceDataProtect {
-    private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
+public class ProtectDataLoader {
+    private static final Logger LOGGER = LogManager.getLogger(ProtectDataLoader.class);
 
     private static final String SAMPLE = "sample";
 
@@ -38,7 +38,7 @@ public class LoadEvidenceDataProtect {
 
         final String actionabilityTsv = cmd.getOptionValue(ACTIONABILITY_TSV);
 
-        if (Utils.anyNull(sampleId,
+        if (anyNull(sampleId,
                 actionabilityTsv,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
@@ -53,8 +53,18 @@ public class LoadEvidenceDataProtect {
         List<EvidenceItem> combinedEvidence = ActionabilityFile.read(actionabilityTsv);
 
         LOGGER.info("Writing evidence items into db");
-        dbAccess.writeClinicalEvidenceProtect(sampleId, combinedEvidence);
+        final ClinicalEvidenceDAOProtect clinicalEvidenceDAOProtect = new ClinicalEvidenceDAOProtect(dbAccess.context());
+        clinicalEvidenceDAOProtect.writeClinicalEvidence(sampleId, combinedEvidence);
         LOGGER.info("Finished");
+    }
+
+    public static boolean anyNull(@NotNull final Object... arguments) {
+        for (final Object object : arguments) {
+            if (object == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void printUsageAndExit(@NotNull final Options options) {

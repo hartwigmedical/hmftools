@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.dao;
+package com.hartwig.hmftools.protect;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCE;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep11;
 
-class ClinicalEvidenceDAOProtect {
+public class ClinicalEvidenceDAOProtect {
 
     @NotNull
     private final DSLContext context;
@@ -23,7 +23,7 @@ class ClinicalEvidenceDAOProtect {
         this.context = context;
     }
 
-    void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> evidenceItem) {
+    public void writeClinicalEvidence(@NotNull String sample, @NotNull List<EvidenceItem> evidenceItem) {
         deleteClinicalEvidenceForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -61,7 +61,7 @@ class ClinicalEvidenceDAOProtect {
                 evidenceItem.isOnLabel());
     }
 
-    void deleteClinicalEvidenceForSample(@NotNull String sample) {
+    public void deleteClinicalEvidenceForSample(@NotNull String sample) {
         context.delete(CLINICALEVIDENCE).where(CLINICALEVIDENCE.SAMPLEID.eq(sample)).execute();
     }
 }

@@ -13,11 +13,14 @@ import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
 import com.hartwig.hmftools.protect.actionability.EvidenceScope;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionabilityFile {
 
     private static final String DELIMITER = "\t";
+    private static final Logger LOGGER = LogManager.getLogger(ActionabilityFile.class);
 
 
     private ActionabilityFile() {
@@ -40,7 +43,7 @@ public final class ActionabilityFile {
     @NotNull
     private static EvidenceItem fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-
+        LOGGER.info(values[0]);
         final ImmutableEvidenceItem.Builder builder = ImmutableEvidenceItem.builder()
                 .event(values[0])
                 .source(ActionabilitySource.fromString(values[1]))
@@ -51,7 +54,7 @@ public final class ActionabilityFile {
                 .response(values[6])
                 .isOnLabel(Boolean.parseBoolean(values[7]))
                 .cancerType(values[8])
-                .scope(EvidenceScope.valueOf(values[9]));
+                .scope((EvidenceScope.valueOf(values[9])));
 
         return builder.build();
     }
