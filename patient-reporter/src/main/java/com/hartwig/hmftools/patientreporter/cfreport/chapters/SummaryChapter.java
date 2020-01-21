@@ -152,7 +152,7 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
         String microSatelliteStabilityString =
-                hasReliablePurity ? MicroSatelliteStatus.interpret(patientReport.microsatelliteIndelsPerMb()).text() : DataUtil.NA_STRING;
+                hasReliablePurity ? MicroSatelliteStatus.interpret(patientReport.microsatelliteIndelsPerMb()) : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
@@ -204,10 +204,10 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createGeneListCell(sortGenes(copyLossGenes)));
 
         // TODO First do DEV-1013 - disable in final report.
-//        Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(patientReport.reportableHomozygousDisruptions());
-//        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
-//                .add(new Paragraph("Disrupted genes").addStyle(ReportResources.bodyTextStyle())));
-//        table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
+        //        Set<String> disruptedGenes = HomozygousDisruptions.disruptedGenes(patientReport.reportableHomozygousDisruptions());
+        //        table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)
+        //                .add(new Paragraph("Disrupted genes").addStyle(ReportResources.bodyTextStyle())));
+        //        table.addCell(createGeneListCell(sortGenes(disruptedGenes)));
 
         Set<String> fusionGenes = GeneFusions.uniqueGeneFusions(patientReport.geneFusions());
         table.addCell(createMiddleAlignedCell().setVerticalAlignment(VerticalAlignment.TOP)

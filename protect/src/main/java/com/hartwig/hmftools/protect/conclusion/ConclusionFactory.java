@@ -18,7 +18,7 @@ public class ConclusionFactory {
 
     }
 
-    public static String createConclusion(@NotNull String patientPrimaryTumorLocation, double tumorMTL, double tumorMTB, double tumorMSI,
+    public static String createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorMTL, double tumorMTB, double tumorMSI,
             double chordScore, @NotNull List<ReportableGeneFusion> geneFusions, @NotNull List<GeneCopyNumber> geneCopyNumbers,
             @NotNull List<? extends Variant> passSomaticVariants, @NotNull List<TemplateConclusion> templateConclusionList, double purity) {
         String conclusion = Strings.EMPTY;
