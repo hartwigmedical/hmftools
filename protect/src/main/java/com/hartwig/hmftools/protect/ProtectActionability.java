@@ -125,7 +125,7 @@ public class ProtectActionability {
                 tumorMSI,
                 chordScore,
                 geneFusions,
-                geneCopyNumbers, passSomaticVariants);
+                geneCopyNumbers, passSomaticVariants, templateConclusionList);
 
         writeConclusionOfSample(OutputConclusionTsv, conclusion);
     }
