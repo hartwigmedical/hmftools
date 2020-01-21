@@ -41,13 +41,13 @@ public class ProtectActionability {
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
+    private static final String TEMPLATE_CONCLUSION_TSV = "template_conclusion";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String CHORD_TXT = "chord_txt";
-
 
     private static final String CONCLUSION_TSV = "conclusion_tsv";
     private static final String OUTPUT_DATABASE_TSV = "output_database_tsv";
@@ -62,6 +62,7 @@ public class ProtectActionability {
         // General params needed for every sample
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        final String templateConclusionTsv = cmd.getOptionValue(TEMPLATE_CONCLUSION_TSV);
 
         // Params specific for specific sample
         final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
@@ -212,7 +213,7 @@ public class ProtectActionability {
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
                 && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT);
+                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -262,6 +263,7 @@ public class ProtectActionability {
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
+        options.addOption(TEMPLATE_CONCLUSION_TSV, true, "Path towards the template for conclusion TSV.");
 
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
