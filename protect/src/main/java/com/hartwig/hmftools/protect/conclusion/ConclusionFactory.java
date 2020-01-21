@@ -37,7 +37,7 @@ public class ConclusionFactory {
                     String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
                     conclusion += highMSI + enter;
                 }
-            } else if (chordScore > 0.5) {
+            } else if (chordScore >= 0.5) { //TODO create enum
                 if (templateConclusion.abberrationGeneSummary().equals("HR-deficient")) {
                     String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
                     conclusion += hrDeficient + enter;
