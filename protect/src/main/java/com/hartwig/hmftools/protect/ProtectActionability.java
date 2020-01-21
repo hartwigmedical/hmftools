@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.common.GenomicData;
+import com.hartwig.hmftools.protect.conclusion.ConclusionFactory;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
 import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
@@ -118,8 +119,9 @@ public class ProtectActionability {
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
 
         LOGGER.info("Create conclusion for sample");
+        String conclusion = ConclusionFactory.createConclusion();
 
-        writeConclusionOfSample(OutputConclusionTsv, "");
+        writeConclusionOfSample(OutputConclusionTsv, conclusion);
     }
 
     private static void writeConclusionOfSample(@NotNull String OutputConclusionTsv, @NotNull String conclusion) throws IOException {
