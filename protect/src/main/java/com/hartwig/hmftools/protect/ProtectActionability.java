@@ -119,7 +119,13 @@ public class ProtectActionability {
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
 
         LOGGER.info("Create conclusion for sample");
-        String conclusion = ConclusionFactory.createConclusion();
+        String conclusion = ConclusionFactory.createConclusion(patientPrimaryTumorLocation,
+                tumorMTL,
+                tumorMTB,
+                tumorMSI,
+                chordScore,
+                geneFusions,
+                geneCopyNumbers, passSomaticVariants);
 
         writeConclusionOfSample(OutputConclusionTsv, conclusion);
     }
