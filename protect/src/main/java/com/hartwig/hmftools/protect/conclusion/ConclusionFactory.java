@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.protect.conclusion;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -42,6 +43,11 @@ public class ConclusionFactory {
                     String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
                     conclusion += hrDeficient + enter;
                 }
+            } else if (purity < 0.20) {
+                if (templateConclusion.abberrationGeneSummary().equals("LOW PURITY") {
+                    String lowPurity = sentenceLowPurity(purity, templateConclusion)
+
+                }
             }
         }
 
@@ -73,6 +79,13 @@ public class ConclusionFactory {
     private static String sentenseHrDeficient(double chordScore, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
         sentence = sentence.replace("a high CHORD score (XXX) ", "a high CHORD score (" + String.format("%.2f", chordScore) + ") ");
+        return sentence;
+    }
+
+    private static String sentenceLowPurity(double purity, @NotNull TemplateConclusion templateConclusion) {
+        String purityPercentage = new DecimalFormat("#'%'").format(purity * 100);
+        String sentence = templateConclusion.summaryTextStatement();
+        sentence = sentence.replace("Due to the low tumor purity (XXX) ", "Due to the low tumor purity (" + purityPercentage + ")");
         return sentence;
     }
 }
