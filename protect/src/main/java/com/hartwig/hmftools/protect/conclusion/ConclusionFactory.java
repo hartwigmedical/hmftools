@@ -44,9 +44,9 @@ public class ConclusionFactory {
                     conclusion += hrDeficient + enter;
                 }
             } else if (purity < 0.20) {
-                if (templateConclusion.abberrationGeneSummary().equals("LOW PURITY") {
-                    String lowPurity = sentenceLowPurity(purity, templateConclusion)
-
+                if (templateConclusion.abberrationGeneSummary().equals("LOW PURITY")) {
+                    String lowPurity = sentenceLowPurity(purity, templateConclusion);
+                    conclusion += lowPurity + enter;
                 }
             }
         }
