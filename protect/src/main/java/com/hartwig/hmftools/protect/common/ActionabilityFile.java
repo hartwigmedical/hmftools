@@ -43,7 +43,6 @@ public final class ActionabilityFile {
     @NotNull
     private static EvidenceItem fromString(@NotNull final String line) {
         String[] values = line.split(DELIMITER);
-        LOGGER.info(values[0]);
         final ImmutableEvidenceItem.Builder builder = ImmutableEvidenceItem.builder()
                 .event(values[0])
                 .source(ActionabilitySource.fromString(values[1]))
