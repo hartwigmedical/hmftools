@@ -10,7 +10,7 @@ public enum TumorMutationalStatus {
     UNKNOWN;
 
     private static final double TMB_CUTOFF = 10;
-    private static final double TML_CUTOFF = 130;
+    private static final double TML_CUTOFF = 140;
 
     @NotNull
     public static TumorMutationalStatus fromBurdenPerMb(double burdenPerMb) {
