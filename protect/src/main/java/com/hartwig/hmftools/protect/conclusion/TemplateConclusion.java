@@ -18,7 +18,7 @@ public abstract class TemplateConclusion {
     @NotNull
     public abstract String summaryTextStatement();
 
-    @NotNull
+    @Nullable
     public abstract String summaryAdditionalText();
 
 }

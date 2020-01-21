@@ -6,10 +6,16 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.protect.ProtectActionability;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class TemplateConclusionFile {
+
+    private static final Logger LOGGER = LogManager.getLogger(TemplateConclusionFile.class);
 
     private static final String DELIMITER = "\t";
 
@@ -27,11 +33,20 @@ public class TemplateConclusionFile {
     @NotNull
     private static TemplateConclusion fromTemplate(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        return ImmutableTemplateConclusion.builder()
-                .abberrationGeneSummary(values[0])
-                .targetedTherapy(values[1])
-                .summaryTextStatement(values[2])
-                .summaryAdditionalText(values[3])
-                .build();
+
+        if (values.length == 3) {
+            return ImmutableTemplateConclusion.builder()
+                    .abberrationGeneSummary(values[0])
+                    .targetedTherapy(values[1])
+                    .summaryTextStatement(values[2])
+                    .build();
+        } else {
+            return ImmutableTemplateConclusion.builder()
+                    .abberrationGeneSummary(values[0])
+                    .targetedTherapy(values[1])
+                    .summaryTextStatement(values[2])
+                    .summaryAdditionalText(values[3])
+                    .build();
+        }
     }
 }
