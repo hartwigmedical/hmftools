@@ -22,10 +22,12 @@ public interface FilterConfig {
 
     String HARD_FILTER = "hard_filter";
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
-    String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_alt_support";
+    String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
+    String HARD_MIN_TUMOR_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
     String MIN_GERMLINE_VAF = "min_germline_vaf";
 
     int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
+    int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
@@ -64,7 +66,9 @@ public interface FilterConfig {
 
     int hardMinTumorQual();
 
-    int hardMinTumorAltSupport();
+    int hardMinTumorRawAltSupport();
+
+    int hardMinTumorRawBaseQuality();
 
     default int hardMinTumorQualFiltered() {
         return DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED;
@@ -83,9 +87,6 @@ public interface FilterConfig {
         return 0;
     }
 
-    default int minGermlineBaseQual() {
-        return 30;
-    }
 
     @NotNull
     SoftFilterConfig softHotspotFilter();
@@ -102,7 +103,8 @@ public interface FilterConfig {
 
         options.addOption(HARD_FILTER, false, "Soft filters become hard");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
-        options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+        options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+        options.addOption(HARD_MIN_TUMOR_BASE_QUALITY, true, "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
@@ -116,7 +118,8 @@ public interface FilterConfig {
         return ImmutableFilterConfig.builder()
                 .hardFilter(cmd.hasOption(HARD_FILTER))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
-                .hardMinTumorAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
                 .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
                 .softWideFilter(SoftFilterConfig.createConfig(cmd, "wide", DEFAULT_WIDE_FILTER))

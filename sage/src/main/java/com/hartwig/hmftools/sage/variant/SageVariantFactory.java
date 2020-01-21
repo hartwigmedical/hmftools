@@ -61,10 +61,6 @@ public class SageVariantFactory {
             result.add(SageVCF.MIN_GERMLINE_VAF);
         }
 
-        if (germline.rawAltSupportBaseQuality() < config.minGermlineBaseQual()) {
-            result.add(SageVCF.MIN_GERMLINE_BASE_QUAL);
-        }
-
         return result;
     }
 

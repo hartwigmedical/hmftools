@@ -38,7 +38,6 @@ public class SageVCF implements AutoCloseable {
     public final static String GERMLINE_MVN = "mnv_germline";
     public final static String NORMAL_SUPPORT = "mnv_normal_support";
     public final static String MIN_GERMLINE_VAF = "min_germline_vaf";
-    public final static String MIN_GERMLINE_BASE_QUAL = "min_germline_base_qual";
 
 
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
@@ -164,7 +163,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
         header.addMetaDataLine(new VCFFilterHeaderLine(MIN_GERMLINE_VAF, "Insufficient germline VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(MIN_GERMLINE_BASE_QUAL, "Insufficient germline base qual"));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));

@@ -24,7 +24,7 @@ public interface MnvPipeline {
 
 
     @NotNull
-    default  VariantHotspot combined(@NotNull final ReferenceSequenceFile refGenome, @NotNull final AltContext left, @NotNull final AltContext right) {
+    default VariantHotspot combined(@NotNull final ReferenceSequenceFile refGenome, @NotNull final AltContext left, @NotNull final AltContext right) {
         int mnvLength = (int) (right.position() - left.position() + 1);
         int additionalLength = mnvLength - left.alt().length();
 

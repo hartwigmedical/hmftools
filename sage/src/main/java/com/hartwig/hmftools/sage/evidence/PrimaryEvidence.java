@@ -88,7 +88,7 @@ public class PrimaryEvidence {
             slicer.slice(tumorReader, recordConsumer);
 
             // Add all valid alt contexts
-            candidates.refContexts().stream().flatMap(x -> x.alts().stream()).filter(x -> altSupportPredicate(tierSelector, x)).forEach(x -> {
+            candidates.refContexts().stream().flatMap(x -> x.alts().stream()).filter(x -> rawPredicate(tierSelector, x)).forEach(x -> {
                 x.setPrimaryReadCounterFromInterim();
                 altContexts.add(x);
             });
@@ -110,8 +110,10 @@ public class PrimaryEvidence {
 
     }
 
-    private boolean altSupportPredicate(@NotNull final TierSelector tierSelector, @NotNull final AltContext altContext) {
-        return altContext.rawAltSupport() >= config.filter().hardMinTumorAltSupport() || tierSelector.isHotspot(altContext);
+    private boolean rawPredicate(@NotNull final TierSelector tierSelector, @NotNull final AltContext altContext) {
+        return tierSelector.isHotspot(altContext) || altContext.rawAltSupport() >= config.filter().hardMinTumorRawAltSupport()
+                && altContext.rawAltSupportBaseQuality() >= config.filter().hardMinTumorRawBaseQuality();
+
     }
 
     private boolean qualPredicate(@NotNull final TierSelector tierSelector, @NotNull final AltContext altContext) {

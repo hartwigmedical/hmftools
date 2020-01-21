@@ -124,10 +124,14 @@ public interface SageConfig {
         final String reference_bam = cmd.getOptionValue(REFERENCE_BAM);
 
         final List<String> tumorList = Lists.newArrayList();
-        tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
+        if (cmd.hasOption(TUMOR)) {
+            tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
+        }
 
         final List<String> tumorBamList = Lists.newArrayList();
-        tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
+        if (cmd.hasOption(TUMOR_BAM)) {
+            tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
+        }
 
         if (tumorList.size() != tumorBamList.size()) {
             throw new ParseException("TODO");
