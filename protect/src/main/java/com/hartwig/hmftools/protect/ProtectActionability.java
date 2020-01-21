@@ -21,6 +21,8 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.common.GenomicData;
+import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
+import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
 import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -83,6 +85,9 @@ public class ProtectActionability {
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
+        LOGGER.info("Reading template Conclusion from {}", templateConclusionTsv);
+        List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
+
         // Extract genomic alterations
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
@@ -106,13 +111,14 @@ public class ProtectActionability {
                 geneCopyNumbers,
                 geneFusions);
 
-        LOGGER.info("Write actionability for patient report");
+        LOGGER.info("Create actionability for patient report");
         writeActionabilityForPatientReport(outputReportTsv, combinedEvidence);
 
         LOGGER.info("Create actionability for database");
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
 
         LOGGER.info("Create conclusion for sample");
+
         writeConclusionOfSample(OutputConclusionTsv, "");
     }
 
