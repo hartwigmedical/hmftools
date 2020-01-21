@@ -33,7 +33,7 @@ public class ConclusionFactory {
                     conclusion += highMTL + enter;
                 }
             } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(MicrosatelliteStatus.MSI)) {
-                if (templateConclusion.abberrationGeneSummary().equals("High TMB")) {
+                if (templateConclusion.abberrationGeneSummary().equals("MSI")) {
                     String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
                     conclusion += highMSI + enter;
                 }
