@@ -198,11 +198,45 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         refContext.altRead(ref, alt, baseQuality);
                     }
 
+                    int mnvMaxLength = mnvLength(refPosition, refPositionStart + alignmentLength - 1, readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
+                    for (int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++) {
+
+                        final String mnvRef = new String(refBases.bases(), refBaseIndex, mnvLength);
+                        final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
+
+                        if (!mnvRef.equals(mnvAlt)) {
+                            if (addInterimReadContexts) {
+                                refContext.altRead(mnvRef, mnvAlt, baseQuality, createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
+                            } else {
+                                refContext.altRead(mnvRef, mnvAlt, baseQuality);
+                            }
+                        }
+                    }
                 } else {
                     refContext.refRead(baseQuality);
                 }
             }
         }
+    }
+
+    private int mnvLength(int alignment, int alignmentEnd, int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
+
+        int gap = 0;
+        for (int i = 1; alignment + i < alignmentEnd; i++) {
+            byte refByte = refBases[refIndex + i];
+            byte readByte = readBases[readIndex + i];
+            if (refByte == readByte) {
+                if (gap == 1) {
+                    return i - 1;
+                } else {
+                    gap++;
+                }
+            } else {
+                gap = 0;
+            }
+        }
+
+        return alignmentEnd - alignment + 1;
     }
 
     private void processMnv(@NotNull final VariantHotspot mnv, @NotNull final SAMRecord record, int readBasesStartIndex,

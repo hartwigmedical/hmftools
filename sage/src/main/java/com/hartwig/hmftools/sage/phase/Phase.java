@@ -12,7 +12,7 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 import org.jetbrains.annotations.NotNull;
 
 public class Phase implements Consumer<SageVariant> {
-    private final SnvSnvMerge mnvMerge;
+    private final DedupMnv mnvMerge;
     private final LocalPhaseSet localPhaseSet;
     private final DedupIndel dedupIndel;
 
@@ -20,7 +20,7 @@ public class Phase implements Consumer<SageVariant> {
             @NotNull final List<GenomeRegion> panelRegions, @NotNull final MnvPipeline mnvPipeline,
             @NotNull final Consumer<SageVariant> consumer) {
         dedupIndel = new DedupIndel(consumer);
-        mnvMerge = new SnvSnvMerge(config, dedupIndel, panelRegions, hotspots, mnvPipeline);
+        mnvMerge = new DedupMnv(dedupIndel);
         localPhaseSet = new LocalPhaseSet(config.germlineOnly(), mnvMerge);
 
     }

@@ -103,15 +103,22 @@ public class ChromosomePipeline implements AutoCloseable {
         };
 
         final Phase phase = new Phase(config, hotspots, panelRegions, sageVariantPipeline, phasedConsumer);
-        final CompletableFuture<Void> done = CompletableFuture.allOf(regions.toArray(new CompletableFuture[regions.size()]));
+
+        // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
+        // It is not necessary to wait for the entire chromosome to be finished to start.
+        CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
+        for (final CompletableFuture<List<SageVariant>> region : regions) {
+            done = done.thenCombine(region, (aVoid, sageVariants) -> {
+
+                sageVariants.forEach(phase);
+                return null;
+            });
+        }
+
 
         return done.thenApply(aVoid -> {
             LOGGER.info("Phasing chromosome {}", chromosome);
 
-            // Phasing must be done in a separate thread as we re-query the MNVs
-            for (final CompletableFuture<List<SageVariant>> region : regions) {
-                region.join().forEach(phase);
-            }
 
             phase.flush();
             sageVCF.close();
