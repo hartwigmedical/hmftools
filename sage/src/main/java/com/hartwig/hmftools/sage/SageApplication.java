@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -82,7 +83,7 @@ public class SageApplication implements AutoCloseable {
     private void run() throws InterruptedException, ExecutionException, IOException {
 
         long timeStamp = System.currentTimeMillis();
-        final List<ChromosomePipeline> chromosomePipelines = Lists.newArrayList();
+        final List<Future<ChromosomePipeline>> chromosomePipelines = Lists.newArrayList();
 
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
@@ -90,20 +91,20 @@ public class SageApplication implements AutoCloseable {
             if (HumanChromosome.contains(contig)) {
                 ChromosomePipeline pipeline = createChromosomePipeline(contig);
                 pipeline.addAllRegions();
-                chromosomePipelines.add(pipeline);
+                chromosomePipelines.add(pipeline.submit());
             }
         }
 
-//        ChromosomePipeline pipeline = createChromosomePipeline("17");
-//        pipeline.addAllRegions(4_000_000);
-//        pipeline.addAllRegions(dictionary.getSequence("17").getSequenceLength());
-//        chromosomePipelines.add(pipeline);
+//        ChromosomePipeline seventeen = createChromosomePipeline("17");
+//        seventeen.addAllRegions(4_000_000);
+//        seventeen.addAllRegions(dictionary.getSequence("17").getSequenceLength());
+//        chromosomePipelines.add(seventeen.submit());
 
-        for (ChromosomePipeline chromosomePipeline : chromosomePipelines) {
-            chromosomePipeline.submit().get();
-            vcf.addVCF(chromosomePipeline.vcfFilename());
-            chromosomePipeline.close();
-            LOGGER.info("Finished writing chromosome  {} ", chromosomePipeline.chromosome());
+        for (Future<ChromosomePipeline> future : chromosomePipelines) {
+            ChromosomePipeline pipeline = future.get();
+            vcf.addVCF(pipeline.vcfFilename());
+            pipeline.close();
+            LOGGER.info("Finished writing chromosome  {} ", pipeline.chromosome());
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
