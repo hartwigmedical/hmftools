@@ -36,8 +36,6 @@ public class ChromosomePipeline implements AutoCloseable {
     private final SageChromosomeVCF sageVCF;
     private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
-    private final List<VariantHotspot> hotspots;
-    private final List<GenomeRegion> panelRegions;
     private final IndexedFastaSequenceFile refGenome;
     private final SageVariantPipeline sageVariantPipeline;
 
@@ -48,12 +46,10 @@ public class ChromosomePipeline implements AutoCloseable {
         this.variantContextFactory =
                 config.germlineOnly() ? SageVariantContextFactory::germlineOnly : SageVariantContextFactory::pairedTumorNormal;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
-        this.hotspots = hotspots;
-        this.panelRegions = panelRegions;
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.sageVariantPipeline = config.germlineOnly()
-                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions, refGenome)
-                : new SomaticPipeline(config, executor, hotspots, panelRegions, refGenome);
+                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions)
+                : new SomaticPipeline(config, executor, hotspots, panelRegions);
     }
 
     @NotNull
@@ -102,7 +98,7 @@ public class ChromosomePipeline implements AutoCloseable {
             }
         };
 
-        final Phase phase = new Phase(config, hotspots, panelRegions, sageVariantPipeline, phasedConsumer);
+        final Phase phase = new Phase(config, phasedConsumer);
 
         // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.

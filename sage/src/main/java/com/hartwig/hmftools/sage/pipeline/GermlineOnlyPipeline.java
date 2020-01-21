@@ -18,9 +18,6 @@ import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class GermlineOnlyPipeline implements SageVariantPipeline {
 
@@ -30,14 +27,12 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
     private final Executor executor;
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panelRegions;
-    private final IndexedFastaSequenceFile refGenome;
     private final PrimaryEvidence primaryEvidence;
 
     GermlineOnlyPipeline(final SageConfig config, final Executor executor, final List<VariantHotspot> hotspots,
-            final List<GenomeRegion> panelRegions, final IndexedFastaSequenceFile refGenome) {
+            final List<GenomeRegion> panelRegions) {
         this.config = config;
         this.executor = executor;
-        this.refGenome = refGenome;
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
 
@@ -58,27 +53,4 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
         return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
     }
 
-    @NotNull
-    @Override
-    public VariantHotspot combined(@NotNull final SageVariant left, @NotNull final SageVariant right) {
-        return combined(refGenome, left.normal(), right.normal());
-    }
-
-    @Nullable
-    @Override
-    public SageVariant mnv(final int lps, @NotNull final VariantHotspot mnv) {
-
-        final RefSequence refSequence = new RefSequence(mnv, refGenome);
-        final List<AltContext> candidates = primaryEvidence.get(config.reference(), config.referenceBam(), refSequence, mnv);
-        if (candidates.isEmpty()) {
-            return null;
-        }
-
-        final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
-        final SageVariant variant = variantFactory.create(candidates.get(0));
-        variant.localPhaseSet(lps);
-        variant.synthetic(true);
-
-        return variant;
-    }
 }

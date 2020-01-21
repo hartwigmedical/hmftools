@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -59,19 +58,6 @@ public class PrimaryEvidence {
         final TumorRefContextCandidates candidates = new TumorRefContextCandidates(sample);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
         return get(bamFile, refSequence, bounds, refContextConsumer, candidates);
-    }
-
-    @NotNull
-    public List<AltContext> get(@NotNull final String sample, @NotNull final String bamFile, @NotNull final RefSequence refSequence,
-            @NotNull final VariantHotspot target) {
-
-        final TumorRefContextCandidates candidates = new TumorRefContextCandidates(sample);
-
-        final GenomeRegion bounds = GenomeRegions.create(target.chromosome(), target.position(), target.end());
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
-        final Consumer<SAMRecord> samRecordConsumer = x -> refContextConsumer.processTargeted(target, x);
-
-        return get(bamFile, refSequence, bounds, samRecordConsumer, candidates);
     }
 
     @NotNull

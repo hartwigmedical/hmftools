@@ -9,7 +9,7 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface SageVariantPipeline extends MnvPipeline {
+public interface SageVariantPipeline {
 
     @NotNull
     CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region, @NotNull final RefSequence refSequence);
