@@ -29,22 +29,22 @@ public class ConclusionFactory {
 
         for (TemplateConclusion templateConclusion : templateConclusionList) {
             if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
-                if (templateConclusion.abberrationGeneSummary().equals("High TMB")) {
+                if (templateConclusion.abberrationGeneSummary().equals(aberrationGenSummary.HIGH_MTL)) {
                     String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
                     conclusion += highMTL + enter;
                 }
-            } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(MicrosatelliteStatus.MSI)) {
+            } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(aberrationGenSummary.MSI)) {
                 if (templateConclusion.abberrationGeneSummary().equals("MSI")) {
                     String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
                     conclusion += highMSI + enter;
                 }
             } else if (chordScore >= 0.5) { //TODO create enum
-                if (templateConclusion.abberrationGeneSummary().equals("HR-deficient")) {
+                if (templateConclusion.abberrationGeneSummary().equals(aberrationGenSummary.HR_DEFICIENT)) {
                     String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
                     conclusion += hrDeficient + enter;
                 }
             } else if (purity < 0.20) {
-                if (templateConclusion.abberrationGeneSummary().equals("LOW PURITY")) {
+                if (templateConclusion.abberrationGeneSummary().equals(aberrationGenSummary.LOW_PURITY)) {
                     String lowPurity = sentenceLowPurity(purity, templateConclusion);
                     conclusion += lowPurity + enter;
                 }
