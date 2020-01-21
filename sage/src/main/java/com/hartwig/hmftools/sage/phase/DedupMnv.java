@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.sage.phase;
 
+import java.util.ArrayDeque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Consumer;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -15,7 +14,7 @@ public class DedupMnv implements Consumer<SageVariant> {
 
     private static final int BUFFER = 10;
 
-    private final List<SageVariant> buffer = Lists.newLinkedList();
+    private final ArrayDeque<SageVariant> buffer = new ArrayDeque<>();
     private final Consumer<SageVariant> consumer;
 
     public DedupMnv(final Consumer<SageVariant> consumer) {

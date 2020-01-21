@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.sage.phase;
 
+import java.util.ArrayDeque;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Consumer;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class DedupIndel implements Consumer<SageVariant> {
 
     private final Consumer<SageVariant> consumer;
-    private final List<SageVariant> list = Lists.newArrayList();
+    private final ArrayDeque<SageVariant> list =  new ArrayDeque<>();
 
     DedupIndel(final Consumer<SageVariant> consumer) {
         this.consumer = consumer;
