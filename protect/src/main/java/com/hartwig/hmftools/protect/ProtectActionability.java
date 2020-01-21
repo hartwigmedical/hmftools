@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
@@ -17,6 +21,7 @@ import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.protect.common.GenomicData;
+import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,7 +46,10 @@ public class ProtectActionability {
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
+    private static final String CHORD_TXT = "chord_txt";
 
+
+    private static final String CONCLUSION_TSV = "conclusion_tsv";
     private static final String OUTPUT_DATABASE_TSV = "output_database_tsv";
     private static final String OUTPUT_REPORT_TSV = "output_report_tsv";
 
@@ -60,10 +68,12 @@ public class ProtectActionability {
         final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
+        final String chordTxt = cmd.getOptionValue(CHORD_TXT);
 
         // Params output file
         final String outputDatabaseTsv = cmd.getOptionValue(OUTPUT_DATABASE_TSV);
         final String outputReportTsv = cmd.getOptionValue(OUTPUT_REPORT_TSV);
+        final String OutputConclusionTsv = cmd.getOptionValue(CONCLUSION_TSV);
 
         if (!validInputForBaseReport(cmd)) {
             printUsageAndExit(options);
@@ -72,11 +82,19 @@ public class ProtectActionability {
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
+        // Extract genomic alterations
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
+
+        // Extract tumor characteristics
+        List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
+        double tumorMTL = TumorMutationalLoad.determineTumorMutationalLoad(variants);
+        double tumorMSI = MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants);
+        double chordScore = ChordFileReader.read(chordTxt).hrdValue();
+        double tumorMTB = TumorMutationalLoad.determineTumorMutationalBurden(variants);
 
         LOGGER.info("Create actionability for sample {}", tumorSampleId);
 
@@ -93,7 +111,17 @@ public class ProtectActionability {
         LOGGER.info("Create actionability for database");
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
 
+        LOGGER.info("Create conclusion for sample");
+        writeConclusionOfSample(OutputConclusionTsv, "");
+    }
 
+    private static void writeConclusionOfSample(@NotNull String OutputConclusionTsv, @NotNull String conclusion) throws IOException {
+        //TODO create conclusion
+        BufferedWriter writerReport = new BufferedWriter(new FileWriter(OutputConclusionTsv, false));
+
+        writerReport.write(conclusion);
+
+        writerReport.close();
     }
 
     private static void writeActionabilityForPatientReport(@NotNull String outputReportTsv, @NotNull List<EvidenceItem> combinedEvidence)
@@ -184,7 +212,7 @@ public class ProtectActionability {
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
                 && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
-                && fileExists(cmd, LINX_FUSION_TSV);
+                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -239,7 +267,9 @@ public class ProtectActionability {
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+        options.addOption(CHORD_TXT, true, "Path towards the chord txt file.");
 
+        options.addOption(CONCLUSION_TSV, true, "Path towards the conclusion TSV.");
         options.addOption(OUTPUT_DATABASE_TSV, true, "Path towards the output file for the database TSV.");
         options.addOption(OUTPUT_REPORT_TSV, true, "Path towards the output file for the report TSV.");
 
