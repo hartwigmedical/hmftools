@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -15,13 +18,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class PonApplication implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(PonApplication.class);
-
 
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
@@ -43,33 +48,66 @@ public class PonApplication implements AutoCloseable {
         }
     }
 
-    private final String input;
     private final PonVCF vcf;
-    private final PonBuilder ponBuilder;
+    private final String input;
+    private final List<File> files;
 
-    private PonApplication(@NotNull final String input, @NotNull final String output) {
+    private PonApplication(@NotNull final String input, @NotNull final String output) throws IOException {
         LOGGER.info("Input: {}", input);
         LOGGER.info("Output: {}", output);
 
         this.input = input;
-        this.vcf = new PonVCF(output);
-        this.ponBuilder = new PonBuilder();
+
+        files = Lists.newArrayList();
+        for (Path path : Files.newDirectoryStream(new File(input).toPath(), "*.vcf.gz")) {
+            files.add(path.toFile());
+        }
+
+        this.vcf = new PonVCF(output, files.size());
     }
 
     private void run() throws IOException {
 
-        int sampleCount = 0;
-        for (Path file : Files.newDirectoryStream(new File(input).toPath(), "*.vcf")) {
-            try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), false)) {
-
-                sampleCount++;
-                for (VariantContext variantContext : fileReader) {
-                    ponBuilder.add(variantContext);
-                }
-            }
+        if (files.isEmpty()) {
+            return;
         }
 
-        vcf.write(sampleCount, ponBuilder.build());
+
+        final VCFFileReader dictionaryReader = new VCFFileReader(files.get(0), false);
+        SAMSequenceDictionary dictionary = dictionaryReader.getFileHeader().getSequenceDictionary();
+        dictionaryReader.close();
+
+        for (SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
+            LOGGER.info("Processing sequence {}", samSequenceRecord.getSequenceName());
+
+            final PonBuilder ponBuilder = new PonBuilder();
+
+            for (Path file : Files.newDirectoryStream(new File(input).toPath(), "*.vcf.gz")) {
+                try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), false)) {
+                    CloseableIterator<VariantContext> iter = fileReader.query(samSequenceRecord.getSequenceName(), 1, samSequenceRecord.getSequenceLength());
+                    while (iter.hasNext()) {
+                        ponBuilder.add(iter.next());
+                    }
+                    iter.close();
+                }
+            }
+
+            vcf.write(ponBuilder.build());
+
+        }
+
+
+//        final PonBuilder ponBuilder = new PonBuilder();
+//        for (Path file : Files.newDirectoryStream(new File(input).toPath(), "*.vcf.gz")) {
+//            try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), false)) {
+//
+//                for (VariantContext variantContext : fileReader) {
+//                    ponBuilder.add(variantContext);
+//                }
+//            }
+//        }
+//        vcf.write(ponBuilder.build());
+
     }
 
     @NotNull
