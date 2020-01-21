@@ -19,16 +19,16 @@ public class ConclusionFactory {
 
     public static String createConclusion(@NotNull String patientPrimaryTumorLocation, double tumorMTL, double tumorMTB, double tumorMSI,
             double chordScore, @NotNull List<ReportableGeneFusion> geneFusions, @NotNull List<GeneCopyNumber> geneCopyNumbers,
-            @NotNull List<? extends Variant> passSomaticVariants, @NotNull List<TemplateConclusion> templateConclusionList) {
+            @NotNull List<? extends Variant> passSomaticVariants, @NotNull List<TemplateConclusion> templateConclusionList, double purity) {
         String conclusion = Strings.EMPTY;
         String enter = " <enter> ";
 
         String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation);
-        conclusion = textTumorLocation + enter ;
+        conclusion = textTumorLocation + enter;
 
         for (TemplateConclusion templateConclusion : templateConclusionList) {
             if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
-                if (templateConclusion.abberrationGeneSummary().equals("High TMB")){
+                if (templateConclusion.abberrationGeneSummary().equals("High TMB")) {
                     String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
                     conclusion += highMTL + enter;
                 }
@@ -58,20 +58,21 @@ public class ConclusionFactory {
     private static String sentenseHighMTL(double tumorMTL, double tumorMTB, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
         sentence = sentence.replace("mutational load (ML) of XXX", "mutational load (ML) of " + Double.toString(tumorMTL));
-        sentence = sentence.replace("tumor mutation burden (TMB) of XXX mt/Mb", "tumor mutation burden (TMB) of " + String.format("%.1f", tumorMTB) + " mt/Mb");
+        sentence = sentence.replace("tumor mutation burden (TMB) of XXX mt/Mb",
+                "tumor mutation burden (TMB) of " + String.format("%.1f", tumorMTB) + " mt/Mb");
         return sentence;
 
     }
 
     private static String sentenseHighMSI(double tumorMSI, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
-        sentence = sentence.replace("MSI signature score XXX " , "MSI signature score " + String.format("%.2f", tumorMSI));
+        sentence = sentence.replace("MSI signature score XXX ", "MSI signature score " + String.format("%.2f", tumorMSI));
         return sentence;
     }
 
     private static String sentenseHrDeficient(double chordScore, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
-        sentence = sentence.replace("a high CHORD score (XXX) " , "a high CHORD score (" + String.format("%.2f", chordScore) + ") ");
+        sentence = sentence.replace("a high CHORD score (XXX) ", "a high CHORD score (" + String.format("%.2f", chordScore) + ") ");
         return sentence;
     }
 }

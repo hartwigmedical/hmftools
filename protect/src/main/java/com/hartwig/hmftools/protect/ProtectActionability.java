@@ -5,10 +5,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
+import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
@@ -90,6 +93,8 @@ public class ProtectActionability {
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
 
         // Extract genomic alterations
+        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        double purity = purityContext.bestFit().purity();
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
@@ -125,7 +130,10 @@ public class ProtectActionability {
                 tumorMSI,
                 chordScore,
                 geneFusions,
-                geneCopyNumbers, passSomaticVariants, templateConclusionList);
+                geneCopyNumbers,
+                passSomaticVariants,
+                templateConclusionList,
+                purity);
 
         writeConclusionOfSample(OutputConclusionTsv, conclusion);
     }
