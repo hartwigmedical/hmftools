@@ -3,7 +3,6 @@ package com.hartwig.hmftools.protect.conclusion;
 import org.jetbrains.annotations.NotNull;
 
 public enum AberrationGenSummary {
-
     NOTE_SIGNATURE_OR_SV_ANNOTATION("NOTE SIGNATURE/SV ANNOTATION"),
     LOW_PURITY("LOW PURITY"),
     NOT_DETECTABLE_TUMOR_PURITY("NOT DETECTABLE TUMOR PURITY"),
