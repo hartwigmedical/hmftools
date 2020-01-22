@@ -10,10 +10,13 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.report.chord.ChordStatus;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class ConclusionFactory {
+    private static final Logger LOGGER = LogManager.getLogger(ConclusionFactory.class);
 
     private ConclusionFactory() {
 
@@ -61,8 +64,16 @@ public class ConclusionFactory {
 
     private static String createTumorLocationSentense(@NotNull String patientPrimaryTumorLocation,
             @NotNull List<TumorLocationConclusion> tumorLocationConclusion) {
-        String tumorLocation = Strings.EMPTY;
-        return tumorLocation + "sample showing";
+        String locationTumor = Strings.EMPTY;
+        for (TumorLocationConclusion locationConclusion: tumorLocationConclusion) {
+            if (locationConclusion.primaryTumorLocation().equals(patientPrimaryTumorLocation)) {
+                locationTumor = locationConclusion.tumorLocationConclusion();
+            }
+        }
+        if (locationTumor.equals(Strings.EMPTY)) {
+            LOGGER.warn("No tumor location is known");
+        }
+        return locationTumor + " sample showing: ";
     }
 
     private static String sentenseHighMTL(double tumorMTL, double tumorMTB, @NotNull TemplateConclusion templateConclusion) {
