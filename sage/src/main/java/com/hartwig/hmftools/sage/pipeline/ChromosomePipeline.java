@@ -40,7 +40,8 @@ public class ChromosomePipeline implements AutoCloseable {
     private final SageVariantPipeline sageVariantPipeline;
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
-            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions) throws IOException {
+            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
+            @NotNull final List<GenomeRegion> highConfidenceRegions) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.variantContextFactory =
@@ -48,8 +49,8 @@ public class ChromosomePipeline implements AutoCloseable {
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.sageVariantPipeline = config.germlineOnly()
-                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions)
-                : new SomaticPipeline(config, executor, hotspots, panelRegions);
+                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions, highConfidenceRegions)
+                : new SomaticPipeline(config, executor, hotspots, panelRegions, highConfidenceRegions);
     }
 
     @NotNull
@@ -111,10 +112,8 @@ public class ChromosomePipeline implements AutoCloseable {
             });
         }
 
-
         return done.thenApply(aVoid -> {
             LOGGER.info("Phasing chromosome {}", chromosome);
-
 
             phase.flush();
             sageVCF.close();

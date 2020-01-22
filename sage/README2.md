@@ -182,16 +182,16 @@ The default filtering settings are:
 
 The following filters are applied after collecting evidence about a variant. 
 The filters are applied according to the `TIER` of the variant. 
-The `TIER` can be one of `HOTSPOT`, `PANEL` or `WIDE` as determined by the supplied hotspot and panel locations. 
+The `TIER` can be one of `HOTSPOT`, `PANEL`, `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` as determined by the supplied hotspot, panel and high confidence locations. 
 
-Filter  | Hotspot | Panel | Wide | Field
+Filter  | Hotspot | Panel | High Confidence | Low Confidence | Field
 ---|---|---|---|---
-min_tumor_qual|35|100|150|`QUAL`
-min_tumor_vaf|0.5%|1.5%|2.5%|`AF`
-min_germline_depth|0|0|10 | ?
-min_germline_depth_allosome|0|0|6 | ?
-max_germline_vaf|10%|4%|4% | ?
-max_germline_rel_base_qual|100%|4%|4% | ?
+min_tumor_qual|35|100|120|200|`QUAL`
+min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
+min_germline_depth|0|0|10 | ? | ?
+min_germline_depth_allosome|0|0|6 | ? | ?
+max_germline_vaf|10%|4%|4% | ? | ?
+max_germline_rel_base_qual|100%|4%|4% | ? | ?
 
 
 ## 6. Phasing

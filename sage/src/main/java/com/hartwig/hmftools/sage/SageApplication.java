@@ -52,6 +52,7 @@ public class SageApplication implements AutoCloseable {
 
     private final ListMultimap<Chromosome, GenomeRegion> panel;
     private final ListMultimap<Chromosome, VariantHotspot> hotspots;
+    private final ListMultimap<Chromosome, GenomeRegion> highConfidence;
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         final Options options = SageConfig.createOptions();
@@ -71,6 +72,7 @@ public class SageApplication implements AutoCloseable {
 
         hotspots = readHotspots();
         panel = panelWithHotspots(hotspots);
+        highConfidence = readPanel(config.highConfidenceBed());
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
@@ -120,7 +122,12 @@ public class SageApplication implements AutoCloseable {
 
     private ChromosomePipeline createChromosomePipeline(@NotNull final String contig) throws IOException {
         final Chromosome chromosome = HumanChromosome.fromString(contig);
-        return new ChromosomePipeline(contig, config, executorService, hotspots.get(chromosome), panel.get(chromosome));
+        return new ChromosomePipeline(contig,
+                config,
+                executorService,
+                hotspots.get(chromosome),
+                panel.get(chromosome),
+                highConfidence.get(chromosome));
     }
 
     @Override
@@ -150,7 +157,7 @@ public class SageApplication implements AutoCloseable {
     private ListMultimap<Chromosome, GenomeRegion> panelWithHotspots(@NotNull final ListMultimap<Chromosome, VariantHotspot> hotspots)
             throws IOException {
 
-        final ListMultimap<Chromosome, GenomeRegion> initialPanel = readPanel();
+        final ListMultimap<Chromosome, GenomeRegion> initialPanel = readPanel(config.panelBed());
         final ListMultimap<Chromosome, GenomeRegion> result = ArrayListMultimap.create();
 
         for (HumanChromosome chromosome : HumanChromosome.values()) {
@@ -168,11 +175,12 @@ public class SageApplication implements AutoCloseable {
         return result;
     }
 
-    private ListMultimap<Chromosome, GenomeRegion> readPanel() throws IOException {
+    @NotNull
+    private static ListMultimap<Chromosome, GenomeRegion> readPanel(@NotNull final String panelBed) throws IOException {
         final ListMultimap<Chromosome, GenomeRegion> panel = ArrayListMultimap.create();
-        if (!config.panel().isEmpty()) {
-            LOGGER.info("Reading gene panel bed file: {}", config.panel());
-            SortedSetMultimap<String, GenomeRegion> bed = BEDFileLoader.fromBedFile(config.panel());
+        if (!panelBed.isEmpty()) {
+            LOGGER.info("Reading bed file: {}", panelBed);
+            SortedSetMultimap<String, GenomeRegion> bed = BEDFileLoader.fromBedFile(panelBed);
             for (String contig : bed.keySet()) {
                 if (HumanChromosome.contains(contig)) {
                     panel.putAll(HumanChromosome.fromString(contig), bed.get(contig));

@@ -29,16 +29,18 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final Executor executor;
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panelRegions;
+    private final List<GenomeRegion> highConfidenceRegions;
     private final PrimaryEvidence primaryEvidence;
     private final NormalEvidence normalEvidence;
 
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions) {
+            @NotNull final List<GenomeRegion> panelRegions, @NotNull final List<GenomeRegion> highConfidenceRegions) {
         this.config = config;
         this.executor = executor;
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
+        this.highConfidenceRegions = highConfidenceRegions;
         this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
         this.normalEvidence = new NormalEvidence(config, samSlicerFactory);
     }
@@ -46,7 +48,7 @@ public class SomaticPipeline implements SageVariantPipeline {
     @NotNull
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region, @NotNull final RefSequence refSequence) {
 
-        final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions);
+        final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
         final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();

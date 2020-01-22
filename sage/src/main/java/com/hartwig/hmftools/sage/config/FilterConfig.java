@@ -19,7 +19,6 @@ public interface FilterConfig {
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     String HARD_MIN_TUMOR_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
-    String MIN_GERMLINE_VAF = "min_germline_vaf";
 
     int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
     int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
@@ -47,9 +46,19 @@ public interface FilterConfig {
             .maxGermlineRelativeQual(0.04)
             .build();
 
-    SoftFilterConfig DEFAULT_WIDE_FILTER = ImmutableSoftFilterConfig.builder()
+    SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
-            .minTumorQual(150)
+            .minTumorQual(125)
+            .minTumorVaf(0.025)
+            .minGermlineReadContextCoverage(10)
+            .minGermlineReadContextCoverageAllosome(6)
+            .maxGermlineVaf(0.04)
+            .maxGermlineRelativeQual(0.04)
+            .build();
+
+    SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
+            .from(NO_FILTER)
+            .minTumorQual(200)
             .minTumorVaf(0.025)
             .minGermlineReadContextCoverage(10)
             .minGermlineReadContextCoverageAllosome(6)
@@ -90,7 +99,10 @@ public interface FilterConfig {
     SoftFilterConfig softPanelFilter();
 
     @NotNull
-    SoftFilterConfig softWideFilter();
+    SoftFilterConfig softHighConfidenceFilter();
+
+    @NotNull
+    SoftFilterConfig softLowConfidenceFilter();
 
     @NotNull
     static Options createOptions() {
@@ -103,7 +115,8 @@ public interface FilterConfig {
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
-        SoftFilterConfig.createOptions("wide", DEFAULT_WIDE_FILTER).getOptions().forEach(options::addOption);
+        SoftFilterConfig.createOptions("high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
+        SoftFilterConfig.createOptions("low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
 
         return options;
     }
@@ -117,7 +130,8 @@ public interface FilterConfig {
                 .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
                 .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
-                .softWideFilter(SoftFilterConfig.createConfig(cmd, "wide", DEFAULT_WIDE_FILTER))
+                .softHighConfidenceFilter(SoftFilterConfig.createConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER))
+                .softLowConfidenceFilter(SoftFilterConfig.createConfig(cmd, "llow_confidence", DEFAULT_LOW_CONFIDENCE_FILTER))
                 .build();
 
     }
@@ -129,8 +143,10 @@ public interface FilterConfig {
                 return softHotspotFilter();
             case PANEL:
                 return softPanelFilter();
+            case HIGH_CONFIDENCE:
+                return softHighConfidenceFilter();
             default:
-                return softWideFilter();
+                return softLowConfidenceFilter();
         }
     }
 

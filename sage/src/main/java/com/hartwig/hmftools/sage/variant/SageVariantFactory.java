@@ -29,9 +29,9 @@ public class SageVariantFactory {
     private final TierSelector tierSelector;
 
     public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions) {
+            @NotNull final List<GenomeRegion> panelRegions, @NotNull final List<GenomeRegion> highConfidenceRegions) {
         this.config = config;
-        this.tierSelector = new TierSelector(panelRegions, hotspots);
+        this.tierSelector = new TierSelector(hotspots, panelRegions, highConfidenceRegions);
     }
 
     @NotNull

@@ -66,7 +66,7 @@ public class SageVCF implements AutoCloseable {
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
 
     public final static String TIER = "TIER";
-    private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT,PANEL,WIDE]";
+    private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
     public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
 
