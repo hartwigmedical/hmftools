@@ -37,7 +37,7 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
         this.panelRegions = panelRegions;
 
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, panelRegions, samSlicerFactory);
+        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
 
     }
 

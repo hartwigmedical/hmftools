@@ -39,7 +39,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, panelRegions, samSlicerFactory);
+        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
         this.normalEvidence = new NormalEvidence(config, samSlicerFactory);
     }
 
