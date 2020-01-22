@@ -26,6 +26,8 @@ import com.hartwig.hmftools.protect.common.GenomicData;
 import com.hartwig.hmftools.protect.conclusion.ConclusionFactory;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
+import com.hartwig.hmftools.protect.conclusion.TumorLocationConclusion;
+import com.hartwig.hmftools.protect.conclusion.TumorLocationConclusionFile;
 import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -93,8 +95,9 @@ public class ProtectActionability {
         LOGGER.info("Reading template Conclusion from {}" , templateConclusionTsv);
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
 
-        LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
-        //TODO
+        LOGGER.info("Reading tumor location curation from {}" , curationTumorLocations);
+        List<TumorLocationConclusion> tumorLocationConclusion =
+                TumorLocationConclusionFile.readTumorLocationConclusion(curationTumorLocations);
 
         LOGGER.info("Extracting genomic alteration from sample {}" , tumorSampleId);
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
@@ -137,7 +140,8 @@ public class ProtectActionability {
                 geneCopyNumbers,
                 passSomaticVariants,
                 templateConclusionList,
-                purity);
+                purity,
+                tumorLocationConclusion);
 
         LOGGER.info("Create hotspot information");
         //TODO create hotspot information
@@ -243,8 +247,9 @@ public class ProtectActionability {
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
                 && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV)
-                && fileExists(cmd, TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
+                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(
+                cmd,
+                TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
