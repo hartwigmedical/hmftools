@@ -2,7 +2,7 @@ package com.hartwig.hmftools.protect.conclusion;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum aberrationGenSummary {
+public enum AberrationGenSummary {
 
     HIGH_MTL("High TMB"),
     HR_DEFICIENT("HR-deficient"),
@@ -12,7 +12,7 @@ public enum aberrationGenSummary {
     @NotNull
     private final String readableString;
 
-    aberrationGenSummary(@NotNull final String readableString) {
+    AberrationGenSummary(@NotNull final String readableString) {
         this.readableString = readableString;
 
     }
@@ -23,7 +23,7 @@ public enum aberrationGenSummary {
     }
 
     @NotNull
-    public static aberrationGenSummary fromString(@NotNull String gene) {
+    public static AberrationGenSummary fromString(@NotNull String gene) {
         switch (gene) {
             case "HR-deficient":
                 return HR_DEFICIENT;
