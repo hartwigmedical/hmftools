@@ -33,10 +33,7 @@ public class SageVCF implements AutoCloseable {
 
     public final static String READ_CONTEXT = "RC";
     public final static String PASS = "PASS";
-    public final static String MERGE_FILTER = "merge";
     public final static String DEDUP_FILTER = "dedup";
-    public final static String GERMLINE_MVN = "mnv_germline";
-    public final static String NORMAL_SUPPORT = "mnv_normal_support";
     public final static String MIN_GERMLINE_VAF = "min_germline_vaf";
 
 
@@ -158,9 +155,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(NORMAL_SUPPORT, "MNV has support in normal"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(GERMLINE_MVN, "MNV contains germline SNV"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(MERGE_FILTER, "Variant was merged into another variant"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
         header.addMetaDataLine(new VCFFilterHeaderLine(MIN_GERMLINE_VAF, "Insufficient germline VAF"));
 
@@ -169,6 +163,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.toString(), "Excess germline VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_BASE_QUAL.toString(), "Excess germline relative quality"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString(), "Excess germline alt support"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         return header;
