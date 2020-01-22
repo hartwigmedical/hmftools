@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.protect.report.chord.ChordStatus;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +39,7 @@ public class ConclusionFactory {
                     String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
                     conclusion += highMSI + enter;
                 }
-            } else if (chordScore >= 0.5) { //TODO create enum
+            } else if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
                 if (AberrationGenSummary.fromString(templateConclusion.abberrationGeneSummary()).equals(AberrationGenSummary.HR_DEFICIENT)) {
                     String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
                     conclusion += hrDeficient + enter;
