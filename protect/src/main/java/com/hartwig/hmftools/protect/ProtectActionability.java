@@ -47,6 +47,7 @@ public class ProtectActionability {
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String TEMPLATE_CONCLUSION_TSV = "template_conclusion";
+    private static final String TUMOR_LOCATION_CURATION_CONCLUSION_TSV = "tumor_location_curation_conclusion_tsv";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
@@ -68,6 +69,7 @@ public class ProtectActionability {
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String templateConclusionTsv = cmd.getOptionValue(TEMPLATE_CONCLUSION_TSV);
+        final String curationTumorLocations = cmd.getOptionValue(TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
 
         // Params specific for specific sample
         final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
@@ -85,13 +87,16 @@ public class ProtectActionability {
             printUsageAndExit(options);
         }
 
-        LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
+        LOGGER.info("Reading knowledgebase from {}" , knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
-        LOGGER.info("Reading template Conclusion from {}", templateConclusionTsv);
+        LOGGER.info("Reading template Conclusion from {}" , templateConclusionTsv);
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
 
-        LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
+        LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
+        //TODO
+
+        LOGGER.info("Extracting genomic alteration from sample {}" , tumorSampleId);
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         double purity = purityContext.bestFit().purity();
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
@@ -100,14 +105,14 @@ public class ProtectActionability {
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
-        LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
+        LOGGER.info("Extract tumor characteristics from sample {}" , tumorSampleId);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
         int tumorMTL = TumorMutationalLoad.determineTumorMutationalLoad(variants);
         double tumorMSI = MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants);
         double chordScore = ChordFileReader.read(chordTxt).hrdValue();
         double tumorMTB = TumorMutationalLoad.determineTumorMutationalBurden(variants);
 
-        LOGGER.info("Create actionability for sample {}", tumorSampleId);
+        LOGGER.info("Create actionability for sample {}" , tumorSampleId);
 
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
@@ -190,15 +195,15 @@ public class ProtectActionability {
 
         List<EvidenceItem> evidenceForVariants =
                 toList(actionabilityAnalyzer.evidenceForAllVariants(variants, patientPrimaryTumorLocation));
-        LOGGER.info(" Found {} evidence items for {} somatic variants.", evidenceForVariants.size(), variants.size());
+        LOGGER.info(" Found {} evidence items for {} somatic variants." , evidenceForVariants.size(), variants.size());
 
         List<EvidenceItem> evidenceForGeneCopyNumbers =
                 toList(actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy));
-        LOGGER.info(" Found {} evidence items for {} copy numbers.", evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
+        LOGGER.info(" Found {} evidence items for {} copy numbers." , evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
 
         List<EvidenceItem> evidenceForGeneFusions =
                 toList(actionabilityAnalyzer.evidenceForFusions(geneFusions, patientPrimaryTumorLocation));
-        LOGGER.info(" Found {} evidence items for {} gene fusions.", evidenceForGeneFusions.size(), geneFusions.size());
+        LOGGER.info(" Found {} evidence items for {} gene fusions." , evidenceForGeneFusions.size(), geneFusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
         combinedEvidence.addAll(evidenceForVariants);
@@ -218,9 +223,9 @@ public class ProtectActionability {
 
     @NotNull
     private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
-        LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
+        LOGGER.info("Reading primary tumor location from {}" , tumorLocationCsv);
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
-        LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
+        LOGGER.info(" Loaded tumor locations for {} patients" , patientTumorLocations.size());
 
         PatientTumorLocation patientTumorLocation =
                 PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
@@ -230,7 +235,7 @@ public class ProtectActionability {
             patientPrimaryTumorLocation = patientTumorLocation.primaryTumorLocation();
         }
 
-        LOGGER.info(" Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);
+        LOGGER.info(" Retrieved tumor location '{}' for sample {}" , patientPrimaryTumorLocation, sampleId);
 
         return patientPrimaryTumorLocation;
     }
@@ -238,7 +243,8 @@ public class ProtectActionability {
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
                 && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV);
+                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV)
+                && fileExists(cmd, TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -289,6 +295,7 @@ public class ProtectActionability {
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(TEMPLATE_CONCLUSION_TSV, true, "Path towards the template for conclusion TSV.");
+        options.addOption(TUMOR_LOCATION_CURATION_CONCLUSION_TSV, true, "Path towards the curation of the tumor location TSV.");
 
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
@@ -312,7 +319,7 @@ public class ProtectActionability {
 
     private static void printUsageAndExit(@NotNull Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Protect", options);
+        formatter.printHelp("Protect" , options);
         System.exit(1);
     }
 
