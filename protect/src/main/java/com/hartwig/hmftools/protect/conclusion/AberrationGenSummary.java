@@ -23,7 +23,7 @@ public enum AberrationGenSummary {
     AR_MUTATION("AR mutation"),
     ARID1A_MUTATION("ARID1A mutation"),
     ACVR2A_INACTIVATION_OR_LOSS_CRC("ACVR2A inactivation/loss (CRC)"),
-    ATM_INACTIVATION_LOSS("ATM inactivation/loss"),
+    ATM_INACTIVATION_OR_LOSS("ATM inactivation/loss"),
     AXL_AMPLIFICATION("AXL amplification"),
     B2M_INACTIVATION("B2M inactivation"),
     BAP1_INACTIVATION_OR_LOSS("BAP1 inactivation/loss"),
@@ -214,7 +214,7 @@ public enum AberrationGenSummary {
             case "ACVR2A inactivation/loss (CRC)":
                 return ACVR2A_INACTIVATION_OR_LOSS_CRC;
             case "ATM inactivation/loss":
-                return ATM_INACTIVATION_LOSS;
+                return ATM_INACTIVATION_OR_LOSS;
             case "AXL amplification":
                 return AXL_AMPLIFICATION;
             case "B2M inactivation":
