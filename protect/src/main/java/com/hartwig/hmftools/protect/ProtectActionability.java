@@ -134,6 +134,12 @@ public class ProtectActionability {
                 templateConclusionList,
                 purity);
 
+        LOGGER.info("Create hotspot information");
+        //TODO create hotspot information
+
+        LOGGER.info("Create knwon amplications and deletions");
+        //TODO create knwon amplifications and deletions
+
         writeConclusionOfSample(OutputConclusionTsv, conclusion);
     }
 
