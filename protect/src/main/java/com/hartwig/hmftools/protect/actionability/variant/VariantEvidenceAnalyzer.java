@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.protect.actionability.ActionabilitySource;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
-import com.hartwig.hmftools.protect.actionability.EvidenceScope;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -98,8 +97,7 @@ public class VariantEvidenceAnalyzer {
                 .drugsType(actionableVariant.drugsType())
                 .level(EvidenceLevel.fromString(actionableVariant.level()))
                 .response(actionableVariant.response())
-                .cancerType(actionableVariant.cancerType())
-                .scope(EvidenceScope.SPECIFIC);
+                .cancerType(actionableVariant.cancerType());
     }
 
     @NotNull
@@ -111,7 +109,6 @@ public class VariantEvidenceAnalyzer {
                 .drugsType(actionableRange.drugsType())
                 .level(EvidenceLevel.fromString(actionableRange.level()))
                 .response(actionableRange.response())
-                .cancerType(actionableRange.cancerType())
-                .scope(EvidenceScope.GENE_LEVEL);
+                .cancerType(actionableRange.cancerType());
     }
 }

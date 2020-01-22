@@ -10,17 +10,13 @@ import java.util.List;
 import com.hartwig.hmftools.protect.actionability.ActionabilitySource;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
-import com.hartwig.hmftools.protect.actionability.EvidenceScope;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class ActionabilityFile {
 
     private static final String DELIMITER = "\t";
-    private static final Logger LOGGER = LogManager.getLogger(ActionabilityFile.class);
 
 
     private ActionabilityFile() {
@@ -52,8 +48,7 @@ public final class ActionabilityFile {
                 .level(EvidenceLevel.fromString(values[5]))
                 .response(values[6])
                 .isOnLabel(Boolean.parseBoolean(values[7]))
-                .cancerType(values[8])
-                .scope((EvidenceScope.valueOf(values[9])));
+                .cancerType(values[8]);
 
         return builder.build();
     }

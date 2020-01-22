@@ -26,6 +26,4 @@ public abstract class ClinicalTrial {
     @NotNull
     public abstract String cancerType();
 
-    @NotNull
-    public abstract EvidenceScope scope();
 }

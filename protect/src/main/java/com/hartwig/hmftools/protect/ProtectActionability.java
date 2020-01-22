@@ -163,8 +163,7 @@ public class ProtectActionability {
         for (EvidenceItem item : combinedEvidence) {
             writerReport.write(
                     item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
-                            + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t"
-                            + item.scope() + "\n");
+                            + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + "\n");
         }
         writerReport.close();
     }
@@ -178,8 +177,7 @@ public class ProtectActionability {
         for (EvidenceItem item : combinedEvidence) {
             writerDatabase.write(
                     item.event() + "\t" + item.source() + "\t" + item.reference() + "\t" + item.drug() + "\t" + item.drugsType() + "\t"
-                            + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t"
-                            + item.scope() + "\n");
+                            + item.level() + "\t" + item.response() + "\t" + item.isOnLabel() + "\t" + item.cancerType() + "\t" + "\n");
         }
         writerDatabase.close();
     }

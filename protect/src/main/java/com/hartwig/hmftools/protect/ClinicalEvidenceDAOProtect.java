@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.protect;
 
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCE;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CLINICALEVIDENCEPROTECT;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -12,7 +12,7 @@ import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
-import org.jooq.InsertValuesStep11;
+import org.jooq.InsertValuesStep10;
 
 public class ClinicalEvidenceDAOProtect {
 
@@ -29,29 +29,27 @@ public class ClinicalEvidenceDAOProtect {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         for (List<EvidenceItem> items : Iterables.partition(evidenceItem, DB_BATCH_INSERT_SIZE)) {
-            InsertValuesStep11 inserter = context.insertInto(CLINICALEVIDENCE,
-                    CLINICALEVIDENCE.SAMPLEID,
-                    CLINICALEVIDENCE.MODIFIED,
-                    CLINICALEVIDENCE.EVENT,
-                    CLINICALEVIDENCE.EVENTMATCH,
-                    CLINICALEVIDENCE.NAME,
-                    CLINICALEVIDENCE.TYPE,
-                    CLINICALEVIDENCE.RESPONSE,
-                    CLINICALEVIDENCE.LEVEL,
-                    CLINICALEVIDENCE.SOURCE,
-                    CLINICALEVIDENCE.CANCERTYPE,
-                    CLINICALEVIDENCE.ISONLABEL);
+            InsertValuesStep10 inserter = context.insertInto(CLINICALEVIDENCEPROTECT,
+                    CLINICALEVIDENCEPROTECT.SAMPLEID,
+                    CLINICALEVIDENCEPROTECT.MODIFIED,
+                    CLINICALEVIDENCEPROTECT.EVENT,
+                    CLINICALEVIDENCEPROTECT.NAME,
+                    CLINICALEVIDENCEPROTECT.TYPE,
+                    CLINICALEVIDENCEPROTECT.RESPONSE,
+                    CLINICALEVIDENCEPROTECT.LEVEL,
+                    CLINICALEVIDENCEPROTECT.SOURCE,
+                    CLINICALEVIDENCEPROTECT.CANCERTYPE,
+                    CLINICALEVIDENCEPROTECT.ISONLABEL);
             items.forEach(trial -> addValues(sample, trial, inserter, timestamp));
             inserter.execute();
         }
     }
 
-    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep11 inserter,
+    private static void addValues(@NotNull String sample, @NotNull EvidenceItem evidenceItem, @NotNull InsertValuesStep10 inserter,
             @NotNull Timestamp timestamp) {
         inserter.values(sample,
                 timestamp,
                 evidenceItem.event(),
-                evidenceItem.scope().readableString(),
                 evidenceItem.drug(),
                 evidenceItem.drugsType(),
                 evidenceItem.response(),
@@ -62,6 +60,6 @@ public class ClinicalEvidenceDAOProtect {
     }
 
     public void deleteClinicalEvidenceForSample(@NotNull String sample) {
-        context.delete(CLINICALEVIDENCE).where(CLINICALEVIDENCE.SAMPLEID.eq(sample)).execute();
+        context.delete(CLINICALEVIDENCEPROTECT).where(CLINICALEVIDENCEPROTECT.SAMPLEID.eq(sample)).execute();
     }
 }
