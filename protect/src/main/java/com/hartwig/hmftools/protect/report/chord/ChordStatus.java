@@ -10,19 +10,19 @@ public enum ChordStatus {
 
     public static final double CHORD_THRESHOLD = 0.5;
 
-    private final String display;
+    private final String status;
 
-    ChordStatus(final String display) {
-        this.display = display;
+    ChordStatus(final String status) {
+        this.status = status;
     }
 
     @NotNull
-    public static String display() {
-        return display();
+    public static String status() {
+        return status();
     }
 
     @NotNull
     public static ChordStatus formChord(double chordValue) {
-        return Doubles.greaterThan(0.5, CHORD_THRESHOLD) ? HR_DEFICIENT : HR_PROFICIENT;
+        return Doubles.greaterThan(chordValue, CHORD_THRESHOLD) ? HR_DEFICIENT : HR_PROFICIENT;
     }
 }

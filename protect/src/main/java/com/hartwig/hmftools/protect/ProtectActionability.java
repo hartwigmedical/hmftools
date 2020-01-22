@@ -91,7 +91,7 @@ public class ProtectActionability {
         LOGGER.info("Reading template Conclusion from {}", templateConclusionTsv);
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
 
-        // Extract genomic alterations
+        LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         double purity = purityContext.bestFit().purity();
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
@@ -100,7 +100,7 @@ public class ProtectActionability {
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
-        // Extract tumor characteristics
+        LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
         int tumorMTL = TumorMutationalLoad.determineTumorMutationalLoad(variants);
         double tumorMSI = MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants);
