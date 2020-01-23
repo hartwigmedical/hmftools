@@ -3,6 +3,8 @@ package com.hartwig.hmftools.iclusion.api;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.hartwig.hmftools.iclusion.IclusionCredentials;
+import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.squareup.moshi.Moshi;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,55 +26,77 @@ public final class IclusionApiReader {
     private IclusionApiReader() {
     }
 
-    public static void readIclusionTrials(@NotNull String iClusionEndpoint, @NotNull String iClusionClientId,
-            @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword) {
+    @NotNull
+    public static List<IclusionTrial> readIclusionTrials(@NotNull String iClusionEndpoint, @NotNull IclusionCredentials credentials) {
         LOGGER.info("Connecting with iClusion API on {}", iClusionEndpoint);
 
+        OkHttpClient httpClient = buildHttpClient();
+        IclusionApi api = buildIclusionApi(httpClient, iClusionEndpoint);
+
+        LOGGER.info("Requesting iClusion access token");
+        String tokenBearer = buildTokenBearer(api, credentials);
+
+        LOGGER.info("Querying iClusion trial database using access token");
+        List<IclusionObjectStudy> studies = api.studies(tokenBearer).blockingFirst();
+        LOGGER.info(" Received {} iClusion studies", studies.size());
+
+        List<IclusionObjectIndication> indications = api.indications(tokenBearer).blockingFirst();
+        LOGGER.info(" Received {} iClusion indications", indications.size());
+
+        List<IclusionObjectGene> genes = api.genes(tokenBearer).blockingFirst();
+        LOGGER.info(" Received {} iClusion genes", genes.size());
+
+        List<IclusionObjectVariant> variants = api.variants(tokenBearer).blockingFirst();
+        LOGGER.info(" Received {} iClusion variants", variants.size());
+
+        List<IclusionTrial> trials = IclusionApiObjectMapper.fromApiObjects(studies, indications, genes, variants);
+        LOGGER.info("Created {} trials from iClusion API objects", trials.size());
+
+        LOGGER.info("Closing down connection");
+        httpClient.dispatcher().executorService().shutdown();
+
+        return trials;
+    }
+
+    @NotNull
+    private static OkHttpClient buildHttpClient() {
         Dispatcher dispatcher = new Dispatcher();
         dispatcher.setMaxRequests(100);
         dispatcher.setMaxRequestsPerHost(100);
 
-        OkHttpClient client = new OkHttpClient.Builder().connectionPool(new ConnectionPool(20, 5, TimeUnit.SECONDS))
+        return new OkHttpClient.Builder().connectionPool(new ConnectionPool(20, 5, TimeUnit.SECONDS))
                 .readTimeout(20, TimeUnit.SECONDS)
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
                 .dispatcher(dispatcher)
                 .build();
+    }
 
+    @NotNull
+    private static IclusionApi buildIclusionApi(@NotNull OkHttpClient httpClient, @NotNull String iClusionEndpoint) {
         MoshiConverterFactory moshiConverterFactory =
                 MoshiConverterFactory.create(new Moshi.Builder().add(new IclusionResponseAdapter()).build());
 
         Retrofit retrofit = new Retrofit.Builder().baseUrl(iClusionEndpoint)
                 .addConverterFactory(moshiConverterFactory)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
-                .client(client)
+                .client(httpClient)
                 .build();
 
-        IclusionApi api = retrofit.create(IclusionApi.class);
+        return retrofit.create(IclusionApi.class);
+    }
 
+    @NotNull
+    private static String buildTokenBearer(@NotNull IclusionApi api, @NotNull IclusionCredentials credentials) {
         MultipartBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("grant_type", "password")
-                .addFormDataPart("client_id", iClusionClientId)
-                .addFormDataPart("client_secret", iClusionClientSecret)
-                .addFormDataPart("username", iClusionUsername)
-                .addFormDataPart("password", iClusionPassword)
+                .addFormDataPart("client_id", credentials.clientId())
+                .addFormDataPart("client_secret", credentials.clientSecret())
+                .addFormDataPart("username", credentials.username())
+                .addFormDataPart("password", credentials.password())
                 .build();
 
-        String tokenBearer = "Bearer " + api.requestAccessToken(requestBody).blockingFirst().accessToken;
-        System.out.println("TokenBearer = " + tokenBearer);
-
-        List<IclusionObjectStudy> studies = api.studies(tokenBearer).blockingFirst();
-        System.out.println("Studies = " + studies.size());
-
-        List<IclusionObjectIndication> indications = api.indications(tokenBearer).blockingFirst();
-        System.out.println("Indications = " + indications.size());
-
-        List<IclusionObjectGene> genes = api.genes(tokenBearer).blockingFirst();
-        System.out.println("Genes = " + genes.size());
-
-        List<IclusionObjectVariant> variants = api.variants(tokenBearer).blockingFirst();
-        System.out.println("Variants = " + variants.size());
-
-        client.dispatcher().executorService().shutdown();
+        // "Bearer " has to go in front, see DEV-473
+        return "Bearer " + api.requestAccessToken(requestBody).blockingFirst().accessToken;
     }
 }
