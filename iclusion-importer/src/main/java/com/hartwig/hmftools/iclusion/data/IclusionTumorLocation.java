@@ -14,13 +14,13 @@ public abstract class IclusionTumorLocation {
     @NotNull
     public abstract String id();
 
-    @NotNull
+    @Nullable
     public abstract String parentId();
 
-    @NotNull
+    @Nullable
     public abstract String doid();
 
-    @NotNull
+    @Nullable
     public abstract String doid2();
 
     @NotNull

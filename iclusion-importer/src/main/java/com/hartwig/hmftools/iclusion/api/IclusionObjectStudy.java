@@ -12,6 +12,6 @@ class IclusionObjectStudy {
     @Json(name = "nct") public String nct;
     @Json(name = "ipn") public String ipn;
     @Json(name = "ccmo") public String ccmo;
-    @Json(name = "indications_id") public List<String> indicationIds;
+    @Json(name = "indication_ids") public List<String> indicationIds;
     @Json(name = "mutations") public List<IclusionObjectMutation> mutations;
 }

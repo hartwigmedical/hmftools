@@ -10,10 +10,14 @@ import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class IclusionApiObjectMapper {
+
+    private static final Logger LOGGER = LogManager.getLogger(IclusionApiObjectMapper.class);
 
     private IclusionApiObjectMapper() {
     }
@@ -25,6 +29,9 @@ final class IclusionApiObjectMapper {
         List<IclusionTrial> trials = Lists.newArrayList();
 
         for (IclusionObjectStudy study : studies) {
+            if (study.indicationIds.contains("1987")) {
+                int x = 1;
+            }
             trials.add(ImmutableIclusionTrial.builder()
                     .id(study.id)
                     .title(study.title)
@@ -43,30 +50,29 @@ final class IclusionApiObjectMapper {
 
     @NotNull
     private static List<IclusionTumorLocation> buildTumorLocations(@NotNull Iterable<IclusionObjectIndication> indications,
-            @Nullable Iterable<String> indicationIds) {
-        if (indicationIds == null) {
-            return Lists.newArrayList();
-        }
-
+            @NotNull Iterable<String> indicationIds) {
         List<IclusionTumorLocation> tumorLocations = Lists.newArrayList();
         for (String id : indicationIds) {
             IclusionObjectIndication indication = findIndicationById(indications, id);
-
-            tumorLocations.add(ImmutableIclusionTumorLocation.builder()
-                    .id(indication.id)
-                    .parentId(indication.parentId)
-                    .doid(indication.doid)
-                    .doid2(indication.doid2)
-                    .indicationName(indication.indicationName)
-                    .indicationNameFull(indication.indicationNameFull)
-                    .nodeIds(indication.nodeIds)
-                    .build());
+            if (indication != null) {
+                tumorLocations.add(ImmutableIclusionTumorLocation.builder()
+                        .id(indication.id)
+                        .parentId(indication.parentId)
+                        .doid(indication.doid)
+                        .doid2(indication.doid2)
+                        .indicationName(indication.indicationName)
+                        .indicationNameFull(indication.indicationNameFull)
+                        .nodeIds(indication.nodeIds)
+                        .build());
+            } else {
+                LOGGER.warn("Could not find indication with ID '{}' in list of indications!", id);
+            }
         }
 
         return tumorLocations;
     }
 
-    @NotNull
+    @Nullable
     private static IclusionObjectIndication findIndicationById(@NotNull Iterable<IclusionObjectIndication> indications,
             @NotNull String id) {
         for (IclusionObjectIndication indication : indications) {
@@ -74,7 +80,7 @@ final class IclusionApiObjectMapper {
                 return indication;
             }
         }
-        throw new IllegalStateException("Could not find iClusion indication with ID '" + id + "'");
+        return null;
     }
 
     @NotNull
