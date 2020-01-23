@@ -120,12 +120,13 @@ public class ProtectActionability {
 
         LOGGER.info("Create actionability for sample {}", tumorSampleId);
 
-        List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
-                patientPrimaryTumorLocation,
-                passSomaticVariants,
-                ploidy,
-                geneCopyNumbers,
-                geneFusions);
+        List<EvidenceItem> combinedEvidence = Lists.newArrayList();
+//        List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
+//                patientPrimaryTumorLocation,
+//                passSomaticVariants,
+//                ploidy,
+//                geneCopyNumbers,
+//                geneFusions);
 
         LOGGER.info("Create actionability for patient report");
         writeActionabilityForPatientReport(outputReportTsv, combinedEvidence);
