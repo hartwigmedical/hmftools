@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.iclusion;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.List;
+
+import com.hartwig.hmftools.iclusion.api.IclusionApiMain;
+import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -26,7 +27,7 @@ public class IclusionImporterApplication {
     private static final String ICLUSION_OUTPUT_STUDIES_RAW = "iclusion_output_studies_raw";
     private static final String ICLUSION_OUTPUT_STUDIES_PROCESSED = "iclusion_output_studies_processed";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException {
+    public static void main(@NotNull final String[] args) throws ParseException {
         Options options = createBasicOptions();
         CommandLine cmd = createCommandLine(args, options);
 
@@ -34,44 +35,24 @@ public class IclusionImporterApplication {
             printUsageAndExit(options);
         }
 
-        String iClusionEndpoint = cmd.getOptionValue(ICLUSION_ENDPOINT);
-        String iClusionClientId = cmd.getOptionValue(ICLUSION_CLIENT_ID);
-        String iClusionClientSecret = cmd.getOptionValue(ICLUSION_CLIENT_SECRET);
-        String iClusionUsername = cmd.getOptionValue(ICLUSION_USERNAME);
-        String iClusionPassword = cmd.getOptionValue(ICLUSION_PASSWORD);
+        List<IclusionTrial> trials = IclusionApiMain.readIclusionTrials(cmd.getOptionValue(ICLUSION_ENDPOINT), buildCredentials(cmd));
 
-//        String token = IclusionApiWrapper.connectWithIclusionApi(iClusionEndpoint,
-//                iClusionClientId,
-//                iClusionClientSecret,
-//                iClusionUsername,
-//                iClusionPassword);
+        LOGGER.info("Printing {} iClusion trials", trials.size());
+        for (IclusionTrial trial : trials) {
+            LOGGER.info(" {}", trial);
+        }
 
-        String iClusionOutputStudiesRaw = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_RAW);
-        String iClusionOutputStudiesProcessed = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_PROCESSED);
-
-        LOGGER.info("Reading iClusion study details.....");
-        LOGGER.info("Queried and filtered {} studies from iClusion API", "size study");
-
-        writeIclusionOutputStudiesRawToTSVFile(iClusionOutputStudiesRaw);
-        writeIclusionOutputStudiesProcessedToTSVFile(iClusionOutputStudiesProcessed);
-
-        LOGGER.info("Iclusion importer is finished!");
+        LOGGER.info("iClusion importer is finished!");
     }
 
-    private static void writeIclusionOutputStudiesRawToTSVFile(@NotNull String iClusionOutputStudiesRaw) throws IOException {
-        LOGGER.info("Writing iClusion output raw to file {}", iClusionOutputStudiesRaw);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(iClusionOutputStudiesRaw, true));
-        writer.write("gene"); //TODO write real data from iclusion
-        writer.write(""); //TODO write real data from iclusion
-        writer.close();
-    }
-
-    private static void writeIclusionOutputStudiesProcessedToTSVFile(@NotNull String iClusionOutputStudiesProcessed) throws IOException {
-        LOGGER.info("Writing iClusion output processed to file {}", iClusionOutputStudiesProcessed);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(iClusionOutputStudiesProcessed, true));
-        writer.write("gene"); //TODO write real data from iclusion
-        writer.write(""); //TODO write real data from iclusion
-        writer.close();
+    @NotNull
+    private static IclusionCredentials buildCredentials(@NotNull CommandLine cmd) {
+        return ImmutableIclusionCredentials.builder()
+                .clientId(cmd.getOptionValue(ICLUSION_CLIENT_ID))
+                .clientSecret(cmd.getOptionValue(ICLUSION_CLIENT_SECRET))
+                .username(cmd.getOptionValue(ICLUSION_USERNAME))
+                .password(cmd.getOptionValue(ICLUSION_PASSWORD))
+                .build();
     }
 
     private static boolean validInputForIclusionConnection(@NotNull CommandLine cmd) {
