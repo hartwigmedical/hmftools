@@ -19,11 +19,11 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 
-public final class IclusionApiReader {
+public final class IclusionApiMain {
 
-    private static final Logger LOGGER = LogManager.getLogger(IclusionApiReader.class);
+    private static final Logger LOGGER = LogManager.getLogger(IclusionApiMain.class);
 
-    private IclusionApiReader() {
+    private IclusionApiMain() {
     }
 
     @NotNull
