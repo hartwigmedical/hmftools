@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.squareup.moshi.Json;
 
-public class IclusionStudy {
+class IclusionStudy {
     @Json(name = "id") public String id;
     @Json(name = "title") public String title;
     @Json(name = "acronym") public String acronym;

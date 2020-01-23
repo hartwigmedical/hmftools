@@ -8,12 +8,11 @@ import com.squareup.moshi.FromJson;
 
 import org.jetbrains.annotations.NotNull;
 
-public class IclusionResponseAdapter {
+class IclusionResponseAdapter {
 
     @FromJson
     @NotNull
     List<IclusionIndication> indications(@NotNull Map<String, IclusionIndication> json) {
-        System.out.println("converting indications");
         return Lists.newArrayList(json.values());
     }
 

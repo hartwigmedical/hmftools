@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.squareup.moshi.Json;
 
-public class IclusionIndication {
+class IclusionIndication {
     @Json(name = "id") public String id;
     @Json(name = "parent_id") public String parentId;
     @Json(name = "doid") public String doid;
