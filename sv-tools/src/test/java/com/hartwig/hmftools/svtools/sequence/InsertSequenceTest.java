@@ -1,12 +1,10 @@
-package com.hartwig.hmftools.linx.misc;
+package com.hartwig.hmftools.svtools.sequence;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.neoepitope.InsertSeqData;
-import com.hartwig.hmftools.linx.neoepitope.InsertSequenceAnalyser;
 
 import org.junit.Test;
 

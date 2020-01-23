@@ -1,12 +1,11 @@
-package com.hartwig.hmftools.linx.neoepitope;
+package com.hartwig.hmftools.svtools.sequence;
 
-import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

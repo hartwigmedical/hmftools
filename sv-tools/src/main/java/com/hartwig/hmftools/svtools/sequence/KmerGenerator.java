@@ -1,17 +1,20 @@
-package com.hartwig.hmftools.linx.neoepitope;
+package com.hartwig.hmftools.svtools.sequence;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
+import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+
+import com.hartwig.hmftools.linx.neoepitope.RefGenomeInterface;
+import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
