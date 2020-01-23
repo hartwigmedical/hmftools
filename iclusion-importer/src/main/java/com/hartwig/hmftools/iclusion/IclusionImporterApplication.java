@@ -4,8 +4,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import com.hartwig.hmftools.iclusion.api.iclusionApi;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -42,11 +40,11 @@ public class IclusionImporterApplication {
         String iClusionUsername = cmd.getOptionValue(ICLUSION_USERNAME);
         String iClusionPassword = cmd.getOptionValue(ICLUSION_PASSWORD);
 
-        String token = iclusionApi.connectWithIclusionApi(iClusionEndpoint,
-                iClusionClientId,
-                iClusionClientSecret,
-                iClusionUsername,
-                iClusionPassword);
+//        String token = IclusionApiWrapper.connectWithIclusionApi(iClusionEndpoint,
+//                iClusionClientId,
+//                iClusionClientSecret,
+//                iClusionUsername,
+//                iClusionPassword);
 
         String iClusionOutputStudiesRaw = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_RAW);
         String iClusionOutputStudiesProcessed = cmd.getOptionValue(ICLUSION_OUTPUT_STUDIES_PROCESSED);
