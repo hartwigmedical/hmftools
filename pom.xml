@@ -33,6 +33,7 @@
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
         <module>protect</module>
+        <module>sv-tools</module>
     </modules>
 
     <properties>
