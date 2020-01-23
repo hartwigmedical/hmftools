@@ -25,11 +25,11 @@ public class ConclusionFactory {
     public static String createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorMTL, double tumorMTB, double tumorMSI,
             double chordScore, @NotNull List<ReportableGeneFusion> geneFusions, @NotNull List<GeneCopyNumber> geneCopyNumbers,
             @NotNull List<? extends Variant> passSomaticVariants, @NotNull List<TemplateConclusion> templateConclusionList, double purity,
-            @NotNull List<TumorLocationConclusion> tumorLocationConclusion) {
+            @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype) {
         String conclusion = Strings.EMPTY;
         String enter = " <enter> ";
 
-        String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, tumorLocationConclusion);
+        String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, tumorLocationConclusion, cancerSubtype);
         conclusion = textTumorLocation + enter;
 
         for (TemplateConclusion templateConclusion : templateConclusionList) {
@@ -63,10 +63,11 @@ public class ConclusionFactory {
     }
 
     private static String createTumorLocationSentense(@NotNull String patientPrimaryTumorLocation,
-            @NotNull List<TumorLocationConclusion> tumorLocationConclusion) {
+            @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype) {
         String locationTumor = Strings.EMPTY;
-        for (TumorLocationConclusion locationConclusion: tumorLocationConclusion) {
-            if (locationConclusion.primaryTumorLocation().equals(patientPrimaryTumorLocation)) {
+        for (TumorLocationConclusion locationConclusion : tumorLocationConclusion) {
+            if (locationConclusion.primaryTumorLocation().equals(patientPrimaryTumorLocation) && locationConclusion.cancerSubType()
+                    .equals(cancerSubtype)) {
                 locationTumor = locationConclusion.tumorLocationConclusion();
             }
         }
@@ -78,29 +79,29 @@ public class ConclusionFactory {
 
     private static String sentenseHighMTL(double tumorMTL, double tumorMTB, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
-        sentence = sentence.replace("mutational load (ML) of XXX" , "mutational load (ML) of " + Double.toString(tumorMTL));
-        sentence = sentence.replace("tumor mutation burden (TMB) of XXX mt/Mb" ,
-                "tumor mutation burden (TMB) of " + String.format("%.1f" , tumorMTB) + " mt/Mb");
+        sentence = sentence.replace("mutational load (ML) of XXX", "mutational load (ML) of " + Double.toString(tumorMTL));
+        sentence = sentence.replace("tumor mutation burden (TMB) of XXX mt/Mb",
+                "tumor mutation burden (TMB) of " + String.format("%.1f", tumorMTB) + " mt/Mb");
         return sentence;
 
     }
 
     private static String sentenseHighMSI(double tumorMSI, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
-        sentence = sentence.replace("MSI signature score XXX " , "MSI signature score " + String.format("%.2f" , tumorMSI));
+        sentence = sentence.replace("MSI signature score XXX ", "MSI signature score " + String.format("%.2f", tumorMSI));
         return sentence;
     }
 
     private static String sentenseHrDeficient(double chordScore, @NotNull TemplateConclusion templateConclusion) {
         String sentence = templateConclusion.summaryTextStatement();
-        sentence = sentence.replace("a high CHORD score (XXX) " , "a high CHORD score (" + String.format("%.2f" , chordScore) + ") ");
+        sentence = sentence.replace("a high CHORD score (XXX) ", "a high CHORD score (" + String.format("%.2f", chordScore) + ") ");
         return sentence;
     }
 
     private static String sentenceLowPurity(double purity, @NotNull TemplateConclusion templateConclusion) {
         String purityPercentage = new DecimalFormat("#'%'").format(purity * 100);
         String sentence = templateConclusion.summaryTextStatement();
-        sentence = sentence.replace("Due to the low tumor purity (XXX) " , "Due to the low tumor purity (" + purityPercentage + ")");
+        sentence = sentence.replace("Due to the low tumor purity (XXX) ", "Due to the low tumor purity (" + purityPercentage + ")");
         return sentence;
     }
 }

@@ -40,6 +40,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ProtectActionability {
     private static final Logger LOGGER = LogManager.getLogger(ProtectActionability.class);
@@ -89,33 +90,35 @@ public class ProtectActionability {
             printUsageAndExit(options);
         }
 
-        LOGGER.info("Reading knowledgebase from {}" , knowledgebaseDirectory);
+        LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
-        LOGGER.info("Reading template Conclusion from {}" , templateConclusionTsv);
+        LOGGER.info("Reading template Conclusion from {}", templateConclusionTsv);
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
 
-        LOGGER.info("Reading tumor location curation from {}" , curationTumorLocations);
+        LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
         List<TumorLocationConclusion> tumorLocationConclusion =
                 TumorLocationConclusionFile.readTumorLocationConclusion(curationTumorLocations);
 
-        LOGGER.info("Extracting genomic alteration from sample {}" , tumorSampleId);
+        LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
         PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
         double purity = purityContext.bestFit().purity();
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
+        String patientCancerSubtype = extractCancerSubtype(tumorLocationCsv, tumorSampleId);
+
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
-        LOGGER.info("Extract tumor characteristics from sample {}" , tumorSampleId);
+        LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
         int tumorMTL = TumorMutationalLoad.determineTumorMutationalLoad(variants);
         double tumorMSI = MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants);
         double chordScore = ChordFileReader.read(chordTxt).hrdValue();
         double tumorMTB = TumorMutationalLoad.determineTumorMutationalBurden(variants);
 
-        LOGGER.info("Create actionability for sample {}" , tumorSampleId);
+        LOGGER.info("Create actionability for sample {}", tumorSampleId);
 
         List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
                 patientPrimaryTumorLocation,
@@ -141,7 +144,7 @@ public class ProtectActionability {
                 passSomaticVariants,
                 templateConclusionList,
                 purity,
-                tumorLocationConclusion);
+                tumorLocationConclusion, patientCancerSubtype);
 
         LOGGER.info("Create hotspot information");
         //TODO create hotspot information
@@ -199,15 +202,15 @@ public class ProtectActionability {
 
         List<EvidenceItem> evidenceForVariants =
                 toList(actionabilityAnalyzer.evidenceForAllVariants(variants, patientPrimaryTumorLocation));
-        LOGGER.info(" Found {} evidence items for {} somatic variants." , evidenceForVariants.size(), variants.size());
+        LOGGER.info(" Found {} evidence items for {} somatic variants.", evidenceForVariants.size(), variants.size());
 
         List<EvidenceItem> evidenceForGeneCopyNumbers =
                 toList(actionabilityAnalyzer.evidenceForCopyNumbers(geneCopyNumbers, patientPrimaryTumorLocation, ploidy));
-        LOGGER.info(" Found {} evidence items for {} copy numbers." , evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
+        LOGGER.info(" Found {} evidence items for {} copy numbers.", evidenceForGeneCopyNumbers.size(), geneCopyNumbers.size());
 
         List<EvidenceItem> evidenceForGeneFusions =
                 toList(actionabilityAnalyzer.evidenceForFusions(geneFusions, patientPrimaryTumorLocation));
-        LOGGER.info(" Found {} evidence items for {} gene fusions." , evidenceForGeneFusions.size(), geneFusions.size());
+        LOGGER.info(" Found {} evidence items for {} gene fusions.", evidenceForGeneFusions.size(), geneFusions.size());
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
         combinedEvidence.addAll(evidenceForVariants);
@@ -225,21 +228,41 @@ public class ProtectActionability {
         return evidenceItemList;
     }
 
-    @NotNull
-    private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
-        LOGGER.info("Reading primary tumor location from {}" , tumorLocationCsv);
+    @Nullable
+    private static PatientTumorLocation extractTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId)
+            throws IOException {
+        LOGGER.info("Reading primary tumor location from {}", tumorLocationCsv);
         List<PatientTumorLocation> patientTumorLocations = PatientTumorLocation.readRecords(tumorLocationCsv);
-        LOGGER.info(" Loaded tumor locations for {} patients" , patientTumorLocations.size());
+        LOGGER.info(" Loaded tumor locations for {} patients", patientTumorLocations.size());
 
-        PatientTumorLocation patientTumorLocation =
-                PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
+        return PatientTumorLocationFunctions.findPatientTumorLocationForSample(patientTumorLocations, sampleId);
+    }
 
-        String patientPrimaryTumorLocation = Strings.EMPTY;
-        if (patientTumorLocation != null) {
-            patientPrimaryTumorLocation = patientTumorLocation.primaryTumorLocation();
+    @NotNull
+    private static String extractCancerSubtype(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
+        PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationCsv, sampleId);
+
+        String cancerSubtype = Strings.EMPTY;
+        if (tumorLocation != null) {
+            cancerSubtype = tumorLocation.cancerSubtype();
         }
 
-        LOGGER.info(" Retrieved tumor location '{}' for sample {}" , patientPrimaryTumorLocation, sampleId);
+        LOGGER.info(" Retrieved cancer subtupe '{}' for sample {}", cancerSubtype, sampleId);
+
+        return cancerSubtype;
+    }
+
+    @NotNull
+    private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
+        PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationCsv, sampleId);
+
+
+        String patientPrimaryTumorLocation = Strings.EMPTY;
+        if (tumorLocation != null) {
+            patientPrimaryTumorLocation = tumorLocation.primaryTumorLocation();
+        }
+
+        LOGGER.info(" Retrieved tumor location '{}' for sample {}", patientPrimaryTumorLocation, sampleId);
 
         return patientPrimaryTumorLocation;
     }
@@ -324,7 +347,7 @@ public class ProtectActionability {
 
     private static void printUsageAndExit(@NotNull Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Protect" , options);
+        formatter.printHelp("Protect", options);
         System.exit(1);
     }
 
