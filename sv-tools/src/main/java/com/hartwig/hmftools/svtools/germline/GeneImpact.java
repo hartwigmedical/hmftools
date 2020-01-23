@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.vcf_filters;
+package com.hartwig.hmftools.svtools.germline;
 
 import static java.lang.Math.abs;
 
@@ -10,12 +10,11 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_PANEL_FILE;
-import static com.hartwig.hmftools.linx.vcf_filters.GermlineVcfConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.svtools.germline.GermlineVcfConfig.GENE_PANEL_FILE;
+import static com.hartwig.hmftools.svtools.germline.GermlineVcfConfig.GENE_TRANSCRIPTS_DIR;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,13 +26,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.linx.types.SvVarData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;

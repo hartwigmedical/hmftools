@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.vcf_filters;
+package com.hartwig.hmftools.svtools.germline;
 
 import static java.util.stream.Collectors.toList;
 
@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
-import static com.hartwig.hmftools.linx.vcf_filters.GeneImpact.DISRUPTION_TYPE_NONE;
 
 import java.io.File;
 import java.io.IOException;

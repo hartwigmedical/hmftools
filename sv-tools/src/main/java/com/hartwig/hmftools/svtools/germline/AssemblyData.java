@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.vcf_filters;
+package com.hartwig.hmftools.svtools.germline;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;

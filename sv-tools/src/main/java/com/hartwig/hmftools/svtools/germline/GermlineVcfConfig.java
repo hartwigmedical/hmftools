@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.vcf_filters;
+package com.hartwig.hmftools.svtools.germline;
 
 import java.io.File;
 import java.io.IOException;
