@@ -23,10 +23,10 @@ public abstract class IclusionTrial {
     @NotNull
     public abstract String eudra();
 
-    @NotNull
+    @Nullable
     public abstract String nct();
 
-    @NotNull
+    @Nullable
     public abstract String ipn();
 
     @NotNull

@@ -28,13 +28,13 @@ public final class IclusionApiMain {
 
     @NotNull
     public static List<IclusionTrial> readIclusionTrials(@NotNull String iClusionEndpoint, @NotNull IclusionCredentials credentials) {
-        LOGGER.info("Connecting with iClusion API on {}", iClusionEndpoint);
-
         OkHttpClient httpClient = buildHttpClient();
+
+        LOGGER.info("Connecting with iClusion API on {}", iClusionEndpoint);
         IclusionApi api = buildIclusionApi(httpClient, iClusionEndpoint);
 
         LOGGER.info("Requesting iClusion access token");
-        String tokenBearer = buildTokenBearer(api, credentials);
+        String tokenBearer = requestAndBuildTokenBearer(api, credentials);
 
         LOGGER.info("Querying iClusion trial database using access token");
         List<IclusionObjectStudy> studies = api.studies(tokenBearer).blockingFirst();
@@ -87,7 +87,7 @@ public final class IclusionApiMain {
     }
 
     @NotNull
-    private static String buildTokenBearer(@NotNull IclusionApi api, @NotNull IclusionCredentials credentials) {
+    private static String requestAndBuildTokenBearer(@NotNull IclusionApi api, @NotNull IclusionCredentials credentials) {
         MultipartBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("grant_type", "password")
                 .addFormDataPart("client_id", credentials.clientId())
