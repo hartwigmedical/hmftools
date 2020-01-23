@@ -989,8 +989,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38)
   - Added tumor mutational load and burden to purity output
+  - Support ensemble transcript version id in driver catalog
 - [2.37](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.37)
   - Remove requirement of chromosome lengths in somatic VCF 
 - [2.36](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.36)

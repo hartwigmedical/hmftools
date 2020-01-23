@@ -54,7 +54,7 @@ public class CanonicalAnnotation {
     @NotNull
     <T extends TranscriptAnnotation> Optional<T> pickCanonicalFavourDriverGene(@NotNull List<T> annotations) {
         List<T> canonicalAnnotations = annotations.stream()
-                .filter(annotation -> canonicalTranscriptGeneMap.keySet().contains(annotation.transcript()))
+                .filter(annotation -> canonicalTranscriptGeneMap.keySet().contains(trimEnsembleVersion(annotation.transcript())))
                 .collect(Collectors.toList());
 
         if (!canonicalAnnotations.isEmpty()) {
@@ -69,4 +69,15 @@ public class CanonicalAnnotation {
 
         return Optional.empty();
     }
+
+
+    @NotNull
+    static String trimEnsembleVersion(@NotNull final String transcriptId) {
+        if (transcriptId.startsWith("EN") && transcriptId.contains(".")) {
+            return transcriptId.substring(0, transcriptId.indexOf("."));
+        }
+
+        return transcriptId;
+    }
+
 }
