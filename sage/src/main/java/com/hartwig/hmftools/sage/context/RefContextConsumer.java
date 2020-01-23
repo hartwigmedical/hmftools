@@ -182,7 +182,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         final String mnvRef = new String(refBases.bases(), refBaseIndex, mnvLength);
                         final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
 
-                        if (!mnvRef.equals(mnvAlt)) {
+                        // Only check last base because some subsets may not be valid,
+                        // ie CA > TA is not a valid subset of CAC > TAT
+                        if (mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1)) {
                             if (addInterimReadContexts) {
                                 refContext.altRead(mnvRef, mnvAlt, baseQuality, createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
                             } else {
