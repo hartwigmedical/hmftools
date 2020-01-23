@@ -22,7 +22,9 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
+import com.hartwig.hmftools.protect.common.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.protect.common.GenomicData;
+import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.conclusion.ConclusionFactory;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
@@ -107,8 +109,12 @@ public class ProtectActionability {
         String patientCancerSubtype = extractCancerSubtype(tumorLocationCsv, tumorSampleId);
 
         List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
+
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
+        List<ReportableGainLoss> reportableGainsAndLosses =
+                ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, purityContext.bestFit().ploidy());
+
         List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
 
         LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
@@ -121,12 +127,12 @@ public class ProtectActionability {
         LOGGER.info("Create actionability for sample {}", tumorSampleId);
 
         List<EvidenceItem> combinedEvidence = Lists.newArrayList();
-//        List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
-//                patientPrimaryTumorLocation,
-//                passSomaticVariants,
-//                ploidy,
-//                geneCopyNumbers,
-//                geneFusions);
+        //        List<EvidenceItem> combinedEvidence = createEvidenceForAllFindings(actionabilityAnalyzer,
+        //                patientPrimaryTumorLocation,
+        //                passSomaticVariants,
+        //                ploidy,
+        //                geneCopyNumbers,
+        //                geneFusions);
 
         LOGGER.info("Create actionability for patient report");
         writeActionabilityForPatientReport(outputReportTsv, combinedEvidence);
@@ -141,11 +147,12 @@ public class ProtectActionability {
                 tumorMSI,
                 chordScore,
                 geneFusions,
-                geneCopyNumbers,
+                reportableGainsAndLosses,
                 passSomaticVariants,
                 templateConclusionList,
                 purity,
-                tumorLocationConclusion, patientCancerSubtype);
+                tumorLocationConclusion,
+                patientCancerSubtype);
 
         LOGGER.info("Create hotspot information");
         //TODO create hotspot information
@@ -256,7 +263,6 @@ public class ProtectActionability {
     @NotNull
     private static String extractPatientTumorLocation(@NotNull String tumorLocationCsv, @NotNull String sampleId) throws IOException {
         PatientTumorLocation tumorLocation = extractTumorLocation(tumorLocationCsv, sampleId);
-
 
         String patientPrimaryTumorLocation = Strings.EMPTY;
         if (tumorLocation != null) {

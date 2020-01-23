@@ -3,12 +3,11 @@ package com.hartwig.hmftools.protect.conclusion;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.report.chord.ChordStatus;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +23,7 @@ public class ConclusionFactory {
     }
 
     public static StringBuilder createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorMTL, double tumorMTB, double tumorMSI,
-            double chordScore, @NotNull List<ReportableGeneFusion> geneFusions, @NotNull List<GeneCopyNumber> geneCopyNumbers,
+            double chordScore, @NotNull List<ReportableGeneFusion> geneFusions, @NotNull List<ReportableGainLoss> geneCopyNumbers,
             @NotNull List<? extends Variant> passSomaticVariants, @NotNull List<TemplateConclusion> templateConclusionList, double purity,
             @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype) {
 
@@ -32,8 +31,8 @@ public class ConclusionFactory {
         String enter = " <enter> ";
         String startRow = "- ";
 
-        LOGGER.info("gene fusions");
-        LOGGER.info(geneFusions);
+        LOGGER.info(geneCopyNumbers);
+
 
         String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, tumorLocationConclusion, cancerSubtype);
         conclusion.append(textTumorLocation).append(enter);
