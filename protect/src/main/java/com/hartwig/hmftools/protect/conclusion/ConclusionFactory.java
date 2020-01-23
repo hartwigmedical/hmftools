@@ -22,42 +22,43 @@ public class ConclusionFactory {
 
     }
 
-    public static String createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorMTL, double tumorMTB, double tumorMSI,
+    public static StringBuilder createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorMTL, double tumorMTB, double tumorMSI,
             double chordScore, @NotNull List<ReportableGeneFusion> geneFusions, @NotNull List<GeneCopyNumber> geneCopyNumbers,
             @NotNull List<? extends Variant> passSomaticVariants, @NotNull List<TemplateConclusion> templateConclusionList, double purity,
             @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype) {
-        String conclusion = Strings.EMPTY;
+
+        StringBuilder conclusion = new StringBuilder();
         String enter = " <enter> ";
 
         String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, tumorLocationConclusion, cancerSubtype);
-        conclusion = textTumorLocation + enter;
+        conclusion.append(textTumorLocation).append(enter);
 
         for (TemplateConclusion templateConclusion : templateConclusionList) {
             if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
                 if (AberrationGenSummary.fromString(templateConclusion.abberrationGeneSummary()).equals(AberrationGenSummary.HIGH_MTL)) {
                     String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
-                    conclusion += highMTL + enter;
+                    conclusion.append(highMTL).append(enter);
                 }
             } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(AberrationGenSummary.MSI)) {
                 if (AberrationGenSummary.fromString(templateConclusion.abberrationGeneSummary()).equals(AberrationGenSummary.MSI)) {
                     String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
-                    conclusion += highMSI + enter;
+                    conclusion.append(highMSI).append(enter);
                 }
             } else if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
                 if (AberrationGenSummary.fromString(templateConclusion.abberrationGeneSummary())
                         .equals(AberrationGenSummary.HR_DEFICIENT)) {
                     String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
-                    conclusion += hrDeficient + enter;
+                    conclusion.append(hrDeficient).append(enter);
                 }
             } else if (purity < 0.20) {
                 if (AberrationGenSummary.fromString(templateConclusion.abberrationGeneSummary()).equals(AberrationGenSummary.LOW_PURITY)) {
                     String lowPurity = sentenceLowPurity(purity, templateConclusion);
-                    conclusion += lowPurity + enter;
+                    conclusion.append(lowPurity).append(enter);
                 }
             }
         }
 
-        conclusion += "\n";
+        conclusion.append("\n");
 
         return conclusion;
     }

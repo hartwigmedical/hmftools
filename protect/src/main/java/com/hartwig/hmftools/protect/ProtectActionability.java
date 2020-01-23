@@ -134,7 +134,7 @@ public class ProtectActionability {
         writeActionabilityForDatabase(outputDatabaseTsv, combinedEvidence);
 
         LOGGER.info("Create conclusion for sample");
-        String conclusion = ConclusionFactory.createConclusion(patientPrimaryTumorLocation,
+        StringBuilder conclusion = ConclusionFactory.createConclusion(patientPrimaryTumorLocation,
                 tumorMTL,
                 tumorMTB,
                 tumorMSI,
@@ -155,11 +155,11 @@ public class ProtectActionability {
         writeConclusionOfSample(OutputConclusionTsv, conclusion);
     }
 
-    private static void writeConclusionOfSample(@NotNull String OutputConclusionTsv, @NotNull String conclusion) throws IOException {
+    private static void writeConclusionOfSample(@NotNull String OutputConclusionTsv, @NotNull StringBuilder conclusion) throws IOException {
         //TODO create conclusion
         BufferedWriter writerReport = new BufferedWriter(new FileWriter(OutputConclusionTsv, false));
 
-        writerReport.write(conclusion);
+        writerReport.write(conclusion.toString());
 
         writerReport.close();
     }
