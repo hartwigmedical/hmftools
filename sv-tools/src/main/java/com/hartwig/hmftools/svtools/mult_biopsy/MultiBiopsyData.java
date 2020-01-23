@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.multibiopsy;
+package com.hartwig.hmftools.svtools.mult_biopsy;
 
 import static java.lang.Math.abs;
 
