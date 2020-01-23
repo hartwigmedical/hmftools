@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.iclusion.data;
 
-public class IclusionMutation {
+import com.squareup.moshi.Json;
 
-    public String gene_id;
-    public String variant_id;
+public class IclusionMutation {
+    @Json(name = "gene_id") public String geneId;
+    @Json(name = "variant_id") public String variantId;
 }

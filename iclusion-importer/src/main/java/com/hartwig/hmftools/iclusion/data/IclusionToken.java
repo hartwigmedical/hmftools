@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.iclusion.data;
 
-public class IclusionToken {
+import com.squareup.moshi.Json;
 
-    public String access_token;
+public class IclusionToken {
+    @Json(name = "access_token") public String accessToken;
 }

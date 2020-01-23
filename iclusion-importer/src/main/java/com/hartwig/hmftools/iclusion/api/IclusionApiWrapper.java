@@ -63,7 +63,7 @@ public final class IclusionApiWrapper {
                 .addFormDataPart("password", iClusionPassword)
                 .build();
 
-        String tokenBearer = "Bearer " + api.requestAccessToken(requestBody).blockingFirst().access_token;
+        String tokenBearer = "Bearer " + api.requestAccessToken(requestBody).blockingFirst().accessToken;
         System.out.println("TokenBearer = " + tokenBearer);
 
         List<IclusionStudy> studies = api.studies(tokenBearer).blockingFirst();

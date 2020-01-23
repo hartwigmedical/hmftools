@@ -2,9 +2,10 @@ package com.hartwig.hmftools.iclusion.data;
 
 import java.util.List;
 
-public class IclusionGene {
+import com.squareup.moshi.Json;
 
-    public String id;
-    public String gene_name;
-    public List<String> variant_ids;
+public class IclusionGene {
+    @Json(name = "id") public String id;
+    @Json(name = "gene_name") public String geneName;
+    @Json(name = "variant_ids") public List<String> variantIds;
 }
