@@ -2,10 +2,10 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DEL_DISRUPTION;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTION;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class HomDisruptionsTest

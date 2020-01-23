@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.linx.fusion_likelihood;
+package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
 
 import java.util.List;
 import java.util.Map;

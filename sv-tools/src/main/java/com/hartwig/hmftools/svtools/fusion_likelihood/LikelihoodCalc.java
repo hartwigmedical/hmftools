@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.linx.fusion_likelihood;
+package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.PRE_GENE_3P_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.haveOverlap;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.PRE_GENE_3P_DISTANCE;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.haveOverlap;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
 
 import java.util.List;
 import java.util.Map;

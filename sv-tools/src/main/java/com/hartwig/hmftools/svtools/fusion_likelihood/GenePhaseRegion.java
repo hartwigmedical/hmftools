@@ -1,23 +1,16 @@
-package com.hartwig.hmftools.linx.fusion_likelihood;
+package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_0;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_1;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_2;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_5P_UTR;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_MAX;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.intAsType;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_0;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_1;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_2;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_5P_UTR;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_MAX;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.typeAsInt;
 
 import java.util.List;
-import java.util.StringJoiner;
-
-import com.google.common.collect.Lists;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class GenePhaseRegion
 {

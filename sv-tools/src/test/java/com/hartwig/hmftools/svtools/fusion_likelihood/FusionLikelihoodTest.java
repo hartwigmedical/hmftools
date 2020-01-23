@@ -1,26 +1,23 @@
-package com.hartwig.hmftools.linx.fusion;
+package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions.createPhaseRegionsFromTranscript;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.hasNoOverlappingRegions;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_0;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_1;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_2;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_5P_UTR;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_MAX;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseType.typeAsInt;
-import static com.hartwig.hmftools.linx.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
-import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
-import static com.hartwig.hmftools.linx.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
-
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.calcCombinedPhase;
-import static com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion.simpleToCombinedPhase;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.createPhaseRegionsFromTranscript;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.calcCombinedPhase;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasNoOverlappingRegions;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.regionsPhaseMatched;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.simpleToCombinedPhase;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_0;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_1;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_2;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_5P_UTR;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_MAX;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.PHASE_NON_CODING;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.typeAsInt;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.LikelihoodCalc.calcOverlapBucketAreas;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.PhaseRegionUtils.checkAddCombinedGenePhaseRegion;
+import static com.hartwig.hmftools.svtools.fusion_likelihood.PhaseRegionUtils.splitOverlappingPhaseRegion;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,10 +30,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.fusion_likelihood.CohortExpFusions;
-import com.hartwig.hmftools.linx.fusion_likelihood.GenePhaseRegion;
-import com.hartwig.hmftools.linx.fusion_likelihood.GeneRangeData;
-import com.hartwig.hmftools.linx.fusion_likelihood.RegionAllocator;
+import com.hartwig.hmftools.linx.gene.GeneTestUtils;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
@@ -51,7 +45,7 @@ public class FusionLikelihoodTest
         // 2 genes, each with transcripts with different phasings
         String geneId = "G001";
         byte strand = 1;
-        EnsemblGeneData geneData = createEnsemblGeneData(geneId, "GEN1", "1", strand, 10, 100);
+        EnsemblGeneData geneData = GeneTestUtils.createEnsemblGeneData(geneId, "GEN1", "1", strand, 10, 100);
 
         GeneRangeData geneRangeData = new GeneRangeData(geneData);
 
@@ -64,7 +58,7 @@ public class FusionLikelihoodTest
 
         long[] exonStarts = new long[]{110, 130, 150, 170};
         int[] exonPhases = new int[]{-1, 1, 2, -1};
-        TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        TranscriptData transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         // converts to 110-129 -1, 130-149 1, 150-169 2
@@ -78,7 +72,7 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(phaseRegions, 150, 169, 10000, 0));
 
         exonPhases = new int[]{0, 0, -1, -1};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         // converts to 110-129 0, 130-149 0
@@ -92,7 +86,7 @@ public class FusionLikelihoodTest
         // and a non-coding transcript
         exonStarts = new long[]{110, 170};
         exonPhases = new int[]{-1, -1};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         // converts to 110-179 -1
@@ -132,7 +126,7 @@ public class FusionLikelihoodTest
         // test for the reverse strand
         geneId = "G002";
         strand = -1;
-        geneData = createEnsemblGeneData(geneId, "GEN2", "1", strand, 10, 100);
+        geneData = GeneTestUtils.createEnsemblGeneData(geneId, "GEN2", "1", strand, 10, 100);
 
         geneRangeData = new GeneRangeData(geneData);
 
@@ -140,14 +134,14 @@ public class FusionLikelihoodTest
 
         exonStarts = new long[]{10, 30, 50, 70};
         exonPhases = new int[]{-1, -1, 1, 2};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         // converts to 41-60 1, 61-80 2
 
         exonStarts = new long[]{10, 30, 50, 70};
         exonPhases = new int[]{-1, 0, 0, -1};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         // converts to 21-40 0, 41-60 0, 61-80 -1
@@ -158,7 +152,7 @@ public class FusionLikelihoodTest
 
         // converts to 20-80 -1 NC
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         transSAMap.clear();
@@ -186,23 +180,23 @@ public class FusionLikelihoodTest
 
         geneId = "G003";
         strand = 1;
-        geneData = createEnsemblGeneData(geneId, geneId, "1", strand, 10, 100);
+        geneData = GeneTestUtils.createEnsemblGeneData(geneId, geneId, "1", strand, 10, 100);
 
         geneRangeData = new GeneRangeData(geneData);
 
         exonStarts = new long[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 1, 1, 1, -1};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         exonStarts = new long[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 1, 1, 1, -1};
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         transSAMap.clear();
 
-        transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
+        transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
@@ -315,7 +309,7 @@ public class FusionLikelihoodTest
         assertTrue(region1.hasAnyPhaseMatch(region2.getPhaseArray()));
         assertTrue(region2.hasAnyPhaseMatch(region1.getPhaseArray()));
 
-        EnsemblGeneData gene = createEnsemblGeneData(geneId, "GEN2", "1", 1, 10, 100);
+        EnsemblGeneData gene = GeneTestUtils.createEnsemblGeneData(geneId, "GEN2", "1", 1, 10, 100);
         GeneRangeData geneData = new GeneRangeData(gene);
         geneData.setPhaseRegions(Lists.newArrayList(region));
         assertFalse(geneData.hasCodingTranscripts());
@@ -565,10 +559,10 @@ public class FusionLikelihoodTest
     @Test
     public void testProximateFusionCounts()
     {
-        EnsemblGeneData gene1 = createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
+        EnsemblGeneData gene1 = GeneTestUtils.createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
         GeneRangeData lowerGene = new GeneRangeData(gene1);
 
-        EnsemblGeneData gene2 = createEnsemblGeneData("ESNG002", "GEN2", "1", 1, 10000, 12000);
+        EnsemblGeneData gene2 = GeneTestUtils.createEnsemblGeneData("ESNG002", "GEN2", "1", 1, 10000, 12000);
         GeneRangeData upperGene = new GeneRangeData(gene2);
 
         List<Long> delLengths = Lists.newArrayList((long)50, (long)400);

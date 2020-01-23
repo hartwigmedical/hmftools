@@ -7,11 +7,11 @@ import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertAmi
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.swapRnaToDna;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.generateTransName;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.generateTransName;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +23,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
-import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeData;

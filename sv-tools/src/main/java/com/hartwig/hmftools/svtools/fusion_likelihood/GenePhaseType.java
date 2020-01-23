@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.fusion_likelihood;
+package com.hartwig.hmftools.svtools.fusion_likelihood;
 
 public enum GenePhaseType
 {

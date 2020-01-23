@@ -4,18 +4,15 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.getCodingBases;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
-import static com.hartwig.hmftools.linx.utils.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
@@ -32,7 +29,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionAnnotations;
-import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionChainInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
