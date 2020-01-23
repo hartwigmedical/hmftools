@@ -32,7 +32,8 @@ public interface SageConfig {
     String OUTPUT_VCF = "out";
     String MIN_MAP_QUALITY = "min_map_quality";
     String MIN_BASE_QUALITY = "min_base_quality";
-    String PANEL = "panel";
+    String HIGH_CONFIDENCE_BED = "high_confidence_bed";
+    String PANEL_BED = "panel_bed";
     String PANEL_ONLY = "panel_only";
     String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
@@ -56,7 +57,8 @@ public interface SageConfig {
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
 
-        options.addOption(PANEL, true, "Panel");
+        options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
+        options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
         options.addOption(GERMLINE_ONLY, false, "Germline only mode");
         options.addOption(HOTSPOTS, true, "Hotspots");
@@ -78,6 +80,9 @@ public interface SageConfig {
     String refGenome();
 
     @NotNull
+    String highConfidenceBed();
+
+    @NotNull
     List<String> tumor();
 
     @NotNull
@@ -87,7 +92,7 @@ public interface SageConfig {
     String outputFile();
 
     @NotNull
-    String panel();
+    String panelBed();
 
     boolean panelOnly();
 
@@ -124,10 +129,14 @@ public interface SageConfig {
         final String reference_bam = cmd.getOptionValue(REFERENCE_BAM);
 
         final List<String> tumorList = Lists.newArrayList();
-        tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
+        if (cmd.hasOption(TUMOR)) {
+            tumorList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
+        }
 
         final List<String> tumorBamList = Lists.newArrayList();
-        tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
+        if (cmd.hasOption(TUMOR_BAM)) {
+            tumorBamList.addAll(Arrays.asList(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(",")));
+        }
 
         if (tumorList.size() != tumorBamList.size()) {
             throw new ParseException("TODO");
@@ -145,7 +154,8 @@ public interface SageConfig {
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
                 .filter(FilterConfig.createConfig(cmd))
-                .panel(cmd.getOptionValue(PANEL, Strings.EMPTY))
+                .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
+                .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
                 .panelOnly(cmd.hasOption(PANEL_ONLY))

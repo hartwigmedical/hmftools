@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.sage.read.ReadContextFactory.createSNVContext
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
@@ -87,7 +86,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                     @Override
                     public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                             final int refPosition) {
-                        processSnv(record, readIndex, refPosition, element.getLength(), refBases);
+                        processAlignment(record, readIndex, refPosition, element.getLength(), refBases);
                     }
 
                     @Override
@@ -102,27 +101,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         processDel(element, record, readIndex, refPosition, refBases);
                     }
                 };
-
-                CigarTraversal.traverseCigar(record, handler);
-            }
-        }
-    }
-
-    public void processTargeted(@NotNull final VariantHotspot hotspot, @NotNull final SAMRecord record) {
-
-        if (inBounds(record)) {
-
-            if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
-                final IndexedBases refBases = refGenome.alignment(record);
-
-                final CigarHandler handler = new CigarHandler() {
-                    @Override
-                    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-                            final int refPosition) {
-                        processMnv(hotspot, record, readIndex, refPosition, element.getLength(), refBases);
-                    }
-                };
-
                 CigarTraversal.traverseCigar(record, handler);
             }
         }
@@ -168,7 +146,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processSnv(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
+    private void processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
             final IndexedBases refBases) {
 
         int refIndex = refPositionStart - refBases.position() + refBases.index();
@@ -198,6 +176,22 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         refContext.altRead(ref, alt, baseQuality);
                     }
 
+                    int mnvMaxLength = mnvLength(refPosition, refPositionStart + alignmentLength - 1, readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
+                    for (int mnvLength = 2; mnvLength <= mnvMaxLength; mnvLength++) {
+
+                        final String mnvRef = new String(refBases.bases(), refBaseIndex, mnvLength);
+                        final String mnvAlt = new String(record.getReadBases(), readBaseIndex, mnvLength);
+
+                        // Only check last base because some subsets may not be valid,
+                        // ie CA > TA is not a valid subset of CAC > TAT
+                        if (mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1)) {
+                            if (addInterimReadContexts) {
+                                refContext.altRead(mnvRef, mnvAlt, baseQuality, createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
+                            } else {
+                                refContext.altRead(mnvRef, mnvAlt, baseQuality);
+                            }
+                        }
+                    }
                 } else {
                     refContext.refRead(baseQuality);
                 }
@@ -205,36 +199,24 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private void processMnv(@NotNull final VariantHotspot mnv, @NotNull final SAMRecord record, int readBasesStartIndex,
-            int refPositionStart, int alignmentLength, final IndexedBases refBases) {
+    private int mnvLength(int alignment, int alignmentEnd, int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
 
-        final int refPositionEnd = refPositionStart + alignmentLength - 1;
-        if (refPositionStart <= mnv.position() && refPositionEnd >= mnv.end()) {
-            int indexOffset = (int) (mnv.position() - refPositionStart);
-            int refIndex = refPositionStart - refBases.position() + refBases.index();
-
-            int mnvRefIndex = refIndex + indexOffset;
-            int mnvReadIndex = readBasesStartIndex + indexOffset;
-
-            final String ref = new String(refBases.bases(), mnvRefIndex, mnv.ref().length());
-            final String alt = new String(record.getReadBases(), mnvReadIndex, mnv.ref().length());
-            if (alt.equals(mnv.alt())) {
-
-                final RefContext refContext = candidates.refContext(record.getContig(), mnv.position());
-                if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
-                    int baseQuality = baseQuality(mnvReadIndex, record, mnv.alt().length());
-                    if (addInterimReadContexts) {
-                        refContext.altRead(ref,
-                                alt,
-                                baseQuality,
-                                createMNVContext((int) mnv.position(), mnvReadIndex, mnv.alt().length(), record, refBases));
-                    } else {
-                        refContext.altRead(ref, alt, baseQuality);
-                    }
+        int gap = 0;
+        for (int i = 1; alignment + i < alignmentEnd; i++) {
+            byte refByte = refBases[refIndex + i];
+            byte readByte = readBases[readIndex + i];
+            if (refByte == readByte) {
+                if (gap == 1) {
+                    return i - 1;
+                } else {
+                    gap++;
                 }
-
+            } else {
+                gap = 0;
             }
         }
+
+        return alignmentEnd - alignment + 1;
     }
 
     private int baseQuality(int readIndex, SAMRecord record, int length) {

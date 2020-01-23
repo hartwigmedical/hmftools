@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.text.DecimalFormat;
 
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
@@ -49,9 +50,9 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
 
-        MicroSatelliteStatus MSIStatus = MicroSatelliteStatus.interpret(microSatelliteStability);
+        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.fromIndelsPerMb(microSatelliteStability);
         String microSatelliteStabilityString =
-                hasReliablePurity ? MSIStatus.text() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
+                hasReliablePurity ? msiStatus.display() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
         double hrDeficiency = patientReport.chordAnalysis().hrdValue();
         String hrDeficiencyLabel = hasReliablePurity ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
@@ -59,13 +60,13 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         String hrFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
                 + "and is therefore not reported for this sample.";
         boolean displayFootNote = false;
-        if (MSIStatus == MicroSatelliteStatus.UNSTABLE) {
+        if (msiStatus == MicrosatelliteStatus.MSI) {
             displayFootNote = true;
             hrDeficiencyLabel = DataUtil.NA_STRING + "*";
         }
 
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
-        hrChart.enabled(hasReliablePurity && MSIStatus == MicroSatelliteStatus.STABLE);
+        hrChart.enabled(hasReliablePurity && msiStatus == MicrosatelliteStatus.MSS);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
 
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",

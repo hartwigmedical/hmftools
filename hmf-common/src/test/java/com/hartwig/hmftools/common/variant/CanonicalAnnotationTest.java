@@ -23,6 +23,12 @@ public class CanonicalAnnotationTest {
     private static final String CDKN2A_OTHER = "ENST00000000000";
 
     @Test
+    public void testTrimEnsembleTranscriptId() {
+        assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570"));
+        assertEquals("ENST00000361570", CanonicalAnnotation.trimEnsembleVersion("ENST00000361570.v8"));
+    }
+
+    @Test
     public void favourCDKN2ACosmicAnnotation() {
         final CosmicAnnotation p16 = createCosmicAnnotation("CDKN2A", CDKN2A);
         final CosmicAnnotation p14 = createCosmicAnnotation("CDKN2A", CDKN2A_P14ARF);

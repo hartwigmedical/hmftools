@@ -1,0 +1,2 @@
+event.gene	event.chromosome	event.position	event.ref	event.alt	actionability.source	actionability.reference	actionability.drug.name	actionability.drug.type	actionability.cancerType	actionability.level	actionability.hmfLevel	actionability.evidenceType	actionability.significance	actionability.hmfResponse
+EGFR	7	55249071	C	T	oncoKb	T790M	Erlotinib	EGFR inhibitor	Non-Small Cell Lung Cancer	1	A	Predictive	Resistant	Resistant

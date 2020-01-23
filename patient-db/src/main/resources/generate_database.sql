@@ -347,6 +347,10 @@ CREATE TABLE purity
     maxDiploidProportion DOUBLE PRECISION not null,
     msIndelsPerMb DOUBLE PRECISION not null,
     msStatus varchar(10) not null,
+    tmbPerMb DOUBLE PRECISION not null,
+    tmbStatus varchar(10) not null,
+    tml DOUBLE PRECISION not null,
+    tmlStatus varchar(10) not null,
     PRIMARY KEY (id),
     INDEX(sampleId)
 );
@@ -767,6 +771,23 @@ CREATE TABLE clinicalEvidence
     sampleId varchar(255) NOT NULL,
     event varchar(255) NOT NULL,
     eventMatch varchar(255) NOT NULL,
+    name varchar(500) NOT NULL,
+    type varchar(255) NOT NULL,
+    response varchar(255) NOT NULL,
+    level varchar(50) NOT NULL,
+    source varchar(255) NOT NULL,
+    cancerType varchar(500) NOT NULL,
+    isOnLabel BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    INDEX(sampleId)
+);
+
+DROP TABLE IF EXISTS clinicalEvidenceProtect;
+CREATE TABLE clinicalEvidenceProtect
+(   id int NOT NULL AUTO_INCREMENT,
+    modified DATETIME NOT NULL,
+    sampleId varchar(255) NOT NULL,
+    event varchar(255) NOT NULL,
     name varchar(500) NOT NULL,
     type varchar(255) NOT NULL,
     response varchar(255) NOT NULL,

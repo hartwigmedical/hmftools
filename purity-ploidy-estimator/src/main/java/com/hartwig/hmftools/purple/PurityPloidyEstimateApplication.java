@@ -209,6 +209,10 @@ public class PurityPloidyEstimateApplication {
                     .wholeGenomeDuplication(wholeGenomeDuplication(copyNumbers))
                     .microsatelliteIndelsPerMb(somaticStream.microsatelliteIndelsPerMb())
                     .microsatelliteStatus(somaticStream.microsatelliteStatus())
+                    .tumorMutationalLoad(somaticStream.tumorMutationalLoad())
+                    .tumorMutationalLoadStatus(somaticStream.tumorMutationalLoadStatus())
+                    .tumorMutationalBurdenPerMb(somaticStream.tumorMutationalBurdenPerMb())
+                    .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
                     .build();
 
             LOGGER.info("Generating driver catalog");

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.select;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -12,26 +11,15 @@ import com.hartwig.hmftools.sage.variant.SageVariantTier;
 import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
-public class TierSelector {
+public class TierSelector extends HotspotSelector {
 
-    private final PanelSelector<GenomeRegion> regionSelector;
-    private final PositionSelector<VariantHotspot> hotspotSelector;
+    private final PanelSelector<GenomeRegion> panelRegionSelector;
+    private final PanelSelector<GenomeRegion> highCondfidenceRegionSelector;
 
-    public TierSelector(final List<GenomeRegion> panel, final List<VariantHotspot> hotspots) {
-        this.regionSelector = new PanelSelector<>(panel);
-        this.hotspotSelector = new PositionSelector<>(hotspots);
-    }
-
-    public boolean isHotspot(@NotNull final VariantHotspot variant) {
-        final AtomicBoolean hotspotMatch = new AtomicBoolean(false);
-
-        hotspotSelector.select(variant.position(), variant.position(), hotspot -> {
-            if (hotspot.alt().equals(variant.alt()) && hotspot.ref().equals(variant.ref())) {
-                hotspotMatch.set(true);
-            }
-        });
-
-        return hotspotMatch.get();
+    public TierSelector(final List<VariantHotspot> hotspots, final List<GenomeRegion> panel, final List<GenomeRegion> highConfidence) {
+        super(hotspots);
+        this.panelRegionSelector = new PanelSelector<>(panel);
+        this.highCondfidenceRegionSelector = new PanelSelector<>(highConfidence);
     }
 
     @NotNull
@@ -41,11 +29,15 @@ public class TierSelector {
             return SageVariantTier.HOTSPOT;
         }
 
-        if (regionSelector.inPanel(variant.position(), variant.end())) {
+        if (panelRegionSelector.inPanel(variant.position(), variant.end())) {
             return SageVariantTier.PANEL;
         }
 
-        return SageVariantTier.WIDE;
+        if (highCondfidenceRegionSelector.inPanel(variant.position(), variant.end())) {
+            return SageVariantTier.HIGH_CONFIDENCE;
+        }
+
+        return SageVariantTier.LOW_CONFIDENCE;
     }
 
 }

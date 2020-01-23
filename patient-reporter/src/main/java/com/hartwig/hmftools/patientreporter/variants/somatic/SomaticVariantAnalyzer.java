@@ -14,6 +14,8 @@ import com.hartwig.hmftools.common.drivercatalog.TsgDrivers;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteIndels;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
 
 import org.apache.logging.log4j.LogManager;
@@ -58,9 +60,9 @@ public final class SomaticVariantAnalyzer {
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
                 driverCatalog,
-                MicrosatelliteAnalyzer.determineMicrosatelliteIndelsPerMb(variants),
-                MutationalLoadAnalyzer.determineTumorMutationalLoad(variants),
-                MutationalBurdenAnalyzer.determineTumorMutationalBurden(variants));
+                MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants),
+                TumorMutationalLoad.determineTumorMutationalLoad(variants),
+                TumorMutationalLoad.determineTumorMutationalBurden(variants));
     }
 
     @NotNull

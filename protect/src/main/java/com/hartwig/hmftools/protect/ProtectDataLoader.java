@@ -1,12 +1,13 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.protect;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.protect.actionability.EvidenceItem;
+import com.hartwig.hmftools.protect.common.ActionabilityFile;
+
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,13 +19,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadEvidenceDataProtect {
-    private static final Logger LOGGER = LogManager.getLogger(LoadEvidenceData.class);
+public class ProtectDataLoader {
+    private static final Logger LOGGER = LogManager.getLogger(ProtectDataLoader.class);
 
     private static final String SAMPLE = "sample";
 
     private static final String ACTIONABILITY_TSV = "knowledgebase_dir";
-
 
     private static final String DB_USER = "db_user";
     private static final String DB_PASS = "db_pass";
@@ -38,7 +38,7 @@ public class LoadEvidenceDataProtect {
 
         final String actionabilityTsv = cmd.getOptionValue(ACTIONABILITY_TSV);
 
-        if (Utils.anyNull(sampleId,
+        if (anyNull(sampleId,
                 actionabilityTsv,
                 cmd.getOptionValue(DB_USER),
                 cmd.getOptionValue(DB_PASS),
@@ -50,16 +50,26 @@ public class LoadEvidenceDataProtect {
         DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading actionability for sample {}", sampleId);
+        List<EvidenceItem> combinedEvidence = ActionabilityFile.read(actionabilityTsv);
 
         LOGGER.info("Writing evidence items into db");
-        List<EvidenceItem> combinedEvidence = Lists.newArrayList();
-        dbAccess.writeClinicalEvidence(sampleId, combinedEvidence);
+        final ClinicalEvidenceDAOProtect clinicalEvidenceDAOProtect = new ClinicalEvidenceDAOProtect(dbAccess.context());
+        clinicalEvidenceDAOProtect.writeClinicalEvidence(sampleId, combinedEvidence);
         LOGGER.info("Finished");
+    }
+
+    public static boolean anyNull(@NotNull final Object... arguments) {
+        for (final Object object : arguments) {
+            if (object == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void printUsageAndExit(@NotNull final Options options) {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("patient-db - load evidence data", options);
+        formatter.printHelp("protect - evidence data loader", options);
         System.exit(1);
     }
 

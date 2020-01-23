@@ -19,7 +19,6 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextCounter implements GenomePosition {
     private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
 
-
     private final VariantHotspot variant;
     private final ReadContext readContext;
 
@@ -183,7 +182,6 @@ public class ReadContextCounter implements GenomePosition {
                 }
 
                 // Check if lengthened, shortened AND/OR reference!
-
                 switch (realignment.type()) {
                     case LENGTHENED:
                         jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
@@ -198,14 +196,13 @@ public class ReadContextCounter implements GenomePosition {
                 byte refBase = refSequence.base((int) variant.position());
                 byte readBase = record.getReadBases()[readIndex];
 
-                //TODO: Shouldn't this check all the bases in the REF ie for MNV and DELS
                 if (!baseDeleted && refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
                     reference++;
                     referenceQuality += quality;
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Error at chromosome: {}, position: {}", chromosome(),  position());
+            LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
             throw e;
         }
     }

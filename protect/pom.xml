@@ -9,14 +9,18 @@
     </parent>
 
     <artifactId>protect</artifactId>
+    <version>${protect.version}</version>
     <packaging>jar</packaging>
-    <version>1.0</version>
-    <name>HMF Tools - protect</name>
+    <name>HMF Tools - PROTECT</name>
 
     <dependencies>
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>hmf-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>patient-db</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -56,7 +60,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.hartwig.hmftools.protect.protectApplication
+                            <mainClass>com.hartwig.hmftools.protect.ProtectActionability
                             </mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>

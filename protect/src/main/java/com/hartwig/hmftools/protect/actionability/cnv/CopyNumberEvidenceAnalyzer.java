@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.protect.actionability.ActionabilitySource;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
-import com.hartwig.hmftools.protect.actionability.EvidenceScope;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
@@ -68,7 +67,6 @@ public class CopyNumberEvidenceAnalyzer {
                 .drugsType(actionableCopyNumber.drugsType())
                 .level(EvidenceLevel.fromString(actionableCopyNumber.level()))
                 .response(actionableCopyNumber.response())
-                .cancerType(actionableCopyNumber.cancerType())
-                .scope(EvidenceScope.SPECIFIC);
+                .cancerType(actionableCopyNumber.cancerType());
     }
 }

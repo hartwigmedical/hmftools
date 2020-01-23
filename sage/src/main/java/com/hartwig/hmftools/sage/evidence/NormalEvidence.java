@@ -8,8 +8,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.RefContext;
@@ -50,17 +48,6 @@ public class NormalEvidence {
             @NotNull final RefContextCandidates candidates) {
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
         return get(bamFile, refSequence, bounds, refContextConsumer, candidates);
-    }
-
-    @NotNull
-    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final VariantHotspot target,
-            @NotNull final RefContextCandidates candidates) {
-
-        final GenomeRegion bounds = GenomeRegions.create(target.chromosome(), target.position(), target.end());
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
-        final Consumer<SAMRecord> samRecordConsumer = x -> refContextConsumer.processTargeted(target, x);
-
-        return get(bamFile, refSequence, bounds, samRecordConsumer, candidates);
     }
 
     @NotNull

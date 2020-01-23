@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.amber;
 
-import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.utils.Integers;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,9 +32,6 @@ public class BaseDepthFilter implements Predicate<BaseDepth> {
     }
 
     private int medianDepth(@NotNull final Multimap<Chromosome, BaseDepth> evidence) {
-        final List<Integer> reads =
-                evidence.values().stream().map(BaseDepth::readDepth).filter(x -> x > 0).sorted().collect(Collectors.toList());
-        int count = reads.size();
-        return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
+        return Integers.medianPositiveValue(evidence.values().stream().map(BaseDepth::readDepth).collect(Collectors.toList()));
     }
 }

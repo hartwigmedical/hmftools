@@ -18,6 +18,7 @@ import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.TierSelector;
+import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,9 +29,9 @@ public class SageVariantFactory {
     private final TierSelector tierSelector;
 
     public SageVariantFactory(@NotNull final FilterConfig config, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions) {
+            @NotNull final List<GenomeRegion> panelRegions, @NotNull final List<GenomeRegion> highConfidenceRegions) {
         this.config = config;
-        this.tierSelector = new TierSelector(panelRegions, hotspots);
+        this.tierSelector = new TierSelector(hotspots, panelRegions, highConfidenceRegions);
     }
 
     @NotNull
@@ -46,7 +47,7 @@ public class SageVariantFactory {
 
         final SageVariantTier tier = tierSelector.tier(normal);
         final SoftFilterConfig softConfig = config.softConfig(tier);
-        final Set<String> filters = filters(tier, softConfig, normal, tumorAltContexts.get(0));
+        final Set<String> filters = pairedFilters(tier, softConfig, normal, tumorAltContexts.get(0));
 
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
@@ -57,18 +58,27 @@ public class SageVariantFactory {
         final Set<String> result = Sets.newHashSet();
 
         if (Doubles.lessThan(germline.primaryReadContext().vaf(), config.minGermlineVaf())) {
-            result.add(FilterConfig.MIN_GERMLINE_VAF);
+            result.add(SageVCF.MIN_GERMLINE_VAF);
         }
 
         return result;
     }
 
     @NotNull
-    private Set<String> filters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
-            @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
+    private Set<String> pairedFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,  @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
-        result.addAll(this.config.tumorFilters(tier, primaryTumor));
 
+        // TUMOR Tests
+        final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
+        if (!skipTumorTests && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
+            result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
+        }
+
+        if (!skipTumorTests && Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
+            result.add(SoftFilter.MIN_TUMOR_VAF.toString());
+        }
+
+        // GERMLINE Tests
         final ReadContextCounter normalCounter = normal.primaryReadContext();
         Chromosome contextChromosome = HumanChromosome.fromString(normal.chromosome());
         int minGermlineCoverage =
@@ -89,6 +99,19 @@ public class SageVariantFactory {
             }
         }
 
+        // MNV Tests
+        if (tier != SageVariantTier.HOTSPOT && normal.isMNV()) {
+            if (normal.primaryReadContext().altSupport() != 0) {
+                result.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
+            }
+        }
+
         return result;
     }
+
+    private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
+        return tier.equals(SageVariantTier.HOTSPOT)
+                && primaryTumor.rawAltSupport() >= config.hotspotMinRawTumorVafToSkipQualCheck();
+    }
+
 }

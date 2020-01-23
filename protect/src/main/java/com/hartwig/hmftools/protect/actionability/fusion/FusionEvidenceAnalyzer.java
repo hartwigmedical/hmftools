@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.protect.actionability.ActionabilitySource;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
 import com.hartwig.hmftools.protect.actionability.EvidenceLevel;
-import com.hartwig.hmftools.protect.actionability.EvidenceScope;
 import com.hartwig.hmftools.protect.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
@@ -99,8 +98,7 @@ public class FusionEvidenceAnalyzer {
                 .drugsType(actionableFusionPair.drugsType())
                 .level(EvidenceLevel.fromString(actionableFusionPair.level()))
                 .response(actionableFusionPair.response())
-                .cancerType(actionableFusionPair.cancerType())
-                .scope(EvidenceScope.SPECIFIC);
+                .cancerType(actionableFusionPair.cancerType());
     }
 
     @NotNull
@@ -113,7 +111,6 @@ public class FusionEvidenceAnalyzer {
                 .drugsType(actionablePromiscuous.drugsType())
                 .level(EvidenceLevel.fromString(actionablePromiscuous.level()))
                 .response(actionablePromiscuous.response())
-                .cancerType(actionablePromiscuous.cancerType())
-                .scope(EvidenceScope.SPECIFIC);
+                .cancerType(actionablePromiscuous.cancerType());
     }
 }

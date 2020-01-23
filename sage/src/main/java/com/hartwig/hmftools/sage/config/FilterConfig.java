@@ -2,11 +2,6 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
-import java.util.Set;
-
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,10 +17,11 @@ public interface FilterConfig {
 
     String HARD_FILTER = "hard_filter";
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
-    String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_alt_support";
-    String MIN_GERMLINE_VAF = "min_germline_vaf";
+    String HARD_MIN_TUMOR_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
+    String HARD_MIN_TUMOR_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
 
     int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
+    int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
     int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
@@ -50,9 +46,19 @@ public interface FilterConfig {
             .maxGermlineRelativeQual(0.04)
             .build();
 
-    SoftFilterConfig DEFAULT_WIDE_FILTER = ImmutableSoftFilterConfig.builder()
+    SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
-            .minTumorQual(150)
+            .minTumorQual(125)
+            .minTumorVaf(0.025)
+            .minGermlineReadContextCoverage(10)
+            .minGermlineReadContextCoverageAllosome(6)
+            .maxGermlineVaf(0.04)
+            .maxGermlineRelativeQual(0.04)
+            .build();
+
+    SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
+            .from(NO_FILTER)
+            .minTumorQual(200)
             .minTumorVaf(0.025)
             .minGermlineReadContextCoverage(10)
             .minGermlineReadContextCoverageAllosome(6)
@@ -64,7 +70,9 @@ public interface FilterConfig {
 
     int hardMinTumorQual();
 
-    int hardMinTumorAltSupport();
+    int hardMinTumorRawAltSupport();
+
+    int hardMinTumorRawBaseQuality();
 
     default int hardMinTumorQualFiltered() {
         return DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED;
@@ -83,6 +91,7 @@ public interface FilterConfig {
         return 0;
     }
 
+
     @NotNull
     SoftFilterConfig softHotspotFilter();
 
@@ -90,7 +99,10 @@ public interface FilterConfig {
     SoftFilterConfig softPanelFilter();
 
     @NotNull
-    SoftFilterConfig softWideFilter();
+    SoftFilterConfig softHighConfidenceFilter();
+
+    @NotNull
+    SoftFilterConfig softLowConfidenceFilter();
 
     @NotNull
     static Options createOptions() {
@@ -98,11 +110,13 @@ public interface FilterConfig {
 
         options.addOption(HARD_FILTER, false, "Soft filters become hard");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
-        options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+        options.addOption(HARD_MIN_TUMOR_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
+        options.addOption(HARD_MIN_TUMOR_BASE_QUALITY, true, "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
 
         SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
         SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
-        SoftFilterConfig.createOptions("wide", DEFAULT_WIDE_FILTER).getOptions().forEach(options::addOption);
+        SoftFilterConfig.createOptions("high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
+        SoftFilterConfig.createOptions("low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
 
         return options;
     }
@@ -112,31 +126,14 @@ public interface FilterConfig {
         return ImmutableFilterConfig.builder()
                 .hardFilter(cmd.hasOption(HARD_FILTER))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
-                .hardMinTumorAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
+                .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))
                 .softHotspotFilter(SoftFilterConfig.createConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER))
                 .softPanelFilter(SoftFilterConfig.createConfig(cmd, "panel", DEFAULT_PANEL_FILTER))
-                .softWideFilter(SoftFilterConfig.createConfig(cmd, "wide", DEFAULT_WIDE_FILTER))
+                .softHighConfidenceFilter(SoftFilterConfig.createConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER))
+                .softLowConfidenceFilter(SoftFilterConfig.createConfig(cmd, "llow_confidence", DEFAULT_LOW_CONFIDENCE_FILTER))
                 .build();
 
-    }
-
-    @NotNull
-    default Set<String> tumorFilters(@NotNull final SageVariantTier tier, @NotNull final AltContext context) {
-
-        final Set<String> result = Sets.newHashSet();
-        final SoftFilterConfig config = softConfig(tier);
-
-        final boolean skipTumorTests = skipMinTumorQualTest(tier, context);
-
-        if (!skipTumorTests && context.primaryReadContext().tumorQuality() < config.minTumorQual()) {
-            result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
-        }
-
-        if (!skipTumorTests && Doubles.lessThan(context.primaryReadContext().vaf(), config.minTumorVaf())) {
-            result.add(SoftFilter.MIN_TUMOR_VAF.toString());
-        }
-
-        return result;
     }
 
     @NotNull
@@ -146,15 +143,11 @@ public interface FilterConfig {
                 return softHotspotFilter();
             case PANEL:
                 return softPanelFilter();
+            case HIGH_CONFIDENCE:
+                return softHighConfidenceFilter();
             default:
-                return softWideFilter();
+                return softLowConfidenceFilter();
         }
     }
-
-    default boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawVaf() >= hotspotMinRawTumorVafToSkipQualCheck();
-    }
-
 
 }

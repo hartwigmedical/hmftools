@@ -1,6 +1,11 @@
 package com.hartwig.hmftools.common.utils;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.NotNull;
 
 public final class Doubles {
 
@@ -49,4 +54,19 @@ public final class Doubles {
     public static Comparator<Double> comparator() {
         return (o1, o2) -> Doubles.equal(o1, o2) ? 0 :  Double.compare(o1, o2);
     }
+
+    public static double median(@NotNull final List<Double> values) {
+        return median(values, x -> true);
+    }
+
+    public static double median(@NotNull final List<Double> values, @NotNull final Predicate<Double> filter) {
+        final List<Double> reads = values.stream().filter(filter).sorted().collect(Collectors.toList());
+        int count = reads.size();
+        if (count == 0) {
+            return 0;
+        }
+
+        return count % 2 == 0 ? (reads.get(count / 2) + reads.get(count / 2 - 1)) / 2 : reads.get(count / 2);
+    }
+
 }

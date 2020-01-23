@@ -608,6 +608,10 @@ MinPloidy | 3.08 | Minimum ploidy with score within 10% of best
 MaxPloidy | 3.13 | Maximum ploidy with score within 10% of best
 msIndelsPerMb | 0.1186 | Microsatellite indels per mega base
 msStatus | MSS | Microsatellite status. One of `MSI`, `MSS` or `UNKNOWN` if somatic variants not supplied
+tmbPerMb | 13.6352 | Tumor mutational burden per mega base
+tmbStatus | HIGH | Tumor mutational burden status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
+tml | 182 | Tumor mutational load
+tmlStatus | HIGH | Tumor mutational load status. One of `HIGH`, `LOW` or `UNKNOWN` if somatic variants not supplied
 
 #### Purity Range File
 
@@ -985,6 +989,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38)
+  - Added tumor mutational load and burden to purity output
+  - Support ensemble transcript version id in driver catalog
 - [2.37](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.37)
   - Remove requirement of chromosome lengths in somatic VCF 
 - [2.36](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.36)
