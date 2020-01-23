@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.simulation;
+package com.hartwig.hmftools.svtools.simulation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

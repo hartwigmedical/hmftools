@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.simulation;
+package com.hartwig.hmftools.svtools.simulation;
 
 import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;

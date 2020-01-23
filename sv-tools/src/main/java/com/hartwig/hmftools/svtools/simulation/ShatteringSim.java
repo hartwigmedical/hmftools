@@ -1,9 +1,6 @@
-package com.hartwig.hmftools.linx.simulation;
+package com.hartwig.hmftools.svtools.simulation;
 
 import static java.lang.Math.floor;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;

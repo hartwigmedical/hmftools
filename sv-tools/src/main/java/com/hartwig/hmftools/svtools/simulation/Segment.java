@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.linx.simulation;
+package com.hartwig.hmftools.svtools.simulation;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;

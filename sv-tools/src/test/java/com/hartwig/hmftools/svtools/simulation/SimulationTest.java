@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.linx.misc;
+package com.hartwig.hmftools.svtools.simulation;
 
-import static com.hartwig.hmftools.linx.simulation.ShatteringSim.calcLinkCount;
+import static com.hartwig.hmftools.svtools.simulation.ShatteringSim.calcLinkCount;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -8,12 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.simulation.ShatteringConfig;
-import com.hartwig.hmftools.linx.simulation.ShatteringResult;
-import com.hartwig.hmftools.linx.simulation.ShatteringSim;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class SimulationTest
