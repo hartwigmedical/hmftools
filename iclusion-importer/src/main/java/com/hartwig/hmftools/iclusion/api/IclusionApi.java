@@ -19,17 +19,17 @@ public interface IclusionApi {
 
     @GET("indications")
     @NotNull
-    Observable<List<IclusionIndication>> indications(@Header("Authorization") @NotNull String tokenBearer);
+    Observable<List<IclusionObjectIndication>> indications(@Header("Authorization") @NotNull String tokenBearer);
 
     @GET("genes")
     @NotNull
-    Observable<List<IclusionGene>> genes(@Header("Authorization") @NotNull String tokenBearer);
+    Observable<List<IclusionObjectGene>> genes(@Header("Authorization") @NotNull String tokenBearer);
 
     @GET("variants")
     @NotNull
-    Observable<List<IclusionVariant>> variants(@Header("Authorization") @NotNull String tokenBearer);
+    Observable<List<IclusionObjectVariant>> variants(@Header("Authorization") @NotNull String tokenBearer);
 
     @GET("studies")
     @NotNull
-    Observable<List<IclusionStudy>> studies(@Header("Authorization") @NotNull String tokenBearer);
+    Observable<List<IclusionObjectStudy>> studies(@Header("Authorization") @NotNull String tokenBearer);
 }

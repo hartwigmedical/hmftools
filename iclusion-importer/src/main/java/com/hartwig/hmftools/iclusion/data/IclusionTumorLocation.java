@@ -9,33 +9,26 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class IclusionTrial {
+public abstract class IclusionTumorLocation {
 
     @NotNull
     public abstract String id();
 
     @NotNull
-    public abstract String title();
+    public abstract String parentId();
 
     @NotNull
-    public abstract String acronym();
+    public abstract String doid();
 
     @NotNull
-    public abstract String eudra();
+    public abstract String doid2();
 
     @NotNull
-    public abstract String nct();
+    public abstract String indicationName();
 
     @NotNull
-    public abstract String ipn();
+    public abstract String indicationNameFull();
 
     @NotNull
-    public abstract String ccmo();
-
-    @NotNull
-    public abstract List<IclusionTumorLocation> tumorLocations();
-
-    @NotNull
-    public abstract List<IclusionMutation> mutations();
-
+    public abstract List<String> nodeIds();
 }

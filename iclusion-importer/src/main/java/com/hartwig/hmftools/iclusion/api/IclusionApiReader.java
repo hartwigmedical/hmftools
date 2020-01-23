@@ -17,14 +17,14 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.moshi.MoshiConverterFactory;
 
-public final class IclusionApiWrapper {
+public final class IclusionApiReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(IclusionApiWrapper.class);
+    private static final Logger LOGGER = LogManager.getLogger(IclusionApiReader.class);
 
-    private IclusionApiWrapper() {
+    private IclusionApiReader() {
     }
 
-    public static void connectWithIclusionApi(@NotNull String iClusionEndpoint, @NotNull String iClusionClientId,
+    public static void readIclusionTrials(@NotNull String iClusionEndpoint, @NotNull String iClusionClientId,
             @NotNull String iClusionClientSecret, @NotNull String iClusionUsername, @NotNull String iClusionPassword) {
         LOGGER.info("Connecting with iClusion API on {}", iClusionEndpoint);
 
@@ -61,16 +61,16 @@ public final class IclusionApiWrapper {
         String tokenBearer = "Bearer " + api.requestAccessToken(requestBody).blockingFirst().accessToken;
         System.out.println("TokenBearer = " + tokenBearer);
 
-        List<IclusionStudy> studies = api.studies(tokenBearer).blockingFirst();
+        List<IclusionObjectStudy> studies = api.studies(tokenBearer).blockingFirst();
         System.out.println("Studies = " + studies.size());
 
-        List<IclusionIndication> indications = api.indications(tokenBearer).blockingFirst();
+        List<IclusionObjectIndication> indications = api.indications(tokenBearer).blockingFirst();
         System.out.println("Indications = " + indications.size());
 
-        List<IclusionGene> genes = api.genes(tokenBearer).blockingFirst();
+        List<IclusionObjectGene> genes = api.genes(tokenBearer).blockingFirst();
         System.out.println("Genes = " + genes.size());
 
-        List<IclusionVariant> variants = api.variants(tokenBearer).blockingFirst();
+        List<IclusionObjectVariant> variants = api.variants(tokenBearer).blockingFirst();
         System.out.println("Variants = " + variants.size());
 
         client.dispatcher().executorService().shutdown();

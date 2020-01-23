@@ -12,25 +12,25 @@ class IclusionResponseAdapter {
 
     @FromJson
     @NotNull
-    List<IclusionIndication> indications(@NotNull Map<String, IclusionIndication> json) {
+    List<IclusionObjectIndication> indications(@NotNull Map<String, IclusionObjectIndication> json) {
         return Lists.newArrayList(json.values());
     }
 
     @FromJson
     @NotNull
-    List<IclusionGene> genes(@NotNull Map<String, IclusionGene> json) {
+    List<IclusionObjectGene> genes(@NotNull Map<String, IclusionObjectGene> json) {
         return Lists.newArrayList(json.values());
     }
 
     @FromJson
     @NotNull
-    List<IclusionVariant> variants(@NotNull Map<String, IclusionVariant> json) {
+    List<IclusionObjectVariant> variants(@NotNull Map<String, IclusionObjectVariant> json) {
         return Lists.newArrayList(json.values());
     }
 
     @FromJson
     @NotNull
-    List<IclusionStudy> studies(@NotNull Map<String, IclusionStudy> json) {
+    List<IclusionObjectStudy> studies(@NotNull Map<String, IclusionObjectStudy> json) {
         return Lists.newArrayList(json.values());
     }
 }
