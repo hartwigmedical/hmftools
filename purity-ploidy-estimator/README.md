@@ -989,6 +989,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Use appropriate karyotype in circos plot 
 - [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38)
   - Added tumor mutational load and burden to purity output
   - Support ensemble transcript version id in driver catalog

@@ -32,7 +32,7 @@ show_tick_labels    = no
 	<<include etc/image.conf>>
 </image>
 
-karyotype = data/karyotype/karyotype.human.txt
+karyotype = KARYOTYPE
 
 chromosomes_units           = 1000000
 chromosomes_display_default = yes

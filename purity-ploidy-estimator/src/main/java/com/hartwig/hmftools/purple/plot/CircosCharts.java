@@ -140,6 +140,7 @@ class CircosCharts {
         content = content.replaceAll("SAMPLE", tumorSample);
         content = content.replaceAll("REFERENCE", referenceSample);
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
+        content = content.replaceAll("KARYOTYPE", isHg38 ? "data/karyotype/karyotype.human.hg38.txt" : "data/karyotype/karyotype.human.hg19.txt");
         Files.write(new File(confFile(type)).toPath(), content.getBytes(charset));
     }
 
