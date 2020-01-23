@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.iclusion.data;
+package com.hartwig.hmftools.iclusion.api;
 
 import com.squareup.moshi.Json;
 

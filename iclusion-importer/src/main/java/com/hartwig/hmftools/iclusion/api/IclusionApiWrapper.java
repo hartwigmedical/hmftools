@@ -3,11 +3,6 @@ package com.hartwig.hmftools.iclusion.api;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.hartwig.hmftools.iclusion.data.IclusionGene;
-import com.hartwig.hmftools.iclusion.data.IclusionIndication;
-import com.hartwig.hmftools.iclusion.data.IclusionResponseAdapter;
-import com.hartwig.hmftools.iclusion.data.IclusionStudy;
-import com.hartwig.hmftools.iclusion.data.IclusionVariant;
 import com.squareup.moshi.Moshi;
 
 import org.apache.logging.log4j.LogManager;

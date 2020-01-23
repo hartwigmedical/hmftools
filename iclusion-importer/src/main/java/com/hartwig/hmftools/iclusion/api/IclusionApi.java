@@ -2,12 +2,6 @@ package com.hartwig.hmftools.iclusion.api;
 
 import java.util.List;
 
-import com.hartwig.hmftools.iclusion.data.IclusionGene;
-import com.hartwig.hmftools.iclusion.data.IclusionIndication;
-import com.hartwig.hmftools.iclusion.data.IclusionStudy;
-import com.hartwig.hmftools.iclusion.data.IclusionToken;
-import com.hartwig.hmftools.iclusion.data.IclusionVariant;
-
 import org.jetbrains.annotations.NotNull;
 
 import io.reactivex.Observable;
