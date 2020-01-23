@@ -17,7 +17,6 @@ public enum EvidenceLevel {
     EvidenceLevel(@NotNull final String readableString, final boolean includeForReporting) {
         this.readableString = readableString;
         this.includeForReporting = includeForReporting;
-
     }
 
     @NotNull
