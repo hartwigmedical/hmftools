@@ -7,10 +7,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
@@ -22,14 +25,28 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.protect.actionability.ActionabilityAnalyzer;
 import com.hartwig.hmftools.protect.actionability.EvidenceItem;
+import com.hartwig.hmftools.protect.common.BachelorFile;
+import com.hartwig.hmftools.protect.common.CopyNumberAnalysis;
+import com.hartwig.hmftools.protect.common.CopyNumberAnalyzer;
+import com.hartwig.hmftools.protect.common.DriverGeneView;
+import com.hartwig.hmftools.protect.common.DriverGeneViewFactory;
 import com.hartwig.hmftools.protect.common.ExtractReportableGainsAndLosses;
 import com.hartwig.hmftools.protect.common.GenomicData;
+import com.hartwig.hmftools.protect.common.GermlineReportingFile;
+import com.hartwig.hmftools.protect.common.GermlineReportingModel;
+import com.hartwig.hmftools.protect.common.GermlineVariant;
 import com.hartwig.hmftools.protect.common.ReportableGainLoss;
+import com.hartwig.hmftools.protect.common.ReportableGermlineVariant;
+import com.hartwig.hmftools.protect.common.ReportableVariant;
+import com.hartwig.hmftools.protect.common.ReportableVariantAnalysis;
+import com.hartwig.hmftools.protect.common.SomaticVariantAnalysis;
+import com.hartwig.hmftools.protect.common.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.protect.conclusion.ConclusionFactory;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
 import com.hartwig.hmftools.protect.conclusion.TumorLocationConclusion;
 import com.hartwig.hmftools.protect.conclusion.TumorLocationConclusionFile;
+import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
 import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,15 +65,22 @@ public class ProtectActionability {
     private static final Logger LOGGER = LogManager.getLogger(ProtectActionability.class);
 
     private static final String TUMOR_SAMPLE_ID = "tumor_sample_id";
+    private static final String TUMOR_BARCODE_ID = "tumor_barcode_id";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String TEMPLATE_CONCLUSION_TSV = "template_conclusion";
     private static final String TUMOR_LOCATION_CURATION_CONCLUSION_TSV = "tumor_location_curation_conclusion_tsv";
+    private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
+    private static final String LIMS_DIRECTORY = "lims_dir";
 
     private static final String SOMATIC_VARIANT_VCF = "somatic_variant_vcf";
+    private static final String GERMLINE_VARIANT_VCF = "germline_variant_vcf";
+
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
+    private static final String PURPLE_QC_TSV = "purple_qc_tsv";
+
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String CHORD_TXT = "chord_txt";
 
@@ -69,17 +93,23 @@ public class ProtectActionability {
         final CommandLine cmd = createCommandLine(args, options);
 
         String tumorSampleId = cmd.getOptionValue(TUMOR_SAMPLE_ID);
+        String tumorBarcodeId = cmd.getOptionValue(TUMOR_BARCODE_ID);
 
         // General params needed for every sample
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String templateConclusionTsv = cmd.getOptionValue(TEMPLATE_CONCLUSION_TSV);
         final String curationTumorLocations = cmd.getOptionValue(TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
+        final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
+        final String limsDir = cmd.getOptionValue(LIMS_DIRECTORY);
 
         // Params specific for specific sample
         final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
+        final String germlineVariantVcf = cmd.getOptionValue(GERMLINE_VARIANT_VCF);
         final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
+        final String purpleQCTsv = cmd.getOptionValue(PURPLE_QC_TSV);
+
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
         final String chordTxt = cmd.getOptionValue(CHORD_TXT);
 
@@ -102,26 +132,65 @@ public class ProtectActionability {
         List<TumorLocationConclusion> tumorLocationConclusion =
                 TumorLocationConclusionFile.readTumorLocationConclusion(curationTumorLocations);
 
-        LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
-        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
-        double purity = purityContext.bestFit().purity();
+        LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
+        Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
+
         String patientPrimaryTumorLocation = extractPatientTumorLocation(tumorLocationCsv, tumorSampleId);
         String patientCancerSubtype = extractCancerSubtype(tumorLocationCsv, tumorSampleId);
 
-        List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
-
+        LOGGER.info("Extracting genomic alteration from sample {}", tumorSampleId);
+        PurityContext purityContext = FittedPurityFile.read(purplePurityTsv);
+        double purity = purityContext.bestFit().purity();
         double ploidy = GenomicData.extractPloidy(purplePurityTsv);
+
+        // Gene Fusion reportable
+        List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
+
+        // Copy Number all + reportable
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGainLoss> reportableGainsAndLosses =
                 ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, purityContext.bestFit().ploidy());
 
-        List<ReportableGeneFusion> geneFusions = GenomicData.readGeneFusions(linxFusionTsv);
+        // somatic Variant
+        List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
+
+        // Germline variants
+        List<GermlineVariant> germlineVariant =
+                BachelorFile.loadBachelorTsv(germlineVariantVcf).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
+        LOGGER.info("Loaded {} PASS germline variants from {}", germlineVariant.size(), germlineVariantVcf);
+
+        // only reportable variants
+        CopyNumberAnalysis copyNumberAnalysis = CopyNumberAnalyzer.analyzeCopyNumbers(purplePurityTsv, purpleQCTsv, purpleGeneCnvTsv);
+        //
+        DriverGeneView driverGeneView = DriverGeneViewFactory.create();
+        SomaticVariantAnalysis somaticVariantAnalysis = SomaticVariantAnalyzer.analyzeSomaticVariants(tumorSampleId,
+                somaticVariantVcf,
+                copyNumberAnalysis.exomeGeneCopyNumbers(),
+                driverGeneView);
+        ChordAnalysis chordAnalysis = ChordFileReader.read(chordTxt);
+        final GermlineReportingModel germlineReportingModel = GermlineReportingFile.buildFromCsv(germlineGenesCsv);
+
+        List<ReportableGermlineVariant> germlineVariantsToReport = GenomicData.analyzeGermlineVariants(tumorBarcodeId,
+                germlineVariantVcf,
+                copyNumberAnalysis,
+                somaticVariantAnalysis,
+                chordAnalysis,
+                driverGeneView,
+                lims,
+                germlineReportingModel);
+
+        ReportableVariantAnalysis reportableVariantsAnalysis =
+                GenomicData.somaticAndGermlineVariantsTogether(somaticVariantAnalysis.variantsToReport(),
+                        somaticVariantAnalysis.driverCatalog(),
+                        driverGeneView,
+                        germlineVariantsToReport,
+                        germlineReportingModel,
+                        lims.germlineReportingChoice(tumorBarcodeId));
 
         LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
         int tumorMTL = TumorMutationalLoad.determineTumorMutationalLoad(variants);
         double tumorMSI = MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants);
-        double chordScore = ChordFileReader.read(chordTxt).hrdValue();
         double tumorMTB = TumorMutationalLoad.determineTumorMutationalBurden(variants);
 
         LOGGER.info("Create actionability for sample {}", tumorSampleId);
@@ -145,7 +214,7 @@ public class ProtectActionability {
                 tumorMTL,
                 tumorMTB,
                 tumorMSI,
-                chordScore,
+                chordAnalysis.hrdValue(),
                 geneFusions,
                 reportableGainsAndLosses,
                 passSomaticVariants,
@@ -275,11 +344,12 @@ public class ProtectActionability {
     }
 
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
-        return valueExists(cmd, TUMOR_SAMPLE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
-                && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
-                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(
-                cmd,
-                TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
+        return valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(cmd, TUMOR_BARCODE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
+                && dirExists(cmd, LIMS_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
+                && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV)
+                && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(cmd,
+                TUMOR_LOCATION_CURATION_CONCLUSION_TSV) && fileExists(cmd, GERMLINE_VARIANT_VCF) && fileExists(cmd, PURPLE_QC_TSV)
+                && fileExists(cmd, GERMLINE_GENES_CSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -326,14 +396,21 @@ public class ProtectActionability {
         final CommandLineParser parser = new DefaultParser();
 
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which a patient report will be generated.");
+        options.addOption(TUMOR_BARCODE_ID, true, "The barcode ID for which a patient report will be generated.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(TEMPLATE_CONCLUSION_TSV, true, "Path towards the template for conclusion TSV.");
         options.addOption(TUMOR_LOCATION_CURATION_CONCLUSION_TSV, true, "Path towards the curation of the tumor location TSV.");
+        options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
+        options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 
         options.addOption(SOMATIC_VARIANT_VCF, true, "Path towards the somatic variant VCF.");
+        options.addOption(GERMLINE_VARIANT_VCF, true, "Path towards the germline variant VCF.");
+
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
+        options.addOption(PURPLE_QC_TSV, true, "Path towards the purple qc TSV.");
+
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
         options.addOption(CHORD_TXT, true, "Path towards the chord txt file.");
