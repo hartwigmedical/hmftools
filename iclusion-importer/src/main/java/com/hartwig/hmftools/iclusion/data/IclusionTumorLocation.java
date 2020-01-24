@@ -12,23 +12,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class IclusionTumorLocation {
 
     @NotNull
-    public abstract String id();
-
-    @Nullable
-    public abstract String parentId();
-
-    @Nullable
-    public abstract String doid();
-
-    @Nullable
-    public abstract String doid2();
+    public abstract String primaryTumorLocation();
 
     @NotNull
-    public abstract String indicationName();
-
-    @NotNull
-    public abstract String indicationNameFull();
-
-    @NotNull
-    public abstract List<String> nodeIds();
+    public abstract List<String> doids();
 }
