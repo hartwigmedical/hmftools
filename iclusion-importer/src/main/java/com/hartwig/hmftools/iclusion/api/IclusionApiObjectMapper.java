@@ -31,8 +31,8 @@ final class IclusionApiObjectMapper {
         for (IclusionObjectStudy study : studies) {
             trials.add(ImmutableIclusionTrial.builder()
                     .id(study.id)
-                    .title(study.title)
                     .acronym(study.acronym)
+                    .title(study.title)
                     .eudra(study.eudra)
                     .nct(study.nct)
                     .ipn(study.ipn)
