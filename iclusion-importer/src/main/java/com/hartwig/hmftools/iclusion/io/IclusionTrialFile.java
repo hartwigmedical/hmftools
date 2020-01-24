@@ -101,7 +101,7 @@ public final class IclusionTrialFile {
 
     private static boolean containsInvalidString(@NotNull String stringToCheck, @NotNull String invalidString) {
         if (stringToCheck.contains(invalidString)) {
-            LOGGER.error("{} found in primary tumor location '{}'. Cannot serialize", invalidString, stringToCheck);
+            LOGGER.error("{} found in field '{}'. Cannot serialize!", invalidString, stringToCheck);
             return true;
         }
 
