@@ -58,10 +58,10 @@ public final class AmberBAFFile {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<AmberBAF> purity) {
+    private static List<String> toLines(@NotNull final List<AmberBAF> bafs) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        purity.stream().map(AmberBAFFile::toString).forEach(lines::add);
+        bafs.stream().map(AmberBAFFile::toString).forEach(lines::add);
         return lines;
     }
 
@@ -79,15 +79,15 @@ public final class AmberBAFFile {
     }
 
     @NotNull
-    private static String toString(@NotNull final AmberBAF ratio) {
-        return new StringJoiner(DELIMITER).add(ratio.chromosome())
-                .add(String.valueOf(ratio.position()))
-                .add(FORMAT.format(ratio.tumorBAF()))
-                .add(FORMAT.format(ratio.tumorModifiedBAF()))
-                .add(String.valueOf(ratio.tumorDepth()))
-                .add(Doubles.isFinite(ratio.normalBAF()) ? FORMAT.format(ratio.normalBAF()) : "0")
-                .add(Doubles.isFinite(ratio.normalModifiedBAF()) ? FORMAT.format(ratio.normalModifiedBAF()) : "0")
-                .add(String.valueOf(ratio.normalDepth()))
+    private static String toString(@NotNull final AmberBAF baf) {
+        return new StringJoiner(DELIMITER).add(baf.chromosome())
+                .add(String.valueOf(baf.position()))
+                .add(FORMAT.format(baf.tumorBAF()))
+                .add(FORMAT.format(baf.tumorModifiedBAF()))
+                .add(String.valueOf(baf.tumorDepth()))
+                .add(Doubles.isFinite(baf.normalBAF()) ? FORMAT.format(baf.normalBAF()) : "0")
+                .add(Doubles.isFinite(baf.normalModifiedBAF()) ? FORMAT.format(baf.normalModifiedBAF()) : "0")
+                .add(String.valueOf(baf.normalDepth()))
                 .toString();
     }
 
@@ -97,8 +97,8 @@ public final class AmberBAFFile {
         for (int i = 1; i < lines.size(); i++) {
             final String line = lines.get(i);
             try {
-                final AmberBAF region = fromString(line);
-                result.put(HumanChromosome.fromString(region.chromosome()), region);
+                final AmberBAF baf = fromString(line);
+                result.put(HumanChromosome.fromString(baf.chromosome()), baf);
             } catch (RuntimeException e) {
                 LOGGER.info("Unable to parse line {}: {}", i, line);
                 throw e;
