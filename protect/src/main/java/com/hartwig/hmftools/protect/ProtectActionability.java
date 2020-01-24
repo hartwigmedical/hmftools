@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.Lims;
@@ -127,6 +128,12 @@ public class ProtectActionability {
 
         LOGGER.info("Reading template Conclusion from {}", templateConclusionTsv);
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
+        Map<String, TemplateConclusion> mapFindingToConclusion = Maps.newHashMap();
+
+        for (TemplateConclusion templateConclusion: templateConclusionList) {
+            mapFindingToConclusion.put(templateConclusion.abberrationGeneSummary(), templateConclusion);
+        }
+
 
         LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
         List<TumorLocationConclusion> tumorLocationConclusion =
@@ -151,8 +158,6 @@ public class ProtectActionability {
         List<ReportableGainLoss> reportableGainsAndLosses =
                 ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, purityContext.bestFit().ploidy());
 
-        // somatic Variant
-        List<? extends Variant> passSomaticVariants = GenomicData.readPassSomaticVariants(tumorSampleId, somaticVariantVcf);
 
         // Germline variants
         List<GermlineVariant> germlineVariant =
@@ -217,7 +222,7 @@ public class ProtectActionability {
                 chordAnalysis.hrdValue(),
                 geneFusions,
                 reportableGainsAndLosses,
-                passSomaticVariants,
+                reportableVariantsAnalysis,
                 templateConclusionList,
                 purity,
                 tumorLocationConclusion,
