@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -133,6 +134,8 @@ public class ProtectActionability {
         for (TemplateConclusion templateConclusion: templateConclusionList) {
             mapFindingToConclusion.put(templateConclusion.abberrationGeneSummary(), templateConclusion);
         }
+
+        Set<String> keysFindings = mapFindingToConclusion.keySet();
 
 
         LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
