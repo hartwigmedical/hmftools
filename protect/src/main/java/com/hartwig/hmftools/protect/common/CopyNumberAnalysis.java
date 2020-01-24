@@ -2,7 +2,6 @@ package com.hartwig.hmftools.protect.common;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 
 import org.immutables.value.Value;
