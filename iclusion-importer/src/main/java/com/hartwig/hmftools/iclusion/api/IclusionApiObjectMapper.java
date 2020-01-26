@@ -29,13 +29,10 @@ final class IclusionApiObjectMapper {
         List<IclusionTrial> trials = Lists.newArrayList();
 
         for (IclusionObjectStudy study : studies) {
-            if (study.indicationIds.contains("1987")) {
-                int x = 1;
-            }
             trials.add(ImmutableIclusionTrial.builder()
                     .id(study.id)
-                    .title(study.title)
                     .acronym(study.acronym)
+                    .title(study.title)
                     .eudra(study.eudra)
                     .nct(study.nct)
                     .ipn(study.ipn)
@@ -55,14 +52,17 @@ final class IclusionApiObjectMapper {
         for (String id : indicationIds) {
             IclusionObjectIndication indication = findIndicationById(indications, id);
             if (indication != null) {
+                List<String> doids = Lists.newArrayList();
+                if (indication.doid != null) {
+                    doids.add(indication.doid);
+                }
+                if (indication.doid2 != null) {
+                    doids.add(indication.doid2);
+                }
+
                 tumorLocations.add(ImmutableIclusionTumorLocation.builder()
-                        .id(indication.id)
-                        .parentId(indication.parentId)
-                        .doid(indication.doid)
-                        .doid2(indication.doid2)
-                        .indicationName(indication.indicationName)
-                        .indicationNameFull(indication.indicationNameFull)
-                        .nodeIds(indication.nodeIds)
+                        .primaryTumorLocation(indication.indicationNameFull)
+                        .doids(doids)
                         .build());
             } else {
                 LOGGER.warn("Could not find indication with ID '{}' in list of indications!", id);
@@ -89,31 +89,40 @@ final class IclusionApiObjectMapper {
         List<IclusionMutation> mutations = Lists.newArrayList();
         for (IclusionObjectMutation mutationObject : mutationObjects) {
             IclusionObjectGene gene = findGeneById(genes, mutationObject.geneId);
-            IclusionObjectVariant variant = findVariantById(variants, mutationObject.variantId);
+            if (gene == null) {
+                LOGGER.warn("Could not find gene with ID '{}' in list of genes!", mutationObject.geneId);
+            }
 
-            mutations.add(ImmutableIclusionMutation.builder().name(variant.variantName).gene(gene.geneName).build());
+            IclusionObjectVariant variant = findVariantById(variants, mutationObject.variantId);
+            if (variant == null) {
+                LOGGER.warn("Could not find variant with ID '{}' in list of variants!", mutationObject.variantId);
+            }
+
+            if (gene != null && variant != null) {
+                mutations.add(ImmutableIclusionMutation.builder().name(variant.variantName).gene(gene.geneName).build());
+            }
         }
 
         return mutations;
     }
 
-    @NotNull
+    @Nullable
     private static IclusionObjectGene findGeneById(@NotNull Iterable<IclusionObjectGene> genes, @NotNull String id) {
         for (IclusionObjectGene gene : genes) {
             if (gene.id.equals(id)) {
                 return gene;
             }
         }
-        throw new IllegalStateException("Could not find iClusion gene with ID '" + id + "'");
+        return null;
     }
 
-    @NotNull
+    @Nullable
     private static IclusionObjectVariant findVariantById(@NotNull Iterable<IclusionObjectVariant> variants, @NotNull String id) {
         for (IclusionObjectVariant variant : variants) {
             if (variant.id.equals(id)) {
                 return variant;
             }
         }
-        throw new IllegalStateException("Could not find iClusion variant with ID '" + id + "'");
+        return null;
     }
 }

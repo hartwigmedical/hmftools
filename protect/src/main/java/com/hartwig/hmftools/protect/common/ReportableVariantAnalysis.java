@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.iclusion.data;
+package com.hartwig.hmftools.protect.common;
 
 import java.util.List;
 
@@ -9,11 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class IclusionTumorLocation {
-
+public abstract class ReportableVariantAnalysis {
     @NotNull
-    public abstract String primaryTumorLocation();
-
-    @NotNull
-    public abstract List<String> doids();
+    public abstract List<ReportableVariant> variantsToReport();
 }

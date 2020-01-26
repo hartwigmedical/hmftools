@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.iclusion.data;
-
-import java.util.List;
+package com.hartwig.hmftools.protect.common;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -9,11 +7,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class IclusionTumorLocation {
+public abstract class ReportableGermlineVariant {
 
     @NotNull
-    public abstract String primaryTumorLocation();
+    public abstract GermlineVariant variant();
 
-    @NotNull
-    public abstract List<String> doids();
+    public abstract double driverLikelihood();
 }
