@@ -66,6 +66,7 @@ public class FusionDisruptionAnalyser
     private DisruptionFinder mDisruptionFinder;
     private FusionWriter mFusionWriter;
     private NeoEpitopeFinder mNeoEpitopeFinder;
+    private boolean mValidState;
 
     private String mSampleId;
     private final String mOutputDir;
@@ -132,6 +133,7 @@ public class FusionDisruptionAnalyser
         mChrBreakendMap = null;
         mRestrictedGenes = Lists.newArrayList();
 
+        mValidState = true;
         initialise(cmdLineArgs);
     }
 
@@ -209,14 +211,19 @@ public class FusionDisruptionAnalyser
                 catch(IOException e)
                 {
                     LOGGER.error("failed to load ref genome: {}", e.toString());
+                    mValidState = false;
                 }
             }
         }
+
+        if(!mFusionFinder.hasValidConfigData())
+            mValidState = false;
     }
 
     public boolean hasRnaSampleData() { return mRnaFusionMapper != null; }
     public final Set<String> getRnaSampleIds() { return mRnaFusionMapper.getSampleRnaData().keySet(); }
     public final List<GeneFusion> getFusions() { return mFusions; }
+    public boolean validState() { return mValidState; }
 
     // for testing
     public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }

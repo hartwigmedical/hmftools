@@ -86,14 +86,14 @@ public class FusionFinder
     }
 
     public void setHasValidConfigData(boolean toggle) { mHasValidConfigData = toggle; }
-    public void setKnownFusionData(final KnownFusionData data) { mKnownFusionData = data; }
+    public boolean hasValidConfigData() { return mHasValidConfigData; }
     public void setLogInvalidReasons(boolean toggle) { mLogInvalidReasons = toggle; }
 
     public static void addCmdLineArgs(Options options)
     {
-        options.addOption(FUSION_PAIRS_CSV, true, "Path towards a CSV containing white-listed gene fusion pairs.");
-        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Path towards a CSV containing white-listed promiscuous 5' genes.");
-        options.addOption(PROMISCUOUS_THREE_CSV, true, "Path towards a CSV containing white-listed promiscuous 3' genes.");
+        options.addOption(FUSION_PAIRS_CSV, true, "Known gene fusion pairs");
+        options.addOption(PROMISCUOUS_FIVE_CSV, true, "Promiscuous 5' genes");
+        options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3' genes");
     }
 
     public final KnownFusionData getKnownFusionDatal() { return mKnownFusionData; }
