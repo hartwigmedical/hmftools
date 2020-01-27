@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.common.ReportableGainLoss;
+import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.common.ReportableVariantAnalysis;
 import com.hartwig.hmftools.protect.report.chord.ChordStatus;
 
@@ -28,7 +29,8 @@ public class ConclusionFactory {
             double tumorMSI, double chordScore, @NotNull List<ReportableGeneFusion> geneFusions,
             @NotNull List<ReportableGainLoss> geneCopyNumbers, @NotNull ReportableVariantAnalysis reportableVariantAnalysis,
             @NotNull List<TemplateConclusion> templateConclusionList, double purity,
-            @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype) {
+            @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype,
+            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions) {
 
         StringBuilder conclusion = new StringBuilder();
         String enter = " <enter> ";

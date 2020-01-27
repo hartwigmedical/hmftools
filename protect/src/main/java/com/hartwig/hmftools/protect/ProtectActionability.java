@@ -37,9 +37,10 @@ import com.hartwig.hmftools.protect.common.GenomicData;
 import com.hartwig.hmftools.protect.common.GermlineReportingFile;
 import com.hartwig.hmftools.protect.common.GermlineReportingModel;
 import com.hartwig.hmftools.protect.common.GermlineVariant;
+import com.hartwig.hmftools.protect.common.HomozygousDisruptionAnalyzer;
 import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.common.ReportableGermlineVariant;
-import com.hartwig.hmftools.protect.common.ReportableVariant;
+import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.common.ReportableVariantAnalysis;
 import com.hartwig.hmftools.protect.common.SomaticVariantAnalysis;
 import com.hartwig.hmftools.protect.common.SomaticVariantAnalyzer;
@@ -82,7 +83,7 @@ public class ProtectActionability {
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_GENE_CNV_TSV = "purple_gene_cnv_tsv";
     private static final String PURPLE_QC_TSV = "purple_qc_tsv";
-
+    private static final String LINX_DRIVERS_TSV = "linx_drivers_tsv";
     private static final String LINX_FUSION_TSV = "linx_fusion_tsv";
     private static final String CHORD_TXT = "chord_txt";
 
@@ -111,7 +112,7 @@ public class ProtectActionability {
         final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
         final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
         final String purpleQCTsv = cmd.getOptionValue(PURPLE_QC_TSV);
-
+        final String linxDriversTsv = cmd.getOptionValue(LINX_DRIVERS_TSV);
         final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
         final String chordTxt = cmd.getOptionValue(CHORD_TXT);
 
@@ -131,12 +132,11 @@ public class ProtectActionability {
         List<TemplateConclusion> templateConclusionList = TemplateConclusionFile.readTemplateConclusion(templateConclusionTsv);
         Map<String, TemplateConclusion> mapFindingToConclusion = Maps.newHashMap();
 
-        for (TemplateConclusion templateConclusion: templateConclusionList) {
+        for (TemplateConclusion templateConclusion : templateConclusionList) {
             mapFindingToConclusion.put(templateConclusion.abberrationGeneSummary(), templateConclusion);
         }
 
         Set<String> keysFindings = mapFindingToConclusion.keySet();
-
 
         LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
         List<TumorLocationConclusion> tumorLocationConclusion =
@@ -160,7 +160,6 @@ public class ProtectActionability {
         List<GeneCopyNumber> geneCopyNumbers = GenomicData.readGeneCopyNumbers(purpleGeneCnvTsv);
         List<ReportableGainLoss> reportableGainsAndLosses =
                 ExtractReportableGainsAndLosses.toReportableGainsAndLosses(geneCopyNumbers, purityContext.bestFit().ploidy());
-
 
         // Germline variants
         List<GermlineVariant> germlineVariant =
@@ -194,6 +193,9 @@ public class ProtectActionability {
                         germlineVariantsToReport,
                         germlineReportingModel,
                         lims.germlineReportingChoice(tumorBarcodeId));
+
+        List<ReportableHomozygousDisruption> reportableHomozygousDisruptions =
+                HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
 
         LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
@@ -229,7 +231,7 @@ public class ProtectActionability {
                 templateConclusionList,
                 purity,
                 tumorLocationConclusion,
-                patientCancerSubtype);
+                patientCancerSubtype, reportableHomozygousDisruptions);
 
         LOGGER.info("Create hotspot information");
         //TODO create hotspot information
@@ -357,7 +359,7 @@ public class ProtectActionability {
                 && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV)
                 && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(cmd,
                 TUMOR_LOCATION_CURATION_CONCLUSION_TSV) && fileExists(cmd, GERMLINE_VARIANT_VCF) && fileExists(cmd, PURPLE_QC_TSV)
-                && fileExists(cmd, GERMLINE_GENES_CSV);
+                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, LINX_DRIVERS_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -418,9 +420,9 @@ public class ProtectActionability {
 
         options.addOption(PURPLE_PURITY_TSV, true, "Path towards the purple purity TSV.");
         options.addOption(PURPLE_QC_TSV, true, "Path towards the purple qc TSV.");
-
         options.addOption(PURPLE_GENE_CNV_TSV, true, "Path towards the purple gene copy number TSV.");
         options.addOption(LINX_FUSION_TSV, true, "Path towards the linx fusion TSV.");
+        options.addOption(LINX_DRIVERS_TSV, true, "Path towards the LINX driver catalog TSV.");
         options.addOption(CHORD_TXT, true, "Path towards the chord txt file.");
 
         options.addOption(CONCLUSION_TSV, true, "Path towards the conclusion TSV.");
