@@ -136,8 +136,6 @@ public class ProtectActionability {
             mapFindingToConclusion.put(templateConclusion.abberrationGeneSummary(), templateConclusion);
         }
 
-        Set<String> keysFindings = mapFindingToConclusion.keySet();
-
         LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
         List<TumorLocationConclusion> tumorLocationConclusion =
                 TumorLocationConclusionFile.readTumorLocationConclusion(curationTumorLocations);
@@ -231,7 +229,7 @@ public class ProtectActionability {
                 templateConclusionList,
                 purity,
                 tumorLocationConclusion,
-                patientCancerSubtype, reportableHomozygousDisruptions);
+                patientCancerSubtype, reportableHomozygousDisruptions, mapFindingToConclusion);
 
         LOGGER.info("Create hotspot information");
         //TODO create hotspot information

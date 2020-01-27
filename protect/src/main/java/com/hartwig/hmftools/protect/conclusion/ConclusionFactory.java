@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -30,42 +29,60 @@ public class ConclusionFactory {
             @NotNull List<ReportableGainLoss> geneCopyNumbers, @NotNull ReportableVariantAnalysis reportableVariantAnalysis,
             @NotNull List<TemplateConclusion> templateConclusionList, double purity,
             @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype,
-            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions) {
+            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
+            @NotNull Map<String, TemplateConclusion> MapTemplateConclusion) {
 
         StringBuilder conclusion = new StringBuilder();
         String enter = " <enter> ";
         String startRow = "- ";
 
-        LOGGER.info(geneCopyNumbers);
-
         String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, tumorLocationConclusion, cancerSubtype);
         conclusion.append(textTumorLocation).append(enter);
 
-        for (TemplateConclusion templateConclusion : templateConclusionList) {
-            if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
-                String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
-                conclusion.append(startRow).append(highMTL).append(enter);
-
-            } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(MicrosatelliteStatus.MSI)) {
-                String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
-                conclusion.append(startRow).append(highMSI).append(enter);
-
-            } else if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
-                String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
-                conclusion.append(startRow).append(hrDeficient).append(enter);
-
-            } else if (purity < 0.20) {
-                String lowPurity = sentenceLowPurity(purity, templateConclusion);
-                conclusion.append(startRow).append(lowPurity).append(enter);
-
-            } else if (geneFusions.size() >= 1) {
-
-            } else if (geneCopyNumbers.size() >= 1) {
-
-            } else if (conclusion.toString().endsWith("sample showing: <enter> ")) { // Must be the last if statement
-                conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
-
+        if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
+            String HRD = ChordStatus.HR_DEFICIENT.toString().replace("_", "-").toLowerCase();
+            for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                String keyTemplate = entry.getKey().toLowerCase();
+                TemplateConclusion templateConclusion = entry.getValue();
+                if (HRD.equals(keyTemplate.toLowerCase())) {
+                    String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
+                    conclusion.append(startRow).append(hrDeficient).append(enter);
+                }
             }
+        } else if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
+            //  String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
+            //  conclusion.append(startRow).append(highMTL).append(enter);
+        } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(MicrosatelliteStatus.MSI)) {
+            // String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
+            //  conclusion.append(startRow).append(highMSI).append(enter);
+
+        } else if (purity < 0.20) {
+            //  String lowPurity = sentenceLowPurity(purity, templateConclusion);
+            //  conclusion.append(startRow).append(lowPurity).append(enter);
+        } else if (geneFusions.size() >= 1) {
+            for (ReportableGeneFusion fusion : geneFusions) {
+                String startFusion = fusion.geneStart().toLowerCase() + " fusion";
+                String endFusion = fusion.geneEnd().toLowerCase() + " fusion";
+                for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                    String keyTemplate = entry.getKey().toLowerCase();
+                    TemplateConclusion templateConclusion = entry.getValue();
+                    if (keyTemplate.equals(startFusion)) {
+                        String fusionConclusion = sentenseFusion(fusion, templateConclusion);
+                        conclusion.append(startRow).append(fusionConclusion).append(enter);
+                    } else if (keyTemplate.equals(endFusion)) {
+                        sentenseFusion(fusion, templateConclusion);
+                        String fusionConclusion = sentenseFusion(fusion, templateConclusion);
+                        conclusion.append(startRow).append(fusionConclusion).append(enter);
+                    }
+                }
+            }
+        } else if (geneCopyNumbers.size() >= 1) {
+
+        } else if (reportableHomozygousDisruptions.size() >= 1) {
+
+        } else if (conclusion.toString().endsWith("sample showing: <enter> ")) { // Must be the last if statement)
+            // conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
+
         }
 
         conclusion.append("\n");
@@ -86,6 +103,13 @@ public class ConclusionFactory {
             LOGGER.warn("No tumor location is known");
         }
         return locationTumor + " sample showing:";
+    }
+
+    private static String sentenseFusion(@NotNull ReportableGeneFusion fusion, @NotNull TemplateConclusion templateConclusion) {
+        String sentence = templateConclusion.summaryTextStatement();
+        sentence = sentence.replace("(XXXX)", "(" + fusion.geneStart() + " - " + fusion.geneEnd() + ")");
+        return sentence;
+
     }
 
     private static String sentenseHighMTL(double tumorMTL, double tumorMTB, @NotNull TemplateConclusion templateConclusion) {
