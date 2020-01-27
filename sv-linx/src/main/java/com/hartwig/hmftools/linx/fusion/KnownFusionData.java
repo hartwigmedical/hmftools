@@ -106,7 +106,10 @@ public class KnownFusionData
     private final List<String> loadFile(final String filename, int expectedDataCount) throws IOException
     {
         if (!Files.exists(Paths.get(filename)))
-            return Lists.newArrayList();
+        {
+            LOGGER.error("file({}) not found", filename);
+            throw new IOException();
+        }
 
         List<String> fileContents = Files.readAllLines(new File(filename).toPath());
 

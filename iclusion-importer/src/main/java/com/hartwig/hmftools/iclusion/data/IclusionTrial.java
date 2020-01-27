@@ -15,10 +15,10 @@ public abstract class IclusionTrial {
     public abstract String id();
 
     @NotNull
-    public abstract String title();
+    public abstract String acronym();
 
     @NotNull
-    public abstract String acronym();
+    public abstract String title();
 
     @NotNull
     public abstract String eudra();

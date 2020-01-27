@@ -144,8 +144,10 @@ public class SvLinxApplication
             sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
 
             // always initialise since is used for transcript evaluation
-            fusionAnalyser = new FusionDisruptionAnalyser(
-                    cmd, config, ensemblDataCache, sampleAnalyser.getVisWriter());
+            fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, sampleAnalyser.getVisWriter());
+
+            if(!fusionAnalyser.validState())
+                return;
 
             if(checkFusions)
             {

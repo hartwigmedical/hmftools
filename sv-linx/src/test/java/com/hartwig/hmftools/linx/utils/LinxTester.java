@@ -63,7 +63,7 @@ public class LinxTester
 
         mCnSegmentBuilder = new CnSegmentBuilder();
 
-        Configurator.setRootLevel(Level.DEBUG);
+        // Configurator.setRootLevel(Level.DEBUG);
     }
 
     public void initialiseFusions(SvGeneTranscriptCollection geneTranscriptCollection)
