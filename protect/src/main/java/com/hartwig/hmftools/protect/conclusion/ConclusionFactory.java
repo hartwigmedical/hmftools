@@ -78,6 +78,7 @@ public class ConclusionFactory {
                 }
             }
         } else if (geneCopyNumbers.size() >= 1) {
+            //TODO: use only reportable geneCopyNumbers instead of all copyNumbers
             for (ReportableGainLoss gainLoss : geneCopyNumbers) {
                 String interpetation = Strings.EMPTY;
                 if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
