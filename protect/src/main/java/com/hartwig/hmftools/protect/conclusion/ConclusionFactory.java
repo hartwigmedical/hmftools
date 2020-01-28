@@ -50,16 +50,36 @@ public class ConclusionFactory {
                     conclusion.append(startRow).append(hrDeficient).append(enter);
                 }
             }
-        } else if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
-            //  String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
-            //  conclusion.append(startRow).append(highMTL).append(enter);
-        } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(MicrosatelliteStatus.MSI)) {
-            // String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
-            //  conclusion.append(startRow).append(highMSI).append(enter);
-
-        } else if (purity < 0.20) {
-            //  String lowPurity = sentenceLowPurity(purity, templateConclusion);
-            //  conclusion.append(startRow).append(lowPurity).append(enter);
+        } else if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) { //TODO test
+            String TML = TumorMutationalStatus.fromLoad(tumorMTL).toString();
+            for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                String keyTemplate = entry.getKey().toLowerCase();
+                TemplateConclusion templateConclusion = entry.getValue();
+                if (TML.equals(keyTemplate.toLowerCase())) {
+                    String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
+                    conclusion.append(startRow).append(highMTL).append(enter);
+                }
+            }
+        } else if (MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).equals(MicrosatelliteStatus.MSI)) { //TODO test
+            String MSI = MicrosatelliteStatus.fromIndelsPerMb(tumorMSI).toString();
+            for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                String keyTemplate = entry.getKey().toLowerCase();
+                TemplateConclusion templateConclusion = entry.getValue();
+                if (MSI.equals(keyTemplate.toLowerCase())) {
+                    String highMSI = sentenseHighMSI(tumorMSI, templateConclusion);
+                    conclusion.append(startRow).append(highMSI).append(enter);
+                }
+            }
+        } else if (purity < 0.20) { //TODO test
+            String purityValue = "low";
+            for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                String keyTemplate = entry.getKey().toLowerCase();
+                TemplateConclusion templateConclusion = entry.getValue();
+                if (purityValue.equals(keyTemplate.toLowerCase())) {
+                    String lowPurity = sentenceLowPurity(purity, templateConclusion);
+                    conclusion.append(startRow).append(lowPurity).append(enter);
+                }
+            }
         } else if (geneFusions.size() >= 1) {
             for (ReportableGeneFusion fusion : geneFusions) {
                 String startFusion = fusion.geneStart().toLowerCase() + " fusion";
@@ -78,7 +98,6 @@ public class ConclusionFactory {
                 }
             }
         } else if (geneCopyNumbers.size() >= 1) {
-            //TODO: use only reportable geneCopyNumbers instead of all copyNumbers
             for (ReportableGainLoss gainLoss : geneCopyNumbers) {
                 String interpetation = Strings.EMPTY;
                 if (gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS
@@ -92,16 +111,11 @@ public class ConclusionFactory {
                     String keyTemplate = entry.getKey().toLowerCase();
                     TemplateConclusion templateConclusion = entry.getValue();
 
-                    if (interpetation.equals("loss")) {
-                        if (keyTemplate.contains(gainLoss.gene()) && keyTemplate.contains(interpetation)) {
-                            String sentenceConclusion = templateConclusion.summaryTextStatement();
-                            conclusion.append(startRow).append(sentenceConclusion).append(enter);
-                        }
-                    } else if (interpetation.equals("amplification") && keyTemplate.contains(interpetation)) {
+                    if (keyTemplate.contains(gainLoss.gene().toLowerCase()) && keyTemplate.contains(interpetation)) {
                         String sentenceConclusion = templateConclusion.summaryTextStatement();
                         conclusion.append(startRow).append(sentenceConclusion).append(enter);
-
                     }
+
                 }
             }
 
