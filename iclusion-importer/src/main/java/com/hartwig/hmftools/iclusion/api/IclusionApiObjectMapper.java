@@ -9,6 +9,7 @@ import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,10 +30,17 @@ final class IclusionApiObjectMapper {
         List<IclusionTrial> trials = Lists.newArrayList();
 
         for (IclusionObjectStudy study : studies) {
+            // We loose MAIN_FIELD_DELIMITER in titles for good but that is considered acceptable compromise.
+            if (study.title.contains(IclusionTrialFile.MAIN_FIELD_DELIMITER)) {
+                LOGGER.info("Removing trial file delimiter '{}' from study with acronym '{}'",
+                        IclusionTrialFile.MAIN_FIELD_DELIMITER,
+                        study.acronym);
+            }
+
             trials.add(ImmutableIclusionTrial.builder()
                     .id(study.id)
                     .acronym(study.acronym)
-                    .title(study.title)
+                    .title(study.title.replace(IclusionTrialFile.MAIN_FIELD_DELIMITER, " "))
                     .eudra(study.eudra)
                     .nct(study.nct)
                     .ipn(study.ipn)

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.iclusion.io;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,7 +21,7 @@ public final class IclusionTrialFile {
 
     private static final Logger LOGGER = LogManager.getLogger(IclusionTrialFile.class);
 
-    private static final String MAIN_FIELD_DELIMITER = "\t";
+    public static final String MAIN_FIELD_DELIMITER = "\t";
     private static final String SUB_FIELD_DELIMITER = "|";
     private static final String SUB_FIELD_SEPARATOR = " - ";
     private static final String DOID_DELIMITER = ",";
@@ -59,8 +61,8 @@ public final class IclusionTrialFile {
                 .add(trial.acronym())
                 .add(trial.title())
                 .add(trial.eudra())
-                .add(trial.nct())
-                .add(trial.ipn())
+                .add(nullToEmpty(trial.nct()))
+                .add(nullToEmpty(trial.ipn()))
                 .add(trial.ccmo())
                 .add(tumorLocationsToString(trial.tumorLocations()))
                 .add(mutationsToString(trial.mutations()))
