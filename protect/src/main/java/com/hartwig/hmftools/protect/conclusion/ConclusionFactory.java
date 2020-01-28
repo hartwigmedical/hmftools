@@ -8,6 +8,7 @@ import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
+import com.hartwig.hmftools.protect.common.DriverInterpretation;
 import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.protect.common.ReportableVariant;
@@ -145,7 +146,7 @@ public class ConclusionFactory {
         }
 
         if (reportableHomozygousDisruptions.size() >= 1) {
-            for (ReportableHomozygousDisruption reportableHomozygousDisruption: reportableHomozygousDisruptions) {
+            for (ReportableHomozygousDisruption reportableHomozygousDisruption : reportableHomozygousDisruptions) {
                 for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
                     String keyTemplate = entry.getKey().toLowerCase();
                     TemplateConclusion templateConclusion = entry.getValue();
@@ -159,13 +160,27 @@ public class ConclusionFactory {
 
         }
 
-        if (reportableVariantAnalysis.variantsToReport().size() >= 1) { //TODO
+        if (reportableVariantAnalysis.variantsToReport().size() >= 1) {
             List<ReportableVariant> reportableVariants = reportableVariantAnalysis.variantsToReport();
-            LOGGER.info(reportableVariants);
+            for (ReportableVariant variant : reportableVariants) {
+                DriverInterpretation interpretation = DriverInterpretation.interpret(variant.driverLikelihood());
+
+                if (interpretation.equals(DriverInterpretation.HIGH)) {
+                    for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                        String keyTemplate = entry.getKey().toLowerCase();
+                        TemplateConclusion templateConclusion = entry.getValue();
+                        if (keyTemplate.contains(variant.gene().toLowerCase()) && keyTemplate.contains("mutation")) {
+                            String sentenceConclusion = templateConclusion.summaryTextStatement();
+                            conclusion.append(startRow).append(sentenceConclusion).append(enter);
+                        }
+                    }
+                }
+            }
         }
 
         if (conclusion.toString().endsWith("sample showing: <enter> ")) { // Must be the last if statement)
-            // conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
+
+          //   conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
 
         }
 
