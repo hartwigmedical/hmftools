@@ -16,18 +16,18 @@ public final class IclusionTrialChecker {
     public static void check(@NotNull Iterable<IclusionTrial> trials) {
         for (IclusionTrial trial : trials) {
             if (trial.acronym().isEmpty()) {
-                LOGGER.warn("Empty acronym for trial with title '{}'", trial.title());
+                LOGGER.warn("Empty acronym for trial with id {} and title '{}'", trial.id(), trial.title());
             }
 
             if (trial.ccmo().isEmpty()) {
                 // CCMO code should always be present (dutch trial code).
-                LOGGER.warn("No CCMO code configured for trial with acronym '{}'", trial.acronym());
+                LOGGER.warn("No CCMO code configured for trial with acronym '{}' and id {}", trial.acronym(), trial.id());
             }
 
             if (!trial.eudra().isEmpty() && (!trial.eudra().contains("-") || trial.eudra().contains(" "))) {
                 // EUDRA codes are formatted as 'yyyy-xxxxxx-xx' where 'yyyy' is (full) year, eg 2019.
-                LOGGER.warn("Potentially incorrect EUDRA code found for {}: '{}'", trial.acronym(), trial.eudra());
+                LOGGER.warn("Potentially incorrect EUDRA code found for {} with id {}: '{}'", trial.acronym(), trial.id(), trial.eudra());
             }
-         }
+        }
     }
 }
