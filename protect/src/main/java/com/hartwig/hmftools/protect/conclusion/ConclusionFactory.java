@@ -143,8 +143,19 @@ public class ConclusionFactory {
             }
 
         }
-        if (reportableHomozygousDisruptions.size() >= 1) { //TODO
-            LOGGER.info(reportableHomozygousDisruptions);
+
+        if (reportableHomozygousDisruptions.size() >= 1) {
+            for (ReportableHomozygousDisruption reportableHomozygousDisruption: reportableHomozygousDisruptions) {
+                for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
+                    String keyTemplate = entry.getKey().toLowerCase();
+                    TemplateConclusion templateConclusion = entry.getValue();
+
+                    if (keyTemplate.contains(reportableHomozygousDisruption.gene().toLowerCase()) && keyTemplate.contains("inactivation")) {
+                        String sentenceConclusion = templateConclusion.summaryTextStatement();
+                        conclusion.append(startRow).append(sentenceConclusion).append(enter);
+                    }
+                }
+            }
 
         }
 
