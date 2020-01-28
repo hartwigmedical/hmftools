@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sig_analyser;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.GENERIC_INPUT_FILE;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
@@ -86,7 +87,7 @@ public class SampleFitter
 
             for(int i = 0; i < sampleCount; ++i)
             {
-                final double[] sampleCounts = sampleCountsMatrix.getCol(0);
+                final double[] sampleCounts = sampleCountsMatrix.getCol(i);
                 lsqFit.initialise(signatures.getData(), sampleCounts);
                 lsqFit.solve();
 
@@ -131,13 +132,14 @@ public class SampleFitter
         }
 
         final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        final String outputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
+        final String outputFileId = cmd.getOptionValue(OUTPUT_FILE_ID, "siga");
         final String outputFile = outputFileId + "_sample_contribs.csv";
 
         try
         {
             BufferedWriter writer = getNewFile(outputDir, outputFile);
             writeMatrixData(writer, scCollection.getFieldNames(), sampleContribs, false);
+            closeBufferedWriter(writer);
         }
         catch(IOException e)
         {

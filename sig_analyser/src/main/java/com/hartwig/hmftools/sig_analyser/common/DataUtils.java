@@ -597,8 +597,8 @@ public class DataUtils {
 
         for(int i = 0; i < matrix.Rows; ++i)
         {
-            for(int j = 0; j < matrix.Cols; ++j) {
-
+            for(int j = 0; j < matrix.Cols; ++j)
+            {
                 if(asInt)
                     writer.write(String.format("%.0f", sigData[i][j]));
                 else
