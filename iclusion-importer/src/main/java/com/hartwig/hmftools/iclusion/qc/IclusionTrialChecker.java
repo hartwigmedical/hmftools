@@ -24,7 +24,7 @@ public final class IclusionTrialChecker {
                 LOGGER.warn("No CCMO code configured for trial with acronym '{}'", trial.acronym());
             }
 
-            if (!trial.eudra().isEmpty() && !trial.eudra().contains("-")) {
+            if (!trial.eudra().isEmpty() && (!trial.eudra().contains("-") || trial.eudra().contains(" "))) {
                 // EUDRA codes are formatted as 'yyyy-xxxxxx-xx' where 'yyyy' is (full) year, eg 2019.
                 LOGGER.warn("Potentially incorrect EUDRA code found for {}: '{}'", trial.acronym(), trial.eudra());
             }
