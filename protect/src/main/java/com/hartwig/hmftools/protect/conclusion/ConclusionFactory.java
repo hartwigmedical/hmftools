@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.protect.common.ReportableGainLoss;
 import com.hartwig.hmftools.protect.common.ReportableHomozygousDisruption;
+import com.hartwig.hmftools.protect.common.ReportableVariant;
 import com.hartwig.hmftools.protect.common.ReportableVariantAnalysis;
 import com.hartwig.hmftools.protect.report.chord.ChordStatus;
 
@@ -142,8 +143,14 @@ public class ConclusionFactory {
             }
 
         }
-        if (reportableHomozygousDisruptions.size() >= 1) {
+        if (reportableHomozygousDisruptions.size() >= 1) { //TODO
+            LOGGER.info(reportableHomozygousDisruptions);
 
+        }
+
+        if (reportableVariantAnalysis.variantsToReport().size() >= 1) { //TODO
+            List<ReportableVariant> reportableVariants = reportableVariantAnalysis.variantsToReport();
+            LOGGER.info(reportableVariants);
         }
 
         if (conclusion.toString().endsWith("sample showing: <enter> ")) { // Must be the last if statement)
