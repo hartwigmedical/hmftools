@@ -111,7 +111,7 @@ public class SageVariantFactory {
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
         return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawAltSupport() >= config.hotspotMinRawTumorVafToSkipQualCheck();
+                && primaryTumor.rawVaf() >= config.hotspotMinRawTumorVafToSkipQualCheck();
     }
 
 }
