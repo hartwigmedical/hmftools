@@ -137,10 +137,8 @@ public class ConclusionFactory {
                         String sentenceConclusion = templateConclusion.summaryTextStatement();
                         conclusion.append(startRow).append(sentenceConclusion).append(enter);
                     }
-
                 }
             }
-
         }
 
         if (reportableHomozygousDisruptions.size() >= 1) {
@@ -155,7 +153,6 @@ public class ConclusionFactory {
                     }
                 }
             }
-
         }
 
         if (reportableVariantAnalysis.variantsToReport().size() >= 1) {
@@ -179,7 +176,6 @@ public class ConclusionFactory {
         if (conclusion.toString().endsWith("sample showing: <enter> ")) { // Must be the last if statement)
 
             //   conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
-
         }
 
         conclusion.append("\n");
@@ -197,7 +193,6 @@ public class ConclusionFactory {
         } else if (!patientPrimaryTumorLocation.equals(Strings.EMPTY) && cancerSubtype.equals(Strings.EMPTY)) {
             tumorLocation = patientPrimaryTumorLocation;
         }
-
         return tumorLocation + " cancer sample showing:";
     }
 
@@ -205,7 +200,6 @@ public class ConclusionFactory {
         String sentence = templateConclusion.summaryTextStatement();
         sentence = sentence.replace("(XXXX)", "(" + fusion.geneStart() + " - " + fusion.geneEnd() + ")");
         return sentence;
-
     }
 
     private static String sentenseHighMTL(double tumorMTL, double tumorMTB, @NotNull TemplateConclusion templateConclusion) {
@@ -214,7 +208,6 @@ public class ConclusionFactory {
         sentence = sentence.replace("tumor mutation burden (TMB) of XXX mt/Mb",
                 "tumor mutation burden (TMB) of " + String.format("%.1f", tumorMTB) + " mt/Mb");
         return sentence;
-
     }
 
     private static String sentenseHighMSI(double tumorMSI, @NotNull TemplateConclusion templateConclusion) {
