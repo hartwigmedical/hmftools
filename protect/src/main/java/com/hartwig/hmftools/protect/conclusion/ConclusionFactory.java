@@ -160,7 +160,7 @@ public class ConclusionFactory {
             for (ReportableVariant variant : reportableVariants) {
                 DriverInterpretation interpretation = DriverInterpretation.interpret(variant.driverLikelihood());
 
-                if (interpretation.equals(DriverInterpretation.HIGH)) {
+                if (interpretation == DriverInterpretation.HIGH) {
                     for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
                         String keyTemplate = entry.getKey().toLowerCase();
                         TemplateConclusion templateConclusion = entry.getValue();
