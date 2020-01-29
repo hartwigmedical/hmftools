@@ -29,7 +29,7 @@ public class TemplateConclusionFile {
     private static TemplateConclusion fromTemplate(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
 
-        // TODO add include/exlude tumor location
+        // TODO add include/exlude tumor location, and include/extra for extra
         if (values.length == 3) {
             return ImmutableTemplateConclusion.builder()
                     .abberrationGeneSummary(values[0])
