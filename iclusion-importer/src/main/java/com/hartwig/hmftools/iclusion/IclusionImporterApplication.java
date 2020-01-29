@@ -27,7 +27,7 @@ public class IclusionImporterApplication {
     private static final String ICLUSION_USERNAME = "iclusion_username";
     private static final String ICLUSION_PASSWORD = "iclusion_password";
 
-    private static final String ICLUSION_TRIALS_TSV = "iclusion_trials_tsv";
+    private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
         Options options = createOptions();
@@ -41,7 +41,7 @@ public class IclusionImporterApplication {
 
         IclusionTrialChecker.check(trials);
 
-        String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIALS_TSV);
+        String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIAL_TSV);
         IclusionTrialFile.write(iClusionTrialTsv, trials);
 
         LOGGER.info("iClusion importer has written {} trials to {}!", trials.size(), iClusionTrialTsv);
@@ -59,7 +59,7 @@ public class IclusionImporterApplication {
 
     private static boolean validInputForIclusionImporting(@NotNull CommandLine cmd) {
         return valueExists(cmd, ICLUSION_ENDPOINT) && valueExists(cmd, ICLUSION_CLIENT_ID) && valueExists(cmd, ICLUSION_CLIENT_SECRET)
-                && valueExists(cmd, ICLUSION_USERNAME) && valueExists(cmd, ICLUSION_PASSWORD) && valueExists(cmd, ICLUSION_TRIALS_TSV);
+                && valueExists(cmd, ICLUSION_USERNAME) && valueExists(cmd, ICLUSION_PASSWORD) && valueExists(cmd, ICLUSION_TRIAL_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -85,7 +85,7 @@ public class IclusionImporterApplication {
         options.addOption(ICLUSION_USERNAME, true, "iClusion username");
         options.addOption(ICLUSION_PASSWORD, true, "iClusion password");
 
-        options.addOption(ICLUSION_TRIALS_TSV, true, "iClusion output trials tsv");
+        options.addOption(ICLUSION_TRIAL_TSV, true, "iClusion output trial tsv");
 
         return options;
     }
