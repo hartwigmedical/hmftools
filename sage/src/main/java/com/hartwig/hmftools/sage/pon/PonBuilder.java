@@ -20,16 +20,19 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class PonBuilder {
 
+    private static final int MIN_OUTPUT_COUNT = 2;
+    private static final int MIN_INPUT_ALLELIC_DEPTH = 3;
+
     private final Map<VariantHotspot, Counter> map = Maps.newHashMap();
 
     public void add(@NotNull final VariantContext context) {
         final VariantHotspot hotspot = hotspot(context);
         final Counter counter = map.computeIfAbsent(hotspot, Counter::new);
         final Genotype genotype = context.getGenotype(0);
-        if (genotype.hasExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH)) {
+        if (!hotspot.ref().contains("N") && genotype.hasExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH)) {
             String rawDepth = (String) genotype.getExtendedAttribute(SageVCF.RAW_ALLELIC_DEPTH);
             int allelicDepth = Integer.valueOf(rawDepth.split(",")[1]);
-            if (allelicDepth >= 3) {
+            if (allelicDepth >= MIN_INPUT_ALLELIC_DEPTH) {
                 counter.increment(allelicDepth);
             }
         }
@@ -39,7 +42,7 @@ public class PonBuilder {
     public List<VariantContext> build() {
         return map.values()
                 .stream()
-                .filter(x -> x.counter > 1)
+                .filter(x -> x.counter >= MIN_OUTPUT_COUNT)
                 .sorted(Comparator.comparing(o -> o.hotspot))
                 .map(PonBuilder::context)
                 .collect(Collectors.toList());
