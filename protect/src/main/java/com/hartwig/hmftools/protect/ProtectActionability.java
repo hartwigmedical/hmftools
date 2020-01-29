@@ -217,7 +217,6 @@ public class ProtectActionability {
                 geneFusions,
                 reportableGainsAndLosses,
                 reportableVariantsAnalysis,
-                templateConclusionList,
                 purity,
                 patientCancerSubtype,
                 reportableHomozygousDisruptions,

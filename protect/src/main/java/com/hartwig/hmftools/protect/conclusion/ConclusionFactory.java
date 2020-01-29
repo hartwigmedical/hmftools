@@ -29,10 +29,8 @@ public class ConclusionFactory {
 
     public static StringBuilder createConclusion(@NotNull String patientPrimaryTumorLocation, int tumorMTL, double tumorMTB,
             double tumorMSI, double chordScore, @NotNull List<ReportableGeneFusion> geneFusions,
-            @NotNull List<ReportableGainLoss> geneCopyNumbers, @NotNull ReportableVariantAnalysis reportableVariantAnalysis,
-            @NotNull List<TemplateConclusion> templateConclusionList, double purity,
-            @NotNull String cancerSubtype,
-            @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
+            @NotNull List<ReportableGainLoss> geneCopyNumbers, @NotNull ReportableVariantAnalysis reportableVariantAnalysis, double purity,
+            @NotNull String cancerSubtype, @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
             @NotNull Map<String, TemplateConclusion> MapTemplateConclusion) {
 
         StringBuilder conclusion = new StringBuilder();
@@ -180,7 +178,7 @@ public class ConclusionFactory {
 
         if (conclusion.toString().endsWith("sample showing: <enter> ")) { // Must be the last if statement)
 
-          //   conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
+            //   conclusion.append(startRow).append(templateConclusion.summaryTextStatement());
 
         }
 
