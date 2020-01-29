@@ -14,6 +14,8 @@ public final class IclusionTrialChecker {
     }
 
     public static void check(@NotNull Iterable<IclusionTrial> trials) {
+        LOGGER.info("Performing QC on iClusion Trial Database");
+
         for (IclusionTrial trial : trials) {
             if (trial.acronym().isEmpty()) {
                 LOGGER.warn("Empty acronym for trial with id {} and title '{}'", trial.id(), trial.title());

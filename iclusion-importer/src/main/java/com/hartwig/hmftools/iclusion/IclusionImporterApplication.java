@@ -44,7 +44,7 @@ public class IclusionImporterApplication {
         String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIAL_TSV);
         IclusionTrialFile.write(iClusionTrialTsv, trials);
 
-        LOGGER.info("iClusion importer has written {} trials to {}!", trials.size(), iClusionTrialTsv);
+        LOGGER.info("iClusion Importer has written {} trials to {}", trials.size(), iClusionTrialTsv);
     }
 
     @NotNull
