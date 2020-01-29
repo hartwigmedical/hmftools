@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.sig_analyser.SigAnalyser.GENERIC_INPUT_FILE;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyMatrix;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
@@ -20,6 +18,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
+import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
 import com.hartwig.hmftools.sig_analyser.common.DataUtils;
 import com.hartwig.hmftools.sig_analyser.common.LeastSquaresFit;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
@@ -56,6 +55,7 @@ public class SampleFitter
         options.addOption(SIGNATURES_FILE, true, "Signature definitions");
         options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
         options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        BaSampleFitter.addCmdLineArgs(options);
 
         NmfConfig.addCmdLineArgs(options);
 
@@ -106,6 +106,12 @@ public class SampleFitter
             nmfFitter.fitSamples();
 
             sampleContribs.setData(nmfFitter.getContributions().getData());
+        }
+        else if(fitMethod.equals(FIT_METHOD_BUCKET))
+        {
+            BaSampleFitter sampleFitter = new BaSampleFitter(sampleCountsMatrix, signatures, cmd);
+            sampleFitter.fitAllSamples();
+            sampleContribs.setData(sampleFitter.getContributions().getData());
         }
 
         if(LOGGER.isDebugEnabled())
