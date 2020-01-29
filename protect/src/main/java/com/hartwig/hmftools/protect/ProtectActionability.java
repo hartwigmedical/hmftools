@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -47,8 +46,6 @@ import com.hartwig.hmftools.protect.common.SomaticVariantAnalyzer;
 import com.hartwig.hmftools.protect.conclusion.ConclusionFactory;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusion;
 import com.hartwig.hmftools.protect.conclusion.TemplateConclusionFile;
-import com.hartwig.hmftools.protect.conclusion.TumorLocationConclusion;
-import com.hartwig.hmftools.protect.conclusion.TumorLocationConclusionFile;
 import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
 import com.hartwig.hmftools.protect.report.chord.ChordFileReader;
 
@@ -73,7 +70,6 @@ public class ProtectActionability {
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String TEMPLATE_CONCLUSION_TSV = "template_conclusion";
-    private static final String TUMOR_LOCATION_CURATION_CONCLUSION_TSV = "tumor_location_curation_conclusion_tsv";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
     private static final String LIMS_DIRECTORY = "lims_dir";
 
@@ -102,7 +98,6 @@ public class ProtectActionability {
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String templateConclusionTsv = cmd.getOptionValue(TEMPLATE_CONCLUSION_TSV);
-        final String curationTumorLocations = cmd.getOptionValue(TUMOR_LOCATION_CURATION_CONCLUSION_TSV);
         final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
         final String limsDir = cmd.getOptionValue(LIMS_DIRECTORY);
 
@@ -135,10 +130,6 @@ public class ProtectActionability {
         for (TemplateConclusion templateConclusion : templateConclusionList) {
             mapFindingToConclusion.put(templateConclusion.abberrationGeneSummary(), templateConclusion);
         }
-
-        LOGGER.info("Reading tumor location curation from {}", curationTumorLocations);
-        List<TumorLocationConclusion> tumorLocationConclusion =
-                TumorLocationConclusionFile.readTumorLocationConclusion(curationTumorLocations);
 
         LOGGER.info("Loading sample data from LIMS in {}", cmd.getOptionValue(LIMS_DIRECTORY));
         Lims lims = LimsFactory.fromLimsDirectory(cmd.getOptionValue(LIMS_DIRECTORY));
@@ -228,8 +219,9 @@ public class ProtectActionability {
                 reportableVariantsAnalysis,
                 templateConclusionList,
                 purity,
-                tumorLocationConclusion,
-                patientCancerSubtype, reportableHomozygousDisruptions, mapFindingToConclusion);
+                patientCancerSubtype,
+                reportableHomozygousDisruptions,
+                mapFindingToConclusion);
 
         LOGGER.info("Create hotspot information");
         //TODO create hotspot information
@@ -355,9 +347,8 @@ public class ProtectActionability {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(cmd, TUMOR_BARCODE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
                 && dirExists(cmd, LIMS_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
                 && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV)
-                && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(cmd,
-                TUMOR_LOCATION_CURATION_CONCLUSION_TSV) && fileExists(cmd, GERMLINE_VARIANT_VCF) && fileExists(cmd, PURPLE_QC_TSV)
-                && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, LINX_DRIVERS_TSV);
+                && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(cmd, GERMLINE_VARIANT_VCF)
+                && fileExists(cmd, PURPLE_QC_TSV) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, LINX_DRIVERS_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -409,7 +400,6 @@ public class ProtectActionability {
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(TEMPLATE_CONCLUSION_TSV, true, "Path towards the template for conclusion TSV.");
-        options.addOption(TUMOR_LOCATION_CURATION_CONCLUSION_TSV, true, "Path towards the curation of the tumor location TSV.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
 

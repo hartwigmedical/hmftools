@@ -31,7 +31,7 @@ public class ConclusionFactory {
             double tumorMSI, double chordScore, @NotNull List<ReportableGeneFusion> geneFusions,
             @NotNull List<ReportableGainLoss> geneCopyNumbers, @NotNull ReportableVariantAnalysis reportableVariantAnalysis,
             @NotNull List<TemplateConclusion> templateConclusionList, double purity,
-            @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype,
+            @NotNull String cancerSubtype,
             @NotNull List<ReportableHomozygousDisruption> reportableHomozygousDisruptions,
             @NotNull Map<String, TemplateConclusion> MapTemplateConclusion) {
 
@@ -39,7 +39,7 @@ public class ConclusionFactory {
         String enter = " <enter> ";
         String startRow = "- ";
 
-        String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, tumorLocationConclusion, cancerSubtype);
+        String textTumorLocation = createTumorLocationSentense(patientPrimaryTumorLocation, cancerSubtype);
         conclusion.append(textTumorLocation).append(enter);
 
         if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
@@ -189,19 +189,18 @@ public class ConclusionFactory {
         return conclusion;
     }
 
-    private static String createTumorLocationSentense(@NotNull String patientPrimaryTumorLocation,
-            @NotNull List<TumorLocationConclusion> tumorLocationConclusion, @NotNull String cancerSubtype) {
-        String locationTumor = Strings.EMPTY;
-        for (TumorLocationConclusion locationConclusion : tumorLocationConclusion) {
-            if (locationConclusion.primaryTumorLocation().equals(patientPrimaryTumorLocation) && locationConclusion.cancerSubType()
-                    .equals(cancerSubtype)) {
-                locationTumor = locationConclusion.tumorLocationConclusion();
-            }
+    private static String createTumorLocationSentense(@NotNull String patientPrimaryTumorLocation, @NotNull String cancerSubtype) {
+        String tumorLocation = Strings.EMPTY;
+        if (patientPrimaryTumorLocation.equals(Strings.EMPTY)) {
+            LOGGER.warn("No tumor location is known of patient!");
+            tumorLocation = "undetermined";
+        } else if (!patientPrimaryTumorLocation.equals(Strings.EMPTY) && !cancerSubtype.equals(Strings.EMPTY)) {
+            tumorLocation = patientPrimaryTumorLocation + " (" + cancerSubtype + ")";
+        } else if (!patientPrimaryTumorLocation.equals(Strings.EMPTY) && cancerSubtype.equals(Strings.EMPTY)) {
+            tumorLocation = patientPrimaryTumorLocation;
         }
-        if (locationTumor.equals(Strings.EMPTY)) {
-            LOGGER.warn("No tumor location is known");
-        }
-        return locationTumor + " sample showing:";
+
+        return tumorLocation + " cancer sample showing:";
     }
 
     private static String sentenseFusion(@NotNull ReportableGeneFusion fusion, @NotNull TemplateConclusion templateConclusion) {
