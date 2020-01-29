@@ -10,13 +10,14 @@ public class GeneReadData
     public final EnsemblGeneData GeneData;
 
     private final List<RegionReadData> mRegionReadData;
+    private int mTotalReadCount;
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
         GeneData = geneData;
 
         mRegionReadData = Lists.newArrayList();
-
+        mTotalReadCount = 0;
     }
 
     public final List<RegionReadData> getRegionReadData() { return mRegionReadData; }
@@ -40,4 +41,8 @@ public class GeneReadData
                 .filter(x -> x.Region.start() == posStart && x.Region.end() == posEnd)
                 .findFirst().orElse(null);
     }
+
+    public int totalReadCount() { return mTotalReadCount; }
+    public void addReadCount() { ++mTotalReadCount; }
+    public void setTotalReadCount(int count) { mTotalReadCount = count; }
 }

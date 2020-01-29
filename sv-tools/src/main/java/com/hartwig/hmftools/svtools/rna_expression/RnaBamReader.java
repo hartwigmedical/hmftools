@@ -17,6 +17,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ensembl.database.homo_sapiens_core.tables.Gene;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarOperator;
@@ -32,17 +33,23 @@ public class RnaBamReader
     private final String mBamFile;
     private final SamReader mSamReader;
 
+    private int mReadCountLimit;
+
+    // state relating to the current gene
     private final List<SAMRecord> mBamRecords;
+    private int mBamRecordCount;
+    private GeneReadData mCurrentGene;
 
     private static final int DEFAULT_MIN_BASE_QUALITY = 13;
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    private static final int MAX_READ_COUNT = 100000;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaBamReader.class);
 
     // config
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
-
+    public static final String READ_COUNT_LIMIT = "read_count_limit";
 
     public RnaBamReader(final CommandLine cmd)
     {
@@ -52,6 +59,10 @@ public class RnaBamReader
         mRefGenomeFile = new File(refGenomeFile);
 
         mBamRecords = Lists.newArrayList();
+        mBamRecordCount = 0;
+        mCurrentGene = null;
+
+        mReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
 
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(mBamFile));
 
@@ -65,7 +76,6 @@ public class RnaBamReader
             LOGGER.error("Reference file loading failed");
             return;
         }
-
     }
 
     public static boolean validConfig(final CommandLine cmd)
@@ -81,9 +91,12 @@ public class RnaBamReader
         options.getOption(BAM_FILE).setRequired(true);
     }
 
-    public void readBamCounts(final GenomeRegion genomeRegion)
+    public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
         mBamRecords.clear();
+        mBamRecordCount = 0;
+
+        mCurrentGene = geneReadData;
 
         SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
         samSlicer.slice(mSamReader, this::processSamRecord);
@@ -91,17 +104,36 @@ public class RnaBamReader
 
     private void processSamRecord(@NotNull final SAMRecord record)
     {
-        mBamRecords.add(record);
+        // skip records if either end isn't in one of the genic regions
+        boolean startMatched = mCurrentGene.getRegionReadData().stream()
+                .anyMatch(x -> record.getStart() >= x.Region.start() && record.getStart() <= x.Region.end());
 
-        // selector.select(asRegion(record), bafEvidence -> bafFactory.addEvidence(bafEvidence, record));
+        boolean endMatched = mCurrentGene.getRegionReadData().stream()
+                .anyMatch(x -> record.getEnd() >= x.Region.start() && record.getEnd() <= x.Region.end());
+
+        if(!startMatched || !endMatched)
+            return;
+
+        ++mBamRecordCount;
+
+        if(mReadCountLimit > 0 && mBamRecords.size() >= mReadCountLimit)
+            return;
+
+        mBamRecords.add(record);
     }
 
-    public void analyseReads(final GeneReadData geneReadData)
+    public void analyseReads()
     {
-        // regionReadData.getBamRecords().addAll(mBamRecords);
+        mCurrentGene.setTotalReadCount(mBamRecordCount);
+
+        if(mBamRecordCount >= MAX_READ_COUNT)
+        {
+            LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mBamRecordCount);
+            // return;
+        }
 
         // cache reference bases for comparison with read bases
-        for(RegionReadData region : geneReadData.getRegionReadData())
+        for(RegionReadData region : mCurrentGene.getRegionReadData())
         {
             final String regionRefBases = mIndexedFastaSequenceFile.getSubsequenceAt(
                     region.chromosome(), region.start(), region.end()).getBaseString();
@@ -114,29 +146,19 @@ public class RnaBamReader
 
         for(final SAMRecord record : mBamRecords)
         {
-            // skip records if either end isn't in one of the genic regions
-            boolean startMatched = geneReadData.getRegionReadData().stream()
-                    .anyMatch(x -> record.getStart() >= x.Region.start() && record.getStart() <= x.Region.end());
-
-            boolean endMatched = geneReadData.getRegionReadData().stream()
-                    .anyMatch(x -> record.getEnd() >= x.Region.start() && record.getEnd() <= x.Region.end());
-
-            if(!startMatched || !endMatched)
-                continue;
-
             // the read covers a part of the exon
-            List<RegionReadData> containingRegions = geneReadData.getRegionReadData().stream()
+            List<RegionReadData> containingRegions = mCurrentGene.getRegionReadData().stream()
                     .filter(x -> x.Region.start() <= record.getStart() && x.Region.end() >= record.getEnd())
                     .collect(Collectors.toList());
 
             // the read covers all of the exon
-            List<RegionReadData> containedRegions = geneReadData.getRegionReadData().stream()
+            List<RegionReadData> containedRegions = mCurrentGene.getRegionReadData().stream()
                     .filter(x -> !containingRegions.contains(x))
                     .filter(x -> x.Region.start() >= record.getStart() && x.Region.end() <= record.getEnd())
                     .collect(Collectors.toList());
 
             // the read covers part of the exon and crosses its boundary
-            List<RegionReadData> overlappingRegions = geneReadData.getRegionReadData().stream()
+            List<RegionReadData> overlappingRegions = mCurrentGene.getRegionReadData().stream()
                     .filter(x -> !containedRegions.contains(x) && !containingRegions.contains(x))
                     .filter(x -> overlaps(x.Region, record))
                     .collect(Collectors.toList());
@@ -170,12 +192,6 @@ public class RnaBamReader
 
             allRegions.forEach(x -> setMatchingBases(x, record));
         }
-
-        // summary stats
-
-
-        //LOGGER.debug("region({}:{}->{}): reads({}) overlaps({}) refBaseMatches({})",
-        //        region.chromosome(), region.start(), region.end(), mBamRecords.size(), overlapMatchCount, refBaseMatchCount);
     }
 
     private boolean overlaps(final GenomeRegion region, final SAMRecord record)
