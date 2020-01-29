@@ -41,11 +41,10 @@ public class ConclusionFactory {
         conclusion.append(textTumorLocation).append(enter);
 
         if (ChordStatus.formChord(chordScore).equals(ChordStatus.HR_DEFICIENT)) {
-            String HRD = ChordStatus.HR_DEFICIENT.toString().replace("_", "-").toLowerCase();
+            String HRD = ChordStatus.HR_DEFICIENT.toString();
             for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
-                String keyTemplate = entry.getKey().toLowerCase();
                 TemplateConclusion templateConclusion = entry.getValue();
-                if (HRD.equals(keyTemplate.toLowerCase())) {
+                if (HRD.equals("HR-deficient")) {
                     String hrDeficient = sentenseHrDeficient(chordScore, templateConclusion);
                     conclusion.append(startRow).append(hrDeficient).append(enter);
                 }
