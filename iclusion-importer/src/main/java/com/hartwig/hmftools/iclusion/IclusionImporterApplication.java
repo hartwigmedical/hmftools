@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.iclusion;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.iclusion.api.IclusionApiMain;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
+import com.hartwig.hmftools.iclusion.qc.IclusionTrialChecker;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -24,25 +27,24 @@ public class IclusionImporterApplication {
     private static final String ICLUSION_USERNAME = "iclusion_username";
     private static final String ICLUSION_PASSWORD = "iclusion_password";
 
-    private static final String ICLUSION_OUTPUT_STUDIES_RAW = "iclusion_output_studies_raw";
-    private static final String ICLUSION_OUTPUT_STUDIES_PROCESSED = "iclusion_output_studies_processed";
+    private static final String ICLUSION_TRIALS_TSV = "iclusion_trials_tsv";
 
-    public static void main(@NotNull final String[] args) throws ParseException {
-        Options options = createBasicOptions();
+    public static void main(@NotNull final String[] args) throws ParseException, IOException {
+        Options options = createOptions();
         CommandLine cmd = createCommandLine(args, options);
 
-        if (!validInputForIclusionConnection(cmd)) {
+        if (!validInputForIclusionImporting(cmd)) {
             printUsageAndExit(options);
         }
 
         List<IclusionTrial> trials = IclusionApiMain.readIclusionTrials(cmd.getOptionValue(ICLUSION_ENDPOINT), buildCredentials(cmd));
 
-        LOGGER.info("Printing {} iClusion trials", trials.size());
-        for (IclusionTrial trial : trials) {
-            LOGGER.info(" {}", trial);
-        }
+        IclusionTrialChecker.check(trials);
 
-        LOGGER.info("iClusion importer is finished!");
+        String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIALS_TSV);
+        IclusionTrialFile.write(iClusionTrialTsv, trials);
+
+        LOGGER.info("iClusion importer has written {} trials to {}!", trials.size(), iClusionTrialTsv);
     }
 
     @NotNull
@@ -55,9 +57,9 @@ public class IclusionImporterApplication {
                 .build();
     }
 
-    private static boolean validInputForIclusionConnection(@NotNull CommandLine cmd) {
+    private static boolean validInputForIclusionImporting(@NotNull CommandLine cmd) {
         return valueExists(cmd, ICLUSION_ENDPOINT) && valueExists(cmd, ICLUSION_CLIENT_ID) && valueExists(cmd, ICLUSION_CLIENT_SECRET)
-                && valueExists(cmd, ICLUSION_USERNAME) && valueExists(cmd, ICLUSION_PASSWORD);
+                && valueExists(cmd, ICLUSION_USERNAME) && valueExists(cmd, ICLUSION_PASSWORD) && valueExists(cmd, ICLUSION_TRIALS_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -74,7 +76,7 @@ public class IclusionImporterApplication {
     }
 
     @NotNull
-    private static Options createBasicOptions() {
+    private static Options createOptions() {
         Options options = new Options();
 
         options.addOption(ICLUSION_ENDPOINT, true, "iClusion endpoint URL");
@@ -82,8 +84,8 @@ public class IclusionImporterApplication {
         options.addOption(ICLUSION_CLIENT_SECRET, true, "iClusion client secret");
         options.addOption(ICLUSION_USERNAME, true, "iClusion username");
         options.addOption(ICLUSION_PASSWORD, true, "iClusion password");
-        options.addOption(ICLUSION_OUTPUT_STUDIES_RAW, true, "iClusion output studies raw");
-        options.addOption(ICLUSION_OUTPUT_STUDIES_PROCESSED, true, "iClusion output studies processed");
+
+        options.addOption(ICLUSION_TRIALS_TSV, true, "iClusion output trials tsv");
 
         return options;
     }

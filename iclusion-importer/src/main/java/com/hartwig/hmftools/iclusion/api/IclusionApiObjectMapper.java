@@ -41,6 +41,8 @@ final class IclusionApiObjectMapper {
                 title = title.replace(IclusionTrialFile.MAIN_FIELD_DELIMITER, " ");
             }
 
+            // We loose NULL nct and ipn fields forever, but that is considered acceptable
+            // (no functional difference between empty nct and null nct)
             trials.add(ImmutableIclusionTrial.builder()
                     .id(study.id)
                     .acronym(study.acronym)
