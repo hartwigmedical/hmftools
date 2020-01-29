@@ -51,6 +51,9 @@ public class ConclusionFactory {
             }
         }
 
+        String melanoma = cancerSubtype.toLowerCase();
+        String lung = patientPrimaryTumorLocation.toLowerCase();
+
         if (TumorMutationalStatus.fromLoad(tumorMTL).equals(TumorMutationalStatus.HIGH)) {
             TumorMutationalStatus TML = TumorMutationalStatus.fromLoad(tumorMTL);
             String TMLValue = Strings.EMPTY;
@@ -62,7 +65,16 @@ public class ConclusionFactory {
             for (Map.Entry<String, TemplateConclusion> entry : MapTemplateConclusion.entrySet()) {
                 String keyTemplate = entry.getKey().toLowerCase();
                 TemplateConclusion templateConclusion = entry.getValue();
-                if (TMLValue.equals(keyTemplate.toLowerCase())) {
+                if (TMLValue.contains(keyTemplate) && keyTemplate.contains(melanoma)) {
+                    String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
+                    conclusion.append(startRow).append(highMTL).append(enter);
+                } else if (TMLValue.contains(keyTemplate) && keyTemplate.contains(lung)) {
+                    String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
+                    conclusion.append(startRow).append(highMTL).append(enter);
+                } else if (TMLValue.equals(keyTemplate) && !keyTemplate.contains(melanoma)) {
+                    String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
+                    conclusion.append(startRow).append(highMTL).append(enter);
+                } else if (TMLValue.equals(keyTemplate) && !keyTemplate.contains(lung)) {
                     String highMTL = sentenseHighMTL(tumorMTL, tumorMTB, templateConclusion);
                     conclusion.append(startRow).append(highMTL).append(enter);
                 }
