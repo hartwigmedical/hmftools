@@ -1,0 +1,8 @@
+Gene	Type	Source	Drug	Drug Type	Cancer Type	Level	Direction	Link
+ERBB2	Amplification	CiViC	Trastuzumab	ERBB2 Inhibitor	Breast Cancer	A	Responsive	-
+ERBB2	Amplification	CiViC	Panitumumab	EGFR Inhibitor	Colorectal Cancer	B	Resistant	-
+MET	Amplification	iClusion	DRUP	Trial	Solid Tumors	B	Responsive	-
+NRAS	Activation	CGI	Cetuximab	EGFR Inhibitor	Colorectal Cancer	A	Resistant	-
+BRCA1	Inactivation	iClusion	DRUP	Trial	Solid Tumors	B	Responsive	-
+FGFR2	Fusion Five	OncoKb	Erdafitinib	TKI	Bladder Cancer	B	Responsive	-
+ALK	Fusion Three	CGI	Crizotinib	ALK Inhibitor	Lung Adenocarcinoma	A	Responsive	-
