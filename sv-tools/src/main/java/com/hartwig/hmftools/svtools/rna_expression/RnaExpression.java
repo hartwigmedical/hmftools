@@ -7,6 +7,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -42,45 +45,34 @@ import htsjdk.samtools.SAMRecord;
 
 public class RnaExpression
 {
-    private static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
-    private static final String GENE_ID_FILE = "gene_id_file";
-    private static final String ALL_TRANSCRIPTS = "all_transcripts";
-    private static final String SAMPLE = "sample";
-
-    private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
-
+    private final RnaExpConfig mConfig;
     private final String mSampledId;
     private final RnaBamReader mRnaBamReader;
     private final SvGeneTranscriptCollection mGeneTransCache;
-    private final List<String> mRestrictedGeneIds;
-    private final String mOutputDir;
-    private final boolean mAllTranscripts;
     private final List<GeneReadData> mGeneReadDatalist;
     private BufferedWriter mWriter;
 
+    private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
+
     public RnaExpression(final CommandLine cmd)
     {
-        mRnaBamReader = new RnaBamReader(cmd);
+        mConfig = new RnaExpConfig(cmd);
+
+        mRnaBamReader = new RnaBamReader(mConfig);
 
         mSampledId = cmd.getOptionValue(SAMPLE);
 
         mGeneTransCache = new SvGeneTranscriptCollection();
         mGeneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
 
-        mRestrictedGeneIds = Lists.newArrayList();
 
-        if(cmd.hasOption(GENE_ID_FILE))
+        if(!mConfig.RestrictedGeneIds.isEmpty())
         {
-            loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE));
-            mGeneTransCache.setRestrictedGeneIdList(mRestrictedGeneIds);
+            mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         }
 
-        mAllTranscripts = cmd.hasOption(ALL_TRANSCRIPTS);
-
-        mGeneTransCache.setRequiredData(true, false, false, !cmd.hasOption(ALL_TRANSCRIPTS));
+        mGeneTransCache.setRequiredData(true, false, false, !mConfig.AllTranscripts);
         mGeneTransCache.loadEnsemblData(false);
-
-        mOutputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
 
         mGeneReadDatalist = Lists.newArrayList();
         mWriter = null;
@@ -121,18 +113,31 @@ public class RnaExpression
         // form a genomic region for each unique exon amongst the transcripts
         long minTransPos = -1;
         long maxTransPos = 0;
+        RegionReadData prevRegionReadData = null;
 
         for(final TranscriptData transData : transDataList)
         {
-            for(ExonData exon : transData.exons())
+            for(int i = 0; i < transData.exons().size(); ++ i)
             {
-                if(geneReadData.hasRegionData(exon.ExonStart, exon.ExonEnd))
-                    continue;
+                ExonData exon = transData.exons().get(i);
 
-                GenomeRegion region = GenomeRegions.create(geneData.Chromosome, exon.ExonStart, exon.ExonEnd);
-                RegionReadData regionReadData = new RegionReadData(
-                        region, String.format("trans(%s) exon(%d)", transData.TransName, exon.ExonRank));
-                geneReadData.addRegionReadData(regionReadData);
+                RegionReadData regionReadData = geneReadData.findRegionData(exon.ExonStart, exon.ExonEnd);
+
+                if (regionReadData == null)
+                {
+                    GenomeRegion region = GenomeRegions.create(geneData.Chromosome, exon.ExonStart, exon.ExonEnd);
+                    regionReadData = new RegionReadData(
+                            region, String.format("trans(%s) exon(%d)", transData.TransName, exon.ExonRank));
+                    geneReadData.addRegionReadData(regionReadData);
+                }
+
+                if(prevRegionReadData != null)
+                {
+                    prevRegionReadData.getPostRegions().add(regionReadData);
+                    regionReadData.getPreRegions().add(prevRegionReadData);
+                }
+
+                prevRegionReadData = regionReadData;
             }
 
             maxTransPos = max(transData.TransEnd, maxTransPos);
@@ -156,25 +161,29 @@ public class RnaExpression
 
     private void writeResults(final GeneReadData geneReadData, final TranscriptData transData)
     {
-        if(mOutputDir.isEmpty())
+        if(mConfig.OutputDir.isEmpty())
             return;
 
         try
         {
             if(mWriter == null)
             {
-                final String outputFileName = mOutputDir + "RNA_GENE_EXPRESSION.csv";
+                final String outputFileName = mConfig.OutputDir + "RNA_GENE_EXPRESSION.csv";
 
                 mWriter = createBufferedWriter(outputFileName, false);
                 mWriter.write("SampleId,GeneId,GeneName,TransId,ExonCount");
-                mWriter.write(",ExonsMatched,LinksMatched,AvgDepth,TotalReads,CodingLength");
+                mWriter.write(",ExonsMatched,AvgDepth,TotalReads,ExonLength,CodingCoverage");
+                mWriter.write(",LinksMatched,TotalLinkingReads,NonAdjacentReads");
                 mWriter.newLine();
             }
 
             int exonsFound = 0;
             int linksFound = 0;
+            int totalLinkedReads = 0;
             double readDepthTotal = 0;
             long codingLengthTotal = 0;
+            long totalReadCoverage = 0;
+            int nonAdjacentReads = 0;
 
             final List<ExonData> exons = transData.exons();
 
@@ -186,8 +195,16 @@ public class RnaExpression
                 if(exonReadData == null)
                     continue;
 
-                ++exonsFound;
+                int exonCoverage = exonReadData.baseCoverage(1);
+                totalReadCoverage += exonCoverage;
+
+                if(exonCoverage / (double)exonReadData.length() > 0.50)
+                {
+                    ++exonsFound;
+                }
+
                 codingLengthTotal += exon.ExonEnd - exon.ExonStart;
+                nonAdjacentReads += exonReadData.nonAdjacentReads();
 
                 ExonData prevExon = i > 0 ? exons.get(i - 1) : null;
                 ExonData nextExon = i < exons.size() - 1 ? exons.get(i + 1) : null;
@@ -197,6 +214,8 @@ public class RnaExpression
 
                 boolean linked = (prevExon == null || exonReadData.getLinkedRegions().containsKey(prevRegion))
                         && (nextExon == null || exonReadData.getLinkedRegions().containsKey(nextRegion));
+
+                totalLinkedReads += exonReadData.getLinkedRegions().values().stream().mapToInt(x -> x).sum();
 
                 if(linked)
                     ++linksFound;
@@ -210,8 +229,11 @@ public class RnaExpression
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, exons.size()));
 
-            mWriter.write(String.format(",%d,%d,%.0f,%d,%d",
-                    exonsFound, linksFound, avgReadDepth, geneReadData.totalReadCount(), codingLengthTotal));
+            mWriter.write(String.format(",%d,%.0f,%d,%d,%d",
+                    exonsFound, avgReadDepth, geneReadData.totalReadCount(), codingLengthTotal, totalReadCoverage));
+
+            mWriter.write(String.format(",%d,%d,%d",
+                    linksFound, totalLinkedReads, nonAdjacentReads));
 
             mWriter.newLine();
         }
@@ -223,7 +245,7 @@ public class RnaExpression
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = createBasicOptions();
+        final Options options = createCmdLineOptions();
         final CommandLine cmd = createCommandLine(args, options);
 
         if (cmd.hasOption(LOG_DEBUG))
@@ -231,7 +253,7 @@ public class RnaExpression
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        if(!validConfig(cmd))
+        if(!RnaExpConfig.checkValid(cmd))
         {
             LOGGER.error("missing config options, exiting");
             return;
@@ -241,59 +263,6 @@ public class RnaExpression
         rnaExpression.runAnalysis();
 
         LOGGER.info("RNA expression analysis complete");
-    }
-
-    public static boolean validConfig(final CommandLine cmd)
-    {
-        if(!cmd.hasOption(SAMPLE) || !cmd.hasOption(GENE_TRANSCRIPTS_DIR))
-            return false;
-
-        return RnaBamReader.validConfig(cmd);
-    }
-
-    private void loadGeneIdsFile(final String filename)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            LOGGER.warn("invalid gene ID file({})", filename);
-            return;
-        }
-
-        try
-        {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return;
-
-            if (fileContents.get(0).contains("GeneId"))
-            {
-                // check for header row
-                fileContents.remove(0);
-            }
-
-            mRestrictedGeneIds.addAll(fileContents.stream().map(x -> x.split(",")[0]).collect(Collectors.toList()));
-
-            LOGGER.info("file({}) analysing {} specific genes", filename, mRestrictedGeneIds.size());
-        }
-        catch (IOException e)
-        {
-            LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
-        }
-    }
-
-    private static Options createBasicOptions()
-    {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
-
-        options.addOption(ALL_TRANSCRIPTS, false, "Check all transcripts, not just canonical");
-        options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
-        options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        RnaBamReader.addCommandLineOptions(options);
-        return options;
     }
 
     @NotNull

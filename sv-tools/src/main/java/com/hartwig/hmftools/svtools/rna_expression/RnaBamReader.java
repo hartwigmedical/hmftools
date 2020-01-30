@@ -3,21 +3,20 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.MAX_READ_COUNT;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ensembl.database.homo_sapiens_core.tables.Gene;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarOperator;
@@ -28,72 +27,47 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RnaBamReader
 {
+    private final RnaExpConfig mConfig;
     private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
     private final File mRefGenomeFile;
-    private final String mBamFile;
     private final SamReader mSamReader;
 
-    private int mReadCountLimit;
-
     // state relating to the current gene
-    private final List<SAMRecord> mBamRecords;
+    private final List<ReadRecord> mReadRecords;
     private int mBamRecordCount;
     private GeneReadData mCurrentGene;
 
-    private static final int DEFAULT_MIN_BASE_QUALITY = 13;
+    // private static final int DEFAULT_MIN_BASE_QUALITY = 13;
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
-    private static final int MAX_READ_COUNT = 100000;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaBamReader.class);
 
-    // config
-    public static final String REF_GENOME = "ref_genome";
-    public static final String BAM_FILE = "bam_file";
-    public static final String READ_COUNT_LIMIT = "read_count_limit";
-
-    public RnaBamReader(final CommandLine cmd)
+    public RnaBamReader(final RnaExpConfig config)
     {
-        mBamFile = cmd.getOptionValue(BAM_FILE);
+        mConfig = config;
+        mRefGenomeFile = new File(mConfig.RefGenomeFile);
 
-        final String refGenomeFile = cmd.getOptionValue(REF_GENOME);
-        mRefGenomeFile = new File(refGenomeFile);
-
-        mBamRecords = Lists.newArrayList();
+        mReadRecords = Lists.newArrayList();
         mBamRecordCount = 0;
         mCurrentGene = null;
 
-        mReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
-
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(mBamFile));
+        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(mConfig.BamFile));
 
         try
         {
-            LOGGER.debug("Loading indexed fasta reference file");
-            mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(refGenomeFile));
+            LOGGER.debug("loading indexed fasta reference file");
+            mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
         }
         catch (IOException e)
         {
-            LOGGER.error("Reference file loading failed");
+            LOGGER.error("Reference file loading failed: {}", e.toString());
             return;
         }
     }
 
-    public static boolean validConfig(final CommandLine cmd)
-    {
-        return cmd.hasOption(REF_GENOME) && cmd.hasOption(BAM_FILE);
-    }
-
-    public static void addCommandLineOptions(final Options options)
-    {
-        options.addOption(REF_GENOME, true, "Ref genome file location");
-        options.getOption(REF_GENOME).setRequired(true);
-        options.addOption(BAM_FILE, true, "RNA BAM file location");
-        options.getOption(BAM_FILE).setRequired(true);
-    }
-
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
-        mBamRecords.clear();
+        mReadRecords.clear();
         mBamRecordCount = 0;
 
         mCurrentGene = geneReadData;
@@ -116,10 +90,10 @@ public class RnaBamReader
 
         ++mBamRecordCount;
 
-        if(mReadCountLimit > 0 && mBamRecords.size() >= mReadCountLimit)
+        if(mConfig.ReadCountLimit > 0 && mReadRecords.size() >= mConfig.ReadCountLimit)
             return;
 
-        mBamRecords.add(record);
+        mReadRecords.add(new ReadRecord(record));
     }
 
     public void analyseReads()
@@ -144,17 +118,17 @@ public class RnaBamReader
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
 
-        for(final SAMRecord record : mBamRecords)
+        for(final ReadRecord record : mReadRecords)
         {
             // the read covers a part of the exon
             List<RegionReadData> containingRegions = mCurrentGene.getRegionReadData().stream()
-                    .filter(x -> x.Region.start() <= record.getStart() && x.Region.end() >= record.getEnd())
+                    .filter(x -> x.Region.start() <= record.PosStart && x.Region.end() >= record.PosEnd)
                     .collect(Collectors.toList());
 
             // the read covers all of the exon
             List<RegionReadData> containedRegions = mCurrentGene.getRegionReadData().stream()
                     .filter(x -> !containingRegions.contains(x))
-                    .filter(x -> x.Region.start() >= record.getStart() && x.Region.end() <= record.getEnd())
+                    .filter(x -> x.Region.start() >= record.PosStart && x.Region.end() <= record.PosEnd)
                     .collect(Collectors.toList());
 
             // the read covers part of the exon and crosses its boundary
@@ -186,45 +160,120 @@ public class RnaBamReader
                     }
                 }
             }
+            else
+            {
+                RegionReadData region = allRegions.get(0);
+
+                // check for a soft-clipping which matches an adjacent exon
+                checkSoftClippedRegions(region, record);
+            }
 
             // now check for matching bases in the read vs the reference for the overlapping sections
-            // final String recordBaseStr = record.getReadString();
-
             allRegions.forEach(x -> setMatchingBases(x, record));
         }
     }
 
-    private boolean overlaps(final GenomeRegion region, final SAMRecord record)
+    private static int MIN_SOFT_CLIPPED_MATCHED_BASES = 5;
+
+    private void checkSoftClippedRegions(final RegionReadData region, final ReadRecord record)
     {
-        return !(record.getStart() > region.end() || record.getEnd() < region.start());
+        // look for soft-clipped bases which match the exon before or afterwards
+        if(record.Cigar.getFirstCigarElement().getOperator() == CigarOperator.S
+        && record.Cigar.getFirstCigarElement().getLength() >= MIN_SOFT_CLIPPED_MATCHED_BASES && !region.getPreRegions().isEmpty())
+        {
+            int scLength = record.Cigar.getFirstCigarElement().getLength();
+            final String scBases = record.ReadBases.substring(0, scLength);
+            boolean matched = false;
+
+            for(RegionReadData preRegion : region.getPreRegions())
+            {
+                int baseLength = preRegion.refBases().length();
+
+                if(scBases.length() > baseLength)
+                    continue;
+
+                final String endBases = preRegion.refBases().substring(baseLength - scBases.length(), baseLength);
+                if(endBases.equals(scBases))
+                {
+                    matched = true;
+                    int[] preRegionBases = preRegion.refBasesMatched();
+                    int startBase = baseLength - scBases.length();
+                    for(int i = 0; i < scBases.length(); ++i)
+                    {
+                        ++preRegionBases[startBase + i];
+                    }
+
+                    preRegion.addMatchedRead();
+                }
+            }
+
+            if(!matched)
+                region.addNonAdjacentRead();
+        }
+
+        if(record.Cigar.getLastCigarElement().getOperator() == CigarOperator.S
+        && record.Cigar.getLastCigarElement().getLength() >= MIN_SOFT_CLIPPED_MATCHED_BASES && !region.getPostRegions().isEmpty())
+        {
+            int scLength = record.Cigar.getLastCigarElement().getLength();
+            final String scBases = record.ReadBases.substring(record.ReadBases.length() - scLength, record.ReadBases.length());
+            boolean matched = false;
+
+            for(RegionReadData postRegion : region.getPostRegions())
+            {
+                if(scBases.length() > postRegion.refBases().length())
+                    continue;
+
+                final String startBases = postRegion.refBases().substring(0, scBases.length());
+                if(startBases.equals(scBases))
+                {
+                    matched = true;
+
+                    int[] postRegionBases = postRegion.refBasesMatched();
+                    for(int i = 0; i < scBases.length(); ++i)
+                    {
+                        ++postRegionBases[i];
+                    }
+
+                    postRegion.addMatchedRead();
+                }
+            }
+
+            if(!matched)
+                region.addNonAdjacentRead();
+        }
     }
 
-    private void setMatchingBases(final RegionReadData region, final SAMRecord record)
+    private boolean overlaps(final GenomeRegion region, final ReadRecord record)
     {
-        long overlapStart = max(region.start(), record.getStart());
-        long overlapEnd = min(region.end(), record.getEnd());
+        return !(record.PosStart > region.end() || record.PosEnd < region.start());
+    }
+
+    public static void setMatchingBases(final RegionReadData region, final ReadRecord record)
+    {
+        long overlapStart = max(region.start(), record.PosStart);
+        long overlapEnd = min(region.end(), record.PosEnd);
         int overlapLength = (int)(overlapEnd - overlapStart + 1);
 
         if(overlapLength < 5)
             return;
 
         // compare the bases at this location
-        int recordOverlapStart = (int)(overlapStart - record.getStart());
+        int recordOverlapStart = (int)(overlapStart - record.PosStart);
 
         // factor in soft-clipping
-        if(record.getCigar().getFirstCigarElement().getOperator() == CigarOperator.S)
+        if(record.Cigar.getFirstCigarElement().getOperator() == CigarOperator.S)
         {
-            recordOverlapStart += record.getCigar().getFirstCigarElement().getLength();
+            recordOverlapStart += record.Cigar.getFirstCigarElement().getLength();
         }
 
-        int recordOverlapEnd = min(recordOverlapStart + overlapLength, record.getReadString().length() - 1);
+        int recordOverlapEnd = min(recordOverlapStart + overlapLength, record.ReadBases.length() - 1);
 
-        if(recordOverlapStart < 0 || recordOverlapStart >= record.getReadString().length())
+        if(recordOverlapStart < 0 || recordOverlapStart >= record.ReadBases.length())
         {
             recordOverlapStart = 0;
         }
 
-        final String recordBases = record.getReadString().substring(recordOverlapStart, recordOverlapEnd);
+        final String recordBases = record.ReadBases.substring(recordOverlapStart, recordOverlapEnd);
 
         int regionOverlapStart = (int)(overlapStart - region.start());
         int regionOverlapEnd = regionOverlapStart + overlapLength;
@@ -232,13 +281,13 @@ public class RnaBamReader
 
         if(!recordBases.equals(regionBases))
         {
-            // prform a manual comparison
+            // perform a manual comparison
             int matchedBases = findStringOverlaps(regionBases, recordBases);
 
             if(matchedBases < MIN_BASE_MATCH_PERC * overlapLength)
             {
                 LOGGER.trace("region({}) has base-mismatch, overlap({}) matched({}) cigar({})",
-                        region, overlapLength, matchedBases, record.getCigar());
+                        region, overlapLength, matchedBases, record.Cigar);
 
                 LOGGER.trace("regionBases: pos({} -> {}) {}",
                         regionOverlapStart, regionOverlapEnd, regionBases);
@@ -261,7 +310,7 @@ public class RnaBamReader
 
     private static final double MIN_BASE_MATCH_PERC = 0.9;
 
-    private int findStringOverlaps(final String str1, final String str2)
+    public static int findStringOverlaps(final String str1, final String str2)
     {
         if(str1.length() == 0 || str2.length() == 0)
             return 0;
@@ -332,70 +381,14 @@ public class RnaBamReader
         return matched;
     }
 
-    public void testReadBamCounts()
+    @VisibleForTesting
+    public void addReadRecords(final GeneReadData geneReadData, final List<ReadRecord> readRecords)
     {
-        LOGGER.debug("reading BAM file: {}", mBamFile);
-
-        // slicing
-        List<GenomeRegion> genomeRegions = Lists.newArrayList();
-
-        String chromosome = "21";
-        long posStart = 42870046;
-        long posEnd = 42870116;
-
-        genomeRegions.add(GenomeRegions.create(chromosome, posStart, posEnd));
-
-        SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, genomeRegions);
-
-        samSlicer.slice(mSamReader, this::processSamRecord);
-
-        // mTumorReader.
-
-
+        mCurrentGene = geneReadData;
+        mBamRecordCount += readRecords.size();
+        mReadRecords.clear();;
+        mReadRecords.addAll(readRecords);
     }
 
 
-
-            /*
-        for(BachelorGermlineVariant variant : bachRecords)
-        {
-            VariantHotspot variantHotspot = ImmutableVariantHotspotImpl.builder()
-                    .chromosome(variant.Chromosome)
-                    .position(variant.Position)
-                    .ref(variant.Ref)
-                    .alt(variant.Alts)
-                    .build();
-
-            allHotspots.add(variantHotspot);
-        }
-
-        final VariantHotspotEvidenceFactory hotspotEvidenceFactory = new VariantHotspotEvidenceFactory(DEFAULT_MIN_MAPPING_QUALITY, DEFAULT_MIN_BASE_QUALITY, allHotspots);
-        final List<VariantHotspotEvidence> tumorEvidence = hotspotEvidenceFactory.evidence(mIndexedFastaSequenceFile, mSamReader);
-
-        if(tumorEvidence.size() != bachRecords.size())
-        {
-            LOGGER.error("Incomplete BAM evidence read: evidenceCount({}) vs bachRecords({})", tumorEvidence.size(), bachRecords.size());
-            return;
-        }
-
-
-        for(BachelorGermlineVariant variant : bachRecords)
-        {
-            for(VariantHotspotEvidence evidence : tumorEvidence)
-            {
-                if(evidence.chromosome().equals(variant.Chromosome) && evidence.position() == variant.Position
-                        && evidence.ref().equals(variant.Ref) && evidence.alt().equals(variant.Alts))
-                {
-                    variant.setTumorData(evidence.altSupport(), evidence.readDepth());
-
-                    LOGGER.debug("chr({}) position({}) matched, counts(ref={} alt={} depth={})",
-                            variant.Chromosome, variant.Position,
-                            variant.getTumorRefCount(), variant.getTumorAltCount(), variant.getTumorReadDepth());
-
-                    break;
-                }
-            }
-        }
-
-     */
 }

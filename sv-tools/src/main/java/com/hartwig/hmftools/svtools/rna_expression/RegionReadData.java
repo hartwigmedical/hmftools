@@ -19,7 +19,10 @@ public class RegionReadData
     private String mRefBases;
     private int[] mRefBasesMatched;
     private int mMatchingReads;
-    private Map<RegionReadData,Integer> mLinkedRegions; // where a read covers this region and another next to it
+    private int mNonAdjacentReads; // reads spanning to unmapped regions where adjacent regions exist
+    private final Map<RegionReadData,Integer> mLinkedRegions; // where a read covers this region and another next to it
+    private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
+    private List<RegionReadData> mPostRegions;
 
     public RegionReadData(final GenomeRegion region, final String id)
     {
@@ -30,6 +33,10 @@ public class RegionReadData
         mRefBases = "";
         mLinkedRegions = Maps.newHashMap();
         mMatchingReads = 0;
+
+        mPreRegions = Lists.newArrayList();
+        mPostRegions = Lists.newArrayList();
+        mNonAdjacentReads = 0;
     }
 
     public String chromosome() { return Region.chromosome(); }
@@ -39,6 +46,12 @@ public class RegionReadData
     public int[] refBasesMatched() { return mRefBasesMatched; }
     public void addMatchedRead() { ++mMatchingReads; }
     public int matchedReadCount() { return mMatchingReads; }
+
+    public void addNonAdjacentRead() { ++mNonAdjacentReads; }
+    public int nonAdjacentReads() { return mNonAdjacentReads; }
+
+    public List<RegionReadData> getPreRegions() { return mPreRegions; }
+    public List<RegionReadData> getPostRegions() { return mPostRegions; }
 
     public final Map<RegionReadData, Integer> getLinkedRegions() { return mLinkedRegions; }
 
@@ -55,10 +68,18 @@ public class RegionReadData
     public final String refBases() { return mRefBases; }
     public void setRefBases(final String bases) { mRefBases = bases; }
 
+    public int length() { return mRefBases.length(); }
+
     public double averageDepth()
     {
         int depthTotal = Arrays.stream(mRefBasesMatched).sum();
         return depthTotal/(double)mRefBasesMatched.length;
+    }
+
+    public int baseCoverage(int minReadCount)
+    {
+        // percent of bases covered by a read
+        return (int)Arrays.stream(mRefBasesMatched).filter(x -> x >= minReadCount).count();
     }
 
     public String toString()
