@@ -54,12 +54,9 @@ public class IclusionApiObjectMapperTest {
         study.ccmo = "ccmo";
         study.mutations = Lists.newArrayList(mutation1, mutation2);
         study.indicationIds = Lists.newArrayList("ind1");
-        study.type_id = "type_id";
-        study.type_name = "type_name";
-        study.age_id = "age_id";
-        study.age_name = "age_name";
-        study.phase_id = "phase_id";
-        study.phase_name = "phase_name";
+        study.typeName = "type_name";
+        study.ageName = "age_name";
+        study.phaseName = "phase_name";
 
         List<IclusionTrial> trials = IclusionApiObjectMapper.fromApiObjects(Lists.newArrayList(study), Lists.newArrayList(indication),
                 Lists.newArrayList(gene), Lists.newArrayList(variant1, variant2));
@@ -73,9 +70,9 @@ public class IclusionApiObjectMapperTest {
         assertEquals(nullToEmpty(study.nct), trials.get(0).nct());
         assertEquals(nullToEmpty(study.ipn), trials.get(0).ipn());
         assertEquals(study.ccmo, trials.get(0).ccmo());
-        assertEquals(study.type_id + ":" + study.type_name, trials.get(0).type());
-        assertEquals(study.age_id + ":" + study.age_name, trials.get(0).age());
-        assertEquals(study.phase_id + ":" + study.phase_name, trials.get(0).phase());
+        assertEquals(study.typeName, trials.get(0).type());
+        assertEquals(study.ageName, trials.get(0).age());
+        assertEquals(study.phaseName, trials.get(0).phase());
 
         assertEquals(indication.indicationNameFull, trials.get(0).tumorLocations().get(0).primaryTumorLocation());
         assertEquals(indication.doid, trials.get(0).tumorLocations().get(0).doids().get(0));

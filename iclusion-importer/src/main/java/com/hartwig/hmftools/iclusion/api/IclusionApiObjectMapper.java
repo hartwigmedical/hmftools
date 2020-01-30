@@ -15,6 +15,7 @@ import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,9 +53,9 @@ final class IclusionApiObjectMapper {
                     .ccmo(study.ccmo)
                     .tumorLocations(buildTumorLocations(indications, study.indicationIds))
                     .mutations(buildMutations(genes, variants, study.mutations))
-                    .type(study.type_id + ":" + study.type_name)
-                    .age(study.age_id + ":" + study.age_name)
-                    .phase(study.phase_id + ":" + study.phase_name)
+                    .type(study.typeName)
+                    .age(study.ageName)
+                    .phase(study.phaseName)
                     .build());
         }
 

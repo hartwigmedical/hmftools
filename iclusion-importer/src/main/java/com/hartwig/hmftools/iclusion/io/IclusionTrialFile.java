@@ -79,9 +79,9 @@ public final class IclusionTrialFile {
                 .add(trial.ccmo())
                 .add(tumorLocationsToString(trial.tumorLocations()))
                 .add(mutationsToString(trial.mutations()))
-                .add(trial.type())
-                .add(trial.age())
-                .add(trial.phase())
+                .add(trial.type().isEmpty() ? NO_LIST_ENTRIES : trial.type())
+                .add(trial.age().isEmpty() ? NO_LIST_ENTRIES : trial.age())
+                .add(trial.phase().isEmpty() ? NO_LIST_ENTRIES : trial.phase())
                 .toString();
     }
 
