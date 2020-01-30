@@ -40,6 +40,9 @@ public class IclusionTrialFileTest {
                 .addTumorLocations(ImmutableIclusionTumorLocation.builder().primaryTumorLocation("loc2").build())
                 .addMutations(ImmutableIclusionMutation.builder().gene("gene1").name("name1").build())
                 .addMutations(ImmutableIclusionMutation.builder().gene("gene2").name("name2").build())
+                .type("type")
+                .age("age")
+                .phase("phase")
                 .build();
 
         IclusionTrial trial2 = ImmutableIclusionTrial.builder()
@@ -50,6 +53,9 @@ public class IclusionTrialFileTest {
                 .nct("nct2")
                 .ipn("ipn2")
                 .ccmo("ccmo2")
+                .type("type")
+                .age("age")
+                .phase("phase")
                 .build();
 
         IclusionTrial trial3 = ImmutableIclusionTrial.builder()
@@ -61,6 +67,9 @@ public class IclusionTrialFileTest {
                 .ipn("ipn3")
                 .ccmo("ccmo3")
                 .addMutations(ImmutableIclusionMutation.builder().gene("gene3").name("name3").build())
+                .type("type")
+                .age("age")
+                .phase("phase")
                 .build();
 
         List<IclusionTrial> convertedTrials =
@@ -124,6 +133,9 @@ public class IclusionTrialFileTest {
                 .eudra(Strings.EMPTY)
                 .nct(Strings.EMPTY)
                 .ipn(Strings.EMPTY)
-                .ccmo(Strings.EMPTY);
+                .ccmo(Strings.EMPTY)
+                .type(Strings.EMPTY)
+                .age(Strings.EMPTY)
+                .phase(Strings.EMPTY);
     }
 }

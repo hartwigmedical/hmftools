@@ -38,4 +38,13 @@ public abstract class IclusionTrial {
     @NotNull
     public abstract List<IclusionMutation> mutations();
 
+    @NotNull
+    public abstract String type();
+
+    @NotNull
+    public abstract String age();
+
+    @NotNull
+    public abstract String phase();
+
 }

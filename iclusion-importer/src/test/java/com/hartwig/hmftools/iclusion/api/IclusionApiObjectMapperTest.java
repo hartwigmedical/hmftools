@@ -54,6 +54,12 @@ public class IclusionApiObjectMapperTest {
         study.ccmo = "ccmo";
         study.mutations = Lists.newArrayList(mutation1, mutation2);
         study.indicationIds = Lists.newArrayList("ind1");
+        study.type_id = "type_id";
+        study.type_name = "type_name";
+        study.age_id = "age_id";
+        study.age_name = "age_name";
+        study.phase_id = "phase_id";
+        study.phase_name = "phase_name";
 
         List<IclusionTrial> trials = IclusionApiObjectMapper.fromApiObjects(Lists.newArrayList(study), Lists.newArrayList(indication),
                 Lists.newArrayList(gene), Lists.newArrayList(variant1, variant2));

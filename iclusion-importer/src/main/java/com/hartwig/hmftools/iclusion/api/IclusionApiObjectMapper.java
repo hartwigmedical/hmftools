@@ -40,7 +40,6 @@ final class IclusionApiObjectMapper {
                         study.acronym);
                 title = title.replace(IclusionTrialFile.MAIN_FIELD_DELIMITER, " ");
             }
-
             // We loose NULL nct and ipn fields forever, but that is considered acceptable
             // (no functional difference between empty nct and null nct)
             trials.add(ImmutableIclusionTrial.builder()
@@ -53,6 +52,9 @@ final class IclusionApiObjectMapper {
                     .ccmo(study.ccmo)
                     .tumorLocations(buildTumorLocations(indications, study.indicationIds))
                     .mutations(buildMutations(genes, variants, study.mutations))
+                    .type(study.type_id + ":" + study.type_name)
+                    .age(study.age_id + ":" + study.age_name)
+                    .phase(study.phase_id + ":" + study.phase_name)
                     .build());
         }
 
