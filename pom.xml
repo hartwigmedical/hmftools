@@ -66,7 +66,7 @@
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <patient-reporter.version>7.9</patient-reporter.version>
         <patient-db.version>3.39</patient-db.version>
-        <iclusion-importer.version>1.0</iclusion-importer.version>
+        <iclusion-importer.version>1.1</iclusion-importer.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
