@@ -73,7 +73,8 @@ There are 8 key steps in the SAGE algorithm described in detail below:
 ## 1. Candidate Variants And Read Contexts
 
 In this first parse of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs and compares the bases in every aligned 
-region (flags `M`, `X` or `=`) with the provided reference genome to find SNVs. 
+region (flags `M`, `X` or `=`) with the provided reference genome to find SNVs.   MNVs of 2 ('2X') or 3 bases ('1X1M1X' or '3X') are considered explicitly also at this stage as an independent candidate variant.
+
 Note that there are no base quality or mapping quality requirements when looking for candidates.
 
 SAGE tallies the raw ref/alt support and base quality and collects the read contexts of each variant.
@@ -110,7 +111,9 @@ Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTE
 
 Lastly, if the base the variant location matches the ref genome, the `REFERENCE` tally is incremented while any read which spans the core read context increments the `TOTAL` tally. 
 
-### Quality
+### Modified Tumor Quality Score
+
+**@JON - PLEASE ADD default values for penalty constants 
 
 If a `FULL` or `PARTIAL` match is made, we update the quality of the variant. 
 No other match contributes to quality.  
@@ -124,7 +127,7 @@ The quality is incremented as follows:
 distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
 baseQuality (SNV) = BASEQ at variant location  
 baseQuality (MNV/Indel) = min BASEQ over core read context  
-modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty`, distanceFromReadEdge - `distanceFromReadEdgeFixedPenalty`) 
+modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty`, 3*distanceFromReadEdge - `distanceFromReadEdgeFixedPenalty`) 
 
 improperPairPenalty = `mapQualityImproperPaidPenalty` if improper pair flag set else 0  
 distanceFromReference = number of somatic alterations to get to reference from the complete read context  
@@ -160,39 +163,34 @@ To reduce processing time there are two hard filters that are applied at this st
 
 Filter | Default Value | Field
 ---|---|---
-hard_min_tumor_qual | 1| `QUAL`
+hard_min_tumor_qual |1**| `QUAL`
 hard_min_tumor_alt_support |2| Normal `AD[1]`
- 
-These variants are excluded from this point onwards and have no further processing applied to them.
+** Hotspots are kept regardless of tumor quality
+
+These variants are excluded from this point onwards and have no further processing applied to them.  
  
 ## 4. Normal Counts and Quality
-Evidence in the normal is collected in same manner as step 2.
+
+For each candidate variant evidence in the normal is collected in same manner as step 2.
 
 ## 5. Soft Filters
-TODO: CLEAN UP
 
+Given evidence of the variants in the tumor and normal we apply somatic filters.    The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the normal sample.
 
-Given evidence of the variants in the tumor and normal we apply somatic filters. 
-The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample 
-and validating that the variant is highly unlikely to be present in the normal sample.
-The filters are tiered to maximise sensitivity in regions of high prior likelihood for variants.
-A hotspot panel of 10,000 specific variants are set to the highest sensitivity followed by medium sensitivity for a panel of cancer related 
-gene exons and splice regions and more aggressive filtering genome wide to ensure a low false positive rate.   
-The default filtering settings are:
+The filters are tiered to maximise sensitivity in regions of high prior likelihood for variants.    A hotspot panel of 10,000 specific variants are set to the highest sensitivity (TIER=`HOTSPOT`) followed by medium sensitivity for a panel of cancer related gene exons and splice regions (TIER =`PANEL`) and more aggressive filtering genome wide in both high confidence (TIER=`HIGH_CONFIDENCE`) and low confidence (TIER=`LOW_CONFIDENCE`) regions to ensure a low false positive rate genome wide
 
-The following filters are applied after collecting evidence about a variant. 
-The filters are applied according to the `TIER` of the variant. 
-The `TIER` can be one of `HOTSPOT`, `PANEL`, `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` as determined by the supplied hotspot, panel and high confidence locations. 
+The specific fiters and default settings for each tier are:
 
 Filter  | Hotspot | Panel | High Confidence | Low Confidence | Field
----|---|---|---|---
-min_tumor_qual|35|100|120|200|`QUAL`
+---|---|---|---|---|---
+min_tumor_qual|35**|100|120|200|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | ? | ?
 min_germline_depth_allosome|0|0|6 | ? | ?
-max_germline_vaf|10%|4%|4% | ? | ?
+max_germline_vaf***|10%|4%|4% | ? | ?
 max_germline_rel_base_qual|100%|4%|4% | ? | ?
-
+** Even if tumor qual score cutoff is not met, hotspots are also called so long as raw tumor vaf >= 0.05 and raw allelic depth in tumor supporting the ALT >= 5 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
+*** A special filter is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 
 ## 6. Phasing
 
@@ -206,7 +204,7 @@ Regarding mechanism, multiple somatic cis-phased variants can frequently occur t
 
 Phasing somatic and germline variants together can also aid in understanding somatic mechanisms - for example if the germline has a 6 base deletion in a microsatellite and the tumor has a 7 base deletion, then the likely somatic mechanism is a 1 base deletion. 
 
-Phasing is also important for function impact particularly in 2 prominent cases: 
+Phasing is also important for functional impact particularly in 2 prominent cases: 
   - 2 nearby phased frameshift variants can lead to an inframe (and potentially activating) INDEL; and 
   - 2 phased synonymous SNVs in the same codon could potentially cause a nonsense or missense effect together.    
 
@@ -219,45 +217,23 @@ A>T: CAACAATCGA<b>T</b>CGATACAATC
 T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 </pre>
 
-Similarly, SNVs and INDELs may be phased together.
-
-Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
-
-Phasing variants opens up a number of algorithmic possibilities including MNV detection and de-duplication as explained below.
+Similarly, SNVs, MNVs and INDELs may be phased together.   Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
 
 
-### INDEL De-duplication
+## 7. INDEL De-duplication
 
 While the read context is designed to capture a unique sequence of bases, it it sometimes possible that repeat sequences in the flanks of the read context coupled with an aligners alternate view on the same event can cause duplicate INDELs. 
 If SAGE finds two phased INDELs of the same type at the same position where one is a subset of the other, then the longer is filtered with `dedup`.
- 
 
-## 7. MNV Handling
+## 8. MNV/SNV Deduplication and special handling
 
-Phased SNVs separated by no more than one base may indicate the existence of a MNV. 
-To confirm the existence of a MNV we re-examine the bam files, but only if:
-  1. the SNVs are unfiltered;
-  2. the resultant MNV is a hotspot; or
-  3. one of the SNVs is unfiltered and the other is a germline variant (ie, soft-filtered by the germline criteria only).
+**<@JON - PLEASE ADD DETAILS>. . .   
 
-Once the evidence is collected, the MNV is included if it is either unfiltered with <b> NO SUPPORT IN THE NORMAL </b> or it's a hotpot. 
-In either case, the constituent SNVs are filtered with `merge`.   
+This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants.   In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
 
-If the MNV contains a germline variant (case 3 above) it is filtered with `germline_mnv` before being written to file and the constituent SNVs remain unchanged.
-The purpose of this is to capture the impact of the germline variant together with the somatic variant. 
+**<@JON - Do we annotate these at all>
 
-The following example shows unfiltered, phased, SNVs that produce the MNV `TCGA > CGGT`:
-<pre>
-REF: CAACAATCGATCGATATAAATCTGA
-T>C: CAACAA<b>C</b>GGTTCGATATAAATC
-C>G:  AACAAC<b>G</b>GTTCGATATAAATCT
-A>T:    CAACGG<b>T</b>TCGATATAAATCTGA
-
-MNV: CAACAA<b>CG</b>G<b>T</b>TCGATATAAATCTGA
-</pre>
-
-
-## 8. Output
+## 9. Output
 
 There are two more 'hard' filters that are lazily applied at the end of the process just before writing to file. 
 These do not save any processing time but do reduce the output file size. 
@@ -267,4 +243,4 @@ Filter | Default Value | Field
 hard_min_tumor_qual_vcf | 30 | `QUAL`
 hard_max_normal_alt_support |2| Normal `AD[1]`
 
-Including the `hard_filter` flag will turn all the soft filters described above into (lazily applied) hard filters.
+Including the `hard_filter` flag will turn all the soft filters described above into (lazily applied) hard filters.   Again hotspots are excluded from these hard filters.
