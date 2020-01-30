@@ -73,6 +73,9 @@ public class IclusionApiObjectMapperTest {
         assertEquals(nullToEmpty(study.nct), trials.get(0).nct());
         assertEquals(nullToEmpty(study.ipn), trials.get(0).ipn());
         assertEquals(study.ccmo, trials.get(0).ccmo());
+        assertEquals(study.type_id + ":" + study.type_name, trials.get(0).type());
+        assertEquals(study.age_id + ":" + study.age_name, trials.get(0).age());
+        assertEquals(study.phase_id + ":" + study.phase_name, trials.get(0).phase());
 
         assertEquals(indication.indicationNameFull, trials.get(0).tumorLocations().get(0).primaryTumorLocation());
         assertEquals(indication.doid, trials.get(0).tumorLocations().get(0).doids().get(0));
