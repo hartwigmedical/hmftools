@@ -189,6 +189,7 @@ min_germline_depth|0|0|10 | ? | ?
 min_germline_depth_allosome|0|0|6 | ? | ?
 max_germline_vaf***|10%|4%|4% | ? | ?
 max_germline_rel_base_qual|100%|4%|4% | ? | ?
+
 ** Even if tumor qual score cutoff is not met, hotspots are also called so long as raw tumor vaf >= 0.05 and raw allelic depth in tumor supporting the ALT >= 5 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 *** A special filter is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 
