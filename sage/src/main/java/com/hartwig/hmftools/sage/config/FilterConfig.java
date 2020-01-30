@@ -87,6 +87,11 @@ public interface FilterConfig {
         return 0.05;
     }
 
+    default int hotspotMinRawTumorAltSupportToSkipQualCheck() {
+        return 5;
+    }
+
+
     default double minGermlineVaf() {
         return 0;
     }

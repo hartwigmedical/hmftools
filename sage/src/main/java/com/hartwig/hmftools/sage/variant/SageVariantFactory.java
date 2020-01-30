@@ -52,7 +52,6 @@ public class SageVariantFactory {
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
 
-
     @NotNull
     private Set<String> germlineOnlyFilters(@NotNull final AltContext germline) {
         final Set<String> result = Sets.newHashSet();
@@ -65,7 +64,8 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    private Set<String> pairedFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,  @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
+    private Set<String> pairedFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
+            @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
 
         // TUMOR Tests
@@ -110,8 +110,8 @@ public class SageVariantFactory {
     }
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawVaf() >= config.hotspotMinRawTumorVafToSkipQualCheck();
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawAltSupport() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
+                && Doubles.greaterOrEqual(primaryTumor.rawVaf(), config.hotspotMinRawTumorVafToSkipQualCheck());
     }
 
 }
