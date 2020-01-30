@@ -30,7 +30,7 @@ public final class IclusionApiMain {
     public static List<IclusionTrial> readIclusionTrials(@NotNull String iClusionEndpoint, @NotNull IclusionCredentials credentials) {
         OkHttpClient httpClient = buildHttpClient();
 
-        LOGGER.info("Connecting with iClusion API on {}", iClusionEndpoint);
+        LOGGER.info("Connecting with iClusion API at {} using user '{}'", iClusionEndpoint, credentials.username());
         IclusionApi api = buildIclusionApi(httpClient, iClusionEndpoint);
 
         LOGGER.info("Requesting iClusion access token");
@@ -49,11 +49,11 @@ public final class IclusionApiMain {
         List<IclusionObjectVariant> variants = api.variants(tokenBearer).blockingFirst();
         LOGGER.info(" Received {} iClusion variants", variants.size());
 
+        LOGGER.info("Closing down connection to iClusion API");
+        httpClient.dispatcher().executorService().shutdown();
+
         List<IclusionTrial> trials = IclusionApiObjectMapper.fromApiObjects(studies, indications, genes, variants);
         LOGGER.info("Created {} trials from iClusion API objects", trials.size());
-
-        LOGGER.info("Closing down connection");
-        httpClient.dispatcher().executorService().shutdown();
 
         return trials;
     }

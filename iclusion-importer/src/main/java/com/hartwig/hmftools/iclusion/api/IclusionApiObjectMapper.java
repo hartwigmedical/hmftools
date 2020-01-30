@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.iclusion.api;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -9,6 +11,7 @@ import com.hartwig.hmftools.iclusion.data.IclusionTumorLocation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionMutation;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTrial;
 import com.hartwig.hmftools.iclusion.data.ImmutableIclusionTumorLocation;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,13 +32,24 @@ final class IclusionApiObjectMapper {
         List<IclusionTrial> trials = Lists.newArrayList();
 
         for (IclusionObjectStudy study : studies) {
+            // We loose MAIN_FIELD_DELIMITER in titles for good but that is considered acceptable compromise.
+            String title = study.title;
+            if (title.contains(IclusionTrialFile.MAIN_FIELD_DELIMITER)) {
+                LOGGER.info("Replacing trial file delimiter '{}' with a space from study with acronym '{}'",
+                        IclusionTrialFile.MAIN_FIELD_DELIMITER,
+                        study.acronym);
+                title = title.replace(IclusionTrialFile.MAIN_FIELD_DELIMITER, " ");
+            }
+
+            // We loose NULL nct and ipn fields forever, but that is considered acceptable
+            // (no functional difference between empty nct and null nct)
             trials.add(ImmutableIclusionTrial.builder()
                     .id(study.id)
                     .acronym(study.acronym)
-                    .title(study.title)
+                    .title(title)
                     .eudra(study.eudra)
-                    .nct(study.nct)
-                    .ipn(study.ipn)
+                    .nct(nullToEmpty(study.nct))
+                    .ipn(nullToEmpty(study.ipn))
                     .ccmo(study.ccmo)
                     .tumorLocations(buildTumorLocations(indications, study.indicationIds))
                     .mutations(buildMutations(genes, variants, study.mutations))

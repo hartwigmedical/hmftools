@@ -10,7 +10,7 @@
 
     <artifactId>iclusion-importer</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>${iclusion-importer.version}</version>
     <name>HMF Tools - iClusion Importer</name>
 
     <dependencies>
