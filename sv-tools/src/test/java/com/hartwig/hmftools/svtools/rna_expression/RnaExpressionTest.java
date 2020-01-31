@@ -1,8 +1,14 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.findStringOverlaps;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.junit.Test;
 
@@ -37,5 +43,29 @@ public class RnaExpressionTest
 
         overlap = findStringOverlaps(str1, str2);
         assertEquals(19, overlap);
+    }
+
+    @Test
+    public void testPositionMatches()
+    {
+        GenomeRegion region = GenomeRegions.create("1", 1000, 2000);
+
+        ReadRecord record = new ReadRecord("1", "1", 800, 900, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = new ReadRecord("1", "1", 2200, 2300, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = new ReadRecord("1", "1", 1500, 1600, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = new ReadRecord("1", "1", 800, 2200, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = new ReadRecord("1", "1", 800, 1200, "", null);
+        assertTrue(overlaps(region, record));
+
+        record = new ReadRecord("1", "1", 1900, 2200, "", null);
+        assertTrue(overlaps(region, record));
     }
 }

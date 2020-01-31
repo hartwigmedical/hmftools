@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,12 +32,16 @@ public class RnaExpConfig
     public static final String BAM_FILE = "bam_file";
     public static final String READ_COUNT_LIMIT = "read_count_limit";
 
+    public static final String SPECIFIC_TRANS_IDS = "specific_trans";
+
     public final List<String> RestrictedGeneIds;
     public final String OutputDir;
     public final boolean AllTranscripts;
     public final String BamFile;
     public final String RefGenomeFile;
     public final int ReadCountLimit;
+
+    public final List<String> SpecificTransIds;
 
     public static final int MAX_READ_COUNT = 100000;
 
@@ -58,6 +63,18 @@ public class RnaExpConfig
 
         RefGenomeFile = cmd.getOptionValue(REF_GENOME);
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
+
+        SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
+                Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
+                : Lists.newArrayList();
+
+        /*
+        final String specificTrans = cmd.getOptionValue(SPECIFIC_TRANS_IDS);
+        SpecificTransIds = specificTrans != null ? (specificTrans.contains(";") ?
+                Arrays.stream(specificTrans.split(";")).collect(Collectors.toList()) : Lists.newArrayList(specificTrans))
+                : Lists.newArrayList();
+
+         */
     }
 
     public RnaExpConfig()
@@ -68,6 +85,7 @@ public class RnaExpConfig
         RefGenomeFile = "";
         AllTranscripts = true;
         ReadCountLimit = MAX_READ_COUNT;
+        SpecificTransIds = Lists.newArrayList();
     }
 
     public static boolean checkValid(final CommandLine cmd)
@@ -88,11 +106,10 @@ public class RnaExpConfig
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
 
         options.addOption(REF_GENOME, true, "Ref genome file location");
-        options.getOption(REF_GENOME).setRequired(true);
         options.addOption(BAM_FILE, true, "RNA BAM file location");
-        options.getOption(BAM_FILE).setRequired(true);
         return options;
     }
 

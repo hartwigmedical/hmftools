@@ -8,19 +8,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import htsjdk.samtools.SAMRecord;
-
 public class RegionReadData
 {
     public final GenomeRegion Region;
 
     public final String Id;
+    private final List<String> mRefRegions;
 
     private String mRefBases;
     private int[] mRefBasesMatched;
     private int mMatchingReads;
     private int mNonAdjacentReads; // reads spanning to unmapped regions where adjacent regions exist
-    private final Map<RegionReadData,Integer> mLinkedRegions; // where a read covers this region and another next to it
+    private final Map<RegionReadData,Integer> mLinkedRegions; // count of reads covering this region and another next to it
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
     private List<RegionReadData> mPostRegions;
 
@@ -28,6 +27,8 @@ public class RegionReadData
     {
         Region = region;
         Id = id;
+
+        mRefRegions = Lists.newArrayList();
 
         mRefBasesMatched = new int[(int)region.bases()+1];
         mRefBases = "";
@@ -42,6 +43,13 @@ public class RegionReadData
     public String chromosome() { return Region.chromosome(); }
     public long start() { return Region.start(); }
     public long end() { return Region.end(); }
+
+    public final List<String> getRefRegions() { return mRefRegions; }
+    public void addRefRegion(final String ref)
+    {
+        if(!mRefRegions.contains(ref))
+            mRefRegions.add(ref);
+    }
 
     public int[] refBasesMatched() { return mRefBasesMatched; }
     public void addMatchedRead() { ++mMatchingReads; }

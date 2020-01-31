@@ -10,13 +10,18 @@ public class GeneReadData
     public final EnsemblGeneData GeneData;
 
     private final List<RegionReadData> mRegionReadData;
+
+    // summary results
     private int mTotalReadCount;
+    private List<TranscriptResults> mTranscriptResults;
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
         GeneData = geneData;
 
         mRegionReadData = Lists.newArrayList();
+
+        mTranscriptResults = Lists.newArrayList();
         mTotalReadCount = 0;
     }
 
@@ -45,4 +50,6 @@ public class GeneReadData
     public int totalReadCount() { return mTotalReadCount; }
     public void addReadCount() { ++mTotalReadCount; }
     public void setTotalReadCount(int count) { mTotalReadCount = count; }
+
+    public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
 }
