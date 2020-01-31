@@ -196,7 +196,7 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
     }
 
     private boolean isMod3RefOrAlt(@NotNull final VariantContext context) {
-        int indelLength = indelLength(context);
+        int indelLength = Math.abs(indelLength(context));
         return (indelLength > 0 && indelLength % 3 == 0);
     }
 
