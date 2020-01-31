@@ -21,6 +21,8 @@ public enum LimsGermlineReportingChoice {
                     return ACTIONABLE_ONLY;
                 case "3: Geen toevalsbevindingen; familie mag deze wel opvragen":
                     return NONE_ALLOW_FAMILY;
+                case "3: Geen toevalsbevindingen":
+                    return NONE;
                 case "4: Geen toevalsbevindingen; familie mag deze niet opvragen":
                     return NONE;
                 default:
