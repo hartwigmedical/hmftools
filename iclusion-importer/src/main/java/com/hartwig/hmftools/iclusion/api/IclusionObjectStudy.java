@@ -14,10 +14,7 @@ class IclusionObjectStudy {
     @Json(name = "ccmo") public String ccmo;
     @Json(name = "indication_ids") public List<String> indicationIds;
     @Json(name = "mutations") public List<IclusionObjectMutation> mutations;
-    @Json(name = "type_id")  public String typeId;
     @Json(name = "type_name")  public String typeName;
-    @Json(name = "age_id")  public String ageId;
     @Json(name = "age_name")  public String ageName;
-    @Json(name = "phase_id")  public String phaseId;
     @Json(name = "phase_name")  public String phaseName;
 }
