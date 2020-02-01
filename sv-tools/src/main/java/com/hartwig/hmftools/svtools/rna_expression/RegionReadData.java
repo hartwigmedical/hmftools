@@ -13,7 +13,7 @@ public class RegionReadData
     public final GenomeRegion Region;
 
     public final String Id;
-    private final List<String> mRefRegions;
+    private final List<String> mRefRegions; // identifiers for this region, eg transcriptId
 
     private String mRefBases;
     private int[] mRefBasesMatched;
@@ -93,5 +93,15 @@ public class RegionReadData
     public String toString()
     {
         return String.format("%s: %s:%d -> %d", Id, chromosome(), start(), end());
+    }
+
+    public void clearState()
+    {
+        for(int i = 0; i < mRefBasesMatched.length; ++i)
+            mRefBasesMatched[i] = 0;
+
+        mLinkedRegions.clear();
+        mMatchingReads = 0;
+        mNonAdjacentReads = 0;
     }
 }

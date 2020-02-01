@@ -1,6 +1,10 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadRecord
@@ -11,9 +15,9 @@ public class ReadRecord
     public final String Chromosome;
     public final long PosStart;
     public final long PosEnd;
-    public final int Length;
 
     public final String ReadBases;
+    public final int Length; // of bases
     public final Cigar Cigar;
 
     public ReadRecord(SAMRecord record)
@@ -24,8 +28,8 @@ public class ReadRecord
         Chromosome = record.getReferenceName();
         PosStart = record.getStart();
         PosEnd = record.getEnd();
-        Length = record.getReadLength();
         ReadBases = record.getReadString();
+        Length = ReadBases.length();
         Cigar = record.getCigar();
     }
 
@@ -36,8 +40,8 @@ public class ReadRecord
         Chromosome = chromosome;
         PosStart = posStart;
         PosEnd = posEnd;
-        Length = (int)(PosEnd - PosStart);
         ReadBases = readBases;
+        Length = ReadBases.length();
         Cigar = cigar;
     }
 
@@ -45,10 +49,34 @@ public class ReadRecord
 
     public long range() { return PosEnd - PosStart; }
 
+    public long upperReadStart()
+    {
+        // make use of Cigar info if present
+        if(range() == Length)
+            return PosStart;
+
+        if(Cigar != null && Cigar.getLastCigarElement().getOperator() == CigarOperator.M)
+            return PosEnd - Cigar.getLastCigarElement().getLength() + 1;
+
+        return max(PosStart, PosEnd - Length + 1);
+    }
+
+    public long lowerReadEnd()
+    {
+        // make use of Cigar info if present
+        if(range() == Length)
+            return PosEnd;
+
+        if(Cigar != null && Cigar.getFirstCigarElement().getOperator() == CigarOperator.M)
+            return PosStart + Cigar.getFirstCigarElement().getLength() - 1;
+
+        return min(PosEnd, PosStart + Length - 1);
+    }
+
     public String toString()
     {
-        return String.format("%s: range(%s: %d -> %d, dist=%d) length(%d) cigar(%s)",
-                Id, Chromosome, PosStart, PosEnd, PosEnd - PosStart, Length, Cigar != null ? Cigar.toString() : "");
+        return String.format("range(%s: %d -> %d, range=%d) length(%d) cigar(%s) id(%s)",
+                Chromosome, PosStart, PosEnd, range(), Length, Cigar != null ? Cigar.toString() : "", Id);
     }
 
 }
