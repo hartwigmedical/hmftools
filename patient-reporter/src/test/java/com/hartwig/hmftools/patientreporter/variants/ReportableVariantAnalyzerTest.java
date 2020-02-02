@@ -133,7 +133,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.NONE_ALLOW_FAMILY,
+                LimsGermlineReportingChoice.NONE,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 

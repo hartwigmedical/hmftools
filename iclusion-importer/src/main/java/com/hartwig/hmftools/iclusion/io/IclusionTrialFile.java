@@ -62,6 +62,9 @@ public final class IclusionTrialFile {
                 .add("ccmo")
                 .add("tumorLocations")
                 .add("mutations")
+                .add("type")
+                .add("age")
+                .add("phase")
                 .toString();
     }
 
@@ -76,6 +79,9 @@ public final class IclusionTrialFile {
                 .add(trial.ccmo())
                 .add(tumorLocationsToString(trial.tumorLocations()))
                 .add(mutationsToString(trial.mutations()))
+                .add(trial.type().isEmpty() ? NO_LIST_ENTRIES : trial.type())
+                .add(trial.age().isEmpty() ? NO_LIST_ENTRIES : trial.age())
+                .add(trial.phase().isEmpty() ? NO_LIST_ENTRIES : trial.phase())
                 .toString();
     }
 
@@ -154,6 +160,9 @@ public final class IclusionTrialFile {
                 .ccmo(values[6])
                 .tumorLocations(tumorLocationsFromString(values[7]))
                 .mutations(mutationsFromString(values[8]))
+                .type(values[9])
+                .age(values[10])
+                .phase(values[11])
                 .build();
     }
 

@@ -12,10 +12,12 @@ public class LimsGermlineReportingChoiceTest {
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("1: Behandelbare toevalsbevindingen", "WIDE02991111T"));
         assertEquals(LimsGermlineReportingChoice.ALL,
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("2: Alle toevalsbevindingen", "WIDE02991111T"));
-        assertEquals(LimsGermlineReportingChoice.NONE_ALLOW_FAMILY,
+        assertEquals(LimsGermlineReportingChoice.NONE,
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
                         "3: Geen toevalsbevindingen; familie mag deze wel opvragen",
                         "WIDE02991111T"));
+        assertEquals(LimsGermlineReportingChoice.NONE,
+                LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("3: Geen toevalsbevindingen", "WIDE02991111T"));
         assertEquals(LimsGermlineReportingChoice.NONE,
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
                         "4: Geen toevalsbevindingen; familie mag deze niet opvragen",
