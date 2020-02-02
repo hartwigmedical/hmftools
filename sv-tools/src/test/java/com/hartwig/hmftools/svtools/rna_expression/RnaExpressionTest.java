@@ -93,7 +93,7 @@ public class RnaExpressionTest
 
         // a read covering all of an exon with unmapped bases either end
         region = new RegionReadData(GenomeRegions.create("1", 105, 114), "1");
-        region.setRefBases(refBaseString.substring(5, 14));
+        region.setRefBases(refBaseString.substring(5, 15));
 
         record = new ReadRecord("1", "1", 100, 119, refBaseString, createCigar(5, 10, 5));
         setMatchingBases(region, record);

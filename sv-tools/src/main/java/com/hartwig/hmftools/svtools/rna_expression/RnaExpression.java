@@ -40,6 +40,7 @@ public class RnaExpression
     private final String mSampledId;
     private final RnaBamReader mRnaBamReader;
     private final SvGeneTranscriptCollection mGeneTransCache;
+    private final GcBiasAdjuster mGcBiasAdjuster;
     private final List<GeneReadData> mGeneReadDatalist;
     private BufferedWriter mWriter;
 
@@ -50,12 +51,12 @@ public class RnaExpression
         mConfig = new RnaExpConfig(cmd);
 
         mRnaBamReader = new RnaBamReader(mConfig);
+        mGcBiasAdjuster = new GcBiasAdjuster(mConfig);
 
         mSampledId = cmd.getOptionValue(SAMPLE);
 
         mGeneTransCache = new SvGeneTranscriptCollection();
         mGeneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
         {
@@ -71,6 +72,12 @@ public class RnaExpression
 
     public void runAnalysis()
     {
+        if(mGcBiasAdjuster.enabled())
+        {
+            mGcBiasAdjuster.loadData();
+            mGcBiasAdjuster.generateDepthCounts(mRnaBamReader, mGeneTransCache.getChrGeneDataMap());
+        }
+
         // measure read counts of exonic regions for all specific genes
         int geneCount = 0;
         for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())

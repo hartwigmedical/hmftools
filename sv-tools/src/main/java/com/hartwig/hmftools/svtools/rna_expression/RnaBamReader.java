@@ -1,15 +1,14 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.MAX_READ_COUNT;
 
-import static htsjdk.samtools.CigarOperator.N;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -21,6 +20,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -30,8 +31,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class RnaBamReader
 {
     private final RnaExpConfig mConfig;
-    private IndexedFastaSequenceFile mIndexedFastaSequenceFile;
-    private final File mRefGenomeFile;
     private final SamReader mSamReader;
 
     // state relating to the current gene
@@ -47,24 +46,12 @@ public class RnaBamReader
     public RnaBamReader(final RnaExpConfig config)
     {
         mConfig = config;
-        mRefGenomeFile = new File(mConfig.RefGenomeFile);
 
         mReadRecords = Lists.newArrayList();
         mBamRecordCount = 0;
         mCurrentGene = null;
 
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mRefGenomeFile).open(new File(mConfig.BamFile));
-
-        try
-        {
-            LOGGER.debug("loading indexed fasta reference file");
-            mIndexedFastaSequenceFile = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("Reference file loading failed: {}", e.toString());
-            return;
-        }
+        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
     }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
@@ -76,6 +63,12 @@ public class RnaBamReader
 
         SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
         samSlicer.slice(mSamReader, this::processSamRecord);
+    }
+
+    public void readBamCounts(final GenomeRegion genomeRegion, final Consumer<SAMRecord> consumer)
+    {
+        SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
+        samSlicer.slice(mSamReader, consumer);
     }
 
     private void processSamRecord(@NotNull final SAMRecord record)
@@ -111,7 +104,7 @@ public class RnaBamReader
         // cache reference bases for comparison with read bases
         for(RegionReadData region : mCurrentGene.getRegionReadData())
         {
-            final String regionRefBases = mIndexedFastaSequenceFile.getSubsequenceAt(
+            final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
                     region.chromosome(), region.start(), region.end()).getBaseString();
 
             region.setRefBases(regionRefBases);
@@ -201,6 +194,224 @@ public class RnaBamReader
 
     public static void setMatchingBases(final RegionReadData region, final ReadRecord read)
     {
+        if(read.Cigar != null)
+        {
+            setMatchingBasesFromCigar(region, read);
+            return;
+        }
+
+        // manual base comparison
+        // perform a manual comparison
+        int matchedBases = findStringOverlaps(region.refBases(), read.ReadBases);
+
+        if(matchedBases < MIN_BASE_MATCH_PERC * region.length())
+        {
+            /*
+            LOGGER.trace("region({}) has base-mismatch, overlap({}) matched({}) cigar({})",
+                    region, overlapLength, matchedBases, read.Cigar);
+
+            LOGGER.trace("regionBases: pos({} -> {}) {}",
+                    regionBaseStart, regionBaseEnd, regionBases);
+            LOGGER.trace("recordBases: pos({} -> {}) {}",
+                    recordBaseStart, recordBaseEnd, recordBases);
+            return;
+
+         */
+        }
+
+        // TODO: support this manual comparison?
+        int[] refBasesMatched = region.refBasesMatched();
+
+        /*
+        for(long i = overlapStart; i <= overlapEnd; ++i)
+        {
+            int baseIndex = (int)(i - region.start());
+            ++matchedBases[baseIndex];
+        }
+        */
+
+        region.addMatchedRead();
+    }
+
+
+    public static void setMatchingBasesFromCigar(final RegionReadData region, final ReadRecord read)
+    {
+        final Cigar cigar = read.Cigar;
+
+        // first establish whether the read is split across 2 distant regions, and if so which it maps to
+        final String readBases = read.ReadBases;
+        int readBaseIndex = 0;
+
+        final String regionBases = region.refBases();
+        int[] regionMatchedBases = region.refBasesMatched();
+        int regionBaseIndex = 0;
+
+        int matchedBases = 0;
+
+        boolean hasSplitRegions = cigar.containsOperator(CigarOperator.N)
+                && cigar.getCigarElements().stream().filter(x -> x.getOperator() == CigarOperator.M).count() >= 2;
+
+        int matchedRegionsSkipped = 0;
+
+        for(CigarElement element : read.Cigar.getCigarElements())
+        {
+            if(element.getOperator() == CigarOperator.S || element.getOperator() == CigarOperator.I)
+            {
+                readBaseIndex += element.getLength();
+            }
+            else if(element.getOperator() == CigarOperator.D)
+            {
+                regionBaseIndex += element.getLength();
+            }
+            else if(element.getOperator() == CigarOperator.M)
+            {
+                if(hasSplitRegions && matchedRegionsSkipped == 0)
+                {
+                    // check whether this matched section corresponds to the region (and not an adjacent exon region)
+                    long readPosition = read.PosStart + readBaseIndex;
+                    long regionPosition = region.start() + readBaseIndex;
+
+                    if(abs(readPosition - regionPosition) >= read.Length)
+                    {
+                        // this read relates to a difference region
+                        readBaseIndex += element.getLength();
+                        ++matchedRegionsSkipped;
+                        continue;
+                    }
+                }
+
+                if(region.start() < read.PosStart)
+                {
+                    regionBaseIndex += read.PosStart - region.start();
+                }
+
+                // check the bases in this matched region
+                for(int i = 0; i < element.getLength(); ++i)
+                {
+                    if(regionBaseIndex >= regionBases.length() || readBaseIndex >= readBases.length())
+                        break;
+
+                    if(regionBases.charAt(regionBaseIndex) == readBases.charAt(readBaseIndex))
+                    {
+                        ++regionMatchedBases[regionBaseIndex];
+                        ++matchedBases;
+                    }
+
+                    ++regionBaseIndex;
+                    ++readBaseIndex;
+                }
+
+                if(matchedBases >= MIN_BASE_MATCH)
+                {
+                    region.addMatchedRead();
+                }
+                else
+                {
+                    LOGGER.warn("insufficient base match: read(index={} pos={}) region(index={} pos={}) matchLen({}) matched({})",
+                            readBaseIndex, read.PosStart + readBaseIndex, regionBaseIndex, region.start() + regionBaseIndex,
+                            element.getLength(), matchedBases);
+                }
+
+                return;
+            }
+        }
+
+        LOGGER.warn("no base match: cigar({}) read({}->{} index={}) region(index={} pos={}) matchLen({}) matched({})",
+                cigar.toString(), readBaseIndex, read.PosStart, read.PosEnd, readBaseIndex,
+                region.start(), region.end(), regionBaseIndex);
+    }
+
+    private void checkNonCodingOverlaps(final RegionReadData region, final ReadRecord read)
+    {
+        if (!region.getPreRegions().isEmpty() && read.PosStart < region.start())
+        {
+            region.addNonAdjacentRead();
+        }
+        else if (!region.getPostRegions().isEmpty() && read.PosEnd > region.end())
+        {
+            region.addNonAdjacentRead();
+        }
+    }
+
+    private static int MIN_BASE_MATCH = 4;
+
+    private boolean checkSoftClippedRegions(final RegionReadData region, final ReadRecord read)
+    {
+        boolean matched = false;
+
+        // look for soft-clipped bases which match the exon before or afterwards
+        if(read.Cigar.getFirstCigarElement().getOperator() == CigarOperator.S
+        && read.Cigar.getFirstCigarElement().getLength() >= MIN_BASE_MATCH && !region.getPreRegions().isEmpty())
+        {
+            int scLength = read.Cigar.getFirstCigarElement().getLength();
+            final String scBases = read.ReadBases.substring(0, scLength);
+
+            for(RegionReadData preRegion : region.getPreRegions())
+            {
+                int baseLength = preRegion.refBases().length();
+
+                if(scBases.length() > baseLength)
+                    continue;
+
+                final String endBases = preRegion.refBases().substring(baseLength - scBases.length(), baseLength);
+                if(endBases.equals(scBases))
+                {
+                    matched = true;
+                    int[] preRegionBases = preRegion.refBasesMatched();
+                    int startBase = baseLength - scBases.length();
+                    for(int i = 0; i < scBases.length(); ++i)
+                    {
+                        ++preRegionBases[startBase + i];
+                    }
+
+                    preRegion.addMatchedRead();
+
+                    preRegion.addLinkedRegion(region);
+                    region.addLinkedRegion(preRegion);
+
+                    break;
+                }
+            }
+        }
+
+        if(read.Cigar.getLastCigarElement().getOperator() == CigarOperator.S
+        && read.Cigar.getLastCigarElement().getLength() >= MIN_BASE_MATCH && !region.getPostRegions().isEmpty())
+        {
+            int scLength = read.Cigar.getLastCigarElement().getLength();
+            final String scBases = read.ReadBases.substring(read.ReadBases.length() - scLength, read.ReadBases.length());
+
+            for(RegionReadData postRegion : region.getPostRegions())
+            {
+                if(scBases.length() > postRegion.refBases().length())
+                    continue;
+
+                final String startBases = postRegion.refBases().substring(0, scBases.length());
+                if(startBases.equals(scBases))
+                {
+                    matched = true;
+
+                    int[] postRegionBases = postRegion.refBasesMatched();
+                    for(int i = 0; i < scBases.length(); ++i)
+                    {
+                        ++postRegionBases[i];
+                    }
+
+                    postRegion.addMatchedRead();
+
+                    postRegion.addLinkedRegion(region);
+                    region.addLinkedRegion(postRegion);
+
+                    break;
+                }
+            }
+        }
+
+        return matched;
+    }
+
+    @Deprecated
+    public static void setMatchingBasesOld(final RegionReadData region, final ReadRecord read)
+    {
         // scenarios:
         // only Matched (or mis-match) bases
         // Matched with soft-clipping
@@ -217,7 +428,7 @@ public class RnaBamReader
             overlapStart = region.start();
             overlapEnd = region.end();
 
-            if(read.Cigar != null && read.Cigar.containsOperator(N))
+            if(read.Cigar != null && read.Cigar.containsOperator(CigarOperator.N))
             {
                 // there can be a large gap between the start and end of the read, so need to first determine
                 // which side of this the region maps to
@@ -316,94 +527,6 @@ public class RnaBamReader
         }
 
         region.addMatchedRead();
-    }
-
-    private void checkNonCodingOverlaps(final RegionReadData region, final ReadRecord read)
-    {
-        if (!region.getPreRegions().isEmpty() && read.PosStart < region.start())
-        {
-            region.addNonAdjacentRead();
-        }
-        else if (!region.getPostRegions().isEmpty() && read.PosEnd > region.end())
-        {
-            region.addNonAdjacentRead();
-        }
-    }
-
-    private static int MIN_BASE_MATCH = 4;
-
-    private boolean checkSoftClippedRegions(final RegionReadData region, final ReadRecord read)
-    {
-        boolean matched = false;
-
-        // look for soft-clipped bases which match the exon before or afterwards
-        if(read.Cigar.getFirstCigarElement().getOperator() == CigarOperator.S
-        && read.Cigar.getFirstCigarElement().getLength() >= MIN_BASE_MATCH && !region.getPreRegions().isEmpty())
-        {
-            int scLength = read.Cigar.getFirstCigarElement().getLength();
-            final String scBases = read.ReadBases.substring(0, scLength);
-
-            for(RegionReadData preRegion : region.getPreRegions())
-            {
-                int baseLength = preRegion.refBases().length();
-
-                if(scBases.length() > baseLength)
-                    continue;
-
-                final String endBases = preRegion.refBases().substring(baseLength - scBases.length(), baseLength);
-                if(endBases.equals(scBases))
-                {
-                    matched = true;
-                    int[] preRegionBases = preRegion.refBasesMatched();
-                    int startBase = baseLength - scBases.length();
-                    for(int i = 0; i < scBases.length(); ++i)
-                    {
-                        ++preRegionBases[startBase + i];
-                    }
-
-                    preRegion.addMatchedRead();
-
-                    preRegion.addLinkedRegion(region);
-                    region.addLinkedRegion(preRegion);
-
-                    break;
-                }
-            }
-        }
-
-        if(read.Cigar.getLastCigarElement().getOperator() == CigarOperator.S
-        && read.Cigar.getLastCigarElement().getLength() >= MIN_BASE_MATCH && !region.getPostRegions().isEmpty())
-        {
-            int scLength = read.Cigar.getLastCigarElement().getLength();
-            final String scBases = read.ReadBases.substring(read.ReadBases.length() - scLength, read.ReadBases.length());
-
-            for(RegionReadData postRegion : region.getPostRegions())
-            {
-                if(scBases.length() > postRegion.refBases().length())
-                    continue;
-
-                final String startBases = postRegion.refBases().substring(0, scBases.length());
-                if(startBases.equals(scBases))
-                {
-                    matched = true;
-
-                    int[] postRegionBases = postRegion.refBasesMatched();
-                    for(int i = 0; i < scBases.length(); ++i)
-                    {
-                        ++postRegionBases[i];
-                    }
-
-                    postRegion.addMatchedRead();
-
-                    postRegion.addLinkedRegion(region);
-                    region.addLinkedRegion(postRegion);
-
-                    break;
-                }
-            }
-        }
-
-        return matched;
     }
 
     private static final double MIN_BASE_MATCH_PERC = 0.9;

@@ -18,6 +18,9 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class RnaExpConfig
 {
     // config items
@@ -30,15 +33,18 @@ public class RnaExpConfig
 
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
+    public static final String GC_BIAS_FILE = "gcbias_file";
     public static final String READ_COUNT_LIMIT = "read_count_limit";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
     public final List<String> RestrictedGeneIds;
     public final String OutputDir;
+    public final String GcBiasFile;
     public final boolean AllTranscripts;
     public final String BamFile;
-    public final String RefGenomeFile;
+    public final File RefGenomeFile;
+    public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
 
     public final List<String> SpecificTransIds;
@@ -60,21 +66,28 @@ public class RnaExpConfig
         OutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
         BamFile = cmd.getOptionValue(BAM_FILE);
+        GcBiasFile = cmd.getOptionValue(GC_BIAS_FILE, "");
 
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
+        final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
+        RefGenomeFile = new File(refGenomeFilename);
+
+        RefFastaSeqFile = null;
+
+        try
+        {
+            LOGGER.debug("loading indexed fasta reference file");
+            RefFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("Reference file loading failed: {}", e.toString());
+        }
+
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
-
-        /*
-        final String specificTrans = cmd.getOptionValue(SPECIFIC_TRANS_IDS);
-        SpecificTransIds = specificTrans != null ? (specificTrans.contains(";") ?
-                Arrays.stream(specificTrans.split(";")).collect(Collectors.toList()) : Lists.newArrayList(specificTrans))
-                : Lists.newArrayList();
-
-         */
     }
 
     public RnaExpConfig()
@@ -82,9 +95,11 @@ public class RnaExpConfig
         RestrictedGeneIds = Lists.newArrayList();
         OutputDir = "";
         BamFile = "";
-        RefGenomeFile = "";
+        RefGenomeFile = null;
+        RefFastaSeqFile = null;
         AllTranscripts = true;
         ReadCountLimit = MAX_READ_COUNT;
+        GcBiasFile = "";
         SpecificTransIds = Lists.newArrayList();
     }
 
@@ -106,10 +121,13 @@ public class RnaExpConfig
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
-        options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
-
+        options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
+        options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
+
+        options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
+
         return options;
     }
 
