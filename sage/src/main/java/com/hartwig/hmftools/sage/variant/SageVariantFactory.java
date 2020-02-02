@@ -91,11 +91,11 @@ public class SageVariantFactory {
             result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
 
-        double tumorQual = primaryTumor.rawAltSupportBaseQuality();
-        double germlineQual = normal.rawAltSupportBaseQuality();
+        double tumorQual = primaryTumor.rawBaseQualityAlt();
+        double germlineQual = normal.rawBaseQualityAlt();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
-                result.add(SoftFilter.MAX_GERMLINE_REL_BASE_QUAL.toString());
+                result.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
             }
         }
 
@@ -110,7 +110,7 @@ public class SageVariantFactory {
     }
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawAltSupport() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawDepthAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
                 && Doubles.greaterOrEqual(primaryTumor.rawVaf(), config.hotspotMinRawTumorVafToSkipQualCheck());
     }
 

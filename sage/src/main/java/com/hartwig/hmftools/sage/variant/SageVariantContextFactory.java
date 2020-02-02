@@ -115,8 +115,8 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
-                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawRefSupport(), evidence.rawAltSupport() })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[]{evidence.rawRefSupportBaseQuality(), evidence.rawAltSupportBaseQuality()})
+                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawDepthRef(), evidence.rawDepthAlt() })
+                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[]{evidence.rawBaseQualityRef(), evidence.rawBaseQualityAlt()})
                 .attribute(RAW_DEPTH, evidence.rawDepth())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();

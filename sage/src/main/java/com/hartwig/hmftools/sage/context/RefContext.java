@@ -20,8 +20,8 @@ public class RefContext implements GenomePosition {
     private final Map<String, AltContext> alts;
 
     private int rawDepth;
-    private int rawRefSupport;
-    private int rawRefSupportBaseQuality;
+    private int rawDepthRef;
+    private int rawBaseQualityRef;
 
     public RefContext(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -35,7 +35,7 @@ public class RefContext implements GenomePosition {
         this.chromosome = left.chromosome;
         this.position = left.position;
         this.alts = new HashMap<>();
-        this.rawRefSupport = Math.min(left.rawRefSupport, right.rawRefSupport);
+        this.rawDepthRef = Math.min(left.rawDepthRef, right.rawDepthRef);
         this.rawDepth = Math.min(left.rawDepth, right.rawDepth);
     }
 
@@ -49,9 +49,9 @@ public class RefContext implements GenomePosition {
     }
 
     public void refRead(int baseQuality) {
-        this.rawRefSupport++;
+        this.rawDepthRef++;
         this.rawDepth++;
-        this.rawRefSupportBaseQuality += baseQuality;
+        this.rawBaseQualityRef += baseQuality;
     }
 
     @NotNull
@@ -93,12 +93,12 @@ public class RefContext implements GenomePosition {
         return sample;
     }
 
-    public int rawRefSupport() {
-        return rawRefSupport;
+    public int rawDepthRef() {
+        return rawDepthRef;
     }
 
-    public int rawRefSupportBaseQuality() {
-        return rawRefSupportBaseQuality;
+    public int rawBaseQualityRef() {
+        return rawBaseQualityRef;
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_BASE_QUAL;
+import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_GERMLINE_DEPTH_ALLOSOME;
@@ -42,7 +42,7 @@ public interface SoftFilterConfig {
         options.addOption(prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME, true, "Minimum " + prefix + " germline depth [" + defaultValue.minGermlineReadContextCoverageAllosome() + "]");
 
         options.addOption(prefix + "_" + MAX_GERMLINE_VAF,true,"Maximum " + prefix + " germline VAF [" + defaultValue.maxGermlineVaf() + "]");
-        options.addOption(prefix + "_" + MAX_GERMLINE_REL_BASE_QUAL, true, "Maximum " + prefix + " germline relative quality [" + defaultValue.maxGermlineRelativeQual() + "]");
+        options.addOption(prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL, true, "Maximum " + prefix + " germline relative quality [" + defaultValue.maxGermlineRelativeQual() + "]");
 
         return options;
     }
@@ -55,7 +55,7 @@ public interface SoftFilterConfig {
         final int minGermlineDepthAllosome = defaultIntValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME, defaultValue.minGermlineReadContextCoverageAllosome());
 
         final double maxGermlineVaf = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_VAF, defaultValue.maxGermlineVaf());
-        final double maxGermlineRelativeQual = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_BASE_QUAL, defaultValue.maxGermlineRelativeQual());
+        final double maxGermlineRelativeQual = defaultDoubleValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL, defaultValue.maxGermlineRelativeQual());
 
         return ImmutableSoftFilterConfig.builder()
                 .minTumorQual(minTumorQual)
