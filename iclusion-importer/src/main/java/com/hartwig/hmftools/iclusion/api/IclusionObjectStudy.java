@@ -12,9 +12,9 @@ class IclusionObjectStudy {
     @Json(name = "nct") public String nct;
     @Json(name = "ipn") public String ipn;
     @Json(name = "ccmo") public String ccmo;
-    @Json(name = "indication_ids") public List<String> indicationIds;
-    @Json(name = "mutations") public List<IclusionObjectMutation> mutations;
     @Json(name = "type_name")  public String typeName;
     @Json(name = "age_name")  public String ageName;
     @Json(name = "phase_name")  public String phaseName;
+    @Json(name = "indication_ids") public List<String> indicationIds;
+    @Json(name = "mutations") public List<IclusionObjectMutation> mutations;
 }

@@ -109,6 +109,10 @@ public class IclusionTrialFileTest {
         assertEquals(expectedTrial.nct(), actualTrial.nct());
         assertEquals(expectedTrial.ipn(), actualTrial.ipn());
         assertEquals(expectedTrial.ccmo(), actualTrial.ccmo());
+        assertEquals(expectedTrial.type(), actualTrial.type());
+        assertEquals(expectedTrial.age(), actualTrial.age());
+        assertEquals(expectedTrial.phase(), actualTrial.phase());
+
 
         assertEquals(expectedTrial.tumorLocations().size(), actualTrial.tumorLocations().size());
         for (int i = 0; i < expectedTrial.tumorLocations().size(); i++) {
