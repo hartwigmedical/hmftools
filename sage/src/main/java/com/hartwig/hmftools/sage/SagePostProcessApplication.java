@@ -2,8 +2,10 @@ package com.hartwig.hmftools.sage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.sage.snpeff.SagePostProcess;
 import com.hartwig.hmftools.sage.snpeff.SagePostProcessVCF;
 
@@ -22,16 +24,28 @@ import htsjdk.variant.vcf.VCFFileReader;
 
 public class SagePostProcessApplication implements AutoCloseable {
 
+    private static final String HG19 = "hg19";
+    private static final String HG38 = "hg38";
+
     private static final Logger LOGGER = LogManager.getLogger(SagePostProcessApplication.class);
 
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
+    private static final String ASSEMBLY = "assembly";
 
     public static void main(String[] args) throws IOException, ParseException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
         final String inputFilePath = cmd.getOptionValue(IN_VCF);
         final String outputFilePath = cmd.getOptionValue(OUT_VCF);
+        final String assembly = cmd.getOptionValue(ASSEMBLY);
+
+        if (assembly == null || !assembly.equals(HG19) && !assembly.equals(HG38)) {
+            LOGGER.error("Parameter assembly must be one of [hg19, hg38]");
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("SagePostProcessApplication", options);
+            System.exit(1);
+        }
 
         if (outputFilePath == null || inputFilePath == null) {
             final HelpFormatter formatter = new HelpFormatter();
@@ -39,7 +53,7 @@ public class SagePostProcessApplication implements AutoCloseable {
             System.exit(1);
         }
 
-        try (SagePostProcessApplication app = new SagePostProcessApplication(inputFilePath, outputFilePath)) {
+        try (SagePostProcessApplication app = new SagePostProcessApplication(inputFilePath, outputFilePath, assembly)) {
             app.run();
         }
     }
@@ -48,16 +62,18 @@ public class SagePostProcessApplication implements AutoCloseable {
     private final VCFFileReader fileReader;
     private final SagePostProcessVCF fileWriter;
 
-    private SagePostProcessApplication(final String inputVCF, final String outputVCF) {
+    private SagePostProcessApplication(final String inputVCF, final String outputVCF, final String assembly) {
         LOGGER.info("Input: {}", inputVCF);
         LOGGER.info("Output: {}", outputVCF);
 
         this.fileReader = new VCFFileReader(new File(inputVCF), false);
         this.fileWriter = new SagePostProcessVCF(outputVCF);
-        this.postProcess = new SagePostProcess(HmfGenePanelSupplier.allGenesMap37(), fileWriter::writeVariant);
+        Map<String, HmfTranscriptRegion> geneMap =
+                assembly.equals(HG19) ? HmfGenePanelSupplier.allGenesMap37() : HmfGenePanelSupplier.allGenesMap38();
+        this.postProcess = new SagePostProcess(geneMap, fileWriter::writeVariant);
     }
 
-    private void run()  {
+    private void run() {
         fileWriter.writeHeader(fileReader.getFileHeader());
 
         for (VariantContext context : fileReader) {
