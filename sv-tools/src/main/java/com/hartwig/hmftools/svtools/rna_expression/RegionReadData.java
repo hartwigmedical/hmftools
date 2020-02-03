@@ -61,6 +61,18 @@ public class RegionReadData
     public List<RegionReadData> getPreRegions() { return mPreRegions; }
     public List<RegionReadData> getPostRegions() { return mPostRegions; }
 
+    public void addPreRegion(final RegionReadData region)
+    {
+        if(!mPreRegions.contains(region))
+            mPreRegions.add(region);
+    }
+
+    public void addPostRegion(final RegionReadData region)
+    {
+        if(!mPostRegions.contains(region))
+            mPostRegions.add(region);
+    }
+
     public final Map<RegionReadData, Integer> getLinkedRegions() { return mLinkedRegions; }
 
     public void addLinkedRegion(final RegionReadData region)

@@ -29,7 +29,7 @@ public class RnaExpConfig
 
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String ALL_TRANSCRIPTS = "all_transcripts";
-    private static final String WRITE_MATCHED_READS = "write_matched_reads";
+    private static final String WRITE_EXON_DATA = "write_exon_data";
 
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
@@ -46,6 +46,7 @@ public class RnaExpConfig
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
+    public boolean WriteExonData;
 
     public final List<String> SpecificTransIds;
 
@@ -85,6 +86,8 @@ public class RnaExpConfig
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
 
+        WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
+
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
@@ -100,6 +103,7 @@ public class RnaExpConfig
         AllTranscripts = true;
         ReadCountLimit = MAX_READ_COUNT;
         GcBiasFile = "";
+        WriteExonData = false;
         SpecificTransIds = Lists.newArrayList();
     }
 
@@ -125,6 +129,7 @@ public class RnaExpConfig
         options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
+        options.addOption(WRITE_EXON_DATA, false, "Exon region data");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
 

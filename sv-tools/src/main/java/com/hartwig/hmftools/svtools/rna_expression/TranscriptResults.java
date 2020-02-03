@@ -16,6 +16,6 @@ public abstract class TranscriptResults
     public abstract double avgReadDepth();
     public abstract long codingLengthTotal();
     public abstract long totalReadCoverage();
-    public abstract int nonAdjacentReads();
+    public abstract int intronSpanReads();
 
 }
