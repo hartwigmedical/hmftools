@@ -9,12 +9,12 @@ Key features include:
   - modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
   - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatelites while ignoring common sequencing errors
   - no cutoff for homopolymer repeat length for improved INDEL handling 
-  - [Phasing](#5.-phasing) of somatic + somatic and somatic + germline up to 25 bases
+  - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
 
  # Read context 
  
- SAGE defines a core read context around each candidate point mutation position which uniquely identifies the variant from both the reference and other possible variants at that location regardless of local alignment.  
+ SAGE defines a core read context around each candidate point mutation position which uniquely identifies the variant from both the reference and other possible variants at that location regardless of local alignment. 
  This read context is used to search for evidence supporting the variant and also to calculate the allelic depth and frequency.
  
  The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome.
@@ -30,8 +30,7 @@ Key features include:
  An INSERT always includes the base to the left of the insert as well as the new sequence. 
  As with a DEL, the core read context will be extended to include any repeats and/or microhomology.
  
- The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is  
- nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
+ The importance of capturing the microhomology is demonstrated in the following example. This delete of 4 bases in a AAAC microhomology is nominally left aligned as 7: AAAAC > A but can equally be represented as 8:AAACA > A, 9:AACAA > A, 10: ACAAA > A, 11: CAAAC > C etc. 
  
  Using a (bolded) read context of `CAAAAACAAACAAACAAT` spanning the microhomology matches every alt but not the ref:
  
@@ -61,13 +60,13 @@ Key features include:
 # Algorithm
 
 There are 7 key steps in the SAGE algorithm described in detail below:
-  1. [Candidate Variants And Read Contexts](#1.-candidate-variants-and-read-contexts)
-  2. [Tumor Counts and Quality](#2.-tumor-counts-and-quality)
-  3. [Normal Counts and Quality](#3.-normal-counts-and-quality)
-  4. [Soft Filter](#4.-soft-filters)
-  5. [Phasing](#5.-phasing)
-  6. [MNV Handling](#6.-de-duplication)
-  7. [Output](#7.-output)
+  1. [Candidate Variants And Read Contexts](#1-candidate-variants-and-read-contexts)
+  2. [Tumor Counts and Quality](#2-tumor-counts-and-quality)
+  3. [Normal Counts and Quality](#3-normal-counts-and-quality)
+  4. [Soft Filter](#4-soft-filters)
+  5. [Phasing](#5-phasing)
+  6. [MNV Handling](#6-de-duplication)
+  7. [Output](#7-output)
  
  
 ## 1. Candidate Variants And Read Contexts
@@ -136,18 +135,18 @@ The quality is incremented as follows:
 distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
 baseQuality (SNV/MNV) = BASEQ at variant location(s)  
 baseQuality (Indel) = min BASEQ over core read context  
-modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty` (12), 3 * distanceFromReadEdge - `distanceFromReadEdgeFixedPenalty` (0)) 
+modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge - `distanceFromReadEdgeFixedPenalty (0)` ) 
 
-improperPairPenalty = `mapQualityImproperPaidPenalty` (15) if improper pair flag set else 0  
+improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if improper pair flag set else 0  
 distanceFromReference = number of somatic alterations to get to reference from the complete read context  
-distanceFromReferencePenalty =  (distanceFromReference - 1) * `mapQualityAdditionalDistanceFromRefPenalty` (10) 
-modifiedMapQuality = MAPQ - `mapQualityFixedPenalty` (15) - improperPairPenalty - distanceFromReferencePenalty  
+distanceFromReferencePenalty =  (distanceFromReference - 1) * `mapQualityAdditionalDistanceFromRefPenalty (10)` 
+modifiedMapQuality = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty  
 
 matchQuality += max(0, min(modifiedMapQuality, modifiedBaseQuality))
 
 A 'jitter penalty' is also calculated.  The jitter penalty is meant to model common sequencing errors whereby a repeat can be extended or contracted by 1 repeat unit.  Weakly supported variants with read contexts which differ by only 1 repeat from a true read context found in the tumor with a lot of support may be artefacts of these sequencing errors and are penalised.  If a `LENGTHENED` or `SHORTENED` jitter match is made we increment the jitter penalty as a function of the count of the repeat sequence in the microsatellite:
 
-`JITTER_PENALTY` += `jitterPenalty` (0.25) * max(0, repeatCount - `jitterMinRepeatCount` (3))
+`JITTER_PENALTY` += `jitterPenalty (0.25)`  * max(0, repeatCount - `jitterMinRepeatCount (3)` )
 
 The final quality score also takes into account jitter and is calculated as:
 
@@ -198,7 +197,7 @@ min_tumor_qual|35**|100|125|200|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
-max_germline_vaf***|10%|4%|4% | 4% | Sum Normal`RC_CNT[1,2,3,4]` / Normal `RC_CNT[6]`
+max_germline_vaf***|10%|4%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
 max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 
 ** Even if tumor qual score cutoff is not met, hotspots are also called so long as raw tumor vaf >= 0.05 and raw allelic depth in tumor supporting the ALT >= 5 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
@@ -257,4 +256,4 @@ Filter | Default Value | Field
 hard_min_tumor_qual_vcf | 30 | `QUAL`
 hard_max_normal_alt_support |2| Normal `AD[1]`
 
-Including the `hard_filter` flag will turn all the [soft filters](#4.-soft-filters) described above into (lazily applied) hard filters. Again, hotspots are excluded from these filters.
+Including the `hard_filter` flag will turn all the [soft filters](#4-soft-filters) described above into (lazily applied) hard filters. Again, hotspots are excluded from these filters.
