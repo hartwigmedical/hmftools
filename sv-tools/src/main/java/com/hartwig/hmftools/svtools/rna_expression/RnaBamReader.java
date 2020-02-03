@@ -113,26 +113,26 @@ public class RnaBamReader
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
 
-        for(final ReadRecord record : mReadRecords)
+        for(final ReadRecord read : mReadRecords)
         {
             // the read is fully within the exon
             List<RegionReadData> containingRegions = mCurrentGene.getRegionReadData().stream()
-                    .filter(x -> x.Region.start() <= record.PosStart && x.Region.end() >= record.PosEnd)
+                    .filter(x -> x.Region.start() <= read.PosStart && x.Region.end() >= read.PosEnd)
                     .collect(Collectors.toList());
 
             // the read covers all of the exon (discounting any intronic or unmapped sections)
-            long recordReadLength = record.Length;
+            long recordReadLength = read.Length;
 
             List<RegionReadData> containedRegions = mCurrentGene.getRegionReadData().stream()
                     .filter(x -> !containingRegions.contains(x))
                     .filter(x -> x.length() <= recordReadLength)
-                    .filter(x -> x.Region.start() >= record.PosStart && x.Region.end() <= record.PosEnd)
+                    .filter(x -> x.Region.start() >= read.PosStart && x.Region.end() <= read.PosEnd)
                     .collect(Collectors.toList());
 
             // the read covers part of the exon and crosses its boundary
             List<RegionReadData> overlappingRegions = mCurrentGene.getRegionReadData().stream()
                     .filter(x -> !containedRegions.contains(x) && !containingRegions.contains(x))
-                    .filter(x -> overlaps(x.Region, record))
+                    .filter(x -> overlaps(x.Region, read))
                     .collect(Collectors.toList());
 
             if(containedRegions.isEmpty() && containingRegions.isEmpty() && overlappingRegions.isEmpty())
@@ -167,16 +167,16 @@ public class RnaBamReader
                 RegionReadData region = allRegions.get(0);
 
                 // check for a soft-clipping which matches an adjacent exon
-                boolean otherRegionMatched = checkSoftClippedRegions(region, record);
+                boolean otherRegionMatched = checkSoftClippedRegions(region, read);
 
                 if(!otherRegionMatched)
                 {
-                    checkNonCodingOverlaps(region, record);
+                    checkNonCodingOverlaps(region, read);
                 }
             }
 
             // now check for matching bases in the read vs the reference for the overlapping sections
-            allRegions.forEach(x -> setMatchingBases(x, record));
+            allRegions.forEach(x -> setMatchingBases(x, read));
         }
     }
 
@@ -194,48 +194,12 @@ public class RnaBamReader
 
     public static void setMatchingBases(final RegionReadData region, final ReadRecord read)
     {
-        if(read.Cigar != null)
+        if(read.Cigar == null)
         {
-            setMatchingBasesFromCigar(region, read);
+            setMatchingBasesNoCigar(region, read);
             return;
         }
 
-        // manual base comparison
-        // perform a manual comparison
-        int matchedBases = findStringOverlaps(region.refBases(), read.ReadBases);
-
-        if(matchedBases < MIN_BASE_MATCH_PERC * region.length())
-        {
-            /*
-            LOGGER.trace("region({}) has base-mismatch, overlap({}) matched({}) cigar({})",
-                    region, overlapLength, matchedBases, read.Cigar);
-
-            LOGGER.trace("regionBases: pos({} -> {}) {}",
-                    regionBaseStart, regionBaseEnd, regionBases);
-            LOGGER.trace("recordBases: pos({} -> {}) {}",
-                    recordBaseStart, recordBaseEnd, recordBases);
-            return;
-
-         */
-        }
-
-        // TODO: support this manual comparison?
-        int[] refBasesMatched = region.refBasesMatched();
-
-        /*
-        for(long i = overlapStart; i <= overlapEnd; ++i)
-        {
-            int baseIndex = (int)(i - region.start());
-            ++matchedBases[baseIndex];
-        }
-        */
-
-        region.addMatchedRead();
-    }
-
-
-    public static void setMatchingBasesFromCigar(final RegionReadData region, final ReadRecord read)
-    {
         final Cigar cigar = read.Cigar;
 
         // first establish whether the read is split across 2 distant regions, and if so which it maps to
@@ -245,8 +209,8 @@ public class RnaBamReader
         final String regionBases = region.refBases();
         int[] regionMatchedBases = region.refBasesMatched();
         int regionBaseIndex = 0;
-
-        int matchedBases = 0;
+        int regionSkippedBases = 0;
+        int readSkippedBases = 0;
 
         boolean hasSplitRegions = cigar.containsOperator(CigarOperator.N)
                 && cigar.getCigarElements().stream().filter(x -> x.getOperator() == CigarOperator.M).count() >= 2;
@@ -258,20 +222,26 @@ public class RnaBamReader
             if(element.getOperator() == CigarOperator.S || element.getOperator() == CigarOperator.I)
             {
                 readBaseIndex += element.getLength();
+                readSkippedBases += element.getLength();
             }
             else if(element.getOperator() == CigarOperator.D)
             {
                 regionBaseIndex += element.getLength();
             }
+            else if(element.getOperator() == CigarOperator.N)
+            {
+                regionSkippedBases += element.getLength();
+            }
             else if(element.getOperator() == CigarOperator.M)
             {
-                if(hasSplitRegions && matchedRegionsSkipped == 0)
+                long readPosition = read.PosStart + readBaseIndex - readSkippedBases + regionSkippedBases;
+
+                if(hasSplitRegions)
                 {
                     // check whether this matched section corresponds to the region (and not an adjacent exon region)
-                    long readPosition = read.PosStart + readBaseIndex;
-                    long regionPosition = region.start() + readBaseIndex;
+                    long readPosEnd = readPosition + element.getLength() - 1;
 
-                    if(abs(readPosition - regionPosition) >= read.Length)
+                    if(readPosEnd < region.start() || readPosition > region.end())
                     {
                         // this read relates to a difference region
                         readBaseIndex += element.getLength();
@@ -280,12 +250,26 @@ public class RnaBamReader
                     }
                 }
 
-                if(region.start() < read.PosStart)
+                if(region.start() < readPosition)
                 {
-                    regionBaseIndex += read.PosStart - region.start();
+                    regionBaseIndex += readPosition - region.start();
+                }
+                else if(region.start() > readPosition)
+                {
+                    readBaseIndex += region.start() - readPosition;
+                }
+
+                if(regionBaseIndex < 0 || regionBaseIndex >= regionBases.length())
+                {
+                    LOGGER.warn("invalid base match: cigar({}) read(pos={} start={} index={}) region(pos={} index={} skipped={}) matchLen({})",
+                            cigar.toString(), readPosition, read.PosStart, readBaseIndex,
+                            region.start() + regionBaseIndex, regionBaseIndex, regionSkippedBases, element.getLength());
+                    return;
                 }
 
                 // check the bases in this matched region
+                int matchedBases = 0;
+
                 for(int i = 0; i < element.getLength(); ++i)
                 {
                     if(regionBaseIndex >= regionBases.length() || readBaseIndex >= readBases.length())
@@ -301,14 +285,14 @@ public class RnaBamReader
                     ++readBaseIndex;
                 }
 
-                if(matchedBases >= MIN_BASE_MATCH)
+                if(element.getLength() == matchedBases || matchedBases >= MIN_BASE_MATCH && matchedBases/(double)element.getLength() > MIN_BASE_MATCH_PERC)
                 {
                     region.addMatchedRead();
                 }
                 else
                 {
-                    LOGGER.warn("insufficient base match: read(index={} pos={}) region(index={} pos={}) matchLen({}) matched({})",
-                            readBaseIndex, read.PosStart + readBaseIndex, regionBaseIndex, region.start() + regionBaseIndex,
+                    LOGGER.trace("insufficient base match: cigar({}) read(index={} pos={}) region(index={} pos={}) matchLen({}) matched({})",
+                            cigar.toString(), readBaseIndex, read.PosStart + readBaseIndex, regionBaseIndex, region.start() + regionBaseIndex,
                             element.getLength(), matchedBases);
                 }
 
@@ -316,8 +300,9 @@ public class RnaBamReader
             }
         }
 
-        LOGGER.warn("no base match: cigar({}) read({}->{} index={}) region(index={} pos={}) matchLen({}) matched({})",
-                cigar.toString(), readBaseIndex, read.PosStart, read.PosEnd, readBaseIndex,
+        // not an issue since must map to other regions
+        LOGGER.trace("no base match: cigar({}) read({}->{} index={}) region(index={} pos={})",
+                cigar.toString(), read.PosStart, read.PosEnd, readBaseIndex,
                 region.start(), region.end(), regionBaseIndex);
     }
 
@@ -407,6 +392,42 @@ public class RnaBamReader
         }
 
         return matched;
+    }
+
+    public static void setMatchingBasesNoCigar(final RegionReadData region, final ReadRecord read)
+    {
+
+        // manual base comparison
+        // perform a manual comparison
+        int matchedBases = findStringOverlaps(region.refBases(), read.ReadBases);
+
+        if(matchedBases < MIN_BASE_MATCH_PERC * region.length())
+        {
+            /*
+            LOGGER.trace("region({}) has base-mismatch, overlap({}) matched({}) cigar({})",
+                    region, overlapLength, matchedBases, read.Cigar);
+
+            LOGGER.trace("regionBases: pos({} -> {}) {}",
+                    regionBaseStart, regionBaseEnd, regionBases);
+            LOGGER.trace("recordBases: pos({} -> {}) {}",
+                    recordBaseStart, recordBaseEnd, recordBases);
+            return;
+
+         */
+        }
+
+        // TODO: support this manual comparison?
+        int[] refBasesMatched = region.refBasesMatched();
+
+        /*
+        for(long i = overlapStart; i <= overlapEnd; ++i)
+        {
+            int baseIndex = (int)(i - region.start());
+            ++matchedBases[baseIndex];
+        }
+        */
+
+        region.addMatchedRead();
     }
 
     @Deprecated

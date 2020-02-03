@@ -95,7 +95,7 @@ public class RnaExpressionTest
         region = new RegionReadData(GenomeRegions.create("1", 105, 114), "1");
         region.setRefBases(refBaseString.substring(5, 15));
 
-        record = new ReadRecord("1", "1", 100, 119, refBaseString, createCigar(5, 10, 5));
+        record = new ReadRecord("1", "1", 105, 124, refBaseString, createCigar(5, 10, 5));
         setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
@@ -142,9 +142,10 @@ public class RnaExpressionTest
         assertEquals(10, region.baseCoverage(1));
         assertEquals(1, region.matchedReadCount());
 
-        // a region extending further than the read at the other end
-        record = new ReadRecord("1", "1", 105, 224, refBaseString.substring(5, 15) + refBaseString2.substring(0, 5),
-                createCigar(0, 10, 100, 5, 0));
+        // a region extending further than the read at the other end, with the first 5 bases matching a region before the exon
+        String intronicBases = "ABCDE";
+        record = new ReadRecord("1", "1", 105, 224, refBaseString.substring(5, 15) + intronicBases + refBaseString2.substring(0, 5),
+                createCigar(0, 10, 100, 10, 0));
 
         region = new RegionReadData(GenomeRegions.create("1", 220, 229), "1");
         region.setRefBases(refBaseString2.substring(0, 10));
@@ -152,7 +153,7 @@ public class RnaExpressionTest
         setMatchingBases(region, record);
 
         assertEquals(5, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(0, region.matchedReadCount()); // insufficient to count as a match
     }
 
     @Test

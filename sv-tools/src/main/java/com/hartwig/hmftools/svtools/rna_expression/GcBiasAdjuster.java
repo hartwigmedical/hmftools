@@ -64,6 +64,11 @@ public class GcBiasAdjuster
 
     public static int positionToIndex(long position)
     {
+        return (int)(position / SEGMENT_LENGTH);
+    }
+
+    public static int positionToRegion(long position)
+    {
         return (int)(position / SEGMENT_LENGTH) * SEGMENT_LENGTH;
     }
 
@@ -238,12 +243,12 @@ public class GcBiasAdjuster
 
             for(EnsemblGeneData geneData : entry.getValue())
             {
-                long geneStartRegion = (geneData.GeneStart / SEGMENT_LENGTH) * SEGMENT_LENGTH;
+                long geneStartRegion = positionToRegion(geneData.GeneStart);
                 mCurrentRegionStart = max(mCurrentRegionStart, geneStartRegion);
 
                 while (mCurrentRegionStart < geneData.GeneEnd)
                 {
-                    int regionIndex = (int)(mCurrentRegionStart/SEGMENT_LENGTH);
+                    int regionIndex = positionToIndex(mCurrentRegionStart);
 
                     double gcRatio = ratios.get(regionIndex);
 
