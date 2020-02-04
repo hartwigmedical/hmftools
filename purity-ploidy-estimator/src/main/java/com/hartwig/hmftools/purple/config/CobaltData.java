@@ -75,5 +75,4 @@ public interface CobaltData {
                 .referenceSegments(referenceSegments)
                 .build();
     }
-
 }
