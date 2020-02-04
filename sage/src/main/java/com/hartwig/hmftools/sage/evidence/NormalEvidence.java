@@ -17,7 +17,7 @@ import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
-import com.hartwig.hmftools.sage.select.PositionSelector;
+import com.hartwig.hmftools.sage.select.SamRecordSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,8 +56,8 @@ public class NormalEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
-        final PositionSelector<AltContext> consumerSelector =
-                new PositionSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
+        final SamRecordSelector<AltContext> consumerSelector =
+                new SamRecordSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
             slicer.slice(tumorReader, samRecord -> {
@@ -66,8 +66,7 @@ public class NormalEvidence {
                 final IndexedBases refBases = refSequence.alignment(samRecord);
 
                 if (samRecord.getMappingQuality() >= minQuality) {
-                    consumerSelector.select(samRecord.getAlignmentStart(),
-                            samRecord.getAlignmentEnd(),
+                    consumerSelector.select(samRecord,
                             x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig, refBases));
                 }
 

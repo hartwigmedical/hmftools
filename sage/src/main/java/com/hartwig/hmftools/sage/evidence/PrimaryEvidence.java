@@ -19,7 +19,7 @@ import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
-import com.hartwig.hmftools.sage.select.PositionSelector;
+import com.hartwig.hmftools.sage.select.SamRecordSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,7 +62,7 @@ public class PrimaryEvidence {
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
             @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
         final List<AltContext> altContexts = Lists.newArrayList();
-        final PositionSelector<AltContext> consumerSelector = new PositionSelector<>(altContexts);
+        final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(altContexts);
         final HotspotSelector tierSelector = new HotspotSelector(hotspots);
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
@@ -80,8 +80,7 @@ public class PrimaryEvidence {
             // Second parse
             slicer.slice(tumorReader, samRecord -> {
                 final IndexedBases refBases = refSequence.alignment(samRecord);
-                consumerSelector.select(samRecord.getAlignmentStart(),
-                        samRecord.getAlignmentEnd(),
+                consumerSelector.select(samRecord,
                         x -> x.primaryReadContext().accept(x.rawDepth() < config.maxReadDepth(), samRecord, config, refBases));
 
             });
@@ -91,7 +90,6 @@ public class PrimaryEvidence {
         }
 
         return altContexts.stream().filter(x -> qualPredicate(tierSelector, x)).collect(Collectors.toList());
-
     }
 
     private boolean rawPredicate(@NotNull final HotspotSelector tierSelector, @NotNull final AltContext altContext) {

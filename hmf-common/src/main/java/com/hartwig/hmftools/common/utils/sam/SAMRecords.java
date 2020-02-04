@@ -5,11 +5,38 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class SAMRecords {
 
     public static final int PHRED_OFFSET = 33;
+
+    public static int leftSoftClip(@NotNull final SAMRecord record) {
+        Cigar cigar = record.getCigar();
+        if (cigar.numCigarElements() > 0) {
+            CigarElement firstElement = cigar.getCigarElement(0);
+            if (firstElement.getOperator() == CigarOperator.S) {
+                return firstElement.getLength();
+            }
+        }
+
+        return 0;
+    }
+
+    public static int rightSoftClip(@NotNull final SAMRecord record) {
+        Cigar cigar = record.getCigar();
+        if (cigar.numCigarElements() > 0) {
+            CigarElement lastLement = cigar.getCigarElement(cigar.numCigarElements() - 1);
+            if (lastLement.getOperator() == CigarOperator.S) {
+                return lastLement.getLength();
+            }
+        }
+
+        return 0;
+    }
 
     public static int getBaseQuality(final char quality) {
         return quality - PHRED_OFFSET;
