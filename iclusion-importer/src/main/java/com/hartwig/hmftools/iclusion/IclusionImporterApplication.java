@@ -75,7 +75,7 @@ public class IclusionImporterApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
     }
 
