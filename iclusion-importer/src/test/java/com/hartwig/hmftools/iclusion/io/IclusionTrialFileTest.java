@@ -32,6 +32,9 @@ public class IclusionTrialFileTest {
                 .nct("nct1")
                 .ipn("ipn1")
                 .ccmo("ccmo1")
+                .type("type")
+                .age("age")
+                .phase("phase")
                 .addTumorLocations(ImmutableIclusionTumorLocation.builder()
                         .primaryTumorLocation("loc1")
                         .addDoids("doid1")
@@ -40,9 +43,6 @@ public class IclusionTrialFileTest {
                 .addTumorLocations(ImmutableIclusionTumorLocation.builder().primaryTumorLocation("loc2").build())
                 .addMutations(ImmutableIclusionMutation.builder().gene("gene1").name("name1").build())
                 .addMutations(ImmutableIclusionMutation.builder().gene("gene2").name("name2").build())
-                .type("type")
-                .age("age")
-                .phase("phase")
                 .build();
 
         IclusionTrial trial2 = ImmutableIclusionTrial.builder()
@@ -66,10 +66,10 @@ public class IclusionTrialFileTest {
                 .nct("nct3")
                 .ipn("ipn3")
                 .ccmo("ccmo3")
-                .addMutations(ImmutableIclusionMutation.builder().gene("gene3").name("name3").build())
                 .type("type")
                 .age("age")
                 .phase("phase")
+                .addMutations(ImmutableIclusionMutation.builder().gene("gene3").name("name3").build())
                 .build();
 
         List<IclusionTrial> convertedTrials =
@@ -112,7 +112,6 @@ public class IclusionTrialFileTest {
         assertEquals(expectedTrial.type(), actualTrial.type());
         assertEquals(expectedTrial.age(), actualTrial.age());
         assertEquals(expectedTrial.phase(), actualTrial.phase());
-
 
         assertEquals(expectedTrial.tumorLocations().size(), actualTrial.tumorLocations().size());
         for (int i = 0; i < expectedTrial.tumorLocations().size(); i++) {

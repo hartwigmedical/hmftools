@@ -50,9 +50,9 @@ final class IclusionApiObjectMapper {
                     .nct(nullToEmpty(study.nct))
                     .ipn(nullToEmpty(study.ipn))
                     .ccmo(study.ccmo)
-                    .type(study.typeName)
-                    .age(study.ageName)
-                    .phase(study.phaseName)
+                    .type(study.type)
+                    .age(study.age)
+                    .phase(study.phase)
                     .tumorLocations(buildTumorLocations(indications, study.indicationIds))
                     .mutations(buildMutations(genes, variants, study.mutations))
                     .build());

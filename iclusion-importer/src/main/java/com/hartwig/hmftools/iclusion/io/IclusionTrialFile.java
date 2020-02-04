@@ -168,11 +168,11 @@ public final class IclusionTrialFile {
 
     @NotNull
     private static List<IclusionTumorLocation> tumorLocationsFromString(@NotNull String tumorLocationsString) {
-        List<IclusionTumorLocation> tumorLocations = Lists.newArrayList();
-
         if (tumorLocationsString.equals(NO_LIST_ENTRIES)) {
-            return tumorLocations;
+            return Lists.newArrayList();
         }
+
+        List<IclusionTumorLocation> tumorLocations = Lists.newArrayList();
 
         String[] values = tumorLocationsString.split("\\" + SUB_FIELD_DELIMITER);
         for (String value : values) {
@@ -188,11 +188,11 @@ public final class IclusionTrialFile {
 
     @NotNull
     private static List<IclusionMutation> mutationsFromString(@NotNull String mutationsString) {
-        List<IclusionMutation> mutations = Lists.newArrayList();
-
         if (mutationsString.equals(NO_LIST_ENTRIES)) {
-            return mutations;
+            return Lists.newArrayList();
         }
+
+        List<IclusionMutation> mutations = Lists.newArrayList();
 
         String[] values = mutationsString.split("\\" + SUB_FIELD_DELIMITER);
         for (String value : values) {

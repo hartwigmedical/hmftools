@@ -33,8 +33,7 @@ public class IclusionImporterApplication {
 
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
-
-        LOGGER.info("Running iClusion importer v{}", VERSION);
+        LOGGER.info("Running iClusion Importer v{}", VERSION);
 
         Options options = createOptions();
         CommandLine cmd = createCommandLine(args, options);
