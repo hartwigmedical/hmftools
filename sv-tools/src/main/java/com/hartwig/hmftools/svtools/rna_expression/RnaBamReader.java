@@ -1,18 +1,25 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_SPLICE_JUNCTION;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_NONE;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_SPAN_EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.MAX_READ_COUNT;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
@@ -26,7 +33,6 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RnaBamReader
 {
@@ -74,14 +80,17 @@ public class RnaBamReader
     private void processSamRecord(@NotNull final SAMRecord record)
     {
         // skip records if both ends aren't in one of the genic regions
-        boolean startMatched = mCurrentGene.getRegionReadData().stream()
+        boolean startMatched = mCurrentGene.getExonRegions().stream()
                 .anyMatch(x -> record.getStart() >= x.Region.start() && record.getStart() <= x.Region.end());
 
-        boolean endMatched = mCurrentGene.getRegionReadData().stream()
+        boolean endMatched = mCurrentGene.getExonRegions().stream()
                 .anyMatch(x -> record.getEnd() >= x.Region.start() && record.getEnd() <= x.Region.end());
 
         if(!startMatched && !endMatched)
+        {
+            checkIntronicRegions(record);
             return;
+        }
 
         ++mBamRecordCount;
 
@@ -102,7 +111,7 @@ public class RnaBamReader
         }
 
         // cache reference bases for comparison with read bases
-        for(RegionReadData region : mCurrentGene.getRegionReadData())
+        for(RegionReadData region : mCurrentGene.getExonRegions())
         {
             final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
                     region.chromosome(), region.start(), region.end()).getBaseString();
@@ -116,21 +125,21 @@ public class RnaBamReader
         for(final ReadRecord read : mReadRecords)
         {
             // the read is fully within the exon
-            List<RegionReadData> containingRegions = mCurrentGene.getRegionReadData().stream()
+            List<RegionReadData> containingRegions = mCurrentGene.getExonRegions().stream()
                     .filter(x -> x.Region.start() <= read.PosStart && x.Region.end() >= read.PosEnd)
                     .collect(Collectors.toList());
 
             // the read covers all of the exon (discounting any intronic or unmapped sections)
             long recordReadLength = read.Length;
 
-            List<RegionReadData> containedRegions = mCurrentGene.getRegionReadData().stream()
+            List<RegionReadData> containedRegions = mCurrentGene.getExonRegions().stream()
                     .filter(x -> !containingRegions.contains(x))
                     .filter(x -> x.length() <= recordReadLength)
                     .filter(x -> x.Region.start() >= read.PosStart && x.Region.end() <= read.PosEnd)
                     .collect(Collectors.toList());
 
             // the read covers part of the exon and crosses its boundary
-            List<RegionReadData> overlappingRegions = mCurrentGene.getRegionReadData().stream()
+            List<RegionReadData> overlappingRegions = mCurrentGene.getExonRegions().stream()
                     .filter(x -> !containedRegions.contains(x) && !containingRegions.contains(x))
                     .filter(x -> overlaps(x.Region, read))
                     .collect(Collectors.toList());
@@ -143,38 +152,53 @@ public class RnaBamReader
             allRegions.addAll(containingRegions);
             allRegions.addAll(overlappingRegions);
 
+            Map<Integer, List<RegionReadData>> mappedRegions = Maps.newHashMap();
+
             // now check for matching bases in the read vs the reference for the overlapping sections
-            List<RegionReadData> matchedRegions = Lists.newArrayList();
             for(RegionReadData region : allRegions)
             {
-                boolean matched = setMatchingBases(region, read);
+                int matchType = setMatchingBases(region, read);
 
-                if(matched)
-                    matchedRegions.add(region);
+                if(matchType == MATCH_TYPE_NONE)
+                    continue;
+
+                List<RegionReadData> regions = mappedRegions.get(matchType);
+                if(regions == null)
+                {
+                    regions = Lists.newArrayList();
+                    mappedRegions.put(matchType, regions);
+                }
+
+                regions.add(region);
             }
+
+            // check for reads matching 2 adjacent exon regions
+            List<RegionReadData> exonBoundaryRegions = mappedRegions.get(MATCH_TYPE_EXON_BOUNDARY);
 
             boolean linksFound = false;
 
-            if(matchedRegions.size() > 1)
+            if(exonBoundaryRegions != null)
             {
                 // record the links between these exons
                 List<RegionReadData> linkedRegions = Lists.newArrayList();
 
-                for(int i = 0; i < matchedRegions.size() - 1; ++i)
+                for(int i = 0; i < exonBoundaryRegions.size() - 1; ++i)
                 {
-                    RegionReadData region1 = matchedRegions.get(i);
+                    RegionReadData region1 = exonBoundaryRegions.get(i);
 
                     if(linkedRegions.contains(region1))
                         continue;
 
-                    for(int j = i + 1; j < matchedRegions.size(); ++j)
+                    for(int j = i + 1; j < exonBoundaryRegions.size(); ++j)
                     {
-                        RegionReadData region2 = matchedRegions.get(j);
+                        RegionReadData region2 = exonBoundaryRegions.get(j);
 
                         if(region1.getPreRegions().contains(region2) || region1.getPostRegions().contains(region2))
                         {
                             region1.addLinkedRegion(region2);
                             region2.addLinkedRegion(region1);
+                            region1.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
+                            region2.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
                             linkedRegions.add(region1);
                             linkedRegions.add(region2);
                         }
@@ -184,22 +208,39 @@ public class RnaBamReader
                 if(!linkedRegions.isEmpty())
                 {
                     linksFound = true;
-                    linkedRegions.forEach(x -> matchedRegions.remove(x));
+                    linkedRegions.forEach(x -> exonBoundaryRegions.remove(x));
+                }
+                else
+                {
+                    for(RegionReadData region : exonBoundaryRegions)
+                    {
+                        if(checkSoftClippedRegions(region, read))
+                        {
+                            linksFound = true;
+                            linkedRegions.add(region);
+                        }
+                    }
+
+                    linkedRegions.forEach(x -> exonBoundaryRegions.remove(x));
                 }
             }
 
-            if(!linksFound && overlappingRegions.size() == 1 && matchedRegions.contains(overlappingRegions.get(0)))
+            // analyse other types of matches
+            if(!linksFound)
             {
-                RegionReadData region = overlappingRegions.get(0);
+                // exon-intron spanning reads
+                List<RegionReadData> spanBoundaryRegions = mappedRegions.get(MATCH_TYPE_SPAN_EXON_BOUNDARY);
 
-                // check for an exonic region going into its adjacent intron
-                boolean otherRegionMatched = checkNonCodingOverlaps(region, read);
+                if(spanBoundaryRegions != null)
+                    spanBoundaryRegions.forEach(x -> checkNonCodingOverlaps(x, read));
 
-                // check for a soft-clipping which matches an adjacent exon
-                if (!otherRegionMatched)
-                {
-                    checkSoftClippedRegions(region, read);
-                }
+                List<RegionReadData> withinExonRegions = mappedRegions.get(MATCH_TYPE_WITHIN_EXON);
+
+                if(withinExonRegions != null)
+                    withinExonRegions.forEach(x -> x.addMatchedRead(MATCH_TYPE_WITHIN_EXON));
+
+                if(exonBoundaryRegions != null)
+                    exonBoundaryRegions.forEach(x -> x.addMatchedRead(MATCH_TYPE_EXON_BOUNDARY));
             }
         }
     }
@@ -216,13 +257,10 @@ public class RnaBamReader
         return false;
     }
 
-    public static boolean setMatchingBases(final RegionReadData region, final ReadRecord read)
+    public static int setMatchingBases(final RegionReadData region, final ReadRecord read)
     {
         if(read.Cigar == null)
-        {
-            setMatchingBasesNoCigar(region, read);
-            return false;
-        }
+            return MATCH_TYPE_NONE;
 
         final Cigar cigar = read.Cigar;
 
@@ -258,14 +296,14 @@ public class RnaBamReader
             }
             else if(element.getOperator() == CigarOperator.M)
             {
-                long readPosition = read.PosStart + readBaseIndex - readSkippedBases + regionSkippedBases;
+                long readStartPos = read.PosStart + readBaseIndex - readSkippedBases + regionSkippedBases;
 
                 if(hasSplitRegions)
                 {
                     // check whether this matched section corresponds to the region (and not an adjacent exon region)
-                    long readPosEnd = readPosition + element.getLength() - 1;
+                    long readPosEnd = readStartPos + element.getLength() - 1;
 
-                    if(readPosEnd < region.start() || readPosition > region.end())
+                    if(readPosEnd < region.start() || readStartPos > region.end())
                     {
                         // this read relates to a difference region
                         readBaseIndex += element.getLength();
@@ -274,30 +312,35 @@ public class RnaBamReader
                     }
                 }
 
-                if(region.start() < readPosition)
+                int matchType = MATCH_TYPE_NONE;
+
+                if(region.start() < readStartPos)
                 {
-                    regionBaseIndex += readPosition - region.start();
+                    regionBaseIndex += readStartPos - region.start();
                 }
-                else if(region.start() > readPosition)
+                else if(region.start() > readStartPos)
                 {
-                    readBaseIndex += region.start() - readPosition;
+                    readBaseIndex += region.start() - readStartPos;
                 }
 
                 if(regionBaseIndex < 0 || regionBaseIndex >= regionBases.length())
                 {
                     LOGGER.warn("invalid base match: cigar({}) read(pos={} start={} index={}) region(pos={} index={} skipped={}) matchLen({})",
-                            cigar.toString(), readPosition, read.PosStart, readBaseIndex,
+                            cigar.toString(), readStartPos, read.PosStart, readBaseIndex,
                             region.start() + regionBaseIndex, regionBaseIndex, regionSkippedBases, element.getLength());
-                    return false;
+                    return MATCH_TYPE_NONE;
                 }
 
                 // check the bases in this matched region
                 int matchedBases = 0;
+                int overlapBases = 0;
 
                 for(int i = 0; i < element.getLength(); ++i)
                 {
                     if(regionBaseIndex >= regionBases.length() || readBaseIndex >= readBases.length())
                         break;
+
+                    ++overlapBases;
 
                     if(regionBases.charAt(regionBaseIndex) == readBases.charAt(readBaseIndex))
                     {
@@ -309,10 +352,24 @@ public class RnaBamReader
                     ++readBaseIndex;
                 }
 
-                if(element.getLength() == matchedBases || matchedBases == region.length()
-                || matchedBases >= MIN_BASE_MATCH && matchedBases/(double)element.getLength() > MIN_BASE_MATCH_PERC)
+                // classify the type of match
+                long readEndPos = read.PosStart + readBaseIndex - readSkippedBases + regionSkippedBases - 1;
+
+                if(element.getLength() == matchedBases)
                 {
-                    region.addMatchedRead();
+                    if (readStartPos == region.start() || readEndPos == region.end())
+                    {
+                        matchType = MATCH_TYPE_EXON_BOUNDARY;
+                    }
+                    else
+                    {
+                        matchType = MATCH_TYPE_WITHIN_EXON;
+                    }
+                }
+                else if(matchedBases == overlapBases)
+                {
+                    // the read crosses this region boundary but matched for the portion which overlapped
+                    matchType = MATCH_TYPE_SPAN_EXON_BOUNDARY;
                 }
                 else
                 {
@@ -321,7 +378,7 @@ public class RnaBamReader
                             element.getLength(), matchedBases);
                 }
 
-                return true;
+                return matchType;
             }
         }
 
@@ -330,7 +387,7 @@ public class RnaBamReader
                 cigar.toString(), read.PosStart, read.PosEnd, readBaseIndex,
                 region.start(), region.end(), regionBaseIndex);
 
-        return false;
+        return MATCH_TYPE_NONE;
     }
 
     private boolean checkNonCodingOverlaps(final RegionReadData region, final ReadRecord read)
@@ -343,12 +400,12 @@ public class RnaBamReader
 
         if (!region.getPreRegions().isEmpty() && read.PosStart < region.start())
         {
-            region.addNonAdjacentRead();
+            region.addMatchedRead(MATCH_TYPE_UNSPLICED);
             return true;
         }
         else if (!region.getPostRegions().isEmpty() && read.PosEnd > region.end())
         {
-            region.addNonAdjacentRead();
+            region.addMatchedRead(MATCH_TYPE_UNSPLICED);
             return true;
         }
 
@@ -386,7 +443,8 @@ public class RnaBamReader
                         ++preRegionBases[startBase + i];
                     }
 
-                    preRegion.addMatchedRead();
+                    region.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
+                    preRegion.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
 
                     preRegion.addLinkedRegion(region);
                     region.addLinkedRegion(preRegion);
@@ -418,7 +476,8 @@ public class RnaBamReader
                         ++postRegionBases[i];
                     }
 
-                    postRegion.addMatchedRead();
+                    region.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
+                    postRegion.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
 
                     postRegion.addLinkedRegion(region);
                     region.addLinkedRegion(postRegion);
@@ -431,40 +490,22 @@ public class RnaBamReader
         return matched;
     }
 
-    public static void setMatchingBasesNoCigar(final RegionReadData region, final ReadRecord read)
+    private void checkIntronicRegions(final SAMRecord record)
     {
-
-        // manual base comparison
-        // perform a manual comparison
-        int matchedBases = findStringOverlaps(region.refBases(), read.ReadBases);
-
-        if(matchedBases < MIN_BASE_MATCH_PERC * region.length())
-        {
-            /*
-            LOGGER.trace("region({}) has base-mismatch, overlap({}) matched({}) cigar({})",
-                    region, overlapLength, matchedBases, read.Cigar);
-
-            LOGGER.trace("regionBases: pos({} -> {}) {}",
-                    regionBaseStart, regionBaseEnd, regionBases);
-            LOGGER.trace("recordBases: pos({} -> {}) {}",
-                    recordBaseStart, recordBaseEnd, recordBases);
+        if(record.getCigar() == null)
             return;
 
-         */
-        }
+        if(record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
+            return;
 
-        // TODO: support this manual comparison?
-        int[] refBasesMatched = region.refBasesMatched();
+        RegionReadData intronReadData = mCurrentGene.getIntronRegions().stream()
+                .filter(x -> record.getStart() >= x.Region.start() && record.getStart() <= x.Region.end())
+                .findFirst().orElse(null);
 
-        /*
-        for(long i = overlapStart; i <= overlapEnd; ++i)
+        if(intronReadData != null)
         {
-            int baseIndex = (int)(i - region.start());
-            ++matchedBases[baseIndex];
+            intronReadData.addMatchedRead(MATCH_TYPE_INTRONIC);
         }
-        */
-
-        region.addMatchedRead();
     }
 
     private static final double MIN_BASE_MATCH_PERC = 0.9;

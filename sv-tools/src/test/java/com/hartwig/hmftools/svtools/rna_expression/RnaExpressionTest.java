@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_SPAN_EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.MATCH_TYPE_WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.setMatchingBases;
@@ -86,30 +89,30 @@ public class RnaExpressionTest
 
         ReadRecord record = new ReadRecord("1", "1", 105, 114, refBaseString.substring(5, 15), createCigar(0, 10, 0));
 
-        setMatchingBases(region, record);
+        int matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(MATCH_TYPE_WITHIN_EXON, matchType);
 
         // a read covering all of an exon with unmapped bases either end
         region = new RegionReadData(GenomeRegions.create("1", 105, 114), "1");
         region.setRefBases(refBaseString.substring(5, 15));
 
         record = new ReadRecord("1", "1", 105, 124, refBaseString, createCigar(5, 10, 5));
-        setMatchingBases(region, record);
+        matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(MATCH_TYPE_EXON_BOUNDARY,  matchType);
 
         // soft-clipped ends with matching position at one end
         record = new ReadRecord("1", "1", 105, 119, refBaseString.substring(2, 19),
                 createCigar(3, 10, 5, 0, 0));
 
         region.clearState();
-        setMatchingBases(region, record);
+        matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(MATCH_TYPE_EXON_BOUNDARY, matchType);
 
         // read overlapping 2 different regions
         region = new RegionReadData(GenomeRegions.create("1", 100, 119), "1");
@@ -119,28 +122,28 @@ public class RnaExpressionTest
         record = new ReadRecord("1", "1", 105, 224, refBaseString.substring(5, 15) + refBaseString2.substring(0, 10),
                 createCigar(0, 10, 100, 10, 0));
 
-        setMatchingBases(region, record);
+        matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(MATCH_TYPE_WITHIN_EXON, matchType);
 
         // matching exact exon boundary at start
         region = new RegionReadData(GenomeRegions.create("1", 105, 114), "1");
         region.setRefBases(refBaseString.substring(5, 15));
 
-        setMatchingBases(region, record);
+        matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(MATCH_TYPE_EXON_BOUNDARY, matchType);
 
         // and a region at the other end
         region = new RegionReadData(GenomeRegions.create("1", 215, 224), "1");
         region.setRefBases(refBaseString2.substring(0, 10));
 
-        setMatchingBases(region, record);
+        matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(1, region.matchedReadCount());
+        assertEquals(MATCH_TYPE_EXON_BOUNDARY, matchType);
 
         // a region extending further than the read at the other end, with the first 5 bases matching a region before the exon
         String intronicBases = "ABCDE";
@@ -150,10 +153,11 @@ public class RnaExpressionTest
         region = new RegionReadData(GenomeRegions.create("1", 220, 229), "1");
         region.setRefBases(refBaseString2.substring(0, 10));
 
-        setMatchingBases(region, record);
+        matchType = setMatchingBases(region, record);
 
         assertEquals(5, region.baseCoverage(1));
-        assertEquals(0, region.matchedReadCount()); // insufficient to count as a match
+        assertEquals(MATCH_TYPE_SPAN_EXON_BOUNDARY, matchType);
+        // assertEquals(0, region.matchedReadCount()); // insufficient to count as a match
     }
 
     @Test

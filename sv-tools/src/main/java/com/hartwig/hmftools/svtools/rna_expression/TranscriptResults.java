@@ -10,12 +10,16 @@ public abstract class TranscriptResults
     public abstract TranscriptData trans();
 
     public abstract int exonsFound();
-    public abstract int linksFound();
-    public abstract int totalLinkedReads();
+    public abstract int spliceJunctionsSupported();
+    public abstract int splicedReads();
     public abstract double readDepthTotal();
     public abstract double avgReadDepth();
     public abstract long codingLengthTotal();
     public abstract long totalReadCoverage();
-    public abstract int intronSpanReads();
+    public abstract int exonicReads();
+    public abstract int exonBoundaryReads();
+    public abstract int unsplicedReads();
+    public abstract int intronicReads();
+    public abstract int uniqueIntronicReads();
 
 }
