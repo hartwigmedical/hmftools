@@ -32,6 +32,7 @@
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
+        <module>knowledgebase-generator</module>
         <module>protect</module>
         <module>sv-tools</module>
     </modules>
@@ -67,6 +68,7 @@
         <patient-reporter.version>7.9</patient-reporter.version>
         <patient-db.version>3.39</patient-db.version>
         <iclusion-importer.version>1.1</iclusion-importer.version>
+        <knowledgebase-generator.version>0.1</knowledgebase-generator.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
