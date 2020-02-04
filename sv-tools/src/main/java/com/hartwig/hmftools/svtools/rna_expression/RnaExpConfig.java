@@ -18,7 +18,6 @@ import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RnaExpConfig
@@ -30,6 +29,7 @@ public class RnaExpConfig
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String ALL_TRANSCRIPTS = "all_transcripts";
     private static final String WRITE_EXON_DATA = "write_exon_data";
+    private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
 
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
@@ -47,6 +47,7 @@ public class RnaExpConfig
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
     public boolean WriteExonData;
+    public boolean WriteFragmentLengths;
 
     public final List<String> SpecificTransIds;
 
@@ -87,6 +88,7 @@ public class RnaExpConfig
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
+        WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
@@ -104,6 +106,7 @@ public class RnaExpConfig
         ReadCountLimit = MAX_READ_COUNT;
         GcBiasFile = "";
         WriteExonData = false;
+        WriteFragmentLengths = false;
         SpecificTransIds = Lists.newArrayList();
     }
 
@@ -130,6 +133,7 @@ public class RnaExpConfig
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
+        options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
 

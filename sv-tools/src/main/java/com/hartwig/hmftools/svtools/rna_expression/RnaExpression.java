@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
@@ -16,6 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -42,7 +47,8 @@ public class RnaExpression
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final List<GeneReadData> mGeneReadDatalist;
-    
+    private final Map<Integer,Integer> mFragmentLengths;
+
     private BufferedWriter mWriter;
     private BufferedWriter mExonDataWriter;
 
@@ -69,6 +75,8 @@ public class RnaExpression
         mGeneTransCache.loadEnsemblData(false);
 
         mGeneReadDatalist = Lists.newArrayList();
+        mFragmentLengths = Maps.newHashMap();
+
         mWriter = null;
         mExonDataWriter = null;
     }
@@ -94,6 +102,16 @@ public class RnaExpression
 
                 if(geneCount > 1 && (geneCount % 100) == 0)
                     LOGGER.info("processed {} genes", geneCount);
+            }
+        }
+
+        if(mConfig.WriteFragmentLengths && !mFragmentLengths.isEmpty())
+        {
+            LOGGER.info("fragment sizes:");
+
+            for (Map.Entry<Integer, Integer> entry : mFragmentLengths.entrySet())
+            {
+                LOGGER.info("FRAG_SIZE: {},{}", entry.getKey(), entry.getValue());
             }
         }
 
@@ -133,12 +151,11 @@ public class RnaExpression
                 if (exonReadData == null)
                 {
                     GenomeRegion region = GenomeRegions.create(geneData.Chromosome, exon.ExonStart, exon.ExonEnd);
-                    exonReadData = new RegionReadData(
-                            region, String.format("trans(%s) exon(%d)", transData.TransName, exon.ExonRank));
+                    exonReadData = new RegionReadData(region);
                     geneReadData.addExonRegion(exonReadData);
                 }
 
-                exonReadData.addRefRegion(transData.TransName);
+                exonReadData.addExonRef(transData.TransName, exon.ExonRank);
 
                 if(prevRegionReadData != null)
                 {
@@ -153,7 +170,7 @@ public class RnaExpression
                     long intronEnd = exon.ExonStart - 1;
 
                     RegionReadData intronReadData = geneReadData.createOrFindIntronRegion(intronStart, intronEnd);
-                    intronReadData.addRefRegion(transData.TransName);
+                    intronReadData.addExonRef(transData.TransName, exon.ExonRank);
                 }
 
                 prevRegionReadData = exonReadData;
@@ -179,6 +196,17 @@ public class RnaExpression
             if(mConfig.WriteExonData)
             {
                 writeExonData(geneReadData, transData);
+            }
+
+            for(Integer fragmentLength : geneReadData.getFragmentLengths())
+            {
+                fragmentLength = min(fragmentLength, 5000); // to prevent map blowing out in size
+
+                Integer count = mFragmentLengths.get(fragmentLength);
+                if(count == null)
+                    mFragmentLengths.put(fragmentLength, 1);
+                else
+                    mFragmentLengths.put(fragmentLength, count + 1);
             }
         }
 
@@ -224,9 +252,9 @@ public class RnaExpression
 
             codingLengthTotal += exon.ExonEnd - exon.ExonStart + 1;
 
-            unsplicedReads += exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_UNSPLICED);
-            exonicReads += exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_WITHIN_EXON);
-            exonBoundaryReads += exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_EXON_BOUNDARY);
+            unsplicedReads += exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED);
+            exonicReads += exonReadData.matchedReadCount(MATCH_TYPE_WITHIN_EXON);
+            exonBoundaryReads += exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY);
 
             ExonData prevExon = i > 0 ? exons.get(i - 1) : null;
             ExonData nextExon = i < exons.size() - 1 ? exons.get(i + 1) : null;
@@ -303,7 +331,7 @@ public class RnaExpression
                 mWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
                 mWriter.write(",ExonsMatched,AvgDepth,TotalReads,ExonLength,CodingCoverage");
                 mWriter.write(",SpliceJunctionsSupported,SplicedReads,ExonicReads,ExonBoundaryReads,UnsplicedReads");
-                mWriter.write(",IntronicReads,UniqueIntronicReads");
+                mWriter.write(",UniqueIntronicReads");
                 mWriter.newLine();
             }
 
@@ -321,8 +349,7 @@ public class RnaExpression
                     transResults.spliceJunctionsSupported(), transResults.splicedReads(),
                     transResults.exonicReads(), transResults.exonBoundaryReads(), transResults.unsplicedReads()));
 
-            mWriter.write(String.format(",%d,%d",
-                    transResults.intronicReads(), transResults.uniqueIntronicReads()));
+            mWriter.write(String.format(",%d", transResults.uniqueIntronicReads()));
 
             mWriter.newLine();
 
@@ -373,12 +400,12 @@ public class RnaExpression
                         mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                         transData.TransName, exon.ExonRank, exon.ExonStart, exon.ExonEnd));
 
-                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d,%d,%d,%d",
+                mExonDataWriter.write(String.format(",%d,%.0f,0,%d,%d,%d,%d,%d",
                         exonReadData.baseCoverage(1), exonReadData.averageDepth(),
-                        exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_SPLICE_JUNCTION),
-                        exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_WITHIN_EXON),
-                        exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_EXON_BOUNDARY),
-                        exonReadData.matchedReadCount(RegionReadData.MATCH_TYPE_UNSPLICED),
+                        // exonReadData.matchedReadCount(MATCH_TYPE_SPLICE_JUNCTION),
+                        exonReadData.matchedReadCount(MATCH_TYPE_WITHIN_EXON),
+                        exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY),
+                        exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED),
                         startLinks != null ? startLinks : 0, endLinks != null ? endLinks : 0));
 
                 mExonDataWriter.newLine();

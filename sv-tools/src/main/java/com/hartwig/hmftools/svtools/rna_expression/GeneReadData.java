@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_INTRONIC;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,7 +71,7 @@ public class GeneReadData
         if(intronRegion == null)
         {
             GenomeRegion region = GenomeRegions.create(GeneData.Chromosome, intronStart, intronEnd);
-            intronRegion = new RegionReadData(region, String.format("%d", mIntronRegions.size()));
+            intronRegion = new RegionReadData(region);
             mIntronRegions.add(intronRegion);
         }
         else
@@ -91,7 +93,7 @@ public class GeneReadData
                 .filter(x -> !restrictToUnique || x.getRefRegions().size() == 1)
                 .collect(Collectors.toList());
 
-        return intronRegions.stream().mapToInt(x -> x.matchedReadCount(RegionReadData.MATCH_TYPE_INTRONIC)).sum();
+        return intronRegions.stream().mapToInt(x -> x.matchedReadCount(MATCH_TYPE_INTRONIC)).sum();
     }
 
     public int totalReadCount() { return mTotalReadCount; }
