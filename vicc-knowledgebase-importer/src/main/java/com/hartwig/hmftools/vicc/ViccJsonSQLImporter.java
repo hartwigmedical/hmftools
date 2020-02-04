@@ -31,8 +31,11 @@ public class ViccJsonSQLImporter {
 
     private static final String SKIP_DATABASE_WRITING = "skip_database_writing";
 
+    private static final String VERSION = ViccJsonSQLImporter.class.getPackage().getImplementationVersion();
+
     public static void main(final String... args) throws ParseException, IOException, SQLException {
-        LOGGER.info("Running VICC Knowledgebase Importer");
+        LOGGER.info("Running VICC Knowledgebase Importer v{}", VERSION);
+
         Options options = createOptions();
         CommandLine cmd = createCommandLine(args, options);
 
