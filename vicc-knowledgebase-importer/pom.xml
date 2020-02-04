@@ -10,7 +10,7 @@
 
     <artifactId>vicc-knowledgebase-importer</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>${vicc-knowledgebase-importer.version}</version>
     <name>HMF Tools - VICC Knowledgebase Importer</name>
 
     <dependencies>

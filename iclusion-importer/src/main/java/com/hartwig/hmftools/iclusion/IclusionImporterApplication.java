@@ -31,7 +31,6 @@ public class IclusionImporterApplication {
 
     private static final String VERSION = IclusionImporterApplication.class.getPackage().getImplementationVersion();
 
-
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
         LOGGER.info("Running iClusion Importer v{}", VERSION);
 
