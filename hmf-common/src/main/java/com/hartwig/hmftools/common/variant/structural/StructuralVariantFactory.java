@@ -110,9 +110,9 @@ public class StructuralVariantFactory {
 
     @Nullable
     public static String mateId(@NotNull VariantContext context) {
-        String mate = (String) context.getAttribute(PAR_ID);
+        String mate = context.getAttributeAsString(MATE_ID, null);
         if (mate == null) {
-            return (String) context.getAttribute(MATE_ID);
+            return context.getAttributeAsString(PAR_ID, null);
         }
 
         return mate;
@@ -400,7 +400,7 @@ public class StructuralVariantFactory {
             Genotype geno = context.getGenotype(NORMAL_GENOTYPE_ORDINAL);
             if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
                     VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
-                Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID)
+                Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
                         ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
@@ -413,7 +413,7 @@ public class StructuralVariantFactory {
             Genotype geno = context.getGenotype(TUMOUR_GENOTYPE_ORDINAL);
             if (geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
                     VARIANT_FRAGMENT_BREAKEND_COVERAGE)) {
-                Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID)
+                Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
                         ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
                         : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
                 Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
