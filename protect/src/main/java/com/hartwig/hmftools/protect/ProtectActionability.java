@@ -120,6 +120,9 @@ public class ProtectActionability {
             printUsageAndExit(options);
         }
 
+        LOGGER.info("Reading knowledgebase generator v2 from {}", knowledgebaseDirectory);
+      //  ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
+
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
 
