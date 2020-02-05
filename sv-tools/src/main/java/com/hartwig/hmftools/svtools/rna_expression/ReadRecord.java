@@ -332,137 +332,38 @@ public class ReadRecord
         return EXON_BOUNDARY;
     }
 
-    // TODO - adjust to set base matching only for matched transcript regions
-    public static RegionMatchType setMatchingBases(final RegionReadData region, final ReadRecord read)
+    public void markRegionBases(final RegionReadData region)
     {
-        if(read.Cigar == null)
-            return RegionMatchType.NONE;
-
-        final Cigar cigar = read.Cigar;
-
-        // first establish whether the read is split across 2 distant regions, and if so which it maps to
-        final String readBases = read.ReadBases;
-        int readBaseIndex = 0;
-
-        final String regionBases = region.refBases();
-        int[] regionMatchedBases = region.refBasesMatched();
-        int regionBaseIndex = 0;
-        int regionSkippedBases = 0;
-        int readSkippedBases = 0;
-
-        boolean hasSplitRegions = cigar.containsOperator(CigarOperator.N)
-                && cigar.getCigarElements().stream().filter(x -> x.getOperator() == CigarOperator.M).count() >= 2;
-
-        for(CigarElement element : read.Cigar.getCigarElements())
+        for(int i = 0; i < mMappedCoords.size(); ++i)
         {
-            if(element.getOperator() == CigarOperator.S || element.getOperator() == CigarOperator.I)
+            final long[] readSection = mMappedCoords.get(i);
+            long readStartPos = readSection[SE_START];
+            long readEndPos = readSection[SE_END];
+
+            if (readStartPos > region.end() || readEndPos < region.start())
+                continue;
+
+            // process this overlap
+            int regionBaseIndex = readStartPos > region.start() ? (int)(readStartPos - region.start()) : 0;
+            int overlap = (int)(min(readEndPos, region.end()) - max(readStartPos, region.start())) + 1;
+
+            int[] regionBaseDepth = region.refBasesMatched();
+
+            if(regionBaseIndex + overlap >= regionBaseDepth.length)
             {
-                readBaseIndex += element.getLength();
-                readSkippedBases += element.getLength();
+                LOGGER.error("read({}) region({}) coords({} -> {}) regionBaseIndex({}) overlap({})",
+                        this.toString(), region, readStartPos, readEndPos, regionBaseIndex, overlap);
+                return;
             }
-            else if(element.getOperator() == CigarOperator.D)
+
+            for(int j = regionBaseIndex; j <= overlap; ++j)
             {
-                regionBaseIndex += element.getLength();
+                ++regionBaseDepth[j];
             }
-            else if(element.getOperator() == CigarOperator.N)
-            {
-                regionSkippedBases += element.getLength();
-            }
-            else if(element.getOperator() == CigarOperator.M)
-            {
-                long readStartPos = read.PosStart + readBaseIndex - readSkippedBases + regionSkippedBases;
 
-                if(hasSplitRegions)
-                {
-                    // check whether this matched section corresponds to the region (and not an adjacent exon region)
-                    long readPosEnd = readStartPos + element.getLength() - 1;
-
-                    if(readPosEnd < region.start() || readStartPos > region.end())
-                    {
-                        // this read relates to a difference region
-                        readBaseIndex += element.getLength();
-                        continue;
-                    }
-                }
-
-                RegionMatchType matchType = RegionMatchType.NONE;
-
-                if(region.start() < readStartPos)
-                {
-                    regionBaseIndex += readStartPos - region.start();
-                }
-                else if(region.start() > readStartPos)
-                {
-                    readBaseIndex += region.start() - readStartPos;
-                }
-
-                if(regionBaseIndex < 0 || regionBaseIndex >= regionBases.length())
-                {
-                    LOGGER.warn("invalid base match: cigar({}) read(pos={} start={} index={}) region(pos={} index={} skipped={}) matchLen({})",
-                            cigar.toString(), readStartPos, read.PosStart, readBaseIndex,
-                            region.start() + regionBaseIndex, regionBaseIndex, regionSkippedBases, element.getLength());
-                    return RegionMatchType.NONE;
-                }
-
-                // check the bases in this matched region
-                int matchedBases = 0;
-                int overlapBases = 0;
-
-                for(int i = 0; i < element.getLength(); ++i)
-                {
-                    if(regionBaseIndex >= regionBases.length() || readBaseIndex >= readBases.length())
-                        break;
-
-                    ++overlapBases;
-
-                    if(regionBases.charAt(regionBaseIndex) == readBases.charAt(readBaseIndex))
-                    {
-                        ++regionMatchedBases[regionBaseIndex];
-                        ++matchedBases;
-                    }
-
-                    ++regionBaseIndex;
-                    ++readBaseIndex;
-                }
-
-                // classify the type of match
-                long readEndPos = read.PosStart + readBaseIndex - readSkippedBases + regionSkippedBases - 1;
-
-                if(element.getLength() == matchedBases)
-                {
-                    if (readStartPos == region.start() || readEndPos == region.end())
-                    {
-                        matchType = EXON_BOUNDARY;
-                    }
-                    else
-                    {
-                        matchType = WITHIN_EXON;
-                    }
-                }
-                else if(matchedBases == overlapBases)
-                {
-                    // the read crosses this region boundary but matched for the portion which overlapped
-                    matchType = RegionMatchType.EXON_INTRON;
-                }
-                else
-                {
-                    LOGGER.trace("insufficient base match: cigar({}) read(index={} pos={}) region(index={} pos={}) matchLen({}) matched({})",
-                            cigar.toString(), readBaseIndex, read.PosStart + readBaseIndex, regionBaseIndex, region.start() + regionBaseIndex,
-                            element.getLength(), matchedBases);
-                }
-
-                return matchType;
-            }
+            return;
         }
-
-        // not an issue since must map to other regions
-        LOGGER.trace("no base match: cigar({}) read({}->{} index={}) region(index={} pos={})",
-                cigar.toString(), read.PosStart, read.PosEnd, readBaseIndex,
-                region.start(), region.end(), regionBaseIndex);
-
-        return RegionMatchType.NONE;
     }
-
 
     private static int MIN_BASE_MATCH = 4;
 
@@ -498,9 +399,6 @@ public class ReadRecord
                     //region.addMatchedRead(SPLICE_JUNCTION);
                     //preRegion.addMatchedRead(SPLICE_JUNCTION);
 
-                    preRegion.addLinkedRegion(region);
-                    region.addLinkedRegion(preRegion);
-
                     break;
                 }
             }
@@ -530,9 +428,6 @@ public class ReadRecord
 
                     // region.addMatchedRead(SPLICE_JUNCTION);
                     // postRegion.addMatchedRead(SPLICE_JUNCTION);
-
-                    postRegion.addLinkedRegion(region);
-                    region.addLinkedRegion(postRegion);
 
                     break;
                 }

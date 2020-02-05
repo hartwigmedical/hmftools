@@ -207,6 +207,10 @@ public class RnaBamReader
         }
 
         // finally record valid read info against each region now that it is known
+        Map<ReadRecord, List<RegionReadData>> markedReadRegions = Maps.newHashMap();
+        markedReadRegions.put(read1, Lists.newArrayList());
+        markedReadRegions.put(read2, Lists.newArrayList());
+
         for(final String trans : validTranscripts)
         {
             mCurrentGene.addTranscriptReadMatch(trans);
@@ -220,12 +224,22 @@ public class RnaBamReader
                         .filter(x -> validRegionMatchType(x.getValue()))
                         .map(x -> x.getKey()).collect(Collectors.toList());
 
-                regions.forEach(x -> x.addTranscriptReadMatch(trans));
+                List<RegionReadData> markedRegions = markedReadRegions.get(read);
 
-                // now record the bases covered by the read in these matched regions
+                for(RegionReadData region : regions)
+                {
+                    // register a read against this valid transcript region
+                    region.addTranscriptReadMatch(trans);
+
+                    // now record the bases covered by the read in these matched regions
+                    if (!markedRegions.contains(region))
+                    {
+                        read.markRegionBases(region);
+                        markedRegions.add(region);
+                    }
+                }
 
                 // any adjacent reads can record a splice junction count
-
                 if(regions.size() > 1 && read.getTranscriptClassification(trans) == SPLICE_JUNCTION)
                 {
                     for(int r1 = 0; r1 < regions.size() - 1; ++r1)

@@ -26,7 +26,6 @@ public class RegionReadData implements Comparable< RegionReadData>
     private final Map<String, int[]> mTranscriptJunctionMatches; // count of reads which support each exon junction and a specific transcript
 
     private int[] mMatchTypeCounts;
-    private final Map<RegionReadData,Integer> mLinkedRegions; // count of reads covering this region and another next to it
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
     private List<RegionReadData> mPostRegions;
 
@@ -44,19 +43,11 @@ public class RegionReadData implements Comparable< RegionReadData>
 
         mTranscriptReadMatches = Maps.newHashMap();
         mTranscriptJunctionMatches = Maps.newHashMap();
-
-        mLinkedRegions = Maps.newHashMap();
     }
 
     public String chromosome() { return Region.chromosome(); }
     public long start() { return Region.start(); }
     public long end() { return Region.end(); }
-
-    @Override
-    public int compareTo(RegionReadData other)
-    {
-        return (int)(start() - other.start());
-    }
 
     public void resetRegionBounds(long posStart, long posEnd)
     {
@@ -156,18 +147,6 @@ public class RegionReadData implements Comparable< RegionReadData>
         ++counts[seIndex];
     }
 
-    public final Map<RegionReadData, Integer> getLinkedRegions() { return mLinkedRegions; }
-
-    public void addLinkedRegion(final RegionReadData region)
-    {
-        Integer linkCount = mLinkedRegions.get(region);
-
-        if(linkCount != null)
-            mLinkedRegions.put(region, linkCount + 1);
-        else
-            mLinkedRegions.put(region, 1);
-    }
-
     public double averageDepth()
     {
         if(mRefBasesMatched == null)
@@ -204,9 +183,14 @@ public class RegionReadData implements Comparable< RegionReadData>
                 mRefBasesMatched[i] = 0;
         }
 
-        mLinkedRegions.clear();
-
         for(int i = 0; i < mMatchTypeCounts.length; ++i)
             mMatchTypeCounts[i] = 0;
     }
+
+    @Override
+    public int compareTo(RegionReadData other)
+    {
+        return (int)(start() - other.start());
+    }
+
 }
