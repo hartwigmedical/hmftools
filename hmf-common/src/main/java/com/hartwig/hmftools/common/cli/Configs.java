@@ -8,19 +8,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class Configs {
+public final class Configs {
 
-    private static Logger LOGGER = LogManager.getLogger(Configs.class);
+    private static final Logger LOGGER = LogManager.getLogger(Configs.class);
+
+    private Configs() {
+    }
 
     @NotNull
     public static <E extends Enum<E>> E defaultEnumValue(@NotNull final CommandLine cmd, @NotNull final String argument,
             @NotNull final E defaultValue) throws ParseException {
-
         if (cmd.hasOption(argument)) {
             final String optionValue = cmd.getOptionValue(argument);
             try {
-
-                final E value = defaultValue.valueOf(defaultValue.getDeclaringClass(), optionValue);
+                final E value = E.valueOf(defaultValue.getDeclaringClass(), optionValue);
                 if (!value.equals(defaultValue)) {
                     LOGGER.info("Using non default value {} for parameter {}", optionValue, argument);
                 }
@@ -57,5 +58,4 @@ public class Configs {
 
         return defaultValue;
     }
-
 }
