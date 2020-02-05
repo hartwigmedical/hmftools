@@ -140,6 +140,59 @@ public class RnaExpressionTest
     }
 
     @Test
+    public void testUnmappedSpliceJunctions()
+    {
+        String refBaseString = "ABCDEFGHIJKLMNOPQRST"; // currently unused
+
+        // soft-clipping at one end
+        RegionReadData region1 = new RegionReadData(GenomeRegions.create("1", 141, 150));
+        region1.setRefBases(refBaseString.substring(0, 10));
+        RegionReadData region2 = new RegionReadData(GenomeRegions.create("1", 200, 209));
+        region2.setRefBases(refBaseString.substring(10, 19));
+
+        region1.addPostRegion(region2);
+        region2.addPreRegion(region1);
+
+        ReadRecord read = createReadRecord(1, "1", 200, 209, refBaseString.substring(5, 19), createCigar(5, 10, 0));
+
+        List<RegionReadData> regions = Lists.newArrayList(region2);
+        read.processOverlappingRegions(regions);
+
+        assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region1));
+        assertEquals(2, read.getMappedRegionCoords().size());
+        assertEquals(146, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(150, read.getMappedRegionCoords().get(0)[SE_END]);
+
+        // test again on the up side, with 2 different regions matching the inferred bases
+        read = createReadRecord(1, "1", 141, 155, refBaseString.substring(0, 15), createCigar(0, 15, 0));
+
+        RegionReadData region3 = new RegionReadData(GenomeRegions.create("1", 200, 229));
+        region3.setRefBases(refBaseString.substring(10, 19) + refBaseString);
+
+        RegionReadData region4 = new RegionReadData(GenomeRegions.create("1", 121, 150));
+        region1.setRefBases(refBaseString + refBaseString.substring(0, 10));
+
+        region1.addPostRegion(region3);
+        region3.addPreRegion(region1);
+
+        region4.addPostRegion(region2);
+        region4.addPostRegion(region3);
+        region2.addPreRegion(region4);
+        region3.addPreRegion(region4);
+
+        regions = Lists.newArrayList(region1, region4);
+        read.processOverlappingRegions(regions);
+
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region1));
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region2));
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region3));
+        assertEquals(EXON_BOUNDARY, read.getMappedRegions().get(region4));
+        assertEquals(2, read.getMappedRegionCoords().size());
+        assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_START]);
+        assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_END]);
+    }
+
+    @Test
     public void testReadTranscriptClassification()
     {
         String refBaseString = "ABCDEFGHIJKLMNOPQRST"; // currently unused

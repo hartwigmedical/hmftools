@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
@@ -45,21 +46,12 @@ public class ReadRecord
     public final Cigar Cigar;
 
     public final List<long[]> mMappedCoords;
+    private boolean mLowerInferredAdded;
+    private boolean mUpperInferredAdded;
 
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
 
     private final Map<String,TransMatchType> mTranscriptClassification;
-
-    // type of match between a read region (ie a 'M' section in CIGAR) and an exon
-    /*
-    public static final int NONE = -1;
-    public static final int EXON_BOUNDARY = 0; // read matches one exon boundary
-    public static final int WITHIN_EXON = 1; // read fully contained within the exon
-    public static final int EXON_MATCH = 2; // read fully contained within the exon
-    public static final int UNSPLICED = 3; // reads spanning to unmapped regions where adjacent regions exist
-    public static final int INTRONIC = 4;
-
-     */
 
     private static final Logger LOGGER = LogManager.getLogger(ReadRecord.class);
 
@@ -89,6 +81,8 @@ public class ReadRecord
 
         mMappedRegions = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
+        mLowerInferredAdded = false;
+        mUpperInferredAdded = false;
     }
 
     public final SAMRecord samRecord() { return mSamRecord; }
@@ -155,8 +149,10 @@ public class ReadRecord
             }
 
             RegionMatchType matchType = getRegionMatchType(region);
-
             mMappedRegions.put(region, matchType);
+
+            if(matchType == EXON_INTRON || Cigar.containsOperator(CigarOperator.S))
+                checkMissedJunctions(region);
         }
 
         for(final String transId : transcripts)
@@ -367,76 +363,120 @@ public class ReadRecord
 
     private static int MIN_BASE_MATCH = 4;
 
-    private boolean checkSoftClippedRegions(final RegionReadData region)
+    private void checkMissedJunctions(final RegionReadData region)
     {
-        boolean matched = false;
+        // check for reads either soft-clipped or apparently unspliced, where the extra bases can match with the next exon
 
-        // look for soft-clipped bases which match the exon before or afterwards
-        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S
-        && Cigar.getFirstCigarElement().getLength() >= MIN_BASE_MATCH && !region.getPreRegions().isEmpty())
+        // check start of read
+        long[] readSection = mLowerInferredAdded ? mMappedCoords.get(1) : mMappedCoords.get(0);
+        long readStartPos = readSection[SE_START];
+        long readEndPos = readSection[SE_END];
+
+        int extraBaseLength = 0;
+
+        if(region.start() > readStartPos && readEndPos > region.start())
         {
-            int scLength = Cigar.getFirstCigarElement().getLength();
-            final String scBases = ReadBases.substring(0, scLength);
+            extraBaseLength = (int)(region.start() - readStartPos);
+        }
+
+        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S)
+        {
+            extraBaseLength += Cigar.getFirstCigarElement().getLength();
+        }
+
+        if(extraBaseLength >= MIN_BASE_MATCH)
+        {
+            final String extraBases = ReadBases.substring(0, extraBaseLength);
 
             for(RegionReadData preRegion : region.getPreRegions())
             {
-                int baseLength = preRegion.refBases().length();
+                int baseLength = preRegion.length();
 
-                if(scBases.length() > baseLength)
+                if(extraBases.length() > baseLength)
                     continue;
 
-                final String endBases = preRegion.refBases().substring(baseLength - scBases.length(), baseLength);
-                if(endBases.equals(scBases))
+                final String endBases = preRegion.refBases().substring(baseLength - extraBases.length(), baseLength);
+                if(endBases.equals(extraBases))
                 {
-                    matched = true;
-                    int[] preRegionBases = preRegion.refBasesMatched();
-                    int startBase = baseLength - scBases.length();
-                    for(int i = 0; i < scBases.length(); ++i)
-                    {
-                        ++preRegionBases[startBase + i];
-                    }
-
-                    //region.addMatchedRead(SPLICE_JUNCTION);
-                    //preRegion.addMatchedRead(SPLICE_JUNCTION);
-
-                    break;
+                    // add matched coordinates for this exon and it as a region
+                    mMappedRegions.put(region, EXON_BOUNDARY);
+                    mMappedRegions.put(preRegion, EXON_BOUNDARY);
+                    addInferredMappingRegion(true, preRegion.end() - extraBaseLength + 1, preRegion.end());
                 }
             }
         }
 
-        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S
-        && Cigar.getLastCigarElement().getLength() >= MIN_BASE_MATCH && !region.getPostRegions().isEmpty())
+        readSection = mUpperInferredAdded ? mMappedCoords.get(mMappedCoords.size() - 2) : mMappedCoords.get(mMappedCoords.size() - 1);
+        readStartPos = readSection[SE_START];
+        readEndPos = readSection[SE_END];
+
+        extraBaseLength = 0;
+
+        if(readEndPos > region.end() && readStartPos < region.end())
         {
-            int scLength = Cigar.getLastCigarElement().getLength();
-            final String scBases = ReadBases.substring(ReadBases.length() - scLength, ReadBases.length());
+            extraBaseLength = (int)(readEndPos - region.end());
+        }
+
+        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S)
+        {
+            extraBaseLength += Cigar.getLastCigarElement().getLength();
+        }
+
+        if(extraBaseLength >= MIN_BASE_MATCH)
+        {
+            final String extraBases = ReadBases.substring(ReadBases.length() - extraBaseLength, ReadBases.length());
 
             for(RegionReadData postRegion : region.getPostRegions())
             {
-                if(scBases.length() > postRegion.refBases().length())
+                int baseLength = postRegion.length();
+
+                if(extraBases.length() > baseLength)
                     continue;
 
-                final String startBases = postRegion.refBases().substring(0, scBases.length());
-                if(startBases.equals(scBases))
+                final String endBases = postRegion.refBases().substring(0, extraBases.length());
+                if(endBases.equals(extraBases))
                 {
-                    matched = true;
+                    // add matched coordinates for this exon and it as a region
+                    mMappedRegions.put(region, EXON_BOUNDARY);
+                    mMappedRegions.put(postRegion, EXON_BOUNDARY);
 
-                    int[] postRegionBases = postRegion.refBasesMatched();
-                    for(int i = 0; i < scBases.length(); ++i)
-                    {
-                        ++postRegionBases[i];
-                    }
-
-                    // region.addMatchedRead(SPLICE_JUNCTION);
-                    // postRegion.addMatchedRead(SPLICE_JUNCTION);
-
-                    break;
+                    addInferredMappingRegion(false, postRegion.start(), postRegion.start() + extraBaseLength - 1);
                 }
             }
         }
-
-        return matched;
     }
 
+
+    private void addInferredMappingRegion(boolean isLower, long posStart, long posEnd)
+    {
+        if(isLower)
+        {
+            if (!mLowerInferredAdded)
+            {
+                mLowerInferredAdded = true;
+                mMappedCoords.add(0, new long[] { posStart, posEnd });
+            }
+            else
+            {
+                // lengthen the new region if required
+                long[] newSection = mMappedCoords.get(0);
+                newSection[SE_START] = min(newSection[SE_START], posStart);
+            }
+        }
+        else
+        {
+            if(!mUpperInferredAdded)
+            {
+                mUpperInferredAdded = true;
+                mMappedCoords.add(new long[] {posStart, posEnd});
+            }
+            else
+            {
+                long[] newSection = mMappedCoords.get(mMappedCoords.size() - 1);
+                newSection[SE_END] = max(newSection[SE_END], posEnd);
+            }
+        }
+    }
 
     public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
