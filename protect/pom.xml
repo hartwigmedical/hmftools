@@ -9,8 +9,8 @@
     </parent>
 
     <artifactId>protect</artifactId>
-    <version>${protect.version}</version>
     <packaging>jar</packaging>
+    <version>${protect.version}</version>
     <name>HMF Tools - PROTECT</name>
 
     <dependencies>
@@ -23,18 +23,11 @@
             <artifactId>patient-db</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -56,7 +49,6 @@
                     </execution>
                 </executions>
                 <configuration>
-
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
@@ -70,9 +62,9 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

@@ -12,20 +12,19 @@
         <module>hmf-common</module>
         <module>hmf-extensions</module>
         <module>api-clients</module>
-        <module>ensembl-db</module>
         <module>hmf-gene-panel-builder</module>
-        <module>patient-db</module>
+        <module>ensembl-db</module>
+        <module>hmf-id-generator</module>
         <module>bam-slicer</module>
-        <module>patient-reporter</module>
         <module>health-checker</module>
         <module>fastq-stats</module>
+        <module>patient-db</module>
         <module>amber</module>
         <module>count-bam-lines</module>
         <module>purity-ploidy-estimator</module>
         <module>sage</module>
         <module>strelka-post-process</module>
         <module>bachelor</module>
-        <module>hmf-id-generator</module>
         <module>sv-linx</module>
         <module>sv-tools</module>
         <module>stat_calcs</module>
@@ -35,6 +34,7 @@
         <module>iclusion-importer</module>
         <module>knowledgebase-generator</module>
         <module>protect</module>
+        <module>patient-reporter</module>
     </modules>
 
     <properties>
@@ -63,29 +63,29 @@
         <sage.version>1.1</sage.version>
         <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>
-        <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <patient-reporter.version>7.9</patient-reporter.version>
         <patient-db.version>3.39</patient-db.version>
+        <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
         <iclusion-importer.version>1.1</iclusion-importer.version>
         <knowledgebase-generator.version>0.1</knowledgebase-generator.version>
         <protect.version>0.1</protect.version>
 
+        <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
         <google.guava.version>23.0</google.guava.version>
         <google.gson.version>2.8.1</google.gson.version>
-        <apache.commons.cli.version>1.3.1</apache.commons.cli.version>
         <apache.commons.lang3.version>3.6</apache.commons.lang3.version>
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
         <apache.log4j.version>2.8.1</apache.log4j.version>
         <apache.log4j.slf4j.version>2.8.1</apache.log4j.slf4j.version>
         <apache.lucene.version>7.1.0</apache.lucene.version>
+        <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <jooq.version>3.9.5</jooq.version>
         <mysqlconnector.version>8.0.11</mysqlconnector.version>
-        <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <rxjava2.version>2.1.2</rxjava2.version>
         <retrofit.version>2.4.0</retrofit.version>
         <moshi.version>1.6.0</moshi.version>
@@ -210,6 +210,16 @@
                 <artifactId>vicc-knowledgebase-importer</artifactId>
                 <version>${vicc-knowledgebase-importer.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>count-bam-lines</artifactId>
+                <version>${cobalt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>amber</artifactId>
+                <version>${amber.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.github.samtools</groupId>
@@ -234,7 +244,7 @@
             <dependency>
                 <groupId>commons-cli</groupId>
                 <artifactId>commons-cli</artifactId>
-                <version>${apache.commons.cli.version}</version>
+                <version>${commons.cli.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -245,6 +255,16 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math3</artifactId>
                 <version>${apache.commons.math3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-csv</artifactId>
+                <version>${apache.commons.csv.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-dbcp2</artifactId>
+                <version>${apache.dbcp2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
@@ -277,11 +297,6 @@
                 <artifactId>gson</artifactId>
                 <version>${immutables.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-dbcp2</artifactId>
-                <version>${apache.dbcp2.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.reactivex.rxjava2</groupId>
@@ -352,11 +367,6 @@
                 <groupId>org.apache.lucene</groupId>
                 <artifactId>lucene-highlighter</artifactId>
                 <version>${apache.lucene.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-csv</artifactId>
-                <version>${apache.commons.csv.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>

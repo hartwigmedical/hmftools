@@ -46,6 +46,7 @@ public class HmfGenePanelBuilder {
     public static void main(String[] args) throws ParseException, IOException, SQLException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
+
         final String outputFilePath = cmd.getOptionValue(OUT_PATH);
         final String ensemblVersion = cmd.getOptionValue(ENSEMBL_VERSION);
 
