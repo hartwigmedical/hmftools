@@ -210,6 +210,16 @@
                 <artifactId>vicc-knowledgebase-importer</artifactId>
                 <version>${vicc-knowledgebase-importer.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>count-bam-lines</artifactId>
+                <version>${cobalt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>amber</artifactId>
+                <version>${amber.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.github.samtools</groupId>
