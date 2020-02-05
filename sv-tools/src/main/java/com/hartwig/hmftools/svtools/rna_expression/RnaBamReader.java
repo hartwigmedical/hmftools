@@ -2,19 +2,21 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_BOUNDARY;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_INTRONIC;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_EXONIC;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_OTHER_TRANS;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validRegionMatchType;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validTranscriptType;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.MAX_READ_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,11 +48,11 @@ public class RnaBamReader
     private int mBamRecordCount;
     private GeneReadData mCurrentGene;
 
-    // private static final int DEFAULT_MIN_BASE_QUALITY = 13;
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
     private static final double MIN_BASE_MATCH_PERC = 0.9;
 
     private final Map<String,ReadRecord> mFragmentReads;
+    private BufferedWriter mWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaBamReader.class);
 
@@ -63,7 +66,10 @@ public class RnaBamReader
         mFragmentReads = Maps.newHashMap();
 
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        mWriter = null;
     }
+
+    public void close() { closeBufferedWriter(mWriter); }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
@@ -162,9 +168,9 @@ public class RnaBamReader
                 - one read in an intron -> UNSPLICED
                 -
         */
-        final Map<String,Integer> firstReadTransTypes = read1.getTranscriptClassifications();
+        final Map<String,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
 
-        final Map<String,Integer> secondReadTransTypes = read2.getTranscriptClassifications();
+        final Map<String,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
 
         // first find valid transcripts in both reads
         final List<String> firstReadValidTrans = firstReadTransTypes.entrySet().stream()
@@ -182,22 +188,22 @@ public class RnaBamReader
             firstReadTransTypes.entrySet().stream()
                     .filter(x -> validTranscriptType(x.getValue()))
                     .filter(x -> !validTranscripts.contains(x.getKey()))
-                    .forEach(x -> x.setValue(TRANS_MATCH_OTHER_TRANS));
+                    .forEach(x -> x.setValue(OTHER_TRANS));
 
             secondReadTransTypes.entrySet().stream()
                     .filter(x -> validTranscriptType(x.getValue()))
                     .filter(x -> !validTranscripts.contains(x.getKey()))
-                    .forEach(x -> x.setValue(TRANS_MATCH_OTHER_TRANS));
+                    .forEach(x -> x.setValue(OTHER_TRANS));
         }
         else
         {
             firstReadTransTypes.entrySet().stream()
                     .filter(x -> validTranscriptType(x.getValue()))
-                    .forEach(x -> x.setValue(TRANS_MATCH_ALT));
+                    .forEach(x -> x.setValue(ALT));
 
             secondReadTransTypes.entrySet().stream()
                     .filter(x -> validTranscriptType(x.getValue()))
-                    .forEach(x -> x.setValue(TRANS_MATCH_ALT));
+                    .forEach(x -> x.setValue(ALT));
         }
 
         // finally record valid read info against each region now that it is known
@@ -220,7 +226,7 @@ public class RnaBamReader
 
                 // any adjacent reads can record a splice junction count
 
-                if(regions.size() > 1 && read.getTranscriptClassification(trans) == TRANS_MATCH_SPLICE_JUNCTION)
+                if(regions.size() > 1 && read.getTranscriptClassification(trans) == SPLICE_JUNCTION)
                 {
                     for(int r1 = 0; r1 < regions.size() - 1; ++r1)
                     {
@@ -244,6 +250,12 @@ public class RnaBamReader
                     }
                 }
             }
+        }
+
+        if(mConfig.WriteReadData)
+        {
+            writeReadData(read1);
+            writeReadData(read2);
         }
     }
 
@@ -276,7 +288,7 @@ public class RnaBamReader
             if(mConfig.AllTranscripts && intronReadData.getRefRegions().size() == 1)
             {
                 // only record intronic reads if they are unique to a transcript
-                intronReadData.addMatchedRead(MATCH_TYPE_INTRONIC);
+                intronReadData.addMatchedRead(INTRONIC);
             }
 
             if(record.getInferredInsertSize() > 0)
@@ -322,6 +334,53 @@ public class RnaBamReader
 
         mFragmentReads.put(read.Id, read);
         return null;
+    }
+
+    private void writeReadData(final ReadRecord read)
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
+
+        try
+        {
+            if(mWriter == null)
+            {
+                final String outputFileName = mConfig.OutputDir + "RNA_READ_DATA.csv";
+
+                mWriter = createBufferedWriter(outputFileName, false);
+                mWriter.write("GeneId,GeneName,ReadId,Chromosome,PosStart,PosEnd,Cigar");
+                mWriter.write(",TransId,TransClass,ExonRank,ExonStart,ExonEnd,MatchType");
+                mWriter.newLine();
+            }
+
+            for(Map.Entry<String,TransMatchType> entry : read.getTranscriptClassifications().entrySet())
+            {
+                final String trans = entry.getKey();
+                TransMatchType transType = entry.getValue();
+
+                for(Map.Entry<RegionReadData,RegionMatchType> rEntry : read.getMappedRegions().entrySet())
+                {
+                    RegionReadData region = rEntry.getKey();
+                    RegionMatchType matchType = rEntry.getValue();
+
+                    if(!region.hasTransId(trans))
+                        continue;
+
+                    mWriter.write(String.format("%s,%s,%s,%s,%d,%d,%s",
+                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, read.Id,
+                            read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString()));
+
+                    mWriter.write(String.format(",%s,%s,%d,%d,%d,%s",
+                            trans, transType, region.getExonRank(trans), region.start(), region.end(), matchType));
+
+                    mWriter.newLine();
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write read data file: {}", e.toString());
+        }
     }
 
     public static int findStringOverlaps(final String str1, final String str2)

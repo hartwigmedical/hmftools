@@ -3,9 +3,6 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_BOUNDARY;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_INTRONIC;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_WITHIN_EXON;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
-public class RegionReadData
+public class RegionReadData implements Comparable< RegionReadData>
 {
     public GenomeRegion Region;
 
@@ -40,7 +37,7 @@ public class RegionReadData
         mRefRegions = Lists.newArrayList();
 
         mRefBases = "";
-        mMatchTypeCounts = new int[MATCH_TYPE_INTRONIC+1];
+        mMatchTypeCounts = new int[RegionMatchType.values().length];
 
         mPreRegions = Lists.newArrayList();
         mPostRegions = Lists.newArrayList();
@@ -54,6 +51,12 @@ public class RegionReadData
     public String chromosome() { return Region.chromosome(); }
     public long start() { return Region.start(); }
     public long end() { return Region.end(); }
+
+    @Override
+    public int compareTo(RegionReadData other)
+    {
+        return (int)(start() - other.start());
+    }
 
     public void resetRegionBounds(long posStart, long posEnd)
     {
@@ -87,8 +90,8 @@ public class RegionReadData
             mRefRegions.add(formExonRefId(transId, exonRank));
     }
 
-    public void addMatchedRead(int matchType) { ++mMatchTypeCounts[matchType]; }
-    public int matchedReadCount(int matchType) { return mMatchTypeCounts[matchType]; }
+    public void addMatchedRead(RegionMatchType matchType) { ++mMatchTypeCounts[matchType.ordinal()]; }
+    public int matchedReadCount(RegionMatchType matchType) { return mMatchTypeCounts[matchType.ordinal()]; }
 
     public final String refBases() { return mRefBases; }
 

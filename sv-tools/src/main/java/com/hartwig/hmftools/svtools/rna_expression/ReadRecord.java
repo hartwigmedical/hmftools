@@ -5,8 +5,16 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.UNKNOWN;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,25 +46,20 @@ public class ReadRecord
 
     public final List<long[]> mMappedCoords;
 
-    private final Map<RegionReadData,Integer> mMappedRegions; // regions related to this read and their match type
+    private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
 
-    private final Map<String,Integer> mTranscriptClassification;
+    private final Map<String,TransMatchType> mTranscriptClassification;
 
     // type of match between a read region (ie a 'M' section in CIGAR) and an exon
-    public static final int MATCH_TYPE_NONE = -1;
-    public static final int MATCH_TYPE_EXON_BOUNDARY = 0; // read matches one exon boundary
-    public static final int MATCH_TYPE_WITHIN_EXON = 1; // read fully contained within the exon
-    public static final int MATCH_TYPE_EXON_MATCH = 2; // read fully contained within the exon
-    public static final int MATCH_TYPE_UNSPLICED = 3; // reads spanning to unmapped regions where adjacent regions exist
-    public static final int MATCH_TYPE_INTRONIC = 4;
+    /*
+    public static final int NONE = -1;
+    public static final int EXON_BOUNDARY = 0; // read matches one exon boundary
+    public static final int WITHIN_EXON = 1; // read fully contained within the exon
+    public static final int EXON_MATCH = 2; // read fully contained within the exon
+    public static final int UNSPLICED = 3; // reads spanning to unmapped regions where adjacent regions exist
+    public static final int INTRONIC = 4;
 
-    // type of match against a transcript
-    public static final int TRANS_MATCH_UNKONWN = -1;
-    public static final int TRANS_MATCH_ALT = 0; // maps to unknown exons (ie intronic regions)
-    public static final int TRANS_MATCH_UNSPLICED = 1; // has reads spanning exon-intron boundaries
-    public static final int TRANS_MATCH_EXONIC = 2; // has reads fully within an exon
-    public static final int TRANS_MATCH_SPLICE_JUNCTION = 3; // 2 or more exons correctly covered by a read
-    public static final int TRANS_MATCH_OTHER_TRANS = 4; // correctly matched to another trans
+     */
 
     private static final Logger LOGGER = LogManager.getLogger(ReadRecord.class);
 
@@ -151,14 +154,14 @@ public class ReadRecord
                     transcripts.add(transId);
             }
 
-            int matchType = getRegionMatchType(region);
+            RegionMatchType matchType = getRegionMatchType(region);
 
             mMappedRegions.put(region, matchType);
         }
 
         for(final String transId : transcripts)
         {
-            int transMatchType = TRANS_MATCH_UNKONWN;
+            TransMatchType transMatchType = UNKNOWN;
 
             List<RegionReadData> transRegions = regions.stream()
                     .filter(x -> x.getRefRegions().stream().anyMatch(y -> y.contains(transId)))
@@ -170,25 +173,27 @@ public class ReadRecord
             {
                 // simple case of a single exon and read section
                 RegionReadData region = transRegions.get(0);
-                int matchType = mMappedRegions.get(region);
+                RegionMatchType matchType = mMappedRegions.get(region);
 
-                if (matchType == MATCH_TYPE_NONE)
+                if (matchType == RegionMatchType.NONE)
                 {
-                    transMatchType = TRANS_MATCH_ALT;
+                    transMatchType = ALT;
                 }
-                else if (matchType == MATCH_TYPE_UNSPLICED)
+                else if (matchType == RegionMatchType.EXON_INTRON)
                 {
-                    transMatchType = TRANS_MATCH_UNSPLICED;
+                    transMatchType = TransMatchType.UNSPLICED;
                 }
             }
             else if(mMappedCoords.size() > transRegions.size())
             {
-                transMatchType = TRANS_MATCH_ALT;
+                transMatchType = ALT;
             }
             else
             {
                 int minExonRank = 0;
                 int maxExonRank = 0;
+
+                Collections.sort(transRegions);
 
                 for (int regionIndex = 0; regionIndex < transRegions.size(); ++regionIndex)
                 {
@@ -202,15 +207,15 @@ public class ReadRecord
 
                     if (mappingIndex < 0 || mappingIndex != regionIndex)
                     {
-                        transMatchType = TRANS_MATCH_ALT;
+                        transMatchType = ALT;
                         break;
                     }
 
-                    int matchType = mMappedRegions.get(region);
+                    RegionMatchType matchType = mMappedRegions.get(region);
 
-                    if (matchType == MATCH_TYPE_UNSPLICED)
+                    if (matchType == RegionMatchType.EXON_INTRON)
                     {
-                        transMatchType = TRANS_MATCH_UNSPLICED;
+                        transMatchType = TransMatchType.UNSPLICED;
                         break;
                     }
                     else
@@ -225,7 +230,7 @@ public class ReadRecord
                         {
                             if(missEnd)
                             {
-                                transMatchType = TRANS_MATCH_ALT;
+                                transMatchType = ALT;
                                 break;
                             }
                         }
@@ -233,35 +238,35 @@ public class ReadRecord
                         {
                             if(missStart)
                             {
-                                transMatchType = TRANS_MATCH_ALT;
+                                transMatchType = ALT;
                                 break;
                             }
                         }
                         else if(missStart || missEnd)
                         {
-                            transMatchType = TRANS_MATCH_ALT;
+                            transMatchType = ALT;
                             break;
                         }
                     }
                 }
 
-                if (transMatchType == TRANS_MATCH_UNKONWN)
+                if (transMatchType == UNKNOWN)
                 {
                     int expectedRegions = maxExonRank - minExonRank + 1;
                     if (transRegions.size() < expectedRegions)
-                        transMatchType = TRANS_MATCH_ALT;
+                        transMatchType = ALT;
                 }
             }
 
-            if(transMatchType == TRANS_MATCH_UNKONWN)
+            if(transMatchType == UNKNOWN)
             {
                 if(transRegions.size() > 1)
                 {
-                    transMatchType = TRANS_MATCH_SPLICE_JUNCTION;
+                    transMatchType = SPLICE_JUNCTION;
                 }
                 else
                 {
-                    transMatchType = TRANS_MATCH_EXONIC;
+                    transMatchType = EXONIC;
                 }
             }
 
@@ -269,14 +274,14 @@ public class ReadRecord
         }
     }
 
-    public static boolean validTranscriptType(int transType)
+    public static boolean validTranscriptType(TransMatchType transType)
     {
-        return transType == TRANS_MATCH_EXONIC || transType == TRANS_MATCH_SPLICE_JUNCTION;
+        return transType == EXONIC || transType == SPLICE_JUNCTION;
     }
 
-    public static boolean validRegionMatchType(int matchType)
+    public static boolean validRegionMatchType(RegionMatchType matchType)
     {
-        return matchType == MATCH_TYPE_EXON_BOUNDARY || matchType == MATCH_TYPE_WITHIN_EXON || matchType == MATCH_TYPE_EXON_MATCH;
+        return matchType == EXON_BOUNDARY || matchType == WITHIN_EXON || matchType == EXON_MATCH;
     }
 
     public int getRegionMappingIndex(final RegionReadData region)
@@ -294,44 +299,44 @@ public class ReadRecord
         return -1;
     }
 
-    public int getRegionMatchType(final RegionReadData region)
+    public RegionMatchType getRegionMatchType(final RegionReadData region)
     {
         int mappingIndex = getRegionMappingIndex(region);
         if (mappingIndex < 0)
-            return MATCH_TYPE_NONE;
+            return RegionMatchType.NONE;
 
         return getRegionMatchType(region, mappingIndex);
     }
 
-    private int getRegionMatchType(final RegionReadData region, int mappingIndex)
+    private RegionMatchType getRegionMatchType(final RegionReadData region, int mappingIndex)
     {
         if(mappingIndex < 0 || mappingIndex >= mMappedCoords.size())
-            return MATCH_TYPE_NONE;
+            return RegionMatchType.NONE;
 
         final long[] readSection = mMappedCoords.get(mappingIndex);
         long readStartPos = readSection[SE_START];
         long readEndPos = readSection[SE_END];
 
         if (readEndPos < region.start() || readStartPos > region.end())
-            return MATCH_TYPE_NONE;
+            return RegionMatchType.NONE;
 
         if (readStartPos < region.start() || readEndPos > region.end())
-            return MATCH_TYPE_UNSPLICED;
+            return RegionMatchType.EXON_INTRON;
 
         if (readStartPos > region.start() && readEndPos < region.end())
-            return MATCH_TYPE_WITHIN_EXON;
+            return WITHIN_EXON;
 
         if (readStartPos == region.start() && readEndPos == region.end())
-            return MATCH_TYPE_EXON_MATCH;
+            return EXON_MATCH;
 
-        return MATCH_TYPE_EXON_BOUNDARY;
+        return EXON_BOUNDARY;
     }
 
     // TODO - adjust to set base matching only for matched transcript regions
-    public static int setMatchingBases(final RegionReadData region, final ReadRecord read)
+    public static RegionMatchType setMatchingBases(final RegionReadData region, final ReadRecord read)
     {
         if(read.Cigar == null)
-            return MATCH_TYPE_NONE;
+            return RegionMatchType.NONE;
 
         final Cigar cigar = read.Cigar;
 
@@ -380,7 +385,7 @@ public class ReadRecord
                     }
                 }
 
-                int matchType = MATCH_TYPE_NONE;
+                RegionMatchType matchType = RegionMatchType.NONE;
 
                 if(region.start() < readStartPos)
                 {
@@ -396,7 +401,7 @@ public class ReadRecord
                     LOGGER.warn("invalid base match: cigar({}) read(pos={} start={} index={}) region(pos={} index={} skipped={}) matchLen({})",
                             cigar.toString(), readStartPos, read.PosStart, readBaseIndex,
                             region.start() + regionBaseIndex, regionBaseIndex, regionSkippedBases, element.getLength());
-                    return MATCH_TYPE_NONE;
+                    return RegionMatchType.NONE;
                 }
 
                 // check the bases in this matched region
@@ -427,17 +432,17 @@ public class ReadRecord
                 {
                     if (readStartPos == region.start() || readEndPos == region.end())
                     {
-                        matchType = MATCH_TYPE_EXON_BOUNDARY;
+                        matchType = EXON_BOUNDARY;
                     }
                     else
                     {
-                        matchType = MATCH_TYPE_WITHIN_EXON;
+                        matchType = WITHIN_EXON;
                     }
                 }
                 else if(matchedBases == overlapBases)
                 {
                     // the read crosses this region boundary but matched for the portion which overlapped
-                    matchType = MATCH_TYPE_UNSPLICED;
+                    matchType = RegionMatchType.EXON_INTRON;
                 }
                 else
                 {
@@ -455,7 +460,7 @@ public class ReadRecord
                 cigar.toString(), read.PosStart, read.PosEnd, readBaseIndex,
                 region.start(), region.end(), regionBaseIndex);
 
-        return MATCH_TYPE_NONE;
+        return RegionMatchType.NONE;
     }
 
 
@@ -490,8 +495,8 @@ public class ReadRecord
                         ++preRegionBases[startBase + i];
                     }
 
-                    //region.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
-                    //preRegion.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
+                    //region.addMatchedRead(SPLICE_JUNCTION);
+                    //preRegion.addMatchedRead(SPLICE_JUNCTION);
 
                     preRegion.addLinkedRegion(region);
                     region.addLinkedRegion(preRegion);
@@ -523,8 +528,8 @@ public class ReadRecord
                         ++postRegionBases[i];
                     }
 
-                    // region.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
-                    // postRegion.addMatchedRead(MATCH_TYPE_SPLICE_JUNCTION);
+                    // region.addMatchedRead(SPLICE_JUNCTION);
+                    // postRegion.addMatchedRead(SPLICE_JUNCTION);
 
                     postRegion.addLinkedRegion(region);
                     region.addLinkedRegion(postRegion);
@@ -538,20 +543,20 @@ public class ReadRecord
     }
 
 
-    public final Map<RegionReadData,Integer> getMappedRegions() { return mMappedRegions; }
+    public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
-    public final List<RegionReadData> getMappedRegions(int matchType)
+    public final List<RegionReadData> getMappedRegions(RegionMatchType matchType)
     {
         return mMappedRegions.entrySet().stream()
                 .filter(x -> x.getValue() == matchType).map(x -> x.getKey()).collect(Collectors.toList());
     }
 
-    public final Map<String,Integer> getTranscriptClassifications() { return mTranscriptClassification; }
+    public final Map<String,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
 
-    public int getTranscriptClassification(final String trans)
+    public TransMatchType getTranscriptClassification(final String trans)
     {
-        Integer transType = mTranscriptClassification.get(trans);
-        return transType != null ? transType : TRANS_MATCH_UNKONWN;
+        TransMatchType transType = mTranscriptClassification.get(trans);
+        return transType != null ? transType : UNKNOWN;
     }
 
     public String toString()

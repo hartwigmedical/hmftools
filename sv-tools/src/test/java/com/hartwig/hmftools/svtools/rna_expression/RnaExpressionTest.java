@@ -2,16 +2,16 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_BOUNDARY;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_MATCH;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_WITHIN_EXON;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_EXONIC;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.setMatchingBases;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.UNSPLICED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -102,16 +102,16 @@ public class RnaExpressionTest
         assertEquals(130, read.getMappedRegionCoords().get(0)[SE_END]);
 
         // test classification of reads
-        assertEquals(MATCH_TYPE_WITHIN_EXON, read.getRegionMatchType(region));
+        assertEquals(WITHIN_EXON, read.getRegionMatchType(region));
 
         read = createReadRecord(1, "1", 90, 110, refBaseString, createCigar(0, 21, 0));
-        assertEquals(MATCH_TYPE_UNSPLICED, read.getRegionMatchType(region));
+        assertEquals(EXON_INTRON, read.getRegionMatchType(region));
 
         read = createReadRecord(1, "1", 100, 200, refBaseString, createCigar(0, 101, 0));
-        assertEquals(MATCH_TYPE_EXON_MATCH, read.getRegionMatchType(region));
+        assertEquals(EXON_MATCH, read.getRegionMatchType(region));
 
         read = createReadRecord(1, "1", 100, 150, refBaseString, createCigar(0, 51, 0));
-        assertEquals(MATCH_TYPE_EXON_BOUNDARY, read.getRegionMatchType(region));
+        assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region));
 
         // read covering multiple exons
         Cigar cigar = new Cigar();
@@ -135,9 +135,9 @@ public class RnaExpressionTest
         RegionReadData region2 = new RegionReadData(GenomeRegions.create("1", 140, 160));
         RegionReadData region3 = new RegionReadData(GenomeRegions.create("1", 180, 200));
 
-        assertEquals(MATCH_TYPE_EXON_BOUNDARY, read.getRegionMatchType(region1));
-        assertEquals(MATCH_TYPE_EXON_MATCH, read.getRegionMatchType(region2));
-        assertEquals(MATCH_TYPE_UNSPLICED, read.getRegionMatchType(region3));
+        assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region1));
+        assertEquals(EXON_MATCH, read.getRegionMatchType(region2));
+        assertEquals(EXON_INTRON, read.getRegionMatchType(region3));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class RnaExpressionTest
         List<RegionReadData> regions = Lists.newArrayList(region);
         read.processOverlappingRegions(regions);
 
-        assertEquals(TRANS_MATCH_UNSPLICED, read.getTranscriptClassification(trans1));
+        assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
 
         // exonic read does support the transcript
         read = createReadRecord(1, "1", 120, 140, refBaseString, createCigar(0, 21, 0));
@@ -163,7 +163,7 @@ public class RnaExpressionTest
         regions = Lists.newArrayList(region);
         read.processOverlappingRegions(regions);
 
-        assertEquals(TRANS_MATCH_EXONIC, read.getTranscriptClassification(trans1));
+        assertEquals(EXONIC, read.getTranscriptClassification(trans1));
 
         // skipped exon
         RegionReadData region1 = createRegion(trans1,1,"1", 100, 120);
@@ -176,7 +176,7 @@ public class RnaExpressionTest
         regions = Lists.newArrayList(region1, region2, region3);
         read.processOverlappingRegions(regions);
 
-        assertEquals(TRANS_MATCH_ALT, read.getTranscriptClassification(trans1));
+        assertEquals(ALT, read.getTranscriptClassification(trans1));
 
         // incomplete intermediary exon
         Cigar cigar = new Cigar();
@@ -190,7 +190,7 @@ public class RnaExpressionTest
 
         read.processOverlappingRegions(regions);
 
-        assertEquals(TRANS_MATCH_ALT, read.getTranscriptClassification(trans1));
+        assertEquals(ALT, read.getTranscriptClassification(trans1));
 
         // read spanning into intro (unspliced)
         cigar = new Cigar();
@@ -204,7 +204,7 @@ public class RnaExpressionTest
 
         read.processOverlappingRegions(regions);
 
-        assertEquals(TRANS_MATCH_UNSPLICED, read.getTranscriptClassification(trans1));
+        assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
     }
 
     @Test
@@ -219,10 +219,10 @@ public class RnaExpressionTest
 
         ReadRecord record = createReadRecord(1, "1", 105, 114, refBaseString.substring(5, 15), createCigar(0, 10, 0));
 
-        int matchType = setMatchingBases(region, record);
+        RegionMatchType matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_WITHIN_EXON, matchType);
+        assertEquals(WITHIN_EXON, matchType);
 
         // a read covering all of an exon with unmapped bases either end
         region = new RegionReadData(GenomeRegions.create("1", 105, 114));
@@ -232,7 +232,7 @@ public class RnaExpressionTest
         matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_EXON_BOUNDARY,  matchType);
+        assertEquals(EXON_BOUNDARY,  matchType);
 
         // soft-clipped ends with matching position at one end
         record = createReadRecord(1, "1", 105, 119, refBaseString.substring(2, 19),
@@ -242,7 +242,7 @@ public class RnaExpressionTest
         matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_EXON_BOUNDARY, matchType);
+        assertEquals(EXON_BOUNDARY, matchType);
 
         // read overlapping 2 different regions
         region = new RegionReadData(GenomeRegions.create("1", 100, 119));
@@ -255,7 +255,7 @@ public class RnaExpressionTest
         matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_WITHIN_EXON, matchType);
+        assertEquals(WITHIN_EXON, matchType);
 
         // matching exact exon boundary at start
         region = new RegionReadData(GenomeRegions.create("1", 105, 114));
@@ -264,7 +264,7 @@ public class RnaExpressionTest
         matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_EXON_BOUNDARY, matchType);
+        assertEquals(EXON_BOUNDARY, matchType);
 
         // and a region at the other end
         region = new RegionReadData(GenomeRegions.create("1", 215, 224));
@@ -273,7 +273,7 @@ public class RnaExpressionTest
         matchType = setMatchingBases(region, record);
 
         assertEquals(10, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_EXON_BOUNDARY, matchType);
+        assertEquals(EXON_BOUNDARY, matchType);
 
         // a region extending further than the read at the other end, with the first 5 bases matching a region before the exon
         String intronicBases = "ABCDE";
@@ -286,7 +286,7 @@ public class RnaExpressionTest
         matchType = setMatchingBases(region, record);
 
         assertEquals(5, region.baseCoverage(1));
-        assertEquals(MATCH_TYPE_UNSPLICED, matchType);
+        assertEquals(EXON_INTRON, matchType);
         // assertEquals(0, region.matchedReadCount()); // insufficient to count as a match
     }
 

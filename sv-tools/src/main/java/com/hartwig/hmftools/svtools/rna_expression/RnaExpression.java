@@ -116,6 +116,7 @@ public class RnaExpression
 
         closeBufferedWriter(mWriter);
         closeBufferedWriter(mExonDataWriter);
+        mRnaBamReader.close();
     }
 
     private void processGene(final EnsemblGeneData geneData)
