@@ -70,6 +70,8 @@
                             <addClasspath>true</addClasspath>
                             <mainClass>com.hartwig.hmftools.knowledgebasegenerator.KnowledgebaseGeneratorApplication
                             </mainClass>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                     </archive>
 

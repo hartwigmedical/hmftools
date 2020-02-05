@@ -9,8 +9,8 @@
     </parent>
 
     <artifactId>protect</artifactId>
-    <version>${protect.version}</version>
     <packaging>jar</packaging>
+    <version>${protect.version}</version>
     <name>HMF Tools - PROTECT</name>
 
     <dependencies>
@@ -35,6 +35,7 @@
             <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
