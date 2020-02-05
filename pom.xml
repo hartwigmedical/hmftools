@@ -27,13 +27,14 @@
         <module>bachelor</module>
         <module>hmf-id-generator</module>
         <module>sv-linx</module>
+        <module>sv-tools</module>
         <module>stat_calcs</module>
         <module>sig_analyser</module>
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>
+        <module>knowledgebase-generator</module>
         <module>protect</module>
-        <module>sv-tools</module>
     </modules>
 
     <properties>
@@ -56,7 +57,6 @@
         <bachelor.version>1.9</bachelor.version>
         <sv-linx.version>1.7</sv-linx.version>
         <sv-tools.version>1.0</sv-tools.version>
-        <protect.version>0.1</protect.version>
         <amber.version>3.2</amber.version>
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.39</purple.version>
@@ -66,7 +66,10 @@
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <patient-reporter.version>7.9</patient-reporter.version>
         <patient-db.version>3.39</patient-db.version>
+        <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
         <iclusion-importer.version>1.1</iclusion-importer.version>
+        <knowledgebase-generator.version>0.1</knowledgebase-generator.version>
+        <protect.version>0.1</protect.version>
 
         <immutables.version>2.4.4</immutables.version>
         <htsjdk.version>2.12.0</htsjdk.version>
@@ -194,13 +197,18 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>protect</artifactId>
-                <version>${protect.version}</version>
+                <artifactId>hmf-extensions-csv</artifactId>
+                <version>${hmf-extensions.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>hmf-extensions-csv</artifactId>
-                <version>${hmf-extensions.version}</version>
+                <artifactId>iclusion-importer</artifactId>
+                <version>${iclusion-importer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>vicc-knowledgebase-importer</artifactId>
+                <version>${vicc-knowledgebase-importer.version}</version>
             </dependency>
 
             <dependency>

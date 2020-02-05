@@ -41,7 +41,6 @@ public interface AmberData {
     @NotNull
     static AmberData createAmberData(@NotNull final CommonConfig commonConfig)
             throws ParseException, IOException {
-
         final String amberDirectory = commonConfig.amberDirectory();
         final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(amberDirectory, commonConfig.tumorSample());
         if (!new File(amberFilename).exists()) {
@@ -79,5 +78,4 @@ public interface AmberData {
                 .gender(gender)
                 .build();
     }
-
 }

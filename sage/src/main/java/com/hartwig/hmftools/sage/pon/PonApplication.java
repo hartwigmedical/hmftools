@@ -30,6 +30,7 @@ public class PonApplication implements AutoCloseable {
 
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
+    private static final String GLOB = "*.sage.germline.vcf.gz";
 
     public static void main(String[] args) throws IOException, ParseException {
         final Options options = createOptions();
@@ -59,7 +60,7 @@ public class PonApplication implements AutoCloseable {
         this.input = input;
 
         files = Lists.newArrayList();
-        for (Path path : Files.newDirectoryStream(new File(input).toPath(), "*.vcf.gz")) {
+        for (Path path : Files.newDirectoryStream(new File(input).toPath(), GLOB)) {
             files.add(path.toFile());
         }
 
@@ -73,7 +74,7 @@ public class PonApplication implements AutoCloseable {
         }
 
 
-        final VCFFileReader dictionaryReader = new VCFFileReader(files.get(0), false);
+        final VCFFileReader dictionaryReader = new VCFFileReader(files.get(0), true);
         SAMSequenceDictionary dictionary = dictionaryReader.getFileHeader().getSequenceDictionary();
         dictionaryReader.close();
 
@@ -82,8 +83,8 @@ public class PonApplication implements AutoCloseable {
 
             final PonBuilder ponBuilder = new PonBuilder();
 
-            for (Path file : Files.newDirectoryStream(new File(input).toPath(), "*.vcf.gz")) {
-                try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), false)) {
+            for (Path file : Files.newDirectoryStream(new File(input).toPath(), GLOB)) {
+                try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), true)) {
                     CloseableIterator<VariantContext> iter = fileReader.query(samSequenceRecord.getSequenceName(), 1, samSequenceRecord.getSequenceLength());
                     while (iter.hasNext()) {
                         ponBuilder.add(iter.next());
@@ -95,19 +96,6 @@ public class PonApplication implements AutoCloseable {
             vcf.write(ponBuilder.build());
 
         }
-
-
-//        final PonBuilder ponBuilder = new PonBuilder();
-//        for (Path file : Files.newDirectoryStream(new File(input).toPath(), "*.vcf.gz")) {
-//            try (VCFFileReader fileReader = new VCFFileReader(file.toFile(), false)) {
-//
-//                for (VariantContext variantContext : fileReader) {
-//                    ponBuilder.add(variantContext);
-//                }
-//            }
-//        }
-//        vcf.write(ponBuilder.build());
-
     }
 
     @NotNull

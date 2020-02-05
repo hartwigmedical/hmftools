@@ -29,7 +29,11 @@ public class IclusionImporterApplication {
 
     private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
 
+    private static final String VERSION = IclusionImporterApplication.class.getPackage().getImplementationVersion();
+
     public static void main(@NotNull final String[] args) throws ParseException, IOException {
+        LOGGER.info("Running iClusion Importer v{}", VERSION);
+
         Options options = createOptions();
         CommandLine cmd = createCommandLine(args, options);
 
@@ -71,7 +75,7 @@ public class IclusionImporterApplication {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
     }
 

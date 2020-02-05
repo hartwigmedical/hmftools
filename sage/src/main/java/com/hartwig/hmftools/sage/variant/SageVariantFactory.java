@@ -52,7 +52,6 @@ public class SageVariantFactory {
         return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
 
-
     @NotNull
     private Set<String> germlineOnlyFilters(@NotNull final AltContext germline) {
         final Set<String> result = Sets.newHashSet();
@@ -65,7 +64,8 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    private Set<String> pairedFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,  @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
+    private Set<String> pairedFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
+            @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
         Set<String> result = Sets.newHashSet();
 
         // TUMOR Tests
@@ -91,11 +91,11 @@ public class SageVariantFactory {
             result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
 
-        double tumorQual = primaryTumor.rawAltSupportBaseQuality();
-        double germlineQual = normal.rawAltSupportBaseQuality();
+        double tumorQual = primaryTumor.rawBaseQualityAlt();
+        double germlineQual = normal.rawBaseQualityAlt();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
-                result.add(SoftFilter.MAX_GERMLINE_REL_BASE_QUAL.toString());
+                result.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
             }
         }
 
@@ -110,8 +110,8 @@ public class SageVariantFactory {
     }
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT)
-                && primaryTumor.rawAltSupport() >= config.hotspotMinRawTumorVafToSkipQualCheck();
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawDepthAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
+                && Doubles.greaterOrEqual(primaryTumor.rawVaf(), config.hotspotMinRawTumorVafToSkipQualCheck());
     }
 
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
-import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_BASE_QUAL;
+import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.config.SoftFilter.MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.config.SoftFilter.isGermlineAndNotTumorFiltered;
@@ -17,12 +17,12 @@ public class SoftFilterTest {
     @Test
     public void testIsGermlineAndNotTumorFiltered() {
 
-        assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString())));
-        assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString(), MAX_GERMLINE_VAF.toString())));
+        assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.toString())));
+        assertTrue(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(), MAX_GERMLINE_VAF.toString())));
 
         assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet()));
-        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString(), MIN_TUMOR_QUAL.toString())));
-        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_BASE_QUAL.toString(), "Random Filter")));
+        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(), MIN_TUMOR_QUAL.toString())));
+        assertFalse(isGermlineAndNotTumorFiltered(Sets.newHashSet(MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(), "Random Filter")));
     }
 
 }

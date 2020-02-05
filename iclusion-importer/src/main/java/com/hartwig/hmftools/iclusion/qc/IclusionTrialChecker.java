@@ -14,7 +14,7 @@ public final class IclusionTrialChecker {
     }
 
     public static void check(@NotNull Iterable<IclusionTrial> trials) {
-        LOGGER.info("Performing QC on iClusion Trial Database");
+        LOGGER.info("Performing QC on iClusion trials");
 
         for (IclusionTrial trial : trials) {
             if (trial.acronym().isEmpty()) {
@@ -29,6 +29,18 @@ public final class IclusionTrialChecker {
             if (!trial.eudra().isEmpty() && (!trial.eudra().contains("-") || trial.eudra().contains(" "))) {
                 // EUDRA codes are formatted as 'yyyy-xxxxxx-xx' where 'yyyy' is (full) year, eg 2019.
                 LOGGER.warn("Potentially incorrect EUDRA code found for {} with id {}: '{}'", trial.acronym(), trial.id(), trial.eudra());
+            }
+
+            if (trial.type().isEmpty()) {
+                LOGGER.warn("Empty type for trial with title {}", trial.title());
+            }
+
+            if (trial.age().isEmpty()) {
+                LOGGER.warn("Empty age for trial with title {}", trial.title());
+            }
+
+            if (trial.phase().isEmpty()) {
+                LOGGER.warn("Empty phase for trial with title {}", trial.title());
             }
         }
     }

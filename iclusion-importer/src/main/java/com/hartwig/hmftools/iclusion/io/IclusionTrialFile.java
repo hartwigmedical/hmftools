@@ -60,11 +60,11 @@ public final class IclusionTrialFile {
                 .add("nct")
                 .add("ipn")
                 .add("ccmo")
-                .add("tumorLocations")
-                .add("mutations")
                 .add("type")
                 .add("age")
                 .add("phase")
+                .add("tumorLocations")
+                .add("mutations")
                 .toString();
     }
 
@@ -77,11 +77,11 @@ public final class IclusionTrialFile {
                 .add(trial.nct())
                 .add(trial.ipn())
                 .add(trial.ccmo())
+                .add(trial.type())
+                .add(trial.age())
+                .add(trial.phase())
                 .add(tumorLocationsToString(trial.tumorLocations()))
                 .add(mutationsToString(trial.mutations()))
-                .add(trial.type().isEmpty() ? NO_LIST_ENTRIES : trial.type())
-                .add(trial.age().isEmpty() ? NO_LIST_ENTRIES : trial.age())
-                .add(trial.phase().isEmpty() ? NO_LIST_ENTRIES : trial.phase())
                 .toString();
     }
 
@@ -158,21 +158,21 @@ public final class IclusionTrialFile {
                 .nct(values[4])
                 .ipn(values[5])
                 .ccmo(values[6])
-                .tumorLocations(tumorLocationsFromString(values[7]))
-                .mutations(mutationsFromString(values[8]))
-                .type(values[9])
-                .age(values[10])
-                .phase(values[11])
+                .type(values[7])
+                .age(values[8])
+                .phase(values[9])
+                .tumorLocations(tumorLocationsFromString(values[10]))
+                .mutations(mutationsFromString(values[11]))
                 .build();
     }
 
     @NotNull
     private static List<IclusionTumorLocation> tumorLocationsFromString(@NotNull String tumorLocationsString) {
-        List<IclusionTumorLocation> tumorLocations = Lists.newArrayList();
-
         if (tumorLocationsString.equals(NO_LIST_ENTRIES)) {
-            return tumorLocations;
+            return Lists.newArrayList();
         }
+
+        List<IclusionTumorLocation> tumorLocations = Lists.newArrayList();
 
         String[] values = tumorLocationsString.split("\\" + SUB_FIELD_DELIMITER);
         for (String value : values) {
@@ -188,11 +188,11 @@ public final class IclusionTrialFile {
 
     @NotNull
     private static List<IclusionMutation> mutationsFromString(@NotNull String mutationsString) {
-        List<IclusionMutation> mutations = Lists.newArrayList();
-
         if (mutationsString.equals(NO_LIST_ENTRIES)) {
-            return mutations;
+            return Lists.newArrayList();
         }
+
+        List<IclusionMutation> mutations = Lists.newArrayList();
 
         String[] values = mutationsString.split("\\" + SUB_FIELD_DELIMITER);
         for (String value : values) {

@@ -12,7 +12,6 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class SagePostProcessVCF implements AutoCloseable {
 
     public static String PHASED_INFRAME_INDEL = "PII";
-    public static String RIGHT_INFRAME_INDEL = "RII";
 
     private final VariantContextWriter writer;
 
@@ -22,7 +21,6 @@ public class SagePostProcessVCF implements AutoCloseable {
 
     public void writeHeader(@NotNull final VCFHeader header) {
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASED_INFRAME_INDEL, 1, VCFHeaderLineType.Flag, "Phased inframe indel"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(RIGHT_INFRAME_INDEL, 1, VCFHeaderLineType.Flag, "Right aligned inframe indel"));
         writer.writeHeader(header);
     }
 

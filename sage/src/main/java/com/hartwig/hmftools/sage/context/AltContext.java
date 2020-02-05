@@ -22,8 +22,8 @@ public class AltContext implements VariantHotspot {
     private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
 
     private ReadContextCounter readContextCounter;
-    private int rawSupport;
-    private int rawSupportBaseQuality;
+    private int rawDepthAlt;
+    private int rawBaseQualityAlt;
 
     public AltContext(final String sample, final VariantHotspot hotspot) {
         refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
@@ -39,8 +39,8 @@ public class AltContext implements VariantHotspot {
 
 
     public void incrementAltRead(int baseQuality) {
-        this.rawSupport++;
-        this.rawSupportBaseQuality += baseQuality;
+        this.rawDepthAlt++;
+        this.rawBaseQualityAlt += baseQuality;
     }
 
     public void addReadContext(@NotNull final ReadContext newReadContext) {
@@ -112,16 +112,16 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
-    public int rawRefSupport() {
-        return refContext.rawRefSupport();
+    public int rawDepthRef() {
+        return refContext.rawDepthRef();
     }
 
-    public int rawRefSupportBaseQuality() {
-        return refContext.rawRefSupportBaseQuality();
+    public int rawBaseQualityRef() {
+        return refContext.rawBaseQualityRef();
     }
 
-    public int rawAltSupport() {
-        return rawSupport;
+    public int rawDepthAlt() {
+        return rawDepthAlt;
     }
 
     public int rawDepth() {
@@ -129,11 +129,11 @@ public class AltContext implements VariantHotspot {
     }
 
     public double rawVaf() {
-        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupport) / rawDepth();
+        return refContext.rawDepth() ==  0 ? 0 : ((double) rawDepthAlt) / rawDepth();
     }
 
-    public int rawAltSupportBaseQuality() {
-        return rawSupportBaseQuality;
+    public int rawBaseQualityAlt() {
+        return rawBaseQualityAlt;
     }
 
     @NotNull
