@@ -77,6 +77,7 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
                 <artifactId>maven-jaxb2-plugin</artifactId>
@@ -90,6 +91,15 @@
                 </executions>
                 <configuration>
                     <generatePackage>com.hartwig.hmftools.bachelor.datamodel</generatePackage>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
         </plugins>

@@ -64,7 +64,6 @@
                     </execution>
                 </executions>
                 <configuration>
-
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
@@ -78,9 +77,9 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
