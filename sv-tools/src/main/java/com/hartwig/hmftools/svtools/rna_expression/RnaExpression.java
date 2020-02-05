@@ -5,10 +5,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_BOUNDARY;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
@@ -221,9 +220,6 @@ public class RnaExpression
         double readDepthTotal = 0;
         long codingLengthTotal = 0;
         long totalReadCoverage = 0;
-        int unsplicedReads = 0;
-        int exonicReads = 0;
-        int exonBoundaryReads = 0;
 
         /* Criteria for transcript selection
         - all exon junctions covered
@@ -233,6 +229,8 @@ public class RnaExpression
          */
 
         final List<ExonData> exons = transData.exons();
+
+        List<Integer> exonReadsCounts = Lists.newArrayList();
 
         for(int i = 0; i < exons.size(); ++i)
         {
@@ -250,38 +248,41 @@ public class RnaExpression
                 ++exonsFound;
             }
 
+            int exonReads = exonReadData.getTranscriptReadMatchCount(transData.TransName);
+
+            int index = 0;
+            while(index < exonReadsCounts.size())
+            {
+                if(exonReads < exonReadsCounts.get(index))
+                    break;
+
+                ++index;
+            }
+
+            exonReadsCounts.add(index, exonReads);
+
             codingLengthTotal += exon.ExonEnd - exon.ExonStart + 1;
-
-            unsplicedReads += exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED);
-            exonicReads += exonReadData.matchedReadCount(MATCH_TYPE_WITHIN_EXON);
-            exonBoundaryReads += exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY);
-
-            ExonData prevExon = i > 0 ? exons.get(i - 1) : null;
-            ExonData nextExon = i < exons.size() - 1 ? exons.get(i + 1) : null;
-
-            RegionReadData prevRegion = prevExon != null ? geneReadData.findExonRegion(prevExon.ExonStart, prevExon.ExonEnd) : null;
-            RegionReadData nextRegion = nextExon != null ? geneReadData.findExonRegion(nextExon.ExonStart, nextExon.ExonEnd) : null;
 
             boolean linked = true;
 
-            if(prevRegion != null)
+            if(i > 0)
             {
-                Integer links = exonReadData.getLinkedRegions().get(prevRegion);
+                int sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START);
 
-                if(links == null)
+                if(sjReads == 0)
                     linked = false;
                 else
-                    totalSplicedReads += links;
+                    totalSplicedReads += sjReads;
             }
 
-            if(nextRegion != null)
+            if(i < exons.size() - 1)
             {
-                Integer links = exonReadData.getLinkedRegions().get(nextRegion);
+                int sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_END);
 
-                if(links == null)
+                if(sjReads == 0)
                     linked = false;
                 else
-                    totalSplicedReads += links;
+                    totalSplicedReads += sjReads;
             }
 
             if(linked)
@@ -292,6 +293,17 @@ public class RnaExpression
 
         double avgReadDepth = exonsFound > 0 ? readDepthTotal / exonsFound : 0;
 
+        double medianExonReads = 0;
+        int medIndex = exonReadsCounts.size() / 2;
+        if((exonReadsCounts.size() % 2) == 0)
+        {
+            medianExonReads = (exonReadsCounts.get(medIndex-1) + exonReadsCounts.get(medIndex)) * 0.5;
+        }
+        else
+        {
+            medianExonReads = exonReadsCounts.get(medIndex);
+        }
+
         totalSplicedReads /= 2; // since each linked read is count against each region
 
         int intronicReads = geneReadData.getIntronRegionCounts(transData, false);
@@ -300,15 +312,13 @@ public class RnaExpression
         TranscriptResults results = ImmutableTranscriptResults.builder()
                 .trans(transData)
                 .exonsFound(exonsFound)
+                .supportingReads(geneReadData.getTranscriptReadCount(transData.TransName))
+                .medianExonReads(medianExonReads)
                 .spliceJunctionsSupported(spliceJunctionsSupported)
-                .splicedReads(totalSplicedReads)
-                .readDepthTotal(readDepthTotal)
+                .spliceJunctionReads(totalSplicedReads)
                 .avgReadDepth(avgReadDepth)
                 .codingLengthTotal(codingLengthTotal)
                 .totalReadCoverage(totalReadCoverage)
-                .unsplicedReads(unsplicedReads)
-                .exonicReads(exonicReads)
-                .exonBoundaryReads(exonBoundaryReads)
                 .intronicReads(intronicReads)
                 .uniqueIntronicReads(uniqueIntronicReads)
                 .build();
@@ -329,8 +339,8 @@ public class RnaExpression
 
                 mWriter = createBufferedWriter(outputFileName, false);
                 mWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
-                mWriter.write(",ExonsMatched,AvgDepth,TotalReads,ExonLength,CodingCoverage");
-                mWriter.write(",SpliceJunctionsSupported,SplicedReads,ExonicReads,ExonBoundaryReads,UnsplicedReads");
+                mWriter.write(",ExonsMatched,AvgDepth,ExonLength,CodingCoverage");
+                mWriter.write(",TotalGeneReads,SupportingReads,MedianExonReads,SpliceJuncSupported,SpliceJuncReads");
                 mWriter.write(",UniqueIntronicReads");
                 mWriter.newLine();
             }
@@ -341,13 +351,13 @@ public class RnaExpression
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, transData.IsCanonical, transData.exons().size()));
 
-            mWriter.write(String.format(",%d,%.0f,%d,%d,%d",
-                    transResults.exonsFound(), transResults.avgReadDepth(), geneReadData.totalReadCount(),
+            mWriter.write(String.format(",%d,%.0f,%d,%d",
+                    transResults.exonsFound(), transResults.avgReadDepth(),
                     transResults.codingLengthTotal(), transResults.totalReadCoverage()));
 
-            mWriter.write(String.format(",%d,%d,%d,%d,%d",
-                    transResults.spliceJunctionsSupported(), transResults.splicedReads(),
-                    transResults.exonicReads(), transResults.exonBoundaryReads(), transResults.unsplicedReads()));
+            mWriter.write(String.format(",%d,%d,%.0f,%d,%d",
+                    geneReadData.totalReadCount(), transResults.supportingReads(), transResults.medianExonReads(),
+                    transResults.spliceJunctionsSupported(), transResults.spliceJunctionReads()));
 
             mWriter.write(String.format(",%d", transResults.uniqueIntronicReads()));
 
@@ -373,7 +383,7 @@ public class RnaExpression
 
                 mExonDataWriter = createBufferedWriter(outputFileName, false);
                 mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd");
-                mExonDataWriter.write(",TotalCoverage,AvgDepth,JunctionReads,ContainedReads,BoundaryReads,UnsplicedReads,StartLinks,EndLinks");
+                mExonDataWriter.write(",TotalCoverage,AvgDepth,MatchedReads,SpliceJuncStart,SpliceJuncEnd");
                 mExonDataWriter.newLine();
             }
 
@@ -387,26 +397,23 @@ public class RnaExpression
                 if (exonReadData == null)
                     continue;
 
-                ExonData prevExon = i > 0 ? exons.get(i - 1) : null;
-                ExonData nextExon = i < exons.size() - 1 ? exons.get(i + 1) : null;
-
-                RegionReadData prevRegion = prevExon != null ? geneReadData.findExonRegion(prevExon.ExonStart, prevExon.ExonEnd) : null;
-                RegionReadData nextRegion = nextExon != null ? geneReadData.findExonRegion(nextExon.ExonStart, nextExon.ExonEnd) : null;
-
-                Integer startLinks = prevRegion != null ? exonReadData.getLinkedRegions().get(prevRegion) : null;
-                Integer endLinks = nextRegion != null ? exonReadData.getLinkedRegions().get(nextRegion) : null;
 
                 mExonDataWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d",
                         mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                         transData.TransName, exon.ExonRank, exon.ExonStart, exon.ExonEnd));
 
-                mExonDataWriter.write(String.format(",%d,%.0f,0,%d,%d,%d,%d,%d",
+                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d",
                         exonReadData.baseCoverage(1), exonReadData.averageDepth(),
-                        // exonReadData.matchedReadCount(MATCH_TYPE_SPLICE_JUNCTION),
+                        exonReadData.getTranscriptReadMatchCount(transData.TransName),
+                        exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START),
+                        exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_END)));
+
+                /* match types are not recorded per transcript
+                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d,%d,%d",
                         exonReadData.matchedReadCount(MATCH_TYPE_WITHIN_EXON),
-                        exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY),
-                        exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED),
-                        startLinks != null ? startLinks : 0, endLinks != null ? endLinks : 0));
+                        exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY) + exonReadData.matchedReadCount(MATCH_TYPE_EXON_MATCH),
+                        exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED));
+                 */
 
                 mExonDataWriter.newLine();
             }

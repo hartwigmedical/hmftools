@@ -6,9 +6,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_INTRONIC;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -24,6 +26,7 @@ public class GeneReadData
 
     // summary results
     private int mTotalReadCount;
+    private final Map<String,Integer> mTranscriptReadCounts;
     private final List<TranscriptResults> mTranscriptResults;
 
     public GeneReadData(final EnsemblGeneData geneData)
@@ -36,6 +39,7 @@ public class GeneReadData
 
         mTranscriptResults = Lists.newArrayList();
         mTotalReadCount = 0;
+        mTranscriptReadCounts = Maps.newHashMap();
     }
 
     public final List<RegionReadData> getExonRegions() { return mExonRegions; }
@@ -99,6 +103,22 @@ public class GeneReadData
     public int totalReadCount() { return mTotalReadCount; }
     public void addReadCount() { ++mTotalReadCount; }
     public void setTotalReadCount(int count) { mTotalReadCount = count; }
+
+    public final Map<String,Integer> getTranscriptReadCounts() { return mTranscriptReadCounts; }
+    public int getTranscriptReadCount(final String trans)
+    {
+        Integer count = mTranscriptReadCounts.get(trans);
+        return count != null ? count : 0;
+    }
+
+    public void addTranscriptReadMatch(final String trans)
+    {
+        Integer count = mTranscriptReadCounts.get(trans);
+        if(count == null)
+            mTranscriptReadCounts.put(trans, 1);
+        else
+            mTranscriptReadCounts.put(trans, count + 1);
+    }
 
     public List<Integer> getFragmentLengths() { return mFragmentLengths; }
     public void addFragmentLength(int length) { mFragmentLengths.add(length); }

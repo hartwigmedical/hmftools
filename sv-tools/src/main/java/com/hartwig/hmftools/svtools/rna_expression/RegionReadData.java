@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_EXON_BOUNDARY;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_WITHIN_EXON;
@@ -21,6 +24,10 @@ public class RegionReadData
 
     private String mRefBases;
     private int[] mRefBasesMatched;
+
+    private final Map<String, Integer> mTranscriptReadMatches; // count of reads which support this region and a specific transcript
+    private final Map<String, int[]> mTranscriptJunctionMatches; // count of reads which support each exon junction and a specific transcript
+
     private int[] mMatchTypeCounts;
     private final Map<RegionReadData,Integer> mLinkedRegions; // count of reads covering this region and another next to it
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
@@ -37,6 +44,10 @@ public class RegionReadData
 
         mPreRegions = Lists.newArrayList();
         mPostRegions = Lists.newArrayList();
+
+        mTranscriptReadMatches = Maps.newHashMap();
+        mTranscriptJunctionMatches = Maps.newHashMap();
+
         mLinkedRegions = Maps.newHashMap();
     }
 
@@ -64,6 +75,11 @@ public class RegionReadData
     }
 
     public final List<String> getRefRegions() { return mRefRegions; }
+
+    public boolean hasTransId(final String transId)
+    {
+        return mRefRegions.stream().anyMatch(x -> x.contains(transId));
+    }
 
     public void addExonRef(final String transId, int exonRank)
     {
@@ -100,6 +116,43 @@ public class RegionReadData
             mPostRegions.add(region);
     }
 
+    public final Map<String, Integer> getTranscriptReadMatches() { return mTranscriptReadMatches; }
+
+    public void addTranscriptReadMatch(final String trans)
+    {
+        Integer count = mTranscriptReadMatches.get(trans);
+        if(count == null)
+            mTranscriptReadMatches.put(trans, 1);
+        else
+            mTranscriptReadMatches.put(trans, count + 1);
+    }
+
+    public int getTranscriptReadMatchCount(final String trans)
+    {
+        Integer count = mTranscriptReadMatches.get(trans);
+        return count != null ? count : 0;
+    }
+
+    public final Map<String, int[]> getTranscriptJunctionMatches() { return mTranscriptJunctionMatches; }
+
+    public int getTranscriptJunctionMatchCount(final String trans, int seIndex)
+    {
+        int[] counts = mTranscriptJunctionMatches.get(trans);
+        return counts != null ? counts[seIndex] : 0;
+    }
+
+    public void addTranscriptJunctionMatch(final String trans, int seIndex)
+    {
+        int[] counts = mTranscriptJunctionMatches.get(trans);
+        if(counts == null)
+        {
+            counts = new int[SE_PAIR];
+            mTranscriptJunctionMatches.put(trans, counts);
+        }
+
+        ++counts[seIndex];
+    }
+
     public final Map<RegionReadData, Integer> getLinkedRegions() { return mLinkedRegions; }
 
     public void addLinkedRegion(final RegionReadData region)
@@ -132,11 +185,12 @@ public class RegionReadData
 
     public String toString()
     {
+        int sjReads = mTranscriptJunctionMatches.values().stream().mapToInt(x -> x[SE_START] + x[SE_END]).sum();
+        int reads = mTranscriptReadMatches.values().stream().mapToInt(x -> x).sum();
+
         return String.format("%s %s:%d -> %d refs(%d) %s",
                 !mRefRegions.isEmpty() ? mRefRegions.get(0) : "unknown", chromosome(), start(), end(), mRefRegions.size(),
-                mRefBases != null ? String.format("reads(sj=?? e=%d eb=%d i=%d)",
-                mMatchTypeCounts[MATCH_TYPE_WITHIN_EXON],
-                mMatchTypeCounts[MATCH_TYPE_EXON_BOUNDARY], mMatchTypeCounts[MATCH_TYPE_INTRONIC]) : "intron");
+                mRefBases != null ? String.format("reads(%d sj=%d)",reads, sjReads) : "intron");
     }
 
     public void clearState()

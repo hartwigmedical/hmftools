@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.MATCH_TYPE_
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_EXONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.TRANS_MATCH_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.setMatchingBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.setMatchingBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -294,7 +294,7 @@ public class RnaExpressionTest
             final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int)(posEnd - posStart + 1), 0);
-        return new ReadRecord(null, String.valueOf(id), id, chromosome, posStart, posEnd, readBases, readCigar, -1);
+        return new ReadRecord(null, String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar);
     }
 
     private RegionReadData createRegion(final String trans, int exonRank, final String chromosome, long posStart, long posEnd)
