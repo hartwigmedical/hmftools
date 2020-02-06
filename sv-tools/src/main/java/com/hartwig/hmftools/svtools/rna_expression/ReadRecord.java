@@ -48,6 +48,7 @@ public class ReadRecord
     public final List<long[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
+    private int mFragmentInsertSize;
 
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
 
@@ -83,11 +84,20 @@ public class ReadRecord
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
+        mFragmentInsertSize = mSamRecord != null ? mSamRecord.getInferredInsertSize() : 0;
     }
 
     public final SAMRecord samRecord() { return mSamRecord; }
 
     public long range() { return PosEnd - PosStart; }
+
+    public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
+    public int fragmentInsertSize() { return mFragmentInsertSize; }
+
+    public boolean sameChromosomeMate()
+    {
+        return mSamRecord == null || (mSamRecord != null && mSamRecord.getMateReferenceName().equals(mSamRecord.getReferenceName()));
+    }
 
     public List<long[]> getMappedRegionCoords() { return mMappedCoords; }
 
@@ -165,7 +175,7 @@ public class ReadRecord
 
             // if any reads cross and exon-intron boundary, then mark the transcript as unspliced
 
-            if(transRegions.size() == 1 && mMappedCoords.size() == 1)
+            if(transRegions.size() == 1 && mappedRegionCount() == 1)
             {
                 // simple case of a single exon and read section
                 RegionReadData region = transRegions.get(0);
@@ -180,7 +190,7 @@ public class ReadRecord
                     transMatchType = TransMatchType.UNSPLICED;
                 }
             }
-            else if(mMappedCoords.size() > transRegions.size())
+            else if(mappedRegionCount() > transRegions.size())
             {
                 transMatchType = ALT;
             }
@@ -200,6 +210,9 @@ public class ReadRecord
                     minExonRank = minExonRank == 0 ? exonRank : min(exonRank, minExonRank);
 
                     int mappingIndex = getRegionMappingIndex(region);
+
+                    if(mLowerInferredAdded)
+                        --mappingIndex;
 
                     if (mappingIndex < 0 || mappingIndex != regionIndex)
                     {
@@ -361,7 +374,7 @@ public class ReadRecord
         }
     }
 
-    private static int MIN_BASE_MATCH = 4;
+    private static int MIN_BASE_MATCH = 2;
 
     private void checkMissedJunctions(final RegionReadData region)
     {
@@ -446,6 +459,11 @@ public class ReadRecord
         }
     }
 
+    private int mappedRegionCount()
+    {
+        // discount any inferred regions
+        return mMappedCoords.size() - (mLowerInferredAdded ? 1 : 0) - (mUpperInferredAdded ? 1 : 0);
+    }
 
     private void addInferredMappingRegion(boolean isLower, long posStart, long posEnd)
     {

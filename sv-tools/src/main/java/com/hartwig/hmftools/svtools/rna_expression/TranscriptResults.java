@@ -11,7 +11,6 @@ public abstract class TranscriptResults
 
     public abstract int exonsFound();
     public abstract int supportingReads();
-    public abstract double medianExonReads();
     public abstract int spliceJunctionsSupported();
     public abstract int spliceJunctionReads();
     public abstract double avgReadDepth();

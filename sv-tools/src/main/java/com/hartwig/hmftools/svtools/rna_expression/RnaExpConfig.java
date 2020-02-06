@@ -36,6 +36,7 @@ public class RnaExpConfig
     public static final String BAM_FILE = "bam_file";
     public static final String GC_BIAS_FILE = "gcbias_file";
     public static final String READ_COUNT_LIMIT = "read_count_limit";
+    public static final String MAX_FRAGMENT_SIZE = "max_frag_size";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
@@ -47,6 +48,8 @@ public class RnaExpConfig
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
+    public final int MaxFragmentSize;
+
     public boolean WriteExonData;
     public boolean WriteReadData;
     public boolean WriteFragmentLengths;
@@ -54,6 +57,7 @@ public class RnaExpConfig
     public final List<String> SpecificTransIds;
 
     public static final int MAX_READ_COUNT = 100000;
+    public static final int DEFAULT_MAX_FRAGMENT_SIZE = 1000;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpConfig.class);
 
@@ -88,6 +92,7 @@ public class RnaExpConfig
         }
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
+        MaxFragmentSize = Integer.parseInt(cmd.getOptionValue(MAX_FRAGMENT_SIZE, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
@@ -108,6 +113,8 @@ public class RnaExpConfig
         AllTranscripts = true;
         ReadCountLimit = MAX_READ_COUNT;
         GcBiasFile = "";
+        MaxFragmentSize = DEFAULT_MAX_FRAGMENT_SIZE;
+
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
@@ -135,6 +142,7 @@ public class RnaExpConfig
         options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
         options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(REF_GENOME, true, "Ref genome file location");
+        options.addOption(MAX_FRAGMENT_SIZE, true, "Max RNA fragment size");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");

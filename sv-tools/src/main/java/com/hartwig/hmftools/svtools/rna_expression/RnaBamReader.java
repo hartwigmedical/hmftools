@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
@@ -17,6 +18,8 @@ import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,11 +48,11 @@ public class RnaBamReader
 
     // state relating to the current gene
     private final List<ReadRecord> mReadRecords;
-    private int mBamRecordCount;
     private GeneReadData mCurrentGene;
+    private final List<String> mDiscardedReads;
 
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
-    private static final double MIN_BASE_MATCH_PERC = 0.9;
+    public static final int FRAGMENT_GENE_BOUNDARY = 5000;
 
     private final Map<String,ReadRecord> mFragmentReads;
     private BufferedWriter mWriter;
@@ -61,21 +64,30 @@ public class RnaBamReader
         mConfig = config;
 
         mReadRecords = Lists.newArrayList();
-        mBamRecordCount = 0;
         mCurrentGene = null;
         mFragmentReads = Maps.newHashMap();
+        mDiscardedReads = Lists.newArrayList();
 
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        if(!mConfig.BamFile.isEmpty() && Files.exists(Paths.get(mConfig.BamFile)))
+        {
+            mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        }
+        else
+        {
+            mSamReader = null;
+        }
+
         mWriter = null;
     }
 
+    public boolean validReader() { return mSamReader != null; }
     public void close() { closeBufferedWriter(mWriter); }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
         mReadRecords.clear();
         mFragmentReads.clear();
-        mBamRecordCount = 0;
+        mDiscardedReads.clear();
 
         mCurrentGene = geneReadData;
 
@@ -91,73 +103,89 @@ public class RnaBamReader
 
     private void processSamRecord(@NotNull final SAMRecord record)
     {
-        // check for records which overlap an exonic regions
-        boolean exonOverlap = mCurrentGene.getExonRegions().stream()
-                .anyMatch(x -> !(record.getEnd() < x.start() || record.getStart() > x.Region.end()));
-
-        if(!exonOverlap)
-        {
-            checkIntronicRegions(record);
-            return;
-        }
-
-        ++mBamRecordCount;
-
-        if(mConfig.ReadCountLimit > 0 && mReadRecords.size() >= mConfig.ReadCountLimit)
-            return;
-
         mReadRecords.add(ReadRecord.from(record));
     }
 
     public void analyseReads()
     {
-        mCurrentGene.setTotalReadCount(mBamRecordCount);
-
-        if(mBamRecordCount >= MAX_READ_COUNT)
-        {
-            LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mBamRecordCount);
-            // return;
-        }
-
-        // cache reference bases for comparison with read bases
-        for(RegionReadData region : mCurrentGene.getExonRegions())
-        {
-            final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
-                    region.chromosome(), region.start(), region.end()).getBaseString();
-
-            region.setRefBases(regionRefBases);
-        }
+        int bamRecordCount = 0;
 
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
 
+        boolean processingLimitReached = false;
+
         for(final ReadRecord read : mReadRecords)
         {
+            boolean exonOverlap = mCurrentGene.getExonRegions().stream()
+                    .anyMatch(x -> !(read.PosEnd < x.start() || read.PosStart > x.Region.end()));
+
+            if(!exonOverlap)
+            {
+                boolean outsideGene = read.PosStart > mCurrentGene.GeneData.GeneEnd || read.PosEnd < mCurrentGene.GeneData.GeneStart;
+
+                if(outsideGene)
+                {
+                    checkFragmentRead(read);
+                }
+                else
+                {
+                    checkIntronicRegions(read);
+                    ++bamRecordCount;
+                }
+
+                continue;
+            }
+
+            ++bamRecordCount;
+
+            if(mConfig.ReadCountLimit > 0 && bamRecordCount >= mConfig.ReadCountLimit)
+            {
+                if(!processingLimitReached)
+                {
+                    LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, bamRecordCount);
+                    processingLimitReached = true;
+                }
+
+                continue;
+            }
+
             // the read is fully within the exon
             List<RegionReadData> overlappingRegions = mCurrentGene.getExonRegions().stream()
                     .filter(x -> read.overlapsMappedReads(x.Region.start(), x.Region.end()))
                     .collect(Collectors.toList());
 
-            if(overlappingRegions.isEmpty())
-                continue;
+            if(!overlappingRegions.isEmpty())
+            {
+                // look at all matched reads within the context of a transcript
+                read.processOverlappingRegions(overlappingRegions);
+            }
 
-            // look at all matched reads within the context of a transcript
-            read.processOverlappingRegions(overlappingRegions);
-
-            ReadRecord otherRead = checkFragmentRead(read);
-
-            if(otherRead != null)
-                processFragmentReads(read, otherRead);
+            checkFragmentRead(read);
         }
 
-        if(!mFragmentReads.isEmpty())
+        if(!processingLimitReached && !mFragmentReads.isEmpty())
         {
-            LOGGER.debug("gene({}) has {} unmatched reads", mCurrentGene.GeneData.GeneName, mFragmentReads.size());
+            if(LOGGER.isDebugEnabled())
+            {
+                int discardedReadMatches = (int) mFragmentReads.keySet().stream().filter(x -> mDiscardedReads.contains(x)).count();
+
+                LOGGER.debug("gene({}) has {} unmatched reads, discarded({})",
+                        mCurrentGene.GeneData.GeneName, mFragmentReads.size(), discardedReadMatches);
+            }
+
+            // only paired reads can be processed - otherwise implies a link to another gene or non-genic region
+
+            // mFragmentReads.values().forEach(x -> processingUnmatchedRead(x));
             mFragmentReads.clear();
         }
+
+        LOGGER.debug("gene({}) bamReadCount({})",mCurrentGene.GeneData.GeneName, bamRecordCount);
+
+        mCurrentGene.setTotalReadCount(bamRecordCount);
     }
 
-    public void processFragmentReads(@NotNull final ReadRecord read1, @NotNull final ReadRecord read2)
+    private void processFragmentReads(@NotNull final ReadRecord read1, @NotNull final ReadRecord read2)
     {
         /* use of fragment read pair:
             - supporting a transcript:
@@ -168,6 +196,9 @@ public class RnaBamReader
                 - one read in an intron -> UNSPLICED
                 -
         */
+        if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
+            return;
+
         final Map<String,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
 
         final Map<String,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
@@ -207,7 +238,9 @@ public class RnaBamReader
         }
 
         // finally record valid read info against each region now that it is known
-        Map<ReadRecord, List<RegionReadData>> markedReadRegions = Maps.newHashMap();
+
+        // keep track of which regions have been allocated from this read
+        final Map<ReadRecord, List<RegionReadData>> markedReadRegions = Maps.newHashMap();
         markedReadRegions.put(read1, Lists.newArrayList());
         markedReadRegions.put(read2, Lists.newArrayList());
 
@@ -215,61 +248,107 @@ public class RnaBamReader
         {
             mCurrentGene.addTranscriptReadMatch(trans);
 
-            for(int i = 0; i <= 1; ++i)
-            {
-                ReadRecord read = (i == 0) ? read1 : read2;
-
-                List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
-                        .filter(x -> x.getKey().hasTransId(trans))
-                        .filter(x -> validRegionMatchType(x.getValue()))
-                        .map(x -> x.getKey()).collect(Collectors.toList());
-
-                List<RegionReadData> markedRegions = markedReadRegions.get(read);
-
-                for(RegionReadData region : regions)
-                {
-                    // register a read against this valid transcript region
-                    region.addTranscriptReadMatch(trans);
-
-                    // now record the bases covered by the read in these matched regions
-                    if (!markedRegions.contains(region))
-                    {
-                        read.markRegionBases(region);
-                        markedRegions.add(region);
-                    }
-                }
-
-                // any adjacent reads can record a splice junction count
-                if(regions.size() > 1 && read.getTranscriptClassification(trans) == SPLICE_JUNCTION)
-                {
-                    for(int r1 = 0; r1 < regions.size() - 1; ++r1)
-                    {
-                        RegionReadData region1 = regions.get(r1);
-
-                        for(int r2 = r1 + 1; r2 < regions.size(); ++r2)
-                        {
-                            RegionReadData region2 = regions.get(r2);
-
-                            if(region1.getPostRegions().contains(region2))
-                            {
-                                region1.addTranscriptJunctionMatch(trans, SE_END);
-                                region2.addTranscriptJunctionMatch(trans, SE_START);
-                            }
-                            else if(region1.getPreRegions().contains(region2))
-                            {
-                                region1.addTranscriptJunctionMatch(trans, SE_START);
-                                region2.addTranscriptJunctionMatch(trans, SE_END);
-                            }
-                        }
-                    }
-                }
-            }
+            processValidTranscript(trans, read1, markedReadRegions);
+            processValidTranscript(trans, read2, markedReadRegions);
         }
 
         if(mConfig.WriteReadData)
         {
-            writeReadData(read1);
-            writeReadData(read2);
+            writeReadData(0, read1);
+            writeReadData(1, read2);
+        }
+    }
+
+    private void processValidTranscript(
+            final String trans, final ReadRecord read, final Map<ReadRecord, List<RegionReadData>> markedReadRegions)
+    {
+        List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
+                .filter(x -> x.getKey().hasTransId(trans))
+                .filter(x -> validRegionMatchType(x.getValue()))
+                .map(x -> x.getKey()).collect(Collectors.toList());
+
+        List<RegionReadData> markedRegions = markedReadRegions.get(read);
+
+        for(RegionReadData region : regions)
+        {
+            // register a read against this valid transcript region
+            region.addTranscriptReadMatch(trans);
+
+            // now record the bases covered by the read in these matched regions
+            if (!markedRegions.contains(region))
+            {
+                read.markRegionBases(region);
+                markedRegions.add(region);
+            }
+        }
+
+        // any adjacent reads can record a splice junction count
+        if(regions.size() > 1 && read.getTranscriptClassification(trans) == SPLICE_JUNCTION)
+        {
+            for(int r1 = 0; r1 < regions.size() - 1; ++r1)
+            {
+                RegionReadData region1 = regions.get(r1);
+
+                for(int r2 = r1 + 1; r2 < regions.size(); ++r2)
+                {
+                    RegionReadData region2 = regions.get(r2);
+
+                    if(region1.getPostRegions().contains(region2))
+                    {
+                        region1.addTranscriptJunctionMatch(trans, SE_END);
+                        region2.addTranscriptJunctionMatch(trans, SE_START);
+                    }
+                    else if(region1.getPreRegions().contains(region2))
+                    {
+                        region1.addTranscriptJunctionMatch(trans, SE_START);
+                        region2.addTranscriptJunctionMatch(trans, SE_END);
+                    }
+                }
+            }
+        }
+    }
+
+    private void processingUnmatchedRead(@NotNull final ReadRecord read)
+    {
+        if(read.getMappedRegions().isEmpty()) // unpaired intronic reads will have nothing to do
+            return;
+
+        // these could be a read split over into another gene?
+        final Map<String,TransMatchType> firstReadTransTypes = read.getTranscriptClassifications();
+
+        final List<String> validTranscripts = read.getTranscriptClassifications().entrySet().stream()
+                .filter(x -> validTranscriptType(x.getValue()))
+                .map(x -> x.getKey()).collect(Collectors.toList());
+
+        // now mark all other transcripts which aren't valid either due to the read pair
+        if(!validTranscripts.isEmpty())
+        {
+            firstReadTransTypes.entrySet().stream()
+                    .filter(x -> validTranscriptType(x.getValue()))
+                    .filter(x -> !validTranscripts.contains(x.getKey()))
+                    .forEach(x -> x.setValue(OTHER_TRANS));
+        }
+        else
+        {
+            firstReadTransTypes.entrySet().stream()
+                    .filter(x -> validTranscriptType(x.getValue()))
+                    .forEach(x -> x.setValue(ALT));
+        }
+
+        // finally record valid read info against each region now that it is known
+        Map<ReadRecord, List<RegionReadData>> markedReadRegions = Maps.newHashMap();
+        markedReadRegions.put(read, Lists.newArrayList());
+
+        for(final String trans : validTranscripts)
+        {
+            mCurrentGene.addTranscriptReadMatch(trans);
+
+            processValidTranscript(trans, read, markedReadRegions);
+        }
+
+        if(mConfig.WriteReadData)
+        {
+            writeReadData(-1, read);
         }
     }
 
@@ -285,72 +364,98 @@ public class RnaBamReader
         return false;
     }
 
-    private void checkIntronicRegions(final SAMRecord record)
+    private void checkIntronicRegions(final ReadRecord read)
     {
-        if(record.getCigar() == null)
+        if(read.Cigar == null)
             return;
 
-        if(record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
+        if(read.Cigar.containsOperator(CigarOperator.N) || !read.Cigar.containsOperator(CigarOperator.M))
             return;
 
         RegionReadData intronReadData = mCurrentGene.getIntronRegions().stream()
-                .filter(x -> record.getStart() >= x.Region.start() && record.getStart() <= x.Region.end())
+                .filter(x -> read.PosStart >= x.Region.start() && read.PosEnd <= x.Region.end())
                 .findFirst().orElse(null);
 
         if(intronReadData != null)
         {
-            if(mConfig.AllTranscripts && intronReadData.getRefRegions().size() == 1)
+            if (mConfig.AllTranscripts && intronReadData.getRefRegions().size() == 1)
             {
                 // only record intronic reads if they are unique to a transcript
                 intronReadData.addMatchedRead(INTRONIC);
             }
+        }
 
-            if(record.getInferredInsertSize() > 0)
+        if(mFragmentReads.containsKey(read.Id))
+        {
+            checkFragmentRead(read);
+            return;
+        }
+
+        // cache this read if it's pair is expected to reach an exon with its pair
+        // (for testing assume that the first read encountered is the lower of the 2)
+        long otherReadStartPos = read.samRecord() != null ? read.samRecord().getMateAlignmentStart() : read.PosEnd + mConfig.MaxFragmentSize;
+        long otherReadEndPos = otherReadStartPos + read.Length; // assume similar length
+
+        // measure distance to nearest exon region and cache if within range of being a fragment read pair
+        boolean otherReadExonic = mCurrentGene.getExonRegions().stream()
+                .anyMatch(x -> (otherReadStartPos >= x.start() && otherReadStartPos <= x.end())
+                        || (otherReadEndPos >= x.start() && otherReadEndPos <= x.end()));
+
+        if(otherReadExonic)
+        {
+            checkFragmentRead(read);
+            return;
+        }
+
+        if(LOGGER.isDebugEnabled())
+        {
+            if(mDiscardedReads.contains(read.Id))
             {
-                // cache reads likely to map into an exon
-                if(record.getStart() - record.getInferredInsertSize() <= intronReadData.start()
-                || record.getEnd() + record.getInferredInsertSize() >= intronReadData.start())
-                {
-                    ReadRecord read = ReadRecord.from(record);
-                    ReadRecord otherRead = checkFragmentRead(read);
-
-                    if(otherRead != null)
-                        processFragmentReads(read, otherRead);
-                }
+                // both reads intronic so ignore
+                mDiscardedReads.remove(read.Id);
+                mFragmentReads.remove(read.Id);
+            }
+            else
+            {
+                mDiscardedReads.add(read.Id);
             }
         }
 
         if(mConfig.WriteFragmentLengths)
         {
-            int fragmentSize = record.getInferredInsertSize();
-            if (fragmentSize > 0 && record.getMateReferenceName().equals(record.getReferenceName()))
+            int fragmentSize = read.fragmentInsertSize();
+            if (fragmentSize > 0 && read.sameChromosomeMate())
             {
                 mCurrentGene.addFragmentLength(fragmentSize);
             }
         }
     }
 
-    private ReadRecord checkFragmentRead(ReadRecord read)
+    private void checkFragmentRead(ReadRecord read)
     {
         if(read.samRecord() != null)
         {
             if(!read.samRecord().getMateReferenceName().equals(read.Chromosome)
             || read.samRecord().getMateReferenceIndex() == null)
             {
-                return null;
+                return;
             }
         }
 
         ReadRecord otherRead = mFragmentReads.get(read.Id);
 
         if(otherRead != null)
-            return otherRead;
-
-        mFragmentReads.put(read.Id, read);
-        return null;
+        {
+            mFragmentReads.remove(read.Id);
+            processFragmentReads(read, otherRead);
+        }
+        else
+        {
+            mFragmentReads.put(read.Id, read);
+        }
     }
 
-    private void writeReadData(final ReadRecord read)
+    private void writeReadData(int readIndex, final ReadRecord read)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -362,7 +467,7 @@ public class RnaBamReader
                 final String outputFileName = mConfig.OutputDir + "RNA_READ_DATA.csv";
 
                 mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("GeneId,GeneName,ReadId,Chromosome,PosStart,PosEnd,Cigar");
+                mWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar");
                 mWriter.write(",TransId,TransClass,ExonRank,ExonStart,ExonEnd,MatchType");
                 mWriter.newLine();
             }
@@ -380,8 +485,8 @@ public class RnaBamReader
                     if(!region.hasTransId(trans))
                         continue;
 
-                    mWriter.write(String.format("%s,%s,%s,%s,%d,%d,%s",
-                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, read.Id,
+                    mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%d,%s",
+                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, readIndex, read.Id,
                             read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString()));
 
                     mWriter.write(String.format(",%s,%s,%d,%d,%d,%s",
@@ -397,82 +502,11 @@ public class RnaBamReader
         }
     }
 
-    public static int findStringOverlaps(final String str1, final String str2)
-    {
-        if(str1.length() == 0 || str2.length() == 0)
-            return 0;
-
-        int matched = 0;
-        int i = 0;
-        int j = 0;
-        int mismatchIndex = -1;
-
-        // first compare bases at same indices, making note of the first difference if there is one
-        while(i < str1.length() && j < str2.length())
-        {
-            if (str1.charAt(i) == str2.charAt(j))
-                ++matched;
-            else if(mismatchIndex == -1)
-                mismatchIndex = i;
-
-            ++i;
-            ++j;
-        }
-
-        if(matched > MIN_BASE_MATCH_PERC * min(str1.length(), str2.length()))
-            return matched;
-
-        i = j = mismatchIndex;
-        matched = mismatchIndex;
-
-        while(i < str1.length() && j < str2.length())
-        {
-            if(str1.charAt(i) == str2.charAt(j))
-            {
-                ++i;
-                ++j;
-                ++matched;
-                continue;
-            }
-
-            // search ahead in each string in turn for the next short matching sequence
-            int startI = i;
-            boolean seqFound = false;
-            for(; i < str1.length() - 2 && j < str2.length() - 2; ++i)
-            {
-                if(str1.charAt(i) == str2.charAt(j) && str1.charAt(i+1) == str2.charAt(j+1) && str1.charAt(i+2) == str2.charAt(j+2))
-                {
-                    seqFound = true;
-                    break;
-                }
-            }
-
-            if(seqFound)
-                continue;
-
-            i = startI;
-
-            for(; i < str1.length() - 2 && j < str2.length() - 2; ++j)
-            {
-                if(str1.charAt(i) == str2.charAt(j) && str1.charAt(i+1) == str2.charAt(j+1) && str1.charAt(i+2) == str2.charAt(j+2))
-                {
-                    seqFound = true;
-                    break;
-                }
-            }
-
-            if(!seqFound)
-                break;
-        }
-
-        return matched;
-    }
-
     @VisibleForTesting
     public void addReadRecords(final GeneReadData geneReadData, final List<ReadRecord> readRecords)
     {
         mCurrentGene = geneReadData;
-        mBamRecordCount += readRecords.size();
+
         mReadRecords.clear();;
         mReadRecords.addAll(readRecords);
     }

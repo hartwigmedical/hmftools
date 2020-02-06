@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_B
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.UNSPLICED;
@@ -21,6 +21,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 
 import org.junit.Test;
 
@@ -30,6 +31,8 @@ import htsjdk.samtools.CigarOperator;
 
 public class RnaExpressionTest
 {
+    private static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
+
     @Test
     public void testBaseComparisons()
     {
@@ -88,13 +91,13 @@ public class RnaExpressionTest
     @Test
     public void testReadRegionTypes()
     {
-        String refBaseString = "ABCDEFGHIJKLMNOPQRST"; // currently unused
+        String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST"; // currently unused
 
         // single read and exon
         RegionReadData region = new RegionReadData(GenomeRegions.create("1", 100, 200));
 
         // read covers part of the exon
-        ReadRecord read = createReadRecord(1, "1", 110, 130, refBaseString, createCigar(0, 21, 0));
+        ReadRecord read = createReadRecord(1, "1", 110, 130, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         assertEquals(1, read.getMappedRegionCoords().size());
         assertEquals(110, read.getMappedRegionCoords().get(0)[SE_START]);
@@ -103,13 +106,13 @@ public class RnaExpressionTest
         // test classification of reads
         assertEquals(WITHIN_EXON, read.getRegionMatchType(region));
 
-        read = createReadRecord(1, "1", 90, 110, refBaseString, createCigar(0, 21, 0));
+        read = createReadRecord(1, "1", 90, 110, REF_BASE_STR_1, createCigar(0, 21, 0));
         assertEquals(EXON_INTRON, read.getRegionMatchType(region));
 
-        read = createReadRecord(1, "1", 100, 200, refBaseString, createCigar(0, 101, 0));
+        read = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 101, 0));
         assertEquals(EXON_MATCH, read.getRegionMatchType(region));
 
-        read = createReadRecord(1, "1", 100, 150, refBaseString, createCigar(0, 51, 0));
+        read = createReadRecord(1, "1", 100, 150, REF_BASE_STR_1, createCigar(0, 51, 0));
         assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region));
 
         // read covering multiple exons
@@ -120,7 +123,7 @@ public class RnaExpressionTest
         cigar.add(new CigarElement(19, CigarOperator.N));
         cigar.add(new CigarElement(25, CigarOperator.M)); // matches past last exon into intron
 
-        read = createReadRecord(1, "1", 110, 204, refBaseString, cigar);
+        read = createReadRecord(1, "1", 110, 204, REF_BASE_STR_1, cigar);
 
         assertEquals(3, read.getMappedRegionCoords().size());
         assertEquals(110, read.getMappedRegionCoords().get(0)[SE_START]);
@@ -146,14 +149,14 @@ public class RnaExpressionTest
 
         // soft-clipping at one end
         RegionReadData region1 = new RegionReadData(GenomeRegions.create("1", 141, 150));
-        region1.setRefBases(refBaseString.substring(0, 10));
+        region1.setRefBases(REF_BASE_STR_1.substring(0, 10));
         RegionReadData region2 = new RegionReadData(GenomeRegions.create("1", 200, 209));
-        region2.setRefBases(refBaseString.substring(10, 19));
+        region2.setRefBases(REF_BASE_STR_1.substring(10, 19));
 
         region1.addPostRegion(region2);
         region2.addPreRegion(region1);
 
-        ReadRecord read = createReadRecord(1, "1", 200, 209, refBaseString.substring(5, 19), createCigar(5, 10, 0));
+        ReadRecord read = createReadRecord(1, "1", 200, 209, REF_BASE_STR_1.substring(5, 19), createCigar(5, 10, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region2);
         read.processOverlappingRegions(regions);
@@ -164,13 +167,13 @@ public class RnaExpressionTest
         assertEquals(150, read.getMappedRegionCoords().get(0)[SE_END]);
 
         // test again on the up side, with 2 different regions matching the inferred bases
-        read = createReadRecord(1, "1", 141, 155, refBaseString.substring(0, 15), createCigar(0, 15, 0));
+        read = createReadRecord(1, "1", 141, 155, REF_BASE_STR_1.substring(0, 15), createCigar(0, 15, 0));
 
         RegionReadData region3 = new RegionReadData(GenomeRegions.create("1", 200, 229));
-        region3.setRefBases(refBaseString.substring(10, 19) + refBaseString);
+        region3.setRefBases(REF_BASE_STR_1.substring(10, 19) + REF_BASE_STR_1);
 
         RegionReadData region4 = new RegionReadData(GenomeRegions.create("1", 121, 150));
-        region1.setRefBases(refBaseString + refBaseString.substring(0, 10));
+        region1.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
 
         region1.addPostRegion(region3);
         region3.addPreRegion(region1);
@@ -195,14 +198,12 @@ public class RnaExpressionTest
     @Test
     public void testReadTranscriptClassification()
     {
-        String refBaseString = "ABCDEFGHIJKLMNOPQRST"; // currently unused
-
         String trans1 = "TRANS01";
 
         RegionReadData region = createRegion(trans1, 1, "1", 100, 200);
 
         // unspliced read does not support the transcript
-        ReadRecord read = createReadRecord(1, "1", 90, 110, refBaseString, createCigar(0, 21, 0));
+        ReadRecord read = createReadRecord(1, "1", 90, 110, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         List<RegionReadData> regions = Lists.newArrayList(region);
         read.processOverlappingRegions(regions);
@@ -210,7 +211,7 @@ public class RnaExpressionTest
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
 
         // exonic read does support the transcript
-        read = createReadRecord(1, "1", 120, 140, refBaseString, createCigar(0, 21, 0));
+        read = createReadRecord(1, "1", 120, 140, REF_BASE_STR_1, createCigar(0, 21, 0));
 
         regions = Lists.newArrayList(region);
         read.processOverlappingRegions(regions);
@@ -223,7 +224,7 @@ public class RnaExpressionTest
         RegionReadData region3 = createRegion(trans1,3, "1", 180, 200);
 
         // read covering multiple exons but skips the middle exon
-        read = createReadRecord(1, "1", 110, 200, refBaseString, createCigar(0, 11, 59, 21, 0));
+        read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, createCigar(0, 11, 59, 21, 0));
 
         regions = Lists.newArrayList(region1, region2, region3);
         read.processOverlappingRegions(regions);
@@ -238,7 +239,7 @@ public class RnaExpressionTest
         cigar.add(new CigarElement(29, CigarOperator.N));
         cigar.add(new CigarElement(25, CigarOperator.M)); // matches past last exon into intron
 
-        read = createReadRecord(1, "1", 110, 200, refBaseString, cigar);
+        read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, cigar);
 
         read.processOverlappingRegions(regions);
 
@@ -252,11 +253,39 @@ public class RnaExpressionTest
         cigar.add(new CigarElement(9, CigarOperator.N));
         cigar.add(new CigarElement(25, CigarOperator.M)); // matches past last exon into intron
 
-        read = createReadRecord(1, "1", 110, 200, refBaseString, cigar);
+        read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, cigar);
 
         read.processOverlappingRegions(regions);
 
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
+    }
+
+    @Test
+    public void testFragmentReadPairs()
+    {
+        // one read outside the gene
+        RnaExpConfig config = new RnaExpConfig();
+        RnaBamReader bamReader = new RnaBamReader(config);
+
+        GeneReadData geneReadData = createGeneReadData("GEN01", "1",(byte)1, 1000, 2000);
+
+        String trans1 = "TRANS01";
+        RegionReadData region1 = createRegion(trans1,1,"1", 1000, 1100);
+        geneReadData.addExonRegion(region1);
+
+        ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 10, 0));
+        ReadRecord read2 = createReadRecord(1, "1", 1050, 1070, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        List<ReadRecord> reads = Lists.newArrayList(read1, read2);
+
+        bamReader.addReadRecords(geneReadData, reads);
+        bamReader.analyseReads();
+    }
+
+    private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)
+    {
+        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, strand, posStart, posEnd, "");
+        return new GeneReadData(geneData);
     }
 
     private ReadRecord createReadRecord(

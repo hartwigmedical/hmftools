@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.FRAGMENT_GENE_BOUNDARY;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
@@ -45,7 +46,6 @@ public class RnaExpression
     private final RnaBamReader mRnaBamReader;
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
-    private final List<GeneReadData> mGeneReadDatalist;
     private final Map<Integer,Integer> mFragmentLengths;
 
     private BufferedWriter mWriter;
@@ -73,7 +73,6 @@ public class RnaExpression
         mGeneTransCache.setRequiredData(true, false, false, !mConfig.AllTranscripts);
         mGeneTransCache.loadEnsemblData(false);
 
-        mGeneReadDatalist = Lists.newArrayList();
         mFragmentLengths = Maps.newHashMap();
 
         mWriter = null;
@@ -82,6 +81,12 @@ public class RnaExpression
 
     public void runAnalysis()
     {
+        if(!mRnaBamReader.validReader())
+        {
+            LOGGER.warn("BAM reader init failed");
+            return;
+        }
+
         if(mGcBiasAdjuster.enabled())
         {
             mGcBiasAdjuster.loadData();
@@ -182,7 +187,22 @@ public class RnaExpression
                 minTransPos = transData.TransStart;
         }
 
-        GenomeRegion geneRegion = GenomeRegions.create(geneData.Chromosome, minTransPos, maxTransPos);
+        // cache reference bases for comparison with read bases
+        if(mConfig.RefFastaSeqFile != null)
+        {
+            for (RegionReadData region : geneReadData.getExonRegions())
+            {
+                final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
+                        region.chromosome(), region.start(), region.end()).getBaseString();
+
+                region.setRefBases(regionRefBases);
+            }
+        }
+
+        // use a buffer around the gene to pick up reads which span outside its transcripts
+        GenomeRegion geneRegion = GenomeRegions.create(
+                geneData.Chromosome, minTransPos - FRAGMENT_GENE_BOUNDARY, maxTransPos + FRAGMENT_GENE_BOUNDARY);
+
         mRnaBamReader.readBamCounts(geneReadData, geneRegion);
         mRnaBamReader.analyseReads();
 
@@ -231,8 +251,6 @@ public class RnaExpression
 
         final List<ExonData> exons = transData.exons();
 
-        List<Integer> exonReadsCounts = Lists.newArrayList();
-
         for(int i = 0; i < exons.size(); ++i)
         {
             ExonData exon = exons.get(i);
@@ -248,19 +266,6 @@ public class RnaExpression
             {
                 ++exonsFound;
             }
-
-            int exonReads = exonReadData.getTranscriptReadMatchCount(transData.TransName);
-
-            int index = 0;
-            while(index < exonReadsCounts.size())
-            {
-                if(exonReads < exonReadsCounts.get(index))
-                    break;
-
-                ++index;
-            }
-
-            exonReadsCounts.add(index, exonReads);
 
             codingLengthTotal += exon.ExonEnd - exon.ExonStart + 1;
 
@@ -294,17 +299,6 @@ public class RnaExpression
 
         double avgReadDepth = exonsFound > 0 ? readDepthTotal / exonsFound : 0;
 
-        double medianExonReads = 0;
-        int medIndex = exonReadsCounts.size() / 2;
-        if((exonReadsCounts.size() % 2) == 0)
-        {
-            medianExonReads = (exonReadsCounts.get(medIndex-1) + exonReadsCounts.get(medIndex)) * 0.5;
-        }
-        else
-        {
-            medianExonReads = exonReadsCounts.get(medIndex);
-        }
-
         totalSplicedReads /= 2; // since each linked read is count against each region
 
         int intronicReads = geneReadData.getIntronRegionCounts(transData, false);
@@ -314,7 +308,6 @@ public class RnaExpression
                 .trans(transData)
                 .exonsFound(exonsFound)
                 .supportingReads(geneReadData.getTranscriptReadCount(transData.TransName))
-                .medianExonReads(medianExonReads)
                 .spliceJunctionsSupported(spliceJunctionsSupported)
                 .spliceJunctionReads(totalSplicedReads)
                 .avgReadDepth(avgReadDepth)
@@ -356,8 +349,8 @@ public class RnaExpression
                     transResults.exonsFound(), transResults.avgReadDepth(),
                     transResults.codingLengthTotal(), transResults.totalReadCoverage()));
 
-            mWriter.write(String.format(",%d,%d,%.0f,%d,%d",
-                    geneReadData.totalReadCount(), transResults.supportingReads(), transResults.medianExonReads(),
+            mWriter.write(String.format(",%d,%d,%d,%d",
+                    geneReadData.totalReadCount(), transResults.supportingReads(),
                     transResults.spliceJunctionsSupported(), transResults.spliceJunctionReads()));
 
             mWriter.write(String.format(",%d", transResults.uniqueIntronicReads()));
