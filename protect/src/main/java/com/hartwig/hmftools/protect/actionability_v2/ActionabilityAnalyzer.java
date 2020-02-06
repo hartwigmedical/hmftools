@@ -2,13 +2,19 @@ package com.hartwig.hmftools.protect.actionability_v2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
-import com.hartwig.hmftools.protect.actionability_v2.fusion.ActionableFusion;
-import com.hartwig.hmftools.protect.actionability_v2.gene.ActionableGene;
-import com.hartwig.hmftools.protect.actionability_v2.range.ActionableRange;
-import com.hartwig.hmftools.protect.actionability_v2.signature.ActionableSignature;
-import com.hartwig.hmftools.protect.actionability_v2.variant.ActionableVariant;
+import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
+import com.hartwig.hmftools.protect.actionability.cnv.CopyNumberEvidenceAnalyzer;
+import com.hartwig.hmftools.protect.actionability_v2.fusion.FusionEvidenceAnalyzer;
+import com.hartwig.hmftools.protect.actionability_v2.fusion.FusionEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.protect.actionability_v2.gene.GeneEvidenceAnalyzer;
+import com.hartwig.hmftools.protect.actionability_v2.gene.GeneEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.protect.actionability_v2.range.RangeEvidenceAnalyzer;
+import com.hartwig.hmftools.protect.actionability_v2.range.RangeEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.protect.actionability_v2.signature.SignatureEvidenceAnalyzer;
+import com.hartwig.hmftools.protect.actionability_v2.signature.SignatureEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.protect.actionability_v2.variant.VariantEvidenceAnalyzer;
+import com.hartwig.hmftools.protect.actionability_v2.variant.VariantEvidenceAnalyzerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,15 +27,37 @@ public class ActionabilityAnalyzer {
     private static final String ACTIONABLE_VARIANT_TSV = "actionableVariant.tsv";
 
     @NotNull
-    public static void fromKnowledgebase(@NotNull String knowledgebaseDirectory) throws
-            IOException {
+    private final FusionEvidenceAnalyzer fusionEvidenceAnalyzer;
+    @NotNull
+    private final GeneEvidenceAnalyzer geneEvidenceAnalyzer;
+    @NotNull
+    private final RangeEvidenceAnalyzer rangeEvidenceAnalyzer;
+    @NotNull
+    private final SignatureEvidenceAnalyzer signatureEvidenceAnalyzer;
+    @NotNull
+    private final VariantEvidenceAnalyzer variantEvidenceAnalyzer;
+
+    @NotNull
+    public static ActionabilityAnalyzer fromKnowledgebase(@NotNull String knowledgebaseDirectory) throws IOException {
 
         String basePath = knowledgebaseDirectory + File.separator;
-        List<ActionableFusion> actionableFusion = ReadActionabilityFiles.loadFromFileFusion(basePath + ACTIONABLE_FUSION_TSV);
-        List<ActionableGene> actionableGene = ReadActionabilityFiles.loadFromFileGene(basePath + ACTIONABLE_GENE_TSV);
-        List<ActionableRange> actionableRange = ReadActionabilityFiles.loadFromFileRange(basePath + ACTIONABLE_RANGE_TSV);
-        List<ActionableSignature> actionableSignature = ReadActionabilityFiles.loadFromFileSignature(basePath + ACTIONABLE_SIGNATURE_TSV);
-        List<ActionableVariant> actionableVariant = ReadActionabilityFiles.loadFromFileVariant(basePath + ACTIONABLE_VARIANT_TSV);
+        FusionEvidenceAnalyzer actionableFusion = FusionEvidenceAnalyzerFactory.loadFromFileFusion(basePath + ACTIONABLE_FUSION_TSV);
+        GeneEvidenceAnalyzer actionableGene = GeneEvidenceAnalyzerFactory.loadFromFileGene(basePath + ACTIONABLE_GENE_TSV);
+        RangeEvidenceAnalyzer actionableRange = RangeEvidenceAnalyzerFactory.loadFromFileRange(basePath + ACTIONABLE_RANGE_TSV);
+        SignatureEvidenceAnalyzer actionableSignature =
+                SignatureEvidenceAnalyzerFactory.loadFromFileSignature(basePath + ACTIONABLE_SIGNATURE_TSV);
+        VariantEvidenceAnalyzer actionableVariant = VariantEvidenceAnalyzerFactory.loadFromFileVariant(basePath + ACTIONABLE_VARIANT_TSV);
 
+        return new ActionabilityAnalyzer(actionableFusion, actionableGene, actionableRange, actionableSignature, actionableVariant);
+    }
+
+    private ActionabilityAnalyzer(@NotNull final FusionEvidenceAnalyzer actionableFusion,
+            @NotNull final GeneEvidenceAnalyzer actionableGene, @NotNull final RangeEvidenceAnalyzer actionableRange,
+            @NotNull final SignatureEvidenceAnalyzer actionableSignature, @NotNull final VariantEvidenceAnalyzer actionableVariant) {
+        this.fusionEvidenceAnalyzer = actionableFusion;
+        this.geneEvidenceAnalyzer = actionableGene;
+        this.rangeEvidenceAnalyzer = actionableRange;
+        this.signatureEvidenceAnalyzer = actionableSignature;
+        this.variantEvidenceAnalyzer = actionableVariant;
     }
 }
