@@ -26,7 +26,7 @@ public class GeneReadData
 
     // summary results
     private int mTotalReadCount;
-    private final Map<String,Integer> mTranscriptReadCounts;
+    private final Map<String,int[]> mTranscriptReadCounts; // count of fragments supporting the transcript, and whether unique
     private final List<TranscriptResults> mTranscriptResults;
 
     public GeneReadData(final EnsemblGeneData geneData)
@@ -103,20 +103,28 @@ public class GeneReadData
     public int totalReadCount() { return mTotalReadCount; }
     public void setTotalReadCount(int count) { mTotalReadCount = count; }
 
-    public final Map<String,Integer> getTranscriptReadCounts() { return mTranscriptReadCounts; }
-    public int getTranscriptReadCount(final String trans)
+    public static final int TRANS_COUNT = 0;
+    public static final int UNIQUE_TRANS_COUNT = 1;
+
+    public int[] getTranscriptReadCount(final String trans)
     {
-        Integer count = mTranscriptReadCounts.get(trans);
-        return count != null ? count : 0;
+        int[] counts = mTranscriptReadCounts.get(trans);
+        return counts != null ? counts : new int[]{0, 0};
     }
 
-    public void addTranscriptReadMatch(final String trans)
+    public void addTranscriptReadMatch(final String trans, boolean isUnique)
     {
-        Integer count = mTranscriptReadCounts.get(trans);
-        if(count == null)
-            mTranscriptReadCounts.put(trans, 1);
-        else
-            mTranscriptReadCounts.put(trans, count + 1);
+        int[] counts = mTranscriptReadCounts.get(trans);
+        if(counts == null)
+        {
+            counts = new int[2];
+            mTranscriptReadCounts.put(trans,  counts);
+        }
+
+        if(isUnique)
+            ++counts[UNIQUE_TRANS_COUNT];
+
+        ++counts[TRANS_COUNT];
     }
 
     public List<Integer> getFragmentLengths() { return mFragmentLengths; }

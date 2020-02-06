@@ -2,11 +2,13 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
@@ -32,61 +34,6 @@ import htsjdk.samtools.CigarOperator;
 public class RnaExpressionTest
 {
     private static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
-
-    @Test
-    public void testBaseComparisons()
-    {
-        // extra bases at the start
-        String str1 = "ABCDEFGHIJ";
-        String str2 = "XXXABCDEFGHIJ";
-
-        int overlap = findStringOverlaps(str1, str2);
-        assertEquals(10, overlap);
-
-        overlap = findStringOverlaps(str2, str1);
-        assertEquals(10, overlap);
-
-        // and in the middle
-        str1 = "ABCDEFZZZGHIJ";
-        str2 = "XXXABCDEFGHIJ";
-
-        overlap = findStringOverlaps(str1, str2);
-        assertEquals(10, overlap);
-
-        overlap = findStringOverlaps(str2, str1);
-        assertEquals(10, overlap);
-
-        // some incorrect letters - 2/21 is more than 90%
-        str1 = "ABCDEFGHIYKLMNOPQRSTU";
-        str2 = "ABCXEFGHIJKLMNOPQRSTU";
-
-        overlap = findStringOverlaps(str1, str2);
-        assertEquals(19, overlap);
-    }
-
-    @Test
-    public void testPositionOverlaps()
-    {
-        GenomeRegion region = GenomeRegions.create("1", 1000, 2000);
-
-        ReadRecord record = createReadRecord(1, "1", 800, 900, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 2200, 2300, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 1500, 1600, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 800, 2200, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 800, 1200, "", null);
-        assertTrue(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 1900, 2200, "", null);
-        assertTrue(overlaps(region, record));
-    }
 
     @Test
     public void testReadRegionTypes()
@@ -360,4 +307,156 @@ public class RnaExpressionTest
         return cigar;
     }
 
+    @Test
+    public void testMappingCoords()
+    {
+        List<long[]> mappings1 = Lists.newArrayList();
+
+        mappings1.add(new long[]{10,20});
+        mappings1.add(new long[]{40,50});
+        mappings1.add(new long[]{70,80});
+
+        List<long[]> mappings2 = Lists.newArrayList();
+
+        // no overlaps
+        mappings2.add(new long[]{25,35});
+        mappings2.add(new long[]{55,65});
+        mappings2.add(new long[]{85,95});
+
+        List<long[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
+        assertEquals(6, commonMappings.size());
+        assertTrue(commonMappings.contains(mappings1.get(0)));
+        assertTrue(commonMappings.contains(mappings1.get(1)));
+        assertTrue(commonMappings.contains(mappings1.get(2)));
+        assertTrue(commonMappings.contains(mappings2.get(0)));
+        assertTrue(commonMappings.contains(mappings2.get(1)));
+        assertTrue(commonMappings.contains(mappings2.get(2)));
+
+        // widening of all regions only
+        mappings2.clear();
+
+        mappings2.add(new long[]{5,15});
+        mappings2.add(new long[]{35,45});
+        mappings2.add(new long[]{55,75});
+
+        commonMappings = deriveCommonRegions(mappings1, mappings2);
+        assertEquals(3, commonMappings.size());
+        assertEquals(5, commonMappings.get(0)[SE_START]);
+        assertEquals(20, commonMappings.get(0)[SE_END]);
+        assertEquals(35, commonMappings.get(1)[SE_START]);
+        assertEquals(50, commonMappings.get(1)[SE_END]);
+        assertEquals(55, commonMappings.get(2)[SE_START]);
+        assertEquals(80, commonMappings.get(2)[SE_END]);
+
+        // one other region overlapping all others
+        mappings2.clear();
+
+        mappings2.add(new long[]{5,95});
+
+        commonMappings = deriveCommonRegions(mappings1, mappings2);
+        assertEquals(1, commonMappings.size());
+        assertEquals(5, commonMappings.get(0)[SE_START]);
+        assertEquals(95, commonMappings.get(0)[SE_END]);
+
+        mappings2.clear();
+        mappings1.clear();
+
+        // a mix of various scenarios
+        mappings1.add(new long[]{10,20});
+
+        mappings2.add(new long[]{30,40});
+
+        mappings2.add(new long[]{50,60});
+        mappings1.add(new long[]{55,75});
+        mappings1.add(new long[]{85,95});
+        mappings2.add(new long[]{70,110});
+
+        mappings2.add(new long[]{120,130});
+
+        mappings1.add(new long[]{140,150});
+
+        commonMappings = deriveCommonRegions(mappings1, mappings2);
+        assertEquals(5, commonMappings.size());
+
+        assertEquals(50, commonMappings.get(2)[SE_START]);
+        assertEquals(110, commonMappings.get(2)[SE_END]);
+    }
+
+    @Test
+    public void testBaseAssignment()
+    {
+        RegionReadData region = createRegion("TRANS01",1,"1", 100, 119);
+        region.setRefBases(REF_BASE_STR_1);
+
+        List<long[]> readCoords = Lists.newArrayList();
+        readCoords.add(new long[]{100, 119});
+
+        markRegionBases(readCoords, region);
+        assertEquals(20, region.baseCoverage(1));
+
+        region.clearState();
+
+        readCoords.clear();
+        readCoords.add(new long[]{100, 104});
+        readCoords.add(new long[]{110, 114});
+        readCoords.add(new long[]{118, 119});
+
+        markRegionBases(readCoords, region);
+        assertEquals(12, region.baseCoverage(1));
+    }
+
+    @Test
+    public void testBaseComparisons()
+    {
+        // extra bases at the start
+        String str1 = "ABCDEFGHIJ";
+        String str2 = "XXXABCDEFGHIJ";
+
+        int overlap = findStringOverlaps(str1, str2);
+        assertEquals(10, overlap);
+
+        overlap = findStringOverlaps(str2, str1);
+        assertEquals(10, overlap);
+
+        // and in the middle
+        str1 = "ABCDEFZZZGHIJ";
+        str2 = "XXXABCDEFGHIJ";
+
+        overlap = findStringOverlaps(str1, str2);
+        assertEquals(10, overlap);
+
+        overlap = findStringOverlaps(str2, str1);
+        assertEquals(10, overlap);
+
+        // some incorrect letters - 2/21 is more than 90%
+        str1 = "ABCDEFGHIYKLMNOPQRSTU";
+        str2 = "ABCXEFGHIJKLMNOPQRSTU";
+
+        overlap = findStringOverlaps(str1, str2);
+        assertEquals(19, overlap);
+    }
+
+    @Test
+    public void testPositionOverlaps()
+    {
+        GenomeRegion region = GenomeRegions.create("1", 1000, 2000);
+
+        ReadRecord record = createReadRecord(1, "1", 800, 900, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = createReadRecord(1, "1", 2200, 2300, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = createReadRecord(1, "1", 1500, 1600, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = createReadRecord(1, "1", 800, 2200, "", null);
+        assertFalse(overlaps(region, record));
+
+        record = createReadRecord(1, "1", 800, 1200, "", null);
+        assertTrue(overlaps(region, record));
+
+        record = createReadRecord(1, "1", 1900, 2200, "", null);
+        assertTrue(overlaps(region, record));
+    }
 }

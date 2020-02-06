@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +24,8 @@ public class RegionReadData implements Comparable< RegionReadData>
     private String mRefBases;
     private int[] mRefBasesMatched;
 
-    private final Map<String, Integer> mTranscriptReadMatches; // count of reads which support this region and a specific transcript
-    private final Map<String, int[]> mTranscriptJunctionMatches; // count of reads which support each exon junction and a specific transcript
+    private final Map<String, int[]> mTranscriptReadCounts; // count of reads which support this region and a specific transcript
+    private final Map<String, int[][]> mTranscriptJunctionCounts; // count of reads which support each exon junction and a specific transcript
 
     private int[] mMatchTypeCounts;
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
@@ -41,8 +43,8 @@ public class RegionReadData implements Comparable< RegionReadData>
         mPreRegions = Lists.newArrayList();
         mPostRegions = Lists.newArrayList();
 
-        mTranscriptReadMatches = Maps.newHashMap();
-        mTranscriptJunctionMatches = Maps.newHashMap();
+        mTranscriptReadCounts = Maps.newHashMap();
+        mTranscriptJunctionCounts = Maps.newHashMap();
     }
 
     public String chromosome() { return Region.chromosome(); }
@@ -89,7 +91,7 @@ public class RegionReadData implements Comparable< RegionReadData>
     public void setRefBases(final String bases)
     {
         mRefBases = bases;
-        mRefBasesMatched = new int[(int)mRefBases.length()+1];
+        mRefBasesMatched = new int[(int)mRefBases.length()];
     }
 
     public int length() { return mRefBases.length(); }
@@ -110,41 +112,46 @@ public class RegionReadData implements Comparable< RegionReadData>
             mPostRegions.add(region);
     }
 
-    public final Map<String, Integer> getTranscriptReadMatches() { return mTranscriptReadMatches; }
-
-    public void addTranscriptReadMatch(final String trans)
+    public int[] getTranscriptReadCount(final String trans)
     {
-        Integer count = mTranscriptReadMatches.get(trans);
-        if(count == null)
-            mTranscriptReadMatches.put(trans, 1);
-        else
-            mTranscriptReadMatches.put(trans, count + 1);
+        int[] counts = mTranscriptReadCounts.get(trans);
+        return counts != null ? counts : new int[]{0, 0};
     }
 
-    public int getTranscriptReadMatchCount(final String trans)
+    public void addTranscriptReadMatch(final String trans, boolean isUnique)
     {
-        Integer count = mTranscriptReadMatches.get(trans);
-        return count != null ? count : 0;
-    }
-
-    public final Map<String, int[]> getTranscriptJunctionMatches() { return mTranscriptJunctionMatches; }
-
-    public int getTranscriptJunctionMatchCount(final String trans, int seIndex)
-    {
-        int[] counts = mTranscriptJunctionMatches.get(trans);
-        return counts != null ? counts[seIndex] : 0;
-    }
-
-    public void addTranscriptJunctionMatch(final String trans, int seIndex)
-    {
-        int[] counts = mTranscriptJunctionMatches.get(trans);
+        int[] counts = mTranscriptReadCounts.get(trans);
         if(counts == null)
         {
-            counts = new int[SE_PAIR];
-            mTranscriptJunctionMatches.put(trans, counts);
+            counts = new int[2];
+            mTranscriptReadCounts.put(trans,  counts);
         }
 
-        ++counts[seIndex];
+        if(isUnique)
+            ++counts[UNIQUE_TRANS_COUNT];
+
+        ++counts[TRANS_COUNT];
+    }
+
+    public int[] getTranscriptJunctionMatchCount(final String trans, int seIndex)
+    {
+        int[][] counts = mTranscriptJunctionCounts.get(trans);
+        return counts != null ? counts[seIndex] : new int[]{0, 0};
+    }
+
+    public void addTranscriptJunctionMatch(final String trans, int seIndex, boolean isUnique)
+    {
+        int[][] counts = mTranscriptJunctionCounts.get(trans);
+        if(counts == null)
+        {
+            counts = new int[SE_PAIR][2];
+            mTranscriptJunctionCounts.put(trans, counts);
+        }
+
+        if(isUnique)
+            ++counts[seIndex][UNIQUE_TRANS_COUNT];
+
+        ++counts[seIndex][TRANS_COUNT];
     }
 
     public double averageDepth()
@@ -161,14 +168,15 @@ public class RegionReadData implements Comparable< RegionReadData>
         if(mRefBasesMatched == null)
             return 0;
 
-        // percent of bases covered by a read
         return (int)Arrays.stream(mRefBasesMatched).filter(x -> x >= minReadCount).count();
     }
 
     public String toString()
     {
-        int sjReads = mTranscriptJunctionMatches.values().stream().mapToInt(x -> x[SE_START] + x[SE_END]).sum();
-        int reads = mTranscriptReadMatches.values().stream().mapToInt(x -> x).sum();
+        int sjReads = mTranscriptJunctionCounts.values().stream()
+                .mapToInt(x -> x[SE_START][TRANS_COUNT] + x[SE_END][TRANS_COUNT]).sum();
+
+        int reads = mTranscriptReadCounts.values().stream().mapToInt(x -> x[TRANS_COUNT]).sum();
 
         return String.format("%s %s:%d -> %d refs(%d) %s",
                 !mRefRegions.isEmpty() ? mRefRegions.get(0) : "unknown", chromosome(), start(), end(), mRefRegions.size(),

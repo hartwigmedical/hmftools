@@ -10,13 +10,12 @@ public abstract class TranscriptResults
     public abstract TranscriptData trans();
 
     public abstract int exonsFound();
-    public abstract int supportingReads();
+    public abstract int supportingFragments();
+    public abstract int uniqueFragments();
     public abstract int spliceJunctionsSupported();
-    public abstract int spliceJunctionReads();
-    public abstract double avgReadDepth();
-    public abstract long codingLengthTotal();
-    public abstract long totalReadCoverage();
-    public abstract int intronicReads();
-    public abstract int uniqueIntronicReads();
+    public abstract int spliceJunctionFragments();
+    public abstract int spliceJunctionUniqueFragments();
+    public abstract long exonicBases();
+    public abstract long exonicBaseCoverage();
 
 }

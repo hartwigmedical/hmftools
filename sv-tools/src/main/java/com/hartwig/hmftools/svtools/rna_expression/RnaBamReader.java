@@ -7,10 +7,11 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validRegionMatchType;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.INTRONIC;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.MAX_READ_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
@@ -52,7 +53,6 @@ public class RnaBamReader
     private final List<String> mDiscardedReads;
 
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
-    public static final int FRAGMENT_GENE_BOUNDARY = 5000;
 
     private final Map<String,ReadRecord> mFragmentReads;
     private BufferedWriter mWriter;
@@ -117,6 +117,24 @@ public class RnaBamReader
 
         for(final ReadRecord read : mReadRecords)
         {
+            ++bamRecordCount;
+
+            if(bamRecordCount > 0 && (bamRecordCount % 100000) == 0)
+            {
+                LOGGER.info("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, bamRecordCount);
+            }
+
+            if(mConfig.ReadCountLimit > 0 && bamRecordCount >= mConfig.ReadCountLimit)
+            {
+                if(!processingLimitReached)
+                {
+                    LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, bamRecordCount);
+                    processingLimitReached = true;
+                }
+
+                continue;
+            }
+
             boolean exonOverlap = mCurrentGene.getExonRegions().stream()
                     .anyMatch(x -> !(read.PosEnd < x.start() || read.PosStart > x.Region.end()));
 
@@ -131,20 +149,6 @@ public class RnaBamReader
                 else
                 {
                     checkIntronicRegions(read);
-                    ++bamRecordCount;
-                }
-
-                continue;
-            }
-
-            ++bamRecordCount;
-
-            if(mConfig.ReadCountLimit > 0 && bamRecordCount >= mConfig.ReadCountLimit)
-            {
-                if(!processingLimitReached)
-                {
-                    LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, bamRecordCount);
-                    processingLimitReached = true;
                 }
 
                 continue;
@@ -180,7 +184,7 @@ public class RnaBamReader
             mFragmentReads.clear();
         }
 
-        LOGGER.debug("gene({}) bamReadCount({})",mCurrentGene.GeneData.GeneName, bamRecordCount);
+        LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, bamRecordCount);
 
         mCurrentGene.setTotalReadCount(bamRecordCount);
     }
@@ -238,18 +242,39 @@ public class RnaBamReader
         }
 
         // finally record valid read info against each region now that it is known
-
-        // keep track of which regions have been allocated from this read
-        final Map<ReadRecord, List<RegionReadData>> markedReadRegions = Maps.newHashMap();
-        markedReadRegions.put(read1, Lists.newArrayList());
-        markedReadRegions.put(read2, Lists.newArrayList());
-
-        for(final String trans : validTranscripts)
+        if(!validTranscripts.isEmpty())
         {
-            mCurrentGene.addTranscriptReadMatch(trans);
+            // now record the bases covered by the read in these matched regions
+            final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
-            processValidTranscript(trans, read1, markedReadRegions);
-            processValidTranscript(trans, read2, markedReadRegions);
+            final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
+                    .filter(x -> validRegionMatchType(x.getValue()))
+                    .map(x -> x.getKey()).collect(Collectors.toList());
+
+            final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
+                    .filter(x -> validRegionMatchType(x.getValue()))
+                    .map(x -> x.getKey()).collect(Collectors.toList());
+
+            for(RegionReadData region : regions2)
+            {
+                if (!regions.contains(region))
+                    regions.add(region);
+            }
+
+            regions.forEach(x -> markRegionBases(commonMappings, x));
+
+            boolean isUniqueTrans = validTranscripts.size() == 1;
+
+            for (final String trans : validTranscripts)
+            {
+                mCurrentGene.addTranscriptReadMatch(trans, isUniqueTrans);
+
+                // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
+                final List<RegionReadData> processedRegions = Lists.newArrayList();
+
+                processValidTranscript(trans, read1, processedRegions, isUniqueTrans);
+                processValidTranscript(trans, read2, processedRegions, isUniqueTrans);
+            }
         }
 
         if(mConfig.WriteReadData)
@@ -260,25 +285,19 @@ public class RnaBamReader
     }
 
     private void processValidTranscript(
-            final String trans, final ReadRecord read, final Map<ReadRecord, List<RegionReadData>> markedReadRegions)
+            final String trans, final ReadRecord read, final List<RegionReadData> processedRegions, boolean isUniqueTrans)
     {
         List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
                 .filter(x -> x.getKey().hasTransId(trans))
                 .filter(x -> validRegionMatchType(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
-        List<RegionReadData> markedRegions = markedReadRegions.get(read);
-
         for(RegionReadData region : regions)
         {
-            // register a read against this valid transcript region
-            region.addTranscriptReadMatch(trans);
-
-            // now record the bases covered by the read in these matched regions
-            if (!markedRegions.contains(region))
+            if (!processedRegions.contains(region))
             {
-                read.markRegionBases(region);
-                markedRegions.add(region);
+                // register a read against this valid transcript region
+                region.addTranscriptReadMatch(trans, isUniqueTrans);
             }
         }
 
@@ -293,63 +312,24 @@ public class RnaBamReader
                 {
                     RegionReadData region2 = regions.get(r2);
 
+                    if(processedRegions.contains(region1) && processedRegions.contains(region2))
+                        continue;
+
                     if(region1.getPostRegions().contains(region2))
                     {
-                        region1.addTranscriptJunctionMatch(trans, SE_END);
-                        region2.addTranscriptJunctionMatch(trans, SE_START);
+                        region1.addTranscriptJunctionMatch(trans, SE_END, isUniqueTrans);
+                        region2.addTranscriptJunctionMatch(trans, SE_START, isUniqueTrans);
                     }
                     else if(region1.getPreRegions().contains(region2))
                     {
-                        region1.addTranscriptJunctionMatch(trans, SE_START);
-                        region2.addTranscriptJunctionMatch(trans, SE_END);
+                        region1.addTranscriptJunctionMatch(trans, SE_START, isUniqueTrans);
+                        region2.addTranscriptJunctionMatch(trans, SE_END, isUniqueTrans);
                     }
                 }
             }
         }
-    }
 
-    private void processingUnmatchedRead(@NotNull final ReadRecord read)
-    {
-        if(read.getMappedRegions().isEmpty()) // unpaired intronic reads will have nothing to do
-            return;
-
-        // these could be a read split over into another gene?
-        final Map<String,TransMatchType> firstReadTransTypes = read.getTranscriptClassifications();
-
-        final List<String> validTranscripts = read.getTranscriptClassifications().entrySet().stream()
-                .filter(x -> validTranscriptType(x.getValue()))
-                .map(x -> x.getKey()).collect(Collectors.toList());
-
-        // now mark all other transcripts which aren't valid either due to the read pair
-        if(!validTranscripts.isEmpty())
-        {
-            firstReadTransTypes.entrySet().stream()
-                    .filter(x -> validTranscriptType(x.getValue()))
-                    .filter(x -> !validTranscripts.contains(x.getKey()))
-                    .forEach(x -> x.setValue(OTHER_TRANS));
-        }
-        else
-        {
-            firstReadTransTypes.entrySet().stream()
-                    .filter(x -> validTranscriptType(x.getValue()))
-                    .forEach(x -> x.setValue(ALT));
-        }
-
-        // finally record valid read info against each region now that it is known
-        Map<ReadRecord, List<RegionReadData>> markedReadRegions = Maps.newHashMap();
-        markedReadRegions.put(read, Lists.newArrayList());
-
-        for(final String trans : validTranscripts)
-        {
-            mCurrentGene.addTranscriptReadMatch(trans);
-
-            processValidTranscript(trans, read, markedReadRegions);
-        }
-
-        if(mConfig.WriteReadData)
-        {
-            writeReadData(-1, read);
-        }
+        regions.forEach(x -> processedRegions.add(x));
     }
 
     public static boolean overlaps(final GenomeRegion region, final ReadRecord record)

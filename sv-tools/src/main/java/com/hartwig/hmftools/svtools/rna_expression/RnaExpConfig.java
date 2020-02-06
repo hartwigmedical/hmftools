@@ -56,7 +56,7 @@ public class RnaExpConfig
 
     public final List<String> SpecificTransIds;
 
-    public static final int MAX_READ_COUNT = 100000;
+    public static final int DEFAULT_MAX_READ_COUNT = 100000;
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 1000;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpConfig.class);
@@ -91,7 +91,7 @@ public class RnaExpConfig
             LOGGER.error("Reference file loading failed: {}", e.toString());
         }
 
-        ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(MAX_READ_COUNT)));
+        ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(DEFAULT_MAX_READ_COUNT)));
         MaxFragmentSize = Integer.parseInt(cmd.getOptionValue(MAX_FRAGMENT_SIZE, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
@@ -111,7 +111,7 @@ public class RnaExpConfig
         RefGenomeFile = null;
         RefFastaSeqFile = null;
         AllTranscripts = true;
-        ReadCountLimit = MAX_READ_COUNT;
+        ReadCountLimit = DEFAULT_MAX_READ_COUNT;
         GcBiasFile = "";
         MaxFragmentSize = DEFAULT_MAX_FRAGMENT_SIZE;
 

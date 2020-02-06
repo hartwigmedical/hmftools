@@ -341,11 +341,10 @@ public class ReadRecord
         return EXON_BOUNDARY;
     }
 
-    public void markRegionBases(final RegionReadData region)
+    public static void markRegionBases(final List<long[]> readCoords, final RegionReadData region)
     {
-        for(int i = 0; i < mMappedCoords.size(); ++i)
+        for(final long[] readSection : readCoords)
         {
-            final long[] readSection = mMappedCoords.get(i);
             long readStartPos = readSection[SE_START];
             long readEndPos = readSection[SE_END];
 
@@ -358,19 +357,17 @@ public class ReadRecord
 
             int[] regionBaseDepth = region.refBasesMatched();
 
-            if(regionBaseIndex + overlap >= regionBaseDepth.length)
+            if(regionBaseIndex + overlap > regionBaseDepth.length)
             {
-                LOGGER.error("read({}) region({}) coords({} -> {}) regionBaseIndex({}) overlap({})",
-                        this.toString(), region, readStartPos, readEndPos, regionBaseIndex, overlap);
+                LOGGER.error("region({}) read coords({} -> {}) regionBaseIndex({}) overlap({}) regionLength({})",
+                        region, readStartPos, readEndPos, regionBaseIndex, overlap, regionBaseDepth.length);
                 return;
             }
 
-            for(int j = regionBaseIndex; j <= overlap; ++j)
+            for(int j = regionBaseIndex; j < regionBaseIndex + overlap; ++j)
             {
                 ++regionBaseDepth[j];
             }
-
-            return;
         }
     }
 
