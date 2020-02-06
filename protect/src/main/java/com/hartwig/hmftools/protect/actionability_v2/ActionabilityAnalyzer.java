@@ -3,8 +3,7 @@ package com.hartwig.hmftools.protect.actionability_v2;
 import java.io.File;
 import java.io.IOException;
 
-import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.protect.actionability.cnv.CopyNumberEvidenceAnalyzer;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.protect.actionability_v2.fusion.FusionEvidenceAnalyzer;
 import com.hartwig.hmftools.protect.actionability_v2.fusion.FusionEvidenceAnalyzerFactory;
 import com.hartwig.hmftools.protect.actionability_v2.gene.GeneEvidenceAnalyzer;
@@ -20,11 +19,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class ActionabilityAnalyzer {
 
-    private static final String ACTIONABLE_FUSION_TSV = "actionableFusion.tsv";
-    private static final String ACTIONABLE_GENE_TSV = "actionableGene.tsv";
-    private static final String ACTIONABLE_RANGE_TSV = "actionableRange.tsv";
-    private static final String ACTIONABLE_SIGNATURE_TSV = "actionableSignature.tsv";
-    private static final String ACTIONABLE_VARIANT_TSV = "actionableVariant.tsv";
+    private static final String ACTIONABLE_FUSION_TSV = "actionableFusions.tsv";
+    private static final String ACTIONABLE_GENE_TSV = "actionableGenes.tsv";
+    private static final String ACTIONABLE_RANGE_TSV = "actionableRanges.tsv";
+    private static final String ACTIONABLE_SIGNATURE_TSV = "actionableSignatures.tsv";
+    private static final String ACTIONABLE_VARIANT_TSV = "actionableVariants.tsv";
 
     @NotNull
     private final FusionEvidenceAnalyzer fusionEvidenceAnalyzer;
@@ -59,5 +58,35 @@ public class ActionabilityAnalyzer {
         this.rangeEvidenceAnalyzer = actionableRange;
         this.signatureEvidenceAnalyzer = actionableSignature;
         this.variantEvidenceAnalyzer = actionableVariant;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public FusionEvidenceAnalyzer fusionEvidenceAnalyzer() {
+        return fusionEvidenceAnalyzer;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public GeneEvidenceAnalyzer geneEvidenceAnalyzer() {
+        return geneEvidenceAnalyzer;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    RangeEvidenceAnalyzer rangeEvidenceAnalyzer() {
+        return rangeEvidenceAnalyzer;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    SignatureEvidenceAnalyzer signatureEvidenceAnalyzer() {
+        return signatureEvidenceAnalyzer;
+    }
+
+    @NotNull
+    @VisibleForTesting
+    VariantEvidenceAnalyzer variantEvidenceAnalyzer() {
+        return variantEvidenceAnalyzer;
     }
 }
