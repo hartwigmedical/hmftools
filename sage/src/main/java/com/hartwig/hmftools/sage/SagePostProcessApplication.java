@@ -33,6 +33,7 @@ public class SagePostProcessApplication implements AutoCloseable {
     private static final String OUT_VCF = "out";
     private static final String ASSEMBLY = "assembly";
 
+
     public static void main(String[] args) throws IOException, ParseException {
         final Options options = createOptions();
         final CommandLine cmd = createCommandLine(args, options);
@@ -92,6 +93,7 @@ public class SagePostProcessApplication implements AutoCloseable {
         final Options options = new Options();
         options.addOption(IN_VCF, true, "Input file.");
         options.addOption(OUT_VCF, true, "Output file.");
+        options.addOption(ASSEMBLY, true, "Assembly. Must be one of [hg19, hg38]");
         return options;
     }
 
