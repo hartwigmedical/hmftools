@@ -93,7 +93,7 @@ public class RnaExpConfig
             LOGGER.error("Reference file loading failed: {}", e.toString());
         }
 
-        ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, String.valueOf(DEFAULT_MAX_READ_COUNT)));
+        ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
         MaxFragmentSize = Integer.parseInt(cmd.getOptionValue(MAX_FRAGMENT_SIZE, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);

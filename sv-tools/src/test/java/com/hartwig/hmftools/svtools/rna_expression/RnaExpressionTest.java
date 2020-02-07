@@ -2,6 +2,10 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
@@ -214,19 +218,49 @@ public class RnaExpressionTest
         RnaExpConfig config = new RnaExpConfig();
         RnaBamReader bamReader = new RnaBamReader(config);
 
-        GeneReadData geneReadData = createGeneReadData("GEN01", "1",(byte)1, 1000, 2000);
+        GeneReadData geneReadData = createGeneReadData("GEN01", "1",(byte)1, 1000, 5000);
 
         String trans1 = "TRANS01";
-        RegionReadData region1 = createRegion(trans1,1,"1", 1000, 1100);
+        RegionReadData region1 = createRegion(trans1,1,"1", 1000, 1200);
         geneReadData.addExonRegion(region1);
+        RegionReadData region2 = createRegion(trans1,1,"1", 2000, 2500);
+        geneReadData.addExonRegion(region2);
+        RegionReadData region3 = createRegion(trans1,1,"1", 4500, 5000);
+        geneReadData.addExonRegion(region3);
 
         ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 10, 0));
-        ReadRecord read2 = createReadRecord(1, "1", 1050, 1070, REF_BASE_STR_1, createCigar(0, 20, 0));
+        ReadRecord read2 = createReadRecord(1, "1", 1050, 1150, REF_BASE_STR_1, createCigar(0, 20, 0));
 
         List<ReadRecord> reads = Lists.newArrayList(read1, read2);
+        bamReader.processReadRecords(geneReadData, reads);
 
-        bamReader.addReadRecords(geneReadData, reads);
-        bamReader.analyseReads();
+        int[] geneCounts = geneReadData.getCounts();
+        assertEquals(1, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_READ_THROUGH]);
+
+        // exon to intronic read
+        read1 = createReadRecord(1, "1", 1300, 1350, REF_BASE_STR_1, createCigar(0, 50, 0));
+        read1.setFragmentInsertSize(1100);
+        read2 = createReadRecord(1, "1", 2300, 2400, REF_BASE_STR_1, createCigar(0, 100, 0));
+        read2.setFragmentInsertSize(-1100);
+
+        reads = Lists.newArrayList(read1, read2);
+        bamReader.processReadRecords(geneReadData, reads);
+
+        assertEquals(2, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_ALT]);
+
+        // fully intronic
+        read1 = createReadRecord(1, "1", 2600, 2650, REF_BASE_STR_1, createCigar(0, 50, 0));
+        read1.setFragmentInsertSize(300);
+        read2 = createReadRecord(1, "1", 2800, 2900, REF_BASE_STR_1, createCigar(0, 100, 0));
+        read2.setFragmentInsertSize(-300);
+
+        reads = Lists.newArrayList(read1, read2);
+        bamReader.processReadRecords(geneReadData, reads);
+
+        assertEquals(3, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_INTRONIC]);
     }
 
     private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)

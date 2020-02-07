@@ -114,7 +114,7 @@ public class GeneReadData
     }
 
     public final int[] getCounts() { return mFragmentCounts; }
-    public void addCount(int count, int type) { mFragmentCounts[type] += count; }
+    public void addCount(int type, int count) { mFragmentCounts[type] += count; }
 
     public static final int TRANS_COUNT = 0;
     public static final int UNIQUE_TRANS_COUNT = 1;

@@ -198,7 +198,11 @@ public class RnaExpression
                 geneData.Chromosome, minTransPos - mConfig.MaxFragmentSize, maxTransPos + mConfig.MaxFragmentSize);
 
         mRnaBamReader.readBamCounts(geneReadData, geneRegion);
-        mRnaBamReader.analyseReads();
+
+        mResultsWriter.writeGeneData(geneReadData);
+
+        if(mConfig.GeneStatsOnly)
+            return;
 
         // report evidence for each gene transcript
         for(final TranscriptData transData : transDataList)
@@ -230,9 +234,6 @@ public class RnaExpression
     private TranscriptResults calculateTranscriptResults(final GeneReadData geneReadData, final TranscriptData transData)
     {
         int exonsFound = 0;
-
-        int fragments = 0;
-        int uniqueFragments = 0;
 
         int sjFragments = 0;
         int sjUniqueFragments = 0;

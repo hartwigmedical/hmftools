@@ -16,6 +16,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
@@ -28,7 +29,8 @@ public class ResultsWriter
 
     private String mSampledId;
 
-    private BufferedWriter mWriter;
+    private BufferedWriter mGeneDataWriter;
+    private BufferedWriter mTransDataWriter;
     private BufferedWriter mExonDataWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
@@ -38,7 +40,8 @@ public class ResultsWriter
         mConfig = config;
         mSampledId = "";
 
-        mWriter = null;
+        mGeneDataWriter = null;
+        mTransDataWriter = null;
         mExonDataWriter = null;
     }
 
@@ -46,7 +49,8 @@ public class ResultsWriter
 
     public void close()
     {
-        closeBufferedWriter(mWriter);
+        closeBufferedWriter(mGeneDataWriter);
+        closeBufferedWriter(mTransDataWriter);
         closeBufferedWriter(mExonDataWriter);
     }
 
@@ -57,27 +61,29 @@ public class ResultsWriter
 
         try
         {
-            if(mWriter == null)
+            if(mGeneDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_GENE_EXPRESSION.csv";
+                final String outputFileName = mConfig.OutputDir + "RNA_EXP_GENE_DATA.csv";
 
-                mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("SampleId,GeneId,GeneName,TransCount");
-                mWriter.write(",SupportingFragments,IntronicFragment,AltFragents,ReadThroughFragment");
-                mWriter.newLine();
+                mGeneDataWriter = createBufferedWriter(outputFileName, false);
+                mGeneDataWriter.write("SampleId,GeneId,GeneName,Chromosome,GeneLength,TransCount");
+                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Intronic,ReadThrough");
+                mGeneDataWriter.newLine();
             }
 
-            mWriter.write(String.format("%s,%s,%s,%d",
-                    mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
-                    geneReadData.getTranscripts().size()));
+            final EnsemblGeneData geneData = geneReadData.GeneData;
+
+            mGeneDataWriter.write(String.format("%s,%s,%s,%s,%d,%d",
+                    mSampledId, geneData.GeneId, geneData.GeneName, geneData.Chromosome,
+                    geneData.GeneEnd - geneData.GeneStart, geneReadData.getTranscripts().size()));
 
             final int[] fragmentCounts = geneReadData.getCounts();
 
-            mWriter.write(String.format(",%d,%d,%d,%s,%d",
+            mGeneDataWriter.write(String.format(",%d,%d,%d,%d,%d",
                     fragmentCounts[GC_TOTAL], fragmentCounts[GC_TRANS_SUPPORTING], fragmentCounts[GC_ALT],
                     fragmentCounts[GC_INTRONIC], fragmentCounts[GC_READ_THROUGH]));
 
-            mWriter.newLine();
+            mGeneDataWriter.newLine();
 
         }
         catch(IOException e)
@@ -93,31 +99,31 @@ public class ResultsWriter
 
         try
         {
-            if(mWriter == null)
+            if(mTransDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_GENE_EXPRESSION.csv";
+                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_DATA.csv";
 
-                mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
-                mWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,Fragments,UniqueFragments");
-                mWriter.write(",SpliceJuncSupported,SpliceJuncFragments,UniqueSpliceJuncFragments");
-                mWriter.newLine();
+                mTransDataWriter = createBufferedWriter(outputFileName, false);
+                mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
+                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,Fragments,UniqueFragments");
+                mTransDataWriter.write(",SpliceJuncSupported,SpliceJuncFragments,UniqueSpliceJuncFragments");
+                mTransDataWriter.newLine();
             }
 
             final TranscriptData transData = transResults.trans();
 
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%d",
+            mTransDataWriter.write(String.format("%s,%s,%s,%s,%s,%d",
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, transData.IsCanonical, transData.exons().size()));
 
-            mWriter.write(String.format(",%d,%d,%d",
+            mTransDataWriter.write(String.format(",%d,%d,%d",
                     transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage()));
 
-            mWriter.write(String.format(",%d,%d,%d,%d,%d",
+            mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d",
                     transResults.supportingFragments(), transResults.uniqueFragments(), transResults.spliceJunctionsSupported(),
                     transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
 
-            mWriter.newLine();
+            mTransDataWriter.newLine();
 
         }
         catch(IOException e)
@@ -135,7 +141,7 @@ public class ResultsWriter
         {
             if(mExonDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXON_EXPRESSION.csv";
+                final String outputFileName = mConfig.OutputDir + "RNA_EXP_EXON_DATA.csv";
 
                 mExonDataWriter = createBufferedWriter(outputFileName, false);
                 mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd");
