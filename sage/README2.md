@@ -257,3 +257,22 @@ hard_min_tumor_qual_vcf | 30 | `QUAL`
 hard_max_normal_alt_support |2| Normal `AD[1]`
 
 Including the `hard_filter` flag will turn all the [soft filters](#4-soft-filters) described above into (lazily applied) hard filters. Again, hotspots are excluded from these filters.
+
+
+# Performance Characteristics
+Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
+
+
+Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---
+8 | 87 | 682 | 91
+16 | 52 | 795 | 100 
+24 | 40 | 850 | 106 
+32 | 34 | 930 | 110
+48 | 33 | 1286 | 109
+64 | 33 | 1680 | 110
+72 | 32 | 1857 | 115
+
