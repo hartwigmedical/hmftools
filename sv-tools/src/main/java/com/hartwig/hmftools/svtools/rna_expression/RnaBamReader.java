@@ -32,7 +32,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

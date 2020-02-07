@@ -24,10 +24,19 @@ public class GeneReadData
     private final List<RegionReadData> mIntronRegions;
     private final List<Integer> mFragmentLengths;
 
+    private final List<TranscriptData> mTranscripts;
+
     // summary results
-    private int mTotalReadCount;
     private final Map<String,int[]> mTranscriptReadCounts; // count of fragments supporting the transcript, and whether unique
     private final List<TranscriptResults> mTranscriptResults;
+
+    private final int[] mFragmentCounts;
+
+    public static final int GC_TOTAL = 0;
+    public static final int GC_TRANS_SUPPORTING = 1;
+    public static final int GC_ALT = 2;
+    public static final int GC_INTRONIC = 3;
+    public static final int GC_READ_THROUGH = 4;
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
@@ -36,11 +45,15 @@ public class GeneReadData
         mExonRegions = Lists.newArrayList();
         mIntronRegions = Lists.newArrayList();
         mFragmentLengths = Lists.newArrayList();
+        mTranscripts = Lists.newArrayList();
 
         mTranscriptResults = Lists.newArrayList();
-        mTotalReadCount = 0;
+        mFragmentCounts = new int[GC_READ_THROUGH+1];
         mTranscriptReadCounts = Maps.newHashMap();
     }
+
+    public final List<TranscriptData> getTranscripts() { return mTranscripts; }
+    public void setTranscripts(final List<TranscriptData> transDataList) { mTranscripts.addAll(transDataList); }
 
     public final List<RegionReadData> getExonRegions() { return mExonRegions; }
 
@@ -100,8 +113,8 @@ public class GeneReadData
         return intronRegions.stream().mapToInt(x -> x.matchedReadCount(INTRONIC)).sum();
     }
 
-    public int totalReadCount() { return mTotalReadCount; }
-    public void setTotalReadCount(int count) { mTotalReadCount = count; }
+    public final int[] getCounts() { return mFragmentCounts; }
+    public void addCount(int count, int type) { mFragmentCounts[type] += count; }
 
     public static final int TRANS_COUNT = 0;
     public static final int UNIQUE_TRANS_COUNT = 1;

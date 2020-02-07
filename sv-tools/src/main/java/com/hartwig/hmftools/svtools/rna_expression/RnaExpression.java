@@ -3,9 +3,6 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
@@ -14,8 +11,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRAN
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,12 +40,10 @@ public class RnaExpression
     private final RnaExpConfig mConfig;
     private final String mSampledId;
     private final RnaBamReader mRnaBamReader;
+    private final ResultsWriter mResultsWriter;
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final Map<Integer,Integer> mFragmentLengths;
-
-    private BufferedWriter mWriter;
-    private BufferedWriter mExonDataWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
@@ -62,6 +55,8 @@ public class RnaExpression
         mGcBiasAdjuster = new GcBiasAdjuster(mConfig);
 
         mSampledId = cmd.getOptionValue(SAMPLE);
+        mResultsWriter = new ResultsWriter(mConfig);
+        mResultsWriter.setSampleId(mSampledId);
 
         mGeneTransCache = new SvGeneTranscriptCollection();
         mGeneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
@@ -75,9 +70,6 @@ public class RnaExpression
         mGeneTransCache.loadEnsemblData(false);
 
         mFragmentLengths = Maps.newHashMap();
-
-        mWriter = null;
-        mExonDataWriter = null;
     }
 
     public void runAnalysis()
@@ -120,8 +112,7 @@ public class RnaExpression
             }
         }
 
-        closeBufferedWriter(mWriter);
-        closeBufferedWriter(mExonDataWriter);
+        mResultsWriter.close();
         mRnaBamReader.close();
     }
 
@@ -136,6 +127,8 @@ public class RnaExpression
             LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
             return;
         }
+
+        geneReadData.setTranscripts(transDataList);
 
         if(!mConfig.SpecificTransIds.isEmpty())
             transDataList = transDataList.stream().filter(x -> mConfig.SpecificTransIds.contains(x.TransName)).collect(Collectors.toList());
@@ -212,11 +205,11 @@ public class RnaExpression
         {
             final TranscriptResults results = calculateTranscriptResults(geneReadData, transData);
             geneReadData.getTranscriptResults().add(results);
-            writeResults(geneReadData, results);
+            mResultsWriter.writeTranscriptResults(geneReadData, results);
 
             if(mConfig.WriteExonData)
             {
-                writeExonData(geneReadData, transData);
+                mResultsWriter.writeExonData(geneReadData, transData);
             }
 
             for(Integer fragmentLength : geneReadData.getFragmentLengths())
@@ -309,104 +302,6 @@ public class RnaExpression
                 .build();
 
         return results;
-    }
-
-    private void writeResults(final GeneReadData geneReadData, final TranscriptResults transResults)
-    {
-        if(mConfig.OutputDir.isEmpty())
-            return;
-
-        try
-        {
-            if(mWriter == null)
-            {
-                final String outputFileName = mConfig.OutputDir + "RNA_GENE_EXPRESSION.csv";
-
-                mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
-                mWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,Fragments,UniqueFragments");
-                mWriter.write(",SpliceJuncSupported,SpliceJuncFragments,UniqueSpliceJuncFragments");
-                mWriter.newLine();
-            }
-
-            final TranscriptData transData = transResults.trans();
-
-            mWriter.write(String.format("%s,%s,%s,%s,%s,%d",
-                    mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
-                    transData.TransName, transData.IsCanonical, transData.exons().size()));
-
-            mWriter.write(String.format(",%d,%d,%d",
-                    transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage()));
-
-            mWriter.write(String.format(",%d,%d,%d,%d,%d",
-                    transResults.supportingFragments(), transResults.uniqueFragments(), transResults.spliceJunctionsSupported(),
-                    transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
-
-            mWriter.newLine();
-
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write gene expression file: {}", e.toString());
-        }
-    }
-
-    private void writeExonData(final GeneReadData geneReadData, final TranscriptData transData)
-    {
-        if(mConfig.OutputDir.isEmpty())
-            return;
-
-        try
-        {
-            if(mExonDataWriter == null)
-            {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXON_EXPRESSION.csv";
-
-                mExonDataWriter = createBufferedWriter(outputFileName, false);
-                mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd");
-                mExonDataWriter.write(",TotalCoverage,AvgDepth,Fragments,UniqueFragments");
-                mExonDataWriter.write(",SpliceJuncStart,SpliceJuncEnd,UniqueSpliceJuncStart,UniqueSpliceJuncEnd");
-                mExonDataWriter.newLine();
-            }
-
-            final List<ExonData> exons = transData.exons();
-
-            for(int i = 0; i < exons.size(); ++i)
-            {
-                ExonData exon = exons.get(i);
-
-                final RegionReadData exonReadData = geneReadData.findExonRegion(exon.ExonStart, exon.ExonEnd);
-                if (exonReadData == null)
-                    continue;
-
-                mExonDataWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d",
-                        mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
-                        transData.TransName, exon.ExonRank, exon.ExonStart, exon.ExonEnd));
-
-                int[] matchCounts = exonReadData.getTranscriptReadCount(transData.TransName);
-                int[] startSjCounts = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START);
-                int[] endSjCounts = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_END);
-
-                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d,%d,%d,%d",
-                        exonReadData.baseCoverage(1), exonReadData.averageDepth(),
-                        matchCounts[TRANS_COUNT], matchCounts[UNIQUE_TRANS_COUNT],
-                        startSjCounts[TRANS_COUNT], endSjCounts[TRANS_COUNT],
-                        startSjCounts[UNIQUE_TRANS_COUNT], endSjCounts[UNIQUE_TRANS_COUNT]));
-
-                /* match types are not recorded per transcript
-                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d,%d,%d",
-                        exonReadData.matchedReadCount(MATCH_TYPE_WITHIN_EXON),
-                        exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY) + exonReadData.matchedReadCount(MATCH_TYPE_EXON_MATCH),
-                        exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED));
-                 */
-
-                mExonDataWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write exon expression file: {}", e.toString());
-        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

@@ -31,6 +31,7 @@ public class RnaExpConfig
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
     private static final String WRITE_READ_DATA = "write_read_data";
+    private static final String GENE_STATS_ONLY = "gene_stats_only";
 
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
@@ -53,6 +54,7 @@ public class RnaExpConfig
     public boolean WriteExonData;
     public boolean WriteReadData;
     public boolean WriteFragmentLengths;
+    public boolean GeneStatsOnly;
 
     public final List<String> SpecificTransIds;
 
@@ -97,6 +99,7 @@ public class RnaExpConfig
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
+        GeneStatsOnly = cmd.hasOption(GENE_STATS_ONLY);
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
@@ -118,6 +121,7 @@ public class RnaExpConfig
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
+        GeneStatsOnly = false;
         SpecificTransIds = Lists.newArrayList();
     }
 
@@ -146,6 +150,7 @@ public class RnaExpConfig
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
+        options.addOption(GENE_STATS_ONLY, false, "Skip all processing except gene summary data");
         options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
