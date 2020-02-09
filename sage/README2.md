@@ -286,6 +286,7 @@ Peak memory is measure in gigabytes.
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
+1 | 622 | 640 | 58
 8 | 87 | 682 | 91
 16 | 52 | 795 | 100 
 24 | 40 | 850 | 106 
