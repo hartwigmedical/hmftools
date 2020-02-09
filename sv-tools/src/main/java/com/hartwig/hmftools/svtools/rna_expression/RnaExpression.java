@@ -103,14 +103,7 @@ public class RnaExpression
         }
 
         if(mConfig.WriteFragmentLengths && !mFragmentLengths.isEmpty())
-        {
-            LOGGER.info("fragment sizes:");
-
-            for (Map.Entry<Integer, Integer> entry : mFragmentLengths.entrySet())
-            {
-                LOGGER.info("FRAG_SIZE: {},{}", entry.getKey(), entry.getValue());
-            }
-        }
+            mResultsWriter.writeFragmentLengths(mFragmentLengths);
 
         mResultsWriter.close();
         mRnaBamReader.close();
@@ -209,6 +202,7 @@ public class RnaExpression
         {
             final TranscriptResults results = calculateTranscriptResults(geneReadData, transData);
             geneReadData.getTranscriptResults().add(results);
+
             mResultsWriter.writeTranscriptResults(geneReadData, results);
 
             if(mConfig.WriteExonData)

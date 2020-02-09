@@ -261,6 +261,17 @@ public class RnaExpressionTest
 
         assertEquals(3, geneCounts[GC_TOTAL]);
         assertEquals(1, geneCounts[GC_INTRONIC]);
+
+        // both reads outside the gene
+        read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        read1.setFragmentInsertSize(400);
+        read2 = createReadRecord(1, "1", 400, 500, REF_BASE_STR_1, createCigar(0, 100, 0));
+        read2.setFragmentInsertSize(-300);
+
+        reads = Lists.newArrayList(read1, read2);
+        bamReader.processReadRecords(geneReadData, reads);
+
+        assertEquals(3, geneCounts[GC_TOTAL]);
     }
 
     private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)

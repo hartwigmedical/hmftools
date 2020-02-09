@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TR
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
@@ -188,6 +189,31 @@ public class ResultsWriter
         {
             LOGGER.error("failed to write exon expression file: {}", e.toString());
         }
+    }
+
+    public void writeFragmentLengths(final Map<Integer, Integer> fragmentLengths)
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
+
+        try
+        {
+            final String outputFileName = mConfig.OutputDir + "RNA_EXP_FRAG_LENGTHS.csv";
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("FragmentLength,Count");
+            writer.newLine();
+
+            for (Map.Entry<Integer, Integer> entry : fragmentLengths.entrySet())
+            {
+                writer.write(String.format("%d,%d", entry.getKey(), entry.getValue()));
+                writer.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write fragment length file: {}", e.toString());
+        }
+
     }
 
 }

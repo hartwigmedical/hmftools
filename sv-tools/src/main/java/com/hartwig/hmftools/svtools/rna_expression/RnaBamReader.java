@@ -89,7 +89,13 @@ public class RnaBamReader
     }
 
     public boolean validReader() { return mSamReader != null; }
-    public void close() { closeBufferedWriter(mWriter); }
+
+    public void close()
+    {
+        LOGGER.info("read {} total BAM reads", mTotalBamReadCount);
+
+        closeBufferedWriter(mWriter);
+    }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
@@ -150,7 +156,7 @@ public class RnaBamReader
 
         if(mGeneReadCount > 0 && (mGeneReadCount % 100000) == 0)
         {
-            LOGGER.info("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+            LOGGER.debug("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
         }
 
         if(mConfig.ReadCountLimit > 0 && mGeneReadCount >= mConfig.ReadCountLimit)
@@ -208,6 +214,12 @@ public class RnaBamReader
                 -
         */
 
+        boolean r1OutsideGene = read1.PosStart > mCurrentGene.GeneData.GeneEnd || read1.PosEnd < mCurrentGene.GeneData.GeneStart;
+        boolean r2OutsideGene = read2.PosStart > mCurrentGene.GeneData.GeneEnd || read2.PosEnd < mCurrentGene.GeneData.GeneStart;
+
+        if(r1OutsideGene && r2OutsideGene)
+            return;
+
         mCurrentGene.addCount(GC_TOTAL, 1);
 
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
@@ -250,10 +262,8 @@ public class RnaBamReader
                     .filter(x -> validTranscriptType(x.getValue()))
                     .forEach(x -> x.setValue(ALT));
 
-            boolean outsideGene = read1.PosStart > mCurrentGene.GeneData.GeneEnd || read1.PosEnd < mCurrentGene.GeneData.GeneStart
-                    || read2.PosStart > mCurrentGene.GeneData.GeneEnd || read2.PosEnd < mCurrentGene.GeneData.GeneStart;
 
-            if(outsideGene)
+            if(r1OutsideGene || r2OutsideGene)
                 mCurrentGene.addCount(GC_READ_THROUGH, 1);
             else
                 mCurrentGene.addCount(GC_ALT, 1);
