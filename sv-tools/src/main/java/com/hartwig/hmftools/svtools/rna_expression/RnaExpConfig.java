@@ -37,7 +37,8 @@ public class RnaExpConfig
     public static final String BAM_FILE = "bam_file";
     public static final String GC_BIAS_FILE = "gcbias_file";
     public static final String READ_COUNT_LIMIT = "read_count_limit";
-    public static final String MAX_FRAGMENT_SIZE = "max_frag_size";
+    public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
+    public static final String KEEP_DUPLICATES = "keep_dups";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
@@ -49,7 +50,8 @@ public class RnaExpConfig
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
-    public final int MaxFragmentSize;
+    public final int LongFragmentLimit;
+    public final boolean KeepDuplicates; // currently SAMSlicer enforces dropping of duplicates so this config cannot be applied
 
     public boolean WriteExonData;
     public boolean WriteReadData;
@@ -60,6 +62,8 @@ public class RnaExpConfig
 
     public static final int DEFAULT_MAX_READ_COUNT = 100000;
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 1000;
+
+    public static final int GENE_FRAGMENT_BUFFER = 1000; // width around a gene within which to search for reads
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpConfig.class);
 
@@ -94,7 +98,8 @@ public class RnaExpConfig
         }
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
-        MaxFragmentSize = Integer.parseInt(cmd.getOptionValue(MAX_FRAGMENT_SIZE, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
+        LongFragmentLimit = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
+        KeepDuplicates = cmd.hasOption(KEEP_DUPLICATES);
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
@@ -116,7 +121,8 @@ public class RnaExpConfig
         AllTranscripts = true;
         ReadCountLimit = DEFAULT_MAX_READ_COUNT;
         GcBiasFile = "";
-        MaxFragmentSize = DEFAULT_MAX_FRAGMENT_SIZE;
+        LongFragmentLimit = DEFAULT_MAX_FRAGMENT_SIZE;
+        KeepDuplicates = false;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -146,7 +152,8 @@ public class RnaExpConfig
         options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
         options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(REF_GENOME, true, "Ref genome file location");
-        options.addOption(MAX_FRAGMENT_SIZE, true, "Max RNA fragment size");
+        options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
+        options.addOption(KEEP_DUPLICATES, false, "Process duplicate reads (if marked as such eg by picard)");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");

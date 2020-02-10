@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
@@ -188,37 +189,40 @@ public class RnaExpression
 
         // use a buffer around the gene to pick up reads which span outside its transcripts
         GenomeRegion geneRegion = GenomeRegions.create(
-                geneData.Chromosome, minTransPos - mConfig.MaxFragmentSize, maxTransPos + mConfig.MaxFragmentSize);
+                geneData.Chromosome, minTransPos - GENE_FRAGMENT_BUFFER, maxTransPos + GENE_FRAGMENT_BUFFER);
 
         mRnaBamReader.readBamCounts(geneReadData, geneRegion);
 
         mResultsWriter.writeGeneData(geneReadData);
 
-        if(mConfig.GeneStatsOnly)
-            return;
-
-        // report evidence for each gene transcript
-        for(final TranscriptData transData : transDataList)
+        if(mConfig.WriteFragmentLengths)
         {
-            final TranscriptResults results = calculateTranscriptResults(geneReadData, transData);
-            geneReadData.getTranscriptResults().add(results);
-
-            mResultsWriter.writeTranscriptResults(geneReadData, results);
-
-            if(mConfig.WriteExonData)
-            {
-                mResultsWriter.writeExonData(geneReadData, transData);
-            }
-
-            for(Integer fragmentLength : geneReadData.getFragmentLengths())
+            for (Integer fragmentLength : geneReadData.getFragmentLengths())
             {
                 fragmentLength = min(fragmentLength, 5000); // to prevent map blowing out in size
 
                 Integer count = mFragmentLengths.get(fragmentLength);
-                if(count == null)
+                if (count == null)
                     mFragmentLengths.put(fragmentLength, 1);
                 else
                     mFragmentLengths.put(fragmentLength, count + 1);
+            }
+        }
+
+        if(!mConfig.GeneStatsOnly)
+        {
+            // report evidence for each gene transcript
+            for (final TranscriptData transData : transDataList)
+            {
+                final TranscriptResults results = calculateTranscriptResults(geneReadData, transData);
+                geneReadData.getTranscriptResults().add(results);
+
+                mResultsWriter.writeTranscriptResults(geneReadData, results);
+
+                if (mConfig.WriteExonData)
+                {
+                    mResultsWriter.writeExonData(geneReadData, transData);
+                }
             }
         }
 

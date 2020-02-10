@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -92,7 +91,7 @@ public class RnaBamReader
 
     public void close()
     {
-        LOGGER.info("read {} total BAM reads", mTotalBamReadCount);
+        LOGGER.info("read {} total BAM records", mTotalBamReadCount);
 
         closeBufferedWriter(mWriter);
     }
@@ -144,7 +143,10 @@ public class RnaBamReader
         ++mGeneReadCount;
 
         if(mConfig.GeneStatsOnly)
+        {
+            recordFragmentLength(record);
             return;
+        }
 
         processRead(ReadRecord.from(record));
     }
@@ -439,14 +441,7 @@ public class RnaBamReader
             }
         }
 
-        if(mConfig.WriteFragmentLengths)
-        {
-            int fragmentSize = read.fragmentInsertSize();
-            if (fragmentSize > 0 && read.sameChromosomeMate())
-            {
-                mCurrentGene.addFragmentLength(fragmentSize);
-            }
-        }
+        recordFragmentLength(read.samRecord());
     }
 
     private boolean checkFragmentRead(ReadRecord read)
@@ -472,6 +467,22 @@ public class RnaBamReader
 
         mFragmentReads.put(read.Id, read);
         return false;
+    }
+
+    private void recordFragmentLength(SAMRecord record)
+    {
+        if(!mConfig.WriteFragmentLengths || record == null)
+            return;
+
+        if(!record.getMateReferenceName().equals(record.getReferenceName())
+        || record.getMateNegativeStrandFlag() != record.getReadNegativeStrandFlag())
+            return;
+
+        int fragmentSize = record.getInferredInsertSize();
+        if (fragmentSize > 0)
+        {
+            mCurrentGene.addFragmentLength(fragmentSize);
+        }
     }
 
     private void writeReadData(int readIndex, final ReadRecord read)
