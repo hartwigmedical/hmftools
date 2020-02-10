@@ -214,6 +214,8 @@ public class ResultsWriter
                 writer.write(String.format("%d,%d", entry.getKey(), entry.getValue()));
                 writer.newLine();
             }
+
+            closeBufferedWriter(writer);
         }
         catch(IOException e)
         {

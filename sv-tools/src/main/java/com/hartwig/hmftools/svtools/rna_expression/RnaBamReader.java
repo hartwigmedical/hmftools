@@ -161,13 +161,43 @@ public class RnaBamReader
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
+        recordFragmentLength(record);
+
         if(mConfig.GeneStatsOnly)
-        {
-            recordFragmentLength(record);
             return;
-        }
 
         processRead(ReadRecord.from(record));
+    }
+
+    private void recordFragmentLength(SAMRecord record)
+    {
+        if(!mConfig.WriteFragmentLengths)
+            return;
+
+        if(!record.getFirstOfPairFlag())
+            return;
+
+        // ignore translocations and inversions
+        if(!record.getMateReferenceName().equals(record.getReferenceName()) || record.getMateNegativeStrandFlag() == record.getReadNegativeStrandFlag())
+            return;
+
+        // ignore split or unmapped reads
+        if(record.getCigar() == null || record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
+            return;
+
+        long posStart = record.getStart();
+        long posEnd = record.getEnd();
+
+        // no part of the read can overlap with any exon
+        if(mCurrentGene.getExonRegions().stream().anyMatch(x -> !(posStart > x.end() || posEnd < x.start())))
+            return;
+
+        int fragmentSize = record.getInferredInsertSize();
+
+        if (fragmentSize > 0)
+        {
+            mCurrentGene.addFragmentLength(fragmentSize);
+        }
     }
 
     public void processRead(ReadRecord read)
@@ -239,7 +269,6 @@ public class RnaBamReader
             - not supporting a transcript
                 - both reads touch the same exon if there is a gap in the reads
                 - one read in an intron -> UNSPLICED
-                -
         */
 
         boolean r1OutsideGene = read1.PosStart > mCurrentGene.GeneData.GeneEnd || read1.PosEnd < mCurrentGene.GeneData.GeneStart;
@@ -459,6 +488,7 @@ public class RnaBamReader
         if(read.Cigar.containsOperator(CigarOperator.N) || !read.Cigar.containsOperator(CigarOperator.M))
             return;
 
+        /* unused for now
         RegionReadData intronReadData = mCurrentGene.getIntronRegions().stream()
                 .filter(x -> read.PosStart >= x.Region.start() && read.PosEnd <= x.Region.end())
                 .findFirst().orElse(null);
@@ -471,6 +501,7 @@ public class RnaBamReader
                 intronReadData.addMatchedRead(INTRONIC);
             }
         }
+        */
 
         // process the fragment if both reads are now available, and implies one of the reads covers an exon
         if(mFragmentReads.containsKey(read.Id))
@@ -515,8 +546,6 @@ public class RnaBamReader
                 mDiscardedReads.add(read.Id);
             }
         }
-
-        recordFragmentLength(read.samRecord());
     }
 
     private boolean checkFragmentRead(ReadRecord read)
@@ -542,22 +571,6 @@ public class RnaBamReader
 
         mFragmentReads.put(read.Id, read);
         return false;
-    }
-
-    private void recordFragmentLength(SAMRecord record)
-    {
-        if(!mConfig.WriteFragmentLengths || record == null)
-            return;
-
-        if(!record.getMateReferenceName().equals(record.getReferenceName())
-        || record.getMateNegativeStrandFlag() != record.getReadNegativeStrandFlag())
-            return;
-
-        int fragmentSize = record.getInferredInsertSize();
-        if (fragmentSize > 0)
-        {
-            mCurrentGene.addFragmentLength(fragmentSize);
-        }
     }
 
     private void writeReadData(int readIndex, final ReadRecord read)
