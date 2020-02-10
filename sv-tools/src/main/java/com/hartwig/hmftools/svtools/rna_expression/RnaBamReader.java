@@ -58,6 +58,8 @@ public class RnaBamReader
     private final RnaExpConfig mConfig;
     private final SamReader mSamReader;
 
+    private FragmentSizeCalcs mFragmentSizeCalcs;
+
     // state relating to the current gene
     private GeneReadData mCurrentGene;
     private final List<String> mDiscardedReads;
@@ -96,6 +98,8 @@ public class RnaBamReader
     }
 
     public boolean validReader() { return mSamReader != null; }
+
+    public void setFragmentSizeCalcs(final FragmentSizeCalcs calcs) { mFragmentSizeCalcs = calcs; }
 
     public void close()
     {
@@ -167,37 +171,6 @@ public class RnaBamReader
             return;
 
         processRead(ReadRecord.from(record));
-    }
-
-    private void recordFragmentLength(SAMRecord record)
-    {
-        if(!mConfig.WriteFragmentLengths)
-            return;
-
-        if(!record.getFirstOfPairFlag())
-            return;
-
-        // ignore translocations and inversions
-        if(!record.getMateReferenceName().equals(record.getReferenceName()) || record.getMateNegativeStrandFlag() == record.getReadNegativeStrandFlag())
-            return;
-
-        // ignore split or unmapped reads
-        if(record.getCigar() == null || record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
-            return;
-
-        long posStart = record.getStart();
-        long posEnd = record.getEnd();
-
-        // no part of the read can overlap with any exon
-        if(mCurrentGene.getExonRegions().stream().anyMatch(x -> !(posStart > x.end() || posEnd < x.start())))
-            return;
-
-        int fragmentSize = record.getInferredInsertSize();
-
-        if (fragmentSize > 0)
-        {
-            mCurrentGene.addFragmentLength(fragmentSize);
-        }
     }
 
     public void processRead(ReadRecord read)
@@ -571,6 +544,12 @@ public class RnaBamReader
 
         mFragmentReads.put(read.Id, read);
         return false;
+    }
+
+    private void recordFragmentLength(final SAMRecord record)
+    {
+        if(mFragmentSizeCalcs != null && mFragmentSizeCalcs.enabled())
+            mFragmentSizeCalcs.recordFragmentLength(record, mCurrentGene);
     }
 
     private void writeReadData(int readIndex, final ReadRecord read)

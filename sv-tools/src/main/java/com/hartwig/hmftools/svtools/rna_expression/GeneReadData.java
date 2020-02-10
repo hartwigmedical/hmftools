@@ -23,7 +23,6 @@ public class GeneReadData
 
     private final List<RegionReadData> mExonRegions;
     private final List<RegionReadData> mIntronRegions;
-    private final List<Integer> mFragmentLengths;
 
     private final List<TranscriptData> mTranscripts;
 
@@ -52,7 +51,6 @@ public class GeneReadData
 
         mExonRegions = Lists.newArrayList();
         mIntronRegions = Lists.newArrayList();
-        mFragmentLengths = Lists.newArrayList();
         mTranscripts = Lists.newArrayList();
 
         mTranscriptResults = Lists.newArrayList();
@@ -149,9 +147,6 @@ public class GeneReadData
 
         ++counts[type][TRANS_COUNT];
     }
-
-    public List<Integer> getFragmentLengths() { return mFragmentLengths; }
-    public void addFragmentLength(int length) { mFragmentLengths.add(length); }
 
     public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
 

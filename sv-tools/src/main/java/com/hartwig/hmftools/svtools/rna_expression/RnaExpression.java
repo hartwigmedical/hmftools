@@ -47,7 +47,7 @@ public class RnaExpression
     private final ResultsWriter mResultsWriter;
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
-    private final Map<Integer,Integer> mFragmentLengths;
+    private final FragmentSizeCalcs mFragmentSizeCalcs;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
@@ -73,7 +73,8 @@ public class RnaExpression
         mGeneTransCache.setRequiredData(true, false, false, !mConfig.AllTranscripts);
         mGeneTransCache.loadEnsemblData(false);
 
-        mFragmentLengths = Maps.newHashMap();
+        mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mRnaBamReader);
+        mRnaBamReader.setFragmentSizeCalcs(mFragmentSizeCalcs);
     }
 
     public void runAnalysis()
@@ -89,6 +90,9 @@ public class RnaExpression
             mGcBiasAdjuster.loadData();
             mGcBiasAdjuster.generateDepthCounts(mRnaBamReader, mGeneTransCache.getChrGeneDataMap());
         }
+
+        if(mConfig.FragmentLengthSampling)
+            mFragmentSizeCalcs.calcSampleFragmentSize();
 
         // measure read counts of exonic regions for all specific genes
         int geneCount = 0;
@@ -106,8 +110,8 @@ public class RnaExpression
             }
         }
 
-        if(mConfig.WriteFragmentLengths && !mFragmentLengths.isEmpty())
-            mResultsWriter.writeFragmentLengths(mFragmentLengths);
+        if(mConfig.WriteFragmentLengths)
+            mResultsWriter.writeFragmentLengths(mFragmentSizeCalcs.getFragmentLengths());
 
         mResultsWriter.close();
         mRnaBamReader.close();
@@ -197,20 +201,6 @@ public class RnaExpression
         mRnaBamReader.readBamCounts(geneReadData, geneRegion);
 
         mResultsWriter.writeGeneData(geneReadData);
-
-        if(mConfig.WriteFragmentLengths)
-        {
-            for (Integer fragmentLength : geneReadData.getFragmentLengths())
-            {
-                fragmentLength = min(fragmentLength, 5000); // to prevent map blowing out in size
-
-                Integer count = mFragmentLengths.get(fragmentLength);
-                if (count == null)
-                    mFragmentLengths.put(fragmentLength, 1);
-                else
-                    mFragmentLengths.put(fragmentLength, count + 1);
-            }
-        }
 
         if(!mConfig.GeneStatsOnly)
         {

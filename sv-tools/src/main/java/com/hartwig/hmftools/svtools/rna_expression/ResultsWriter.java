@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentSizeCalcs.FL_LENGTH;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentSizeCalcs.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_DUPLICATES;
@@ -17,7 +19,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TR
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
@@ -197,9 +198,9 @@ public class ResultsWriter
         }
     }
 
-    public void writeFragmentLengths(final Map<Integer, Integer> fragmentLengths)
+    public void writeFragmentLengths(final List<int[]> fragmentLengths)
     {
-        if(mConfig.OutputDir.isEmpty())
+        if(mConfig.OutputDir.isEmpty() || fragmentLengths.isEmpty())
             return;
 
         try
@@ -209,9 +210,9 @@ public class ResultsWriter
             writer.write("FragmentLength,Count");
             writer.newLine();
 
-            for (Map.Entry<Integer, Integer> entry : fragmentLengths.entrySet())
+            for (final int[] fragLengthCount : fragmentLengths)
             {
-                writer.write(String.format("%d,%d", entry.getKey(), entry.getValue()));
+                writer.write(String.format("%d,%d", fragLengthCount[FL_LENGTH], fragLengthCount[FL_FREQUENCY]));
                 writer.newLine();
             }
 
