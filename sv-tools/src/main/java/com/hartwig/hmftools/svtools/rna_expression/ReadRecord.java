@@ -94,9 +94,14 @@ public class ReadRecord
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
-    public boolean sameChromosomeMate()
+    public boolean translocation()
     {
-        return mSamRecord == null || (mSamRecord != null && mSamRecord.getMateReferenceName().equals(mSamRecord.getReferenceName()));
+        return mSamRecord != null && !mSamRecord.getMateReferenceName().equals(mSamRecord.getReferenceName());
+    }
+
+    public boolean localInversion()
+    {
+        return mSamRecord != null && mSamRecord.getReadNegativeStrandFlag() == mSamRecord.getMateNegativeStrandFlag();
     }
 
     public List<long[]> getMappedRegionCoords() { return mMappedCoords; }

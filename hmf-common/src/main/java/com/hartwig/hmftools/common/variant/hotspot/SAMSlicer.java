@@ -21,11 +21,15 @@ public class SAMSlicer {
 
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
+    private boolean dropDuplicates;
 
     public SAMSlicer(final int minMappingQuality, @NotNull final Collection<GenomeRegion> slices) {
         this.minMappingQuality = minMappingQuality;
         this.regions = slices;
+        this.dropDuplicates = true;
     }
+
+    public void setDropDuplicates(boolean toggle) { dropDuplicates = toggle; }
 
     public void slice(@NotNull final SamReader samReader, @NotNull final Consumer<SAMRecord> consumer) {
         final Set<String> processed = Sets.newHashSet();
@@ -56,7 +60,7 @@ public class SAMSlicer {
     }
 
     private boolean samRecordMeetsQualityRequirements(@NotNull final SAMRecord record) {
-        return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag() && !record.getDuplicateReadFlag() && !record
-                .isSecondaryOrSupplementary();
+        return record.getMappingQuality() >= minMappingQuality && !record.getReadUnmappedFlag()
+                && (!record.getDuplicateReadFlag() || !dropDuplicates) && !record.isSecondaryOrSupplementary();
     }
 }

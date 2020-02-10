@@ -37,6 +37,9 @@ public class GeneReadData
     public static final int GC_ALT = 2;
     public static final int GC_INTRONIC = 3;
     public static final int GC_READ_THROUGH = 4;
+    public static final int GC_CHIMERIC = 5;
+    public static final int GC_DUPLICATES = 6;
+    public static final int GC_MAX = 7;
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
@@ -48,7 +51,7 @@ public class GeneReadData
         mTranscripts = Lists.newArrayList();
 
         mTranscriptResults = Lists.newArrayList();
-        mFragmentCounts = new int[GC_READ_THROUGH+1];
+        mFragmentCounts = new int[GC_MAX];
         mTranscriptReadCounts = Maps.newHashMap();
     }
 

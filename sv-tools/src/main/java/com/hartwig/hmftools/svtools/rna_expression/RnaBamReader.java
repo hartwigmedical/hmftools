@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_CHIMERIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_DUPLICATES;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
@@ -105,6 +107,8 @@ public class RnaBamReader
         mGeneReadCount = 0;
 
         SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
+        samSlicer.setDropDuplicates(false);
+
         samSlicer.slice(mSamReader, this::processSamRecord);
 
         if(!mFragmentReads.isEmpty())
@@ -139,6 +143,15 @@ public class RnaBamReader
 
     private void processSamRecord(@NotNull final SAMRecord record)
     {
+        if(record.getDuplicateReadFlag())
+        {
+            if(record.getFirstOfPairFlag())
+                ++mCurrentGene.getCounts()[GC_DUPLICATES];
+
+            if(!mConfig.KeepDuplicates)
+                return;
+        }
+
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
@@ -168,6 +181,13 @@ public class RnaBamReader
                 LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mGeneReadCount);
             }
 
+            return;
+        }
+
+        if(read.translocation())
+        {
+            mCurrentGene.addCount(GC_TOTAL, 1);
+            mCurrentGene.addCount(GC_CHIMERIC, 1);
             return;
         }
 
@@ -224,6 +244,12 @@ public class RnaBamReader
 
         mCurrentGene.addCount(GC_TOTAL, 1);
 
+        if(read1.localInversion() || read2.localInversion())
+        {
+            mCurrentGene.addCount(GC_CHIMERIC, 1);
+            return;
+        }
+
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
             return;
 
@@ -240,6 +266,8 @@ public class RnaBamReader
                 .filter(x -> validTranscriptType(x.getValue()))
                 .filter(x -> firstReadValidTrans.contains(x.getKey()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
+
+        boolean isLongFragment = read1.fragmentInsertSize() > mConfig.LongFragmentLimit;
 
         // now mark all other transcripts which aren't valid either due to the read pair
         if(!validTranscripts.isEmpty())
