@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -27,15 +28,19 @@ public class GeneReadData
     private final List<TranscriptData> mTranscripts;
 
     // summary results
-    private final Map<String,int[]> mTranscriptReadCounts; // count of fragments supporting the transcript, and whether unique
+    private final Map<String,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final List<TranscriptResults> mTranscriptResults;
+
+    public static final int TC_SPLICE = 0;
+    public static final int TC_SHORT = 1;
+    public static final int TC_LONG = 2;
 
     private final int[] mFragmentCounts;
 
     public static final int GC_TOTAL = 0;
     public static final int GC_TRANS_SUPPORTING = 1;
     public static final int GC_ALT = 2;
-    public static final int GC_INTRONIC = 3;
+    public static final int GC_UNSPLICED = 3;
     public static final int GC_READ_THROUGH = 4;
     public static final int GC_CHIMERIC = 5;
     public static final int GC_DUPLICATES = 6;
@@ -122,29 +127,39 @@ public class GeneReadData
     public static final int TRANS_COUNT = 0;
     public static final int UNIQUE_TRANS_COUNT = 1;
 
-    public int[] getTranscriptReadCount(final String trans)
+    public int[][] getTranscriptReadCount(final String trans)
     {
-        int[] counts = mTranscriptReadCounts.get(trans);
-        return counts != null ? counts : new int[]{0, 0};
+        int[][] counts = mTranscriptReadCounts.get(trans);
+        return counts != null ? counts : new int[TC_LONG+1][UNIQUE_TRANS_COUNT+1];
     }
 
-    public void addTranscriptReadMatch(final String trans, boolean isUnique)
+    public void addTranscriptReadMatch(final String trans, boolean isUnique, int type)
     {
-        int[] counts = mTranscriptReadCounts.get(trans);
+        int[][] counts = mTranscriptReadCounts.get(trans);
         if(counts == null)
         {
-            counts = new int[2];
+            counts = new int[TC_LONG+1][UNIQUE_TRANS_COUNT+1];
             mTranscriptReadCounts.put(trans,  counts);
         }
 
         if(isUnique)
-            ++counts[UNIQUE_TRANS_COUNT];
+        {
+            ++counts[type][UNIQUE_TRANS_COUNT];
+        }
 
-        ++counts[TRANS_COUNT];
+        ++counts[type][TRANS_COUNT];
     }
 
     public List<Integer> getFragmentLengths() { return mFragmentLengths; }
     public void addFragmentLength(int length) { mFragmentLengths.add(length); }
 
     public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
+
+    @VisibleForTesting
+    public void clearCounts()
+    {
+        for(int i = 0; i < mFragmentCounts.length; ++i)
+            mFragmentCounts[i] = 0;
+    }
+
 }

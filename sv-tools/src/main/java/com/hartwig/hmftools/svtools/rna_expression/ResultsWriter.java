@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_DUPLICATES;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TRANS_SUPPORTING;
@@ -84,7 +84,7 @@ public class ResultsWriter
 
             mGeneDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
                     fragmentCounts[GC_TOTAL], fragmentCounts[GC_TRANS_SUPPORTING], fragmentCounts[GC_ALT],
-                    fragmentCounts[GC_INTRONIC], fragmentCounts[GC_READ_THROUGH],
+                    fragmentCounts[GC_UNSPLICED], fragmentCounts[GC_READ_THROUGH],
                     fragmentCounts[GC_CHIMERIC], fragmentCounts[GC_DUPLICATES]));
 
             mGeneDataWriter.newLine();
@@ -109,8 +109,9 @@ public class ResultsWriter
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
-                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,Fragments,UniqueFragments");
-                mTransDataWriter.write(",SpliceJuncSupported,SpliceJuncFragments,UniqueSpliceJuncFragments");
+                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,SpliceJuncSupported");
+                mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments");
+                mTransDataWriter.write(",SpliceJuncFragments,UniqueSpliceJuncFragments");
                 mTransDataWriter.newLine();
             }
 
@@ -120,11 +121,13 @@ public class ResultsWriter
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, transData.IsCanonical, transData.exons().size()));
 
-            mTransDataWriter.write(String.format(",%d,%d,%d",
-                    transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage()));
+            mTransDataWriter.write(String.format(",%d,%d,%d,%d",
+                    transResults.exonsFound(), transResults.exonicBases(),
+                    transResults.exonicBaseCoverage(), transResults.spliceJunctionsSupported()));
 
-            mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d",
-                    transResults.supportingFragments(), transResults.uniqueFragments(), transResults.spliceJunctionsSupported(),
+            mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
+                    transResults.shortSupportingFragments(), transResults.shortUniqueFragments(),
+                    transResults.longSupportingFragments(), transResults.longUniqueFragments(),
                     transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
 
             mTransDataWriter.newLine();

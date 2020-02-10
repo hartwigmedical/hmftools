@@ -10,8 +10,10 @@ public abstract class TranscriptResults
     public abstract TranscriptData trans();
 
     public abstract int exonsFound();
-    public abstract int supportingFragments();
-    public abstract int uniqueFragments();
+    public abstract int shortSupportingFragments();
+    public abstract int shortUniqueFragments();
+    public abstract int longSupportingFragments();
+    public abstract int longUniqueFragments();
     public abstract int spliceJunctionsSupported();
     public abstract int spliceJunctionFragments();
     public abstract int spliceJunctionUniqueFragments();

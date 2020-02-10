@@ -10,13 +10,19 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_DUPLICATES;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TRANS_SUPPORTING;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICE;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.getUniqueValidRegion;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validRegionMatchType;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validTranscriptType;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
@@ -258,76 +264,117 @@ public class RnaBamReader
         final Map<String,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
 
         // first find valid transcripts in both reads
-        final List<String> firstReadValidTrans = firstReadTransTypes.entrySet().stream()
-                .filter(x -> validTranscriptType(x.getValue()))
-                .map(x -> x.getKey()).collect(Collectors.toList());
+        final List<String> validTranscripts = Lists.newArrayList();
+        final List<String> invalidTranscripts = Lists.newArrayList();
 
-        final List<String> validTranscripts = secondReadTransTypes.entrySet().stream()
-                .filter(x -> validTranscriptType(x.getValue()))
-                .filter(x -> firstReadValidTrans.contains(x.getKey()))
-                .map(x -> x.getKey()).collect(Collectors.toList());
+        final List<RegionReadData> validRegions = getUniqueValidRegion(read1, read2);
 
-        boolean isLongFragment = read1.fragmentInsertSize() > mConfig.LongFragmentLimit;
+        for(Map.Entry<String,TransMatchType> entry : firstReadTransTypes.entrySet())
+        {
+            final String trans = entry.getKey();
+
+            if(validTranscriptType(entry.getValue()))
+            {
+                if(secondReadTransTypes.containsKey(trans) && validTranscriptType(secondReadTransTypes.get(trans)))
+                {
+                    if(!hasSkippedExons(validRegions, trans))
+                    {
+                        validTranscripts.add(trans);
+                        continue;
+                    }
+                }
+            }
+
+            if(!invalidTranscripts.contains(trans))
+                invalidTranscripts.add(trans);
+        }
+
+        boolean isLongFragment = abs(read1.fragmentInsertSize()) > mConfig.LongFragmentLimit;
 
         // now mark all other transcripts which aren't valid either due to the read pair
-        if(!validTranscripts.isEmpty())
+        if(validTranscripts.isEmpty())
         {
-            firstReadTransTypes.entrySet().stream()
-                    .filter(x -> validTranscriptType(x.getValue()))
-                    .filter(x -> !validTranscripts.contains(x.getKey()))
-                    .forEach(x -> x.setValue(OTHER_TRANS));
+            // no valid transcripts but record against the gene further information about these reads
+            int transMatchType = GC_UNSPLICED;
 
-            secondReadTransTypes.entrySet().stream()
-                    .filter(x -> validTranscriptType(x.getValue()))
-                    .filter(x -> !validTranscripts.contains(x.getKey()))
-                    .forEach(x -> x.setValue(OTHER_TRANS));
+            if(r1OutsideGene || r2OutsideGene)
+            {
+                transMatchType = GC_READ_THROUGH;
+            }
+            else if(read1.containsSplit() || read2.containsSplit())
+            {
+                transMatchType = GC_ALT;
+            }
+            else if(isLongFragment)
+            {
+                // look for alternative splicing from long reads involving more than one region and not spanning into an intro
+                for(String trans : invalidTranscripts)
+                {
+                    List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
+                            .filter(x -> x.getKey().hasTransId(trans))
+                            .filter(x -> x.getValue() != EXON_INTRON)
+                            .map(x -> x.getKey()).collect(Collectors.toList());;
+
+                    final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
+                            .filter(x -> x.getKey().hasTransId(trans))
+                            .filter(x -> x.getValue() != EXON_INTRON)
+                            .map(x -> x.getKey()).collect(Collectors.toList());
+
+                    for(RegionReadData region : regions2)
+                    {
+                        if (!regions.contains(region))
+                            regions.add(region);
+                    }
+
+                    if(regions.size() > 1)
+                    {
+                        transMatchType = GC_ALT;
+                        break;
+                    }
+                }
+            }
+
+            mCurrentGene.addCount(transMatchType, 1);
         }
         else
         {
+            // record valid read info against each region now that it is known
+
+            // first mark any invalid trans as 'other' meaning it doesn't require any further classification since a valid trans exists
             firstReadTransTypes.entrySet().stream()
                     .filter(x -> validTranscriptType(x.getValue()))
-                    .forEach(x -> x.setValue(ALT));
+                    .filter(x -> !validTranscripts.contains(x.getKey()))
+                    .forEach(x -> x.setValue(OTHER_TRANS));
 
             secondReadTransTypes.entrySet().stream()
                     .filter(x -> validTranscriptType(x.getValue()))
-                    .forEach(x -> x.setValue(ALT));
+                    .filter(x -> !validTranscripts.contains(x.getKey()))
+                    .forEach(x -> x.setValue(OTHER_TRANS));
 
-
-            if(r1OutsideGene || r2OutsideGene)
-                mCurrentGene.addCount(GC_READ_THROUGH, 1);
-            else
-                mCurrentGene.addCount(GC_ALT, 1);
-        }
-
-        // finally record valid read info against each region now that it is known
-        if(!validTranscripts.isEmpty())
-        {
+            // now set counts for each valid transcript
             mCurrentGene.addCount(GC_TRANS_SUPPORTING, 1);
 
             // now record the bases covered by the read in these matched regions
             final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
-            final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
-                    .filter(x -> validRegionMatchType(x.getValue()))
-                    .map(x -> x.getKey()).collect(Collectors.toList());
-
-            final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
-                    .filter(x -> validRegionMatchType(x.getValue()))
-                    .map(x -> x.getKey()).collect(Collectors.toList());
-
-            for(RegionReadData region : regions2)
-            {
-                if (!regions.contains(region))
-                    regions.add(region);
-            }
-
-            regions.forEach(x -> markRegionBases(commonMappings, x));
+            validRegions.forEach(x -> markRegionBases(commonMappings, x));
 
             boolean isUniqueTrans = validTranscripts.size() == 1;
 
             for (final String trans : validTranscripts)
             {
-                mCurrentGene.addTranscriptReadMatch(trans, isUniqueTrans);
+                int regionCount = (int)validRegions.stream().filter(x -> x.hasTransId(trans)).count();
+
+                int transMatchType;
+
+                if(read1.getTranscriptClassification(trans) == SPLICE_JUNCTION || read2.getTranscriptClassification(trans) == SPLICE_JUNCTION)
+                    transMatchType = TC_SPLICE;
+                else if(regionCount > 1 && isLongFragment)
+                    transMatchType = TC_LONG;
+                else
+                    transMatchType = TC_SHORT;
+
+                mCurrentGene.addTranscriptReadMatch(trans, isUniqueTrans, transMatchType);
 
                 // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
                 final List<RegionReadData> processedRegions = Lists.newArrayList();
@@ -451,7 +498,7 @@ public class RnaBamReader
 
         if(read.PosStart < otherReadStartPos)
         {
-            mCurrentGene.addCount(GC_INTRONIC, 1);
+            mCurrentGene.addCount(GC_UNSPLICED, 1);
             mCurrentGene.addCount(GC_TOTAL, 1);
         }
 

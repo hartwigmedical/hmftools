@@ -114,30 +114,23 @@ public class ReadRecord
     private void generateMappedCoords()
     {
         // first establish whether the read is split across 2 distant regions, and if so which it maps to
-        // int readBaseIndex = 0;
-        // int readSkippedBases = 0;
         int posOffset = 0;
 
         for(CigarElement element : Cigar.getCigarElements())
         {
             if(element.getOperator() == CigarOperator.S || element.getOperator() == CigarOperator.I)
             {
-                // readBaseIndex += element.getLength();
-                // readSkippedBases += element.getLength();
+                // nothing to skip
             }
             else if(element.getOperator() == CigarOperator.D)
             {
-                // regionBaseIndex += element.getLength();
             }
             else if(element.getOperator() == CigarOperator.N)
             {
-                // regionSkippedBases += element.getLength();
                 posOffset += element.getLength();
             }
             else if(element.getOperator() == CigarOperator.M)
             {
-                // long readStartPos = PosStart + readBaseIndex - readSkippedBases + regionSkippedBases;
-                // long readEndPos = PosStart + readBaseIndex - readSkippedBases + regionSkippedBases - 1;
                 long readStartPos = PosStart + posOffset;
                 long readEndPos = readStartPos + element.getLength() - 1;
 
@@ -288,6 +281,47 @@ public class ReadRecord
         }
     }
 
+    public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)
+    {
+        final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
+                .filter(x -> validRegionMatchType(x.getValue()))
+                .map(x -> x.getKey()).collect(Collectors.toList());
+
+        final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
+                .filter(x -> validRegionMatchType(x.getValue()))
+                .map(x -> x.getKey()).collect(Collectors.toList());
+
+        for(RegionReadData region : regions2)
+        {
+            if (!regions.contains(region))
+                regions.add(region);
+        }
+
+        return regions;
+    }
+
+    public static boolean hasSkippedExons(final List<RegionReadData> regions, final String trans)
+    {
+        int minExonRank = -1;
+        int maxExonRank = 0;
+        int regionCount = 0;
+
+        for(RegionReadData region : regions)
+        {
+            if(!region.hasTransId(trans))
+                continue;
+
+            ++regionCount;
+            int exonRank = region.getExonRank(trans);
+
+            maxExonRank = max(maxExonRank, exonRank);
+            minExonRank = minExonRank == -1 ? exonRank : min(exonRank, exonRank);
+        }
+
+        int expectedRegions = maxExonRank - minExonRank + 1;
+        return regionCount < expectedRegions;
+    }
+
     public static boolean validTranscriptType(TransMatchType transType)
     {
         return transType == EXONIC || transType == SPLICE_JUNCTION;
@@ -348,6 +382,11 @@ public class ReadRecord
 
     public static void markRegionBases(final List<long[]> readCoords, final RegionReadData region)
     {
+        int[] regionBaseDepth = region.refBasesMatched();
+
+        if(regionBaseDepth == null)
+            return;
+
         for(final long[] readSection : readCoords)
         {
             long readStartPos = readSection[SE_START];
@@ -359,8 +398,6 @@ public class ReadRecord
             // process this overlap
             int regionBaseIndex = readStartPos > region.start() ? (int)(readStartPos - region.start()) : 0;
             int overlap = (int)(min(readEndPos, region.end()) - max(readStartPos, region.start())) + 1;
-
-            int[] regionBaseDepth = region.refBasesMatched();
 
             if(regionBaseIndex + overlap > regionBaseDepth.length)
             {
@@ -374,6 +411,11 @@ public class ReadRecord
                 ++regionBaseDepth[j];
             }
         }
+    }
+
+    public boolean containsSplit()
+    {
+        return Cigar != null && Cigar.containsOperator(CigarOperator.N);
     }
 
     private static int MIN_BASE_MATCH = 2;

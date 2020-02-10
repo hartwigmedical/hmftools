@@ -3,7 +3,7 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
@@ -223,9 +223,9 @@ public class RnaExpressionTest
         String trans1 = "TRANS01";
         RegionReadData region1 = createRegion(trans1,1,"1", 1000, 1200);
         geneReadData.addExonRegion(region1);
-        RegionReadData region2 = createRegion(trans1,1,"1", 2000, 2500);
+        RegionReadData region2 = createRegion(trans1,2,"1", 2000, 2500);
         geneReadData.addExonRegion(region2);
-        RegionReadData region3 = createRegion(trans1,1,"1", 4500, 5000);
+        RegionReadData region3 = createRegion(trans1,3,"1", 4500, 5000);
         geneReadData.addExonRegion(region3);
 
         ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 10, 0));
@@ -248,7 +248,7 @@ public class RnaExpressionTest
         bamReader.processReadRecords(geneReadData, reads);
 
         assertEquals(2, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_ALT]);
+        assertEquals(1, geneCounts[GC_UNSPLICED]);
 
         // fully intronic
         read1 = createReadRecord(1, "1", 2600, 2650, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -256,11 +256,13 @@ public class RnaExpressionTest
         read2 = createReadRecord(1, "1", 2800, 2900, REF_BASE_STR_1, createCigar(0, 100, 0));
         read2.setFragmentInsertSize(-300);
 
+        geneReadData.clearCounts();
+
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(3, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_INTRONIC]);
+        assertEquals(1, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_UNSPLICED]);
 
         // both reads outside the gene
         read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -271,7 +273,38 @@ public class RnaExpressionTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(3, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_TOTAL]);
+
+        // alternative splicing - first from reads with splits
+        geneReadData.clearCounts();
+
+        read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100,  0));
+        read1.setFragmentInsertSize(500);
+        read2 = createReadRecord(1, "1", 3100, 3300, REF_BASE_STR_1, createCigar(0, 100, 0));
+        read2.setFragmentInsertSize(-500);
+
+        reads = Lists.newArrayList(read1, read2);
+        bamReader.processReadRecords(geneReadData, reads);
+
+        assertEquals(1, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_ALT]);
+
+        int longInsertSize = config.LongFragmentLimit + 100;
+
+        // alt splicing - exon to exon read skipping an exon and long, currently not detected
+        geneReadData.clearCounts();
+
+        read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 0));
+        read1.setFragmentInsertSize(longInsertSize);
+        read2 = createReadRecord(1, "1", 4550, 4650, REF_BASE_STR_1, createCigar(0, 100, 0));
+        read2.setFragmentInsertSize(-longInsertSize);
+
+        reads = Lists.newArrayList(read1, read2);
+        bamReader.processReadRecords(geneReadData, reads);
+
+        assertEquals(1, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[GC_ALT]);
+
     }
 
     private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)

@@ -5,6 +5,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
@@ -233,10 +236,7 @@ public class RnaExpression
     {
         int exonsFound = 0;
 
-        int sjFragments = 0;
-        int sjUniqueFragments = 0;
         int spliceJunctionsSupported = 0;
-
         long exonicBases = 0;
         long exonicBaseCoverage = 0;
 
@@ -275,27 +275,24 @@ public class RnaExpression
                 {
                     linked = false;
                 }
-                else
-                {
-                    sjFragments += sjReads[TRANS_COUNT];
-                    sjUniqueFragments += sjReads[UNIQUE_TRANS_COUNT];
-                }
             }
 
             if(linked)
                 ++spliceJunctionsSupported;
         }
 
-        int[] supportingFragments = geneReadData.getTranscriptReadCount(transData.TransName);
+        int[][] supportingFragments = geneReadData.getTranscriptReadCount(transData.TransName);
 
         TranscriptResults results = ImmutableTranscriptResults.builder()
                 .trans(transData)
                 .exonsFound(exonsFound)
-                .supportingFragments(supportingFragments[TRANS_COUNT])
-                .uniqueFragments(supportingFragments[UNIQUE_TRANS_COUNT])
+                .shortSupportingFragments(supportingFragments[TC_SHORT][TRANS_COUNT])
+                .shortUniqueFragments(supportingFragments[TC_SHORT][UNIQUE_TRANS_COUNT])
+                .longSupportingFragments(supportingFragments[TC_LONG][TRANS_COUNT])
+                .longUniqueFragments(supportingFragments[TC_LONG][UNIQUE_TRANS_COUNT])
                 .spliceJunctionsSupported(spliceJunctionsSupported)
-                .spliceJunctionFragments(sjFragments)
-                .spliceJunctionUniqueFragments(sjUniqueFragments)
+                .spliceJunctionFragments(supportingFragments[TC_SPLICE][TRANS_COUNT])
+                .spliceJunctionUniqueFragments(supportingFragments[TC_SPLICE][UNIQUE_TRANS_COUNT])
                 .exonicBases(exonicBases)
                 .exonicBaseCoverage(exonicBaseCoverage)
                 .build();
