@@ -72,10 +72,15 @@ public class PrimaryEvidence {
             slicer.slice(tumorReader, recordConsumer);
 
             // Add all valid alt contexts
-            candidates.refContexts().stream().flatMap(x -> x.alts().stream()).filter(x -> rawPredicate(tierSelector, x)).forEach(x -> {
-                x.setPrimaryReadCounterFromInterim();
-                altContexts.add(x);
-            });
+            candidates.refContexts()
+                    .stream()
+                    .flatMap(x -> x.alts().stream())
+                    .filter(this::refPredicate)
+                    .filter(x -> rawPredicate(tierSelector, x))
+                    .forEach(x -> {
+                        x.setPrimaryReadCounterFromInterim();
+                        altContexts.add(x);
+                    });
 
             // Second parse
             slicer.slice(tumorReader, samRecord -> {
@@ -92,10 +97,20 @@ public class PrimaryEvidence {
         return altContexts.stream().filter(x -> qualPredicate(tierSelector, x)).collect(Collectors.toList());
     }
 
+    private boolean refPredicate(@NotNull final AltContext altContext) {
+        for (int i = 0; i < altContext.ref().length(); i++) {
+            char base = altContext.ref().charAt(i);
+            if (base != 'G' && base != 'A' && base != 'T' && base != 'C') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private boolean rawPredicate(@NotNull final HotspotSelector tierSelector, @NotNull final AltContext altContext) {
         return tierSelector.isHotspot(altContext) || altContext.rawDepthAlt() >= config.filter().hardMinTumorRawAltSupport()
                 && altContext.rawBaseQualityAlt() >= config.filter().hardMinTumorRawBaseQuality();
-
     }
 
     private boolean qualPredicate(@NotNull final HotspotSelector tierSelector, @NotNull final AltContext altContext) {

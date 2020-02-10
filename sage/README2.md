@@ -296,6 +296,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 72 | 32 | 1857 | 115
 
  ## Version History
+ - Upcoming
+   - Filter variants with ref containing bases other then G,A,T,C
  - 2.0
    - Revamped small indel / SNV caller
  - 1.1
