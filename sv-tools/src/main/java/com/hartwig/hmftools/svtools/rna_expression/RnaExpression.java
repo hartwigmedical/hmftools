@@ -256,20 +256,15 @@ public class RnaExpression
 
             exonicBases += exon.ExonEnd - exon.ExonStart + 1;
 
-            boolean linked = true;
-
             if(i > 0)
             {
                 int[] sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START);
 
-                if(sjReads[TRANS_COUNT] == 0)
+                if(sjReads[TRANS_COUNT] > 0)
                 {
-                    linked = false;
+                    ++spliceJunctionsSupported;
                 }
             }
-
-            if(linked)
-                ++spliceJunctionsSupported;
         }
 
         int[][] supportingFragments = geneReadData.getTranscriptReadCount(transData.TransName);

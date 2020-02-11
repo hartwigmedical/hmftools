@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
@@ -215,10 +216,10 @@ public class FragmentSizeCalcs
 
     private void addFragmentLength(final SAMRecord record)
     {
-        long mateStartPos = record.getMateAlignmentStart();
+        // long mateStartPos = record.getMateAlignmentStart();
 
-        long inferredFragLength = mateStartPos > record.getStart() ?
-                mateStartPos - record.getStart() + record.getReadLength() : record.getEnd() - mateStartPos;
+        // long inferredFragLength = mateStartPos > record.getStart() ?
+        //        mateStartPos - record.getStart() + record.getReadLength() : record.getEnd() - mateStartPos;
 
         /* don't discard long reads
         if(inferredFragLength > FRAG_LENGTH_LIMIT)
@@ -228,7 +229,10 @@ public class FragmentSizeCalcs
         }
         */
 
-        int fragmentLength = min((int)inferredFragLength, FRAG_LENGTH_CAP);
+        int fragmentLength = min(abs(record.getInferredInsertSize()), FRAG_LENGTH_CAP);
+
+        if(fragmentLength == 0)
+            return;
 
         int index = 0;
         boolean exists = false;
@@ -273,7 +277,9 @@ public class FragmentSizeCalcs
                 mWriter = createBufferedWriter(outputFileName, false);
 
                 if(geneData != null)
+                {
                     mWriter.write("GeneId,GeneName,Chromosome,");
+                }
 
                 mWriter.write("FragmentLength,Count");
                 mWriter.newLine();
@@ -282,8 +288,10 @@ public class FragmentSizeCalcs
             for (final int[] fragLengthCount : mFragmentLengths)
             {
                 if(geneData != null)
+                {
                     mWriter.write(String.format("%s,%s,%s,",
                             geneData.GeneId, geneData.GeneName, geneData.Chromosome));
+                }
 
                 mWriter.write(String.format("%d,%d", fragLengthCount[FL_LENGTH], fragLengthCount[FL_FREQUENCY]));
                 mWriter.newLine();

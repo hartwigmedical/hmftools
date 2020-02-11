@@ -182,13 +182,6 @@ public class ResultsWriter
                         startSjCounts[TRANS_COUNT], endSjCounts[TRANS_COUNT],
                         startSjCounts[UNIQUE_TRANS_COUNT], endSjCounts[UNIQUE_TRANS_COUNT]));
 
-                /* match types are not recorded per transcript
-                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d,%d,%d",
-                        exonReadData.matchedReadCount(MATCH_TYPE_WITHIN_EXON),
-                        exonReadData.matchedReadCount(MATCH_TYPE_EXON_BOUNDARY) + exonReadData.matchedReadCount(MATCH_TYPE_EXON_MATCH),
-                        exonReadData.matchedReadCount(MATCH_TYPE_UNSPLICED));
-                 */
-
                 mExonDataWriter.newLine();
             }
         }
