@@ -7,6 +7,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms.CompassionateUsePrograms;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -25,6 +27,8 @@ public class KnowledgebaseGeneratorApplication {
 
     private static final String VICC_JSON = "vicc_json";
     private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
+    private static final String COMPASSIONATE_USE_PROGRAMS_TSV = "compassionate_use_programs_tsv";
+
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
@@ -45,10 +49,16 @@ public class KnowledgebaseGeneratorApplication {
         String viccJson = cmd.getOptionValue(VICC_JSON);
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJson);
         LOGGER.info("Read {} VICC entries from {}", viccEntries.size(), viccJson);
+
+        String compassionateUseProgramsTsv = cmd.getOptionValue(COMPASSIONATE_USE_PROGRAMS_TSV);
+        List<CompassionateUsePrograms> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramsTsv);
+        LOGGER.info("Read {} compassionate use programs from {}", compassionateUsePrograms.size(), compassionateUseProgramsTsv);
+
+
     }
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
-        return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON);
+        return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAMS_TSV);
     }
 
     private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -74,6 +84,8 @@ public class KnowledgebaseGeneratorApplication {
 
         options.addOption(VICC_JSON, true, "VICC JSON knowledgebase");
         options.addOption(ICLUSION_TRIAL_TSV, true, "iClusion input trial tsv");
+        options.addOption(COMPASSIONATE_USE_PROGRAMS_TSV, true, "compassionate use pgram input tsv");
+
 
         return options;
     }
