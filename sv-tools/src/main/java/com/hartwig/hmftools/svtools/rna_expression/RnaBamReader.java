@@ -7,13 +7,12 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_CHIMERIC;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_DUPLICATES;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TRANS_SUPPORTING;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TOTAL;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TRANS_SUPPORTING;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICE;
@@ -149,7 +148,7 @@ public class RnaBamReader
 
         if(mConfig.GeneStatsOnly)
         {
-            mCurrentGene.addCount(GC_TOTAL, mGeneReadCount / 2);
+            mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
     }
 
@@ -165,7 +164,7 @@ public class RnaBamReader
         if(checkDuplicates(record))
         {
             if(record.getFirstOfPairFlag())
-                ++mCurrentGene.getCounts()[GC_DUPLICATES];
+                mCurrentGene.addCount(DUPLICATE, 1);
 
             if(!mConfig.KeepDuplicates)
                 return;
@@ -204,8 +203,8 @@ public class RnaBamReader
 
         if(read.translocation())
         {
-            mCurrentGene.addCount(GC_TOTAL, 1);
-            mCurrentGene.addCount(GC_CHIMERIC, 1);
+            mCurrentGene.addCount(TOTAL, 1);
+            mCurrentGene.addCount(CHIMERIC, 1);
             return;
         }
 
@@ -259,11 +258,11 @@ public class RnaBamReader
         if(r1OutsideGene && r2OutsideGene)
             return;
 
-        mCurrentGene.addCount(GC_TOTAL, 1);
+        mCurrentGene.addCount(TOTAL, 1);
 
         if(read1.localInversion() || read2.localInversion())
         {
-            mCurrentGene.addCount(GC_CHIMERIC, 1);
+            mCurrentGene.addCount(CHIMERIC, 1);
             return;
         }
 
@@ -288,7 +287,7 @@ public class RnaBamReader
             {
                 if(secondReadTransTypes.containsKey(trans) && validTranscriptType(secondReadTransTypes.get(trans)))
                 {
-                    if(!hasSkippedExons(validRegions, trans))
+                    if(!hasSkippedExons(validRegions, trans, mConfig.LongFragmentLimit))
                     {
                         validTranscripts.add(trans);
                         continue;
@@ -301,24 +300,23 @@ public class RnaBamReader
         }
 
         boolean isLongFragment = abs(read1.fragmentInsertSize()) > mConfig.LongFragmentLimit;
+        GeneMatchType geneReadType = UNSPLICED;
 
         // now mark all other transcripts which aren't valid either due to the read pair
         if(validTranscripts.isEmpty())
         {
             // no valid transcripts but record against the gene further information about these reads
-            int transMatchType = GC_UNSPLICED;
-
             if(r1OutsideGene || r2OutsideGene)
             {
-                transMatchType = GC_READ_THROUGH;
+                geneReadType = READ_THROUGH;
             }
             else if(read1.containsSplit() || read2.containsSplit())
             {
-                transMatchType = GC_ALT;
+                geneReadType = GeneMatchType.ALT;
             }
             else if(isLongFragment)
             {
-                // look for alternative splicing from long reads involving more than one region and not spanning into an intro
+                // look for alternative splicing from long reads involving more than one region and not spanning into an intron
                 for(String trans : invalidTranscripts)
                 {
                     List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
@@ -339,17 +337,16 @@ public class RnaBamReader
 
                     if(regions.size() > 1)
                     {
-                        transMatchType = GC_ALT;
+                        geneReadType = GeneMatchType.ALT;
                         break;
                     }
                 }
             }
-
-            mCurrentGene.addCount(transMatchType, 1);
         }
         else
         {
             // record valid read info against each region now that it is known
+            geneReadType = TRANS_SUPPORTING;
 
             // first mark any invalid trans as 'other' meaning it doesn't require any further classification since a valid trans exists
             firstReadTransTypes.entrySet().stream()
@@ -362,14 +359,12 @@ public class RnaBamReader
                     .filter(x -> !validTranscripts.contains(x.getKey()))
                     .forEach(x -> x.setValue(OTHER_TRANS));
 
-            // now set counts for each valid transcript
-            mCurrentGene.addCount(GC_TRANS_SUPPORTING, 1);
-
             // now record the bases covered by the read in these matched regions
             final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
             validRegions.forEach(x -> markRegionBases(commonMappings, x));
 
+            // now set counts for each valid transcript
             boolean isUniqueTrans = validTranscripts.size() == 1;
 
             for (final String trans : validTranscripts)
@@ -395,10 +390,12 @@ public class RnaBamReader
             }
         }
 
+        mCurrentGene.addCount(geneReadType, 1);
+
         if(mConfig.WriteReadData)
         {
-            writeReadData(0, read1);
-            writeReadData(1, read2);
+            writeReadData(0, read1, geneReadType);
+            writeReadData(1, read2, geneReadType);
         }
     }
 
@@ -511,8 +508,8 @@ public class RnaBamReader
 
         if(read.PosStart < otherReadStartPos)
         {
-            mCurrentGene.addCount(GC_UNSPLICED, 1);
-            mCurrentGene.addCount(GC_TOTAL, 1);
+            mCurrentGene.addCount(UNSPLICED, 1);
+            mCurrentGene.addCount(TOTAL, 1);
         }
 
         if(LOGGER.isDebugEnabled())
@@ -622,7 +619,7 @@ public class RnaBamReader
             mFragmentSizeCalcs.recordFragmentLength(record, mCurrentGene);
     }
 
-    private void writeReadData(int readIndex, final ReadRecord read)
+    private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -635,7 +632,7 @@ public class RnaBamReader
 
                 mWriter = createBufferedWriter(outputFileName, false);
                 mWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar");
-                mWriter.write(",TransId,TransClass,ExonRank,ExonStart,ExonEnd,MatchType");
+                mWriter.write(",GeneClass,TransId,TransClass,ExonRank,ExonStart,ExonEnd,RegionClass");
                 mWriter.newLine();
             }
 
@@ -656,8 +653,8 @@ public class RnaBamReader
                             mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, readIndex, read.Id,
                             read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString()));
 
-                    mWriter.write(String.format(",%s,%s,%d,%d,%d,%s",
-                            trans, transType, region.getExonRank(trans), region.start(), region.end(), matchType));
+                    mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%s",
+                            geneReadType, trans, transType, region.getExonRank(trans), region.start(), region.end(), matchType));
 
                     mWriter.newLine();
                 }

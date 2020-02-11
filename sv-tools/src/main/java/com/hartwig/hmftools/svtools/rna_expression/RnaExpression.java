@@ -78,6 +78,8 @@ public class RnaExpression
 
     public void runAnalysis()
     {
+        LOGGER.info("sample({}) running RNA expression analysis", mSampledId);
+
         if(!mRnaBamReader.validReader())
         {
             LOGGER.warn("BAM reader init failed");

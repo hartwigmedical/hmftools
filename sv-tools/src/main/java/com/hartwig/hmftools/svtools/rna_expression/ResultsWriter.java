@@ -4,15 +4,14 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.FragmentSizeCalcs.FL_LENGTH;
-import static com.hartwig.hmftools.svtools.rna_expression.FragmentSizeCalcs.FL_FREQUENCY;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_CHIMERIC;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_DUPLICATES;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TRANS_SUPPORTING;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.ALT;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TOTAL;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TRANS_SUPPORTING;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 
@@ -84,9 +83,9 @@ public class ResultsWriter
             final int[] fragmentCounts = geneReadData.getCounts();
 
             mGeneDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
-                    fragmentCounts[GC_TOTAL], fragmentCounts[GC_TRANS_SUPPORTING], fragmentCounts[GC_ALT],
-                    fragmentCounts[GC_UNSPLICED], fragmentCounts[GC_READ_THROUGH],
-                    fragmentCounts[GC_CHIMERIC], fragmentCounts[GC_DUPLICATES]));
+                    fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)], fragmentCounts[typeAsInt(ALT)],
+                    fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(READ_THROUGH)],
+                    fragmentCounts[typeAsInt(CHIMERIC)], fragmentCounts[typeAsInt(DUPLICATE)]));
 
             mGeneDataWriter.newLine();
 

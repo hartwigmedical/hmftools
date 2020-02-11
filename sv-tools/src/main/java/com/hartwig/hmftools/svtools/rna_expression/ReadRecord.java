@@ -181,6 +181,7 @@ public class ReadRecord
 
                 if (matchType == RegionMatchType.NONE)
                 {
+                    // should never happen since implies this read didn't hit the region at all
                     transMatchType = ALT;
                 }
                 else if (matchType == RegionMatchType.EXON_INTRON)
@@ -300,11 +301,14 @@ public class ReadRecord
         return regions;
     }
 
-    public static boolean hasSkippedExons(final List<RegionReadData> regions, final String trans)
+    public static boolean hasSkippedExons(final List<RegionReadData> regions, final String trans, int longFragmentLimit)
     {
         int minExonRank = -1;
         int maxExonRank = 0;
         int regionCount = 0;
+
+        long minRegionPos = -1;
+        long maxRegionPos = 0;
 
         for(RegionReadData region : regions)
         {
@@ -316,10 +320,12 @@ public class ReadRecord
 
             maxExonRank = max(maxExonRank, exonRank);
             minExonRank = minExonRank == -1 ? exonRank : min(exonRank, exonRank);
+            minRegionPos = minRegionPos == -1 ? region.start() : min(minRegionPos, region.start());
+            maxRegionPos = max(maxRegionPos, region.end());
         }
 
         int expectedRegions = maxExonRank - minExonRank + 1;
-        return regionCount < expectedRegions;
+        return regionCount < expectedRegions && maxRegionPos - minRegionPos > longFragmentLimit * 2;
     }
 
     public static boolean validTranscriptType(TransMatchType transType)
@@ -541,12 +547,6 @@ public class ReadRecord
     }
 
     public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
-
-    public final List<RegionReadData> getMappedRegions(RegionMatchType matchType)
-    {
-        return mMappedRegions.entrySet().stream()
-                .filter(x -> x.getValue() == matchType).map(x -> x.getKey()).collect(Collectors.toList());
-    }
 
     public final Map<String,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
 

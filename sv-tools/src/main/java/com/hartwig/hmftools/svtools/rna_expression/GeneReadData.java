@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.MAX;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.INTRONIC;
 
 import java.util.List;
@@ -36,15 +38,6 @@ public class GeneReadData
 
     private final int[] mFragmentCounts;
 
-    public static final int GC_TOTAL = 0;
-    public static final int GC_TRANS_SUPPORTING = 1;
-    public static final int GC_ALT = 2;
-    public static final int GC_UNSPLICED = 3;
-    public static final int GC_READ_THROUGH = 4;
-    public static final int GC_CHIMERIC = 5;
-    public static final int GC_DUPLICATES = 6;
-    public static final int GC_MAX = 7;
-
     public GeneReadData(final EnsemblGeneData geneData)
     {
         GeneData = geneData;
@@ -54,7 +47,7 @@ public class GeneReadData
         mTranscripts = Lists.newArrayList();
 
         mTranscriptResults = Lists.newArrayList();
-        mFragmentCounts = new int[GC_MAX];
+        mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
         mTranscriptReadCounts = Maps.newHashMap();
     }
 
@@ -120,7 +113,7 @@ public class GeneReadData
     }
 
     public final int[] getCounts() { return mFragmentCounts; }
-    public void addCount(int type, int count) { mFragmentCounts[type] += count; }
+    public void addCount(GeneMatchType type, int count) { mFragmentCounts[typeAsInt(type)] += count; }
 
     public static final int TRANS_COUNT = 0;
     public static final int UNIQUE_TRANS_COUNT = 1;

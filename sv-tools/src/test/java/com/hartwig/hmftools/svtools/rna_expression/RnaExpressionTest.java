@@ -2,10 +2,9 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_READ_THROUGH;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.GC_TOTAL;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TOTAL;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
@@ -235,8 +234,8 @@ public class RnaExpressionTest
         bamReader.processReadRecords(geneReadData, reads);
 
         int[] geneCounts = geneReadData.getCounts();
-        assertEquals(1, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_READ_THROUGH]);
+        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, geneCounts[typeAsInt(READ_THROUGH)]);
 
         // exon to intronic read
         read1 = createReadRecord(1, "1", 1300, 1350, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -247,8 +246,8 @@ public class RnaExpressionTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(2, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_UNSPLICED]);
+        assertEquals(2, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.UNSPLICED)]);
 
         // fully intronic
         read1 = createReadRecord(1, "1", 2600, 2650, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -261,8 +260,8 @@ public class RnaExpressionTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(1, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_UNSPLICED]);
+        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.UNSPLICED)]);
 
         // both reads outside the gene
         read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -273,7 +272,7 @@ public class RnaExpressionTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(1, geneCounts[GC_TOTAL]);
+        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
 
         // alternative splicing - first from reads with splits
         geneReadData.clearCounts();
@@ -286,8 +285,8 @@ public class RnaExpressionTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(1, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_ALT]);
+        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
 
         int longInsertSize = config.LongFragmentLimit + 100;
 
@@ -302,8 +301,8 @@ public class RnaExpressionTest
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneReadData, reads);
 
-        assertEquals(1, geneCounts[GC_TOTAL]);
-        assertEquals(1, geneCounts[GC_ALT]);
+        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
+        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
 
     }
 
