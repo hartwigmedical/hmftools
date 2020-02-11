@@ -25,7 +25,7 @@ public enum TumorMutationalStatus {
 
     @NotNull
     public static TumorMutationalStatus fromLoad(int load) {
-        return load > TML_THRESHOLD ? HIGH : LOW;
+        return load >= TML_THRESHOLD ? HIGH : LOW;
     }
 
     @NotNull
