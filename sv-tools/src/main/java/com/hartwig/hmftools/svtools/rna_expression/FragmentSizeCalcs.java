@@ -1,16 +1,18 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -19,6 +21,7 @@ import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -30,6 +33,7 @@ public class FragmentSizeCalcs
     private final RnaBamReader mRnaBamReader;
 
     private final List<int[]> mFragmentLengths;
+    private BufferedWriter mWriter;
 
     // indices into fragment length frequency array
     public static final int FL_LENGTH = 0;
@@ -48,21 +52,20 @@ public class FragmentSizeCalcs
 
         mCurrentTransDataList = null;
         mProcessedFragments = 0;
+        mWriter = null;
 
         mFragmentLengths = Lists.newArrayList();
     }
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
-    public boolean enabled() { return mConfig.WriteFragmentLengths || mConfig.FragmentLengthSampling; }
+    public boolean enabled() { return mConfig.WriteFragmentLengths || mConfig.FragmentLengthMinCount > 0; }
 
-    private static final int MIN_GENE_LENGTH = 10000;
+    private static final int MIN_GENE_LENGTH = 1000;
     private static final int MAX_GENE_LENGTH = 1000000;
-    private static final int MAX_GENE_TRANS = 10;
-    private static final int MAX_TRAN_EXONS = 10;
-    private static final int MAX_FRAGMENT_COUNT = 10000;
+    private static final int MAX_GENE_TRANS = 20;
+    private static final int MAX_TRAN_EXONS = 20;
 
     private static int FRAG_LENGTH_CAP = 5000; // to prevent map blowing out in size
-    private static int FRAG_LENGTH_LIMIT = 10000;
 
     public void calcSampleFragmentSize()
     {
@@ -99,34 +102,55 @@ public class FragmentSizeCalcs
 
                 mRnaBamReader.readBamCounts(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd), this::processBamRead);
 
-                if (mProcessedFragments > MAX_FRAGMENT_COUNT)
+                if(mConfig.FragmentLengthsByGene)
+                {
+                    writeFragmentLengths(geneData);
+                    mFragmentLengths.clear();
+                }
+
+                if (mProcessedFragments >= mConfig.FragmentLengthMinCount)
                 {
                     LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
                     break;
                 }
             }
 
-            if (mProcessedFragments > MAX_FRAGMENT_COUNT)
+            if (mProcessedFragments >= mConfig.FragmentLengthMinCount)
                 break;
         }
 
+        if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
+        {
+            writeFragmentLengths(null);
+        }
+
+        closeBufferedWriter(mWriter);
+
+        if(!mConfig.FragmentLengthsByGene)
+        {
+            calcSummaryData();
+        }
+    }
+
+    private void calcSummaryData()
+    {
         // work out median or Xth percential etc
 
         int totalLengths = mFragmentLengths.stream().mapToInt(x -> x[FL_FREQUENCY]).sum();
-        int medianCount = totalLengths/2;
-        int percentile75Count = (int)round(totalLengths * 0.75);
+        int medianCount = totalLengths / 2;
+        int percentile75Count = (int) round(totalLengths * 0.75);
 
         int countsTotal = 0;
         int medianLength = -1;
         int percentile75Length = -1;
 
-        for(final int[] flData : mFragmentLengths)
+        for (final int[] flData : mFragmentLengths)
         {
-            if(medianLength == -1 && flData[FL_FREQUENCY] + countsTotal > medianCount)
+            if (medianLength == -1 && flData[FL_FREQUENCY] + countsTotal > medianCount)
             {
                 medianLength = flData[FL_LENGTH];
             }
-            else if(flData[FL_FREQUENCY] + countsTotal > percentile75Count)
+            else if (flData[FL_FREQUENCY] + countsTotal > percentile75Count)
             {
                 percentile75Length = flData[FL_LENGTH];
                 break;
@@ -157,7 +181,7 @@ public class FragmentSizeCalcs
 
     public void recordFragmentLength(final SAMRecord record, final GeneReadData geneReadData)
     {
-        if(!mConfig.WriteFragmentLengths)
+        if(!mConfig.WriteFragmentLengths || mConfig.FragmentLengthMinCount > 0)
             return;
 
         if(!isCandidateRecord(record))
@@ -175,7 +199,7 @@ public class FragmentSizeCalcs
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
-        if(!record.getFirstOfPairFlag())
+        if(!record.getFirstOfPairFlag() || record.getDuplicateReadFlag())
             return false;
 
         // ignore translocations and inversions
@@ -196,11 +220,13 @@ public class FragmentSizeCalcs
         long inferredFragLength = mateStartPos > record.getStart() ?
                 mateStartPos - record.getStart() + record.getReadLength() : record.getEnd() - mateStartPos;
 
+        /* don't discard long reads
         if(inferredFragLength > FRAG_LENGTH_LIMIT)
         {
             // more likely a split exonic read pair
             return;
         }
+        */
 
         int fragmentLength = min((int)inferredFragLength, FRAG_LENGTH_CAP);
 
@@ -232,6 +258,42 @@ public class FragmentSizeCalcs
         }
 
         ++mProcessedFragments;
+    }
+
+    public void writeFragmentLengths(@Nullable final EnsemblGeneData geneData)
+    {
+        if(mConfig.OutputDir.isEmpty() || mFragmentLengths.isEmpty())
+            return;
+
+        try
+        {
+            if(mWriter == null)
+            {
+                final String outputFileName = mConfig.OutputDir + "RNA_EXP_FRAG_LENGTHS.csv";
+                mWriter = createBufferedWriter(outputFileName, false);
+
+                if(geneData != null)
+                    mWriter.write("GeneId,GeneName,Chromosome,");
+
+                mWriter.write("FragmentLength,Count");
+                mWriter.newLine();
+            }
+
+            for (final int[] fragLengthCount : mFragmentLengths)
+            {
+                if(geneData != null)
+                    mWriter.write(String.format("%s,%s,%s,",
+                            geneData.GeneId, geneData.GeneName, geneData.Chromosome));
+
+                mWriter.write(String.format("%d,%d", fragLengthCount[FL_LENGTH], fragLengthCount[FL_FREQUENCY]));
+                mWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write fragment length file: {}", e.toString());
+        }
+
     }
 
 }

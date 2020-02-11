@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -91,8 +90,13 @@ public class RnaExpression
             mGcBiasAdjuster.generateDepthCounts(mRnaBamReader, mGeneTransCache.getChrGeneDataMap());
         }
 
-        if(mConfig.FragmentLengthSampling)
+        if(mConfig.FragmentLengthMinCount > 0)
+        {
             mFragmentSizeCalcs.calcSampleFragmentSize();
+
+            if (mConfig.WriteFragmentLengths)
+                return;
+        }
 
         // measure read counts of exonic regions for all specific genes
         int geneCount = 0;
@@ -109,9 +113,6 @@ public class RnaExpression
                     LOGGER.info("processed {} genes", geneCount);
             }
         }
-
-        if(mConfig.WriteFragmentLengths)
-            mResultsWriter.writeFragmentLengths(mFragmentSizeCalcs.getFragmentLengths());
 
         mResultsWriter.close();
         mRnaBamReader.close();

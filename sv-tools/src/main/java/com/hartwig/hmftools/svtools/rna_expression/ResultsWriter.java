@@ -198,31 +198,4 @@ public class ResultsWriter
         }
     }
 
-    public void writeFragmentLengths(final List<int[]> fragmentLengths)
-    {
-        if(mConfig.OutputDir.isEmpty() || fragmentLengths.isEmpty())
-            return;
-
-        try
-        {
-            final String outputFileName = mConfig.OutputDir + "RNA_EXP_FRAG_LENGTHS.csv";
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("FragmentLength,Count");
-            writer.newLine();
-
-            for (final int[] fragLengthCount : fragmentLengths)
-            {
-                writer.write(String.format("%d,%d", fragLengthCount[FL_LENGTH], fragLengthCount[FL_FREQUENCY]));
-                writer.newLine();
-            }
-
-            closeBufferedWriter(writer);
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write fragment length file: {}", e.toString());
-        }
-
-    }
-
 }

@@ -39,7 +39,8 @@ public class RnaExpConfig
     public static final String READ_COUNT_LIMIT = "read_count_limit";
     public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     public static final String KEEP_DUPLICATES = "keep_dups";
-    public static final String FRAG_LENGTH_SAMPLING = "frag_length_sampling";
+    public static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
+    public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
@@ -58,7 +59,8 @@ public class RnaExpConfig
     public final boolean WriteReadData;
     public final boolean WriteFragmentLengths;
     public final boolean GeneStatsOnly;
-    public final boolean FragmentLengthSampling;
+    public final int FragmentLengthMinCount;
+    public final boolean FragmentLengthsByGene;
 
     public final List<String> SpecificTransIds;
 
@@ -102,7 +104,8 @@ public class RnaExpConfig
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
         LongFragmentLimit = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         KeepDuplicates = cmd.hasOption(KEEP_DUPLICATES);
-        FragmentLengthSampling = cmd.hasOption(FRAG_LENGTH_SAMPLING);
+        FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
+        FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
@@ -131,7 +134,8 @@ public class RnaExpConfig
         WriteReadData = false;
         WriteFragmentLengths = false;
         GeneStatsOnly = false;
-        FragmentLengthSampling = false;
+        FragmentLengthsByGene = false;
+        FragmentLengthMinCount = 0;
         SpecificTransIds = Lists.newArrayList();
     }
 
@@ -158,7 +162,8 @@ public class RnaExpConfig
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(KEEP_DUPLICATES, false, "Process duplicate reads (if marked as such eg by picard)");
-        options.addOption(FRAG_LENGTH_SAMPLING, false, "Down-sample selection of genes for fragment length measurement");
+        options.addOption(FRAG_LENGTH_MIN_COUNT, true, "Fragment length measurement - min read fragments required");
+        options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
