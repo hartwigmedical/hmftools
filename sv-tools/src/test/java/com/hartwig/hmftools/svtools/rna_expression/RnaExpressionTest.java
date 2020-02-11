@@ -123,7 +123,7 @@ public class RnaExpressionTest
         region3.setRefBases(REF_BASE_STR_1.substring(10, 19) + REF_BASE_STR_1);
 
         RegionReadData region4 = new RegionReadData(GenomeRegions.create("1", 121, 150));
-        region1.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
+        region4.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
 
         region1.addPostRegion(region3);
         region3.addPreRegion(region1);

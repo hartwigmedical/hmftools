@@ -41,6 +41,7 @@ public class FragmentSizeCalcs
     public static final int FL_FREQUENCY = 1;
 
     private List<TranscriptData> mCurrentTransDataList;
+    private int mCurrentReadCount;
     private int mProcessedFragments;
 
     private static final Logger LOGGER = LogManager.getLogger(FragmentSizeCalcs.class);
@@ -52,6 +53,7 @@ public class FragmentSizeCalcs
         mRnaBamReader = bamReader;
 
         mCurrentTransDataList = null;
+        mCurrentReadCount = 0;
         mProcessedFragments = 0;
         mWriter = null;
 
@@ -65,6 +67,7 @@ public class FragmentSizeCalcs
     private static final int MAX_GENE_LENGTH = 1000000;
     private static final int MAX_GENE_TRANS = 20;
     private static final int MAX_TRAN_EXONS = 20;
+    private static final int MAX_GENE_READ_COUNT = 1000; // to avoid impact of highly enriched genes
 
     private static int FRAG_LENGTH_CAP = 5000; // to prevent map blowing out in size
 
@@ -82,8 +85,10 @@ public class FragmentSizeCalcs
 
             long lastGeneEnd = 0;
 
-            for (EnsemblGeneData geneData : geneDataList)
+            for (int i = 0; i < geneDataList.size(); ++i)
             {
+                EnsemblGeneData geneData = geneDataList.get(i);
+
                 if (geneData.GeneStart < lastGeneEnd)
                     continue;
 
@@ -99,8 +104,15 @@ public class FragmentSizeCalcs
                 if (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
                     continue;
 
+                if(i > 0 && (i % 100) == 0)
+                {
+                    LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({})",
+                            chromosome, i, lastGeneEnd, mProcessedFragments);
+                }
+
                 lastGeneEnd = geneData.GeneEnd;
 
+                mCurrentReadCount = 0;
                 mRnaBamReader.readBamCounts(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd), this::processBamRead);
 
                 if(mConfig.FragmentLengthsByGene)
@@ -165,6 +177,11 @@ public class FragmentSizeCalcs
 
     private void processBamRead(@NotNull final SAMRecord record)
     {
+        ++mCurrentReadCount;
+
+        if(mCurrentReadCount >= MAX_GENE_READ_COUNT)
+            return;
+
         if(!isCandidateRecord(record))
             return;
 

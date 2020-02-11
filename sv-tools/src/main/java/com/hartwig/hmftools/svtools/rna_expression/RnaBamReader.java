@@ -603,7 +603,6 @@ public class RnaBamReader
         long[] dupData = {secondStartPos, readLength, insertSize};
         dupDataList.add(dupData);
 
-
         return false;
     }
 

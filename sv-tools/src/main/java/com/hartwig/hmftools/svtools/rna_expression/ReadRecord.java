@@ -447,22 +447,21 @@ public class ReadRecord
             extraBaseLength += Cigar.getFirstCigarElement().getLength();
         }
 
-        if(extraBaseLength >= MIN_BASE_MATCH)
+        // allow a single base match if only 1 region matches
+        if(extraBaseLength >= 1)
         {
             final String extraBases = ReadBases.substring(0, extraBaseLength);
 
-            for(RegionReadData preRegion : region.getPreRegions())
+            final List<RegionReadData> matchedRegions = region.getPreRegions().stream()
+                    .filter(x -> matchesOtherRegionBases(extraBases, x, false)).collect(Collectors.toList());
+
+            if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
             {
-                int baseLength = preRegion.length();
+                mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if(extraBases.length() > baseLength)
-                    continue;
-
-                final String endBases = preRegion.refBases().substring(baseLength - extraBases.length(), baseLength);
-                if(endBases.equals(extraBases))
+                for(RegionReadData preRegion : matchedRegions)
                 {
                     // add matched coordinates for this exon and it as a region
-                    mMappedRegions.put(region, EXON_BOUNDARY);
                     mMappedRegions.put(preRegion, EXON_BOUNDARY);
                     addInferredMappingRegion(true, preRegion.end() - extraBaseLength + 1, preRegion.end());
                 }
@@ -485,28 +484,37 @@ public class ReadRecord
             extraBaseLength += Cigar.getLastCigarElement().getLength();
         }
 
-        if(extraBaseLength >= MIN_BASE_MATCH)
+        if(extraBaseLength >= 1)
         {
             final String extraBases = ReadBases.substring(ReadBases.length() - extraBaseLength, ReadBases.length());
 
-            for(RegionReadData postRegion : region.getPostRegions())
+            final List<RegionReadData> matchedRegions = region.getPostRegions().stream()
+                    .filter(x -> matchesOtherRegionBases(extraBases, x, true)).collect(Collectors.toList());
+
+            if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
             {
-                int baseLength = postRegion.length();
+                mMappedRegions.put(region, EXON_BOUNDARY);
 
-                if(extraBases.length() > baseLength)
-                    continue;
-
-                final String endBases = postRegion.refBases().substring(0, extraBases.length());
-                if(endBases.equals(extraBases))
+                for(RegionReadData postRegion : matchedRegions)
                 {
-                    // add matched coordinates for this exon and it as a region
-                    mMappedRegions.put(region, EXON_BOUNDARY);
                     mMappedRegions.put(postRegion, EXON_BOUNDARY);
-
                     addInferredMappingRegion(false, postRegion.start(), postRegion.start() + extraBaseLength - 1);
                 }
             }
         }
+    }
+
+    private static boolean matchesOtherRegionBases(final String extraBases, final RegionReadData otherRegion, boolean matchToStart)
+    {
+        int otherRegionLength = otherRegion.length();
+
+        if(extraBases.length() > otherRegionLength)
+            return false;
+
+        final String otherRegionBases = matchToStart ? otherRegion.refBases().substring(0, extraBases.length())
+                : otherRegion.refBases().substring(otherRegionLength - extraBases.length(), otherRegionLength);
+
+        return (otherRegionBases.equals(extraBases));
     }
 
     private int mappedRegionCount()
