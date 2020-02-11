@@ -70,6 +70,9 @@ public class RnaBamReader
     private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
     private final Map<String,ReadRecord> mFragmentReads;
+    private final Map<Long,List<long[]>> mDuplicateCache;
+    private final List<String> mDuplicateReadIds;
+
     private BufferedWriter mWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaBamReader.class);
@@ -94,6 +97,9 @@ public class RnaBamReader
             mSamReader = null;
         }
 
+        mDuplicateCache = Maps.newHashMap();
+        mDuplicateReadIds = Lists.newArrayList();
+
         mWriter = null;
     }
 
@@ -112,6 +118,8 @@ public class RnaBamReader
     {
         mFragmentReads.clear();
         mDiscardedReads.clear();
+
+        clearDuplicates();
 
         mCurrentGene = geneReadData;
         mGeneReadCount = 0;
@@ -147,13 +155,14 @@ public class RnaBamReader
 
     public void readBamCounts(final GenomeRegion genomeRegion, final Consumer<SAMRecord> consumer)
     {
+        clearDuplicates();
         SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
         samSlicer.slice(mSamReader, consumer);
     }
 
     private void processSamRecord(@NotNull final SAMRecord record)
     {
-        if(record.getDuplicateReadFlag())
+        if(checkDuplicates(record))
         {
             if(record.getFirstOfPairFlag())
                 ++mCurrentGene.getCounts()[GC_DUPLICATES];
@@ -544,6 +553,67 @@ public class RnaBamReader
 
         mFragmentReads.put(read.Id, read);
         return false;
+    }
+
+    private static final int DUP_DATA_SECOND_START = 0;
+    private static final int DUP_DATA_READ_LEN = 1;
+    private static final int DUP_DATA_INSERT_SIZE = 2;
+
+    public boolean checkDuplicates(final SAMRecord record)
+    {
+        if(record.getDuplicateReadFlag())
+            return true;
+
+        if(!mConfig.MarkDuplicates)
+            return false;
+
+        if(mDuplicateReadIds.contains(record.getReadName()))
+        {
+            mDuplicateReadIds.remove(record.getReadName());
+            return true;
+        }
+
+        if(!record.getReferenceName().equals(record.getMateReferenceName()) || record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+            return false;
+
+        long firstStartPos = record.getFirstOfPairFlag() ? record.getStart() : record.getMateAlignmentStart();
+        long secondStartPos = record.getFirstOfPairFlag() ? record.getMateAlignmentStart() : record.getStart();
+        int readLength = record.getReadLength();
+        int insertSize = record.getInferredInsertSize();
+
+        List<long[]> dupDataList = mDuplicateCache.get(firstStartPos);
+
+        if(dupDataList == null)
+        {
+            dupDataList = Lists.newArrayList();
+            mDuplicateCache.put(firstStartPos, dupDataList);
+        }
+        else
+        {
+            // search for a match
+            if(dupDataList.stream().anyMatch(x -> x[DUP_DATA_SECOND_START] == secondStartPos
+                    && x[DUP_DATA_READ_LEN] == readLength && insertSize == x[DUP_DATA_INSERT_SIZE]))
+            {
+                LOGGER.trace("duplicate fragment: id({}) chr({}) pos({}->{}) otherReadStart({}) insertSize({})",
+                        record.getReadName(), record.getReferenceName(), firstStartPos, record.getEnd(), secondStartPos, insertSize);
+
+                // cache so the second read can be identified immediately
+                mDuplicateReadIds.add(record.getReadName());
+                return true;
+            }
+        }
+
+        long[] dupData = {secondStartPos, readLength, insertSize};
+        dupDataList.add(dupData);
+
+
+        return false;
+    }
+
+    private void clearDuplicates()
+    {
+        mDuplicateCache.clear();
+        mDuplicateReadIds.clear();
     }
 
     private void recordFragmentLength(final SAMRecord record)

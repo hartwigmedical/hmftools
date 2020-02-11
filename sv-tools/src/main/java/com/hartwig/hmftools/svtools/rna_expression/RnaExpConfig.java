@@ -39,6 +39,7 @@ public class RnaExpConfig
     public static final String READ_COUNT_LIMIT = "read_count_limit";
     public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     public static final String KEEP_DUPLICATES = "keep_dups";
+    public static final String MARK_DUPLICATES = "mark_dups";
     public static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
@@ -53,7 +54,8 @@ public class RnaExpConfig
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
     public final int LongFragmentLimit;
-    public final boolean KeepDuplicates; // currently SAMSlicer enforces dropping of duplicates so this config cannot be applied
+    public final boolean KeepDuplicates;
+    public final boolean MarkDuplicates;
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
@@ -104,6 +106,7 @@ public class RnaExpConfig
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
         LongFragmentLimit = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         KeepDuplicates = cmd.hasOption(KEEP_DUPLICATES);
+        MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
         FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
         FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
 
@@ -129,6 +132,7 @@ public class RnaExpConfig
         GcBiasFile = "";
         LongFragmentLimit = DEFAULT_MAX_FRAGMENT_SIZE;
         KeepDuplicates = false;
+        MarkDuplicates = false;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -162,6 +166,7 @@ public class RnaExpConfig
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(KEEP_DUPLICATES, false, "Process duplicate reads (if marked as such eg by picard)");
+        options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate reads");
         options.addOption(FRAG_LENGTH_MIN_COUNT, true, "Fragment length measurement - min read fragments required");
         options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
         options.addOption(BAM_FILE, true, "RNA BAM file location");

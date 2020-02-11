@@ -199,7 +199,7 @@ public class FragmentSizeCalcs
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
-        if(!record.getFirstOfPairFlag() || record.getDuplicateReadFlag())
+        if(!record.getFirstOfPairFlag() || mRnaBamReader.checkDuplicates(record))
             return false;
 
         // ignore translocations and inversions
