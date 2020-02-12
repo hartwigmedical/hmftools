@@ -108,6 +108,9 @@ public class RnaExpression
 
             for(EnsemblGeneData geneData : genesDataList)
             {
+                if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
+                    continue;
+
                 processGene(geneData);
                 ++geneCount;
 

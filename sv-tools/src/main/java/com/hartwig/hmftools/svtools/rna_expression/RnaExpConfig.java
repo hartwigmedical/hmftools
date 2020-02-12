@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.visualiser.data.Exon;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -27,6 +28,7 @@ public class RnaExpConfig
     public static final String SAMPLE = "sample";
 
     private static final String GENE_ID_FILE = "gene_id_file";
+    private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String ALL_TRANSCRIPTS = "all_transcripts";
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
@@ -45,7 +47,8 @@ public class RnaExpConfig
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
-    public final List<String> RestrictedGeneIds;
+    public final List<String> RestrictedGeneIds; // specific set of genes to process
+    public final List<String> ExcludedGeneIds; // genes to ignore
     public final String OutputDir;
     public final String GcBiasFile;
     public final boolean AllTranscripts;
@@ -76,10 +79,20 @@ public class RnaExpConfig
     public RnaExpConfig(final CommandLine cmd)
     {
         RestrictedGeneIds = Lists.newArrayList();
+        ExcludedGeneIds = Lists.newArrayList();
 
         if(cmd.hasOption(GENE_ID_FILE))
         {
-            loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE));
+            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
+            loadGeneIdsFile(inputFile, RestrictedGeneIds);
+            LOGGER.info("file({}) load {} restricted genes", inputFile, RestrictedGeneIds.size());
+        }
+
+        if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
+        {
+            final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
+            loadGeneIdsFile(inputFile, ExcludedGeneIds);
+            LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
         AllTranscripts = cmd.hasOption(ALL_TRANSCRIPTS);
@@ -123,6 +136,7 @@ public class RnaExpConfig
     public RnaExpConfig()
     {
         RestrictedGeneIds = Lists.newArrayList();
+        ExcludedGeneIds = Lists.newArrayList();
         OutputDir = "";
         BamFile = "";
         RefGenomeFile = null;
@@ -159,6 +173,7 @@ public class RnaExpConfig
 
         options.addOption(ALL_TRANSCRIPTS, false, "Check all transcripts, not just canonical");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
+        options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
@@ -180,7 +195,7 @@ public class RnaExpConfig
         return options;
     }
 
-    private void loadGeneIdsFile(final String filename)
+    private static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
     {
         if (!Files.exists(Paths.get(filename)))
         {
@@ -201,9 +216,7 @@ public class RnaExpConfig
                 fileContents.remove(0);
             }
 
-            RestrictedGeneIds.addAll(fileContents.stream().map(x -> x.split(",")[0]).collect(Collectors.toList()));
-
-            LOGGER.info("file({}) analysing {} specific genes", filename, RestrictedGeneIds.size());
+            geneIdList.addAll(fileContents.stream().map(x -> x.split(",")[0]).collect(Collectors.toList()));
         }
         catch (IOException e)
         {

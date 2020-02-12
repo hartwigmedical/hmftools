@@ -40,8 +40,10 @@ public class FragmentSizeCalcs
     public static final int FL_LENGTH = 0;
     public static final int FL_FREQUENCY = 1;
 
+    private EnsemblGeneData mCurrentGeneData;
     private List<TranscriptData> mCurrentTransDataList;
     private int mCurrentReadCount;
+    private int mTotalReadCount;
     private int mProcessedFragments;
 
     private static final Logger LOGGER = LogManager.getLogger(FragmentSizeCalcs.class);
@@ -52,8 +54,10 @@ public class FragmentSizeCalcs
         mGeneTransCache = geneTransCache;
         mRnaBamReader = bamReader;
 
+        mCurrentGeneData = null;
         mCurrentTransDataList = null;
         mCurrentReadCount = 0;
+        mTotalReadCount = 0;
         mProcessedFragments = 0;
         mWriter = null;
 
@@ -89,6 +93,9 @@ public class FragmentSizeCalcs
             {
                 EnsemblGeneData geneData = geneDataList.get(i);
 
+                if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
+                    continue;
+
                 if (geneData.GeneStart < lastGeneEnd)
                     continue;
 
@@ -106,13 +113,14 @@ public class FragmentSizeCalcs
 
                 if(i > 0 && (i % 100) == 0)
                 {
-                    LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({})",
-                            chromosome, i, lastGeneEnd, mProcessedFragments);
+                    LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
+                            chromosome, i, lastGeneEnd, mProcessedFragments, mTotalReadCount);
                 }
 
                 lastGeneEnd = geneData.GeneEnd;
 
                 mCurrentReadCount = 0;
+                mCurrentGeneData = geneData;
                 mRnaBamReader.readBamCounts(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd), this::processBamRead);
 
                 if(mConfig.FragmentLengthsByGene)
@@ -178,6 +186,12 @@ public class FragmentSizeCalcs
     private void processBamRead(@NotNull final SAMRecord record)
     {
         ++mCurrentReadCount;
+        ++mTotalReadCount;
+
+        if(mTotalReadCount > 0 && (mTotalReadCount % 10000) == 0)
+        {
+            LOGGER.trace("currentGene({}:{}) totalReads({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mTotalReadCount);
+        }
 
         if(mCurrentReadCount >= MAX_GENE_READ_COUNT)
             return;
