@@ -17,7 +17,7 @@ public class TempRunner {
 
         Transvar transvar = new Transvar(refFastaPath, refVersion);
 
-        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation("EGFR", Strings.EMPTY, "T790M");
+        List<String> hotspots = transvar.extractHotspotsFromProteinAnnotation("EGFR", Strings.EMPTY, "T790M");
 
         System.out.println(hotspots);
     }

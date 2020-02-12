@@ -30,7 +30,7 @@ public class Transvar {
         this.refVersion = refVersion;
     }
 
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
+    public List<String> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
             @NotNull String proteinAnnotation) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
@@ -82,7 +82,6 @@ public class Transvar {
     @NotNull
     private static List<String> captureStdout(@NotNull Process process) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
         List<String> stdout = toStringList(reader);
 
         reader.close();
