@@ -20,7 +20,7 @@ public enum TumorMutationalStatus {
 
     @NotNull
     public static TumorMutationalStatus fromBurdenPerMb(double burdenPerMb) {
-        return Doubles.greaterThan(burdenPerMb, TMB_THRESHOLD) ? HIGH : LOW;
+        return Doubles.greaterOrEqual(burdenPerMb, TMB_THRESHOLD) ? HIGH : LOW;
     }
 
     @NotNull

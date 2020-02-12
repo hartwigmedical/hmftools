@@ -19,7 +19,7 @@ public enum MicrosatelliteStatus {
 
     @NotNull
     public static MicrosatelliteStatus fromIndelsPerMb(double microsatelliteIndelsPerMb) {
-        return Doubles.greaterThan(microsatelliteIndelsPerMb, MSI_THRESHOLD) ? MSI : MSS;
+        return Doubles.greaterOrEqual(microsatelliteIndelsPerMb, MSI_THRESHOLD) ? MSI : MSS;
     }
 
     @NotNull
