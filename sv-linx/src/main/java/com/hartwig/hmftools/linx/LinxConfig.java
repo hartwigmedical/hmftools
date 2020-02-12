@@ -60,6 +60,9 @@ public class LinxConfig
     public static final String DB_PASS = "db_pass";
     public static final String DB_URL = "db_url";
 
+    public static final String DRIVERS_CHECK = "check_drivers";
+    public static final String CHECK_FUSIONS = "check_fusions";
+
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";

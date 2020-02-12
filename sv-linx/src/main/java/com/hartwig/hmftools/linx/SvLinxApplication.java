@@ -2,9 +2,11 @@ package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantFactory.PASS;
+import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_PASS;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_URL;
 import static com.hartwig.hmftools.linx.LinxConfig.DB_USER;
+import static com.hartwig.hmftools.linx.LinxConfig.DRIVERS_CHECK;
 import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
@@ -48,8 +50,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class SvLinxApplication
 {
-    private static final String DRIVERS_CHECK = "check_drivers";
-    private static final String CHECK_FUSIONS = "check_fusions";
     private static final String FILTER_QC_PASS = "filter_qc_pass";
 
     private static final Logger LOGGER = LogManager.getLogger(SvLinxApplication.class);

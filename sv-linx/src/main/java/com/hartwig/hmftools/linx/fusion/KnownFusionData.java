@@ -70,6 +70,9 @@ public class KnownFusionData
 
     public boolean loadFromFile(@NotNull final CommandLine cmd)
     {
+        if(!cmd.hasOption(PROMISCUOUS_THREE_CSV) && !cmd.hasOption(PROMISCUOUS_FIVE_CSV) && !cmd.hasOption(FUSION_PAIRS_CSV))
+            return false;
+
         try
         {
             if(cmd.hasOption(PROMISCUOUS_THREE_CSV))

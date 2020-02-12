@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
@@ -153,70 +154,70 @@ public class FusionDisruptionAnalyser
 
     private void initialise(final CommandLine cmdLineArgs)
     {
-        if(cmdLineArgs != null)
+        if(cmdLineArgs == null)
+            return;
+
+        if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
         {
-            if (cmdLineArgs.hasOption(PRE_GENE_BREAKEND_DISTANCE))
+            int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
+            PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
+        }
+
+        if(cmdLineArgs.hasOption(RESTRICTED_GENE_LIST))
+        {
+            String restrictedGenesStr = cmdLineArgs.getOptionValue(RESTRICTED_GENE_LIST);
+            mRestrictedGenes = Arrays.stream(restrictedGenesStr.split(";")).collect(Collectors.toList());
+
+            LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
+        }
+
+        mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
+        mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
+        mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
+        mLogRepeatedGenePairs = cmdLineArgs.hasOption(LOG_REPEAT_GENE_PAIRS);
+
+        if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
+        {
+            mFusionFinder.setLogInvalidReasons(true);
+            mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
+        }
+
+        if(mConfig.hasMultipleSamples() || mLogAllPotentials)
+        {
+            mFusionWriter.initialiseOutputFiles();
+        }
+
+        if(mConfig.hasMultipleSamples())
+        {
+            mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
+        }
+
+        if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
+        {
+            mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder, mUniqueFusions, mInvalidFusions);
+            mRnaFusionMapper.setOutputDir(mOutputDir);
+            mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
+        }
+
+        mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
+
+        if(mFindNeoEpitopes && cmdLineArgs.hasOption(REF_GENOME_FILE))
+        {
+            try
             {
-                int preGeneBreakendDistance = Integer.parseInt(cmdLineArgs.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
-                PRE_GENE_PROMOTOR_DISTANCE = preGeneBreakendDistance;
+                IndexedFastaSequenceFile refGenomeFile =
+                        new IndexedFastaSequenceFile(new File(cmdLineArgs.getOptionValue(REF_GENOME_FILE)));
+                RefGenomeSource refGenome = new RefGenomeSource(refGenomeFile);
+                mNeoEpitopeFinder = new NeoEpitopeFinder(refGenome, mGeneTransCollection, mOutputDir);
             }
-
-            if(cmdLineArgs.hasOption(RESTRICTED_GENE_LIST))
+            catch(IOException e)
             {
-                String restrictedGenesStr = cmdLineArgs.getOptionValue(RESTRICTED_GENE_LIST);
-                mRestrictedGenes = Arrays.stream(restrictedGenesStr.split(";")).collect(Collectors.toList());
-
-                LOGGER.info("restricting fusion genes to: {}", restrictedGenesStr);
-            }
-
-            mLogReportableOnly = cmdLineArgs.hasOption(LOG_REPORTABLE_ONLY);
-            mFusionParams.RequirePhaseMatch = cmdLineArgs.hasOption(SKIP_UNPHASED_FUSIONS);
-            mLogAllPotentials = cmdLineArgs.hasOption(LOG_ALL_POTENTIALS);
-            mLogRepeatedGenePairs = cmdLineArgs.hasOption(LOG_REPEAT_GENE_PAIRS);
-
-            if(cmdLineArgs.hasOption(LOG_INVALID_REASONS))
-            {
-                mFusionFinder.setLogInvalidReasons(true);
-                mFusionParams.LogInvalidReasons = cmdLineArgs.hasOption(LOG_INVALID_REASONS);
-            }
-
-            if(mConfig.hasMultipleSamples() || mLogAllPotentials)
-            {
-                mFusionWriter.initialiseOutputFiles();
-            }
-
-            if(mConfig.hasMultipleSamples())
-            {
-                mDisruptionFinder.initialiseOutputFile("LNX_DISRUPTIONS.csv");
-            }
-
-            if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
-            {
-                mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder, mUniqueFusions, mInvalidFusions);
-                mRnaFusionMapper.setOutputDir(mOutputDir);
-                mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
-            }
-
-            mFindNeoEpitopes = cmdLineArgs.hasOption(NEO_EPITOPES);
-
-            if(mFindNeoEpitopes && cmdLineArgs.hasOption(REF_GENOME_FILE))
-            {
-                try
-                {
-                    IndexedFastaSequenceFile refGenomeFile =
-                            new IndexedFastaSequenceFile(new File(cmdLineArgs.getOptionValue(REF_GENOME_FILE)));
-                    RefGenomeSource refGenome = new RefGenomeSource(refGenomeFile);
-                    mNeoEpitopeFinder = new NeoEpitopeFinder(refGenome, mGeneTransCollection, mOutputDir);
-                }
-                catch(IOException e)
-                {
-                    LOGGER.error("failed to load ref genome: {}", e.toString());
-                    mValidState = false;
-                }
+                LOGGER.error("failed to load ref genome: {}", e.toString());
+                mValidState = false;
             }
         }
 
-        if(!mFusionFinder.hasValidConfigData())
+        if(cmdLineArgs.hasOption(CHECK_FUSIONS) && !mFusionFinder.hasValidConfigData())
             mValidState = false;
     }
 
