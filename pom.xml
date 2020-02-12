@@ -60,10 +60,10 @@
         <amber.version>3.2</amber.version>
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.39</purple.version>
-        <sage.version>1.1</sage.version>
+        <sage.version>2.0</sage.version>
         <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>
-        <patient-reporter.version>7.9</patient-reporter.version>
+        <patient-reporter.version>7.10</patient-reporter.version>
         <patient-db.version>3.39</patient-db.version>
         <knowledgebase-importer.version>1.8</knowledgebase-importer.version>
         <vicc-knowledgebase-importer.version>1.0</vicc-knowledgebase-importer.version>
@@ -80,10 +80,10 @@
         <apache.commons.lang3.version>3.6</apache.commons.lang3.version>
         <apache.commons.math3.version>3.6</apache.commons.math3.version>
         <apache.commons.csv.version>1.5</apache.commons.csv.version>
+        <apache.commons.dbcp2.version>2.1.1</apache.commons.dbcp2.version>
         <apache.log4j.version>2.8.1</apache.log4j.version>
         <apache.log4j.slf4j.version>2.8.1</apache.log4j.slf4j.version>
         <apache.lucene.version>7.1.0</apache.lucene.version>
-        <apache.dbcp2.version>2.1.1</apache.dbcp2.version>
         <jooq.version>3.9.5</jooq.version>
         <mysqlconnector.version>8.0.11</mysqlconnector.version>
         <rxjava2.version>2.1.2</rxjava2.version>
@@ -264,7 +264,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-dbcp2</artifactId>
-                <version>${apache.dbcp2.version}</version>
+                <version>${apache.commons.dbcp2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>

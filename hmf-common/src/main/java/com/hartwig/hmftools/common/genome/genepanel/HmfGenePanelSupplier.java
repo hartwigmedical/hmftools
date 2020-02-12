@@ -35,15 +35,24 @@ public final class HmfGenePanelSupplier {
 
     @NotNull
     public static Map<String, HmfTranscriptRegion> allGenesMap37() {
-        List<HmfTranscriptRegion> regions = allGeneList37();
+        return allGenesMap(allGeneList37());
+    }
+
+    @NotNull
+    public static Map<String, HmfTranscriptRegion> allGenesMap38() {
+        return allGenesMap(allGeneList38());
+    }
+
+    @NotNull
+    private static Map<String, HmfTranscriptRegion> allGenesMap(List<HmfTranscriptRegion> regions) {
         Map<String, HmfTranscriptRegion> geneMap = Maps.newHashMap();
         for (HmfTranscriptRegion region : regions) {
             assert !geneMap.containsKey(region.gene());
             geneMap.put(region.gene(), region);
         }
-
         return geneMap;
     }
+
 
     @NotNull
     private static SortedSetMultimap<String, HmfTranscriptRegion> toSortedMap(@NotNull final List<HmfTranscriptRegion> regions) {

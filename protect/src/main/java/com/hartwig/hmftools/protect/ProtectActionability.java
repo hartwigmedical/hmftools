@@ -68,6 +68,8 @@ public class ProtectActionability {
     private static final String TUMOR_BARCODE_ID = "tumor_barcode_id";
 
     private static final String KNOWLEDGEBASE_DIRECTORY = "knowledgebase_dir";
+    private static final String KNOWLEDGEBASE_DIRECTORY_V2 = "knowledgebase_dir_v2";
+
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String TEMPLATE_CONCLUSION_TSV = "template_conclusion";
     private static final String GERMLINE_GENES_CSV = "germline_genes_csv";
@@ -96,6 +98,8 @@ public class ProtectActionability {
 
         // General params needed for every sample
         final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
+        final String knowledgebaseDirectory_v2 = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY_V2);
+
         final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
         final String templateConclusionTsv = cmd.getOptionValue(TEMPLATE_CONCLUSION_TSV);
         final String germlineGenesCsv = cmd.getOptionValue(GERMLINE_GENES_CSV);
@@ -120,8 +124,9 @@ public class ProtectActionability {
             printUsageAndExit(options);
         }
 
-        LOGGER.info("Reading knowledgebase generator v2 from {}", knowledgebaseDirectory);
-      //  ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
+        LOGGER.info("Reading knowledgebase generator v2 from {}", knowledgebaseDirectory_v2);
+        com.hartwig.hmftools.protect.actionability_v2.ActionabilityAnalyzer actionabilityAnalyzer_v2 =
+                com.hartwig.hmftools.protect.actionability_v2.ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory_v2);
 
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);
@@ -347,10 +352,12 @@ public class ProtectActionability {
 
     private static boolean validInputForBaseReport(@NotNull CommandLine cmd) {
         return valueExists(cmd, TUMOR_SAMPLE_ID) && valueExists(cmd, TUMOR_BARCODE_ID) && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY)
-                && dirExists(cmd, LIMS_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV) && fileExists(cmd, SOMATIC_VARIANT_VCF)
-                && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV) && fileExists(cmd, LINX_FUSION_TSV)
-                && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(cmd, GERMLINE_VARIANT_VCF)
-                && fileExists(cmd, PURPLE_QC_TSV) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd, LINX_DRIVERS_TSV);
+                && dirExists(cmd, KNOWLEDGEBASE_DIRECTORY_V2) && dirExists(cmd, LIMS_DIRECTORY) && fileExists(cmd, TUMOR_LOCATION_CSV)
+                && fileExists(cmd, SOMATIC_VARIANT_VCF) && fileExists(cmd, PURPLE_PURITY_TSV) && fileExists(cmd, PURPLE_GENE_CNV_TSV)
+                && fileExists(cmd, LINX_FUSION_TSV) && fileExists(cmd, CHORD_TXT) && fileExists(cmd, TEMPLATE_CONCLUSION_TSV) && fileExists(
+                cmd,
+                GERMLINE_VARIANT_VCF) && fileExists(cmd, PURPLE_QC_TSV) && fileExists(cmd, GERMLINE_GENES_CSV) && fileExists(cmd,
+                LINX_DRIVERS_TSV);
     }
 
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -400,6 +407,8 @@ public class ProtectActionability {
         options.addOption(TUMOR_BARCODE_ID, true, "The barcode ID for which a patient report will be generated.");
 
         options.addOption(KNOWLEDGEBASE_DIRECTORY, true, "Path towards the folder containing knowledgebase files.");
+        options.addOption(KNOWLEDGEBASE_DIRECTORY_V2, true, "Path towards the folder containing knowledgebase files from version 2.");
+
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(TEMPLATE_CONCLUSION_TSV, true, "Path towards the template for conclusion TSV.");
         options.addOption(GERMLINE_GENES_CSV, true, "Path towards a CSV containing germline genes which we want to report.");

@@ -257,3 +257,45 @@ hard_min_tumor_qual_vcf | 30 | `QUAL`
 hard_max_normal_alt_support |2| Normal `AD[1]`
 
 Including the `hard_filter` flag will turn all the [soft filters](#4-soft-filters) described above into (lazily applied) hard filters. Again, hotspots are excluded from these filters.
+
+
+# Variant Pipeline
+A number of post processing steps are applied to the SAGE output.
+
+## PON Filtering
+To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 200 germline samples and recording any variants with at least 3 reads and total base quality 30. 
+The frequency (`PON_COUNT`) of each variant was then aggregated into the PON file.
+We use the PON file to filter SAGE output of any variant that appears in more than 2 samples.
+
+## Post Process
+
+SAGE post process is a separate application that can make some readjustments to the SAGE output. It depends on the SAGE phasing (`LPS` field) and snpEff annotations.   
+
+The application applies the following rules:
+1. If a left-aligned indel with micro-homology in a splice region can equally be represented as an inframe indel in a coding region when right-aligned, then add an inframe_insertion/deletion annotation to the canonical snpEff record.
+2. Add a splice_donor_variant snpEff annotation to any +5 splice donor SNVs. 
+3. If two phased frameshift indels in the same exon when considered together are inframe, then add the Phased Inframe Indel `PII` flag to both entries.
+
+
+# Performance Characteristics
+Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
+Elapsed time is measured in minutes. 
+CPU time is minutes spent in user mode. 
+Peak memory is measure in gigabytes.
+
+
+Threads | Elapsed Time| CPU Time | Peak Mem
+---|---|---|---
+8 | 87 | 682 | 91
+16 | 52 | 795 | 100 
+24 | 40 | 850 | 106 
+32 | 34 | 930 | 110
+48 | 33 | 1286 | 109
+64 | 33 | 1680 | 110
+72 | 32 | 1857 | 115
+
+ ## Version History
+ - 2.0
+   - Revamped small indel / SNV caller
+ - 1.1
+   - SageHotspotAnnotation - Merge all info header fields from hotspots vcf with source vcf   
