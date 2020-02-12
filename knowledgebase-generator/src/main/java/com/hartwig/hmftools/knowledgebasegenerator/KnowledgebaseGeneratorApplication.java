@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
-import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUsePrograms;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -51,7 +51,7 @@ public class KnowledgebaseGeneratorApplication {
         LOGGER.info("Read {} VICC entries from {}", viccEntries.size(), viccJson);
 
         String compassionateUseProgramsTsv = cmd.getOptionValue(COMPASSIONATE_USE_PROGRAMS_TSV);
-        List<CompassionateUsePrograms> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramsTsv);
+        List<CompassionateUseProgram> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramsTsv);
         LOGGER.info("Read {} compassionate use programs from {}", compassionateUsePrograms.size(), compassionateUseProgramsTsv);
 
 
