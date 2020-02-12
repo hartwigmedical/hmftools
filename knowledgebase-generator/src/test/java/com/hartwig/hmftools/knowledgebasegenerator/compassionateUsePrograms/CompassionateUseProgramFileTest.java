@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUsePrograms;
 
 import org.junit.Ignore;
 import org.junit.Test;

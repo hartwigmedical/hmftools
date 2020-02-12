@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms.CompassionateUseProgramFile;
-import com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms.CompassionateUsePrograms;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUsePrograms;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 

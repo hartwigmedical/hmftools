@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms;
+package com.hartwig.hmftools.knowledgebasegenerator.compassionateuse;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

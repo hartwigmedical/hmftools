@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms;
+package com.hartwig.hmftools.knowledgebasegenerator.compassionateuse;
 
 import java.io.File;
 import java.io.IOException;
