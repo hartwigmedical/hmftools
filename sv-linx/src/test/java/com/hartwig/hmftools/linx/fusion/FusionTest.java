@@ -522,6 +522,73 @@ public class FusionTest
         assertFalse(validateFusionAnnotations(fusion, false, false));
     }
 
+    @Test
+    public void testSameGeneFusions()
+    {
+        LinxTester tester = new LinxTester();
+
+        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+
+        tester.initialiseFusions(geneTransCache);
+
+        String geneName = "GENE1";
+        String geneId1 = "ENSG0001";
+        String chromosome = "1";
+        byte strand = 1;
+
+        List<EnsemblGeneData> geneList = Lists.newArrayList();
+        geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1500));
+
+        addGeneData(geneTransCache, chromosome, geneList);
+
+        List<TranscriptData> transDataList = Lists.newArrayList();
+
+        int transId = 1;
+
+        long[] exonStarts = new long[]{100, 300, 500, 700, 900, 1100, 1300};
+        int[] exonPhases = new int[]{-1, 1, 1, 1, 1, 1, -1};
+
+        TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
+        transDataList.add(transData);
+
+        addTransExonData(geneTransCache, geneId1, transDataList);
+
+        // mark as 3' promiscuous
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionData().promiscuousThreeGenes().add(geneName);
+
+        byte posOrient = 1;
+        byte negOrient = -1;
+
+        // first test a DUP around a single exon, remaining in phase
+        List<GeneAnnotation> upGenes = Lists.newArrayList();
+        upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome, 650, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        upGenes.get(0).setPositionalData(chromosome, 650, posOrient);
+
+        // add downstream breakends
+        List<GeneAnnotation> downGenes = Lists.newArrayList();
+        downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome, 450, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
+        downGenes.get(0).setPositionalData(chromosome, 450, negOrient);
+
+        FusionParameters params = new FusionParameters();
+        params.RequirePhaseMatch = true;
+        params.AllowExonSkipping = true;
+
+        List<GeneFusion> fusions = tester.FusionAnalyser.getFusionFinder().findFusions(upGenes, downGenes, params, true);
+        // fusions.forEach(x -> x.setKnownType(REPORTABLE_TYPE_KNOWN));
+        // tester.FusionAnalyser.getFusionFinder().setReportableGeneFusions(fusions);
+
+        assertEquals(1, fusions.size());
+        final GeneFusion fusion = fusions.get(0);
+
+        // the selected fusion is the longest for coding bases and without any exon skipping
+        assertEquals(650, fusion.upstreamTrans().gene().position());
+        assertEquals(450, fusion.downstreamTrans().gene().position());
+        assertEquals(0, fusion.getExonsSkipped(true));
+        assertEquals(0, fusion.getExonsSkipped(false));
+        assertTrue(!fusion.reportable());
+
+    }
+
     private static boolean validateFusionAnnotations(final GeneFusion fusion, boolean validEnds, boolean validTraversal)
     {
         final FusionAnnotations annotations = fusion.getAnnotations();
