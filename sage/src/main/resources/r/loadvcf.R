@@ -1,6 +1,7 @@
 library(VariantAnnotation)
 library(tidyr)
 library(dplyr)
+library(GenomicRanges)
 
 vcf_data_frame<- function(vcf) {
   vcf.rowRanges = rowRanges(vcf)
@@ -37,16 +38,15 @@ vcf_data_frame<- function(vcf) {
     #postStrelka = vcf.info$POST_STRELKA,
     #highConfidence = vcf.info$HC,
     #mappability = vcf.info$MAPPABILITY,
-    germlinePonCount = vcf.info$GERMLINE_PON_COUNT,
-    somaticPonCount = vcf.info$SOMATIC_PON_COUNT,
+    ponCount = vcf.info$PON_COUNT,
     
     tier = vcf.info$TIER,
     normalAD = normalAD,
     tumorAD = tumorAD,
     tumorAF = vcf.info$AF,
     
-    rawNormalAltBaseQual = vcf.geno$RABQ[, 1],
-    rawTumorAltBaseQual = vcf.geno$RABQ[, 2],
+    rawNormalAltBaseQual = vcf.geno$RABQ[, 1, 2],
+    rawTumorAltBaseQual = vcf.geno$RABQ[, 2, 2],
     
     rawNormalDP = vcf.geno$RDP[, 1],
     rawNormalAD0 = vcf.geno$RAD[, 1, 1],
@@ -127,7 +127,6 @@ vcf_data_frame<- function(vcf) {
 
 
 
-# scp jon@hmf-datastore://data/experiments/191119_sage_panel_slices/*/*final*.vcf.gz .
 
 sagePanelResult = data.frame()
 for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/", pattern = "*vcf.gz$")) {
