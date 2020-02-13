@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.visualiser.data.Exon;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -29,10 +28,11 @@ public class RnaExpConfig
 
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
-    private static final String ALL_TRANSCRIPTS = "all_transcripts";
+    private static final String CANONICAL_ONLY = "canonical_only";
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
     private static final String WRITE_READ_DATA = "write_read_data";
+    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
     private static final String GENE_STATS_ONLY = "gene_stats_only";
 
     public static final String REF_GENOME = "ref_genome";
@@ -51,7 +51,7 @@ public class RnaExpConfig
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final String OutputDir;
     public final String GcBiasFile;
-    public final boolean AllTranscripts;
+    public final boolean CanonicalTranscriptOnly;
     public final String BamFile;
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
@@ -63,6 +63,8 @@ public class RnaExpConfig
     public final boolean WriteExonData;
     public final boolean WriteReadData;
     public final boolean WriteFragmentLengths;
+    public final boolean WriteTransComboData;
+
     public final boolean GeneStatsOnly;
     public final int FragmentLengthMinCount;
     public final boolean FragmentLengthsByGene;
@@ -95,7 +97,7 @@ public class RnaExpConfig
             LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        AllTranscripts = cmd.hasOption(ALL_TRANSCRIPTS);
+        CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
         OutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
         BamFile = cmd.getOptionValue(BAM_FILE);
@@ -126,6 +128,7 @@ public class RnaExpConfig
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
+        WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         GeneStatsOnly = cmd.hasOption(GENE_STATS_ONLY);
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
@@ -141,7 +144,7 @@ public class RnaExpConfig
         BamFile = "";
         RefGenomeFile = null;
         RefFastaSeqFile = null;
-        AllTranscripts = true;
+        CanonicalTranscriptOnly = false;
         ReadCountLimit = DEFAULT_MAX_READ_COUNT;
         GcBiasFile = "";
         LongFragmentLimit = DEFAULT_MAX_FRAGMENT_SIZE;
@@ -151,6 +154,7 @@ public class RnaExpConfig
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
+        WriteTransComboData = false;
         GeneStatsOnly = false;
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
@@ -171,7 +175,7 @@ public class RnaExpConfig
         options.addOption(SAMPLE, true, "Tumor sample ID");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
 
-        options.addOption(ALL_TRANSCRIPTS, false, "Check all transcripts, not just canonical");
+        options.addOption(CANONICAL_ONLY, false, "Check all transcripts, not just canonical");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
@@ -187,6 +191,7 @@ public class RnaExpConfig
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
+        options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
         options.addOption(GENE_STATS_ONLY, false, "Skip all processing except gene summary data");
         options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
 

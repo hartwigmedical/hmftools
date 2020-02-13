@@ -65,7 +65,7 @@ public class RnaExpression
             mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         }
 
-        mGeneTransCache.setRequiredData(true, false, false, !mConfig.AllTranscripts);
+        mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.loadEnsemblData(false);
 
         mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mRnaBamReader);

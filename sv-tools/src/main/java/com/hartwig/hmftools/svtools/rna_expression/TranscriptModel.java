@@ -123,7 +123,7 @@ public class TranscriptModel
 
             for (int i = 1; i < transData.exons().size(); ++i)
             {
-                if(transData.exons().get(0).ExonEnd == exonEnd && transData.exons().get(1).ExonStart == exonStart)
+                if(transData.exons().get(i-1).ExonEnd == exonEnd && transData.exons().get(i).ExonStart == exonStart)
                     return false;
             }
         }
