@@ -762,7 +762,7 @@ public class RnaFusionMapper
             }
         }
 
-        KnownFusionData refFusionData = mFusionFinder.getKnownFusionDatal();
+        KnownFusionData refFusionData = mFusionFinder.getKnownFusionData();
 
         if(refFusionData == null)
         {

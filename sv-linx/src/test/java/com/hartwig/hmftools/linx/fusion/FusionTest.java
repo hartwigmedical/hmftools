@@ -59,8 +59,6 @@ public class FusionTest
         String chromosome = "1";
         byte strand = 1;
 
-        // GeneAnnotation geneUp = createGeneAnnotation(0, true, geneName, geneId1, strand, chromosome, 0, 1);
-
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId1, geneName, chromosome, strand, 100, 1000));
 
@@ -119,7 +117,6 @@ public class FusionTest
         downGenes.get(1).setPositionalData(chromosome, 10450, negOrient);
         downGenes.get(2).setPositionalData(chromosome, 10650, negOrient);
         downGenes.get(3).setPositionalData(chromosome, 10850, negOrient);
-
 
         FusionParameters params = new FusionParameters();
         params.RequirePhaseMatch = true;
@@ -324,6 +321,9 @@ public class FusionTest
         addTransExonData(geneTransCache, geneId2, transDataList);
 
         PRE_GENE_PROMOTOR_DISTANCE = 200;
+
+        // set known fusion genes
+        tester.FusionAnalyser.getFusionFinder().getKnownFusionData().knownPairs().add(new String[] {geneName1, geneName2});
 
         // test 1: create a chain of DELs with a single-SV fusion which link between exon 2-3 of upstream to 2-3 of downstream
 

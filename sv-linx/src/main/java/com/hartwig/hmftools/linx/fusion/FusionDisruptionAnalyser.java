@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -226,8 +227,6 @@ public class FusionDisruptionAnalyser
     public final List<GeneFusion> getFusions() { return mFusions; }
     public boolean validState() { return mValidState; }
 
-    // for testing
-    public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
     public final FusionFinder getFusionFinder() { return mFusionFinder; }
     public final DisruptionFinder getDisruptionFinder() { return mDisruptionFinder; }
 
@@ -1085,5 +1084,9 @@ public class FusionDisruptionAnalyser
         if(mNeoEpitopeFinder != null)
             mNeoEpitopeFinder.close();
     }
+
+    @VisibleForTesting
+    public void setHasValidConfigData(boolean toggle) { mFusionFinder.setHasValidConfigData(toggle); }
+
 
 }

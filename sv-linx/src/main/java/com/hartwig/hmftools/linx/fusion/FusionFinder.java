@@ -33,8 +33,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionFinder
 {
-    private KnownFusionData mKnownFusionData;
-    boolean mHasValidConfigData;
+    private final KnownFusionData mKnownFusionData;
+    private boolean mHasValidConfigData;
 
     private SvGeneTranscriptCollection mGeneTranscriptCollection;
     private List<String> mProteinsRequiredKept;
@@ -59,7 +59,7 @@ public class FusionFinder
     {
         mGeneTranscriptCollection = geneTransCache;
 
-        mKnownFusionData = null;
+        mKnownFusionData = new KnownFusionData();
         mHasValidConfigData = false;
 
         mProteinsRequiredKept = Lists.newArrayList();
@@ -76,8 +76,6 @@ public class FusionFinder
 
     private void initialise(@NotNull final CommandLine cmd)
     {
-        mKnownFusionData = new KnownFusionData();
-
         if(mKnownFusionData.loadFromFile(cmd))
         {
             LOGGER.debug("loaded known fusion data");
@@ -96,7 +94,7 @@ public class FusionFinder
         options.addOption(PROMISCUOUS_THREE_CSV, true, "Promiscuous 3' genes");
     }
 
-    public final KnownFusionData getKnownFusionDatal() { return mKnownFusionData; }
+    public final KnownFusionData getKnownFusionData() { return mKnownFusionData; }
 
     public static final String INVALID_REASON_ORIENTATION = "Orientation";
     public static final String INVALID_REASON_PHASING = "Unphased";
@@ -745,9 +743,6 @@ public class FusionFinder
 
     public String getKnownFusionType(final Transcript upTrans, final Transcript downTrans)
     {
-        if(mHasValidConfigData && mKnownFusionData == null)
-            return REPORTABLE_TYPE_KNOWN;
-
         final String upGene = upTrans.gene().GeneName;
         final String downGene = downTrans.gene().GeneName;
 
@@ -776,5 +771,7 @@ public class FusionFinder
 
         return REPORTABLE_TYPE_NONE;
     }
+
+
 
 }
