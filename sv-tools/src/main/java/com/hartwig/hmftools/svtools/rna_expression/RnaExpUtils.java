@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class RnaExpUtils
 {

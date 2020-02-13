@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_B
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.findStringOverlaps;
@@ -480,6 +481,37 @@ public class RnaExpressionTest
 
         markRegionBases(readCoords, region);
         assertEquals(12, region.baseCoverage(1));
+    }
+
+    @Test
+    public void testUniqueRegionBases()
+    {
+        RegionReadData region1 = createRegion("TRANS01",1,"1", 100, 119);
+        region1.setRefBases(REF_BASE_STR_1);
+
+        // covers the first region entirely
+        RegionReadData region2 = createRegion("TRANS02",1,"1", 95, 124);
+        region2.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
+
+        RegionReadData region3 = createRegion("TRANS03",1,"1", 80, 99);
+        region3.setRefBases(REF_BASE_STR_1);
+
+        RegionReadData region4 = createRegion("TRANS04",1,"1", 70, 89);
+        region4.setRefBases(REF_BASE_STR_1);
+
+        RegionReadData region5 = createRegion("TRANS04",1,"1", 130, 149);
+        region5.setRefBases(REF_BASE_STR_1);
+
+        List<RegionReadData> regions = Lists.newArrayList(region1, region2, region3, region4, region5);
+        findUniqueBases(regions);
+
+        assertEquals(0, region1.uniqueBaseCount());
+        assertEquals(5, region2.uniqueBaseCount());
+        assertEquals(5, region3.uniqueBaseCount());
+        assertEquals(10, region4.uniqueBaseCount());
+        assertEquals(20, region5.uniqueBaseCount());
+
+
     }
 
     @Test

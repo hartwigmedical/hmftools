@@ -3,17 +3,13 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICE;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calculateTranscriptResults;
 
 import java.util.List;
 import java.util.Map;
@@ -198,6 +194,8 @@ public class RnaExpression
 
                 region.setRefBases(regionRefBases);
             }
+
+            findUniqueBases(geneReadData.getExonRegions());
         }
 
         // use a buffer around the gene to pick up reads which span outside its transcripts
@@ -224,71 +222,6 @@ public class RnaExpression
                 }
             }
         }
-
-        // mGeneReadDatalist.add(geneReadData);
-    }
-
-    private TranscriptResults calculateTranscriptResults(final GeneReadData geneReadData, final TranscriptData transData)
-    {
-        int exonsFound = 0;
-
-        int spliceJunctionsSupported = 0;
-        long exonicBases = 0;
-        long exonicBaseCoverage = 0;
-
-        /* Criteria for transcript selection
-        - all exon junctions covered
-        - unique exon junctions
-        - split reads skipping exons
-        - unique exon reads (but could cover introns as well
-         */
-
-        final List<ExonData> exons = transData.exons();
-
-        for(int i = 0; i < exons.size(); ++i)
-        {
-            ExonData exon = exons.get(i);
-
-            final RegionReadData exonReadData = geneReadData.findExonRegion(exon.ExonStart, exon.ExonEnd);
-            if(exonReadData == null)
-                continue;
-
-            int exonCoverage = exonReadData.baseCoverage(1);
-            exonicBaseCoverage += exonCoverage;
-
-            if(exonCoverage > 0)
-                ++exonsFound;
-
-            exonicBases += exon.ExonEnd - exon.ExonStart + 1;
-
-            if(i > 0)
-            {
-                int[] sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START);
-
-                if(sjReads[TRANS_COUNT] > 0)
-                {
-                    ++spliceJunctionsSupported;
-                }
-            }
-        }
-
-        int[][] supportingFragments = geneReadData.getTranscriptReadCount(transData.TransName);
-
-        TranscriptResults results = ImmutableTranscriptResults.builder()
-                .trans(transData)
-                .exonsFound(exonsFound)
-                .shortSupportingFragments(supportingFragments[TC_SHORT][TRANS_COUNT])
-                .shortUniqueFragments(supportingFragments[TC_SHORT][UNIQUE_TRANS_COUNT])
-                .longSupportingFragments(supportingFragments[TC_LONG][TRANS_COUNT])
-                .longUniqueFragments(supportingFragments[TC_LONG][UNIQUE_TRANS_COUNT])
-                .spliceJunctionsSupported(spliceJunctionsSupported)
-                .spliceJunctionFragments(supportingFragments[TC_SPLICE][TRANS_COUNT])
-                .spliceJunctionUniqueFragments(supportingFragments[TC_SPLICE][UNIQUE_TRANS_COUNT])
-                .exonicBases(exonicBases)
-                .exonicBaseCoverage(exonicBaseCoverage)
-                .build();
-
-        return results;
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

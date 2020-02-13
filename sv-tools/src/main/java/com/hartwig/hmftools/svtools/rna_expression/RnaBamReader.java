@@ -22,9 +22,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionB
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validRegionMatchType;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
-import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
 
@@ -630,7 +628,7 @@ public class RnaBamReader
                 final String outputFileName = mConfig.OutputDir + "RNA_READ_DATA.csv";
 
                 mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar");
+                mWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
                 mWriter.write(",GeneClass,TransId,TransClass,ExonRank,ExonStart,ExonEnd,RegionClass");
                 mWriter.newLine();
             }
@@ -648,9 +646,9 @@ public class RnaBamReader
                     if(!region.hasTransId(trans))
                         continue;
 
-                    mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%d,%s",
+                    mWriter.write(String.format("%s,%s,%d,%s,%s,%d,%d,%s,%d",
                             mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, readIndex, read.Id,
-                            read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString()));
+                            read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
 
                     mWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%s",
                             geneReadType, trans, transType, region.getExonRank(trans), region.start(), region.end(), matchType));

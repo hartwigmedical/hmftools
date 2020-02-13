@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -14,6 +17,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class RegionReadData implements Comparable< RegionReadData>
 {
@@ -23,11 +28,11 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     private String mRefBases;
     private int[] mRefBasesMatched;
+    private boolean[] mUniqueRefBases; // bases not covered by any other region
 
     private final Map<String, int[]> mTranscriptReadCounts; // count of reads which support this region and a specific transcript
     private final Map<String, int[][]> mTranscriptJunctionCounts; // count of reads which support each exon junction and a specific transcript
 
-    private int[] mMatchTypeCounts;
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
     private List<RegionReadData> mPostRegions;
 
@@ -38,7 +43,6 @@ public class RegionReadData implements Comparable< RegionReadData>
         mRefRegions = Lists.newArrayList();
 
         mRefBases = "";
-        mMatchTypeCounts = new int[RegionMatchType.values().length];
 
         mPreRegions = Lists.newArrayList();
         mPostRegions = Lists.newArrayList();
@@ -83,19 +87,21 @@ public class RegionReadData implements Comparable< RegionReadData>
             mRefRegions.add(formExonRefId(transId, exonRank));
     }
 
-    public void addMatchedRead(RegionMatchType matchType) { ++mMatchTypeCounts[matchType.ordinal()]; }
-    public int matchedReadCount(RegionMatchType matchType) { return mMatchTypeCounts[matchType.ordinal()]; }
-
     public final String refBases() { return mRefBases; }
 
     public void setRefBases(final String bases)
     {
         mRefBases = bases;
-        mRefBasesMatched = new int[(int)mRefBases.length()];
+        mRefBasesMatched = new int[mRefBases.length()];
+        mUniqueRefBases = new boolean[mRefBases.length()];
+
+        for(int i = 0; i < mUniqueRefBases.length; ++i)
+            mUniqueRefBases[i] = true;
     }
 
     public int length() { return mRefBases.length(); }
     public int[] refBasesMatched() { return mRefBasesMatched; }
+    public boolean[] uniqueRefBases() { return mUniqueRefBases; }
 
     public List<RegionReadData> getPreRegions() { return mPreRegions; }
     public List<RegionReadData> getPostRegions() { return mPostRegions; }
@@ -171,6 +177,79 @@ public class RegionReadData implements Comparable< RegionReadData>
         return (int)Arrays.stream(mRefBasesMatched).filter(x -> x >= minReadCount).count();
     }
 
+    public static void findUniqueBases(final List<RegionReadData> regions)
+    {
+        for(int i = 0; i < regions.size() - 1; ++i)
+        {
+            final RegionReadData region1 = regions.get(i);
+
+            for(int j = i + 1; j < regions.size(); ++j)
+            {
+                final RegionReadData region2 = regions.get(j);
+                region1.markNonUniqueBases(region2);
+            }
+        }
+    }
+
+    public void markNonUniqueBases(final RegionReadData other)
+    {
+        if(start() > other.end() || end() < other.start())
+            return;
+
+        int overlapBases = (int)(min(end(), other.end()) - max(start(), other.start())) + 1;
+
+        int thisOffset = (int)max(other.start() - start(), 0);
+        int otherOffset = (int)max(start() - other.start(), 0);
+
+        for(int i = 0; i < overlapBases; ++i)
+        {
+            mUniqueRefBases[i + thisOffset] = false;
+            other.uniqueRefBases()[i + otherOffset] = false;
+        }
+    }
+
+    public int uniqueBaseCount()
+    {
+        int count = 0;
+        for(int i = 0; i < mUniqueRefBases.length; ++i)
+        {
+            if(mUniqueRefBases[i])
+                ++count;
+        }
+
+        return count;
+    }
+
+    public int uniqueBaseCoverage(int minReadCount)
+    {
+        if(mRefBasesMatched == null || mUniqueRefBases == null)
+            return 0;
+
+        int count = 0;
+        for(int i = 0; i < mRefBasesMatched.length; ++i)
+        {
+            if(mUniqueRefBases[i] && mRefBasesMatched[i] >= minReadCount)
+                ++count;
+        }
+
+        return count;
+    }
+
+    public int uniqueBaseTotalDepth()
+    {
+        if(mRefBasesMatched == null || mUniqueRefBases == null)
+            return 0;
+
+        int total = 0;
+        for(int i = 0; i < mRefBasesMatched.length; ++i)
+        {
+            if(mUniqueRefBases[i])
+                total += mRefBasesMatched[i];
+        }
+
+        return total;
+    }
+
     public String toString()
     {
         int sjReads = mTranscriptJunctionCounts.values().stream()
@@ -190,9 +269,6 @@ public class RegionReadData implements Comparable< RegionReadData>
             for (int i = 0; i < mRefBasesMatched.length; ++i)
                 mRefBasesMatched[i] = 0;
         }
-
-        for(int i = 0; i < mMatchTypeCounts.length; ++i)
-            mMatchTypeCounts[i] = 0;
     }
 
     @Override

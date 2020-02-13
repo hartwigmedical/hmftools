@@ -102,16 +102,6 @@ public class GeneReadData
         return intronRegion;
     }
 
-    public int getIntronRegionCounts(final TranscriptData transData, boolean restrictToUnique)
-    {
-        final List<RegionReadData> intronRegions = mIntronRegions.stream()
-                .filter(x -> x.getRefRegions().contains(transData.TransName))
-                .filter(x -> !restrictToUnique || x.getRefRegions().size() == 1)
-                .collect(Collectors.toList());
-
-        return intronRegions.stream().mapToInt(x -> x.matchedReadCount(INTRONIC)).sum();
-    }
-
     public final int[] getCounts() { return mFragmentCounts; }
     public void addCount(GeneMatchType type, int count) { mFragmentCounts[typeAsInt(type)] += count; }
 

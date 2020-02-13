@@ -109,9 +109,9 @@ public class ResultsWriter
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
-                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,SpliceJuncSupported");
-                mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments");
-                mTransDataWriter.write(",SpliceJuncFragments,UniqueSpliceJuncFragments");
+                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
+                mTransDataWriter.write(",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported");
+                mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments");
                 mTransDataWriter.newLine();
             }
 
@@ -121,14 +121,18 @@ public class ResultsWriter
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, transData.IsCanonical, transData.exons().size()));
 
-            mTransDataWriter.write(String.format(",%d,%d,%d,%d",
-                    transResults.exonsFound(), transResults.exonicBases(),
-                    transResults.exonicBaseCoverage(), transResults.spliceJunctionsSupported()));
+            mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d,%.0f",
+                    transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage(),
+                    transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
+
+            mTransDataWriter.write(String.format(",%d,%d,%d",
+                    transResults.spliceJunctionsSupported(), transResults.uniqueSpliceJunctions(), transResults.uniqueSpliceJunctionsSupported()));
 
             mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
                     transResults.shortSupportingFragments(), transResults.shortUniqueFragments(),
                     transResults.longSupportingFragments(), transResults.longUniqueFragments(),
                     transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
+
 
             mTransDataWriter.newLine();
 
@@ -151,8 +155,8 @@ public class ResultsWriter
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_EXON_DATA.csv";
 
                 mExonDataWriter = createBufferedWriter(outputFileName, false);
-                mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd");
-                mExonDataWriter.write(",TotalCoverage,AvgDepth,Fragments,UniqueFragments");
+                mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd,SharedTrans");
+                mExonDataWriter.write(",TotalCoverage,AvgDepth,UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth,Fragments,UniqueFragments");
                 mExonDataWriter.write(",SpliceJuncStart,SpliceJuncEnd,UniqueSpliceJuncStart,UniqueSpliceJuncEnd");
                 mExonDataWriter.newLine();
             }
@@ -167,16 +171,25 @@ public class ResultsWriter
                 if (exonReadData == null)
                     continue;
 
-                mExonDataWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d",
-                        mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
-                        transData.TransName, exon.ExonRank, exon.ExonStart, exon.ExonEnd));
+                mExonDataWriter.write(String.format("%s,%s,%s,%s",
+                        mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransName));
+
+                mExonDataWriter.write(String.format(",%d,%d,%d,%d",
+                        exon.ExonRank, exon.ExonStart, exon.ExonEnd, exonReadData.getRefRegions().size()));
 
                 int[] matchCounts = exonReadData.getTranscriptReadCount(transData.TransName);
                 int[] startSjCounts = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START);
                 int[] endSjCounts = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_END);
 
-                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%d,%d,%d,%d",
+                int uniqueBaseTotalDepth = exonReadData.uniqueBaseTotalDepth();
+                int uniqueBaseCount = exonReadData.uniqueBaseCount();
+                double uniqueAvgDepth = uniqueBaseCount > 0 ? uniqueBaseTotalDepth / (double)uniqueBaseCount : 0;
+
+                mExonDataWriter.write(String.format(",%d,%.0f,%d,%d,%.0f",
                         exonReadData.baseCoverage(1), exonReadData.averageDepth(),
+                        uniqueBaseCount, exonReadData.uniqueBaseCoverage(1), uniqueAvgDepth));
+
+                mExonDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
                         matchCounts[TRANS_COUNT], matchCounts[UNIQUE_TRANS_COUNT],
                         startSjCounts[TRANS_COUNT], endSjCounts[TRANS_COUNT],
                         startSjCounts[UNIQUE_TRANS_COUNT], endSjCounts[UNIQUE_TRANS_COUNT]));
@@ -188,6 +201,11 @@ public class ResultsWriter
         {
             LOGGER.error("failed to write exon expression file: {}", e.toString());
         }
+    }
+
+    public static void calcUniqueExonBases()
+    {
+
     }
 
 }
