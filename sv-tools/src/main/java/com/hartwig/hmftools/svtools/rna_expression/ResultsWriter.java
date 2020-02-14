@@ -69,16 +69,18 @@ public class ResultsWriter
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_GENE_DATA.csv";
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
-                mGeneDataWriter.write("SampleId,GeneId,GeneName,Chromosome,GeneLength,TransCount");
+                mGeneDataWriter.write("SampleId,GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
                 mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Intronic,ReadThrough,Chimeric,Duplicates");
                 mGeneDataWriter.newLine();
             }
 
             final EnsemblGeneData geneData = geneReadData.GeneData;
 
-            mGeneDataWriter.write(String.format("%s,%s,%s,%s,%d,%d",
-                    mSampledId, geneData.GeneId, geneData.GeneName, geneData.Chromosome,
-                    geneData.GeneEnd - geneData.GeneStart, geneReadData.getTranscripts().size()));
+            long geneLength = geneData.GeneEnd - geneData.GeneStart;
+
+            mGeneDataWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d",
+                    mSampledId, geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneLength,
+                    geneLength - geneReadData.calcExonicRegionLength(), geneReadData.getTranscripts().size()));
 
             final int[] fragmentCounts = geneReadData.getCounts();
 

@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveComm
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.UNSPLICED;
 
 import static org.junit.Assert.assertEquals;
@@ -209,6 +210,22 @@ public class RnaExpressionTest
         read.processOverlappingRegions(regions);
 
         assertEquals(UNSPLICED, read.getTranscriptClassification(trans1));
+
+        // a read mapping to 2 regions, one as a splice junction, the other as exonic
+        read = createReadRecord(1, "1", 181, 319, REF_BASE_STR_1 + REF_BASE_STR_1,
+                createCigar(0, 20, 99, 20, 0));
+
+        region1 = createRegion(trans1, 1, "1", 100, 200);
+        region2 = createRegion(trans1, 2, "1", 300, 400);
+
+        String trans2 = "TRANS02";
+        region3 = createRegion(trans2, 1, "1", 100, 220);
+
+        regions = Lists.newArrayList(region1, region2, region3);
+        read.processOverlappingRegions(regions);
+
+        assertEquals(SPLICE_JUNCTION, read.getTranscriptClassification(trans1));
+        assertEquals(ALT, read.getTranscriptClassification(trans2));
     }
 
     @Test
@@ -304,7 +321,6 @@ public class RnaExpressionTest
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
-
     }
 
     private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)
@@ -510,8 +526,6 @@ public class RnaExpressionTest
         assertEquals(5, region3.uniqueBaseCount());
         assertEquals(10, region4.uniqueBaseCount());
         assertEquals(20, region5.uniqueBaseCount());
-
-
     }
 
     @Test

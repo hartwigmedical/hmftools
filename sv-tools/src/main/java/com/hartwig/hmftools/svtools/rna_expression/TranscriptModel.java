@@ -3,13 +3,11 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICE;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
-import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -98,8 +96,8 @@ public class TranscriptModel
                 .spliceJunctionsSupported(spliceJunctionsSupported)
                 .uniqueSpliceJunctions(uniqueSpliceJunctions)
                 .uniqueSpliceJunctionsSupported(uniqueSpliceJunctionsSupported)
-                .spliceJunctionFragments(supportingFragments[TC_SPLICE][TRANS_COUNT])
-                .spliceJunctionUniqueFragments(supportingFragments[TC_SPLICE][UNIQUE_TRANS_COUNT])
+                .spliceJunctionFragments(supportingFragments[TC_SPLICED][TRANS_COUNT])
+                .spliceJunctionUniqueFragments(supportingFragments[TC_SPLICED][UNIQUE_TRANS_COUNT])
                 .shortSupportingFragments(supportingFragments[TC_SHORT][TRANS_COUNT])
                 .shortUniqueFragments(supportingFragments[TC_SHORT][UNIQUE_TRANS_COUNT])
                 .longSupportingFragments(supportingFragments[TC_LONG][TRANS_COUNT])

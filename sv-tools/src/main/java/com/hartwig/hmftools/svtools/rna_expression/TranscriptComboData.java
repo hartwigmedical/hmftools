@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_MAX;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class TranscriptComboData
     public TranscriptComboData(final List<String> transcripts)
     {
         mTranscripts = transcripts;
-        mCounts = new int[TC_LONG+1];
+        mCounts = new int[TC_MAX];
     }
 
     public final List<String> getTranscripts() { return mTranscripts; }

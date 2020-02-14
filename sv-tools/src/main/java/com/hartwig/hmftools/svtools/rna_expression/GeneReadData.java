@@ -3,13 +3,14 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.MAX;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
-import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -17,6 +18,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class GeneReadData
@@ -25,16 +27,20 @@ public class GeneReadData
 
     private final List<RegionReadData> mExonRegions;
     private final List<RegionReadData> mIntronRegions;
+    private final List<long[]> mCommonExonicRegions;
 
     private final List<TranscriptData> mTranscripts;
+    private final long[] mTranscriptsRange;
 
     // summary results
     private final Map<String,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final List<TranscriptResults> mTranscriptResults;
 
-    public static final int TC_SPLICE = 0;
+    public static final int TC_SPLICED = 0;
     public static final int TC_SHORT = 1;
     public static final int TC_LONG = 2;
+    public static final int TC_UNSPLICED = 3;
+    public static final int TC_MAX = 4;
 
     private final int[] mFragmentCounts;
 
@@ -45,10 +51,13 @@ public class GeneReadData
         mExonRegions = Lists.newArrayList();
         mIntronRegions = Lists.newArrayList();
         mTranscripts = Lists.newArrayList();
+        mCommonExonicRegions = Lists.newArrayList();
 
         mTranscriptResults = Lists.newArrayList();
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
         mTranscriptReadCounts = Maps.newHashMap();
+
+        mTranscriptsRange = new long[SE_PAIR];
     }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
@@ -74,6 +83,58 @@ public class GeneReadData
         return mExonRegions.stream()
                 .filter(x -> x.Region.start() == posStart && x.Region.end() == posEnd)
                 .findFirst().orElse(null);
+    }
+
+    public final long[] getTranscriptsRange() { return mTranscriptsRange; }
+
+    public void generateExonicRegions()
+    {
+        // form a genomic region for each unique exon amongst the transcripts
+        for(final TranscriptData transData : mTranscripts)
+        {
+            RegionReadData prevRegionReadData = null;
+
+            for(int i = 0; i < transData.exons().size(); ++ i)
+            {
+                ExonData exon = transData.exons().get(i);
+
+                RegionReadData exonReadData = findExonRegion(exon.ExonStart, exon.ExonEnd);
+
+                if (exonReadData == null)
+                {
+                    GenomeRegion region = GenomeRegions.create(GeneData.Chromosome, exon.ExonStart, exon.ExonEnd);
+                    exonReadData = new RegionReadData(region);
+                    addExonRegion(exonReadData);
+                }
+
+                exonReadData.addExonRef(transData.TransName, exon.ExonRank);
+
+                if(prevRegionReadData != null)
+                {
+                    prevRegionReadData.addPostRegion(exonReadData);
+                    exonReadData.addPreRegion(prevRegionReadData);
+                }
+
+                // create intronic regions
+                if(prevRegionReadData != null)
+                {
+                    long intronStart = prevRegionReadData.end() + 1;
+                    long intronEnd = exon.ExonStart - 1;
+
+                    RegionReadData intronReadData = createOrFindIntronRegion(intronStart, intronEnd);
+                    intronReadData.addExonRef(transData.TransName, exon.ExonRank);
+                }
+
+                prevRegionReadData = exonReadData;
+            }
+
+            mTranscriptsRange[SE_END] = max(transData.TransEnd, mTranscriptsRange[SE_END]);
+
+            if(mTranscriptsRange[SE_START] == 0 || transData.TransStart < mTranscriptsRange[SE_START])
+                mTranscriptsRange[SE_START] = transData.TransStart;
+        }
+
+        generateCommonExonicRegions();
     }
 
     public final List<RegionReadData> getIntronRegions() { return mIntronRegions; }
@@ -132,6 +193,29 @@ public class GeneReadData
     }
 
     public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
+
+    private void generateCommonExonicRegions()
+    {
+        if(mExonRegions.isEmpty())
+            return;
+
+        List<long[]> commonExonicRegions = Lists.newArrayList(new long[] {mExonRegions.get(0).start(), mExonRegions.get(0).end()});
+
+        for(int i = 1; i < mExonRegions.size(); ++i)
+        {
+            List<long[]> nextRegion = Lists.newArrayList(new long[] {mExonRegions.get(i).start(), mExonRegions.get(i).end()});
+            commonExonicRegions = deriveCommonRegions(commonExonicRegions, nextRegion);
+        }
+
+        mCommonExonicRegions.addAll(commonExonicRegions);
+    }
+
+    public List<long[]> getCommonExonicRegions() { return mCommonExonicRegions; }
+
+    public long calcExonicRegionLength()
+    {
+        return mCommonExonicRegions.stream().mapToLong(x -> x[SE_END] - x[SE_START]).sum();
+    }
 
     @VisibleForTesting
     public void clearCounts()

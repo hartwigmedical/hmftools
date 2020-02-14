@@ -45,6 +45,10 @@ public class RnaExpConfig
     public static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
+    public static final String GENERATE_EXPECTED_EXPRESSION = "gen_exp_expression";
+    public static final String READ_LENGTH = "read_length";
+    public static final String MEDIAN_FRAGMENT_LENGTH = "median_frag_length";
+
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
     public final List<String> RestrictedGeneIds; // specific set of genes to process
@@ -64,6 +68,10 @@ public class RnaExpConfig
     public final boolean WriteReadData;
     public final boolean WriteFragmentLengths;
     public final boolean WriteTransComboData;
+
+    public final boolean GenerateExpectedExpression;
+    public int ReadLength;
+    public int MedianFragmentLength;
 
     public final boolean GeneStatsOnly;
     public final int FragmentLengthMinCount;
@@ -134,6 +142,10 @@ public class RnaExpConfig
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
+
+        GenerateExpectedExpression = cmd.hasOption(GENERATE_EXPECTED_EXPRESSION);
+        ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
+        MedianFragmentLength = Integer.parseInt(cmd.getOptionValue(MEDIAN_FRAGMENT_LENGTH, "0"));
     }
 
     public RnaExpConfig()
@@ -150,6 +162,10 @@ public class RnaExpConfig
         LongFragmentLimit = DEFAULT_MAX_FRAGMENT_SIZE;
         KeepDuplicates = false;
         MarkDuplicates = false;
+
+        GenerateExpectedExpression = false;
+        ReadLength = 0;
+        MedianFragmentLength = 0;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -194,6 +210,10 @@ public class RnaExpConfig
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
         options.addOption(GENE_STATS_ONLY, false, "Skip all processing except gene summary data");
         options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
+
+        options.addOption(GENERATE_EXPECTED_EXPRESSION, false, "Generate expected expression rates for transcripts");
+        options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
+        options.addOption(MEDIAN_FRAGMENT_LENGTH, true, "Median fragment size");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
 

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
@@ -43,6 +45,7 @@ public class RnaExpression
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final FragmentSizeCalcs mFragmentSizeCalcs;
+    private final ExpectedExpressionRates mExpExpressionRates;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
@@ -70,6 +73,8 @@ public class RnaExpression
 
         mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mRnaBamReader);
         mRnaBamReader.setFragmentSizeCalcs(mFragmentSizeCalcs);
+
+        mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig) : null;
     }
 
     public void runAnalysis()
@@ -131,57 +136,16 @@ public class RnaExpression
             return;
         }
 
-        geneReadData.setTranscripts(transDataList);
-
         if(!mConfig.SpecificTransIds.isEmpty())
             transDataList = transDataList.stream().filter(x -> mConfig.SpecificTransIds.contains(x.TransName)).collect(Collectors.toList());
 
-        // form a genomic region for each unique exon amongst the transcripts
-        long minTransPos = -1;
-        long maxTransPos = 0;
+        geneReadData.setTranscripts(transDataList);
 
-        for(final TranscriptData transData : transDataList)
+        geneReadData.generateExonicRegions();
+
+        if(mExpExpressionRates != null)
         {
-            RegionReadData prevRegionReadData = null;
-
-            for(int i = 0; i < transData.exons().size(); ++ i)
-            {
-                ExonData exon = transData.exons().get(i);
-
-                RegionReadData exonReadData = geneReadData.findExonRegion(exon.ExonStart, exon.ExonEnd);
-
-                if (exonReadData == null)
-                {
-                    GenomeRegion region = GenomeRegions.create(geneData.Chromosome, exon.ExonStart, exon.ExonEnd);
-                    exonReadData = new RegionReadData(region);
-                    geneReadData.addExonRegion(exonReadData);
-                }
-
-                exonReadData.addExonRef(transData.TransName, exon.ExonRank);
-
-                if(prevRegionReadData != null)
-                {
-                    prevRegionReadData.addPostRegion(exonReadData);
-                    exonReadData.addPreRegion(prevRegionReadData);
-                }
-
-                // create intronic regions
-                if(prevRegionReadData != null)
-                {
-                    long intronStart = prevRegionReadData.end() + 1;
-                    long intronEnd = exon.ExonStart - 1;
-
-                    RegionReadData intronReadData = geneReadData.createOrFindIntronRegion(intronStart, intronEnd);
-                    intronReadData.addExonRef(transData.TransName, exon.ExonRank);
-                }
-
-                prevRegionReadData = exonReadData;
-            }
-
-            maxTransPos = max(transData.TransEnd, maxTransPos);
-
-            if(minTransPos < 0 || transData.TransStart < minTransPos)
-                minTransPos = transData.TransStart;
+            mExpExpressionRates.generate(geneReadData);
         }
 
         // cache reference bases for comparison with read bases
@@ -199,8 +163,16 @@ public class RnaExpression
         }
 
         // use a buffer around the gene to pick up reads which span outside its transcripts
-        GenomeRegion geneRegion = GenomeRegions.create(
-                geneData.Chromosome, minTransPos - GENE_FRAGMENT_BUFFER, maxTransPos + GENE_FRAGMENT_BUFFER);
+        long regionStart = geneReadData.getTranscriptsRange()[SE_START] - GENE_FRAGMENT_BUFFER;
+        long regionEnd = geneReadData.getTranscriptsRange()[SE_END] + GENE_FRAGMENT_BUFFER;
+
+        if(regionStart >= regionEnd)
+        {
+            LOGGER.warn("invalid gene({}:{}) region({} -> {})", geneData.GeneId, geneData.GeneName, regionStart, regionEnd);
+            return;
+        }
+
+        GenomeRegion geneRegion = GenomeRegions.create(geneData.Chromosome, regionStart, regionEnd);
 
         mRnaBamReader.readBamCounts(geneReadData, geneRegion);
 

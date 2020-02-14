@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TRANS_SU
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICE;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
@@ -385,14 +385,14 @@ public class RnaBamReader
 
                 if(read1.getTranscriptClassification(trans) == SPLICE_JUNCTION || read2.getTranscriptClassification(trans) == SPLICE_JUNCTION)
                 {
-                    transMatchType = TC_SPLICE;
-                    comboTransMatchType = TC_SPLICE;
+                    transMatchType = TC_SPLICED;
+                    comboTransMatchType = TC_SPLICED;
                 }
                 else if(regionCount > 1 && isLongFragment)
                 {
                     transMatchType = TC_LONG;
 
-                    if(comboTransMatchType != TC_SPLICE)
+                    if(comboTransMatchType != TC_SPLICED)
                         comboTransMatchType = TC_LONG;
                 }
                 else
@@ -678,7 +678,7 @@ public class RnaBamReader
                 final int[] counts = tcData.getCounts();
 
                 mTransComboWriter.write(String.format(",%d,%d,%d",
-                        counts[TC_SPLICE], counts[TC_SHORT], counts[TC_LONG]));
+                        counts[TC_SPLICED], counts[TC_SHORT], counts[TC_LONG]));
 
                 mTransComboWriter.newLine();
             }
