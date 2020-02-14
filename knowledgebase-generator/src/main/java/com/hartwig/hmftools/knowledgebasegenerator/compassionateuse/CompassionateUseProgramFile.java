@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms;
+package com.hartwig.hmftools.knowledgebasegenerator.compassionateuse;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,15 +15,15 @@ public class CompassionateUseProgramFile {
     private static final String DELIMITER = "\t";
 
     @NotNull
-    public static List<CompassionateUsePrograms> read(@NotNull String filePath) throws IOException {
+    public static List<CompassionateUseProgram> read(@NotNull String filePath) throws IOException {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
 
 
     }
 
     @NotNull
-    private static List<CompassionateUsePrograms> fromLines (@NotNull List<String> lines) {
-        List<CompassionateUsePrograms> compassionateUsePrograms = Lists.newArrayList();
+    private static List<CompassionateUseProgram> fromLines (@NotNull List<String> lines) {
+        List<CompassionateUseProgram> compassionateUsePrograms = Lists.newArrayList();
         String[] headers = lines.get(0).split(DELIMITER);
         // Skip header line
         for (String line : lines.subList(1, lines.size())) {
@@ -35,9 +35,9 @@ public class CompassionateUseProgramFile {
 
     @NotNull
     @VisibleForTesting
-    private static CompassionateUsePrograms fromLine(@NotNull String line) {
+    private static CompassionateUseProgram fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
-        ImmutableCompassionateUsePrograms.Builder builder = ImmutableCompassionateUsePrograms.builder()
+        ImmutableCompassionateUseProgram.Builder builder = ImmutableCompassionateUseProgram.builder()
                 .CBGsite(values[0])
                 .variants(values[1])
                 .source(values[2])

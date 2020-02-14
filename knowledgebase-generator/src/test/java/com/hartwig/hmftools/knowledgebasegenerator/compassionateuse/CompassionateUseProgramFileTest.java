@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.compassionateUsePrograms;
+package com.hartwig.hmftools.knowledgebasegenerator.compassionateuse;
 
 import static org.junit.Assert.*;
 
@@ -7,21 +7,19 @@ import java.util.List;
 
 import com.google.common.io.Resources;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class CompassionateUseProgramFileTest {
 
-    private static final String COMPASSIONATE_USE_PROGRAMS_TSV = Resources.getResource("compassionateUsePrograms/compassionateUseProgramsFile.tsv").getPath();
+    private static final String COMPASSIONATE_USE_PROGRAMS_TSV = Resources.getResource("compassionateuse/CBG").getPath();
 
     @Test
-    @Ignore //TODO fix test
     public void canReadTestCompassionateUseProgramFile() throws IOException {
-        List<CompassionateUsePrograms> compassionateUsePrograms = CompassionateUseProgramFile.read(COMPASSIONATE_USE_PROGRAMS_TSV);
+        List<CompassionateUseProgram> compassionateUsePrograms = CompassionateUseProgramFile.read(COMPASSIONATE_USE_PROGRAMS_TSV);
 
         assertEquals(1, compassionateUsePrograms.size());
 
-        CompassionateUsePrograms compassionateUsePrograms1 = compassionateUsePrograms.get(0);
+        CompassionateUseProgram compassionateUsePrograms1 = compassionateUsePrograms.get(0);
         assertEquals("AC", compassionateUsePrograms1.CBGsite());
         assertEquals("-", compassionateUsePrograms1.variants());
         assertEquals("CBG", compassionateUsePrograms1.source());
@@ -32,4 +30,5 @@ public class CompassionateUseProgramFileTest {
         assertEquals("Responsive", compassionateUsePrograms1.direction());
         assertEquals("link", compassionateUsePrograms1.link());
     }
+
 }
