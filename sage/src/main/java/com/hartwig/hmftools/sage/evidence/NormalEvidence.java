@@ -32,26 +32,24 @@ public class NormalEvidence {
     private static final Logger LOGGER = LogManager.getLogger(NormalEvidence.class);
 
     private final int minQuality;
-    private final SageConfig config;
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
 
     public NormalEvidence(@NotNull final SageConfig config, final SamSlicerFactory samSlicerFactory) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
-        this.config = config;
         this.samSlicerFactory = samSlicerFactory;
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
+    public List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
             @NotNull final RefContextCandidates candidates) {
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(false, config, bounds, refSequence, candidates);
-        return get(bamFile, refSequence, bounds, refContextConsumer, candidates);
+        final RefContextConsumer refContextConsumer = new RefContextConsumer(false, sageConfig, bounds, refSequence, candidates);
+        return get(refSequence, bounds, refContextConsumer, candidates);
     }
 
     @NotNull
-    private List<RefContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
+    private List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
             @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
@@ -59,7 +57,7 @@ public class NormalEvidence {
         final SamRecordSelector<AltContext> consumerSelector =
                 new SamRecordSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
+        try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(sageConfig.referenceBam()))) {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);

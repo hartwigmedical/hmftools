@@ -5,11 +5,13 @@ import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.RnaContext;
 
 import org.jetbrains.annotations.NotNull;
 
 public class SageVariant implements GenomePosition {
 
+    private final RnaContext rna;
     private final AltContext normal;
     private final Set<String> filters;
     private final SageVariantTier tier;
@@ -17,13 +19,14 @@ public class SageVariant implements GenomePosition {
 
     private int localPhaseSet;
 
-    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal,
+    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal, final RnaContext rna,
             final List<AltContext> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
         this.tier = tier;
         this.normal = normal;
         this.tumorAltContexts = tumorAltContexts;
         this.filters = filters;
+        this.rna = rna;
     }
 
     public boolean isIndel() {
@@ -84,5 +87,10 @@ public class SageVariant implements GenomePosition {
     @Override
     public long position() {
         return normal.position();
+    }
+
+    @NotNull
+    public RnaContext rna() {
+        return rna;
     }
 }

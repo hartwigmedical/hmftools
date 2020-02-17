@@ -16,6 +16,7 @@ import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.RnaContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.TierSelector;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -39,17 +40,17 @@ public class SageVariantFactory {
         final SageVariantTier tier = tierSelector.tier(normal);
         final Set<String> filters = germlineOnlyFilters(normal);
 
-        return new SageVariant(tier, filters, normal, Collections.emptyList());
+        return new SageVariant(tier, filters, normal, RnaContext.EMPTY, Collections.emptyList());
     }
 
     @NotNull
-    public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
+    public SageVariant create(@NotNull final AltContext normal, @NotNull final RnaContext rna, @NotNull final List<AltContext> tumorAltContexts) {
 
         final SageVariantTier tier = tierSelector.tier(normal);
         final SoftFilterConfig softConfig = config.softConfig(tier);
         final Set<String> filters = pairedFilters(tier, softConfig, normal, tumorAltContexts.get(0));
 
-        return new SageVariant(tier, filters, normal, tumorAltContexts);
+        return new SageVariant(tier, filters, normal, rna, tumorAltContexts);
     }
 
     @NotNull
@@ -110,7 +111,7 @@ public class SageVariantFactory {
     }
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawDepthAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawSupportAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
                 && Doubles.greaterOrEqual(primaryTumor.rawVaf(), config.hotspotMinRawTumorVafToSkipQualCheck());
     }
 

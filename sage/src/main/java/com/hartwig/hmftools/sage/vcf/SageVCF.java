@@ -61,6 +61,9 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
+    public static final String RNA_DEPTH = "RNA_DP";
+    public static final String RNA_ALLELIC_DEPTH = "RNA_AD";
+
     public static final String RAW_DEPTH = "RDP";
     public static final String RAW_ALLELIC_DEPTH = "RAD";
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
@@ -152,6 +155,9 @@ public class SageVCF implements AutoCloseable {
                 1,
                 VCFHeaderLineType.String,
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(RNA_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "RNA allelic depth"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(RNA_DEPTH, 1, VCFHeaderLineType.Integer, "RNA read depth"));
+
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 

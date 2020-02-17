@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public interface SageConfig {
     String REFERENCE_BAM = "reference_bam";
     String TUMOR = "tumor";
     String TUMOR_BAM = "tumor_bam";
+    String RNA_BAM = "rna_bam";
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
     String MIN_MAP_QUALITY = "min_map_quality";
@@ -52,6 +54,7 @@ public interface SageConfig {
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
+        options.addOption(RNA_BAM, true, "Path to RNA bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
@@ -75,6 +78,9 @@ public interface SageConfig {
 
     @NotNull
     String referenceBam();
+
+    @NotNull
+    String rnaBam();
 
     @NotNull
     String refGenome();
@@ -121,12 +127,25 @@ public interface SageConfig {
         return 1000;
     }
 
+    default boolean rnaEnabled() {
+        return !rnaBam().isEmpty();
+    }
+
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
 
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String reference = cmd.getOptionValue(REFERENCE);
         final String reference_bam = cmd.getOptionValue(REFERENCE_BAM);
+        final String rna_bam = cmd.getOptionValue(RNA_BAM, Strings.EMPTY);
+
+        if (!new File(reference_bam).exists()) {
+            throw new ParseException("Unable to locate reference bam " + reference_bam);
+        }
+
+        if (!rna_bam.isEmpty() && !new File(rna_bam).exists()) {
+            throw new ParseException("Unable to locate rna bam " + rna_bam);
+        }
 
         final List<String> tumorList = Lists.newArrayList();
         if (cmd.hasOption(TUMOR)) {
@@ -139,7 +158,7 @@ public interface SageConfig {
         }
 
         if (tumorList.size() != tumorBamList.size()) {
-            throw new ParseException("TODO");
+            throw new ParseException("Each tumor sample must have matching bam");
         }
 
         return ImmutableSageConfig.builder()
@@ -149,6 +168,7 @@ public interface SageConfig {
                 .referenceBam(reference_bam)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
+                .rnaBam(rna_bam)
                 .mnvDetection(!cmd.hasOption(DISABLE_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))

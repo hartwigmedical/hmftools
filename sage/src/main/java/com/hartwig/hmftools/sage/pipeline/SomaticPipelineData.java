@@ -17,6 +17,7 @@ import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
+import com.hartwig.hmftools.sage.context.RnaContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -26,10 +27,10 @@ import org.jetbrains.annotations.NotNull;
 class SomaticPipelineData {
 
     private final String normalSample;
-
     private final Set<VariantHotspot> allHotspots = Sets.newHashSet();
     private final List<Map<VariantHotspot, AltContext>> altContextMap = new ArrayList<>();
     private final Map<Long, RefContext> normalMap = Maps.newHashMap();
+    private final Map<Long, RefContext> rnaMap = Maps.newHashMap();
     private final SageVariantFactory variantFactory;
 
     SomaticPipelineData(final String normalSample, final int tumorSampleSize, final SageVariantFactory variantFactory) {
@@ -82,6 +83,10 @@ class SomaticPipelineData {
         altContexts.forEach(x -> normalMap.put(x.position(), x));
     }
 
+    public void addRNA(@NotNull final List<RefContext> altContexts) {
+        altContexts.forEach(x -> rnaMap.put(x.position(), x));
+    }
+
     @NotNull
     public List<SageVariant> results() {
         return results(variantFactory);
@@ -116,6 +121,11 @@ class SomaticPipelineData {
 
         for (VariantHotspot sortedHotspot : sortedHotspots) {
 
+            final RefContext rnaRefContext = rnaMap.get(sortedHotspot.position());
+            final AltContext rnaAltContext =
+                    rnaRefContext == null ? null : rnaRefContext.altContext(sortedHotspot.ref(), sortedHotspot.alt());
+            final RnaContext rnaContext = rnaAltContext == null ? RnaContext.EMPTY : new RnaContext(rnaAltContext);
+
             final RefContext normalRefContext = normalMap.get(sortedHotspot.position());
             final AltContext normalAltContext = normalRefContext == null
                     ? new AltContext(normalSample, sortedHotspot)
@@ -129,7 +139,7 @@ class SomaticPipelineData {
                 }
             }
 
-            result.add(variantFactory.create(normalAltContext, tumorAltContexts));
+            result.add(variantFactory.create(normalAltContext, rnaContext, tumorAltContexts));
         }
 
         return result;

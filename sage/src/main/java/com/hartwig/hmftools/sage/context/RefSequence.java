@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.context;
 import java.util.Arrays;
 import java.util.EnumSet;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.read.IndexedBases;
 
@@ -20,26 +20,30 @@ public class RefSequence {
     private static final EnumSet<CigarOperator> EXTEND_START = EnumSet.of(CigarOperator.I, CigarOperator.S);
 
     private static final int BUFFER = 1000;
-    private final int sequenceLength;
-    private final int actualStart;
+    private final int end;
+    private final int start;
     private final ReferenceSequence sequence;
 
-    public RefSequence(@NotNull final GenomePosition position, @NotNull final IndexedFastaSequenceFile refGenome) {
-        sequenceLength = refGenome.getSequenceDictionary().getSequence(position.chromosome()).getSequenceLength();
-        actualStart = Math.max(1, (int) position.position() - BUFFER);
-        final int actualEnd = Math.min(sequenceLength, (int) position.position() + BUFFER);
-        this.sequence = refGenome.getSubsequenceAt(position.chromosome(), actualStart, actualEnd);
+    public RefSequence(@NotNull final GenomeRegion region, @NotNull final IndexedFastaSequenceFile refGenome) {
+        end = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
+        start = Math.max(1, (int) region.start() - BUFFER);
+        final int actualEnd = Math.min(this.end, (int) region.end() + BUFFER);
+        this.sequence = refGenome.getSubsequenceAt(region.chromosome(), start, actualEnd);
     }
 
-    public RefSequence(@NotNull final GenomeRegion region, @NotNull final IndexedFastaSequenceFile refGenome) {
-        sequenceLength = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
-        actualStart = Math.max(1, (int) region.start() - BUFFER);
-        final int actualEnd = Math.min(sequenceLength, (int) region.end() + BUFFER);
-        this.sequence = refGenome.getSubsequenceAt(region.chromosome(), actualStart, actualEnd);
+    @VisibleForTesting
+    RefSequence(final ReferenceSequence sequence) {
+        this.sequence = sequence;
+        this.start = sequence.getContigIndex() + 1;
+        this.end = start + sequence.getBases().length - 1;
     }
 
     private byte[] alignment(int start, int end) {
-        return Arrays.copyOfRange(sequence.getBases(), start - actualStart, end - actualStart + 1);
+        try {
+            return Arrays.copyOfRange(sequence.getBases(), start - this.start, end - this.start + 1);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
@@ -48,7 +52,7 @@ public class RefSequence {
     @NotNull
     public IndexedBases alignment(final SAMRecord record) {
 
-        int alignmentStart = record.getAlignmentStart();
+        int alignmentStart = Math.max(start, record.getAlignmentStart());
         int additionalBases = 0;
         int cigarLength = 0;
 
@@ -59,12 +63,12 @@ public class RefSequence {
             cigarLength += cigarElement.getLength();
         }
 
-        int refPositionStart = Math.max(1, alignmentStart - additionalBases);
+        int refPositionStart = Math.max(start, alignmentStart - additionalBases);
 
-        int alignmentEnd = Math.max(alignmentStart + cigarLength, alignmentStart + record.getReadLength());
+        int alignmentEnd = Math.min(end, Math.max(alignmentStart + cigarLength, alignmentStart + record.getReadLength()));
         int alignmentStartIndex = alignmentStart - refPositionStart;
 
-        return new IndexedBases(alignmentStart, alignmentStartIndex, alignment(refPositionStart, Math.min(alignmentEnd, sequenceLength)));
+        return new IndexedBases(alignmentStart, alignmentStartIndex, alignment(refPositionStart, Math.min(alignmentEnd, end)));
     }
 
 }

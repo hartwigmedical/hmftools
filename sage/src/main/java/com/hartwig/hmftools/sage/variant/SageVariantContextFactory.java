@@ -15,6 +15,8 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_MICRO_HOMOLOGY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.RNA_ALLELIC_DEPTH;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.RNA_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.TIER;
 
 import java.util.Collections;
@@ -84,6 +86,12 @@ public class SageVariantContextFactory {
                 .alleles(alleles)
                 .filters(variant.filters());
 
+        if (variant.rna().depth() > 0) {
+            builder
+                .attribute(RNA_DEPTH, variant.rna().depth())
+                .attribute(RNA_ALLELIC_DEPTH, new int[]{variant.rna().supportRef(), variant.rna().supportAlt()});
+        }
+
         if (!counter.readContext().microhomology().isEmpty()) {
             builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, counter.readContext().microhomology());
         }
@@ -115,7 +123,7 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
-                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawDepthRef(), evidence.rawDepthAlt() })
+                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawSupportRef(), evidence.rawSupportAlt() })
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[]{evidence.rawBaseQualityRef(), evidence.rawBaseQualityAlt()})
                 .attribute(RAW_DEPTH, evidence.rawDepth())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))

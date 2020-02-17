@@ -13,6 +13,7 @@ import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.NormalEvidence;
 import com.hartwig.hmftools.sage.evidence.PrimaryEvidence;
+import com.hartwig.hmftools.sage.evidence.RnaEvidence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -32,6 +33,7 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final List<GenomeRegion> highConfidenceRegions;
     private final PrimaryEvidence primaryEvidence;
     private final NormalEvidence normalEvidence;
+    private final RnaEvidence rnaEvidence;
 
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final List<VariantHotspot> hotspots,
             @NotNull final List<GenomeRegion> panelRegions, @NotNull final List<GenomeRegion> highConfidenceRegions) {
@@ -43,6 +45,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.highConfidenceRegions = highConfidenceRegions;
         this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
         this.normalEvidence = new NormalEvidence(config, samSlicerFactory);
+        this.rnaEvidence = new RnaEvidence(config, samSlicerFactory);
     }
 
     @NotNull
@@ -73,12 +76,22 @@ public class SomaticPipeline implements SageVariantPipeline {
                 somaticPipelineData.addTumor(i, future.join());
             }
 
-            return normalEvidence.get(config.referenceBam(), refSequence, region, somaticPipelineData.normalCandidates());
+            return normalEvidence.get(refSequence, region, somaticPipelineData.normalCandidates());
         });
 
-        return normalFuture.thenApply(aVoid -> {
+
+        final CompletableFuture<List<RefContext>> rnaFuture = doneTumor.thenApply(aVoid -> {
+            if (config.rnaEnabled()) {
+                return rnaEvidence.get(refSequence, region, somaticPipelineData.normalCandidates());
+            }
+            return Lists.newArrayList();
+        });
+
+
+        return rnaFuture.thenApply(aVoid -> {
 
             somaticPipelineData.addNormal(normalFuture.join());
+            somaticPipelineData.addRNA(rnaFuture.join());
 
             return somaticPipelineData.results();
         });

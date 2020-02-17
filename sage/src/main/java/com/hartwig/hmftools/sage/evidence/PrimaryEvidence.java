@@ -109,7 +109,7 @@ public class PrimaryEvidence {
     }
 
     private boolean rawPredicate(@NotNull final HotspotSelector tierSelector, @NotNull final AltContext altContext) {
-        return tierSelector.isHotspot(altContext) || altContext.rawDepthAlt() >= config.filter().hardMinTumorRawAltSupport()
+        return tierSelector.isHotspot(altContext) || altContext.rawSupportAlt() >= config.filter().hardMinTumorRawAltSupport()
                 && altContext.rawBaseQualityAlt() >= config.filter().hardMinTumorRawBaseQuality();
     }
 
