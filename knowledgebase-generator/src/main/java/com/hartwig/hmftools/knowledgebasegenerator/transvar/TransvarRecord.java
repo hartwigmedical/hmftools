@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,27 +9,27 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class TransvarOutput {
-
-    @NotNull
-    public abstract String input();
+public abstract class TransvarRecord {
 
     @NotNull
     public abstract String transcript();
 
     @NotNull
-    public abstract String gene();
+    public abstract String chromosome();
+
+    public abstract long position();
 
     @NotNull
-    public abstract String strand();
+    public abstract String gDNARef();
 
     @NotNull
-    public abstract String coordinates_gDNA_cDNA_protein();
+    public abstract String gDNAAlt();
 
     @NotNull
-    public abstract String region();
+    public abstract String referenceCodon();
 
     @NotNull
-    public abstract String info();
+    public abstract List<String> candidateCodons();
+
 
 }

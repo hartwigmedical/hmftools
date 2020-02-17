@@ -1,19 +1,10 @@
 package com.hartwig.hmftools.knowledgebasegenerator;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.util.List;
 
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.iclusion.data.IclusionTrial;
-import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
-import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
-import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -22,7 +13,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class KnowledgebaseGeneratorApplication {
@@ -36,7 +26,7 @@ public class KnowledgebaseGeneratorApplication {
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws ParseException, IOException, InterruptedException {
+    public static void main(String[] args) throws ParseException {
         LOGGER.info("Running Knowledgebase Generator v{}", VERSION);
 
         Options options = createOptions();
@@ -64,10 +54,6 @@ public class KnowledgebaseGeneratorApplication {
         RefVersion refVersion = RefVersion.HG19;
 
         Transvar transvar = new Transvar(refFastaPath, refVersion);
-
-        List<String> hotspots = transvar.extractHotspotsFromProteinAnnotation("EGFR", Strings.EMPTY, "T790M");
-
-
     }
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
