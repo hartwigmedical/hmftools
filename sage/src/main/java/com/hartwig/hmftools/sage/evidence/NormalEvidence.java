@@ -57,7 +57,9 @@ public class NormalEvidence {
         final SamRecordSelector<AltContext> consumerSelector =
                 new SamRecordSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(sageConfig.referenceBam()))) {
+        try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(sageConfig.refGenome()))
+                .open(new File(sageConfig.referenceBam()))) {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);

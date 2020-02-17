@@ -52,7 +52,9 @@ public class RnaEvidence {
             @NotNull final RefContextCandidates candidates) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
-        try (final SamReader bamReader = SamReaderFactory.makeDefault().open(new File(config.rnaBam()))) {
+        try (final SamReader bamReader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(config.refGenome()))
+                .open(new File(config.rnaBam()))) {
             slicer.slice(bamReader, recordConsumer);
         } catch (IOException e) {
             throw new CompletionException(e);

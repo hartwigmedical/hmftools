@@ -66,7 +66,9 @@ public class PrimaryEvidence {
         final HotspotSelector tierSelector = new HotspotSelector(hotspots);
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
-        try (final SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bamFile))) {
+        try (final SamReader tumorReader = SamReaderFactory.makeDefault()
+                .referenceSequence(new File(config.refGenome()))
+                .open(new File(bamFile))) {
 
             // First parse
             slicer.slice(tumorReader, recordConsumer);
