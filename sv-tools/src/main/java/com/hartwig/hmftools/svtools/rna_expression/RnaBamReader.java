@@ -55,8 +55,6 @@ public class RnaBamReader
     private final RnaExpConfig mConfig;
     private final SamReader mSamReader;
 
-    private FragmentSizeCalcs mFragmentSizeCalcs;
-
     // state relating to the current gene
     private GeneReadData mCurrentGene;
     private final List<String> mDiscardedReads;
@@ -106,8 +104,6 @@ public class RnaBamReader
     }
 
     public boolean validReader() { return mSamReader != null; }
-
-    public void setFragmentSizeCalcs(final FragmentSizeCalcs calcs) { mFragmentSizeCalcs = calcs; }
 
     public void close()
     {
@@ -421,6 +417,8 @@ public class RnaBamReader
         }
     }
 
+    public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
+
     private void addTransComboData(final List<String> transcripts, int transMatchType)
     {
         TranscriptComboData transComboCounts = mTransComboData.stream()
@@ -648,8 +646,6 @@ public class RnaBamReader
         mDuplicateReadIds.clear();
     }
 
-    private static final String ENSEMBL_TRANS_PREFIX = "ENST00000";
-
     private void writeTransComboData()
     {
         if(mConfig.OutputDir.isEmpty())
@@ -670,7 +666,7 @@ public class RnaBamReader
             for(final TranscriptComboData tcData : mTransComboData)
             {
                 int transCount = tcData.getTranscripts().size();
-                final String transStr = tcData.getTranscriptStr(10).replaceAll(ENSEMBL_TRANS_PREFIX, "");
+                final String transStr = tcData.getTranscriptsKey();
 
                 mTransComboWriter.write(String.format("%s,%s,%d,%s",
                         mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, transCount, transStr));

@@ -26,6 +26,7 @@ public class ExonData
     }
 
     public int length() { return (int)(ExonEnd - ExonStart); }
+    public int baseLength() { return length() + 1; }
 
     public String toString()
     {

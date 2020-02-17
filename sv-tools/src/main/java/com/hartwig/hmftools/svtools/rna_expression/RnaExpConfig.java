@@ -45,9 +45,13 @@ public class RnaExpConfig
     public static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
-    public static final String GENERATE_EXPECTED_EXPRESSION = "gen_exp_expression";
+    // expected expression config
+    public static final String APPLY_EXP_RATES = "apply_exp_rates";
     public static final String READ_LENGTH = "read_length";
-    public static final String MEDIAN_FRAGMENT_LENGTH = "median_frag_length";
+    public static final String MIN_FRAGMENT_LENGTH = "min_frag_length";
+    public static final String MAX_FRAGMENT_LENGTH = "max_frag_length";
+    public static final String FRAGMENT_LENGTH_STEPS = "frag_length_steps";
+    public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
 
@@ -60,7 +64,7 @@ public class RnaExpConfig
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
-    public final int LongFragmentLimit;
+    public int LongFragmentLimit;
     public final boolean KeepDuplicates;
     public final boolean MarkDuplicates;
 
@@ -71,7 +75,10 @@ public class RnaExpConfig
 
     public final boolean GenerateExpectedExpression;
     public int ReadLength;
-    public int MedianFragmentLength;
+    public int MinFragmentLength;
+    public int MaxFragmentLength;
+    public int FragmentLengthSteps;
+    public final boolean WriteExpectedRates;
 
     public final boolean GeneStatsOnly;
     public final int FragmentLengthMinCount;
@@ -143,9 +150,22 @@ public class RnaExpConfig
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
 
-        GenerateExpectedExpression = cmd.hasOption(GENERATE_EXPECTED_EXPRESSION);
+        GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
-        MedianFragmentLength = Integer.parseInt(cmd.getOptionValue(MEDIAN_FRAGMENT_LENGTH, "0"));
+        MinFragmentLength = Integer.parseInt(cmd.getOptionValue(MIN_FRAGMENT_LENGTH, "0"));
+
+        if(cmd.hasOption(MAX_FRAGMENT_LENGTH) && cmd.hasOption(FRAGMENT_LENGTH_STEPS))
+        {
+            MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(MAX_FRAGMENT_LENGTH, "0"));
+            FragmentLengthSteps = Integer.parseInt(cmd.getOptionValue(FRAGMENT_LENGTH_STEPS, "0"));
+        }
+        else
+        {
+            MaxFragmentLength = MinFragmentLength;
+            FragmentLengthSteps = 0;
+        }
+
+        WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
     }
 
     public RnaExpConfig()
@@ -165,12 +185,15 @@ public class RnaExpConfig
 
         GenerateExpectedExpression = false;
         ReadLength = 0;
-        MedianFragmentLength = 0;
+        MinFragmentLength = 0;
+        MaxFragmentLength = MinFragmentLength;
+        FragmentLengthSteps = 0;
 
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
         WriteTransComboData = false;
+        WriteExpectedRates = false;
         GeneStatsOnly = false;
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
@@ -211,9 +234,12 @@ public class RnaExpConfig
         options.addOption(GENE_STATS_ONLY, false, "Skip all processing except gene summary data");
         options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
 
-        options.addOption(GENERATE_EXPECTED_EXPRESSION, false, "Generate expected expression rates for transcripts");
+        options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
-        options.addOption(MEDIAN_FRAGMENT_LENGTH, true, "Median fragment size");
+        options.addOption(MIN_FRAGMENT_LENGTH, true, "Min fragment size");
+        options.addOption(MAX_FRAGMENT_LENGTH, true, "Max fragment size");
+        options.addOption(FRAGMENT_LENGTH_STEPS, true, "Fragment length step");
+        options.addOption(WRITE_EXPECTED_RATES, true, "Write expected transcript rates to file");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
 

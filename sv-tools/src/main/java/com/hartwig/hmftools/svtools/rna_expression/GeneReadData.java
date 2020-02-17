@@ -217,6 +217,18 @@ public class GeneReadData
         return mCommonExonicRegions.stream().mapToLong(x -> x[SE_END] - x[SE_START]).sum();
     }
 
+    public static String countsTypeToStr(int type)
+    {
+        switch(type)
+        {
+            case TC_SHORT: return "SHORT";
+            case TC_LONG: return "LONG";
+            case TC_UNSPLICED: return "UNSPLICED";
+            case TC_SPLICED: return "SPLICED";
+            default: return "UNKNOWN";
+        }
+    }
+
     @VisibleForTesting
     public void clearCounts()
     {

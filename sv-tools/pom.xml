@@ -31,6 +31,10 @@
             <artifactId>sv-linx</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>sig_analyser</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
         </dependency>

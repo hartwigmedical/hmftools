@@ -10,7 +10,7 @@
 
     <artifactId>sig_analyser</artifactId>
     <packaging>jar</packaging>
-    <version>1.0</version>
+    <version>${sig_analyser.version}</version>
     <name>HMF Tools - Signature Analyser</name>
 
     <dependencies>

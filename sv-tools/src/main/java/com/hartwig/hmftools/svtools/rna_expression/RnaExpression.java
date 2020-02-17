@@ -6,12 +6,14 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calculateTranscriptResults;
+import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.estimateRatesByLeastSquares;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
@@ -72,7 +73,6 @@ public class RnaExpression
         mGeneTransCache.loadEnsemblData(false);
 
         mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mRnaBamReader);
-        mRnaBamReader.setFragmentSizeCalcs(mFragmentSizeCalcs);
 
         mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig) : null;
     }
@@ -122,6 +122,9 @@ public class RnaExpression
 
         mResultsWriter.close();
         mRnaBamReader.close();
+
+        if(mExpExpressionRates != null)
+            mExpExpressionRates.close();
     }
 
     private void processGene(final EnsemblGeneData geneData)
@@ -142,11 +145,6 @@ public class RnaExpression
         geneReadData.setTranscripts(transDataList);
 
         geneReadData.generateExonicRegions();
-
-        if(mExpExpressionRates != null)
-        {
-            mExpExpressionRates.generate(geneReadData);
-        }
 
         // cache reference bases for comparison with read bases
         if(mConfig.RefFastaSeqFile != null)
@@ -176,6 +174,8 @@ public class RnaExpression
 
         mRnaBamReader.readBamCounts(geneReadData, geneRegion);
 
+        runTranscriptEstimation(geneReadData);
+
         mResultsWriter.writeGeneData(geneReadData);
 
         if(!mConfig.GeneStatsOnly)
@@ -194,6 +194,19 @@ public class RnaExpression
                 }
             }
         }
+    }
+
+    private void runTranscriptEstimation(final GeneReadData geneReadData)
+    {
+        if(mExpExpressionRates == null)
+            return;
+
+        mExpExpressionRates.generateExpectedRates(geneReadData);
+
+        final double[] transcriptCounts = mExpExpressionRates.generateTranscriptCounts(
+                geneReadData, mRnaBamReader.getTransComboData(), geneReadData.getCounts()[TC_UNSPLICED]);
+
+        estimateRatesByLeastSquares(transcriptCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

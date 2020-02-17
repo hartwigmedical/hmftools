@@ -11,6 +11,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.sig_analyser.common.LeastSquaresFit;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -129,5 +131,27 @@ public class TranscriptModel
         return true;
     }
 
+    public static void estimateRatesByLeastSquares(
+            final double[] transcriptCounts, final SigMatrix transcriptDefinitions, final List<String> definitionNames)
+    {
+        int transDefinitionCount = transcriptDefinitions.Cols;
+        int categoryCount = transcriptDefinitions.Rows;
+
+        LeastSquaresFit lsqFit = new LeastSquaresFit(categoryCount, transDefinitionCount);
+        lsqFit.initialise(transcriptDefinitions.getData(), transcriptCounts);
+        lsqFit.solve();
+
+        final double[] transcriptAllocs = lsqFit.getContribs();
+
+        for(int definitionId = 0; definitionId < definitionNames.size(); ++definitionId)
+        {
+            double transAllocation = transcriptAllocs[definitionId];
+
+            if(transAllocation > 0)
+            {
+                LOGGER.info("transcript({}) allocated count({})", definitionNames.get(definitionId), String.format("%.2f", transAllocation));
+            }
+        }
+    }
 
 }
