@@ -11,6 +11,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.visualiser.file.VisGeneExonFile;
 
 import org.jetbrains.annotations.NotNull;
@@ -83,7 +86,7 @@ public class Exons
     }
 
     @NotNull
-    public static List<Exon> fromHmfTranscript(@NotNull final String sampleId, int clusterId, @NotNull HmfTranscriptRegion transcript)
+    public static List<Exon> extractExonList(@NotNull final String sampleId, int clusterId, @NotNull HmfTranscriptRegion transcript)
     {
         final List<Exon> result = Lists.newArrayList();
 
@@ -102,6 +105,33 @@ public class Exons
                     .start(hmfExon.start())
                     .end(hmfExon.end())
                     .transcript(transcript.transcriptID())
+                    .build();
+
+            result.add(exon);
+        }
+
+        return result;
+    }
+
+    @NotNull
+    public static List<Exon> extractExonList(final String sampleId, int clusterId, final EnsemblGeneData geneData, final TranscriptData transcript)
+    {
+        final List<Exon> result = Lists.newArrayList();
+
+        for (int i = 0; i < transcript.exons().size(); i++)
+        {
+            ExonData exonData = transcript.exons().get(i);
+
+            Exon exon = ImmutableExon.builder()
+                    .type(ExonType.DRIVER)
+                    .sampleId(sampleId)
+                    .clusterId(clusterId)
+                    .gene(geneData.GeneName)
+                    .chromosome(geneData.Chromosome)
+                    .rank(exonData.ExonRank)
+                    .start(exonData.ExonStart)
+                    .end(exonData.ExonEnd)
+                    .transcript(transcript.TransName)
                     .build();
 
             result.add(exon);

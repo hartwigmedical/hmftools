@@ -275,7 +275,7 @@ clusterId | Only generate image for specified comma separated clusters
 chromosome | Only generate images for specified comma separated chromosomes
 threads | Number of threads to use
 include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
-gene | Add canonical transcriptions of supplied comma separated genes to image
+gene | Add canonical transcriptions of supplied comma-separated genes to image. Requires config 'gene_transcripts_dir' to be set as well.
 
 If neither `chromosome` nor `clusterId` are included, separate visualisations of all chromosomes and clusterIds in the provided files will be created.
 
@@ -286,6 +286,7 @@ Additional genes can only be added to visualisation if they are included in the 
 ```
 java -cp sv-linx.jar com.hartwig.hmftools.linx.visualiser.SvVisualiser \
     -sample COLO829T \
+    -gene_transcripts_dir \path_to_ensembl_cache_files\ \
     -plot_out ~/linx/plot \
     -data_out ~/linx/data \
     -segment ~/linx/COLO829T.linx.vis_segments.tsv \

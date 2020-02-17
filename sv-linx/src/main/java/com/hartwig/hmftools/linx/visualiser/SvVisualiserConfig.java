@@ -2,6 +2,8 @@ package com.hartwig.hmftools.linx.visualiser;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -14,6 +16,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlteration;
 import com.hartwig.hmftools.linx.visualiser.data.CopyNumberAlterations;
 import com.hartwig.hmftools.linx.visualiser.data.Exon;
@@ -116,6 +121,7 @@ public interface SvVisualiserConfig
         options.addOption(CIRCOS, true, "Path to circos binary");
 
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
         options.addOption(CNA, true, "Path to copy number alteration file");
@@ -263,36 +269,72 @@ public interface SvVisualiserConfig
     static List<Exon> additionalExons(@NotNull final CommandLine cmd, @NotNull final List<Exon> currentExons,
             @NotNull final List<Integer> clusterIds)
     {
-        final List<Exon> result = Lists.newArrayList();
-        if (cmd.hasOption(GENE))
-        {
-            final String sampleId = cmd.getOptionValue(SAMPLE);
+        final List<Exon> exonList = Lists.newArrayList();
 
-            Map<String, HmfTranscriptRegion> geneMap = HmfGenePanelSupplier.allGenesMap37();
-            for (final String gene : cmd.getOptionValue(GENE).split(","))
+        if (!cmd.hasOption(GENE))
+            return exonList;
+
+        final String sampleId = cmd.getOptionValue(SAMPLE);
+        final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
+
+        final String[] geneList = cmd.getOptionValue(GENE).split(",");
+
+        SvGeneTranscriptCollection geneTransCache = null;
+        Map<String, HmfTranscriptRegion> geneMap = null;
+
+        if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
+        {
+            geneTransCache = new SvGeneTranscriptCollection();
+            geneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+            geneTransCache.setRequiredData(true, false, false, true);
+            geneTransCache.loadEnsemblData(false);
+        }
+        else
+        {
+            geneMap = HmfGenePanelSupplier.allGenesMap37();
+        }
+
+        for (final String geneName : geneList)
+        {
+            if (currentExons.stream().anyMatch(x -> x.gene().equals(geneName)))
+                continue;
+
+            LOGGER.info("loading exon data for additional gene({}}", geneName);
+
+            if(geneTransCache != null)
             {
-                if (currentExons.stream().noneMatch(x -> x.gene().equals(gene)))
+                EnsemblGeneData geneData = geneTransCache.getGeneDataByName(geneName);
+                TranscriptData transcriptData = geneData != null ? geneTransCache.getTranscriptData(geneData.GeneId, "") : null;
+
+                if (transcriptData == null)
                 {
-                    HmfTranscriptRegion hmfGene = geneMap.get(gene);
-                    if (hmfGene == null)
+                    LOGGER.warn("data not found for specified gene({})", geneName);
+                    continue;
+                }
+
+                for (Integer clusterId : allClusterIds)
+                {
+                    exonList.addAll(Exons.extractExonList(sampleId, clusterId, geneData, transcriptData));
+                }
+            }
+            else
+            {
+                HmfTranscriptRegion hmfGene = geneMap.get(geneName);
+                if (hmfGene == null)
+                {
+                    LOGGER.warn("data not found for specified gene({})", geneName);
+                }
+                else
+                {
+                    for (Integer clusterId : allClusterIds)
                     {
-                        LOGGER.warn("No canonical transcript available for specified gene {}", gene);
-                    }
-                    else
-                    {
-                        LOGGER.info("Adding additional gene {} to plot", gene);
-                        final List<Integer> allClusterIds = clusterIds.isEmpty() ? Lists.newArrayList(0) : clusterIds;
-                        for (Integer clusterId : allClusterIds)
-                        {
-                            result.addAll(Exons.fromHmfTranscript(sampleId, clusterId, hmfGene));
-                        }
+                        exonList.addAll(Exons.extractExonList(sampleId, clusterId, hmfGene));
                     }
                 }
             }
-
         }
 
-        return result;
+        return exonList;
     }
 
 }
