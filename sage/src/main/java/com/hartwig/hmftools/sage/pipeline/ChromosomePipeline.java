@@ -76,7 +76,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
         for (int i = 0; ; i++) {
             int start = 1 + i * regionSliceSize;
-            int end = Math.min(start + regionSliceSize, maxPosition);
+            int end = Math.min(start + regionSliceSize - 1, maxPosition);
             addRegion(start, end);
 
             if (end >= maxPosition) {
