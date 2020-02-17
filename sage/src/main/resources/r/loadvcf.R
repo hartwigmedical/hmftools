@@ -3,7 +3,35 @@ library(tidyr)
 library(dplyr)
 library(GenomicRanges)
 
-vcf_data_frame<- function(vcf) {
+vcf = sample
+
+rna_data_frame<- function(vcf) {
+  vcf.info = info(vcf)
+  vcf.alt = CharacterList(alt(vcf))
+  vcf.alt[elementNROWS(vcf.alt) > 1L ] <- lapply(vcf.alt[elementNROWS(vcf.alt) > 1L ], paste0, collapse=",")
+  
+  rnaAD = unlist(lapply(vcf.info$RNA_AD, paste0, collapse=","))
+  
+  vcf.df = data.frame(
+    chromosome = seqnames(vcf),
+    pos = start(vcf),
+    ref = as.character(ref(vcf)), 
+    alt = as.character(vcf.alt),
+    rnaDepth = vcf.info$RNA_DP,
+    rnaAD = rnaAD,
+    stringsAsFactors = F)
+  
+  vcf.df = vcf.df %>% 
+    separate(rnaAD,c('rnaRefSupport', 'rnaAltSupport'), sep = ",") %>%
+    mutate(rnaRefSupport = ifelse(rnaRefSupport == "NA", NA, as.integer(rnaRefSupport)), rnaAltSupport = ifelse(rnaAltSupport == "NA", NA, as.integer(rnaAltSupport)))
+
+  vcf.df[is.na(vcf.df)] <- 0
+  
+  return (vcf.df)
+}
+
+
+dna_data_frame<- function(vcf) {
   vcf.rowRanges = rowRanges(vcf)
   vcf.info = info(vcf)
   vcf.alt = CharacterList(alt(vcf))
@@ -15,7 +43,6 @@ vcf_data_frame<- function(vcf) {
   
   normalAD = unlist(lapply(vcf.ad[ ,1], paste0, collapse=","))
   tumorAD = unlist(lapply(vcf.ad[ ,2], paste0, collapse=","))
-  
   tumorIPC = vcf.geno$RC_IPC[ ,2]
   
   normalQual = vcf.geno$RC_QUAL[ ,1, ]
@@ -38,15 +65,15 @@ vcf_data_frame<- function(vcf) {
     #postStrelka = vcf.info$POST_STRELKA,
     #highConfidence = vcf.info$HC,
     #mappability = vcf.info$MAPPABILITY,
-    ponCount = vcf.info$PON_COUNT,
-    
-    tier = vcf.info$TIER,
+    #ponCount = vcf.info$PON_COUNT,
+
+        tier = vcf.info$TIER,
     normalAD = normalAD,
     tumorAD = tumorAD,
     tumorAF = vcf.info$AF,
     
     rawNormalAltBaseQual = vcf.geno$RABQ[, 1, 2],
-    rawTumorAltBaseQual = vcf.geno$RABQ[, 2, 2],
+    #rawTumorAltBaseQual = vcf.geno$RABQ[, 2, 2],
     
     rawNormalDP = vcf.geno$RDP[, 1],
     rawNormalAD0 = vcf.geno$RAD[, 1, 1],
@@ -55,7 +82,7 @@ vcf_data_frame<- function(vcf) {
     rawTumorDP = vcf.geno$RDP[, 2],
     rawTumorAD0 = vcf.geno$RAD[, 2, 1],
     rawTumorAD1 = vcf.geno$RAD[, 2, 2],
-    
+
     tumorRCCFull = tumorRCC[, 1],
     tumorRCCPartial = tumorRCC[, 2],
     tumorRCCCore = tumorRCC[, 3],
@@ -64,7 +91,7 @@ vcf_data_frame<- function(vcf) {
     tumorRCCTotal = tumorRCC[, 6],
     tumorRCCShortened = tumorJIT[, 1],
     tumorRCCLengthened = tumorJIT[, 2],
-    
+
     tumorQual = vcf.qual,
     tumorQualFull = tumorQual[, 1],
     tumorQualPartial = tumorQual[, 2],
@@ -73,7 +100,7 @@ vcf_data_frame<- function(vcf) {
     tumorQualReference = tumorQual[, 5],
     tumorQualTotal = tumorQual[, 6],
     tumorQualJitterPenalty = tumorJIT[, 3],
-    
+
     normalRCCFull = normalRCC[, 1],
     normalRCCPartial = normalRCC[, 2],
     normalRCCCore = normalRCC[, 3],
@@ -82,7 +109,7 @@ vcf_data_frame<- function(vcf) {
     normalRCCTotal = normalRCC[, 6],
     normalRCCShortened = normalJIT[, 1],
     normalRCCLengthened = normalJIT[, 2],
-    
+
     normalQualFull = normalQual[, 1],
     normalQualPartial = normalQual[, 2],
     normalQualCore = normalQual[, 3],
@@ -90,28 +117,27 @@ vcf_data_frame<- function(vcf) {
     normalQualReference = normalQual[, 5],
     normalQualTotal = normalQual[, 6],
     normalQualJitterPenalty = normalJIT[, 3],
-    
+
     tumorDistanceFromRef = vcf.info$RC_DIS,
     tumorDiffFromRef = vcf.info$RC_DIF,
     microhomology = vcf.info$MH,
     readContextMicrohomology = vcf.info$RC_MH,
     readContext = vcf.info$RC,
-    refContext = vcf.info$TNC, 
+    refContext = vcf.info$TNC,
     repeatSequence = vcf.info$REP_S,
     readContextRepeatSequence = vcf.info$RC_REPS,
     repeatCount = vcf.info$REP_C,
     readContextRepeatCount = vcf.info$RC_REPC,
-    
+
     phase = vcf.info$LPS,
     tumorImproperPairCount = tumorIPC,
-    #jitterPenalty = vcf.info$JITTER,
     stringsAsFactors = F)
   
   vcf.df[is.na(vcf.df)] <- 0
   
   vcf.df = vcf.df %>% 
     separate(normalAD,c('germlineRefSupport','germlineAltSupport'),sep=',') %>% 
-    separate(tumorAD,c('tumorRefSupport','tumorAltSupport'),sep=',') %>% 
+    separate(tumorAD,c('tumorRefSupport','tumorAltSupport'),sep=',') %>%
     mutate(
       normalQual = normalQualFull + normalQualPartial + normalQualCore +  normalQualRealigned - normalQualJitterPenalty,
       normalAF = (normalQual) / normalQualTotal,
@@ -121,31 +147,12 @@ vcf_data_frame<- function(vcf) {
       germlineAltSupport=as.numeric(germlineAltSupport),
       readContextCentre = readContext)
   
-  
   return (vcf.df)
 }
 
+sample = readVcf("/Users/jon/hmf/analysis/x/x.rna.final.vcf.gz")
+dnaDF = dna_data_frame(sample)
+rnaDf = rna_data_frame(sample)
+combined = left_join(rnaDf, dnaDF, by = c("chromosome", "pos", "ref", "alt"))
 
 
-
-sagePanelResult = data.frame()
-for (file in list.files(path = "/Users/jon/hmf/analysis/sagePanel/", pattern = "*vcf.gz$")) {
-  cat (file, "\n")
-  vcf = readVcf(paste0("~/hmf/analysis/sagePanel/", file))
-  vcfDF = vcf_data_frame(vcf) %>% mutate(sample = substr(file,1, 13))    
-  sagePanelResult = bind_rows(sagePanelResult, vcfDF)
-}
-
-jon = sagePanelResult %>% filter(grepl("germline_mnv", filter))
-jon = sagePanelResult %>% filter(nchar(ref) ==1, nchar(alt) == 1, phase > 0,  !grepl("tumor", filter) & grepl("germline", filter) | filter == 'PASS' | filter == 'merge') %>%
-  mutate(leadPos = lead(pos), lagPos = lag(pos)) %>%
-  mutate(leadPos = ifelse(is.na(leadPos), 0, leadPos), lagPos = ifelse(is.na(lagPos), 0, lagPos)) %>%
-  filter(abs(pos - leadPos) < 5 | abs(pos - lagPos) < 5)
-  
-
-save(sagePanelResult, file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
-
-load( file = "/Users/jon/hmf/analysis/sagePanel/sagePanelResult.RData")
-jon = sagePanelResult %>% filter(tier == 'HOTSPOT', filter == 'PASS')
-
-jon = sagePanelResult %>% filter(sample == 'WIDE01010299T', pos == 110249348)
