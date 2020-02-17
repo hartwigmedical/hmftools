@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +31,8 @@ public class Transvar {
         this.refVersion = refVersion;
     }
 
-    public List<String> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
+    @NotNull
+    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
             @NotNull String proteinAnnotation) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
@@ -46,7 +48,8 @@ public class Transvar {
         // Below is (somehow) necessary to run in intellij. Otherwise it can not find proper locale.
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
 
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+        // Not sure if below is needed to capture all outputs (esp std err).
+//        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
 
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
@@ -71,12 +74,19 @@ public class Transvar {
         }
 
         List<String> stdout = captureStdout(process);
-        // TODO Convert stdout to List of VariantHotspot.
+        List<VariantHotspot> hotspots = Lists.newArrayList();
         for (String outLine : stdout) {
-            LOGGER.info(outLine);
+            hotspots.add(transvarToHotpot(outLine));
         }
 
-        return Lists.newArrayList();
+        return hotspots;
+    }
+
+    @NotNull
+    private static VariantHotspot transvarToHotpot(@NotNull String transvarLine) {
+        LOGGER.info("Converting '{}' to Hotspot", transvarLine);
+        // TODO (implement!)
+        return ImmutableVariantHotspotImpl.builder().chromosome("7").position(0).ref("C").alt("T").build();
     }
 
     @NotNull
