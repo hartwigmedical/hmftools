@@ -17,7 +17,7 @@ public abstract class TransvarRecord {
     @NotNull
     public abstract String chromosome();
 
-    public abstract long position();
+    public abstract long dDNAPosition();
 
     @NotNull
     public abstract String gDNARef();

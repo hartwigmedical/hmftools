@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -32,6 +31,7 @@ public class Transvar {
         this.refVersion = refVersion;
     }
 
+    @NotNull
     public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
             @NotNull String proteinAnnotation) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
@@ -83,10 +83,9 @@ public class Transvar {
     }
 
     @NotNull
-    @VisibleForTesting
-    static VariantHotspot transvarToHotpot(@NotNull String transvarLine) {
+    private static VariantHotspot transvarToHotpot(@NotNull String transvarLine) {
         LOGGER.info("Converting '{}' to Hotspot", transvarLine);
-        String[] parts = transvarLine.split("\t");
+        // TODO (implement!)
         return ImmutableVariantHotspotImpl.builder().chromosome("7").position(0).ref("C").alt("T").build();
     }
 
