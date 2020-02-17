@@ -140,6 +140,10 @@ public class ChromosomePipeline implements AutoCloseable {
             return false;
         }
 
+        if (entry.tier() == SageVariantTier.HOTSPOT) {
+            return true;
+        }
+
         if (config.germlineOnly()) {
             return true;
         }
