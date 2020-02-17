@@ -52,8 +52,8 @@ public class ChromosomePipeline implements AutoCloseable {
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.sageVariantPipeline = config.germlineOnly()
-                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions, highConfidenceRegions)
-                : new SomaticPipeline(config, executor, hotspots, panelRegions, highConfidenceRegions);
+                ? new GermlineOnlyPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions)
+                : new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions);
     }
 
     @NotNull

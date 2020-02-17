@@ -23,17 +23,21 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RnaEvidence {
 
     private static final Logger LOGGER = LogManager.getLogger(RnaEvidence.class);
 
     private final SageConfig config;
+    private final ReferenceSequenceFile refGenome;
     private final SamSlicerFactory samSlicerFactory;
 
-    public RnaEvidence(@NotNull final SageConfig config, final SamSlicerFactory samSlicerFactory) {
+    public RnaEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
         this.config = config;
         this.samSlicerFactory = samSlicerFactory;
+        this.refGenome = refGenome;
     }
 
     @NotNull
@@ -53,7 +57,7 @@ public class RnaEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
         try (final SamReader bamReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(config.refGenome()))
+                .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(config.rnaBam()))) {
             slicer.slice(bamReader, recordConsumer);
         } catch (IOException e) {

@@ -28,20 +28,24 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class PrimaryEvidence {
 
     private static final Logger LOGGER = LogManager.getLogger(PrimaryEvidence.class);
 
     private final SageConfig config;
-    private final SamSlicerFactory samSlicerFactory;
     private final List<VariantHotspot> hotspots;
+    private final ReferenceSequenceFile refGenome;
+    private final SamSlicerFactory samSlicerFactory;
 
     public PrimaryEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final SamSlicerFactory samSlicerFactory) {
+            @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
         this.config = config;
         this.samSlicerFactory = samSlicerFactory;
         this.hotspots = hotspots;
+        this.refGenome = refGenome;
     }
 
     @NotNull
@@ -67,7 +71,7 @@ public class PrimaryEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(config.refGenome()))
+                .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(bamFile))) {
 
             // First parse

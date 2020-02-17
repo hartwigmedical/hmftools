@@ -22,6 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+
 public class SomaticPipeline implements SageVariantPipeline {
 
     private static final Logger LOGGER = LogManager.getLogger(SomaticPipeline.class);
@@ -35,17 +37,18 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final NormalEvidence normalEvidence;
     private final RnaEvidence rnaEvidence;
 
-    SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final List<VariantHotspot> hotspots,
-            @NotNull final List<GenomeRegion> panelRegions, @NotNull final List<GenomeRegion> highConfidenceRegions) {
+    SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
+            @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
+            @NotNull final List<GenomeRegion> highConfidenceRegions) {
         this.config = config;
         this.executor = executor;
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
-        this.normalEvidence = new NormalEvidence(config, samSlicerFactory);
-        this.rnaEvidence = new RnaEvidence(config, samSlicerFactory);
+        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
+        this.normalEvidence = new NormalEvidence(config, samSlicerFactory, refGenome);
+        this.rnaEvidence = new RnaEvidence(config, samSlicerFactory, refGenome);
     }
 
     @NotNull
@@ -79,14 +82,12 @@ public class SomaticPipeline implements SageVariantPipeline {
             return normalEvidence.get(refSequence, region, somaticPipelineData.normalCandidates());
         });
 
-
         final CompletableFuture<List<RefContext>> rnaFuture = doneTumor.thenApply(aVoid -> {
             if (config.rnaEnabled()) {
                 return rnaEvidence.get(refSequence, region, somaticPipelineData.normalCandidates());
             }
             return Lists.newArrayList();
         });
-
 
         return rnaFuture.thenApply(aVoid -> {
 

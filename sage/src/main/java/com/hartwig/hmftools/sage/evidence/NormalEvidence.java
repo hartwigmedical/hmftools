@@ -26,6 +26,8 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class NormalEvidence {
 
@@ -34,11 +36,13 @@ public class NormalEvidence {
     private final int minQuality;
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
+    private final ReferenceSequenceFile refGenome;
 
-    public NormalEvidence(@NotNull final SageConfig config, final SamSlicerFactory samSlicerFactory) {
+    public NormalEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
+        this.refGenome = refGenome;
     }
 
     @NotNull
@@ -58,7 +62,7 @@ public class NormalEvidence {
                 new SamRecordSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
-                .referenceSequence(new File(sageConfig.refGenome()))
+                .referenceSource(new ReferenceSource(refGenome))
                 .open(new File(sageConfig.referenceBam()))) {
             slicer.slice(tumorReader, samRecord -> {
 

@@ -19,6 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+
 class GermlineOnlyPipeline implements SageVariantPipeline {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineOnlyPipeline.class);
@@ -30,15 +32,15 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
     private final List<GenomeRegion> highConfidenceRegions;
     private final PrimaryEvidence primaryEvidence;
 
-    GermlineOnlyPipeline(final SageConfig config, final Executor executor, final List<VariantHotspot> hotspots,
-            final List<GenomeRegion> panelRegions, final List<GenomeRegion> highConfidenceRegions) {
+    GermlineOnlyPipeline(final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
+            final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions, final List<GenomeRegion> highConfidenceRegions) {
         this.config = config;
         this.executor = executor;
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
 
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
+        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
         this.highConfidenceRegions = highConfidenceRegions;
 
     }
