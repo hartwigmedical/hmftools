@@ -26,7 +26,7 @@
         <module>strelka-post-process</module>
         <module>bachelor</module>
         <module>sv-linx</module>
-        <module>sig_analyser</module>
+        <module>sig-analyser</module>
         <module>sv-tools</module>
         <module>stat_calcs</module>
         <module>knowledgebase-importer</module>
@@ -56,7 +56,7 @@
 
         <bachelor.version>1.9</bachelor.version>
         <sv-linx.version>1.7</sv-linx.version>
-        <sig_analyser.version>1.0</sig_analyser.version>
+        <sig-analyser.version>1.0</sig-analyser.version>
         <sv-tools.version>1.0</sv-tools.version>
         <amber.version>3.2</amber.version>
         <cobalt.version>1.8</cobalt.version>
@@ -173,8 +173,8 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
-                <artifactId>sig_analyser</artifactId>
-                <version>${sig_analyser.version}</version>
+                <artifactId>sig-analyser</artifactId>
+                <version>${sig-analyser.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>

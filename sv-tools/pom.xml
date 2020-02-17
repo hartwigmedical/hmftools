@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>sig_analyser</artifactId>
+            <artifactId>sig-analyser</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>

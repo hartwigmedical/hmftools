@@ -8,9 +8,9 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sig_analyser</artifactId>
+    <artifactId>sig-analyser</artifactId>
     <packaging>jar</packaging>
-    <version>${sig_analyser.version}</version>
+    <version>${sig-analyser.version}</version>
     <name>HMF Tools - Signature Analyser</name>
 
     <dependencies>
