@@ -33,7 +33,8 @@ public class GeneReadData
     private final long[] mTranscriptsRange;
 
     // summary results
-    private final Map<String,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
+    private final Map<String, int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
+    private final Map<String, Double> mTranscriptAllocations;
     private final List<TranscriptResults> mTranscriptResults;
 
     public static final int TC_SPLICED = 0;
@@ -56,6 +57,7 @@ public class GeneReadData
         mTranscriptResults = Lists.newArrayList();
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
         mTranscriptReadCounts = Maps.newHashMap();
+        mTranscriptAllocations = Maps.newHashMap();
 
         mTranscriptsRange = new long[SE_PAIR];
     }
@@ -191,6 +193,8 @@ public class GeneReadData
 
         ++counts[type][TRANS_COUNT];
     }
+
+    public Map<String,Double> getTranscriptAllocations() { return mTranscriptAllocations; }
 
     public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
 

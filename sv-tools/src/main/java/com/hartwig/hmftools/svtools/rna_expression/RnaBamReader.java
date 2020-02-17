@@ -501,21 +501,6 @@ public class RnaBamReader
         if(read.Cigar.containsOperator(CigarOperator.N) || !read.Cigar.containsOperator(CigarOperator.M))
             return;
 
-        /* unused for now
-        RegionReadData intronReadData = mCurrentGene.getIntronRegions().stream()
-                .filter(x -> read.PosStart >= x.Region.start() && read.PosEnd <= x.Region.end())
-                .findFirst().orElse(null);
-
-        if(intronReadData != null)
-        {
-            if (mConfig.AllTranscripts && intronReadData.getRefRegions().size() == 1)
-            {
-                // only record intronic reads if they are unique to a transcript
-                intronReadData.addMatchedRead(INTRONIC);
-            }
-        }
-        */
-
         // process the fragment if both reads are now available, and implies one of the reads covers an exon
         if(mFragmentReads.containsKey(read.Id))
         {
@@ -659,7 +644,7 @@ public class RnaBamReader
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
                 mTransComboWriter.write("GeneId,GeneName,TransCount,TransList");
-                mTransComboWriter.write(",ShortFragments,LongFragments,SplicJuncFragments");
+                mTransComboWriter.write(",SpliceJuncFragments,ShortFragments,LongFragments,");
                 mTransComboWriter.newLine();
             }
 

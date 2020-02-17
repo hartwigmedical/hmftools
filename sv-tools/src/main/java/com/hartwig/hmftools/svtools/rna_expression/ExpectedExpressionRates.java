@@ -35,28 +35,43 @@ public class ExpectedExpressionRates
 
     private final List<String> mCategories; // equivalent of buckets
     private final List<String> mTranscriptIds; // equivalent of signature names
-    private SigMatrix mDefinitionsData;
+    private SigMatrix mTranscriptDefinitions;
+
+    private int mCurrentFragSize;
+    private int mCurrentFragFrequency;
+
     private BufferedWriter mWriter;
 
     public static final String UNSPLICED_ID = "UNSPLICED";
+
+    public static final int FL_SIZE = 0;
+    public static final int FL_FREQUENCY = 1;
 
     private static final Logger LOGGER = LogManager.getLogger(ExpectedExpressionRates.class);
 
     public ExpectedExpressionRates(final RnaExpConfig config)
     {
         mConfig = config;
+        mCurrentFragSize = 0;
+        mCurrentFragFrequency = 0;
 
         mTransComboData = Maps.newHashMap();
         mCategories = Lists.newArrayList();
         mTranscriptIds = Lists.newArrayList();
-        mDefinitionsData = null;
+        mTranscriptDefinitions = null;
         mWriter = null;
     }
 
     public Map<String,List<TranscriptComboData>> getTransComboData() { return mTransComboData; }
 
     public List<String> getTranscriptNames() { return mTranscriptIds; }
-    public SigMatrix getTranscriptDefinitions() { return mDefinitionsData; }
+    public SigMatrix getTranscriptDefinitions() { return mTranscriptDefinitions; }
+
+    public void setFragmentLengthData(int length, int frequency)
+    {
+        mCurrentFragSize = length;
+        mCurrentFragFrequency = frequency;
+    }
 
     public void generateExpectedRates(final GeneReadData geneReadData)
     {
@@ -70,65 +85,69 @@ public class ExpectedExpressionRates
         // process each transcript as though it were transcribed
         final List<TranscriptData> transDataList = geneReadData.getTranscripts();
 
-        int fragmentLength = mConfig.MinFragmentLength;
-
-        for(TranscriptData transData : geneReadData.getTranscripts())
+        for(final int[] flData : mConfig.ExpRateFragmentLengths)
         {
-            boolean endOfTrans = false;
+            mCurrentFragSize = flData[FL_SIZE];
+            mCurrentFragFrequency = flData[FL_FREQUENCY];
 
-            for(ExonData exon : transData.exons())
+            for (TranscriptData transData : geneReadData.getTranscripts())
             {
-                for(long startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
+                boolean endOfTrans = false;
+
+                for (ExonData exon : transData.exons())
                 {
-                    // if(startPos + )
-                    if (!allocateTranscriptCounts(transData, transDataList, startPos))
+                    for (long startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
                     {
-                        endOfTrans = true;
-                        break;
+                        // if(startPos + )
+                        if (!allocateTranscriptCounts(transData, transDataList, startPos))
+                        {
+                            endOfTrans = true;
+                            break;
+                        }
                     }
+
+                    if (endOfTrans)
+                        break;
                 }
-
-                if(endOfTrans)
-                    break;
             }
-        }
 
-        // and generate fragments assuming an unspliced gene
-        long regionStart = geneReadData.getTranscriptsRange()[SE_START];
-        long regionEnd = geneReadData.getTranscriptsRange()[SE_END];
+            // and generate fragments assuming an unspliced gene
+            long regionStart = geneReadData.getTranscriptsRange()[SE_START];
+            long regionEnd = geneReadData.getTranscriptsRange()[SE_END];
 
-        int exonicRegionIndex = 0;
-        long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
-        long nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+            int exonicRegionIndex = 0;
+            long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
+            long nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
 
-        List<String> emptyTrans = Lists.newArrayList();
+            List<String> emptyTrans = Lists.newArrayList();
 
-        for(long startPos = regionStart; startPos <= regionEnd - fragmentLength; ++startPos)
-        {
-            if(startPos <= currentExonicEnd)
+            for (long startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
             {
-                // check possible transcript exonic matches
-                allocateUnsplicedCounts(transDataList, startPos);
-            }
-            else
-            {
-                // check for purely intronic fragments
-                if(startPos < nextExonicStart)
+                if (startPos <= currentExonicEnd)
                 {
-                    addTransComboData(UNSPLICED_ID, emptyTrans, TC_UNSPLICED);
+                    // check possible transcript exonic matches
+                    allocateUnsplicedCounts(transDataList, startPos);
                 }
                 else
                 {
-                    ++exonicRegionIndex;
-                    currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
-
-                    if (exonicRegionIndex < commonExonicRegions.size() - 1)
+                    // check for purely intronic fragments
+                    if (startPos < nextExonicStart)
                     {
-                        nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+                        addTransComboData(UNSPLICED_ID, emptyTrans, TC_UNSPLICED);
                     }
                     else
                     {
-                        nextExonicStart = -1;
+                        ++exonicRegionIndex;
+                        currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
+
+                        if (exonicRegionIndex < commonExonicRegions.size() - 1)
+                        {
+                            nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+                        }
+                        else
+                        {
+                            nextExonicStart = -1;
+                        }
                     }
                 }
             }
@@ -140,8 +159,9 @@ public class ExpectedExpressionRates
     private boolean allocateTranscriptCounts(final TranscriptData transData, final List<TranscriptData> transDataList, long startPos)
     {
         List<long[]> readRegions = Lists.newArrayList();
+        List<long[]> spliceJunctions = Lists.newArrayList();
 
-        int matchType = generateImpliedFragment(transData, startPos, readRegions);
+        int matchType = generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         if(readRegions.isEmpty())
             return false;
@@ -160,7 +180,7 @@ public class ExpectedExpressionRates
             if(transData == otherTransData)
                 continue;
 
-            if(readsSupportFragment(otherTransData, readRegions, matchType))
+            if(readsSupportFragment(otherTransData, readRegions, matchType, spliceJunctions))
             {
                 if(matchType == TC_SPLICED || matchType == TC_LONG)
                     longAndSplicedTrans.add(otherTransData.TransName);
@@ -184,14 +204,14 @@ public class ExpectedExpressionRates
     private void allocateUnsplicedCounts(final List<TranscriptData> transDataList, long startPos)
     {
         List<long[]> readRegions = Lists.newArrayList();
+        List<long[]> noSpliceJunctions = Lists.newArrayList();
 
         // the unspliced case
-        int fragmentLength = mConfig.MinFragmentLength;
         int readLength = mConfig.ReadLength;
 
         readRegions.add(new long[] {startPos, startPos + readLength - 1});
 
-        long secondReadEnd = startPos + fragmentLength - 1;
+        long secondReadEnd = startPos + mCurrentFragSize - 1;
         readRegions.add(new long[] {secondReadEnd - readLength + 1, secondReadEnd});
 
         final List<String> shortTrans = Lists.newArrayList();
@@ -199,7 +219,7 @@ public class ExpectedExpressionRates
         // check whether these unspliced reads support exonic regions
         for(TranscriptData transData : transDataList)
         {
-            if(readsSupportFragment(transData, readRegions, TC_SHORT))
+            if(readsSupportFragment(transData, readRegions, TC_SHORT, noSpliceJunctions))
             {
                 shortTrans.add(transData.TransName);
             }
@@ -227,27 +247,26 @@ public class ExpectedExpressionRates
             transComboDataList.add(matchingCounts);
         }
 
-        ++matchingCounts.getCounts()[transMatchType];
+        matchingCounts.getCounts()[transMatchType] += mCurrentFragFrequency;
     }
 
-    public int generateImpliedFragment(final TranscriptData transData, long startPos, List<long[]> readRegions)
+    public int generateImpliedFragment(final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
     {
         readRegions.clear();
+        spliceJunctions.clear();
 
         // set out the fragment reads either within a single exon or spanning one or more
-        int fragmentLength = mConfig.MinFragmentLength;
-
         int exonCount = transData.exons().size();
         final ExonData lastExon = transData.exons().get(exonCount - 1);
 
-        if(startPos + fragmentLength - 1 > lastExon.ExonEnd)
+        if(startPos + mCurrentFragSize - 1 > lastExon.ExonEnd)
             return TC_UNSPLICED;
 
         int matchType = TC_SHORT;
         int readLength = mConfig.ReadLength;
 
         int remainingReadBases = readLength;
-        int remainingInterimBases = fragmentLength - 2 * readLength + 1;
+        int remainingInterimBases = mCurrentFragSize - 2 * readLength + 1;
         long nextRegionStart = startPos;
         int readsAdded = 0;
 
@@ -289,9 +308,7 @@ public class ExpectedExpressionRates
             long regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
             readRegions.add(new long[] {nextRegionStart, regionEnd});
-
-            if(remainingReadBases > 0 && regionEnd == exon.ExonEnd)
-                matchType = TC_SPLICED;
+            boolean spansExonEnd = remainingReadBases > 0;
 
             if(remainingReadBases == 0)
             {
@@ -316,6 +333,12 @@ public class ExpectedExpressionRates
 
                 // will move onto the next exon for further matching
                 nextRegionStart = transData.exons().get(i + 1).ExonStart;
+
+                if(spansExonEnd && regionEnd == exon.ExonEnd)
+                {
+                    matchType = TC_SPLICED;
+                    spliceJunctions.add(new long[] {exon.ExonEnd, nextRegionStart});
+                }
 
                 remainingInterimBases -= exon.ExonEnd - regionEnd;
                 continue;
@@ -350,7 +373,8 @@ public class ExpectedExpressionRates
         return matchType;
     }
 
-    public boolean readsSupportFragment(final TranscriptData transData, List<long[]> readRegions, int requiredMatchType)
+    public boolean readsSupportFragment(
+            final TranscriptData transData, List<long[]> readRegions, int requiredMatchType, List<long[]> spliceJunctions)
     {
         long regionsStart = readRegions.get(0)[SE_START];
         long regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
@@ -361,13 +385,34 @@ public class ExpectedExpressionRates
         }
         else
         {
+            // first check for matching splice junctions
+            for(long[] spliceJunction : spliceJunctions)
+            {
+                long spliceStart = spliceJunction[SE_START];
+                long spliceEnd = spliceJunction[SE_END];
+                boolean matched = false;
+
+                for (int i = 0; i < transData.exons().size() - 1; ++i)
+                {
+                    ExonData exon = transData.exons().get(i);
+                    ExonData nextExon = transData.exons().get(i + 1);
+
+                    if (exon.ExonEnd == spliceStart && nextExon.ExonStart == spliceEnd)
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if(!matched)
+                    return false;
+            }
+
             // none of the reads can breach an exon boundary or skip an exon
             int readIndex = 0;
             long regionStart = readRegions.get(readIndex)[SE_START];
             long regionEnd = readRegions.get(readIndex)[SE_END];
             int exonsMatched = 0;
-            boolean atExonEnd = false;
-            boolean spliceMatched = false;
 
             for(int i = 0; i < transData.exons().size(); ++i)
             {
@@ -385,26 +430,10 @@ public class ExpectedExpressionRates
 
                 ++exonsMatched;
 
-                if (requiredMatchType == TC_SPLICED && !spliceMatched && atExonEnd)
-                {
-                    if(regionStart == exon.ExonStart)
-                        spliceMatched = true;
-                    else
-                        return false;
-
-                    atExonEnd = false;
-                }
-
                 while(true)
                 {
                     if (regionStart >= exon.ExonStart && regionEnd <= exon.ExonEnd)
                     {
-                        if(requiredMatchType == TC_SPLICED && !spliceMatched)
-                        {
-                            if (regionEnd == exon.ExonEnd)
-                                atExonEnd = true;
-                        }
-
                         ++readIndex;
 
                         if(readIndex >= readRegions.size())
@@ -424,10 +453,7 @@ public class ExpectedExpressionRates
                     break;
             }
 
-            if(requiredMatchType == TC_SPLICED)
-                return exonsMatched > 1 && spliceMatched;
-            else
-                return exonsMatched > 1;
+            return exonsMatched > 1;
         }
     }
 
@@ -438,7 +464,7 @@ public class ExpectedExpressionRates
         int categoryCount = mCategories.size();
         int definitionsCount = mTransComboData.size();
 
-        mDefinitionsData = new SigMatrix(categoryCount, definitionsCount);
+        mTranscriptDefinitions = new SigMatrix(categoryCount, definitionsCount);
 
         for(Map.Entry<String,List<TranscriptComboData>> entry : mTransComboData.entrySet())
         {
@@ -475,7 +501,7 @@ public class ExpectedExpressionRates
 
             // convert counts to ratios and add against this transcript definition
             convertToPercentages(categoryCounts);
-            mDefinitionsData.setCol(definitionIndex, categoryCounts);
+            mTranscriptDefinitions.setCol(definitionIndex, categoryCounts);
         }
 
         if(mConfig.WriteExpectedRates)
@@ -606,7 +632,7 @@ public class ExpectedExpressionRates
     private void clearState()
     {
         mTransComboData.clear();
-        mDefinitionsData = null;
+        mTranscriptDefinitions = null;
         mCategories.clear();
         mTranscriptIds.clear();
     }
@@ -616,14 +642,14 @@ public class ExpectedExpressionRates
         if(mConfig.OutputDir.isEmpty())
             return;
 
-        if(mDefinitionsData == null || mCategories.isEmpty() || mTranscriptIds.isEmpty())
+        if(mTranscriptDefinitions == null || mCategories.isEmpty() || mTranscriptIds.isEmpty())
             return;
 
         try
         {
             if(mWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_EXP_RATES.csv";
+                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRAN_RATES.csv";
 
                 mWriter = createBufferedWriter(outputFileName, false);
                 mWriter.write("GeneId,GeneName,Transcript,Category,Rate");
@@ -633,15 +659,15 @@ public class ExpectedExpressionRates
             final String geneId = geneReadData.GeneData.GeneId;
             final String geneName = geneReadData.GeneData.GeneName;
 
-            for(int i = 0; i < mDefinitionsData.Cols; ++i)
+            for(int i = 0; i < mTranscriptDefinitions.Cols; ++i)
             {
                 final String transcriptId = mTranscriptIds.get(i);
 
-                for(int j = 0; j < mDefinitionsData.Rows; ++j)
+                for(int j = 0; j < mTranscriptDefinitions.Rows; ++j)
                 {
                     final String category = mCategories.get(j);
 
-                    double expRate = mDefinitionsData.get(j, i);
+                    double expRate = mTranscriptDefinitions.get(j, i);
 
                     if(expRate == 0)
                         continue;

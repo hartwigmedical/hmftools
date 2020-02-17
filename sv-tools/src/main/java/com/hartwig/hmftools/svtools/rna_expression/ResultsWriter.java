@@ -111,7 +111,8 @@ public class ResultsWriter
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
-                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
+                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,ExpRateAllocation");
+                mTransDataWriter.write(",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
                 mTransDataWriter.write(",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported");
                 mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments");
                 mTransDataWriter.newLine();
@@ -123,8 +124,11 @@ public class ResultsWriter
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, transData.IsCanonical, transData.exons().size()));
 
-            mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d,%.0f",
+            Double expRateAllocation = geneReadData.getTranscriptAllocations().get(transData.TransName);
+
+            mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%d,%d,%.0f",
                     transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage(),
+                    expRateAllocation != null ? expRateAllocation : 0,
                     transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
 
             mTransDataWriter.write(String.format(",%d,%d,%d",

@@ -206,7 +206,8 @@ public class RnaExpression
         final double[] transcriptCounts = mExpExpressionRates.generateTranscriptCounts(
                 geneReadData, mRnaBamReader.getTransComboData(), geneReadData.getCounts()[TC_UNSPLICED]);
 
-        estimateRatesByLeastSquares(transcriptCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
+        estimateRatesByLeastSquares(
+                geneReadData, transcriptCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

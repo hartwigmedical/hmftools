@@ -2,6 +2,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,9 +50,7 @@ public class RnaExpConfig
     // expected expression config
     public static final String APPLY_EXP_RATES = "apply_exp_rates";
     public static final String READ_LENGTH = "read_length";
-    public static final String MIN_FRAGMENT_LENGTH = "min_frag_length";
-    public static final String MAX_FRAGMENT_LENGTH = "max_frag_length";
-    public static final String FRAGMENT_LENGTH_STEPS = "frag_length_steps";
+    public static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
     public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
@@ -75,9 +75,7 @@ public class RnaExpConfig
 
     public final boolean GenerateExpectedExpression;
     public int ReadLength;
-    public int MinFragmentLength;
-    public int MaxFragmentLength;
-    public int FragmentLengthSteps;
+    public final List<int[]> ExpRateFragmentLengths;
     public final boolean WriteExpectedRates;
 
     public final boolean GeneStatsOnly;
@@ -152,17 +150,19 @@ public class RnaExpConfig
 
         GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
-        MinFragmentLength = Integer.parseInt(cmd.getOptionValue(MIN_FRAGMENT_LENGTH, "0"));
 
-        if(cmd.hasOption(MAX_FRAGMENT_LENGTH) && cmd.hasOption(FRAGMENT_LENGTH_STEPS))
+        ExpRateFragmentLengths = Lists.newArrayList();
+
+        if(cmd.hasOption(ER_FRAGMENT_LENGTHS))
         {
-            MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(MAX_FRAGMENT_LENGTH, "0"));
-            FragmentLengthSteps = Integer.parseInt(cmd.getOptionValue(FRAGMENT_LENGTH_STEPS, "0"));
-        }
-        else
-        {
-            MaxFragmentLength = MinFragmentLength;
-            FragmentLengthSteps = 0;
+            String[] fragLengths = cmd.getOptionValue(ER_FRAGMENT_LENGTHS).split(";");
+            for(int i = 0; i < fragLengths.length; ++i)
+            {
+                String[] flItem = fragLengths[i].split("-");
+                int fragLength = Integer.parseInt(flItem[FL_SIZE]);
+                int fragFrequency = Integer.parseInt(flItem[FL_FREQUENCY]);
+                ExpRateFragmentLengths.add(new int[]{ fragLength, fragFrequency });
+            }
         }
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
@@ -185,9 +185,7 @@ public class RnaExpConfig
 
         GenerateExpectedExpression = false;
         ReadLength = 0;
-        MinFragmentLength = 0;
-        MaxFragmentLength = MinFragmentLength;
-        FragmentLengthSteps = 0;
+        ExpRateFragmentLengths = Lists.newArrayList();
 
         WriteExonData = false;
         WriteReadData = false;
@@ -236,10 +234,11 @@ public class RnaExpConfig
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
-        options.addOption(MIN_FRAGMENT_LENGTH, true, "Min fragment size");
-        options.addOption(MAX_FRAGMENT_LENGTH, true, "Max fragment size");
-        options.addOption(FRAGMENT_LENGTH_STEPS, true, "Fragment length step");
-        options.addOption(WRITE_EXPECTED_RATES, true, "Write expected transcript rates to file");
+
+        options.addOption(ER_FRAGMENT_LENGTHS, true,
+                "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");
+
+        options.addOption(WRITE_EXPECTED_RATES, false, "Write expected transcript rates to file");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
 

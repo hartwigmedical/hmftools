@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_ID;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
@@ -29,10 +30,12 @@ public class RnaExpectedRates
     public void testRegionMatching()
     {
         RnaExpConfig config = new RnaExpConfig();
-        config.MinFragmentLength = 100;
+        int fragmentLength = 100;
         config.ReadLength = 20;
 
         ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
+
+        eeRates.setFragmentLengthData(fragmentLength, 1);
 
         TranscriptData transData = new TranscriptData(1, "TRANS01", "GENE01", true, (byte)1,
                 0, 1000, null,null, "");
@@ -46,7 +49,8 @@ public class RnaExpectedRates
         // fully contained fragment
         long startPos = 100;
         List<long[]> readRegions = Lists.newArrayList();
-        int matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions);
+        List<long[]> spliceJunctions = Lists.newArrayList();
+        int matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertEquals(TC_SHORT, matchType);
         assertEquals(2, readRegions.size());
@@ -54,7 +58,7 @@ public class RnaExpectedRates
         assertEquals(119, readRegions.get(0)[SE_END]);
         assertEquals(180, readRegions.get(1)[SE_START]);
         assertEquals(199, readRegions.get(1)[SE_END]);
-        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         // test for another transcript
         TranscriptData transData2 = new TranscriptData(2, "TRANS02", "GENE01", true, (byte)1,
@@ -62,16 +66,16 @@ public class RnaExpectedRates
 
         transData2.exons().add(new ExonData(2, 90, 210, 1, -1, -1));
         transData2.exons().add(new ExonData(2, 300, 400, 2, -1, -1));
-        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
         transData2.exons().add(new ExonData(2, 150, 250, 1, -1, -1));
         transData2.exons().add(new ExonData(2, 300, 400, 2, -1, -1));
-        assertFalse(eeRates.readsSupportFragment(transData2, readRegions, matchType));
+        assertFalse(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // 2 fully contained reads but in 2 exons
         startPos = 371;
-        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions);
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertEquals(TC_LONG, matchType);
         assertEquals(2, readRegions.size());
@@ -79,23 +83,25 @@ public class RnaExpectedRates
         assertEquals(390, readRegions.get(0)[SE_END]);
         assertEquals(631, readRegions.get(1)[SE_START]);
         assertEquals(650, readRegions.get(1)[SE_END]);
-        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
         transData2.exons().add(new ExonData(2, 250, 400, 1, -1, -1));
         transData2.exons().add(new ExonData(2, 450, 550, 2, -1, -1));
         transData2.exons().add(new ExonData(2, 600, 700, 3, -1, -1));
-        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
         transData2.exons().add(new ExonData(2, 250, 300, 1, -1, -1));
         transData2.exons().add(new ExonData(2, 350, 700, 2, -1, -1));
-        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // within an exon then spanning a junction
         startPos = 150;
-        config.MinFragmentLength = 32 + 85 + 2 * config.ReadLength;
-        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions);
+        fragmentLength = 32 + 85 + 2 * config.ReadLength;
+        eeRates.setFragmentLengthData(fragmentLength, 1);
+
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertEquals(TC_SPLICED, matchType);
         assertEquals(3, readRegions.size());
@@ -105,12 +111,14 @@ public class RnaExpectedRates
         assertEquals(400, readRegions.get(1)[SE_END]);
         assertEquals(440, readRegions.get(2)[SE_START]);
         assertEquals(445, readRegions.get(2)[SE_END]);
-        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         // start spanning a junction, ends within an exon
         startPos = 191;
-        config.MinFragmentLength = 40 + 2 * config.ReadLength;
-        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions);
+        fragmentLength = 40 + 2 * config.ReadLength;
+        eeRates.setFragmentLengthData(fragmentLength, 1);
+
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertEquals(TC_SPLICED, matchType);
         assertEquals(3, readRegions.size());
@@ -120,25 +128,27 @@ public class RnaExpectedRates
         assertEquals(309, readRegions.get(1)[SE_END]);
         assertEquals(350, readRegions.get(2)[SE_START]);
         assertEquals(369, readRegions.get(2)[SE_END]);
-        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
         transData2.exons().add(new ExonData(2, 150, 200, 1, -1, -1));
         transData2.exons().add(new ExonData(2, 300, 320, 2, -1, -1));
         transData2.exons().add(new ExonData(2, 340, 380, 3, -1, -1));
-        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // invalid since an exon is skipped in the splicing read
         transData2.exons().clear();
         transData2.exons().add(new ExonData(2, 150, 200, 1, -1, -1));
         transData2.exons().add(new ExonData(2, 210, 290, 2, -1, -1));
         transData2.exons().add(new ExonData(2, 300, 450, 3, -1, -1));
-        assertFalse(eeRates.readsSupportFragment(transData2, readRegions, matchType));
+        assertFalse(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // 2 sets of exon junctions
         startPos = 191;
-        config.MinFragmentLength = 81 + 5 + 2 * config.ReadLength;
-        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions);
+        fragmentLength = 81 + 5 + 2 * config.ReadLength;
+        eeRates.setFragmentLengthData(fragmentLength, 1);
+
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertEquals(TC_SPLICED, matchType);
         assertEquals(5, readRegions.size());
@@ -152,12 +162,12 @@ public class RnaExpectedRates
         assertEquals(449, readRegions.get(3)[SE_END]);
         assertEquals(460, readRegions.get(4)[SE_START]);
         assertEquals(464, readRegions.get(4)[SE_END]);
-        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType));
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         // test cannot generate fragments past the end of the transcript
         startPos = 465;
-        config.MinFragmentLength = 250;
-        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions);
+        eeRates.setFragmentLengthData(250, 1);
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertTrue(readRegions.isEmpty());
     }
@@ -166,8 +176,8 @@ public class RnaExpectedRates
     public void testSingleTranscriptCounts()
     {
         RnaExpConfig config = new RnaExpConfig();
-        config.MinFragmentLength = 30;
         config.ReadLength = 10;
+        config.ExpRateFragmentLengths.add(new int[] {30, 1});
 
         ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
 
@@ -227,7 +237,7 @@ public class RnaExpectedRates
     public void testMultipleTranscriptCounts()
     {
         RnaExpConfig config = new RnaExpConfig();
-        config.MinFragmentLength = 50;
+        config.ExpRateFragmentLengths.add(new int[] {30, 1});
         config.ReadLength = 10;
 
         ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);

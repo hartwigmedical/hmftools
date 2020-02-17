@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COU
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -132,7 +133,8 @@ public class TranscriptModel
     }
 
     public static void estimateRatesByLeastSquares(
-            final double[] transcriptCounts, final SigMatrix transcriptDefinitions, final List<String> definitionNames)
+            final GeneReadData geneReadData, final double[] transcriptCounts,
+            final SigMatrix transcriptDefinitions, final List<String> definitionNames)
     {
         int transDefinitionCount = transcriptDefinitions.Cols;
         int categoryCount = transcriptDefinitions.Rows;
@@ -143,14 +145,19 @@ public class TranscriptModel
 
         final double[] transcriptAllocs = lsqFit.getContribs();
 
+        Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
+
         for(int definitionId = 0; definitionId < definitionNames.size(); ++definitionId)
         {
             double transAllocation = transcriptAllocs[definitionId];
+            final String trancriptDefn = definitionNames.get(definitionId);
 
             if(transAllocation > 0)
             {
-                LOGGER.info("transcript({}) allocated count({})", definitionNames.get(definitionId), String.format("%.2f", transAllocation));
+                LOGGER.debug("transcript({}) allocated count({})", trancriptDefn, String.format("%.2f", transAllocation));
             }
+
+            transAllocations.put(trancriptDefn, transAllocation);
         }
     }
 
