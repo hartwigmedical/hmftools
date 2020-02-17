@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -18,6 +19,7 @@ import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
 import com.hartwig.hmftools.sage.vcf.SageChromosomeVCF;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +32,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class ChromosomePipeline implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
+    private static final EnumSet<SageVariantTier> PANEL_ONLY_TIERS = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
 
     private final String chromosome;
     private final SageConfig config;
@@ -124,6 +127,11 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     private boolean include(@NotNull final SageVariant entry) {
+
+        if (config.panelOnly() && !PANEL_ONLY_TIERS.contains(entry.tier())) {
+            return false;
+        }
+
         if (entry.isPassing()) {
             return true;
         }
