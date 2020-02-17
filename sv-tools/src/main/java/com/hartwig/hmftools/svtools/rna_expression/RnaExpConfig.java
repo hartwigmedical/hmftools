@@ -51,6 +51,7 @@ public class RnaExpConfig
     public static final String APPLY_EXP_RATES = "apply_exp_rates";
     public static final String READ_LENGTH = "read_length";
     public static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
+    public static final String UNSPLICED_WEIGHT = "unspliced_weight";
     public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
@@ -76,6 +77,7 @@ public class RnaExpConfig
     public final boolean GenerateExpectedExpression;
     public int ReadLength;
     public final List<int[]> ExpRateFragmentLengths;
+    public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
 
     public final boolean GeneStatsOnly;
@@ -150,6 +152,7 @@ public class RnaExpConfig
 
         GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
+        UnsplicedWeight = Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
 
         ExpRateFragmentLengths = Lists.newArrayList();
 
@@ -186,6 +189,7 @@ public class RnaExpConfig
         GenerateExpectedExpression = false;
         ReadLength = 0;
         ExpRateFragmentLengths = Lists.newArrayList();
+        UnsplicedWeight = 1;
 
         WriteExonData = false;
         WriteReadData = false;
@@ -234,6 +238,7 @@ public class RnaExpConfig
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
+        options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");

@@ -198,7 +198,7 @@ public class RnaExpression
 
     private void runTranscriptEstimation(final GeneReadData geneReadData)
     {
-        if(mExpExpressionRates == null)
+        if(mExpExpressionRates == null || !mExpExpressionRates.validData())
             return;
 
         mExpExpressionRates.generateExpectedRates(geneReadData);

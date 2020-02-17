@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.countsTypeToStr;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -71,6 +72,11 @@ public class ExpectedExpressionRates
     {
         mCurrentFragSize = length;
         mCurrentFragFrequency = frequency;
+    }
+
+    public boolean validData()
+    {
+        return !mCategories.isEmpty() && mTranscriptDefinitions != null && !mTransComboData.isEmpty();
     }
 
     public void generateExpectedRates(final GeneReadData geneReadData)
@@ -483,7 +489,9 @@ public class ExpectedExpressionRates
 
                 for(int i = 0; i < counts.length; ++i)
                 {
-                    if(counts[i] > 0)
+                    double catCount = counts[i];
+
+                    if(catCount > 0)
                     {
                         final String categoryStr = formCategory(transKey, i);
                         int categoryId = getCategoryIndex(categoryStr);
@@ -494,7 +502,10 @@ public class ExpectedExpressionRates
                             return;
                         }
 
-                        categoryCounts[categoryId] = counts[i];
+                        if(i != TC_SPLICED)
+                            catCount *= mConfig.UnsplicedWeight;
+
+                        categoryCounts[categoryId] = catCount;
                     }
                 }
             }
@@ -522,7 +533,7 @@ public class ExpectedExpressionRates
 
         int skippedComboCounts = 0;
 
-        categoryCounts[categoryId] = unsplicedCounts;
+        categoryCounts[categoryId] = unsplicedCounts * mConfig.UnsplicedWeight;
 
         for(TranscriptComboData tcData : transComboData)
         {
@@ -543,7 +554,7 @@ public class ExpectedExpressionRates
                 }
                 else
                 {
-                    categoryCounts[categoryId] = counts[TC_SHORT];
+                    categoryCounts[categoryId] = counts[TC_SHORT] * mConfig.UnsplicedWeight;
                 }
             }
 
