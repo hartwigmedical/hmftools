@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -418,6 +419,34 @@ public class ReadRecord
                 ++regionBaseDepth[j];
             }
         }
+    }
+
+    public static int calcFragmentLength(final ReadRecord read1, final ReadRecord read2)
+    {
+        int insertSize = abs(read1.fragmentInsertSize());
+
+        if(!read1.containsSplit() && !read2.containsSplit())
+            return insertSize;
+
+        int splitLength1 = read1.containsSplit() ? read1.Cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == CigarOperator.N).mapToInt(x -> x.getLength()).sum() : 0;
+
+        int splitLength2 = read2.containsSplit() ? read2.Cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == CigarOperator.N).mapToInt(x -> x.getLength()).sum() : 0;
+
+        if(read1.PosStart > read2.PosEnd || read2.PosStart > read1.PosEnd)
+        {
+            // no overlap
+            return insertSize - splitLength1 - splitLength2;
+        }
+
+        if(splitLength1 > 0 && splitLength2 > 0 && splitLength1 != splitLength2)
+        {
+            // each reads covers a different split
+            return insertSize - splitLength1 - splitLength2;
+        }
+
+        return insertSize - max(splitLength1, splitLength2);
     }
 
     public boolean containsSplit()

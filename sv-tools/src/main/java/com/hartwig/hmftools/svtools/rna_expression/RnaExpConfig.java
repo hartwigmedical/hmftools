@@ -66,7 +66,7 @@ public class RnaExpConfig
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
-    public int LongFragmentLimit;
+    public int MaxFragmentLength;
     public final boolean KeepDuplicates;
     public final boolean MarkDuplicates;
 
@@ -89,7 +89,7 @@ public class RnaExpConfig
     public final boolean RunValidations;
 
     public static final int DEFAULT_MAX_READ_COUNT = 100000;
-    public static final int DEFAULT_MAX_FRAGMENT_SIZE = 1000;
+    public static final int DEFAULT_MAX_FRAGMENT_SIZE = 550;
 
     public static final int GENE_FRAGMENT_BUFFER = 1000; // width around a gene within which to search for reads
 
@@ -136,7 +136,7 @@ public class RnaExpConfig
         }
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
-        LongFragmentLimit = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
+        MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         KeepDuplicates = cmd.hasOption(KEEP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
         FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
@@ -186,7 +186,7 @@ public class RnaExpConfig
         CanonicalTranscriptOnly = false;
         ReadCountLimit = DEFAULT_MAX_READ_COUNT;
         GcBiasFile = "";
-        LongFragmentLimit = DEFAULT_MAX_FRAGMENT_SIZE;
+        MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
         KeepDuplicates = false;
         MarkDuplicates = false;
 

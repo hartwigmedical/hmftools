@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICE
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
@@ -280,6 +281,8 @@ public class RnaBamReader
         // first find valid transcripts in both reads
         final List<String> validTranscripts = Lists.newArrayList();
         final List<String> invalidTranscripts = Lists.newArrayList();
+        int calcFragmentLength = calcFragmentLength(read1, read2);
+        boolean validFragmentLength = calcFragmentLength <= mConfig.MaxFragmentLength;
 
         final List<RegionReadData> validRegions = getUniqueValidRegion(read1, read2);
 
@@ -298,11 +301,11 @@ public class RnaBamReader
         {
             final String trans = entry.getKey();
 
-            if(validTranscriptType(entry.getValue()))
+            if(validFragmentLength && validTranscriptType(entry.getValue()))
             {
                 if(secondReadTransTypes.containsKey(trans) && validTranscriptType(secondReadTransTypes.get(trans)))
                 {
-                    if(!hasSkippedExons(validRegions, trans, mConfig.LongFragmentLimit))
+                    if(!hasSkippedExons(validRegions, trans, mConfig.MaxFragmentLength))
                     {
                         validTranscripts.add(trans);
                         continue;
@@ -314,7 +317,6 @@ public class RnaBamReader
                 invalidTranscripts.add(trans);
         }
 
-        boolean isLongFragment = abs(read1.fragmentInsertSize()) > mConfig.LongFragmentLimit;
         GeneMatchType geneReadType = UNSPLICED;
 
         // now mark all other transcripts which aren't valid either due to the read pair
@@ -329,7 +331,7 @@ public class RnaBamReader
             {
                 geneReadType = GeneMatchType.ALT;
             }
-            else if(isLongFragment)
+            else
             {
                 // look for alternative splicing from long reads involving more than one region and not spanning into an intron
                 for(String trans : invalidTranscripts)
@@ -406,7 +408,7 @@ public class RnaBamReader
                     transMatchType = TC_SPLICED;
                     comboTransMatchType = TC_SPLICED;
                 }
-                else if(regionCount > 1 && isLongFragment)
+                else if(regionCount > 1)
                 {
                     transMatchType = TC_LONG;
 
@@ -434,8 +436,8 @@ public class RnaBamReader
 
         if(mConfig.WriteReadData)
         {
-            writeReadData(0, read1, geneReadType, validTranscripts.size());
-            writeReadData(1, read2, geneReadType, validTranscripts.size());
+            writeReadData(0, read1, geneReadType, validTranscripts.size(), calcFragmentLength);
+            writeReadData(1, read2, geneReadType, validTranscripts.size(), calcFragmentLength);
         }
     }
 
@@ -691,7 +693,7 @@ public class RnaBamReader
             LOGGER.error("failed to write trans combo data file: {}", e.toString());
         }
     }
-    private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType, int validTranscripts)
+    private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType, int validTranscripts, int calcFragmentLength)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -703,7 +705,7 @@ public class RnaBamReader
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_READ_DATA.csv";
 
                 mReadDataWriter = createBufferedWriter(outputFileName, false);
-                mReadDataWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
+                mReadDataWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize,FragLength");
                 mReadDataWriter.write(",GeneClass,TransId,TransClass,ValidTrans,ExonRank,ExonStart,ExonEnd,RegionClass");
                 mReadDataWriter.newLine();
             }
@@ -721,9 +723,12 @@ public class RnaBamReader
                     if(!region.hasTransId(trans))
                         continue;
 
-                    mReadDataWriter.write(String.format("%s,%s,%d,%s,%s,%d,%d,%s,%d",
-                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, readIndex, read.Id,
-                            read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
+                    mReadDataWriter.write(String.format("%s,%s,%d,%s",
+                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, readIndex, read.Id));
+
+                    mReadDataWriter.write(String.format(",%s,%d,%d,%s,%d,%d",
+                            read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),
+                            read.fragmentInsertSize(), calcFragmentLength));
 
                     mReadDataWriter.write(String.format(",%s,%s,%s,%s,%d,%d,%d,%s",
                             geneReadType, trans, transType, validTranscripts,

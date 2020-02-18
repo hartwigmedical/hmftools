@@ -306,7 +306,7 @@ public class RnaExpressionTest
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
 
-        int longInsertSize = config.LongFragmentLimit + 100;
+        int longInsertSize = config.MaxFragmentLength + 100;
 
         // alt splicing - exon to exon read skipping an exon and long, currently not detected
         geneReadData.clearCounts();
