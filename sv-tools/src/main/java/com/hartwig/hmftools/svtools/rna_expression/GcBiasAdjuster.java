@@ -35,13 +35,14 @@ public class GcBiasAdjuster
     private final RnaExpConfig mConfig;
 
     private final Map<String, List<Double>> mChrRegionRatios;
-    private final Map<Double,List<Integer>> mRatioDepthCounts;
+    private final Map<Double,List<int[]>> mRatioDepthCounts; // GC-ratio to frequency of number of reads
     private final Map<Double, Double> mGcBiasAdjustmentFactors;
 
     // state for each region processed
     private long mCurrentRegionStart;
     private long mCurrentRegionEnd;
     private int mCurrentReadCount;
+    private int mTotalReadCount;
 
     private static final double RATIO_BUCKET = 0.01;
     private static final int SEGMENT_LENGTH = 1000;
@@ -58,6 +59,7 @@ public class GcBiasAdjuster
         mCurrentRegionStart = 0;
         mCurrentRegionEnd = 0;
         mCurrentReadCount = 0;
+        mTotalReadCount = 0;
     }
 
     public boolean enabled() { return !mConfig.GcBiasFile.isEmpty(); }
@@ -219,15 +221,16 @@ public class GcBiasAdjuster
         }
     }
 
+    private static final int DD_DEPTH = 0;
+    private static final int DD_FREQ = 1;
+
     public void generateDepthCounts(final RnaBamReader bamReader, final Map<String, List<EnsemblGeneData>> chrGeneMap)
     {
-        int chrCount = 0;
         int bamSliceCount = 0;
 
         for (Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
         {
             final String chromosome = entry.getKey();
-            ++chrCount;
 
             List<Double> ratios = mChrRegionRatios.get(chromosome);
 
@@ -239,26 +242,32 @@ public class GcBiasAdjuster
 
             LOGGER.debug("measuring read depth for chromosome({})", chromosome);
 
-            long mCurrentRegionStart = 0;
+            long currentRegionStart = 0;
+            int geneCount = 0;
 
             for(EnsemblGeneData geneData : entry.getValue())
             {
                 long geneStartRegion = positionToRegion(geneData.GeneStart);
-                mCurrentRegionStart = max(mCurrentRegionStart, geneStartRegion);
+                currentRegionStart = max(currentRegionStart, geneStartRegion);
 
-                while (mCurrentRegionStart < geneData.GeneEnd)
+                ++geneCount;
+
+                // if(geneCount > 100)
+                //    break;
+
+                while (currentRegionStart < geneData.GeneEnd)
                 {
-                    int regionIndex = positionToIndex(mCurrentRegionStart);
+                    int regionIndex = positionToIndex(currentRegionStart);
 
                     double gcRatio = ratios.get(regionIndex);
 
                     if(gcRatio == 0)
                     {
-                        mCurrentRegionStart += SEGMENT_LENGTH;
+                        currentRegionStart += SEGMENT_LENGTH;
                         continue;
                     }
 
-                    List<Integer> depthCounts = mRatioDepthCounts.get(gcRatio);
+                    List<int[]> depthCounts = mRatioDepthCounts.get(gcRatio);
 
                     if (depthCounts == null)
                     {
@@ -266,35 +275,44 @@ public class GcBiasAdjuster
                         mRatioDepthCounts.put(gcRatio, depthCounts);
                     }
 
-                    // optionally cap the number of reads for each GC bucket
-                    if(depthCounts.size() >= chrCount * 10)
-                    {
-                        mCurrentRegionStart += SEGMENT_LENGTH;
-                        continue;
-                    }
-
-                    mCurrentRegionEnd = mCurrentRegionStart + SEGMENT_LENGTH - 1;
+                    mCurrentRegionEnd = currentRegionStart + SEGMENT_LENGTH - 1;
                     mCurrentReadCount = 0;
 
-                    bamReader.readBamCounts(GenomeRegions.create(chromosome, mCurrentRegionStart, mCurrentRegionEnd), this::processBamRead);
+                    bamReader.readBamCounts(GenomeRegions.create(chromosome, currentRegionStart, mCurrentRegionEnd), this::processBamRead);
                     ++bamSliceCount;
 
-                    if((bamSliceCount % 1000) == 0)
+                    if((bamSliceCount % 10000) == 0)
                     {
-                        LOGGER.debug("GC-region BAM slice count({})", bamSliceCount);
+                        LOGGER.debug("chr({}) gene({}) GC-region({}) BAM slice count({}) readCount()",
+                                chromosome, geneData.GeneName, currentRegionStart, bamSliceCount, mTotalReadCount);
                     }
 
                     // add depth counts in ascending order
                     int index = 0;
+                    boolean found = false;
                     while (index < depthCounts.size())
                     {
-                        if (mCurrentReadCount < depthCounts.get(index))
+                        int[] depthData = depthCounts.get(index);
+                        if (mCurrentReadCount == depthData[DD_DEPTH])
+                        {
+                            ++depthData[DD_FREQ];
+                            found = true;
                             break;
+                        }
+                        else if (mCurrentReadCount < depthCounts.get(index)[DD_DEPTH])
+                        {
+                            break;
+                        }
 
                         ++index;
                     }
 
-                    depthCounts.add(index, mCurrentReadCount);
+                    if(!found)
+                    {
+                        depthCounts.add(index, new int[]{mCurrentReadCount, 1});
+                    }
+
+                    currentRegionStart += SEGMENT_LENGTH;
                 }
             }
         }
@@ -302,14 +320,31 @@ public class GcBiasAdjuster
         // find the median depth count for each ratio bucket
         List<Integer> medianDepthCounts = Lists.newArrayList();
         Map<Double, Integer> gcMedianCounts = Maps.newHashMap();
+        Map<Double, Double> gcAvgCounts = Maps.newHashMap();
 
-        for (Map.Entry<Double, List<Integer>> entry : mRatioDepthCounts.entrySet())
+        for (Map.Entry<Double, List<int[]>> entry : mRatioDepthCounts.entrySet())
         {
             double gcRatio = entry.getKey();
-            final List<Integer> depthCounts = entry.getValue();
+            final List<int[]> depthCounts = entry.getValue();
 
-            int medianIndex = depthCounts.size() / 2;
-            int medianDepthCount = depthCounts.get(medianIndex);
+            int depthTotal = depthCounts.stream().mapToInt(x -> x[DD_DEPTH] * x[DD_FREQ]).sum();
+            int depthReads = depthCounts.stream().mapToInt(x -> x[DD_FREQ]).sum();
+            double avgDepth = depthTotal / (double)depthReads;
+
+            int medianRead = depthReads / 2;
+            int total = 0;
+            int medianDepthCount = 0;
+
+            for(int[] depthData : depthCounts)
+            {
+                if(total + depthData[DD_FREQ] >= medianRead)
+                {
+                    medianDepthCount = depthData[DD_DEPTH];
+                    break;
+                }
+
+                total += depthData[DD_FREQ];
+            }
 
             // add in ascending order
             int index = 0;
@@ -323,6 +358,7 @@ public class GcBiasAdjuster
 
             medianDepthCounts.add(index, medianDepthCount);
             gcMedianCounts.put(gcRatio, medianDepthCount);
+            gcAvgCounts.put(gcRatio, avgDepth);
         }
 
         int medianValue = medianDepthCounts.size() / 2;
@@ -334,19 +370,59 @@ public class GcBiasAdjuster
             double gcRatio = entry.getKey();
             Integer ratioMedianDepth = entry.getValue();
             double adjustmentFactor = medianDepthCount / (double)ratioMedianDepth;
+            double avgDepth = gcAvgCounts.get(gcRatio);
 
-            LOGGER.info("GC-Bias ratio({}) depth({}) adjFactor({}) vs medianDepth({})",
-                    gcRatio, ratioMedianDepth, String.format("%.4f", adjustmentFactor), medianDepthCount);
+            LOGGER.info(String.format("GC-Bias ratio(%.2f) depth(median=%d avg=%.2f) adjFactor(%.4f) vs medianDepth(%d)",
+                    gcRatio, ratioMedianDepth, avgDepth, adjustmentFactor, medianDepthCount));
 
             mGcBiasAdjustmentFactors.put(gcRatio, adjustmentFactor);
         }
+
+        writeGcRatioDepthCounts();
     }
 
     public void processBamRead(@NotNull final SAMRecord record)
     {
+        if(record.getDuplicateReadFlag())
+            return;
+
         if(record.getStart() >= mCurrentRegionStart && record.getEnd() <= mCurrentRegionEnd)
         {
             ++mCurrentReadCount;
+            ++mTotalReadCount;
+        }
+    }
+
+    private void writeGcRatioDepthCounts()
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
+
+        try
+        {
+            final String outputFileName = mConfig.OutputDir + "RNA_EXP_GC_DEPTH.csv";
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("GcRatio,Depth,Frequency");
+            writer.newLine();
+
+            for (Map.Entry<Double, List<int[]>> entry : mRatioDepthCounts.entrySet())
+            {
+                double gcRatio = entry.getKey();
+                final List<int[]> depthCounts = entry.getValue();
+
+                for (int[] depthData : depthCounts)
+                {
+                    writer.write(String.format("%.2f,%d,%d", gcRatio, depthData[DD_DEPTH], depthData[DD_FREQ]));
+                    writer.newLine();
+                }
+            }
+
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write GC depth frequency data file: {}", e.toString());
         }
     }
 

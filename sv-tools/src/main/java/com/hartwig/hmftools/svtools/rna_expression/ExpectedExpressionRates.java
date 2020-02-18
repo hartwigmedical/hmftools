@@ -533,7 +533,7 @@ public class ExpectedExpressionRates
 
         int skippedComboCounts = 0;
 
-        categoryCounts[categoryId] = unsplicedCounts * mConfig.UnsplicedWeight;
+        categoryCounts[categoryId] = unsplicedCounts;
 
         for(TranscriptComboData tcData : transComboData)
         {
@@ -549,12 +549,12 @@ public class ExpectedExpressionRates
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    LOGGER.warn("category({}) skipped with count({})", categoryStr, counts[TC_SHORT]);
+                    LOGGER.debug("category({}) skipped with count({})", categoryStr, counts[TC_SHORT]);
                     skippedComboCounts += counts[TC_SHORT];
                 }
                 else
                 {
-                    categoryCounts[categoryId] = counts[TC_SHORT] * mConfig.UnsplicedWeight;
+                    categoryCounts[categoryId] = counts[TC_SHORT]; //  * mConfig.UnsplicedWeight;
                 }
             }
 
@@ -566,7 +566,7 @@ public class ExpectedExpressionRates
 
                 if(categoryId < 0)
                 {
-                    LOGGER.warn("category({}) skipped with count({})", categoryStr, multiExonCount);
+                    LOGGER.debug("category({}) skipped with count({})", categoryStr, multiExonCount);
                     skippedComboCounts += counts[TC_SHORT];
                 }
                 else

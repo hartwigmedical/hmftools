@@ -91,6 +91,7 @@ public class RnaExpression
         {
             mGcBiasAdjuster.loadData();
             mGcBiasAdjuster.generateDepthCounts(mRnaBamReader, mGeneTransCache.getChrGeneDataMap());
+            return; // for now
         }
 
         if(mConfig.FragmentLengthMinCount > 0)
@@ -198,7 +199,7 @@ public class RnaExpression
 
     private void runTranscriptEstimation(final GeneReadData geneReadData)
     {
-        if(mExpExpressionRates == null || !mExpExpressionRates.validData())
+        if(mExpExpressionRates == null)
             return;
 
         mExpExpressionRates.generateExpectedRates(geneReadData);
@@ -206,8 +207,11 @@ public class RnaExpression
         final double[] transcriptCounts = mExpExpressionRates.generateTranscriptCounts(
                 geneReadData, mRnaBamReader.getTransComboData(), geneReadData.getCounts()[TC_UNSPLICED]);
 
-        estimateRatesByLeastSquares(
-                geneReadData, transcriptCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
+        if(mExpExpressionRates.validData())
+        {
+            estimateRatesByLeastSquares(
+                    geneReadData, transcriptCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
+        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

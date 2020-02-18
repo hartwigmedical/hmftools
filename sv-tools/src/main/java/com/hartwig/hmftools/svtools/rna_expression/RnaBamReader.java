@@ -644,7 +644,7 @@ public class RnaBamReader
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
                 mTransComboWriter.write("GeneId,GeneName,TransCount,TransList");
-                mTransComboWriter.write(",SpliceJuncFragments,ShortFragments,LongFragments,");
+                mTransComboWriter.write(",SpliceJuncFragments,ShortFragments,LongFragments");
                 mTransComboWriter.newLine();
             }
 

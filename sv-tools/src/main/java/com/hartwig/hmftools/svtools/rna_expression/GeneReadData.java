@@ -26,7 +26,6 @@ public class GeneReadData
     public final EnsemblGeneData GeneData;
 
     private final List<RegionReadData> mExonRegions;
-    private final List<RegionReadData> mIntronRegions;
     private final List<long[]> mCommonExonicRegions;
 
     private final List<TranscriptData> mTranscripts;
@@ -50,7 +49,6 @@ public class GeneReadData
         GeneData = geneData;
 
         mExonRegions = Lists.newArrayList();
-        mIntronRegions = Lists.newArrayList();
         mTranscripts = Lists.newArrayList();
         mCommonExonicRegions = Lists.newArrayList();
 
@@ -117,16 +115,6 @@ public class GeneReadData
                     exonReadData.addPreRegion(prevRegionReadData);
                 }
 
-                // create intronic regions
-                if(prevRegionReadData != null)
-                {
-                    long intronStart = prevRegionReadData.end() + 1;
-                    long intronEnd = exon.ExonStart - 1;
-
-                    RegionReadData intronReadData = createOrFindIntronRegion(intronStart, intronEnd);
-                    intronReadData.addExonRef(transData.TransName, exon.ExonRank);
-                }
-
                 prevRegionReadData = exonReadData;
             }
 
@@ -137,32 +125,6 @@ public class GeneReadData
         }
 
         generateCommonExonicRegions();
-    }
-
-    public final List<RegionReadData> getIntronRegions() { return mIntronRegions; }
-
-    public RegionReadData createOrFindIntronRegion(long intronStart, long intronEnd)
-    {
-        RegionReadData intronRegion = mIntronRegions.stream()
-                .filter(x -> x.Region.start() <= intronStart && intronEnd <= x.Region.end())
-                .findFirst().orElse(null);
-
-        if(intronRegion == null)
-        {
-            GenomeRegion region = GenomeRegions.create(GeneData.Chromosome, intronStart, intronEnd);
-            intronRegion = new RegionReadData(region);
-            mIntronRegions.add(intronRegion);
-        }
-        else
-        {
-            // tighten intron region bounds
-            if(intronStart > intronRegion.start() || intronEnd < intronRegion.end())
-            {
-                intronRegion.resetRegionBounds(max(intronStart, intronRegion.start()), min(intronEnd, intronRegion.end()));
-            }
-        }
-
-        return intronRegion;
     }
 
     public final int[] getCounts() { return mFragmentCounts; }

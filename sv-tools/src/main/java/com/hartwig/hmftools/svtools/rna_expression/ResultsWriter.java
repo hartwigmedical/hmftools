@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICE
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calcEffectiveLength;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -110,7 +111,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_DATA.csv";
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
-                mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount");
+                mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount,EffectiveLength");
                 mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,ExpRateAllocation");
                 mTransDataWriter.write(",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
                 mTransDataWriter.write(",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported");
@@ -120,9 +121,11 @@ public class ResultsWriter
 
             final TranscriptData transData = transResults.trans();
 
-            mTransDataWriter.write(String.format("%s,%s,%s,%s,%s,%d",
+            double effectiveLength = calcEffectiveLength(transData, mConfig.ExpRateFragmentLengths);
+
+            mTransDataWriter.write(String.format("%s,%s,%s,%s,%s,%d,%.0f",
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
-                    transData.TransName, transData.IsCanonical, transData.exons().size()));
+                    transData.TransName, transData.IsCanonical, transData.exons().size(), effectiveLength));
 
             Double expRateAllocation = geneReadData.getTranscriptAllocations().get(transData.TransName);
 

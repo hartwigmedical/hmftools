@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
@@ -113,6 +115,35 @@ public class TranscriptModel
                 .build();
 
         return results;
+    }
+
+    public static double calcEffectiveLength(final TranscriptData transData, final List<int[]> fragmentLengthData)
+    {
+        int transLength = (int)(transData.TransEnd - transData.TransStart) + 1;
+
+        if(fragmentLengthData.isEmpty())
+            return transLength;
+
+        int flFrequencyTotal = 0;
+        int flBasesTotal = 0;
+
+        for(final int[] flData : fragmentLengthData)
+        {
+            int fragLength = flData[FL_SIZE];
+            int fragFrequency = flData[FL_FREQUENCY];
+
+            if(fragLength >= transLength)
+                continue;
+
+            int possibleBases = transLength - fragLength;
+            flFrequencyTotal += fragFrequency;
+            flBasesTotal += possibleBases * fragFrequency;
+        }
+
+        if(flFrequencyTotal == 0)
+            return 0;
+
+        return flBasesTotal / (double)flFrequencyTotal;
     }
 
     private static boolean isSpliceJunctionUnique(final String transId, final List<TranscriptData> transDataList, long exonEnd, long exonStart)

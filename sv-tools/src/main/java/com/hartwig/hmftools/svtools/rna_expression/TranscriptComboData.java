@@ -20,8 +20,6 @@ public class TranscriptComboData
 
     private final String mTranscriptsKey;
 
-    public static final String ENSEMBL_TRANS_PREFIX = "ENST00000";
-
     public TranscriptComboData(final List<String> transcripts)
     {
         mTranscripts = transcripts;
