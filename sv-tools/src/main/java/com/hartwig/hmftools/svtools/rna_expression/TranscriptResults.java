@@ -19,8 +19,8 @@ public abstract class TranscriptResults
     public abstract int spliceJunctionUniqueFragments();
     public abstract int uniqueSpliceJunctions();
     public abstract int uniqueSpliceJunctionsSupported();
-    public abstract long exonicBases();
-    public abstract long exonicBaseCoverage();
+    public abstract int exonicBases();
+    public abstract int exonicBaseCoverage();
     public abstract int uniqueBases();
     public abstract int uniqueBaseCoverage();
     public abstract double uniqueBaseAvgDepth();

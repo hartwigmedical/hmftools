@@ -283,6 +283,17 @@ public class RnaBamReader
 
         final List<RegionReadData> validRegions = getUniqueValidRegion(read1, read2);
 
+        if(mConfig.RunValidations)
+        {
+            for(RegionReadData region : validRegions)
+            {
+                if(validRegions.stream().filter(x -> x == region).count() > 1)
+                {
+                    LOGGER.error("repeated exon region");
+                }
+            }
+        }
+
         for(Map.Entry<String,TransMatchType> entry : firstReadTransTypes.entrySet())
         {
             final String trans = entry.getKey();
@@ -366,6 +377,17 @@ public class RnaBamReader
             // now record the bases covered by the read in these matched regions
             final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
+            if(mConfig.RunValidations)
+            {
+                for(long[] readRegion : commonMappings)
+                {
+                    if(commonMappings.stream().filter(x -> x[SE_START] == readRegion[SE_START] && x[SE_END] == readRegion[SE_END]).count() > 1)
+                    {
+                        LOGGER.error("repeated read region");
+                    }
+                }
+            }
+
             validRegions.forEach(x -> markRegionBases(commonMappings, x));
 
             // now set counts for each valid transcript
@@ -412,8 +434,8 @@ public class RnaBamReader
 
         if(mConfig.WriteReadData)
         {
-            writeReadData(0, read1, geneReadType);
-            writeReadData(1, read2, geneReadType);
+            writeReadData(0, read1, geneReadType, validTranscripts.size());
+            writeReadData(1, read2, geneReadType, validTranscripts.size());
         }
     }
 
@@ -669,7 +691,7 @@ public class RnaBamReader
             LOGGER.error("failed to write trans combo data file: {}", e.toString());
         }
     }
-    private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType)
+    private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType, int validTranscripts)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -682,7 +704,7 @@ public class RnaBamReader
 
                 mReadDataWriter = createBufferedWriter(outputFileName, false);
                 mReadDataWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
-                mReadDataWriter.write(",GeneClass,TransId,TransClass,ExonRank,ExonStart,ExonEnd,RegionClass");
+                mReadDataWriter.write(",GeneClass,TransId,TransClass,ValidTrans,ExonRank,ExonStart,ExonEnd,RegionClass");
                 mReadDataWriter.newLine();
             }
 
@@ -703,8 +725,9 @@ public class RnaBamReader
                             mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, readIndex, read.Id,
                             read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
 
-                    mReadDataWriter.write(String.format(",%s,%s,%s,%d,%d,%d,%s",
-                            geneReadType, trans, transType, region.getExonRank(trans), region.start(), region.end(), matchType));
+                    mReadDataWriter.write(String.format(",%s,%s,%s,%s,%d,%d,%d,%s",
+                            geneReadType, trans, transType, validTranscripts,
+                            region.getExonRank(trans), region.start(), region.end(), matchType));
 
                     mReadDataWriter.newLine();
                 }

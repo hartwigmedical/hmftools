@@ -40,6 +40,7 @@ public class ExpectedExpressionRates
 
     private int mCurrentFragSize;
     private int mCurrentFragFrequency;
+    private int mCurrentReadLength;
 
     private BufferedWriter mWriter;
 
@@ -55,6 +56,7 @@ public class ExpectedExpressionRates
         mConfig = config;
         mCurrentFragSize = 0;
         mCurrentFragFrequency = 0;
+        mCurrentReadLength = mConfig.ReadLength;
 
         mTransComboData = Maps.newHashMap();
         mCategories = Lists.newArrayList();
@@ -72,6 +74,7 @@ public class ExpectedExpressionRates
     {
         mCurrentFragSize = length;
         mCurrentFragFrequency = frequency;
+        mCurrentReadLength = min(mConfig.ReadLength, mCurrentFragSize);
     }
 
     public boolean validData()
@@ -104,7 +107,6 @@ public class ExpectedExpressionRates
                 {
                     for (long startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
                     {
-                        // if(startPos + )
                         if (!allocateTranscriptCounts(transData, transDataList, startPos))
                         {
                             endOfTrans = true;
@@ -213,12 +215,20 @@ public class ExpectedExpressionRates
         List<long[]> noSpliceJunctions = Lists.newArrayList();
 
         // the unspliced case
-        int readLength = mConfig.ReadLength;
-
-        readRegions.add(new long[] {startPos, startPos + readLength - 1});
-
+        long firstReadEnd = startPos + mCurrentReadLength - 1;
         long secondReadEnd = startPos + mCurrentFragSize - 1;
-        readRegions.add(new long[] {secondReadEnd - readLength + 1, secondReadEnd});
+        long secondReadStart = secondReadEnd - mCurrentReadLength + 1;
+
+        if(firstReadEnd >= secondReadStart - 1)
+        {
+            // continuous reads so merge into one
+            readRegions.add(new long[] {startPos, secondReadEnd});
+        }
+        else
+        {
+            readRegions.add(new long[] {startPos, firstReadEnd});
+            readRegions.add(new long[] {secondReadStart, secondReadEnd});
+        }
 
         final List<String> shortTrans = Lists.newArrayList();
 
@@ -269,10 +279,10 @@ public class ExpectedExpressionRates
             return TC_UNSPLICED;
 
         int matchType = TC_SHORT;
-        int readLength = mConfig.ReadLength;
 
-        int remainingReadBases = readLength;
-        int remainingInterimBases = mCurrentFragSize - 2 * readLength + 1;
+        int remainingReadBases = mCurrentReadLength;
+        boolean overlappingReads = (mCurrentFragSize - 2 * mCurrentReadLength) < 1;
+        int remainingInterimBases = !overlappingReads ? mCurrentFragSize - 2 * mCurrentReadLength + 1 : 0;
         long nextRegionStart = startPos;
         int readsAdded = 0;
 
@@ -323,11 +333,24 @@ public class ExpectedExpressionRates
                 if (readsAdded == 2)
                     break;
 
-                remainingReadBases = readLength;
+                if(overlappingReads)
+                {
+                    if(mCurrentFragSize <= mCurrentReadLength)
+                        break;
+
+                    remainingReadBases = mCurrentFragSize - mCurrentReadLength;
+                }
+                else
+                {
+                    remainingReadBases = mCurrentReadLength;
+                }
             }
 
             // is the remainder of this exon long enough to match again?
-            nextRegionStart = regionEnd + remainingInterimBases;
+            if(!overlappingReads)
+                nextRegionStart = regionEnd + remainingInterimBases;
+            else
+                nextRegionStart = regionEnd + 1;
 
             if(regionEnd == exon.ExonEnd || nextRegionStart > exon.ExonEnd)
             {
@@ -358,7 +381,8 @@ public class ExpectedExpressionRates
             regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.ExonEnd);
             regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
-            readRegions.add(new long[] {nextRegionStart, regionEnd});
+
+            readRegions.add(new long[] { nextRegionStart, regionEnd });
 
             if(remainingReadBases > 0 && regionEnd == exon.ExonEnd)
                 matchType = TC_SPLICED;
@@ -374,6 +398,26 @@ public class ExpectedExpressionRates
 
             // will move onto the next exon for further matching
             nextRegionStart = transData.exons().get(i + 1).ExonStart;
+        }
+
+        // merge adjacent regions from overlapping reads
+        if(overlappingReads)
+        {
+            int index = 0;
+            while(index < readRegions.size() - 1)
+            {
+                long regionEnd = readRegions.get(index)[SE_END];
+                long regionStart = readRegions.get(index + 1)[SE_START];
+
+                if(regionStart == regionEnd + 1)
+                {
+                    readRegions.get(index)[SE_END] = readRegions.get(index + 1)[SE_END];
+                    readRegions.remove(index + 1);
+                    break;
+                }
+
+                ++index;
+            }
         }
 
         return matchType;

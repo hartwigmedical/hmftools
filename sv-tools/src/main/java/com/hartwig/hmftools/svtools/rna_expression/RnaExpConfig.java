@@ -55,6 +55,7 @@ public class RnaExpConfig
     public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
+    public static final String RUN_VALIDATIONS = "validate";
 
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
@@ -85,6 +86,7 @@ public class RnaExpConfig
     public final boolean FragmentLengthsByGene;
 
     public final List<String> SpecificTransIds;
+    public final boolean RunValidations;
 
     public static final int DEFAULT_MAX_READ_COUNT = 100000;
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 1000;
@@ -150,9 +152,11 @@ public class RnaExpConfig
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
 
+        RunValidations = cmd.hasOption(RUN_VALIDATIONS);
+
         GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
-        UnsplicedWeight = Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
+        UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
 
         ExpRateFragmentLengths = Lists.newArrayList();
 
@@ -200,6 +204,7 @@ public class RnaExpConfig
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
         SpecificTransIds = Lists.newArrayList();
+        RunValidations = true;
     }
 
     public static boolean checkValid(final CommandLine cmd)
@@ -246,6 +251,7 @@ public class RnaExpConfig
         options.addOption(WRITE_EXPECTED_RATES, false, "Write expected transcript rates to file");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
+        options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
 
         return options;
     }

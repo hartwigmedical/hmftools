@@ -170,6 +170,62 @@ public class RnaExpectedRates
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertTrue(readRegions.isEmpty());
+
+        // test fragment sizes less than 2 or even 1 read length
+        fragmentLength = 30;
+        eeRates.setFragmentLengthData(fragmentLength, 1);
+
+        startPos = 150;
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
+
+        assertEquals(TC_SHORT, matchType);
+        assertEquals(1, readRegions.size());
+        assertEquals(150, readRegions.get(0)[SE_START]);
+        assertEquals(179, readRegions.get(0)[SE_END]);
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
+
+        startPos = 190;
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
+
+        assertEquals(TC_SPLICED, matchType);
+        assertEquals(2, readRegions.size());
+        assertEquals(190, readRegions.get(0)[SE_START]);
+        assertEquals(200, readRegions.get(0)[SE_END]);
+        assertEquals(300, readRegions.get(1)[SE_START]);
+        assertEquals(318, readRegions.get(1)[SE_END]);
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
+
+        transData2.exons().clear();
+        transData2.exons().add(new ExonData(2, 150, 200, 1, -1, -1));
+        transData2.exons().add(new ExonData(2, 300, 320, 2, -1, -1));
+        transData2.exons().add(new ExonData(2, 340, 380, 3, -1, -1));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
+
+        // now with a fragment length less than the read length
+        fragmentLength = 15;
+        eeRates.setFragmentLengthData(fragmentLength, 1);
+
+        startPos = 185;
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
+
+        assertEquals(TC_SHORT, matchType);
+        assertEquals(1, readRegions.size());
+        assertEquals(185, readRegions.get(0)[SE_START]);
+        assertEquals(199, readRegions.get(0)[SE_END]);
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
+        assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
+
+        startPos = 195;
+        matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
+
+        assertEquals(TC_SPLICED, matchType);
+        assertEquals(2, readRegions.size());
+        assertEquals(195, readRegions.get(0)[SE_START]);
+        assertEquals(200, readRegions.get(0)[SE_END]);
+        assertEquals(300, readRegions.get(1)[SE_START]);
+        assertEquals(308, readRegions.get(1)[SE_END]);
+        assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
     }
 
     @Test

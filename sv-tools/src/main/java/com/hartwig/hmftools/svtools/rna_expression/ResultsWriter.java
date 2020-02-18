@@ -121,7 +121,7 @@ public class ResultsWriter
 
             final TranscriptData transData = transResults.trans();
 
-            double effectiveLength = calcEffectiveLength(transData, mConfig.ExpRateFragmentLengths);
+            double effectiveLength = calcEffectiveLength(transResults.exonicBases(), mConfig.ExpRateFragmentLengths);
 
             mTransDataWriter.write(String.format("%s,%s,%s,%s,%s,%d,%.0f",
                     mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,

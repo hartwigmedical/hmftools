@@ -117,10 +117,8 @@ public class TranscriptModel
         return results;
     }
 
-    public static double calcEffectiveLength(final TranscriptData transData, final List<int[]> fragmentLengthData)
+    public static double calcEffectiveLength(int transLength, final List<int[]> fragmentLengthData)
     {
-        int transLength = (int)(transData.TransEnd - transData.TransStart) + 1;
-
         if(fragmentLengthData.isEmpty())
             return transLength;
 
