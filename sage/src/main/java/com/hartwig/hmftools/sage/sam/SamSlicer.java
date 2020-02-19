@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMRecord;
@@ -18,6 +20,9 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 
 public class SamSlicer {
+
+    private static final int MAX_N = 100;
+
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 
@@ -50,7 +55,7 @@ public class SamSlicer {
         try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals)) {
             while (iterator.hasNext()) {
                 final SAMRecord record = iterator.next();
-                if (samRecordMeetsQualityRequirements(record)) {
+                if (samRecordMeetsQualityRequirements(record) && samRecordMeetsCigarCriteria(record)) {
                     consumer.accept(record);
                 }
             }
@@ -74,4 +79,13 @@ public class SamSlicer {
                 .isSecondaryOrSupplementary();
     }
 
+    private boolean samRecordMeetsCigarCriteria(@NotNull final SAMRecord record) {
+        int totalN = 0;
+        for (CigarElement cigarElement : record.getCigar()) {
+           if (cigarElement.getOperator().equals(CigarOperator.N)) {
+               totalN += cigarElement.getLength();
+           }
+        }
+        return totalN <= MAX_N;
+    }
 }
