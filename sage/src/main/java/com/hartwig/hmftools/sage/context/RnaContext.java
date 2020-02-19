@@ -4,14 +4,16 @@ public class RnaContext {
 
     public static final RnaContext EMPTY = new RnaContext(0, 0, 0);
 
-
     private final int refSupport;
     private final int altSupport;
     private final int depth;
 
     public RnaContext(final AltContext altContext) {
-        this(altContext.rawSupportRef(), altContext.rawSupportAlt(), altContext.rawDepth());
+        this(altContext.primaryReadContext().refSupport(),
+                altContext.primaryReadContext().altSupport(),
+                altContext.primaryReadContext().depth());
     }
+
 
     public RnaContext(final int refSupport, final int altSupport, final int depth) {
         this.refSupport = refSupport;

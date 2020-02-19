@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.read;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -118,23 +119,50 @@ public class ReadContextCounter implements GenomePosition {
         return readContext.toString();
     }
 
-    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig, IndexedBases refSequence) {
-        final QualityConfig qualityConfig = sageConfig.qualityConfig();
+    private static boolean inLeftSoftClip(long position, int softClip, final SAMRecord record) {
+        return position < record.getAlignmentStart() && position >= record.getAlignmentStart() - softClip;
+    }
+
+    private static boolean inRightSoftClip(long position, int softClip, final SAMRecord record) {
+        return position > record.getAlignmentEnd() && position <= record.getAlignmentEnd() + softClip;
+    }
+
+    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig, final IndexedBases refSequence) {
 
         try {
 
-            if (record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position()
-                    && readContext.isComplete()) {
+            int alignmentEnd = record.getAlignmentEnd();
+            int alignmentStart = record.getAlignmentStart();
+            int leftSoftClipSize = SAMRecords.leftSoftClip(record);
+            int rightSoftClipSize = SAMRecords.rightSoftClip(record);
+
+            boolean variantInLeftSoftClip = inLeftSoftClip(variant.position(), leftSoftClipSize, record);
+            boolean variantInRightSoftClip = inRightSoftClip(variant.position(), rightSoftClipSize, record);
+            boolean variantInAlignment = record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position();
+
+            if (!readContext.isComplete()) {
+                return;
+            }
+
+            if (variantInAlignment || variantInLeftSoftClip || variantInRightSoftClip) {
 
                 if (coverage >= sageConfig.maxReadDepth()) {
                     return;
                 }
 
                 boolean baseDeleted = false;
-                int readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                if (readIndex == -1) {
-                    baseDeleted = true;
-                    readIndex = record.getReadPositionAtReferencePosition(readContext.position(), true) - 1;
+                int readIndex;
+                if (variantInAlignment) {
+                    readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
+                    if (readIndex == -1) {
+                        baseDeleted = true;
+                        readIndex = record.getReadPositionAtReferencePosition(readContext.position(), true) - 1;
+                    }
+                } else if (variantInLeftSoftClip) {
+                    readIndex = record.getReadPositionAtReferencePosition(alignmentStart) - 1 - alignmentStart + (int) variant.position()
+                            - variant.alt().length() + variant.ref().length();
+                } else {
+                    readIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) variant.position();
                 }
 
                 boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
@@ -142,6 +170,7 @@ public class ReadContextCounter implements GenomePosition {
                     return;
                 }
 
+                final QualityConfig qualityConfig = sageConfig.qualityConfig();
                 double quality = calculateQualityScore(readIndex, record, qualityConfig, refSequence);
 
                 coverage++;
