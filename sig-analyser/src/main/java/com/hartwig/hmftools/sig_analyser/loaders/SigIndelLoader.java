@@ -4,7 +4,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.getBucketNameByIndex;
 
 import java.io.BufferedWriter;

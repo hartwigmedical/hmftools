@@ -568,6 +568,8 @@ public class ExpectedExpressionRates
             mTranscriptDefinitions.setCol(definitionIndex, categoryCounts);
         }
 
+        mTranscriptDefinitions.cacheTranspose();
+
         if(mConfig.WriteExpectedRates)
             writeExpectedRates(geneReadData);
     }
@@ -724,7 +726,7 @@ public class ExpectedExpressionRates
 
                     double expRate = mTranscriptDefinitions.get(j, i);
 
-                    if(expRate == 0)
+                    if(expRate < 0.0001)
                         continue;
 
                     mExpRateWriter.write(String.format("%s,%s,%s,%s,%.4f",

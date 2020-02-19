@@ -49,8 +49,8 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVector
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.listToArray;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.redimension;
+import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_REF_SIG_FILE;
 
 import java.io.BufferedWriter;

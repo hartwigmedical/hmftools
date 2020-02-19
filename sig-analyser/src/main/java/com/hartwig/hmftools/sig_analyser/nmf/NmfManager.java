@@ -5,8 +5,8 @@ import static java.lang.Integer.max;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.writeMatrixData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

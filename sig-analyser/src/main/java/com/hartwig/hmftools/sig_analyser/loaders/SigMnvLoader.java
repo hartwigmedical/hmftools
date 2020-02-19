@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sig_analyser.loaders;
 
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.convertBase;
 import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.getBucketNameByIndex;
 

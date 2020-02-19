@@ -13,8 +13,8 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getPoissonRandom;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getPoissonRandomLarge;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.sim.SimSigFactors.SIG_FACTOR_CSV_ITEM_COUNT;
 
 import java.io.BufferedReader;

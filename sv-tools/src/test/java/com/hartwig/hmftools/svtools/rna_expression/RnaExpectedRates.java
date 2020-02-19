@@ -19,7 +19,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
 public class RnaExpectedRates
@@ -388,6 +392,43 @@ public class RnaExpectedRates
         assertTrue(tcData != null);
         assertTrue(tcData.getUnsplicedCount() > 0);
         assertEquals(tcData.getUnsplicedCount(), tcData.totalCount());
+    }
+
+    @Test
+    public void testExpectationMaxFit()
+    {
+        Configurator.setRootLevel(Level.DEBUG);
+
+        int categoryCount = 3;
+        int transCount = 2;
+
+        SigMatrix sigs = new SigMatrix(categoryCount, transCount);
+        double[] transSig1 = {0.2, 0.8, 0};
+        double[] transSig2 = {0.4, 0, 0.6};
+
+        sigs.setCol(0, transSig1);
+        sigs.setCol(1, transSig2);
+
+        double[] transCounts = new double[categoryCount];
+
+        transCounts[0] = 5;
+        transCounts[1] = 4;
+        transCounts[2] = 6;
+
+        double[] allocations = ExpectationMaxFit.performFit(transCounts, sigs);
+
+        assertEquals(5.002, allocations[0], 0.001);
+        assertEquals(9.998, allocations[1], 0.001);
+
+        transCounts[0] = 5;
+        transCounts[1] = 4;
+        transCounts[2] = 7;
+
+        allocations = ExpectationMaxFit.performFit(transCounts, sigs);
+
+        assertEquals(4.913, allocations[0], 0.001);
+        assertEquals(11.087, allocations[1], 0.001);
+
     }
 
 }

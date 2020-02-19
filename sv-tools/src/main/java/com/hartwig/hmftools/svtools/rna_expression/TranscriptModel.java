@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
@@ -162,8 +164,7 @@ public class TranscriptModel
         return true;
     }
 
-    public static final double[] allocateTranscriptCountsByLeastSquares(
-            final double[] transcriptCounts, final SigMatrix transcriptDefinitions, final List<String> definitionNames)
+    public static final double[] allocateTranscriptCountsByLeastSquares(final double[] transcriptCounts, final SigMatrix transcriptDefinitions)
     {
         int transDefinitionCount = transcriptDefinitions.Cols;
         int categoryCount = transcriptDefinitions.Rows;
@@ -176,5 +177,7 @@ public class TranscriptModel
         final double[] transcriptAllocs = lsqFit.getContribs();
         return transcriptAllocs;
     }
+
+
 
 }

@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.writeMatrixData;
+import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_EXIT_LEVEL;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_MAX_ITERATIONS;
 

@@ -216,7 +216,9 @@ public class ResultsWriter
         }
     }
 
-    public void writeTransComboCounts(final GeneReadData geneReadData, final List<String> categories, final double[] counts)
+    public void writeTransComboCounts(
+            final GeneReadData geneReadData, final List<String> categories, final double[] counts,
+            final double[] emFittedCounts, final double[] lsqFittedCounts)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -228,7 +230,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_COMBO_DATA.csv";
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
-                mTransComboWriter.write("GeneId,GeneName,Category,Count");
+                mTransComboWriter.write("GeneId,GeneName,Category,Count,EmFitCount,LsqFitCount");
                 mTransComboWriter.newLine();
             }
 
@@ -237,8 +239,10 @@ public class ResultsWriter
                 double count = counts[i];
                 final String category = categories.get(i);
 
-                mTransComboWriter.write(String.format("%s,%s,%s,%.0f",
-                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, category, count));
+                mTransComboWriter.write(String.format("%s,%s,%s,%.0f,%.1f,%.1f",
+                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, category,
+                        count, emFittedCounts[i], lsqFittedCounts[i]));
+
                 mTransComboWriter.newLine();
             }
         }

@@ -392,6 +392,41 @@ public class DataUtils {
         }
     }
 
+    public static final double[] calculateFittedCounts(final SigMatrix signatures, final double[] allocations)
+    {
+        double[] fittedCounts = new double[signatures.Rows];
+
+        for(int transId = 0; transId < signatures.Cols; ++transId)
+        {
+            double allocation = allocations[transId];
+
+            for(int catId = 0; catId < signatures.Rows; ++catId)
+            {
+                fittedCounts[catId] += allocation * signatures.get(catId, transId);
+            }
+        }
+
+        return fittedCounts;
+    }
+
+    public static final int RESIDUAL_TOTAL = 0;
+    public static final int RESIDUAL_PERC = 1;
+
+    public static double[] calcResiduals(final double[] transcriptCounts, final double[] fittedCounts, double totalCounts)
+    {
+        double residualsTotal = 0;
+
+        for(int catId = 0; catId < transcriptCounts.length; ++catId)
+        {
+            residualsTotal += abs(transcriptCounts[catId] - fittedCounts[catId]);
+        }
+
+        double residualsPerc = residualsTotal / totalCounts;
+
+        return new double[] {residualsTotal, residualsPerc};
+
+    }
+
     public static double calcLinearLeastSquares(final double[] params, final double[] data)
     {
         if(data.length != params.length)
@@ -576,46 +611,6 @@ public class DataUtils {
         outputFileName += fileName;
 
         return createBufferedWriter(outputFileName, false);
-    }
-
-    public static void writeMatrixData(
-            final BufferedWriter writer, final List<String> headers, final SigMatrix matrix, boolean asInt) throws IOException
-    {
-        if(headers != null)
-        {
-            int i = 0;
-            for (; i < headers.size() - 1; ++i)
-            {
-                writer.write(String.format("%s,", headers.get(i)));
-            }
-            writer.write(String.format("%s", headers.get(i)));
-
-            writer.newLine();
-        }
-
-        final double[][] sigData = matrix.getData();
-
-        for(int i = 0; i < matrix.Rows; ++i)
-        {
-            for(int j = 0; j < matrix.Cols; ++j)
-            {
-                if(asInt)
-                    writer.write(String.format("%.0f", sigData[i][j]));
-                else
-                    writer.write(String.format("%.6f", sigData[i][j]));
-
-                if(j < matrix.Cols-1)
-                    writer.write(String.format(",", sigData[i][j]));
-            }
-
-            writer.newLine();
-        }
-
-    }
-
-    public static void writeMatrixData(final BufferedWriter writer, final SigMatrix matrix, boolean asInt) throws IOException
-    {
-        writeMatrixData(writer, null, matrix, asInt);
     }
 
 }

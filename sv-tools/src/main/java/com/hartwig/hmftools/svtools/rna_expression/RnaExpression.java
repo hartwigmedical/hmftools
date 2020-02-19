@@ -2,6 +2,11 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_CAT_INDEX;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
@@ -23,6 +28,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -208,11 +214,6 @@ public class RnaExpression
         int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
         transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
 
-        // final List<TranscriptComboData> transComboData = mRnaBamReader.getTransComboData();
-        // TranscriptComboData unsplicedData = new TranscriptComboData(Lists.newArrayList());
-        // unsplicedData.addCounts(FragmentMatchType.UNSPLICED, unsplicedCount);
-        // transComboData.add(unsplicedData);
-
         if(!mExpExpressionRates.validData())
         {
             LOGGER.error("gene({}) invalid expected rates or actuals data", geneReadData.name());
@@ -221,14 +222,25 @@ public class RnaExpression
 
         final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
 
-        final double[] fitAllocations = allocateTranscriptCountsByLeastSquares(
-                transComboCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
+        final double[] lsqFitAllocations = allocateTranscriptCountsByLeastSquares(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
+        final double[] lsqFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), lsqFitAllocations);
+
+        final double[] emFitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
+        final double[] emFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), emFitAllocations);
+
+        double totalCounts = sumVector(transComboCounts);
+        double[] lsqResiduals = calcResiduals(transComboCounts, lsqFittedCounts, totalCounts);
+        double[] emResiduals = calcResiduals(transComboCounts, emFittedCounts, totalCounts);
+
+        LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) emResiduals(%.0f perc=%.3f) lsqResiduals(%.0f perc=%.3f)",
+                geneReadData.name(), totalCounts, emResiduals[RESIDUAL_TOTAL], emResiduals[RESIDUAL_PERC],
+                lsqResiduals[RESIDUAL_TOTAL], lsqResiduals[RESIDUAL_PERC]));
 
         Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
 
         for(int transId = 0; transId < transcriptNames.size(); ++transId)
         {
-            double transAllocation = fitAllocations[transId];
+            double transAllocation = emFitAllocations[transId];
             final String trancriptDefn = transcriptNames.get(transId);
 
             if(transAllocation > 0)
@@ -240,7 +252,8 @@ public class RnaExpression
         }
 
         if(mConfig.WriteTransComboData)
-            mResultsWriter.writeTransComboCounts(geneReadData, mExpExpressionRates.getCategories(), transComboCounts);
+            mResultsWriter.writeTransComboCounts(
+                    geneReadData, mExpExpressionRates.getCategories(), transComboCounts, emFittedCounts, lsqFittedCounts);
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
