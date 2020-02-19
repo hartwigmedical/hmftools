@@ -79,12 +79,12 @@ public class SomaticPipeline implements SageVariantPipeline {
                 somaticPipelineData.addTumor(i, future.join());
             }
 
-            return normalEvidence.get(refSequence, region, somaticPipelineData.normalCandidates());
+            return normalEvidence.get(refSequence, region, somaticPipelineData.normalCandidates(config.reference()));
         });
 
         final CompletableFuture<List<RefContext>> rnaFuture = doneTumor.thenApply(aVoid -> {
             if (config.rnaEnabled()) {
-                return rnaEvidence.get(refSequence, region, somaticPipelineData.normalCandidates());
+                return rnaEvidence.get(refSequence, region, somaticPipelineData.normalCandidates(config.rna()));
             }
             return Lists.newArrayList();
         });

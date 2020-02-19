@@ -29,6 +29,7 @@ public interface SageConfig {
     String REFERENCE_BAM = "reference_bam";
     String TUMOR = "tumor";
     String TUMOR_BAM = "tumor_bam";
+    String RNA = "rna";
     String RNA_BAM = "rna_bam";
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
@@ -54,6 +55,7 @@ public interface SageConfig {
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
+        options.addOption(RNA, true, "Name of RNA sample");
         options.addOption(RNA_BAM, true, "Path to RNA bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
@@ -78,6 +80,9 @@ public interface SageConfig {
 
     @NotNull
     String referenceBam();
+
+    @NotNull
+    String rna();
 
     @NotNull
     String rnaBam();
@@ -137,6 +142,8 @@ public interface SageConfig {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String reference = cmd.getOptionValue(REFERENCE);
         final String reference_bam = cmd.getOptionValue(REFERENCE_BAM);
+
+        final String rna = cmd.getOptionValue(RNA, Strings.EMPTY);
         final String rna_bam = cmd.getOptionValue(RNA_BAM, Strings.EMPTY);
 
         if (!new File(reference_bam).exists()) {
@@ -145,6 +152,10 @@ public interface SageConfig {
 
         if (!rna_bam.isEmpty() && !new File(rna_bam).exists()) {
             throw new ParseException("Unable to locate rna bam " + rna_bam);
+        }
+
+        if (!rna_bam.isEmpty() && rna.isEmpty()) {
+            throw new ParseException("Parameter " + RNA + " is mandatory when " + RNA_BAM + " supplied");
         }
 
         final List<String> tumorList = Lists.newArrayList();
@@ -161,6 +172,12 @@ public interface SageConfig {
             throw new ParseException("Each tumor sample must have matching bam");
         }
 
+        for (String tumorBam : tumorBamList) {
+            if (!new File(tumorBam).exists()) {
+                throw new ParseException("Unable to locate tumor bam " + tumorBam);
+            }
+        }
+
         return ImmutableSageConfig.builder()
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
@@ -168,6 +185,7 @@ public interface SageConfig {
                 .referenceBam(reference_bam)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
+                .rna(rna)
                 .rnaBam(rna_bam)
                 .mnvDetection(!cmd.hasOption(DISABLE_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))

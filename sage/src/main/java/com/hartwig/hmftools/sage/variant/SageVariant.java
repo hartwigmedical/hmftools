@@ -1,26 +1,27 @@
 package com.hartwig.hmftools.sage.variant;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RnaContext;
 
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class SageVariant implements GenomePosition {
 
-    private final RnaContext rna;
     private final AltContext normal;
     private final Set<String> filters;
     private final SageVariantTier tier;
     private final List<AltContext> tumorAltContexts;
+    private final Optional<AltContext> rna;
 
     private int localPhaseSet;
 
-    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal, final RnaContext rna,
-            final List<AltContext> tumorAltContexts) {
+    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal,
+            final Optional<AltContext> rna, final List<AltContext> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
         this.tier = tier;
         this.normal = normal;
@@ -90,7 +91,7 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
-    public RnaContext rna() {
+    public Optional<AltContext> rna() {
         return rna;
     }
 }

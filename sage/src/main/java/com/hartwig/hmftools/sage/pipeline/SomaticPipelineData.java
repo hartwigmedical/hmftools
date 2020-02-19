@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,7 +18,6 @@ import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
-import com.hartwig.hmftools.sage.context.RnaContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -51,9 +51,9 @@ class SomaticPipelineData {
     }
 
     @NotNull
-    public RefContextCandidates normalCandidates() {
+    public RefContextCandidates normalCandidates(final String sample) {
 
-        NormalRefContextCandidates candidates = new NormalRefContextCandidates(normalSample);
+        NormalRefContextCandidates candidates = new NormalRefContextCandidates(sample);
 
         List<VariantHotspot> sortedHotspots =
                 allHotspots.stream().sorted(Comparator.comparingLong(GenomePosition::position)).collect(Collectors.toList());
@@ -122,9 +122,8 @@ class SomaticPipelineData {
         for (VariantHotspot sortedHotspot : sortedHotspots) {
 
             final RefContext rnaRefContext = rnaMap.get(sortedHotspot.position());
-            final AltContext rnaAltContext =
-                    rnaRefContext == null ? null : rnaRefContext.altContext(sortedHotspot.ref(), sortedHotspot.alt());
-            final RnaContext rnaContext = rnaAltContext == null ? RnaContext.EMPTY : new RnaContext(rnaAltContext);
+            final Optional<AltContext> rnaAltContext =
+                    Optional.ofNullable(rnaRefContext).map(x -> x.altContext(sortedHotspot.ref(), sortedHotspot.alt()));
 
             final RefContext normalRefContext = normalMap.get(sortedHotspot.position());
             final AltContext normalAltContext = normalRefContext == null
@@ -139,7 +138,7 @@ class SomaticPipelineData {
                 }
             }
 
-            result.add(variantFactory.create(normalAltContext, rnaContext, tumorAltContexts));
+            result.add(variantFactory.create(normalAltContext, rnaAltContext, tumorAltContexts));
         }
 
         return result;

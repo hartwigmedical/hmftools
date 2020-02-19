@@ -61,8 +61,6 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
-    public static final String RNA_DEPTH = "RNA_DP";
-    public static final String RNA_ALLELIC_DEPTH = "RNA_AD";
 
     public static final String RAW_DEPTH = "RDP";
     public static final String RAW_ALLELIC_DEPTH = "RAD";
@@ -103,13 +101,18 @@ public class SageVCF implements AutoCloseable {
 
     @NotNull
     static VCFHeader header(@NotNull final SageConfig config) {
-        return config.germlineOnly() ? header(config.reference(), Collections.emptyList()) : header(config.reference(), config.tumor());
+        final List<String> samples = Lists.newArrayList(config.reference());
+        if (!config.germlineOnly()) {
+            samples.addAll(config.tumor());
+            if (config.rnaEnabled()) {
+                samples.add(config.rna());
+            }
+        }
+        return header(samples);
     }
 
     @NotNull
-    private static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
-        final List<String> allSamples = Lists.newArrayList(normalSample);
-        allSamples.addAll(tumorSamples);
+    private static VCFHeader header(@NotNull final List<String> allSamples) {
 
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
@@ -155,8 +158,6 @@ public class SageVCF implements AutoCloseable {
                 1,
                 VCFHeaderLineType.String,
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(RNA_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "RNA allelic depth"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(RNA_DEPTH, 1, VCFHeaderLineType.Integer, "RNA read depth"));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
