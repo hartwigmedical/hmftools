@@ -55,6 +55,8 @@ public class GeneReadData
         mTranscriptsRange = new long[SE_PAIR];
     }
 
+    public String name() { return GeneData.GeneName;}
+
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
     public void setTranscripts(final List<TranscriptData> transDataList) { mTranscripts.addAll(transDataList); }
 

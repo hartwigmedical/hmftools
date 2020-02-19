@@ -33,15 +33,15 @@ public class ExpectedExpressionRates
 
     private final Map<String,List<TranscriptComboData>> mTransComboData;
 
-    private final List<String> mCategories; // equivalent of buckets
-    private final List<String> mTranscriptIds; // equivalent of signature names
+    private final List<String> mCategories; // equivalent of buckets - 0-N transcripts and the fragment type (eg SHORT, SPLICED etc)
+    private final List<String> mTranscriptIds; // equivalent of signature names - all transcripts and an UNSPLICED definition
     private SigMatrix mTranscriptDefinitions;
 
     private int mCurrentFragSize;
     private int mCurrentFragFrequency;
     private int mCurrentReadLength;
 
-    private BufferedWriter mWriter;
+    private BufferedWriter mExpRateWriter;
 
     public static final String UNSPLICED_ID = "UNSPLICED";
 
@@ -61,11 +61,12 @@ public class ExpectedExpressionRates
         mCategories = Lists.newArrayList();
         mTranscriptIds = Lists.newArrayList();
         mTranscriptDefinitions = null;
-        mWriter = null;
+        mExpRateWriter = null;
     }
 
     public Map<String,List<TranscriptComboData>> getTransComboData() { return mTransComboData; }
 
+    public List<String> getCategories() { return mCategories; }
     public List<String> getTranscriptNames() { return mTranscriptIds; }
     public SigMatrix getTranscriptDefinitions() { return mTranscriptDefinitions; }
 
@@ -78,7 +79,16 @@ public class ExpectedExpressionRates
 
     public boolean validData()
     {
-        return !mCategories.isEmpty() && mTranscriptDefinitions != null && !mTransComboData.isEmpty();
+        if(mCategories.isEmpty() || mTranscriptDefinitions == null || mTransComboData.isEmpty())
+            return false;
+
+        if(mTranscriptDefinitions.Cols != mTranscriptIds.size())
+            return false;
+
+        if(mTranscriptDefinitions.Rows != mCategories.size())
+            return false;
+
+        return true;
     }
 
     public void generateExpectedRates(final GeneReadData geneReadData)
@@ -562,21 +572,11 @@ public class ExpectedExpressionRates
             writeExpectedRates(geneReadData);
     }
 
-    public double[] generateTranscriptCounts(final GeneReadData geneReadData, final List<TranscriptComboData> transComboData, int unsplicedCounts)
+    public double[] generateTranscriptCounts(final GeneReadData geneReadData, final List<TranscriptComboData> transComboData)
     {
         double[] categoryCounts = new double[mCategories.size()];
 
-        int categoryId = getCategoryIndex(UNSPLICED_ID);
-
-        if(categoryId < 0)
-        {
-            LOGGER.error("missing unspliced category");
-            return categoryCounts;
-        }
-
         int skippedComboCounts = 0;
-
-        categoryCounts[categoryId] = unsplicedCounts;
 
         for(TranscriptComboData tcData : transComboData)
         {
@@ -588,7 +588,7 @@ public class ExpectedExpressionRates
             if(shortCount > 0)
             {
                 final String categoryStr = formCategory(transKey, SHORT);
-                categoryId = getCategoryIndex(categoryStr);
+                int categoryId = getCategoryIndex(categoryStr);
 
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
@@ -605,7 +605,7 @@ public class ExpectedExpressionRates
             if(splicedCount > 0)
             {
                 final String categoryStr = formCategory(transKey, SPLICED);
-                categoryId = getCategoryIndex(categoryStr);
+                int categoryId = getCategoryIndex(categoryStr);
 
                 if(categoryId < 0)
                 {
@@ -648,6 +648,7 @@ public class ExpectedExpressionRates
     }
 
     private static final String UNSPLICED_STR = "UNSPLC";
+    public static final int UNSPLICED_CAT_INDEX = 0;
 
     private void collectCategories()
     {
@@ -701,13 +702,13 @@ public class ExpectedExpressionRates
 
         try
         {
-            if(mWriter == null)
+            if(mExpRateWriter == null)
             {
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRAN_RATES.csv";
 
-                mWriter = createBufferedWriter(outputFileName, false);
-                mWriter.write("GeneId,GeneName,Transcript,Category,Rate");
-                mWriter.newLine();
+                mExpRateWriter = createBufferedWriter(outputFileName, false);
+                mExpRateWriter.write("GeneId,GeneName,Transcript,Category,Rate");
+                mExpRateWriter.newLine();
             }
 
             final String geneId = geneReadData.GeneData.GeneId;
@@ -726,9 +727,9 @@ public class ExpectedExpressionRates
                     if(expRate == 0)
                         continue;
 
-                    mWriter.write(String.format("%s,%s,%s,%s,%.4f",
+                    mExpRateWriter.write(String.format("%s,%s,%s,%s,%.4f",
                             geneId, geneName, transcriptId, category, expRate));
-                    mWriter.newLine();
+                    mExpRateWriter.newLine();
                 }
             }
         }
@@ -740,7 +741,7 @@ public class ExpectedExpressionRates
 
     public void close()
     {
-        closeBufferedWriter(mWriter);
+        closeBufferedWriter(mExpRateWriter);
     }
 
 

@@ -66,7 +66,6 @@ public class RnaBamReader
     private final List<TranscriptComboData> mTransComboData;
 
     private BufferedWriter mReadDataWriter;
-    private BufferedWriter mTransComboWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaBamReader.class);
 
@@ -95,7 +94,6 @@ public class RnaBamReader
         mDuplicateReadIds = Lists.newArrayList();
 
         mReadDataWriter = null;
-        mTransComboWriter = null;
     }
 
     public boolean validReader() { return mSamReader != null; }
@@ -105,7 +103,6 @@ public class RnaBamReader
         LOGGER.info("read {} total BAM records", mTotalBamReadCount);
 
         closeBufferedWriter(mReadDataWriter);
-        closeBufferedWriter(mTransComboWriter);
     }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
@@ -146,9 +143,6 @@ public class RnaBamReader
         {
             mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
-
-        if(mConfig.WriteTransComboData)
-            writeTransComboData();
     }
 
     public void readBamCounts(final GenomeRegion genomeRegion, final Consumer<SAMRecord> consumer)
@@ -649,48 +643,6 @@ public class RnaBamReader
         mDuplicateReadIds.clear();
     }
 
-    private void writeTransComboData()
-    {
-        if(mConfig.OutputDir.isEmpty())
-            return;
-
-        try
-        {
-            if(mTransComboWriter == null)
-            {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_COMBO_DATA.csv";
-
-                mTransComboWriter = createBufferedWriter(outputFileName, false);
-                mTransComboWriter.write("GeneId,GeneName,TransCount,TransList,Category,Count");
-                mTransComboWriter.newLine();
-            }
-
-            for(final TranscriptComboData tcData : mTransComboData)
-            {
-                int transCount = tcData.getTranscripts().size();
-                final String transStr = tcData.getTranscriptsKey();
-
-                final int[] counts = tcData.getCounts();
-
-                for(int i = 0; i < counts.length; ++i)
-                {
-                    if(counts[i] == 0)
-                        continue;
-
-                    mTransComboWriter.write(String.format("%s,%s,%d,%s",
-                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, transCount, transStr));
-
-                    mTransComboWriter.write(String.format(",%s,%d", FragmentMatchType.intAsType(i), counts[i]));
-
-                    mTransComboWriter.newLine();
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write trans combo data file: {}", e.toString());
-        }
-    }
     private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType, int validTranscripts, int calcFragmentLength)
     {
         if(mConfig.OutputDir.isEmpty())

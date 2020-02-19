@@ -162,9 +162,8 @@ public class TranscriptModel
         return true;
     }
 
-    public static void estimateRatesByLeastSquares(
-            final GeneReadData geneReadData, final double[] transcriptCounts,
-            final SigMatrix transcriptDefinitions, final List<String> definitionNames)
+    public static final double[] allocateTranscriptCountsByLeastSquares(
+            final double[] transcriptCounts, final SigMatrix transcriptDefinitions, final List<String> definitionNames)
     {
         int transDefinitionCount = transcriptDefinitions.Cols;
         int categoryCount = transcriptDefinitions.Rows;
@@ -173,22 +172,9 @@ public class TranscriptModel
         lsqFit.initialise(transcriptDefinitions.getData(), transcriptCounts);
         lsqFit.solve();
 
+        // extract the allocation per transcript and unspliced
         final double[] transcriptAllocs = lsqFit.getContribs();
-
-        Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
-
-        for(int definitionId = 0; definitionId < definitionNames.size(); ++definitionId)
-        {
-            double transAllocation = transcriptAllocs[definitionId];
-            final String trancriptDefn = definitionNames.get(definitionId);
-
-            if(transAllocation > 0)
-            {
-                LOGGER.debug("transcript({}) allocated count({})", trancriptDefn, String.format("%.2f", transAllocation));
-            }
-
-            transAllocations.put(trancriptDefn, transAllocation);
-        }
+        return transcriptAllocs;
     }
 
 }

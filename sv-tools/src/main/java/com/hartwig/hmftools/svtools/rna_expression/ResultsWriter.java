@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_ID;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
@@ -36,6 +37,7 @@ public class ResultsWriter
     private BufferedWriter mGeneDataWriter;
     private BufferedWriter mTransDataWriter;
     private BufferedWriter mExonDataWriter;
+    private BufferedWriter mTransComboWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
@@ -47,6 +49,7 @@ public class ResultsWriter
         mGeneDataWriter = null;
         mTransDataWriter = null;
         mExonDataWriter = null;
+        mTransComboWriter = null;
     }
 
     public void setSampleId(final String sampleId) { mSampledId = sampleId; }
@@ -56,6 +59,7 @@ public class ResultsWriter
         closeBufferedWriter(mGeneDataWriter);
         closeBufferedWriter(mTransDataWriter);
         closeBufferedWriter(mExonDataWriter);
+        closeBufferedWriter(mTransComboWriter);
     }
 
     public void writeGeneData(final GeneReadData geneReadData)
@@ -212,9 +216,35 @@ public class ResultsWriter
         }
     }
 
-    public static void calcUniqueExonBases()
+    public void writeTransComboCounts(final GeneReadData geneReadData, final List<String> categories, final double[] counts)
     {
+        if(mConfig.OutputDir.isEmpty())
+            return;
 
+        try
+        {
+            if(mTransComboWriter == null)
+            {
+                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_COMBO_DATA.csv";
+
+                mTransComboWriter = createBufferedWriter(outputFileName, false);
+                mTransComboWriter.write("GeneId,GeneName,Category,Count");
+                mTransComboWriter.newLine();
+            }
+
+            for(int i = 0; i < categories.size(); ++i)
+            {
+                double count = counts[i];
+                final String category = categories.get(i);
+
+                mTransComboWriter.write(String.format("%s,%s,%s,%.0f",
+                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, category, count));
+                mTransComboWriter.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write trans combo data file: {}", e.toString());
+        }
     }
-
 }

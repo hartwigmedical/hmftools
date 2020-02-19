@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_CAT_INDEX;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
@@ -10,7 +11,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRAN
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calculateTranscriptResults;
-import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.estimateRatesByLeastSquares;
+import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.allocateTranscriptCountsByLeastSquares;
 
 import java.util.List;
 import java.util.Map;
@@ -201,14 +202,45 @@ public class RnaExpression
 
         mExpExpressionRates.generateExpectedRates(geneReadData);
 
-        final double[] transcriptCounts = mExpExpressionRates.generateTranscriptCounts(
-                geneReadData, mRnaBamReader.getTransComboData(), geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)]);
+        final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mRnaBamReader.getTransComboData());
 
-        if(mExpExpressionRates.validData())
+        // add in counts for the unspliced category
+        int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
+        transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
+
+        // final List<TranscriptComboData> transComboData = mRnaBamReader.getTransComboData();
+        // TranscriptComboData unsplicedData = new TranscriptComboData(Lists.newArrayList());
+        // unsplicedData.addCounts(FragmentMatchType.UNSPLICED, unsplicedCount);
+        // transComboData.add(unsplicedData);
+
+        if(!mExpExpressionRates.validData())
         {
-            estimateRatesByLeastSquares(
-                    geneReadData, transcriptCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
+            LOGGER.error("gene({}) invalid expected rates or actuals data", geneReadData.name());
+            return;
         }
+
+        final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
+
+        final double[] fitAllocations = allocateTranscriptCountsByLeastSquares(
+                transComboCounts, mExpExpressionRates.getTranscriptDefinitions(), mExpExpressionRates.getTranscriptNames());
+
+        Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
+
+        for(int transId = 0; transId < transcriptNames.size(); ++transId)
+        {
+            double transAllocation = fitAllocations[transId];
+            final String trancriptDefn = transcriptNames.get(transId);
+
+            if(transAllocation > 0)
+            {
+                LOGGER.debug("transcript({}) allocated count({})", trancriptDefn, String.format("%.2f", transAllocation));
+            }
+
+            transAllocations.put(trancriptDefn, transAllocation);
+        }
+
+        if(mConfig.WriteTransComboData)
+            mResultsWriter.writeTransComboCounts(geneReadData, mExpExpressionRates.getCategories(), transComboCounts);
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
