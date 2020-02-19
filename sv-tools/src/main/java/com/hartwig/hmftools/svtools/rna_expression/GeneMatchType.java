@@ -26,6 +26,5 @@ public enum GeneMatchType
 
             default: return 0;
         }
-
     }
 }

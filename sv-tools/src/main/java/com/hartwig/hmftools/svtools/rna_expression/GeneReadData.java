@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.MAX_FRAG_TYPE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 
@@ -35,12 +36,6 @@ public class GeneReadData
     private final Map<String, int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final Map<String, Double> mTranscriptAllocations;
     private final List<TranscriptResults> mTranscriptResults;
-
-    public static final int TC_SPLICED = 0;
-    public static final int TC_SHORT = 1;
-    public static final int TC_LONG = 2;
-    public static final int TC_UNSPLICED = 3;
-    public static final int TC_MAX = 4;
 
     private final int[] mFragmentCounts;
 
@@ -136,24 +131,24 @@ public class GeneReadData
     public int[][] getTranscriptReadCount(final String trans)
     {
         int[][] counts = mTranscriptReadCounts.get(trans);
-        return counts != null ? counts : new int[TC_LONG+1][UNIQUE_TRANS_COUNT+1];
+        return counts != null ? counts : new int[MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
     }
 
-    public void addTranscriptReadMatch(final String trans, boolean isUnique, int type)
+    public void addTranscriptReadMatch(final String trans, boolean isUnique, FragmentMatchType type)
     {
         int[][] counts = mTranscriptReadCounts.get(trans);
         if(counts == null)
         {
-            counts = new int[TC_LONG+1][UNIQUE_TRANS_COUNT+1];
+            counts = new int[MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
             mTranscriptReadCounts.put(trans,  counts);
         }
 
         if(isUnique)
         {
-            ++counts[type][UNIQUE_TRANS_COUNT];
+            ++counts[FragmentMatchType.typeAsInt(type)][UNIQUE_TRANS_COUNT];
         }
 
-        ++counts[type][TRANS_COUNT];
+        ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
     }
 
     public Map<String,Double> getTranscriptAllocations() { return mTranscriptAllocations; }
@@ -181,18 +176,6 @@ public class GeneReadData
     public long calcExonicRegionLength()
     {
         return mCommonExonicRegions.stream().mapToLong(x -> x[SE_END] - x[SE_START]).sum();
-    }
-
-    public static String countsTypeToStr(int type)
-    {
-        switch(type)
-        {
-            case TC_SHORT: return "SHORT";
-            case TC_LONG: return "LONG";
-            case TC_UNSPLICED: return "UNSPLICED";
-            case TC_SPLICED: return "SPLICED";
-            default: return "UNKNOWN";
-        }
     }
 
     @VisibleForTesting

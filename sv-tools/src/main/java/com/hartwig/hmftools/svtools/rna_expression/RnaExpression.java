@@ -1,12 +1,9 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
@@ -205,7 +202,7 @@ public class RnaExpression
         mExpExpressionRates.generateExpectedRates(geneReadData);
 
         final double[] transcriptCounts = mExpExpressionRates.generateTranscriptCounts(
-                geneReadData, mRnaBamReader.getTransComboData(), geneReadData.getCounts()[TC_UNSPLICED]);
+                geneReadData, mRnaBamReader.getTransComboData(), geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)]);
 
         if(mExpExpressionRates.validData())
         {

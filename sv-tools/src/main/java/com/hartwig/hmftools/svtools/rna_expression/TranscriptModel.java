@@ -3,9 +3,10 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 
@@ -101,12 +102,12 @@ public class TranscriptModel
                 .spliceJunctionsSupported(spliceJunctionsSupported)
                 .uniqueSpliceJunctions(uniqueSpliceJunctions)
                 .uniqueSpliceJunctionsSupported(uniqueSpliceJunctionsSupported)
-                .spliceJunctionFragments(supportingFragments[TC_SPLICED][TRANS_COUNT])
-                .spliceJunctionUniqueFragments(supportingFragments[TC_SPLICED][UNIQUE_TRANS_COUNT])
-                .shortSupportingFragments(supportingFragments[TC_SHORT][TRANS_COUNT])
-                .shortUniqueFragments(supportingFragments[TC_SHORT][UNIQUE_TRANS_COUNT])
-                .longSupportingFragments(supportingFragments[TC_LONG][TRANS_COUNT])
-                .longUniqueFragments(supportingFragments[TC_LONG][UNIQUE_TRANS_COUNT])
+                .spliceJunctionFragments(supportingFragments[typeAsInt(SPLICED)][TRANS_COUNT])
+                .spliceJunctionUniqueFragments(supportingFragments[typeAsInt(SPLICED)][UNIQUE_TRANS_COUNT])
+                .shortSupportingFragments(supportingFragments[typeAsInt(SHORT)][TRANS_COUNT])
+                .shortUniqueFragments(supportingFragments[typeAsInt(SHORT)][UNIQUE_TRANS_COUNT])
+                .longSupportingFragments(supportingFragments[typeAsInt(LONG)][TRANS_COUNT])
+                .longUniqueFragments(supportingFragments[typeAsInt(LONG)][UNIQUE_TRANS_COUNT])
                 .exonicBases(exonicBases)
                 .exonicBaseCoverage(exonicBaseCoverage)
                 .uniqueBases(uniqueExonicBases)

@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -13,9 +10,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THR
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TOTAL;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.hasSkippedExons;
@@ -395,29 +389,29 @@ public class RnaBamReader
             // now set counts for each valid transcript
             boolean isUniqueTrans = validTranscripts.size() == 1;
 
-            int comboTransMatchType = TC_SHORT;
+            FragmentMatchType comboTransMatchType = FragmentMatchType.SHORT;
 
             for (final String trans : validTranscripts)
             {
                 int regionCount = (int)validRegions.stream().filter(x -> x.hasTransId(trans)).count();
 
-                int transMatchType;
+                FragmentMatchType transMatchType;
 
                 if(read1.getTranscriptClassification(trans) == SPLICE_JUNCTION || read2.getTranscriptClassification(trans) == SPLICE_JUNCTION)
                 {
-                    transMatchType = TC_SPLICED;
-                    comboTransMatchType = TC_SPLICED;
+                    transMatchType = FragmentMatchType.SPLICED;
+                    comboTransMatchType = FragmentMatchType.SPLICED;
                 }
                 else if(regionCount > 1)
                 {
-                    transMatchType = TC_LONG;
+                    transMatchType = FragmentMatchType.LONG;
 
-                    if(comboTransMatchType != TC_SPLICED)
-                        comboTransMatchType = TC_LONG;
+                    if(comboTransMatchType != FragmentMatchType.SPLICED)
+                        comboTransMatchType = FragmentMatchType.LONG;
                 }
                 else
                 {
-                    transMatchType = TC_SHORT;
+                    transMatchType = FragmentMatchType.SHORT;
                 }
 
                 mCurrentGene.addTranscriptReadMatch(trans, isUniqueTrans, transMatchType);
@@ -443,7 +437,7 @@ public class RnaBamReader
 
     public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
 
-    private void addTransComboData(final List<String> transcripts, int transMatchType)
+    private void addTransComboData(final List<String> transcripts, FragmentMatchType transMatchType)
     {
         TranscriptComboData transComboCounts = mTransComboData.stream()
                 .filter(x -> x.matches(transcripts)).findFirst().orElse(null);
@@ -454,7 +448,7 @@ public class RnaBamReader
             mTransComboData.add(transComboCounts);
         }
 
-        ++transComboCounts.getCounts()[transMatchType];
+        transComboCounts.addCounts(transMatchType, 1);
     }
 
     private void processValidTranscript(
@@ -667,8 +661,7 @@ public class RnaBamReader
                 final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_COMBO_DATA.csv";
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
-                mTransComboWriter.write("GeneId,GeneName,TransCount,TransList");
-                mTransComboWriter.write(",SpliceJuncFragments,ShortFragments,LongFragments");
+                mTransComboWriter.write("GeneId,GeneName,TransCount,TransList,Category,Count");
                 mTransComboWriter.newLine();
             }
 
@@ -677,15 +670,20 @@ public class RnaBamReader
                 int transCount = tcData.getTranscripts().size();
                 final String transStr = tcData.getTranscriptsKey();
 
-                mTransComboWriter.write(String.format("%s,%s,%d,%s",
-                        mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, transCount, transStr));
-
                 final int[] counts = tcData.getCounts();
 
-                mTransComboWriter.write(String.format(",%d,%d,%d",
-                        counts[TC_SPLICED], counts[TC_SHORT], counts[TC_LONG]));
+                for(int i = 0; i < counts.length; ++i)
+                {
+                    if(counts[i] == 0)
+                        continue;
 
-                mTransComboWriter.newLine();
+                    mTransComboWriter.write(String.format("%s,%s,%d,%s",
+                            mCurrentGene.GeneData.GeneId, mCurrentGene.GeneData.GeneName, transCount, transStr));
+
+                    mTransComboWriter.write(String.format(",%s,%d", FragmentMatchType.intAsType(i), counts[i]));
+
+                    mTransComboWriter.newLine();
+                }
             }
         }
         catch(IOException e)

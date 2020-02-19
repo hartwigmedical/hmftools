@@ -2,11 +2,12 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_MAX;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.MAX_FRAG_TYPE;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.typeAsInt;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +24,7 @@ public class TranscriptComboData
     public TranscriptComboData(final List<String> transcripts)
     {
         mTranscripts = transcripts;
-        mCounts = new int[TC_MAX];
+        mCounts = new int[MAX_FRAG_TYPE];
 
         mTranscriptsKey = formTranscriptIds(transcripts);
     }
@@ -54,6 +55,16 @@ public class TranscriptComboData
     }
 
     public final int[] getCounts() { return mCounts; }
+
+    public void addCounts(FragmentMatchType type, int count)
+    {
+        mCounts[typeAsInt(type)] += count;
+    }
+
+    public int getUnsplicedCount() { return mCounts[typeAsInt(UNSPLICED)]; }
+    public int getShortCount() { return mCounts[typeAsInt(SHORT)]; }
+    public int getSplicedCount() { return mCounts[typeAsInt(LONG)] + mCounts[typeAsInt(SPLICED)]; }
+
     public final int getCount(int type) { return type < mCounts.length ? mCounts[type] : 0; }
     public int totalCount() { return Arrays.stream(mCounts).sum(); }
 
@@ -103,7 +114,8 @@ public class TranscriptComboData
     public String toString()
     {
         return String.format("ids(%d: {}) counts(spl=%d short=%d long=%d unspl=%d)",
-                mTranscripts.size(), mTranscriptsKey, mCounts[TC_SPLICED], mCounts[TC_SHORT],mCounts[TC_LONG], mCounts[TC_UNSPLICED]);
+                mTranscripts.size(), mTranscriptsKey,
+                mCounts[typeAsInt(SPLICED)], mCounts[typeAsInt(SHORT)], mCounts[typeAsInt(LONG)], mCounts[typeAsInt(UNSPLICED)]);
     }
 
 

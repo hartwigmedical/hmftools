@@ -8,11 +8,10 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.countsTypeToStr;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.UNSPLICED;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -141,7 +140,7 @@ public class ExpectedExpressionRates
                     // check for purely intronic fragments
                     if (startPos < nextExonicStart)
                     {
-                        addTransComboData(UNSPLICED_ID, emptyTrans, TC_UNSPLICED);
+                        addTransComboData(UNSPLICED_ID, emptyTrans, UNSPLICED);
                     }
                     else
                     {
@@ -169,7 +168,7 @@ public class ExpectedExpressionRates
         List<long[]> readRegions = Lists.newArrayList();
         List<long[]> spliceJunctions = Lists.newArrayList();
 
-        int matchType = generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
+        FragmentMatchType matchType = generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         if(readRegions.isEmpty())
             return false;
@@ -177,7 +176,7 @@ public class ExpectedExpressionRates
         final List<String> longAndSplicedTrans = Lists.newArrayList();
         final List<String> shortTrans = Lists.newArrayList();
 
-        if(matchType == TC_SPLICED || matchType == TC_LONG)
+        if(matchType == SPLICED || matchType == LONG)
             longAndSplicedTrans.add(transData.TransName);
         else
             shortTrans.add(transData.TransName);
@@ -190,7 +189,7 @@ public class ExpectedExpressionRates
 
             if(readsSupportFragment(otherTransData, readRegions, matchType, spliceJunctions))
             {
-                if(matchType == TC_SPLICED || matchType == TC_LONG)
+                if(matchType == SPLICED || matchType == LONG)
                     longAndSplicedTrans.add(otherTransData.TransName);
                 else
                     shortTrans.add(otherTransData.TransName);
@@ -199,11 +198,11 @@ public class ExpectedExpressionRates
 
         if(!longAndSplicedTrans.isEmpty())
         {
-            addTransComboData(transData.TransName, longAndSplicedTrans, TC_SPLICED);
+            addTransComboData(transData.TransName, longAndSplicedTrans, SPLICED);
         }
         else
         {
-            addTransComboData(transData.TransName, shortTrans, TC_SHORT);
+            addTransComboData(transData.TransName, shortTrans, SHORT);
         }
 
         return true;
@@ -235,16 +234,16 @@ public class ExpectedExpressionRates
         // check whether these unspliced reads support exonic regions
         for(TranscriptData transData : transDataList)
         {
-            if(readsSupportFragment(transData, readRegions, TC_SHORT, noSpliceJunctions))
+            if(readsSupportFragment(transData, readRegions, SHORT, noSpliceJunctions))
             {
                 shortTrans.add(transData.TransName);
             }
         }
 
-        addTransComboData(UNSPLICED_ID, shortTrans, !shortTrans.isEmpty() ? TC_SHORT : TC_UNSPLICED);
+        addTransComboData(UNSPLICED_ID, shortTrans, !shortTrans.isEmpty() ? SHORT : UNSPLICED);
     }
 
-    private void addTransComboData(final String transId, final List<String> transcripts, int transMatchType)
+    private void addTransComboData(final String transId, final List<String> transcripts, FragmentMatchType transMatchType)
     {
         List<TranscriptComboData> transComboDataList = mTransComboData.get(transId);
 
@@ -263,10 +262,10 @@ public class ExpectedExpressionRates
             transComboDataList.add(matchingCounts);
         }
 
-        matchingCounts.getCounts()[transMatchType] += mCurrentFragFrequency;
+        matchingCounts.addCounts(transMatchType, mCurrentFragFrequency);
     }
 
-    public int generateImpliedFragment(final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
+    public FragmentMatchType generateImpliedFragment(final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
     {
         readRegions.clear();
         spliceJunctions.clear();
@@ -276,9 +275,9 @@ public class ExpectedExpressionRates
         final ExonData lastExon = transData.exons().get(exonCount - 1);
 
         if(startPos + mCurrentFragSize - 1 > lastExon.ExonEnd)
-            return TC_UNSPLICED;
+            return UNSPLICED;
 
-        int matchType = TC_SHORT;
+        FragmentMatchType matchType = SHORT;
 
         int remainingReadBases = mCurrentReadLength;
         boolean overlappingReads = (mCurrentFragSize - 2 * mCurrentReadLength) < 1;
@@ -295,8 +294,8 @@ public class ExpectedExpressionRates
 
             if(!readRegions.isEmpty())
             {
-                if(matchType != TC_SPLICED)
-                    matchType = TC_LONG;
+                if(matchType != SPLICED)
+                    matchType = LONG;
             }
 
             if(readsAdded == 1 && remainingInterimBases > 0)
@@ -306,7 +305,7 @@ public class ExpectedExpressionRates
                     if(i >= exonCount - 1)
                     {
                         readRegions.clear();
-                        return TC_UNSPLICED;
+                        return UNSPLICED;
                     }
 
                     nextRegionStart = transData.exons().get(i + 1).ExonStart;
@@ -357,7 +356,7 @@ public class ExpectedExpressionRates
                 if(i == exonCount - 1)
                 {
                     readRegions.clear();
-                    return TC_UNSPLICED;
+                    return UNSPLICED;
                 }
 
                 // will move onto the next exon for further matching
@@ -365,7 +364,7 @@ public class ExpectedExpressionRates
 
                 if(spansExonEnd && regionEnd == exon.ExonEnd)
                 {
-                    matchType = TC_SPLICED;
+                    matchType = SPLICED;
                     spliceJunctions.add(new long[] {exon.ExonEnd, nextRegionStart});
                 }
 
@@ -385,7 +384,7 @@ public class ExpectedExpressionRates
             readRegions.add(new long[] { nextRegionStart, regionEnd });
 
             if(remainingReadBases > 0 && regionEnd == exon.ExonEnd)
-                matchType = TC_SPLICED;
+                matchType = SPLICED;
 
             if(remainingReadBases == 0)
                 break;
@@ -393,7 +392,7 @@ public class ExpectedExpressionRates
             if(i == exonCount - 1)
             {
                 readRegions.clear();
-                return TC_UNSPLICED;
+                return UNSPLICED;
             }
 
             // will move onto the next exon for further matching
@@ -424,12 +423,12 @@ public class ExpectedExpressionRates
     }
 
     public boolean readsSupportFragment(
-            final TranscriptData transData, List<long[]> readRegions, int requiredMatchType, List<long[]> spliceJunctions)
+            final TranscriptData transData, List<long[]> readRegions, FragmentMatchType requiredMatchType, List<long[]> spliceJunctions)
     {
         long regionsStart = readRegions.get(0)[SE_START];
         long regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
 
-        if(requiredMatchType == TC_SHORT)
+        if(requiredMatchType == SHORT)
         {
             return (transData.exons().stream().anyMatch(x -> x.ExonStart <= regionsStart && x.ExonEnd >= regionsEnd));
         }
@@ -537,7 +536,7 @@ public class ExpectedExpressionRates
 
                     if(catCount > 0)
                     {
-                        final String categoryStr = formCategory(transKey, i);
+                        final String categoryStr = formCategory(transKey, FragmentMatchType.intAsType(i));
                         int categoryId = getCategoryIndex(categoryStr);
 
                         if(categoryId < 0)
@@ -546,8 +545,8 @@ public class ExpectedExpressionRates
                             return;
                         }
 
-                        if(i != TC_SPLICED)
-                            catCount *= mConfig.UnsplicedWeight;
+                        // if(i != TC_SPLICED)
+                        //    catCount *= mConfig.UnsplicedWeight;
 
                         categoryCounts[categoryId] = catCount;
                     }
@@ -583,39 +582,39 @@ public class ExpectedExpressionRates
         {
             final String transKey = !tcData.getTranscripts().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
 
-            final int[] counts = tcData.getCounts();
+            int shortCount = tcData.getShortCount();
+            int splicedCount = tcData.getSplicedCount();
 
-            if(counts[TC_SHORT] > 0)
+            if(shortCount > 0)
             {
-                final String categoryStr = formCategory(transKey, TC_SHORT);
+                final String categoryStr = formCategory(transKey, SHORT);
                 categoryId = getCategoryIndex(categoryStr);
 
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    LOGGER.debug("category({}) skipped with count({})", categoryStr, counts[TC_SHORT]);
-                    skippedComboCounts += counts[TC_SHORT];
+                    LOGGER.debug("category({}) skipped with count({})", categoryStr, shortCount);
+                    skippedComboCounts += shortCount;
                 }
                 else
                 {
-                    categoryCounts[categoryId] = counts[TC_SHORT]; //  * mConfig.UnsplicedWeight;
+                    categoryCounts[categoryId] = shortCount; //  * mConfig.UnsplicedWeight;
                 }
             }
 
-            int multiExonCount = counts[TC_SPLICED] + counts[TC_LONG];
-            if(multiExonCount > 0)
+            if(splicedCount > 0)
             {
-                final String categoryStr = formCategory(transKey, TC_SPLICED);
+                final String categoryStr = formCategory(transKey, SPLICED);
                 categoryId = getCategoryIndex(categoryStr);
 
                 if(categoryId < 0)
                 {
-                    LOGGER.debug("category({}) skipped with count({})", categoryStr, multiExonCount);
-                    skippedComboCounts += counts[TC_SHORT];
+                    LOGGER.debug("category({}) skipped with count({})", categoryStr, splicedCount);
+                    skippedComboCounts += splicedCount;
                 }
                 else
                 {
-                    categoryCounts[categoryId] = multiExonCount;
+                    categoryCounts[categoryId] = splicedCount;
                 }
             }
         }
@@ -661,12 +660,12 @@ public class ExpectedExpressionRates
                 boolean hasTrans = !tcData.getTranscripts().isEmpty();
                 final String transKey = hasTrans ? tcData.getTranscriptsKey() : UNSPLICED_ID;
 
-                if(tcData.getCount(TC_SHORT) > 0)
+                if(tcData.getShortCount() > 0)
                 {
-                    addCategory(formCategory(transKey, TC_SHORT));
+                    addCategory(formCategory(transKey, SHORT));
                 }
 
-                if(tcData.getCount(TC_SPLICED) > 0)
+                if(tcData.getSplicedCount() > 0)
                 {
                     addCategory(transKey);
                 }
@@ -674,11 +673,11 @@ public class ExpectedExpressionRates
         }
     }
 
-    private static String formCategory(final String transKey, int countsType)
+    private static String formCategory(final String transKey, FragmentMatchType countsType)
     {
-        if(countsType == TC_SHORT)
+        if(countsType == SHORT)
             return String.format("%s-%s", transKey, UNSPLICED_STR);
-        else if(countsType == TC_SPLICED)
+        else if(countsType == SPLICED)
             return transKey;
         else
             return UNSPLICED_ID;

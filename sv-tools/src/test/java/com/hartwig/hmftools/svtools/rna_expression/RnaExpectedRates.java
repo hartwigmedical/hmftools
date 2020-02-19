@@ -2,12 +2,10 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_ID;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_LONG;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SHORT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_SPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TC_UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
+import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.TranscriptComboData.findMatchingData;
 
 import static org.junit.Assert.assertEquals;
@@ -50,9 +48,9 @@ public class RnaExpectedRates
         long startPos = 100;
         List<long[]> readRegions = Lists.newArrayList();
         List<long[]> spliceJunctions = Lists.newArrayList();
-        int matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
+        FragmentMatchType matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SHORT, matchType);
+        assertEquals(SHORT, matchType);
         assertEquals(2, readRegions.size());
         assertEquals(100, readRegions.get(0)[SE_START]);
         assertEquals(119, readRegions.get(0)[SE_END]);
@@ -77,7 +75,7 @@ public class RnaExpectedRates
         startPos = 371;
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_LONG, matchType);
+        assertEquals(LONG, matchType);
         assertEquals(2, readRegions.size());
         assertEquals(371, readRegions.get(0)[SE_START]);
         assertEquals(390, readRegions.get(0)[SE_END]);
@@ -103,7 +101,7 @@ public class RnaExpectedRates
 
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SPLICED, matchType);
+        assertEquals(SPLICED, matchType);
         assertEquals(3, readRegions.size());
         assertEquals(150, readRegions.get(0)[SE_START]);
         assertEquals(169, readRegions.get(0)[SE_END]);
@@ -120,7 +118,7 @@ public class RnaExpectedRates
 
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SPLICED, matchType);
+        assertEquals(SPLICED, matchType);
         assertEquals(3, readRegions.size());
         assertEquals(191, readRegions.get(0)[SE_START]);
         assertEquals(200, readRegions.get(0)[SE_END]);
@@ -150,7 +148,7 @@ public class RnaExpectedRates
 
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SPLICED, matchType);
+        assertEquals(SPLICED, matchType);
         assertEquals(5, readRegions.size());
         assertEquals(191, readRegions.get(0)[SE_START]);
         assertEquals(200, readRegions.get(0)[SE_END]);
@@ -178,7 +176,7 @@ public class RnaExpectedRates
         startPos = 150;
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SHORT, matchType);
+        assertEquals(SHORT, matchType);
         assertEquals(1, readRegions.size());
         assertEquals(150, readRegions.get(0)[SE_START]);
         assertEquals(179, readRegions.get(0)[SE_END]);
@@ -188,7 +186,7 @@ public class RnaExpectedRates
         startPos = 190;
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SPLICED, matchType);
+        assertEquals(SPLICED, matchType);
         assertEquals(2, readRegions.size());
         assertEquals(190, readRegions.get(0)[SE_START]);
         assertEquals(200, readRegions.get(0)[SE_END]);
@@ -209,7 +207,7 @@ public class RnaExpectedRates
         startPos = 185;
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SHORT, matchType);
+        assertEquals(SHORT, matchType);
         assertEquals(1, readRegions.size());
         assertEquals(185, readRegions.get(0)[SE_START]);
         assertEquals(199, readRegions.get(0)[SE_END]);
@@ -219,7 +217,7 @@ public class RnaExpectedRates
         startPos = 195;
         matchType = eeRates.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
-        assertEquals(TC_SPLICED, matchType);
+        assertEquals(SPLICED, matchType);
         assertEquals(2, readRegions.size());
         assertEquals(195, readRegions.get(0)[SE_START]);
         assertEquals(200, readRegions.get(0)[SE_END]);
@@ -271,22 +269,22 @@ public class RnaExpectedRates
 
         TranscriptComboData tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(90, tcData.getCount(TC_SHORT));
-        assertEquals(58, tcData.getCount(TC_SPLICED));
+        assertEquals(90, tcData.getShortCount());
+        assertEquals(58, tcData.getSplicedCount());
 
         tcDataList = transComboData.get(UNSPLICED_ID);
         assertEquals(2, tcDataList.size());
 
         tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(87, tcData.getCount(TC_SHORT));
-        assertEquals(0, tcData.getCount(TC_SPLICED));
+        assertEquals(87, tcData.getShortCount());
+        assertEquals(0, tcData.getSplicedCount());
 
         tranIds.clear();
         tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(196, tcData.getCount(TC_UNSPLICED));
-        assertEquals(tcData.getCount(TC_UNSPLICED), tcData.totalCount());
+        assertEquals(196, tcData.getUnsplicedCount());
+        assertEquals(tcData.getUnsplicedCount(), tcData.totalCount());
     }
 
     @Test
@@ -356,15 +354,15 @@ public class RnaExpectedRates
 
         TranscriptComboData tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getCount(TC_SHORT) > 0);
-        assertTrue(tcData.getCount(TC_SPLICED) > 0);
-        assertEquals(tcData.getCount(TC_SPLICED) + tcData.getCount(TC_SHORT), tcData.totalCount());
+        assertTrue(tcData.getShortCount() > 0);
+        assertTrue(tcData.getSplicedCount() > 0);
+        assertEquals(tcData.getSplicedCount() + tcData.getShortCount(), tcData.totalCount());
 
         tranIds = Lists.newArrayList(transId1, transId2);
         tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getCount(TC_SHORT) > 0);
-        assertTrue(tcData.getCount(TC_SPLICED) > 0);
+        assertTrue(tcData.getShortCount() > 0);
+        assertTrue(tcData.getSplicedCount() > 0);
 
         tcDataList = transComboData.get(transId2);
         assertEquals(2, tcDataList.size());
@@ -373,14 +371,14 @@ public class RnaExpectedRates
 
         tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getCount(TC_SHORT) > 0);
-        assertTrue(tcData.getCount(TC_SPLICED) > 0);
+        assertTrue(tcData.getShortCount() > 0);
+        assertTrue(tcData.getSplicedCount() > 0);
 
         tranIds = Lists.newArrayList(transId1, transId2);
         tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getCount(TC_SHORT) > 0);
-        assertTrue(tcData.getCount(TC_SPLICED) > 0);
+        assertTrue(tcData.getShortCount() > 0);
+        assertTrue(tcData.getSplicedCount() > 0);
 
         tcDataList = transComboData.get(UNSPLICED_ID);
         assertEquals(4, tcDataList.size());
@@ -388,8 +386,8 @@ public class RnaExpectedRates
         tranIds.clear();
         tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getCount(TC_UNSPLICED) > 0);
-        assertEquals(tcData.getCount(TC_UNSPLICED), tcData.totalCount());
+        assertTrue(tcData.getUnsplicedCount() > 0);
+        assertEquals(tcData.getUnsplicedCount(), tcData.totalCount());
     }
 
 }

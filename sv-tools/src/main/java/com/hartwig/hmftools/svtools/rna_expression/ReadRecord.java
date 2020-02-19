@@ -428,25 +428,20 @@ public class ReadRecord
         if(!read1.containsSplit() && !read2.containsSplit())
             return insertSize;
 
-        int splitLength1 = read1.containsSplit() ? read1.Cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.N).mapToInt(x -> x.getLength()).sum() : 0;
+        // find unique split lengths and remove them
 
-        int splitLength2 = read2.containsSplit() ? read2.Cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() == CigarOperator.N).mapToInt(x -> x.getLength()).sum() : 0;
+        List<Integer> splitLengths = read1.Cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() == CigarOperator.N).map(x -> x.getLength()).collect(Collectors.toList());
 
-        if(read1.PosStart > read2.PosEnd || read2.PosStart > read1.PosEnd)
+        for(final CigarElement element : read2.Cigar.getCigarElements())
         {
-            // no overlap
-            return insertSize - splitLength1 - splitLength2;
+            if(element.getOperator() == CigarOperator.N && !splitLengths.contains(element.getLength()))
+                splitLengths.add(element.getLength());
         }
 
-        if(splitLength1 > 0 && splitLength2 > 0 && splitLength1 != splitLength2)
-        {
-            // each reads covers a different split
-            return insertSize - splitLength1 - splitLength2;
-        }
+        int totalSplitLength = splitLengths.stream().mapToInt(x -> x).sum();
 
-        return insertSize - max(splitLength1, splitLength2);
+        return insertSize - totalSplitLength;
     }
 
     public boolean containsSplit()
