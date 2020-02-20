@@ -66,7 +66,7 @@ public class RnaEvidence {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);
-                final IndexedBases refBases = refSequence.alignment(samRecord);
+                final IndexedBases refBases = refSequence.alignment();
 
                 consumerSelector.select(samRecord,
                         x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig, refBases));

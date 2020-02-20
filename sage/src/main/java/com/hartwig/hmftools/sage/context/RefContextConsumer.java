@@ -88,7 +88,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         if (inBounds(record)) {
 
             if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
-                final IndexedBases refBases = refGenome.alignment(record);
+                final IndexedBases refBases = refGenome.alignment();
 
                 final CigarHandler handler = new CigarHandler() {
                     @Override
@@ -116,7 +116,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
-        int refIndex = refPosition - refBases.position() + refBases.index();
+        int refIndex = refBases.index(refPosition);
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases.bases(), refIndex, 1);
@@ -136,7 +136,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
-        int refIndex = refPosition - refBases.position() + refBases.index();
+        int refIndex = refBases.index(refPosition);
 
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases.bases(), refIndex, e.getLength() + 1);
@@ -157,7 +157,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private void processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
             final IndexedBases refBases) {
 
-        int refIndex = refPositionStart - refBases.position() + refBases.index();
+        int refIndex = refBases.index(refPositionStart);
 
         for (int i = 0; i < alignmentLength; i++) {
 

@@ -90,7 +90,7 @@ public class PrimaryEvidence {
 
             // Second parse
             slicer.slice(tumorReader, samRecord -> {
-                final IndexedBases refBases = refSequence.alignment(samRecord);
+                final IndexedBases refBases = refSequence.alignment();
                 consumerSelector.select(samRecord,
                         x -> x.primaryReadContext().accept(x.rawDepth() < config.maxReadDepth(), samRecord, config, refBases));
 

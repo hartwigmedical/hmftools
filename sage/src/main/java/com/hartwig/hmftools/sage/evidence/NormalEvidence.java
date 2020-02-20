@@ -68,7 +68,7 @@ public class NormalEvidence {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);
-                final IndexedBases refBases = refSequence.alignment(samRecord);
+                final IndexedBases refBases = refSequence.alignment();
 
                 if (samRecord.getMappingQuality() >= minQuality) {
                     consumerSelector.select(samRecord,

@@ -18,7 +18,7 @@ public class RefSequenceTest {
     public void testRNA() {
         RefSequence rnaRefSequence = new RefSequence(REF_SEQ);
         SAMRecord samRecord = buildSamRecord(990, "20M", "GGGGGAAAAATTTTTCCCCC", "XXXXXXXXXXXXXXXXXXXX");
-        IndexedBases indexedBases = rnaRefSequence.alignment(samRecord);
+        IndexedBases indexedBases = rnaRefSequence.alignment();
         assertEquals(1000, indexedBases.position());
     }
 
