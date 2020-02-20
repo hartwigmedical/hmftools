@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
@@ -14,7 +15,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GATCACCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("11M", readSequence);
+        SAMRecord record = buildSamRecord("11M", readSequence);
         ReadContext victium = ReadContextFactory.createSNVContext(1005, 5, record, refBases);
         assertEquals("CACCT", victium.centerBases());
     }
@@ -25,7 +26,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GAGGCTCATCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("2M3I9M", readSequence);
+        SAMRecord record = buildSamRecord("2M3I9M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("AGGC", 1000, 1, record, refBases);
         assertEquals("GAGGCT", victium.centerBases());
     }
@@ -36,7 +37,7 @@ public class ReadContextFactoryTest {
         String readSequence = "TGAAAAAAAAATCT";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("2M1I11M", readSequence);
+        SAMRecord record = buildSamRecord("2M1I11M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("GA", 1000, 1, record, refBases);
         assertEquals("TGAAAAAAAAAT", victium.centerBases());
     }
@@ -47,7 +48,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GATCATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3I8M", readSequence);
+        SAMRecord record = buildSamRecord("1M3I8M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("ATCA", 1000, 1, record, refBases);
         assertEquals("GATCATCATCT", victium.centerBases());
     }
@@ -58,7 +59,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GATCATCATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3I10M", readSequence);
+        SAMRecord record = buildSamRecord("1M3I10M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("ATCA", 1000, 1, record, refBases);
         assertEquals("GATCATCATCATCT", victium.centerBases());
     }
@@ -69,7 +70,7 @@ public class ReadContextFactoryTest {
         String readSequence = "ATGCGATCAATCTTCC";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("5M4I7M", readSequence);
+        SAMRecord record = buildSamRecord("5M4I7M", readSequence);
         ReadContext victium = ReadContextFactory.createInsertContext("GATCA", 1000, 4, record, refBases);
         assertEquals("GCGATCAA", victium.centerBases());
     }
@@ -80,7 +81,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GATCGCTT";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M5D7M", readSequence);
+        SAMRecord record = buildSamRecord("1M5D7M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("GATCGG", 1000, 0, record, refBases);
         assertEquals("GATCGC", victium.centerBases());
     }
@@ -91,7 +92,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3D8M", readSequence);
+        SAMRecord record = buildSamRecord("1M3D8M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("ATCA", 1000, 1, record, refBases);
         assertEquals("GATCATCT", victium.centerBases());
     }
@@ -102,7 +103,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GATCATCTG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M3D8M", readSequence);
+        SAMRecord record = buildSamRecord("1M3D8M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("ATCA", 1000, 1, record, refBases);
         assertEquals("GATCATCTG", victium.centerBases());
     }
@@ -113,7 +114,7 @@ public class ReadContextFactoryTest {
         String readSequence = "GTCATCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M1D9M", readSequence);
+        SAMRecord record = buildSamRecord("1M1D9M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("GA", 1000, 0, record, refBases);
         assertEquals("GTC", victium.centerBases());
     }
@@ -124,9 +125,33 @@ public class ReadContextFactoryTest {
         String readSequence = "GCATCTAGG";
         IndexedBases refBases = new IndexedBases(1000, 0, refSequence.getBytes());
 
-        SAMRecord record = ReadContextDistanceTest.buildSamRecord("1M2D8M", readSequence);
+        SAMRecord record = buildSamRecord("1M2D8M", readSequence);
         ReadContext victium = ReadContextFactory.createDelContext("GAT", 1000, 0, record, refBases);
         assertEquals("GCA", victium.centerBases());
+    }
+
+    @NotNull
+    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString) {
+        final StringBuilder qualityString = new StringBuilder();
+        for (int i = 0; i < readString.length(); i++) {
+            qualityString.append("A");
+        }
+
+        return buildSamRecord(cigar, readString, qualityString.toString());
+    }
+
+    @NotNull
+    static SAMRecord buildSamRecord(@NotNull final String cigar, @NotNull final String readString, @NotNull final String qualities) {
+        final SAMRecord record = new SAMRecord(null);
+        record.setAlignmentStart(1000);
+        record.setCigarString(cigar);
+        record.setReadString(readString);
+        record.setReadNegativeStrandFlag(false);
+        record.setBaseQualityString(qualities);
+        record.setMappingQuality(20);
+        record.setDuplicateReadFlag(false);
+        record.setReadUnmappedFlag(false);
+        return record;
     }
 
 }

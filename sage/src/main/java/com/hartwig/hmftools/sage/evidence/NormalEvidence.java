@@ -72,7 +72,7 @@ public class NormalEvidence {
 
                 if (samRecord.getMappingQuality() >= minQuality) {
                     consumerSelector.select(samRecord,
-                            x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig, refBases));
+                            x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
                 }
 
             });

@@ -25,7 +25,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(hotspot, readContext);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
-        victim.accept(false, record, config, refBases);
+        victim.accept(false, record, config);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -39,7 +39,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(hotspot, readContext);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
-        victim.accept(false, record, config, refBases);
+        victim.accept(false, record, config);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -53,7 +53,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(hotspot, readContext);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
-        victim.accept(false, record, config, refBases);
+        victim.accept(false, record, config);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -67,7 +67,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(hotspot, readContext);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
-        victim.accept(false, record, config, refBases);
+        victim.accept(false, record, config);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -81,7 +81,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(hotspot, readContext);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
-        victim.accept(false, record, config, refBases);
+        victim.accept(false, record, config);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -95,7 +95,7 @@ public class ReadContextCounterTest {
         final ReadContextCounter victim = new ReadContextCounter(hotspot, readContext);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
-        victim.accept(false, record, config, refBases);
+        victim.accept(false, record, config);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
