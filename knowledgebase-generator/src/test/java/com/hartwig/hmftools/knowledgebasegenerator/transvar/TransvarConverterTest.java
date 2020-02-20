@@ -20,9 +20,9 @@ public class TransvarConverterTest {
 
         assertEquals("ENST00000361445", record.transcript());
         assertEquals("1", record.chromosome());
-        assertEquals(11182158, record.dDNAPosition());
-        assertEquals("A", record.gDNARef());
-        assertEquals("C", record.gDNAAlt());
+        assertEquals(11182158, record.gdnaPosition());
+        assertEquals("A", record.gdnaRef());
+        assertEquals("C", record.gdnaAlt());
         assertEquals("TTA", record.referenceCodon());
         assertEquals("GTA", record.candidateCodons().get(0));
         assertEquals("GTC", record.candidateCodons().get(1));

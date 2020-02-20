@@ -17,19 +17,18 @@ public abstract class TransvarRecord {
     @NotNull
     public abstract String chromosome();
 
-    public abstract long dDNAPosition();
+    public abstract long gdnaPosition();
 
     @NotNull
-    public abstract String gDNARef();
+    public abstract String gdnaRef();
 
     @NotNull
-    public abstract String gDNAAlt();
+    public abstract String gdnaAlt();
 
     @NotNull
     public abstract String referenceCodon();
 
     @NotNull
     public abstract List<String> candidateCodons();
-
 
 }
