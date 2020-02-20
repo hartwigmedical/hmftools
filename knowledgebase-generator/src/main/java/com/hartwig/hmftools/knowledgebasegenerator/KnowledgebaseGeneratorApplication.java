@@ -23,7 +23,6 @@ public class KnowledgebaseGeneratorApplication {
     private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
     private static final String COMPASSIONATE_USE_PROGRAMS_TSV = "compassionate_use_programs_tsv";
 
-
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws ParseException {

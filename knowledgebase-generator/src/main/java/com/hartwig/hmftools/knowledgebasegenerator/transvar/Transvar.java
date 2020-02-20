@@ -4,10 +4,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
@@ -25,10 +28,13 @@ public class Transvar {
     private final String refFastaPath;
     @NotNull
     private final RefVersion refVersion;
+    @NotNull
+    private Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
     public Transvar(@NotNull String refFastaPath, @NotNull RefVersion refVersion) {
         this.refFastaPath = refFastaPath;
         this.refVersion = refVersion;
+        this.transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
     }
 
     @NotNull

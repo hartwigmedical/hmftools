@@ -43,7 +43,6 @@ final class HmfExonPanelBed {
 
     @NotNull
     static List<GenomeRegion> createRegions(@NotNull final List<HmfTranscriptRegion> regions) {
-
         final Set<String> actionableGenes = Sets.newHashSet();
         actionableGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
         actionableGenes.addAll(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
@@ -97,5 +96,4 @@ final class HmfExonPanelBed {
                 .add(String.valueOf(region.end()))
                 .toString();
     }
-
 }
