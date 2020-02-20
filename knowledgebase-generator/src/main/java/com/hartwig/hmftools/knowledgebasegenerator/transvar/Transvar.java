@@ -38,8 +38,14 @@ public class Transvar {
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
-            @NotNull String proteinAnnotation) throws IOException, InterruptedException {
+    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String proteinAnnotation)
+            throws IOException, InterruptedException {
+        HmfTranscriptRegion transcript = transcriptPerGeneMap.get(gene);
+        if (transcript == null) {
+            LOGGER.warn("Could not find gene '{}' in HMF exome gene panel. Skipping hotspot extraction for {}", gene, proteinAnnotation);
+            return Lists.newArrayList();
+        }
+
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
                 "--reference",
@@ -55,7 +61,7 @@ public class Transvar {
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
 
         // Not sure if below is needed to capture all outputs (esp std err).
-//        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+        //        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
 
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
@@ -82,16 +88,16 @@ public class Transvar {
         List<String> stdout = captureStdout(process);
         List<VariantHotspot> hotspots = Lists.newArrayList();
         for (String outLine : stdout) {
-            hotspots.add(transvarToHotpot(outLine));
+            hotspots.add(transvarToHotpot(outLine, transcript));
         }
 
         return hotspots;
     }
 
     @NotNull
-    private static VariantHotspot transvarToHotpot(@NotNull String transvarLine) {
+    private static VariantHotspot transvarToHotpot(@NotNull String transvarLine, @NotNull HmfTranscriptRegion transcript) {
         LOGGER.info("Converting '{}' to Hotspot", transvarLine);
-        // TODO (implement!)
+        TransvarRecord record = TransvarConverter.toTransvarRecord(transvarLine);
         return ImmutableVariantHotspotImpl.builder().chromosome("7").position(0).ref("C").alt("T").build();
     }
 
