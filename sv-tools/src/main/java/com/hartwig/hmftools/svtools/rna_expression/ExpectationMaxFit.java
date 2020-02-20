@@ -66,6 +66,9 @@ public class ExpectationMaxFit
 
                 for(int catId = 0; catId < categoryCount; ++catId)
                 {
+                    if(allocFactors[catId] == 0)
+                        continue;
+
                     double catCount = transCounts[catId];
                     newAllocations[transId] += catCount * ratios[catId] * transAlloc / allocFactors[catId];
                 }

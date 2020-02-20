@@ -55,6 +55,7 @@ public class RnaExpConfig
     public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
+    public static final String SPECIFIC_CHR = "specific_chr";
     public static final String RUN_VALIDATIONS = "validate";
 
     public final List<String> RestrictedGeneIds; // specific set of genes to process
@@ -86,6 +87,7 @@ public class RnaExpConfig
     public final boolean FragmentLengthsByGene;
 
     public final List<String> SpecificTransIds;
+    public final String SpecificChromosome;
     public final boolean RunValidations;
 
     public static final int DEFAULT_MAX_READ_COUNT = 100000;
@@ -153,6 +155,7 @@ public class RnaExpConfig
                 : Lists.newArrayList();
 
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
+        SpecificChromosome = cmd.getOptionValue(SPECIFIC_CHR, "");
 
         GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
@@ -204,6 +207,7 @@ public class RnaExpConfig
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
         SpecificTransIds = Lists.newArrayList();
+        SpecificChromosome = "";
         RunValidations = true;
     }
 
@@ -251,6 +255,7 @@ public class RnaExpConfig
         options.addOption(WRITE_EXPECTED_RATES, false, "Write expected transcript rates to file");
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
+        options.addOption(SPECIFIC_CHR, true, "Specify a single chromosome to analyse");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
 
         return options;

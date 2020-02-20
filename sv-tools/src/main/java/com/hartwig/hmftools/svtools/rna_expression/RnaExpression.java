@@ -113,7 +113,9 @@ public class RnaExpression
         {
             final List<EnsemblGeneData> geneDataList = entry.getValue();
 
-            if(!entry.getKey().equals("19"))
+            final String chromosome = entry.getKey();
+
+            if(mConfig.SpecificChromosome != "" && mConfig.SpecificChromosome.equals(chromosome))
                 continue;
 
             if(mConfig.RestrictedGeneIds.isEmpty())
@@ -267,6 +269,7 @@ public class RnaExpression
                 lsqResiduals[RESIDUAL_TOTAL], lsqResiduals[RESIDUAL_PERC]));
 
         Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
+        Map<String,Double> lsqTransAllocations = geneReadData.getLsqTranscriptAllocations();
 
         for(int transId = 0; transId < transcriptNames.size(); ++transId)
         {
@@ -279,6 +282,7 @@ public class RnaExpression
             }
 
             transAllocations.put(trancriptDefn, transAllocation);
+            lsqTransAllocations.put(trancriptDefn, lsqFitAllocations[transId]);
         }
 
         if(mConfig.WriteTransComboData)

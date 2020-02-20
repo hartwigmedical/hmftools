@@ -75,7 +75,7 @@ public class ResultsWriter
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write("SampleId,GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
-                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Intronic,ReadThrough,Chimeric,Duplicates");
+                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc");
                 mGeneDataWriter.newLine();
             }
 
@@ -93,6 +93,9 @@ public class ResultsWriter
                     fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)], fragmentCounts[typeAsInt(ALT)],
                     fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(READ_THROUGH)],
                     fragmentCounts[typeAsInt(CHIMERIC)], fragmentCounts[typeAsInt(DUPLICATE)]));
+
+            Double unsplicedAlloc = geneReadData.getTranscriptAllocations().get(UNSPLICED_ID);
+            mGeneDataWriter.write(String.format(",%.1f", unsplicedAlloc != null && !Double.isNaN(unsplicedAlloc) ? unsplicedAlloc : 0.0));
 
             mGeneDataWriter.newLine();
 
@@ -116,7 +119,7 @@ public class ResultsWriter
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount,EffectiveLength");
-                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,ExpRateAllocation");
+                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,EmFitAllocation,LsqFitAllocation");
                 mTransDataWriter.write(",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
                 mTransDataWriter.write(",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported");
                 mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments");
@@ -132,10 +135,11 @@ public class ResultsWriter
                     transData.TransName, transData.IsCanonical, transData.exons().size(), effectiveLength));
 
             Double expRateAllocation = geneReadData.getTranscriptAllocations().get(transData.TransName);
+            Double lsqAllocation = geneReadData.getLsqTranscriptAllocations().get(transData.TransName);
 
-            mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%d,%d,%.0f",
+            mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%.1f,%d,%d,%.0f",
                     transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage(),
-                    expRateAllocation != null ? expRateAllocation : 0,
+                    expRateAllocation != null ? expRateAllocation : 0, lsqAllocation != null ? lsqAllocation : 0,
                     transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
 
             mTransDataWriter.write(String.format(",%d,%d,%d",
