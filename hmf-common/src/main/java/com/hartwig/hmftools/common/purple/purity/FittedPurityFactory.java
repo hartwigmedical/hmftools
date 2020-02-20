@@ -163,10 +163,11 @@ public class FittedPurityFactory {
         }
 
         final PurityAdjuster purityAdjuster = new PurityAdjuster(gender, purity, normFactor);
-        final double somaticPenalty =
-                Doubles.greaterThan(somaticPenaltyWeight, 0) ? SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions, variants) : 0;
+        final double somaticPenalty = Doubles.greaterThan(somaticPenaltyWeight, 0)
+                ? somaticPenaltyWeight * SomaticPenaltyFactory.penalty(purityAdjuster, fittedRegions,
+                variants) : 0;
 
-        return builder.score(eventPenalty * deviationPenalty + somaticPenaltyWeight * somaticPenalty)
+        return builder.score(eventPenalty * deviationPenalty + somaticPenalty)
                 .diploidProportion(diploidProportion)
                 .ploidy(averagePloidy)
                 .somaticPenalty(somaticPenalty)
