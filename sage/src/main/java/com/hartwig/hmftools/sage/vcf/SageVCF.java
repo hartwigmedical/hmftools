@@ -25,6 +25,7 @@ import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
@@ -108,13 +109,14 @@ public class SageVCF implements AutoCloseable {
                 samples.add(config.rna());
             }
         }
-        return header(samples);
+        return header(config.version(), samples);
     }
 
     @NotNull
-    private static VCFHeader header(@NotNull final List<String> allSamples) {
+    private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples) {
 
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
+        header.addMetaDataLine(new VCFHeaderLine("sageVersion", version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));

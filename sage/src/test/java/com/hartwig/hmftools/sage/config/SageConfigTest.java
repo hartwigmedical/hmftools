@@ -30,6 +30,7 @@ public class SageConfigTest {
                 .panelOnly(false)
                 .germlineOnly(false)
                 .mnvDetection(false)
+                .version("2.1")
                 .outputFile("output file")
                 .reference("reference")
                 .referenceBam("referenceBam")

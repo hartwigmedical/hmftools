@@ -73,6 +73,9 @@ public interface SageConfig {
         return options;
     }
 
+    @NotNull
+    String version();
+
     int threads();
 
     @NotNull
@@ -141,7 +144,7 @@ public interface SageConfig {
     }
 
     @NotNull
-    static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
+    static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
 
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
         final String reference = cmd.getOptionValue(REFERENCE);
@@ -183,6 +186,7 @@ public interface SageConfig {
         }
 
         return ImmutableSageConfig.builder()
+                .version(version)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
                 .reference(reference)

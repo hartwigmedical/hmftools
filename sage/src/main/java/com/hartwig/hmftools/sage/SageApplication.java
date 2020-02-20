@@ -19,6 +19,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -67,8 +68,11 @@ public class SageApplication implements AutoCloseable {
     }
 
     private SageApplication(final Options options, final String... args) throws IOException, ParseException {
+        final VersionInfo version = new VersionInfo("sage.version");
+        LOGGER.info("SAGE version: {}", version.version());
+
         final CommandLine cmd = createCommandLine(args, options);
-        this.config = SageConfig.createConfig(cmd);
+        this.config = SageConfig.createConfig(version.version(), cmd);
 
         hotspots = readHotspots();
         panel = panelWithHotspots(hotspots);
@@ -97,10 +101,11 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-//        ChromosomePipeline seventeen = createChromosomePipeline("17");
-//        seventeen.addAllRegions(4_000_000);
-//        seventeen.addAllRegions(dictionary.getSequence("17").getSequenceLength());
-//        chromosomePipelines.add(seventeen.submit());
+//        ChromosomePipeline custom = createChromosomePipeline("20");
+//        custom.addAllRegions();
+//        custom.addAllRegions(4_000_000);
+//        custom.addRegion(1000, 2000);
+//        chromosomePipelines.add(custom.submit());
 
         for (Future<ChromosomePipeline> future : chromosomePipelines) {
             ChromosomePipeline pipeline = future.get();
