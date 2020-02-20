@@ -18,10 +18,10 @@ public class RefSequence {
     private final IndexedBases indexedBases;
 
     public RefSequence(@NotNull final GenomeRegion region, @NotNull final ReferenceSequenceFile refGenome) {
-        end = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
-        start = Math.max(1, (int) region.start() - BUFFER);
-        final int actualEnd = Math.min(this.end, (int) region.end() + BUFFER);
-        this.sequence = refGenome.getSubsequenceAt(region.chromosome(), start, actualEnd);
+        final int sequenceEnd = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
+        this.start = Math.max(1, (int) region.start() - BUFFER);
+        this.end = Math.min(sequenceEnd, (int) region.end() + BUFFER);
+        this.sequence = refGenome.getSubsequenceAt(region.chromosome(), start, end);
         this.indexedBases = new IndexedBases(start, 0, sequence.getBases());
     }
 

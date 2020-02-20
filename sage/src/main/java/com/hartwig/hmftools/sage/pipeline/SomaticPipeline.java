@@ -56,25 +56,30 @@ public class SomaticPipeline implements SageVariantPipeline {
     @NotNull
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
 
-        @NotNull final RefSequence refSequence = new RefSequence(region, refGenome);
-
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
         final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config.reference(), config.tumor().size(), variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
 
+        final CompletableFuture<RefSequence> refSequenceFuture =
+                CompletableFuture.supplyAsync(() -> new RefSequence(region, refGenome), executor);
+
+
         final List<CompletableFuture<List<AltContext>>> tumorFutures = Lists.newArrayList();
-        for (int i = 0; i < samples.size(); i++) {
-            final String sample = samples.get(i);
-            final String bam = bams.get(i);
+        final CompletableFuture<Void> doneTumor = refSequenceFuture.thenCompose(refSequence -> {
+            for (int i = 0; i < samples.size(); i++) {
+                final String sample = samples.get(i);
+                final String bam = bams.get(i);
 
-            CompletableFuture<List<AltContext>> candidateFuture =
-                    CompletableFuture.supplyAsync(() -> primaryEvidence.get(sample, bam, refSequence, region), executor);
+                CompletableFuture<List<AltContext>> candidateFuture =
+                        CompletableFuture.supplyAsync(() -> primaryEvidence.get(sample, bam, refSequence, region), executor);
 
-            tumorFutures.add(candidateFuture);
-        }
+                tumorFutures.add(candidateFuture);
+            }
 
-        final CompletableFuture<Void> doneTumor = CompletableFuture.allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()]));
+            return CompletableFuture.allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()]));
+        });
+
 
         final CompletableFuture<List<RefContext>> normalFuture = doneTumor.thenApply(aVoid -> {
 
@@ -83,17 +88,18 @@ public class SomaticPipeline implements SageVariantPipeline {
                 somaticPipelineData.addTumor(i, future.join());
             }
 
-            return normalEvidence.get(refSequence, region, somaticPipelineData.normalCandidates(config.reference()));
+            return normalEvidence.get(refSequenceFuture.join(), region, somaticPipelineData.normalCandidates(config.reference()));
         });
 
         final CompletableFuture<List<RefContext>> rnaFuture = doneTumor.thenApply(aVoid -> {
             if (config.rnaEnabled()) {
-                return rnaEvidence.get(refSequence, region, somaticPipelineData.normalCandidates(config.rna()));
+                return rnaEvidence.get(refSequenceFuture.join(), region, somaticPipelineData.normalCandidates(config.rna()));
             }
             return Lists.newArrayList();
         });
 
-        return rnaFuture.thenApply(aVoid -> {
+        final CompletableFuture<Void> doneNormalAndRna = CompletableFuture.allOf(normalFuture, rnaFuture);
+        return doneNormalAndRna.thenApply(aVoid -> {
 
             somaticPipelineData.addNormal(normalFuture.join());
             somaticPipelineData.addRNA(rnaFuture.join());
