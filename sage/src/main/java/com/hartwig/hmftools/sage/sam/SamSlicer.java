@@ -19,8 +19,6 @@ import htsjdk.samtools.SamReader;
 
 public class SamSlicer {
 
-    private static final int MAX_N = 100;
-
     private final int minMappingQuality;
     private final Collection<GenomeRegion> regions;
 

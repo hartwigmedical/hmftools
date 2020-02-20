@@ -25,6 +25,7 @@ public class CigarTraversal {
                     readIndex += e.getLength();
                     break; // soft clip read bases
                 case N:
+                    handler.handleSkippedReference(record, e, readIndex - 1, refBase - 1);
                     refBase += e.getLength();
                     break;  // reference skip
                 case D:

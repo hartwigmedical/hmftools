@@ -57,8 +57,8 @@ public class RnaEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
-        final SamRecordSelector<AltContext> consumerSelector =
-                new SamRecordSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
+        final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(),
+                candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))

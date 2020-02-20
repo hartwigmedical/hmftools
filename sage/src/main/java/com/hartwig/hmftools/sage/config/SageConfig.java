@@ -136,6 +136,10 @@ public interface SageConfig {
         return !rnaBam().isEmpty();
     }
 
+    default int maxSkippedReferenceRegions() {
+        return 50;
+    }
+
     @NotNull
     static SageConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
 

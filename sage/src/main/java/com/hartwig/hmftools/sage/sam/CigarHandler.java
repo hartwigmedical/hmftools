@@ -15,4 +15,6 @@ public interface CigarHandler {
     // Note that for delete, readIndex and refPosition are BEFORE the event
     default void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, int readIndex, int refPosition) {}
 
+    // Note that for skipped, readIndex and refPosition are BEFORE the event
+    default void handleSkippedReference(@NotNull final SAMRecord record, @NotNull final CigarElement element, int readIndex, int refPosition) {}
 }

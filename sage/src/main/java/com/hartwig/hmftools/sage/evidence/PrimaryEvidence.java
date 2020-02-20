@@ -66,7 +66,7 @@ public class PrimaryEvidence {
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
             @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
         final List<AltContext> altContexts = Lists.newArrayList();
-        final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(altContexts);
+        final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(config.maxSkippedReferenceRegions(), altContexts);
         final HotspotSelector tierSelector = new HotspotSelector(hotspots);
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);

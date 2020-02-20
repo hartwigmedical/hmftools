@@ -38,7 +38,8 @@ public class NormalEvidence {
     private final SamSlicerFactory samSlicerFactory;
     private final ReferenceSequenceFile refGenome;
 
-    public NormalEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
+    public NormalEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
+            @NotNull final ReferenceSequenceFile refGenome) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
@@ -58,8 +59,8 @@ public class NormalEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
-        final SamRecordSelector<AltContext> consumerSelector =
-                new SamRecordSelector<>(candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
+        final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(),
+                candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))
