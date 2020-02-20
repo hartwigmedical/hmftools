@@ -26,15 +26,17 @@ public class GeneReadData
 {
     public final EnsemblGeneData GeneData;
 
-    private final List<RegionReadData> mExonRegions;
-    private final List<long[]> mCommonExonicRegions;
+    private final List<RegionReadData> mExonRegions; // set of unique exons ie with differing start and end positions
+    private final List<long[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
 
     private final List<TranscriptData> mTranscripts;
     private final long[] mTranscriptsRange;
 
+    private final List<long[]> mOtherGeneExonicRegions; // a set of exons from other genes which overlap this gene
+
     // summary results
     private final Map<String, int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
-    private final Map<String, Double> mTranscriptAllocations;
+    private final Map<String, Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
     private final List<TranscriptResults> mTranscriptResults;
 
     private final int[] mFragmentCounts;
@@ -46,6 +48,7 @@ public class GeneReadData
         mExonRegions = Lists.newArrayList();
         mTranscripts = Lists.newArrayList();
         mCommonExonicRegions = Lists.newArrayList();
+        mOtherGeneExonicRegions = Lists.newArrayList();
 
         mTranscriptResults = Lists.newArrayList();
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
@@ -174,10 +177,69 @@ public class GeneReadData
     }
 
     public List<long[]> getCommonExonicRegions() { return mCommonExonicRegions; }
+    public List<long[]> getOtherGeneExonicRegions() { return mOtherGeneExonicRegions; }
+
+    public boolean overlapsOtherGeneExon(long posStart, long posEnd)
+    {
+        return mOtherGeneExonicRegions.stream().anyMatch(x -> x[SE_START] <= posStart && x[SE_END] >= posEnd);
+    }
 
     public long calcExonicRegionLength()
     {
         return mCommonExonicRegions.stream().mapToLong(x -> x[SE_END] - x[SE_START]).sum();
+    }
+
+    public static void markOverlappingGeneRegions(final List<GeneReadData> geneReadDataList)
+    {
+        // record against each gene any exon from another gene which overlaps it
+        int startIndex = 0;
+        for(GeneReadData geneReadData : geneReadDataList)
+        {
+            long geneStart = geneReadData.GeneData.GeneStart;
+            long geneEnd = geneReadData.GeneData.GeneEnd;
+
+            int geneOverlaps = 0;
+            int firstMatchingIndex = -1;
+            for(int i = startIndex; i < geneReadDataList.size(); ++i)
+            {
+                final GeneReadData otherGeneReadData = geneReadDataList.get(i);
+
+                if(otherGeneReadData == geneReadData)
+                    continue;
+
+                if(otherGeneReadData.GeneData.GeneStart > geneEnd)
+                    break;
+
+                if(otherGeneReadData.GeneData.GeneEnd < geneStart)
+                    continue;
+
+                if(firstMatchingIndex == -1)
+                {
+                    // move the start index forward each time the current gene's position moves forward along the chromosome
+                    firstMatchingIndex = i;
+                }
+
+                geneReadData.getOtherGeneExonicRegions().addAll(otherGeneReadData.getCommonExonicRegions());
+                ++geneOverlaps;
+            }
+
+            /*
+            if(geneOverlaps > 3)
+            {
+                LOGGER.info("gene({}) has {} overlaps and {} other-exon regions",
+                        geneReadData.name(), geneOverlaps, geneReadData.getOtherGeneExonicRegions().size());
+            }
+           */
+
+            if(firstMatchingIndex > 0)
+                startIndex = firstMatchingIndex;
+        }
+    }
+
+    public String toString()
+    {
+        return String.format("%s:%s location(%s:%d -> %d) trans(%d)",
+                GeneData.GeneId, GeneData.GeneName, GeneData.Chromosome, GeneData.GeneStart, GeneData.GeneEnd, mTranscripts.size());
     }
 
     @VisibleForTesting

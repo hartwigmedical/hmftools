@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_CAT_INDEX;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.markOverlappingGeneRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
@@ -110,14 +111,21 @@ public class RnaExpression
         int geneCount = 0;
         for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
         {
-            final List<EnsemblGeneData> genesDataList = entry.getValue();
+            final List<EnsemblGeneData> geneDataList = entry.getValue();
 
-            for(EnsemblGeneData geneData : genesDataList)
+            if(!entry.getKey().equals("19"))
+                continue;
+
+            if(mConfig.RestrictedGeneIds.isEmpty())
             {
-                if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
-                    continue;
+                LOGGER.info("processing {} genes for chromosome({})", geneDataList.size(), entry.getKey());
+            }
 
-                processGene(geneData);
+            final List<GeneReadData> geneReadDataList = createGeneReadData(geneDataList);
+
+            for(GeneReadData geneReadData : geneReadDataList)
+            {
+                processGene(geneReadData);
                 ++geneCount;
 
                 if(geneCount > 1 && (geneCount % 100) == 0)
@@ -132,25 +140,45 @@ public class RnaExpression
             mExpExpressionRates.close();
     }
 
-    private void processGene(final EnsemblGeneData geneData)
+    private List<GeneReadData> createGeneReadData(final List<EnsemblGeneData> geneDataList)
     {
-        GeneReadData geneReadData = new GeneReadData(geneData);
+        List<GeneReadData> geneReadDataList = Lists.newArrayList();
 
-        List<TranscriptData> transDataList = Lists.newArrayList(mGeneTransCache.getTranscripts(geneData.GeneId));
-
-        if(transDataList.isEmpty())
+        for(EnsemblGeneData geneData : geneDataList)
         {
-            LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
-            return;
+            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
+                continue;
+
+            GeneReadData geneReadData = new GeneReadData(geneData);
+
+            List<TranscriptData> transDataList = Lists.newArrayList(mGeneTransCache.getTranscripts(geneData.GeneId));
+
+            if(transDataList.isEmpty())
+            {
+                LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
+                continue;
+            }
+
+            if(!mConfig.SpecificTransIds.isEmpty())
+                transDataList = transDataList.stream().filter(x -> mConfig.SpecificTransIds.contains(x.TransName)).collect(Collectors.toList());
+
+            geneReadData.setTranscripts(transDataList);
+
+            geneReadData.generateExonicRegions();
+
+            geneReadDataList.add(geneReadData);
         }
 
-        if(!mConfig.SpecificTransIds.isEmpty())
-            transDataList = transDataList.stream().filter(x -> mConfig.SpecificTransIds.contains(x.TransName)).collect(Collectors.toList());
+        if(mConfig.RestrictedGeneIds.isEmpty())
+        {
+            markOverlappingGeneRegions(geneReadDataList);
+        }
 
-        geneReadData.setTranscripts(transDataList);
+        return geneReadDataList;
+    }
 
-        geneReadData.generateExonicRegions();
-
+    private void processGene(final GeneReadData geneReadData)
+    {
         // cache reference bases for comparison with read bases
         if(mConfig.RefFastaSeqFile != null)
         {
@@ -169,6 +197,8 @@ public class RnaExpression
         long regionStart = geneReadData.getTranscriptsRange()[SE_START] - GENE_FRAGMENT_BUFFER;
         long regionEnd = geneReadData.getTranscriptsRange()[SE_END] + GENE_FRAGMENT_BUFFER;
 
+        final EnsemblGeneData geneData = geneReadData.GeneData;
+
         if(regionStart >= regionEnd)
         {
             LOGGER.warn("invalid gene({}:{}) region({} -> {})", geneData.GeneId, geneData.GeneName, regionStart, regionEnd);
@@ -186,7 +216,7 @@ public class RnaExpression
         if(!mConfig.GeneStatsOnly)
         {
             // report evidence for each gene transcript
-            for (final TranscriptData transData : transDataList)
+            for (final TranscriptData transData : geneReadData.getTranscripts())
             {
                 final TranscriptResults results = calculateTranscriptResults(geneReadData, transData);
                 geneReadData.getTranscriptResults().add(results);
@@ -208,17 +238,17 @@ public class RnaExpression
 
         mExpExpressionRates.generateExpectedRates(geneReadData);
 
+        if(!mExpExpressionRates.validData())
+        {
+            LOGGER.debug("gene({}) invalid expected rates or actuals data", geneReadData.name());
+            return;
+        }
+
         final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mRnaBamReader.getTransComboData());
 
         // add in counts for the unspliced category
         int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
         transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
-
-        if(!mExpExpressionRates.validData())
-        {
-            LOGGER.error("gene({}) invalid expected rates or actuals data", geneReadData.name());
-            return;
-        }
 
         final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
 

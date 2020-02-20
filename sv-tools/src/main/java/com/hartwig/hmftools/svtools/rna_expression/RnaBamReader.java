@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -536,6 +539,13 @@ public class RnaBamReader
             checkFragmentRead(read);
             return;
         }
+
+        // only count this read as intronic if it doesn't overlap with other gene's exons
+        long fragMinPos = min(otherReadStartPos, read.PosStart);
+        long fragMaxPos = max(otherReadEndPos, read.PosEnd);
+
+        if(mCurrentGene.overlapsOtherGeneExon(fragMinPos, fragMaxPos))
+            return;
 
         if(read.PosStart < otherReadStartPos)
         {
