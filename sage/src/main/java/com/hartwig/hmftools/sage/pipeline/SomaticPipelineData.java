@@ -17,7 +17,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -51,7 +50,7 @@ class SomaticPipelineData {
     }
 
     @NotNull
-    public RefContextCandidates normalCandidates(final String sample) {
+    public NormalRefContextCandidates normalCandidates(final String sample) {
 
         NormalRefContextCandidates candidates = new NormalRefContextCandidates(sample);
 

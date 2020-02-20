@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
@@ -47,13 +47,13 @@ public class NormalEvidence {
 
     @NotNull
     public List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
-            @NotNull final RefContextCandidates candidates) {
+            @NotNull final NormalRefContextCandidates candidates) {
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, sageConfig, bounds, refSequence, candidates);
         return get(bounds, refContextConsumer, candidates);
     }
 
     @NotNull
-    private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
+    private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final NormalRefContextCandidates candidates) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 

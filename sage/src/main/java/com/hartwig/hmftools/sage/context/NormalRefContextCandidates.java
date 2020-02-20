@@ -45,7 +45,6 @@ public class NormalRefContextCandidates implements RefContextCandidates {
     }
 
     @NotNull
-    @Override
     public List<RefContext> refContexts() {
         return refContexts;
     }

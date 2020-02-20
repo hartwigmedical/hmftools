@@ -11,7 +11,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.context.TumorRefContextCandidates;
@@ -56,17 +55,18 @@ public class PrimaryEvidence {
         }
         LOGGER.info("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
-        final TumorRefContextCandidates candidates = new TumorRefContextCandidates(sample);
+        final HotspotSelector hotspotSelector = new HotspotSelector(hotspots);
+        final TumorRefContextCandidates candidates = new TumorRefContextCandidates(config, hotspotSelector, sample);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
-        return get(bamFile, bounds, refContextConsumer, candidates);
+        return get(bamFile, bounds, refContextConsumer, candidates, hotspotSelector);
     }
 
     @NotNull
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final GenomeRegion bounds,
-            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
+            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final TumorRefContextCandidates candidates, @NotNull final HotspotSelector hotspotSelector) {
         final List<AltContext> altContexts = Lists.newArrayList();
         final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(config.maxSkippedReferenceRegions(), altContexts);
-        final HotspotSelector tierSelector = new HotspotSelector(hotspots);
+
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
@@ -77,44 +77,19 @@ public class PrimaryEvidence {
             slicer.slice(tumorReader, recordConsumer);
 
             // Add all valid alt contexts
-            candidates.refContexts()
-                    .stream()
-                    .flatMap(x -> x.alts().stream())
-                    .filter(this::refPredicate)
-                    .filter(x -> rawPredicate(tierSelector, x))
-                    .forEach(x -> {
-                        x.setPrimaryReadCounterFromInterim();
-                        altContexts.add(x);
-                    });
+            altContexts.addAll(candidates.altContexts());
 
             // Second parse
             slicer.slice(tumorReader, samRecord -> {
                 consumerSelector.select(samRecord,
                         x -> x.primaryReadContext().accept(x.rawDepth() < config.maxReadDepth(), samRecord, config));
-
             });
 
         } catch (Exception e) {
             throw new CompletionException(e);
         }
 
-        return altContexts.stream().filter(x -> qualPredicate(tierSelector, x)).collect(Collectors.toList());
-    }
-
-    private boolean refPredicate(@NotNull final AltContext altContext) {
-        for (int i = 0; i < altContext.ref().length(); i++) {
-            char base = altContext.ref().charAt(i);
-            if (base != 'G' && base != 'A' && base != 'T' && base != 'C') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private boolean rawPredicate(@NotNull final HotspotSelector tierSelector, @NotNull final AltContext altContext) {
-        return tierSelector.isHotspot(altContext) || altContext.rawSupportAlt() >= config.filter().hardMinTumorRawAltSupport()
-                && altContext.rawBaseQualityAlt() >= config.filter().hardMinTumorRawBaseQuality();
+        return altContexts.stream().filter(x -> qualPredicate(hotspotSelector, x)).collect(Collectors.toList());
     }
 
     private boolean qualPredicate(@NotNull final HotspotSelector tierSelector, @NotNull final AltContext altContext) {
