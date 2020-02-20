@@ -2,13 +2,11 @@ package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TransvarConverterTest {
 
     @Test
-    @Ignore
     public void canConvertTransvar() {
         String line =
                 "MTOR:p.L2230V\tENST00000361445 (protein_coding)\tMTOR\t-\tchr1:g.11182158A>C/c.6688T>G/p.L2230V\tinside_[cds_in_exon_48]"

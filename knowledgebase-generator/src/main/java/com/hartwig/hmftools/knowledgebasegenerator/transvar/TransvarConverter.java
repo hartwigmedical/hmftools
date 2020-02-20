@@ -17,7 +17,7 @@ final class TransvarConverter {
 
         populateTranscript(builder, fields[1]);
         populateCoordinates(builder, fields[4]);
-        populateCodonInfo(builder, fields[5]);
+        populateCodonInfo(builder, fields[6]);
 
         return builder.build();
     }
@@ -30,7 +30,7 @@ final class TransvarConverter {
 
     private static void populateCoordinates(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
         // Field looks like "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
-        String[] chromosomeAndGNDA = (field.split("///")[0]).split(":");
+        String[] chromosomeAndGNDA = (field.split("/")[0]).split(":");
 
         // Remove "chr" from the chromosome
         builder.chromosome(chromosomeAndGNDA[0].substring(3));
@@ -52,12 +52,14 @@ final class TransvarConverter {
                 }
             }
 
-            if (foundRefToAltChar) {
-                gdnaAlt.append(charToEvaluate);
-            } else if (String.valueOf(charToEvaluate).equals(">")) {
-                foundRefToAltChar = true;
-            } else {
-                gdnaRef.append(charToEvaluate);
+            if (foundNonInteger) {
+                if (foundRefToAltChar) {
+                    gdnaAlt.append(charToEvaluate);
+                } else if (String.valueOf(charToEvaluate).equals(">")) {
+                    foundRefToAltChar = true;
+                } else {
+                    gdnaRef.append(charToEvaluate);
+                }
             }
         }
 
@@ -75,7 +77,8 @@ final class TransvarConverter {
                 builder.referenceCodon(infoField.split("=")[1]);
             }
             else if (infoField.contains("candidate_codons")) {
-
+                String candidates = infoField.split("=")[1];
+                builder.addCandidateCodons(candidates.split(","));
             }
         }
     }
