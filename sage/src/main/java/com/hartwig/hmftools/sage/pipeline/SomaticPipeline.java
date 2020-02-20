@@ -36,6 +36,7 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final PrimaryEvidence primaryEvidence;
     private final NormalEvidence normalEvidence;
     private final RnaEvidence rnaEvidence;
+    private final ReferenceSequenceFile refGenome;
 
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
@@ -49,10 +50,13 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
         this.normalEvidence = new NormalEvidence(config, samSlicerFactory, refGenome);
         this.rnaEvidence = new RnaEvidence(config, samSlicerFactory, refGenome);
+        this.refGenome = refGenome;
     }
 
     @NotNull
-    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region, @NotNull final RefSequence refSequence) {
+    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
+
+        @NotNull final RefSequence refSequence = new RefSequence(region, refGenome);
 
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
         final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config.reference(), config.tumor().size(), variantFactory);

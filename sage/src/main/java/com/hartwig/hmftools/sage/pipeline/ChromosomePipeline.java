@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
@@ -87,9 +86,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
     public void addRegion(int start, int end) {
         final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
-
-        final RefSequence refSequence = new RefSequence(region, refGenome);
-        regions.add(sageVariantPipeline.variants(region, refSequence));
+        regions.add(sageVariantPipeline.variants(region));
     }
 
     @NotNull

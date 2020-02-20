@@ -31,6 +31,7 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
     private final List<GenomeRegion> panelRegions;
     private final List<GenomeRegion> highConfidenceRegions;
     private final PrimaryEvidence primaryEvidence;
+    private final ReferenceSequenceFile refGenome;
 
     GermlineOnlyPipeline(final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
             final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions, final List<GenomeRegion> highConfidenceRegions) {
@@ -42,12 +43,15 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
         this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
         this.highConfidenceRegions = highConfidenceRegions;
+        this.refGenome = refGenome;
 
     }
 
     @NotNull
     @Override
-    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region, @NotNull final RefSequence refSequence) {
+    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
+
+        @NotNull final RefSequence refSequence = new RefSequence(region, refGenome);
 
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
         final CompletableFuture<List<AltContext>> candidates =

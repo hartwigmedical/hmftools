@@ -14,7 +14,6 @@ import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
@@ -48,12 +47,11 @@ public class RnaEvidence {
     public List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
             @NotNull final RefContextCandidates candidates) {
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, sageConfig, bounds, refSequence, candidates);
-        return get(refSequence, bounds, refContextConsumer, candidates);
+        return get(bounds, refContextConsumer, candidates);
     }
 
     @NotNull
-    private List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
-            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
+    private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
@@ -66,7 +64,6 @@ public class RnaEvidence {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);
-                final IndexedBases refBases = refSequence.alignment();
 
                 consumerSelector.select(samRecord,
                         x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));

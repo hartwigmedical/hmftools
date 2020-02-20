@@ -15,7 +15,6 @@ import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.context.TumorRefContextCandidates;
-import com.hartwig.hmftools.sage.read.IndexedBases;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
@@ -59,11 +58,11 @@ public class PrimaryEvidence {
 
         final TumorRefContextCandidates candidates = new TumorRefContextCandidates(sample);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
-        return get(bamFile, refSequence, bounds, refContextConsumer, candidates);
+        return get(bamFile, bounds, refContextConsumer, candidates);
     }
 
     @NotNull
-    private List<AltContext> get(@NotNull final String bamFile, @NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
+    private List<AltContext> get(@NotNull final String bamFile, @NotNull final GenomeRegion bounds,
             @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidates candidates) {
         final List<AltContext> altContexts = Lists.newArrayList();
         final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(config.maxSkippedReferenceRegions(), altContexts);
@@ -90,7 +89,6 @@ public class PrimaryEvidence {
 
             // Second parse
             slicer.slice(tumorReader, samRecord -> {
-                final IndexedBases refBases = refSequence.alignment();
                 consumerSelector.select(samRecord,
                         x -> x.primaryReadContext().accept(x.rawDepth() < config.maxReadDepth(), samRecord, config));
 

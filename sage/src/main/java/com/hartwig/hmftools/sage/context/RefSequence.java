@@ -6,8 +6,8 @@ import com.hartwig.hmftools.sage.read.IndexedBases;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RefSequence {
 
@@ -15,12 +15,14 @@ public class RefSequence {
     private final int end;
     private final int start;
     private final ReferenceSequence sequence;
+    private final IndexedBases indexedBases;
 
-    public RefSequence(@NotNull final GenomeRegion region, @NotNull final IndexedFastaSequenceFile refGenome) {
+    public RefSequence(@NotNull final GenomeRegion region, @NotNull final ReferenceSequenceFile refGenome) {
         end = refGenome.getSequenceDictionary().getSequence(region.chromosome()).getSequenceLength();
         start = Math.max(1, (int) region.start() - BUFFER);
         final int actualEnd = Math.min(this.end, (int) region.end() + BUFFER);
         this.sequence = refGenome.getSubsequenceAt(region.chromosome(), start, actualEnd);
+        this.indexedBases = new IndexedBases(start, 0, sequence.getBases());
     }
 
     @VisibleForTesting
@@ -28,6 +30,7 @@ public class RefSequence {
         this.sequence = sequence;
         this.start = sequence.getContigIndex() + 1;
         this.end = start + sequence.getBases().length - 1;
+        this.indexedBases = new IndexedBases(start, 0, sequence.getBases());
     }
 
     /**
@@ -35,7 +38,7 @@ public class RefSequence {
      */
     @NotNull
     public IndexedBases alignment() {
-        return new IndexedBases(start, 0, sequence.getBases());
+        return indexedBases;
     }
 
 }
