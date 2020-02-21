@@ -309,6 +309,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
  ## Version History
  - Upcoming
+   - Reduced memory footprint
+   - Add version info to VCF
    - RNA support
    - CRAM support
    - Filter variants with ref containing bases other then G,A,T,C

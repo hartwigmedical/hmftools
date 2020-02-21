@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.pipeline;
 import java.io.File;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -104,12 +105,16 @@ public class ChromosomePipeline implements AutoCloseable {
         // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        for (final CompletableFuture<List<SageVariant>> region : regions) {
+        Iterator<CompletableFuture<List<SageVariant>>> regionsIterator = regions.iterator();
+        while (regionsIterator.hasNext()) {
+            CompletableFuture<List<SageVariant>> region = regionsIterator.next();
             done = done.thenCombine(region, (aVoid, sageVariants) -> {
 
                 sageVariants.forEach(phase);
                 return null;
             });
+
+            regionsIterator.remove();
         }
 
         return done.thenApply(aVoid -> {

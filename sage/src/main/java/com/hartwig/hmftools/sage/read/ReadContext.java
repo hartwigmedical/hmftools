@@ -49,10 +49,29 @@ public class ReadContext {
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
 
-        this.readBases = IndexedBases.resize(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
+        this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
     }
 
+    private ReadContext(@NotNull final ReadContext clone) {
+        this.position = clone.position;
+        this.repeat = clone.repeat;
+        this.repeatCount = clone.repeatCount;
+        this.microhomology = clone.microhomology;
+        this.distance = clone.distance();
+        this.distanceCigar = clone.distanceCigar();
 
+        this.readBases = IndexedBases.resize(position,
+                clone.readBases.index(),
+                clone.readBases.leftCentreIndex(),
+                clone.readBases.rightCentreIndex(),
+                clone.readBases.flankSize(),
+                clone.readBases.bases());
+    }
+
+    @NotNull
+    public ReadContext minimiseFootprint() {
+        return new ReadContext(this);
+    }
 
     public int position() {
         return position;

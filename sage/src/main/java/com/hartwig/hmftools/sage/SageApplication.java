@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -103,15 +104,16 @@ public class SageApplication implements AutoCloseable {
 
 //        ChromosomePipeline custom = createChromosomePipeline("20");
 //        custom.addAllRegions();
-//        custom.addAllRegions(4_000_000);
-//        custom.addRegion(1000, 2000);
 //        chromosomePipelines.add(custom.submit());
 
-        for (Future<ChromosomePipeline> future : chromosomePipelines) {
+        final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
+        while (chromosomeIterator.hasNext()) {
+            Future<ChromosomePipeline> future = chromosomeIterator.next();
             ChromosomePipeline pipeline = future.get();
             vcf.addVCF(pipeline.vcfFilename());
             pipeline.close();
             LOGGER.info("Finished writing chromosome  {} ", pipeline.chromosome());
+            chromosomeIterator.remove();
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
