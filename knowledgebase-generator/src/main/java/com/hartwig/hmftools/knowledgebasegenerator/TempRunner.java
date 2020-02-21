@@ -7,8 +7,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
 
-import org.apache.logging.log4j.util.Strings;
-
 public class TempRunner {
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -17,7 +15,7 @@ public class TempRunner {
 
         Transvar transvar = new Transvar(refFastaPath, refVersion);
 
-        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation("MTOR", Strings.EMPTY, "L2230V");
+        List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation("MTOR",  "L2230V");
 
         System.out.println(hotspots);
     }
