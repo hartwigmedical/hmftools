@@ -308,6 +308,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
    - CRAM support
    - Filter variants with ref containing bases other then G,A,T,C
    - Look for read context of variants that are partially soft clipped
+   - HG38 support
  - 2.0
    - Revamped small indel / SNV caller
  - 1.1
