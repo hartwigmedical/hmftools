@@ -662,7 +662,7 @@ public class RnaBamReader
         {
             if(mReadDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_READ_DATA.csv";
+                final String outputFileName = mConfig.formOutputFile("read_data.csv");
 
                 mReadDataWriter = createBufferedWriter(outputFileName, false);
                 mReadDataWriter.write("GeneId,GeneName,ReadIndex,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize,FragLength");

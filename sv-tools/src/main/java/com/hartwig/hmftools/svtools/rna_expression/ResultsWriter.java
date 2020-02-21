@@ -71,7 +71,7 @@ public class ResultsWriter
         {
             if(mGeneDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_GENE_DATA.csv";
+                final String outputFileName = mConfig.formOutputFile("gene_data.csv");
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write("SampleId,GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
@@ -115,7 +115,7 @@ public class ResultsWriter
         {
             if(mTransDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_DATA.csv";
+                final String outputFileName = mConfig.formOutputFile("transcript_data.csv");
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount,EffectiveLength");
@@ -169,7 +169,7 @@ public class ResultsWriter
         {
             if(mExonDataWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_EXON_DATA.csv";
+                final String outputFileName = mConfig.formOutputFile("exon_data.csv");
 
                 mExonDataWriter = createBufferedWriter(outputFileName, false);
                 mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd,SharedTrans");
@@ -231,7 +231,7 @@ public class ResultsWriter
         {
             if(mTransComboWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRANS_COMBO_DATA.csv";
+                final String outputFileName = mConfig.formOutputFile("category_counts.csv");
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
                 mTransComboWriter.write("GeneId,GeneName,Category,Count,EmFitCount,LsqFitCount");

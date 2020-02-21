@@ -304,7 +304,7 @@ public class FragmentSizeCalcs
         {
             if(mWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_FRAG_LENGTHS.csv";
+                final String outputFileName = mConfig.formOutputFile("fragment_lengths.csv");
                 mWriter = createBufferedWriter(outputFileName, false);
 
                 if(geneData != null)

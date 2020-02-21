@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Sample;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -58,6 +60,7 @@ public class RnaExpConfig
     public static final String SPECIFIC_CHR = "specific_chr";
     public static final String RUN_VALIDATIONS = "validate";
 
+    public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final String OutputDir;
@@ -99,6 +102,8 @@ public class RnaExpConfig
 
     public RnaExpConfig(final CommandLine cmd)
     {
+        SampleId = cmd.getOptionValue(SAMPLE);
+
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
 
@@ -117,7 +122,8 @@ public class RnaExpConfig
         }
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
-        OutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
+
+        OutputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
 
         BamFile = cmd.getOptionValue(BAM_FILE);
         GcBiasFile = cmd.getOptionValue(GC_BIAS_FILE, "");
@@ -178,8 +184,15 @@ public class RnaExpConfig
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
     }
 
+    public String formOutputFile(final String fileId)
+    {
+        return OutputDir + SampleId + "." + fileId;
+    }
+
     public RnaExpConfig()
     {
+        SampleId = "TEST";
+
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
         OutputDir = "";

@@ -45,7 +45,6 @@ import org.jetbrains.annotations.NotNull;
 public class RnaExpression
 {
     private final RnaExpConfig mConfig;
-    private final String mSampledId;
     private final RnaBamReader mRnaBamReader;
     private final ResultsWriter mResultsWriter;
     private final SvGeneTranscriptCollection mGeneTransCache;
@@ -62,9 +61,7 @@ public class RnaExpression
         mRnaBamReader = new RnaBamReader(mConfig);
         mGcBiasAdjuster = new GcBiasAdjuster(mConfig);
 
-        mSampledId = cmd.getOptionValue(SAMPLE);
         mResultsWriter = new ResultsWriter(mConfig);
-        mResultsWriter.setSampleId(mSampledId);
 
         mGeneTransCache = new SvGeneTranscriptCollection();
         mGeneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
@@ -84,7 +81,7 @@ public class RnaExpression
 
     public void runAnalysis()
     {
-        LOGGER.info("sample({}) running RNA expression analysis", mSampledId);
+        LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
 
         if(!mRnaBamReader.validReader())
         {

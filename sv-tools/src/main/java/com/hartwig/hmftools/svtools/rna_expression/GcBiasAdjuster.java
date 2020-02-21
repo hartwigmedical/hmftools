@@ -400,7 +400,7 @@ public class GcBiasAdjuster
 
         try
         {
-            final String outputFileName = mConfig.OutputDir + "RNA_EXP_GC_DEPTH.csv";
+            final String outputFileName = mConfig.formOutputFile("gc_depth.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("GcRatio,Depth,Frequency");

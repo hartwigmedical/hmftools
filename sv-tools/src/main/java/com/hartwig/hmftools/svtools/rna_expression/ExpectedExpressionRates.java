@@ -706,7 +706,7 @@ public class ExpectedExpressionRates
         {
             if(mExpRateWriter == null)
             {
-                final String outputFileName = mConfig.OutputDir + "RNA_EXP_TRAN_RATES.csv";
+                final String outputFileName = mConfig.formOutputFile("expected_rates.csv");
 
                 mExpRateWriter = createBufferedWriter(outputFileName, false);
                 mExpRateWriter.write("GeneId,GeneName,Transcript,Category,Rate");
