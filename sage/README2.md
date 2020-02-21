@@ -184,14 +184,7 @@ For each candidate variant evidence in the normal is collected in same manner as
 
 ## 4. RNA Counts
 
-If the optional `rna_bam` parameter is supplied, SAGE will query the RNA bam for raw counts of the depth, ref support and alt support at each of the variant locations.  
-
-The following INFO fields will be appended to the VCF:
-
-Field | Description
----|---
-RNA_DP | RNA Depth
-RNA_AD\[0,1\] | RNA Allelic Depth \[Ref,Alt\]
+If the optional `rna_bam` parameter is supplied, gather evidence in the rna in same manner as step 2. 
 
 ## 5. Soft Filters
 
@@ -305,15 +298,16 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 34 | 930 | 110
 48 | 33 | 1286 | 109
 64 | 33 | 1680 | 110
-72 | 32 | 1857 | 115
+72 | 30 | 1660 | 82
 
  ## Version History
- - Upcoming
+ - 2.1
    - Reduced memory footprint
    - Add version info to VCF
    - RNA support
    - CRAM support
    - Filter variants with ref containing bases other then G,A,T,C
+   - Look for read context of variants that are partially soft clipped
  - 2.0
    - Revamped small indel / SNV caller
  - 1.1
