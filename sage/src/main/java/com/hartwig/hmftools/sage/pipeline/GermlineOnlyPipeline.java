@@ -50,13 +50,16 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
     @NotNull
     @Override
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
-
-        @NotNull final RefSequence refSequence = new RefSequence(region, refGenome);
-
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
+
+        final CompletableFuture<RefSequence> refSequenceFuture =
+                CompletableFuture.supplyAsync(() -> new RefSequence(region, refGenome), executor);
+
         final CompletableFuture<List<AltContext>> candidates =
-                CompletableFuture.supplyAsync(() -> primaryEvidence.get(config.reference(), config.referenceBam(), refSequence, region),
-                        executor);
+                refSequenceFuture.thenApply(refSequence -> primaryEvidence.get(config.reference(),
+                        config.referenceBam(),
+                        refSequence,
+                        region));
 
         return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
     }
