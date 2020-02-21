@@ -112,7 +112,7 @@ public class RnaExpression
 
             final String chromosome = entry.getKey();
 
-            if(mConfig.SpecificChromosome != "" && mConfig.SpecificChromosome.equals(chromosome))
+            if(mConfig.SpecificChromosome != "" && !mConfig.SpecificChromosome.equals(chromosome))
                 continue;
 
             if(mConfig.RestrictedGeneIds.isEmpty())
@@ -170,7 +170,7 @@ public class RnaExpression
 
         if(mConfig.RestrictedGeneIds.isEmpty())
         {
-            markOverlappingGeneRegions(geneReadDataList);
+            markOverlappingGeneRegions(geneReadDataList, false);
         }
 
         return geneReadDataList;

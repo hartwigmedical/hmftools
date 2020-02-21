@@ -22,6 +22,9 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class GeneReadData
 {
     public final EnsemblGeneData GeneData;
@@ -41,6 +44,8 @@ public class GeneReadData
     private final List<TranscriptResults> mTranscriptResults;
 
     private final int[] mFragmentCounts;
+
+    private static final Logger LOGGER = LogManager.getLogger(GeneReadData.class);
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
@@ -192,7 +197,7 @@ public class GeneReadData
         return mCommonExonicRegions.stream().mapToLong(x -> x[SE_END] - x[SE_START]).sum();
     }
 
-    public static void markOverlappingGeneRegions(final List<GeneReadData> geneReadDataList)
+    public static void markOverlappingGeneRegions(final List<GeneReadData> geneReadDataList, boolean logExonOverlaps)
     {
         // record against each gene any exon from another gene which overlaps it
         int startIndex = 0;
@@ -224,6 +229,9 @@ public class GeneReadData
 
                 geneReadData.getOtherGeneExonicRegions().addAll(otherGeneReadData.getCommonExonicRegions());
                 ++geneOverlaps;
+
+                if(logExonOverlaps)
+                    logGeneExonOverlaps(geneReadData, otherGeneReadData);
             }
 
             /*
@@ -236,6 +244,23 @@ public class GeneReadData
 
             if(firstMatchingIndex > 0)
                 startIndex = firstMatchingIndex;
+        }
+    }
+
+    public static void logGeneExonOverlaps(final GeneReadData gene1, final GeneReadData gene2)
+    {
+        for(final long[] region1 : gene1.getCommonExonicRegions())
+        {
+            for(final long[] region2 : gene2.getCommonExonicRegions())
+            {
+                if (region1[SE_START] > region2[SE_END] || region1[SE_END] < region2[SE_START])
+                    continue;
+
+                // Time,Chromosome,GeneId1,GeneName1,PosStart1,PosEnd1,GeneId2,GeneName2,PosStart2,PosEnd2
+                LOGGER.info("GENE_EXON_OVERLAP: {},{},{},{},{},{},{},{},{}",
+                        gene1.GeneData.Chromosome, gene1.GeneData.GeneId, gene1.GeneData.GeneName, region1[SE_START], region1[SE_END],
+                        gene2.GeneData.GeneId, gene2.GeneData.GeneName, region2[SE_START], region2[SE_END]);
+            }
         }
     }
 
