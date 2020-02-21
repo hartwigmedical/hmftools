@@ -23,14 +23,17 @@ import com.hartwig.hmftools.common.genome.region.Strand;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
+// This class is only used by tests but we like to keep for future reference
 final class HmfExonPanelBed {
 
     private static final String DELIMITER = "\t";
 
+    @SuppressWarnings("WeakerAccess")
     public static void write19File(@NotNull final String filename) throws IOException {
         writeBedFile(filename, Strings.EMPTY, createRegions(HmfGenePanelSupplier.allGeneList37()));
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static void write38File(@NotNull final String filename) throws IOException {
         writeBedFile(filename, "chr", createRegions(HmfGenePanelSupplier.allGeneList38()));
     }
