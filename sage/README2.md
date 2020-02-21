@@ -301,7 +301,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 72 | 30 | 1660 | 82
 
  ## Version History
- - 2.1
+ - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
    - Reduced memory footprint
    - Add version info to VCF
    - RNA support
