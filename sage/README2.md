@@ -11,6 +11,7 @@ Key features include:
   - no cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
+  - Option to also search for somatic variant support in RNA sample
 
  # Read context 
  
