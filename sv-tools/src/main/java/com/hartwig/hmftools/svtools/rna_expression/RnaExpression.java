@@ -1,35 +1,22 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_CAT_INDEX;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.markOverlappingGeneRegions;
-import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.SAMPLE;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
-import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calculateTranscriptResults;
-import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.allocateTranscriptCountsByLeastSquares;
 
+import java.io.BufferedWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadFactory;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -37,8 +24,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,9 +35,7 @@ public class RnaExpression
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final FragmentSizeCalcs mFragmentSizeCalcs;
-    private final ExpectedExpressionRates mExpExpressionRates;
-
-    private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
+    private final ExecutorService mExecutorService;
 
     public RnaExpression(final CommandLine cmd)
     {
@@ -74,20 +57,22 @@ public class RnaExpression
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.loadEnsemblData(false);
 
-        mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mRnaBamReader);
+        mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache);
 
-        mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig) : null;
+        if(mConfig.Threads > 1)
+        {
+            final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("RnaExp-%d").build();
+            mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+        }
+        else
+        {
+            mExecutorService = null;
+        }
     }
 
     public void runAnalysis()
     {
-        LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
-
-        if(!mRnaBamReader.validReader())
-        {
-            LOGGER.warn("BAM reader init failed");
-            return;
-        }
+        RE_LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
 
         if(mGcBiasAdjuster.enabled())
         {
@@ -104,194 +89,57 @@ public class RnaExpression
                 return;
         }
 
-        // measure read counts of exonic regions for all specific genes
-        int geneCount = 0;
+        // prepared writers for threaded execution
+        BufferedWriter expRatesWriter = mResultsWriter.initialiseExpRatesWriter();
+        BufferedWriter readsWriter = null; // mResultsWriter.initialiseExpRatesWriter();
+
+        List<FutureTask> taskList = new ArrayList<FutureTask>();
+
         for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
         {
             final List<EnsemblGeneData> geneDataList = entry.getValue();
 
             final String chromosome = entry.getKey();
 
-            if(mConfig.SpecificChromosome != "" && !mConfig.SpecificChromosome.equals(chromosome))
+            if(mConfig.skipChromosome(chromosome))
                 continue;
 
-            if(mConfig.RestrictedGeneIds.isEmpty())
+            ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter);
+            chrGeneTask.setWriters(expRatesWriter, readsWriter);
+
+            if(mExecutorService != null)
             {
-                LOGGER.info("processing {} genes for chromosome({})", geneDataList.size(), entry.getKey());
+                FutureTask futureTask = new FutureTask(chrGeneTask);
+
+                taskList.add(futureTask);
+                mExecutorService.execute(futureTask);
+            }
+            else
+            {
+                chrGeneTask.analyseGenes();
+            }
+        }
+
+        if(mExecutorService != null)
+        {
+            // Wait until all results are available and combine them at the same time
+            for (FutureTask futureTask : taskList)
+            {
+                try
+                {
+                    futureTask.get();
+                }
+                catch (Exception e)
+                {
+                    RE_LOGGER.error("task execution error: {}", e.toString());
+                }
             }
 
-            final List<GeneReadData> geneReadDataList = createGeneReadData(geneDataList);
-
-            for(GeneReadData geneReadData : geneReadDataList)
-            {
-                processGene(geneReadData);
-                ++geneCount;
-
-                if(geneCount > 1 && (geneCount % 100) == 0)
-                    LOGGER.info("processed {} genes", geneCount);
-            }
+            mExecutorService.shutdown();
         }
 
         mResultsWriter.close();
         mRnaBamReader.close();
-
-        if(mExpExpressionRates != null)
-            mExpExpressionRates.close();
-    }
-
-    private List<GeneReadData> createGeneReadData(final List<EnsemblGeneData> geneDataList)
-    {
-        List<GeneReadData> geneReadDataList = Lists.newArrayList();
-
-        for(EnsemblGeneData geneData : geneDataList)
-        {
-            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
-                continue;
-
-            GeneReadData geneReadData = new GeneReadData(geneData);
-
-            List<TranscriptData> transDataList = Lists.newArrayList(mGeneTransCache.getTranscripts(geneData.GeneId));
-
-            if(transDataList.isEmpty())
-            {
-                LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
-                continue;
-            }
-
-            if(!mConfig.SpecificTransIds.isEmpty())
-                transDataList = transDataList.stream().filter(x -> mConfig.SpecificTransIds.contains(x.TransName)).collect(Collectors.toList());
-
-            geneReadData.setTranscripts(transDataList);
-
-            geneReadData.generateExonicRegions();
-
-            geneReadDataList.add(geneReadData);
-        }
-
-        if(mConfig.RestrictedGeneIds.isEmpty())
-        {
-            markOverlappingGeneRegions(geneReadDataList, false);
-        }
-
-        return geneReadDataList;
-    }
-
-    private void processGene(final GeneReadData geneReadData)
-    {
-        // cache reference bases for comparison with read bases
-        if(mConfig.RefFastaSeqFile != null)
-        {
-            for (RegionReadData region : geneReadData.getExonRegions())
-            {
-                final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
-                        region.chromosome(), region.start(), region.end()).getBaseString();
-
-                region.setRefBases(regionRefBases);
-            }
-
-            findUniqueBases(geneReadData.getExonRegions());
-        }
-
-        // use a buffer around the gene to pick up reads which span outside its transcripts
-        long regionStart = geneReadData.getTranscriptsRange()[SE_START] - GENE_FRAGMENT_BUFFER;
-        long regionEnd = geneReadData.getTranscriptsRange()[SE_END] + GENE_FRAGMENT_BUFFER;
-
-        final EnsemblGeneData geneData = geneReadData.GeneData;
-
-        if(regionStart >= regionEnd)
-        {
-            LOGGER.warn("invalid gene({}:{}) region({} -> {})", geneData.GeneId, geneData.GeneName, regionStart, regionEnd);
-            return;
-        }
-
-        GenomeRegion geneRegion = GenomeRegions.create(geneData.Chromosome, regionStart, regionEnd);
-
-        mRnaBamReader.readBamCounts(geneReadData, geneRegion);
-
-        runTranscriptEstimation(geneReadData);
-
-        mResultsWriter.writeGeneData(geneReadData);
-
-        if(!mConfig.GeneStatsOnly)
-        {
-            // report evidence for each gene transcript
-            for (final TranscriptData transData : geneReadData.getTranscripts())
-            {
-                final TranscriptResults results = calculateTranscriptResults(geneReadData, transData);
-                geneReadData.getTranscriptResults().add(results);
-
-                mResultsWriter.writeTranscriptResults(geneReadData, results);
-
-                if (mConfig.WriteExonData)
-                {
-                    mResultsWriter.writeExonData(geneReadData, transData);
-                }
-            }
-        }
-    }
-
-    private void runTranscriptEstimation(final GeneReadData geneReadData)
-    {
-        if(mExpExpressionRates == null)
-            return;
-
-        mExpExpressionRates.generateExpectedRates(geneReadData);
-
-        if(!mExpExpressionRates.validData())
-        {
-            LOGGER.debug("gene({}) invalid expected rates or actuals data", geneReadData.name());
-            return;
-        }
-
-        final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mRnaBamReader.getTransComboData());
-
-        double totalCounts = sumVector(transComboCounts);
-
-        if(totalCounts == 0)
-            return;
-
-        // add in counts for the unspliced category
-        int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
-        transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
-
-        final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
-
-        /*
-        final double[] lsqFitAllocations = allocateTranscriptCountsByLeastSquares(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
-        final double[] lsqFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), lsqFitAllocations);
-        double[] lsqResiduals = calcResiduals(transComboCounts, lsqFittedCounts, totalCounts);
-        */
-
-        final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
-        final double[] fittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), fitAllocations);
-
-        double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
-
-        LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
-                geneReadData.name(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
-
-        geneReadData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
-
-        Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
-
-        for(int transId = 0; transId < transcriptNames.size(); ++transId)
-        {
-            double transAllocation = fitAllocations[transId];
-            final String trancriptDefn = transcriptNames.get(transId);
-
-            if(transAllocation > 0)
-            {
-                LOGGER.debug("transcript({}) allocated count({})", trancriptDefn, String.format("%.2f", transAllocation));
-            }
-
-            transAllocations.put(trancriptDefn, transAllocation);
-        }
-
-        if(mConfig.WriteTransComboData)
-        {
-            mResultsWriter.writeTransComboCounts(
-                    geneReadData, mExpExpressionRates.getCategories(), transComboCounts, fittedCounts);
-        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
@@ -306,14 +154,14 @@ public class RnaExpression
 
         if(!RnaExpConfig.checkValid(cmd))
         {
-            LOGGER.error("missing config options, exiting");
+            RE_LOGGER.error("missing config options, exiting");
             return;
         }
 
         RnaExpression rnaExpression = new RnaExpression(cmd);
         rnaExpression.runAnalysis();
 
-        LOGGER.info("RNA expression analysis complete");
+        RE_LOGGER.info("RNA expression analysis complete");
     }
 
     @NotNull

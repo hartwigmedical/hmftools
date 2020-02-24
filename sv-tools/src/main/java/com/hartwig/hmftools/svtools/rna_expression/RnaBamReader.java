@@ -84,22 +84,14 @@ public class RnaBamReader
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
 
-        if(!mConfig.BamFile.isEmpty() && Files.exists(Paths.get(mConfig.BamFile)))
-        {
-            mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
-        }
-        else
-        {
-            mSamReader = null;
-        }
+        mSamReader = !mConfig.BamFile.isEmpty() ?
+                SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         mDuplicateCache = Maps.newHashMap();
         mDuplicateReadIds = Lists.newArrayList();
 
         mReadDataWriter = null;
     }
-
-    public boolean validReader() { return mSamReader != null; }
 
     public void close()
     {
@@ -655,7 +647,7 @@ public class RnaBamReader
 
     private void writeReadData(int readIndex, final ReadRecord read, GeneMatchType geneReadType, int validTranscripts, int calcFragmentLength)
     {
-        if(mConfig.OutputDir.isEmpty())
+        if(mConfig.OutputDir.isEmpty() || mConfig.Threads > 1) // currently doesn't support concurrency
             return;
 
         try

@@ -64,6 +64,7 @@ public class ExpectedExpressionRates
         mExpRateWriter = null;
     }
 
+    public void setWriter(BufferedWriter writer) { mExpRateWriter = writer; }
     public Map<String,List<TranscriptComboData>> getTransComboData() { return mTransComboData; }
 
     public List<String> getCategories() { return mCategories; }
@@ -577,7 +578,7 @@ public class ExpectedExpressionRates
         mTranscriptDefinitions.cacheTranspose();
 
         if(mConfig.WriteExpectedRates)
-            writeExpectedRates(geneReadData);
+            writeExpectedRates(mExpRateWriter, geneReadData, mCategories, mTranscriptIds, mTranscriptDefinitions);
     }
 
     public double[] generateTranscriptCounts(final GeneReadData geneReadData, final List<TranscriptComboData> transComboData)
@@ -631,7 +632,7 @@ public class ExpectedExpressionRates
         {
             double totalCounts = sumVector(categoryCounts) + skippedComboCounts;
 
-            LOGGER.info(String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
+            LOGGER.debug(String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
                     geneReadData.GeneData.GeneName, skippedComboCounts, skippedComboCounts/totalCounts, totalCounts));
         }
 
@@ -700,44 +701,55 @@ public class ExpectedExpressionRates
         mTranscriptIds.clear();
     }
 
-    private void writeExpectedRates(final GeneReadData geneReadData)
+    public static BufferedWriter createWriter(final RnaExpConfig config)
     {
-        if(mConfig.OutputDir.isEmpty())
+        try
+        {
+            final String outputFileName = config.formOutputFile("expected_rates.csv");
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("GeneId,GeneName,Transcript,Category,Rate");
+            writer.newLine();
+            return writer;
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
+            return null;
+        }
+    }
+
+    public static void writeExpectedRates(
+            final BufferedWriter writer, final GeneReadData geneReadData,
+            final List<String> categories, final List<String> transcriptIds, SigMatrix transcriptDefinitions)
+    {
+        if(writer == null)
             return;
 
-        if(mTranscriptDefinitions == null || mCategories.isEmpty() || mTranscriptIds.isEmpty())
+        if(transcriptDefinitions == null || categories.isEmpty() || transcriptIds.isEmpty())
             return;
 
         try
         {
-            if(mExpRateWriter == null)
-            {
-                final String outputFileName = mConfig.formOutputFile("expected_rates.csv");
-
-                mExpRateWriter = createBufferedWriter(outputFileName, false);
-                mExpRateWriter.write("GeneId,GeneName,Transcript,Category,Rate");
-                mExpRateWriter.newLine();
-            }
-
             final String geneId = geneReadData.GeneData.GeneId;
             final String geneName = geneReadData.GeneData.GeneName;
 
-            for(int i = 0; i < mTranscriptDefinitions.Cols; ++i)
+            for(int i = 0; i < transcriptDefinitions.Cols; ++i)
             {
-                final String transcriptId = mTranscriptIds.get(i);
+                final String transcriptId = transcriptIds.get(i);
 
-                for(int j = 0; j < mTranscriptDefinitions.Rows; ++j)
+                for(int j = 0; j < transcriptDefinitions.Rows; ++j)
                 {
-                    final String category = mCategories.get(j);
+                    final String category = categories.get(j);
 
-                    double expRate = mTranscriptDefinitions.get(j, i);
+                    double expRate = transcriptDefinitions.get(j, i);
 
                     if(expRate < 0.0001)
                         continue;
 
-                    mExpRateWriter.write(String.format("%s,%s,%s,%s,%.4f",
+                    writer.write(String.format("%s,%s,%s,%s,%.4f",
                             geneId, geneName, transcriptId, category, expRate));
-                    mExpRateWriter.newLine();
+                    writer.newLine();
                 }
             }
         }

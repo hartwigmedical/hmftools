@@ -37,6 +37,8 @@ public class ResultsWriter
     private BufferedWriter mExonDataWriter;
     private BufferedWriter mTransComboWriter;
 
+    private BufferedWriter mExpRateWriter;
+
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
     public ResultsWriter(final RnaExpConfig config)
@@ -47,6 +49,7 @@ public class ResultsWriter
         mTransDataWriter = null;
         mExonDataWriter = null;
         mTransComboWriter = null;
+        mExpRateWriter = null;
     }
 
     public void close()
@@ -55,6 +58,13 @@ public class ResultsWriter
         closeBufferedWriter(mTransDataWriter);
         closeBufferedWriter(mExonDataWriter);
         closeBufferedWriter(mTransComboWriter);
+        closeBufferedWriter(mExpRateWriter);
+    }
+
+    public BufferedWriter initialiseExpRatesWriter()
+    {
+        mExpRateWriter = ExpectedExpressionRates.createWriter(mConfig);
+        return mExpRateWriter;
     }
 
     public void writeGeneData(final GeneReadData geneReadData)

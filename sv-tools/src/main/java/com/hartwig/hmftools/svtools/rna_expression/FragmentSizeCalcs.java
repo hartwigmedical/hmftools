@@ -48,11 +48,11 @@ public class FragmentSizeCalcs
 
     private static final Logger LOGGER = LogManager.getLogger(FragmentSizeCalcs.class);
 
-    public FragmentSizeCalcs(final RnaExpConfig config, final SvGeneTranscriptCollection geneTransCache, final RnaBamReader bamReader)
+    public FragmentSizeCalcs(final RnaExpConfig config, final SvGeneTranscriptCollection geneTransCache)
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
-        mRnaBamReader = bamReader;
+        mRnaBamReader = new RnaBamReader(config);
 
         mCurrentGeneData = null;
         mCurrentTransDataList = null;

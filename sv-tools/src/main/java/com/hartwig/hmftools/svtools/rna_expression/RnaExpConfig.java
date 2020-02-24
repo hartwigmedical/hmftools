@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Sample;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -59,6 +58,7 @@ public class RnaExpConfig
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
     public static final String SPECIFIC_CHR = "specific_chr";
     public static final String RUN_VALIDATIONS = "validate";
+    public static final String THREADS = "threads";
 
     public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
@@ -90,15 +90,16 @@ public class RnaExpConfig
     public final boolean FragmentLengthsByGene;
 
     public final List<String> SpecificTransIds;
-    public final String SpecificChromosome;
+    public final List<String> SpecificChromosomes;
     public final boolean RunValidations;
+    public final int Threads;
 
     public static final int DEFAULT_MAX_READ_COUNT = 100000;
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 550;
 
     public static final int GENE_FRAGMENT_BUFFER = 1000; // width around a gene within which to search for reads
 
-    private static final Logger LOGGER = LogManager.getLogger(RnaExpConfig.class);
+    public static final Logger RE_LOGGER = LogManager.getLogger(RnaExpConfig.class);
 
     public RnaExpConfig(final CommandLine cmd)
     {
@@ -111,14 +112,14 @@ public class RnaExpConfig
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
             loadGeneIdsFile(inputFile, RestrictedGeneIds);
-            LOGGER.info("file({}) load {} restricted genes", inputFile, RestrictedGeneIds.size());
+            RE_LOGGER.info("file({}) load {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
 
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
             loadGeneIdsFile(inputFile, ExcludedGeneIds);
-            LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
+            RE_LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
@@ -135,12 +136,12 @@ public class RnaExpConfig
 
         try
         {
-            LOGGER.debug("loading indexed fasta reference file");
+            RE_LOGGER.debug("loading indexed fasta reference file");
             RefFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
         }
         catch (IOException e)
         {
-            LOGGER.error("Reference file loading failed: {}", e.toString());
+            RE_LOGGER.error("Reference file loading failed: {}", e.toString());
         }
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
@@ -160,8 +161,10 @@ public class RnaExpConfig
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
 
+        Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
-        SpecificChromosome = cmd.getOptionValue(SPECIFIC_CHR, "");
+        SpecificChromosomes = cmd.hasOption(SPECIFIC_CHR) ? Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(";")).collect(Collectors.toList())
+                : Lists.newArrayList();
 
         GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
@@ -182,6 +185,11 @@ public class RnaExpConfig
         }
 
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
+    }
+
+    public boolean skipChromosome(final String chromosome)
+    {
+        return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);
     }
 
     public String formOutputFile(final String fileId)
@@ -220,12 +228,17 @@ public class RnaExpConfig
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
         SpecificTransIds = Lists.newArrayList();
-        SpecificChromosome = "";
+        SpecificChromosomes = Lists.newArrayList();
         RunValidations = true;
+        Threads = 0;
     }
 
     public static boolean checkValid(final CommandLine cmd)
     {
+        final String bamFile = cmd.getOptionValue(BAM_FILE);
+        if(bamFile == null || !Files.exists(Paths.get(bamFile)))
+            return false;
+
         if(!cmd.hasOption(SAMPLE) || !cmd.hasOption(GENE_TRANSCRIPTS_DIR))
             return false;
 
@@ -269,6 +282,7 @@ public class RnaExpConfig
 
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
         options.addOption(SPECIFIC_CHR, true, "Specify a single chromosome to analyse");
+        options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
 
         return options;
@@ -278,7 +292,7 @@ public class RnaExpConfig
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            LOGGER.warn("invalid gene ID file({})", filename);
+            RE_LOGGER.warn("invalid gene ID file({})", filename);
             return;
         }
 
@@ -299,7 +313,7 @@ public class RnaExpConfig
         }
         catch (IOException e)
         {
-            LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
+            RE_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
         }
     }
 
