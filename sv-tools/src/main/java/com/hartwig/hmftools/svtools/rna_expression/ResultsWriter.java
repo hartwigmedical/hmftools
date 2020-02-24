@@ -32,8 +32,6 @@ public class ResultsWriter
 {
     private final RnaExpConfig mConfig;
 
-    private String mSampledId;
-
     private BufferedWriter mGeneDataWriter;
     private BufferedWriter mTransDataWriter;
     private BufferedWriter mExonDataWriter;
@@ -44,15 +42,12 @@ public class ResultsWriter
     public ResultsWriter(final RnaExpConfig config)
     {
         mConfig = config;
-        mSampledId = "";
 
         mGeneDataWriter = null;
         mTransDataWriter = null;
         mExonDataWriter = null;
         mTransComboWriter = null;
     }
-
-    public void setSampleId(final String sampleId) { mSampledId = sampleId; }
 
     public void close()
     {
@@ -74,7 +69,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile("gene_data.csv");
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
-                mGeneDataWriter.write("SampleId,GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
+                mGeneDataWriter.write("GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
                 mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc");
                 mGeneDataWriter.newLine();
             }
@@ -83,8 +78,8 @@ public class ResultsWriter
 
             long geneLength = geneData.GeneEnd - geneData.GeneStart;
 
-            mGeneDataWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d",
-                    mSampledId, geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneLength,
+            mGeneDataWriter.write(String.format("%s,%s,%s,%d,%d,%d",
+                    geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneLength,
                     geneLength - geneReadData.calcExonicRegionLength(), geneReadData.getTranscripts().size()));
 
             final int[] fragmentCounts = geneReadData.getCounts();
@@ -118,8 +113,8 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile("transcript_data.csv");
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
-                mTransDataWriter.write("SampleId,GeneId,GeneName,TransId,Canonical,ExonCount,EffectiveLength");
-                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,EmFitAllocation,LsqFitAllocation");
+                mTransDataWriter.write("GeneId,GeneName,TransId,Canonical,ExonCount,EffectiveLength");
+                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,FitAllocation");
                 mTransDataWriter.write(",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
                 mTransDataWriter.write(",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported");
                 mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments");
@@ -130,17 +125,15 @@ public class ResultsWriter
 
             double effectiveLength = calcEffectiveLength(transResults.exonicBases(), mConfig.ExpRateFragmentLengths);
 
-            mTransDataWriter.write(String.format("%s,%s,%s,%s,%s,%d,%.0f",
-                    mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
+            mTransDataWriter.write(String.format("%s,%s,%s,%s,%d,%.0f",
+                    geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
                     transData.TransName, transData.IsCanonical, transData.exons().size(), effectiveLength));
 
             double expRateAllocation = geneReadData.getTranscriptAllocation(transData.TransName);
-            Double lsqAllocation = geneReadData.getLsqTranscriptAllocations().get(transData.TransName);
 
-            mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%.1f,%d,%d,%.0f",
+            mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%d,%d,%.0f",
                     transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage(),
-                    expRateAllocation, lsqAllocation != null ? lsqAllocation : 0,
-                    transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
+                    expRateAllocation, transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
 
             mTransDataWriter.write(String.format(",%d,%d,%d",
                     transResults.spliceJunctionsSupported(), transResults.uniqueSpliceJunctions(), transResults.uniqueSpliceJunctionsSupported()));
@@ -172,7 +165,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile("exon_data.csv");
 
                 mExonDataWriter = createBufferedWriter(outputFileName, false);
-                mExonDataWriter.write("SampleId,GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd,SharedTrans");
+                mExonDataWriter.write("GeneId,GeneName,TransId,ExonRank,ExonStart,ExonEnd,SharedTrans");
                 mExonDataWriter.write(",TotalCoverage,AvgDepth,UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth,Fragments,UniqueFragments");
                 mExonDataWriter.write(",SpliceJuncStart,SpliceJuncEnd,UniqueSpliceJuncStart,UniqueSpliceJuncEnd");
                 mExonDataWriter.newLine();
@@ -188,8 +181,8 @@ public class ResultsWriter
                 if (exonReadData == null)
                     continue;
 
-                mExonDataWriter.write(String.format("%s,%s,%s,%s",
-                        mSampledId, geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransName));
+                mExonDataWriter.write(String.format("%s,%s,%s",
+                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransName));
 
                 mExonDataWriter.write(String.format(",%d,%d,%d,%d",
                         exon.ExonRank, exon.ExonStart, exon.ExonEnd, exonReadData.getRefRegions().size()));
@@ -221,8 +214,7 @@ public class ResultsWriter
     }
 
     public void writeTransComboCounts(
-            final GeneReadData geneReadData, final List<String> categories, final double[] counts,
-            final double[] emFittedCounts, final double[] lsqFittedCounts)
+            final GeneReadData geneReadData, final List<String> categories, final double[] counts, final double[] fittedCounts)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -234,7 +226,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile("category_counts.csv");
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
-                mTransComboWriter.write("GeneId,GeneName,Category,Count,EmFitCount,LsqFitCount");
+                mTransComboWriter.write("GeneId,GeneName,Category,Count,FitCount");
                 mTransComboWriter.newLine();
             }
 
@@ -243,9 +235,9 @@ public class ResultsWriter
                 double count = counts[i];
                 final String category = categories.get(i);
 
-                mTransComboWriter.write(String.format("%s,%s,%s,%.0f,%.1f,%.1f",
+                mTransComboWriter.write(String.format("%s,%s,%s,%.0f,%.1f",
                         geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, category,
-                        count, emFittedCounts[i], lsqFittedCounts[i]));
+                        count, fittedCounts[i]));
 
                 mTransComboWriter.newLine();
             }

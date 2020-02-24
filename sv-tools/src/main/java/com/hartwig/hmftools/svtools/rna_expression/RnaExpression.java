@@ -256,25 +256,25 @@ public class RnaExpression
 
         final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
 
+        /*
         final double[] lsqFitAllocations = allocateTranscriptCountsByLeastSquares(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
         final double[] lsqFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), lsqFitAllocations);
-
-        final double[] emFitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
-        final double[] emFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), emFitAllocations);
-
         double[] lsqResiduals = calcResiduals(transComboCounts, lsqFittedCounts, totalCounts);
-        double[] emResiduals = calcResiduals(transComboCounts, emFittedCounts, totalCounts);
+        */
 
-        LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) emResiduals(%.0f perc=%.3f) lsqResiduals(%.0f perc=%.3f)",
-                geneReadData.name(), totalCounts, emResiduals[RESIDUAL_TOTAL], emResiduals[RESIDUAL_PERC],
-                lsqResiduals[RESIDUAL_TOTAL], lsqResiduals[RESIDUAL_PERC]));
+        final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
+        final double[] fittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), fitAllocations);
+
+        double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
+
+        LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
+                geneReadData.name(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
 
         Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
-        Map<String,Double> lsqTransAllocations = geneReadData.getLsqTranscriptAllocations();
 
         for(int transId = 0; transId < transcriptNames.size(); ++transId)
         {
-            double transAllocation = emFitAllocations[transId];
+            double transAllocation = fitAllocations[transId];
             final String trancriptDefn = transcriptNames.get(transId);
 
             if(transAllocation > 0)
@@ -283,13 +283,12 @@ public class RnaExpression
             }
 
             transAllocations.put(trancriptDefn, transAllocation);
-            lsqTransAllocations.put(trancriptDefn, lsqFitAllocations[transId]);
         }
 
         if(mConfig.WriteTransComboData)
         {
             mResultsWriter.writeTransComboCounts(
-                    geneReadData, mExpExpressionRates.getCategories(), transComboCounts, emFittedCounts, lsqFittedCounts);
+                    geneReadData, mExpExpressionRates.getCategories(), transComboCounts, fittedCounts);
         }
     }
 

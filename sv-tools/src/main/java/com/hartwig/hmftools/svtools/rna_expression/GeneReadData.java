@@ -40,7 +40,6 @@ public class GeneReadData
     // summary results
     private final Map<String, int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final Map<String, Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
-    private final Map<String, Double> mLsqTranscriptAllocations; // temp
     private final List<TranscriptResults> mTranscriptResults;
 
     private final int[] mFragmentCounts;
@@ -60,7 +59,6 @@ public class GeneReadData
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
         mTranscriptReadCounts = Maps.newHashMap();
         mTranscriptAllocations = Maps.newHashMap();
-        mLsqTranscriptAllocations = Maps.newHashMap();
 
         mTranscriptsRange = new long[SE_PAIR];
     }
@@ -170,8 +168,6 @@ public class GeneReadData
         Double allocation = mTranscriptAllocations.get(transId);
         return allocation != null ? allocation : 0;
     }
-
-    public Map<String,Double> getLsqTranscriptAllocations() { return mLsqTranscriptAllocations; }
 
     public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
 
