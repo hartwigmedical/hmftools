@@ -84,11 +84,10 @@ public class Transvar {
             }
         }
 
-        List<String> stdout = captureStdout(process);
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        for (String outLine : stdout) {
-            LOGGER.info("Converting '{}' to Hotspots", outLine);
-            hotspots.addAll(TransvarConverter.transvarToHotpots(outLine, transcript));
+        for (String stdoutLine : captureStdout(process)) {
+            LOGGER.info("Converting '{}' to Hotspots", stdoutLine);
+            hotspots.addAll(TransvarConverter.transvarToHotpots(stdoutLine, transcript));
         }
 
         return hotspots;
