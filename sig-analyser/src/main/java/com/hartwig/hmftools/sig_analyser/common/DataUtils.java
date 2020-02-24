@@ -172,6 +172,9 @@ public class DataUtils {
     {
         double total = sumVector(counts);
 
+        if(total <= 0)
+            return;
+
         for(int i = 0; i < counts.length; ++i)
         {
             counts[i] /= total;
