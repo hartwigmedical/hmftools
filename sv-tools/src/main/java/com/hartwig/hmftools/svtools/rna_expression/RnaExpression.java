@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -93,7 +94,8 @@ public class RnaExpression
         BufferedWriter expRatesWriter = mResultsWriter.initialiseExpRatesWriter();
         BufferedWriter readsWriter = null; // mResultsWriter.initialiseExpRatesWriter();
 
-        List<FutureTask> taskList = new ArrayList<FutureTask>();
+        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
+        List<ChromosomeGeneTask> chrTasks = Lists.newArrayList();
 
         for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
         {
@@ -106,12 +108,13 @@ public class RnaExpression
 
             ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter);
             chrGeneTask.setWriters(expRatesWriter, readsWriter);
+            chrTasks.add(chrGeneTask);
 
             if(mExecutorService != null)
             {
                 FutureTask futureTask = new FutureTask(chrGeneTask);
 
-                taskList.add(futureTask);
+                threadTaskList.add(futureTask);
                 mExecutorService.execute(futureTask);
             }
             else
@@ -121,25 +124,30 @@ public class RnaExpression
         }
 
         if(mExecutorService != null)
-        {
-            // Wait until all results are available and combine them at the same time
-            for (FutureTask futureTask : taskList)
-            {
-                try
-                {
-                    futureTask.get();
-                }
-                catch (Exception e)
-                {
-                    RE_LOGGER.error("task execution error: {}", e.toString());
-                }
-            }
+            checkThreadCompletion(threadTaskList);
 
-            mExecutorService.shutdown();
-        }
+        int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
+        RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
         mResultsWriter.close();
         mRnaBamReader.close();
+    }
+
+    private void checkThreadCompletion(final List<FutureTask> taskList)
+    {
+        try
+        {
+            for (FutureTask futureTask : taskList)
+            {
+                futureTask.get();
+            }
+        }
+        catch (Exception e)
+        {
+            RE_LOGGER.error("task execution error: {}", e.toString());
+        }
+
+        mExecutorService.shutdown();
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

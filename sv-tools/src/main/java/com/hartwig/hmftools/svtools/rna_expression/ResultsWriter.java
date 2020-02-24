@@ -67,7 +67,7 @@ public class ResultsWriter
         return mExpRateWriter;
     }
 
-    public void writeGeneData(final GeneReadData geneReadData)
+    public synchronized void writeGeneData(final GeneReadData geneReadData)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -113,7 +113,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeTranscriptResults(final GeneReadData geneReadData, final TranscriptResults transResults)
+    public synchronized void writeTranscriptResults(final GeneReadData geneReadData, final TranscriptResults transResults)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -165,7 +165,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeExonData(final GeneReadData geneReadData, final TranscriptData transData)
+    public synchronized void writeExonData(final GeneReadData geneReadData, final TranscriptData transData)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -225,7 +225,7 @@ public class ResultsWriter
         }
     }
 
-    public void writeTransComboCounts(
+    public synchronized void writeTransComboCounts(
             final GeneReadData geneReadData, final List<String> categories, final double[] counts, final double[] fittedCounts)
     {
         if(mConfig.OutputDir.isEmpty())

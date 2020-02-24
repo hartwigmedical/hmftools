@@ -14,6 +14,11 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class RnaExpUtils
 {
+    public static boolean positionsOverlap(long posStart1, long posEnd1, long posStart2, long posEnd2)
+    {
+        return !(posStart1 > posEnd2 || posEnd1 < posStart2);
+    }
+
     public static List<long[]> deriveCommonRegions(final List<long[]> regions1, final List<long[]> regions2)
     {
         List<long[]> newRegions = Lists.newArrayList();

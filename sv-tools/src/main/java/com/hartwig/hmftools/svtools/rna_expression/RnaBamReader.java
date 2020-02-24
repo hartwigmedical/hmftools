@@ -95,10 +95,11 @@ public class RnaBamReader
 
     public void close()
     {
-        LOGGER.info("read {} total BAM records", mTotalBamReadCount);
-
+        LOGGER.debug("read {} total BAM records", mTotalBamReadCount);
         closeBufferedWriter(mReadDataWriter);
     }
+
+    public int totalBamCount() { return mTotalBamReadCount; }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {

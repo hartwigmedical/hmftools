@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
@@ -13,6 +17,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.markOverl
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calculateTranscriptResults;
 
 import java.io.BufferedWriter;
@@ -39,6 +44,8 @@ public class ChromosomeGeneTask implements Callable
     private final RnaBamReader mRnaBamReader;
     private final ExpectedExpressionRates mExpExpressionRates;
     private final List<EnsemblGeneData> mGeneDataList;
+    private int mCurrentGeneIndex;
+    public int mGenesProcessed;
 
     public ChromosomeGeneTask(
             final RnaExpConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
@@ -51,15 +58,21 @@ public class ChromosomeGeneTask implements Callable
 
         mGeneDataList = geneDataList;
 
+        mCurrentGeneIndex = 0;
         mRnaBamReader = new RnaBamReader(mConfig);
         mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig) : null;
     }
 
     public void setWriters(BufferedWriter expRatesWriter, BufferedWriter readsWriter)
     {
+        if(mExpExpressionRates == null)
+            return;
+
         mExpExpressionRates.setWriter(expRatesWriter);
         // mRnaBamReader.setWriter(readsWriter);
     }
+
+    public final RnaBamReader getBamReader() { return mRnaBamReader; }
 
     @Override
     public Long call()
@@ -70,25 +83,55 @@ public class ChromosomeGeneTask implements Callable
 
     public void analyseGenes()
     {
-        final List<GeneReadData> geneReadDataList = createGeneReadData(mGeneDataList);
-
         if(mConfig.RestrictedGeneIds.isEmpty())
         {
             RE_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
-        int geneCount = 0;
-
-        for(GeneReadData geneReadData : geneReadDataList)
+        while(mCurrentGeneIndex < mGeneDataList.size())
         {
-            processGene(geneReadData);
-            ++geneCount;
+            final List<EnsemblGeneData> overlappingGenes = findNextOverlappingGenes();
+            final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
-            if(geneCount > 1 && (geneCount % 100) == 0)
+            for (GeneReadData geneReadData : geneReadDataList)
             {
-                RE_LOGGER.info("chr({}) processed {} genes", mChromosome, geneCount);
+                processGene(geneReadData);
+                ++mGenesProcessed;
+
+                if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
+                {
+                    RE_LOGGER.info("chr({}) processed {} genes", mChromosome, mGenesProcessed);
+                }
             }
         }
+    }
+
+    private List<EnsemblGeneData> findNextOverlappingGenes()
+    {
+        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
+
+        while(mCurrentGeneIndex < mGeneDataList.size())
+        {
+            EnsemblGeneData geneData = mGeneDataList.get(mCurrentGeneIndex);
+
+            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
+            {
+                ++mCurrentGeneIndex;
+                continue;
+            }
+
+            if(overlappingGenes.isEmpty() || overlappingGenes.stream().anyMatch(x -> positionsOverlap(geneData.GeneStart, geneData.GeneEnd, x.GeneStart, x.GeneEnd)))
+            {
+                overlappingGenes.add(geneData);
+                ++mCurrentGeneIndex;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return overlappingGenes;
     }
 
     private List<GeneReadData> createGeneReadData(final List<EnsemblGeneData> geneDataList)
@@ -97,9 +140,6 @@ public class ChromosomeGeneTask implements Callable
 
         for(EnsemblGeneData geneData : geneDataList)
         {
-            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
-                continue;
-
             GeneReadData geneReadData = new GeneReadData(geneData);
 
             List<TranscriptData> transDataList = Lists.newArrayList(mGeneTransCache.getTranscripts(geneData.GeneId));
@@ -125,7 +165,30 @@ public class ChromosomeGeneTask implements Callable
             markOverlappingGeneRegions(geneReadDataList, false);
         }
 
+        // if(geneReadDataList.size() > 1)
+        //    logOverlappingGenes(geneReadDataList);
+
         return geneReadDataList;
+    }
+
+    private void logOverlappingGenes(final List<GeneReadData> overlappingGenes)
+    {
+        String geneNamesStr = "";
+        int transcriptCount = 0;
+        long minRange = -1;
+        long maxRange = 0;
+
+        for(GeneReadData geneReadData : overlappingGenes)
+        {
+            geneNamesStr = appendStr(geneNamesStr, geneReadData.GeneData.GeneName, ';');
+            transcriptCount += geneReadData.getTranscripts().size();
+            maxRange =  max(maxRange, geneReadData.GeneData.GeneEnd);
+            minRange =  minRange < 0 ? geneReadData.GeneData.GeneStart : min(minRange, geneReadData.GeneData.GeneStart);
+        }
+
+        // Time,Chromosome,GeneCount,TranscriptCount,RangeStart,RangeEnd,GeneNames
+        RE_LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{}", // chr({}) genes({}) transcripts({}) range({} -> {}),
+                mChromosome, overlappingGenes.size(), transcriptCount, minRange, maxRange, geneNamesStr);
     }
 
     private void processGene(final GeneReadData geneReadData)

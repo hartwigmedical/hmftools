@@ -208,15 +208,13 @@ public class GeneReadData
     public static void markOverlappingGeneRegions(final List<GeneReadData> geneReadDataList, boolean logExonOverlaps)
     {
         // record against each gene any exon from another gene which overlaps it
-        int startIndex = 0;
         for(GeneReadData geneReadData : geneReadDataList)
         {
             long geneStart = geneReadData.GeneData.GeneStart;
             long geneEnd = geneReadData.GeneData.GeneEnd;
 
             int geneOverlaps = 0;
-            int firstMatchingIndex = -1;
-            for(int i = startIndex; i < geneReadDataList.size(); ++i)
+            for(int i = 0; i < geneReadDataList.size(); ++i)
             {
                 final GeneReadData otherGeneReadData = geneReadDataList.get(i);
 
@@ -228,12 +226,6 @@ public class GeneReadData
 
                 if(otherGeneReadData.GeneData.GeneEnd < geneStart)
                     continue;
-
-                if(firstMatchingIndex == -1)
-                {
-                    // move the start index forward each time the current gene's position moves forward along the chromosome
-                    firstMatchingIndex = i;
-                }
 
                 geneReadData.getOtherGeneExonicRegions().addAll(otherGeneReadData.getCommonExonicRegions());
                 ++geneOverlaps;
@@ -249,9 +241,6 @@ public class GeneReadData
                         geneReadData.name(), geneOverlaps, geneReadData.getOtherGeneExonicRegions().size());
             }
            */
-
-            if(firstMatchingIndex > 0)
-                startIndex = firstMatchingIndex;
         }
     }
 

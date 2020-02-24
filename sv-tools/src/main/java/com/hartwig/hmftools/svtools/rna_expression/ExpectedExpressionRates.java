@@ -719,7 +719,7 @@ public class ExpectedExpressionRates
         }
     }
 
-    public static void writeExpectedRates(
+    public synchronized static void writeExpectedRates(
             final BufferedWriter writer, final GeneReadData geneReadData,
             final List<String> categories, final List<String> transcriptIds, SigMatrix transcriptDefinitions)
     {
