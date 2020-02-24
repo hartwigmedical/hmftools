@@ -395,6 +395,80 @@ public class RnaExpectedRates
     }
 
     @Test
+    public void testSingleExonicRegions()
+    {
+        RnaExpConfig config = new RnaExpConfig();
+        config.ExpRateFragmentLengths.add(new int[] {30, 1});
+        config.ReadLength = 10;
+
+        ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
+
+        String geneId = "GENE01";
+
+        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", (byte)1, 100, 400, "");
+
+        // first the single transcript and single exon
+        String transId1 = "TRANS01";
+
+        TranscriptData transData1 = new TranscriptData(1, transId1, geneId, true, (byte)1,
+                100, 300, null,null, "");
+
+        transData1.exons().add(new ExonData(1, 100, 300, 1, -1, -1));
+
+        GeneReadData geneReadData = new GeneReadData(geneData);
+
+        List<TranscriptData> transcripts = Lists.newArrayList(transData1);
+
+        geneReadData.setTranscripts(transcripts);
+        geneReadData.generateExonicRegions();
+        eeRates.generateExpectedRates(geneReadData);
+
+        Map<String,List<TranscriptComboData>> transComboData = eeRates.getTransComboData();
+        assertEquals(2, transComboData.size());
+        assertTrue(transComboData.containsKey(transId1));
+        assertTrue(transComboData.containsKey(UNSPLICED_ID));
+
+        SigMatrix rates = eeRates.getTranscriptDefinitions();
+        assertEquals(2, rates.Cols);
+        assertEquals(2, rates.Rows);
+
+        assertEquals(2, eeRates.getCategories().size());
+        assertEquals(UNSPLICED_ID, eeRates.getCategories().get(0));
+
+        assertEquals(0, rates.get(0, 0), 0.001);
+        assertEquals(0, rates.get(1, 0), 0.001);
+        assertEquals(0, rates.get(0, 1), 0.001);
+        assertEquals(1, rates.get(1, 1), 0.001); // 100% in the actual trans' count
+
+        String transId2 = "TRANS02";
+
+        TranscriptData transData2 = new TranscriptData(1, transId2, geneId, true, (byte)1,
+                200, 400, null,null, "");
+
+        transData2.exons().add(new ExonData(1, 200, 400, 1, -1, -1));
+
+        geneReadData = new GeneReadData(geneData);
+
+        transcripts = Lists.newArrayList(transData1, transData2);
+
+        geneReadData.setTranscripts(transcripts);
+        geneReadData.generateExonicRegions();
+
+        List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
+        assertEquals(1, commonExonicRegions.size());
+        assertEquals(100, commonExonicRegions.get(0)[SE_START]);
+        assertEquals(400, commonExonicRegions.get(0)[SE_END]);
+
+        eeRates.generateExpectedRates(geneReadData);
+
+        transComboData = eeRates.getTransComboData();
+        assertEquals(3, transComboData.size());
+        assertTrue(transComboData.containsKey(transId1));
+        assertTrue(transComboData.containsKey(transId2));
+        assertTrue(transComboData.containsKey(UNSPLICED_ID));
+    }
+
+    @Test
     public void testExpectationMaxFit()
     {
         Configurator.setRootLevel(Level.DEBUG);

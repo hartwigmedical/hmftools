@@ -97,10 +97,7 @@ public class ExpectedExpressionRates
 
         final List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
 
-        if(commonExonicRegions.size() < 2)
-            return;
-
-        // process each transcript as though it were transcribed
+        // apply fragment reads across each transcript as though it were fully transcribed
         final List<TranscriptData> transDataList = geneReadData.getTranscripts();
 
         for(final int[] flData : mConfig.ExpRateFragmentLengths)
@@ -129,44 +126,53 @@ public class ExpectedExpressionRates
             }
 
             // and generate fragments assuming an unspliced gene
-            long regionStart = geneReadData.getTranscriptsRange()[SE_START];
-            long regionEnd = geneReadData.getTranscriptsRange()[SE_END];
-
-            int exonicRegionIndex = 0;
-            long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
-            long nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
-
             List<String> emptyTrans = Lists.newArrayList();
 
-            for (long startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
+            if(commonExonicRegions.size() > 1)
             {
-                if (startPos <= currentExonicEnd)
+                long regionStart = geneReadData.getTranscriptsRange()[SE_START];
+                long regionEnd = geneReadData.getTranscriptsRange()[SE_END];
+
+                int exonicRegionIndex = 0;
+                long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
+                long nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+
+                for (long startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
                 {
-                    // check possible transcript exonic matches
-                    allocateUnsplicedCounts(transDataList, startPos);
-                }
-                else
-                {
-                    // check for purely intronic fragments
-                    if (startPos < nextExonicStart)
+                    if (startPos <= currentExonicEnd)
                     {
-                        addTransComboData(UNSPLICED_ID, emptyTrans, UNSPLICED);
+                        // check possible transcript exonic matches
+                        allocateUnsplicedCounts(transDataList, startPos);
                     }
                     else
                     {
-                        ++exonicRegionIndex;
-                        currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
-
-                        if (exonicRegionIndex < commonExonicRegions.size() - 1)
+                        // check for purely intronic fragments
+                        if (startPos < nextExonicStart)
                         {
-                            nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+                            addTransComboData(UNSPLICED_ID, emptyTrans, UNSPLICED);
                         }
                         else
                         {
-                            nextExonicStart = -1;
+                            ++exonicRegionIndex;
+                            currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
+
+                            if (exonicRegionIndex < commonExonicRegions.size() - 1)
+                            {
+                                nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+                            }
+                            else
+                            {
+                                nextExonicStart = -1;
+                            }
                         }
                     }
                 }
+            }
+            else
+            {
+                // force an empty entry even though it won't have an category ratios set for it
+                List<TranscriptComboData> emptyList = Lists.newArrayList(new TranscriptComboData(emptyTrans));
+                mTransComboData.put(UNSPLICED_ID, emptyList);
             }
         }
 

@@ -245,6 +245,11 @@ public class RnaExpression
 
         final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mRnaBamReader.getTransComboData());
 
+        double totalCounts = sumVector(transComboCounts);
+
+        if(totalCounts == 0)
+            return;
+
         // add in counts for the unspliced category
         int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
         transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
@@ -257,7 +262,6 @@ public class RnaExpression
         final double[] emFitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
         final double[] emFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), emFitAllocations);
 
-        double totalCounts = sumVector(transComboCounts);
         double[] lsqResiduals = calcResiduals(transComboCounts, lsqFittedCounts, totalCounts);
         double[] emResiduals = calcResiduals(transComboCounts, emFittedCounts, totalCounts);
 
@@ -283,8 +287,10 @@ public class RnaExpression
         }
 
         if(mConfig.WriteTransComboData)
+        {
             mResultsWriter.writeTransComboCounts(
                     geneReadData, mExpExpressionRates.getCategories(), transComboCounts, emFittedCounts, lsqFittedCounts);
+        }
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

@@ -113,7 +113,7 @@ public class TranscriptComboData
 
     public String toString()
     {
-        return String.format("ids(%d: {}) counts(spl=%d short=%d long=%d unspl=%d)",
+        return String.format("ids(%d: %s) counts(spl=%d short=%d long=%d unspl=%d)",
                 mTranscripts.size(), mTranscriptsKey,
                 mCounts[typeAsInt(SPLICED)], mCounts[typeAsInt(SHORT)], mCounts[typeAsInt(LONG)], mCounts[typeAsInt(UNSPLICED)]);
     }

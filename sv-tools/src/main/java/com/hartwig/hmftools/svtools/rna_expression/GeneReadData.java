@@ -164,6 +164,13 @@ public class GeneReadData
     }
 
     public Map<String,Double> getTranscriptAllocations() { return mTranscriptAllocations; }
+
+    public double getTranscriptAllocation(final String transId)
+    {
+        Double allocation = mTranscriptAllocations.get(transId);
+        return allocation != null ? allocation : 0;
+    }
+
     public Map<String,Double> getLsqTranscriptAllocations() { return mLsqTranscriptAllocations; }
 
     public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
