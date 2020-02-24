@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +41,7 @@ public class Transvar {
             throws IOException, InterruptedException {
         HmfTranscriptRegion transcript = transcriptPerGeneMap.get(gene);
         if (transcript == null) {
-            LOGGER.warn("Could not find gene '{}' in HMF exome gene panel. Skipping hotspot extraction for {}", gene, proteinAnnotation);
+            LOGGER.warn("Could not find gene '{}' in HMF exome gene panel. Skipping hotspot extraction for '{}'", gene, proteinAnnotation);
             return Lists.newArrayList();
         }
 
@@ -88,17 +87,11 @@ public class Transvar {
         List<String> stdout = captureStdout(process);
         List<VariantHotspot> hotspots = Lists.newArrayList();
         for (String outLine : stdout) {
-            hotspots.add(transvarToHotpot(outLine, transcript));
+            LOGGER.info("Converting '{}' to Hotspots", outLine);
+            hotspots.addAll(TransvarConverter.transvarToHotpots(outLine, transcript));
         }
 
         return hotspots;
-    }
-
-    @NotNull
-    private static VariantHotspot transvarToHotpot(@NotNull String transvarLine, @NotNull HmfTranscriptRegion transcript) {
-        LOGGER.info("Converting '{}' to Hotspot", transvarLine);
-        TransvarRecord record = TransvarConverter.toTransvarRecord(transvarLine);
-        return ImmutableVariantHotspotImpl.builder().chromosome("7").position(0).ref("C").alt("T").build();
     }
 
     @NotNull
