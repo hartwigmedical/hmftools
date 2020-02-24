@@ -161,7 +161,10 @@ public class ReadRecord
             RegionMatchType matchType = getRegionMatchType(region);
             mMappedRegions.put(region, matchType);
 
-            if(matchType == EXON_INTRON || Cigar.containsOperator(CigarOperator.S))
+            boolean checkMissedJunctions = matchType == EXON_INTRON
+                    || (Cigar.containsOperator(CigarOperator.S) && (matchType == EXON_BOUNDARY || matchType == EXON_MATCH));
+
+            if(checkMissedJunctions)
                 checkMissedJunctions(region);
         }
 
@@ -467,7 +470,7 @@ public class ReadRecord
             extraBaseLength = (int)(region.start() - readStartPos);
         }
 
-        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S)
+        if(Cigar.getFirstCigarElement().getOperator() == CigarOperator.S && readStartPos == region.start())
         {
             extraBaseLength += Cigar.getFirstCigarElement().getLength();
         }
@@ -475,6 +478,7 @@ public class ReadRecord
         // allow a single base match if only 1 region matches
         if(extraBaseLength >= 1)
         {
+            // first check for a match with the next exon on the lower side
             final String extraBases = ReadBases.substring(0, extraBaseLength);
 
             final List<RegionReadData> matchedRegions = region.getPreRegions().stream()
@@ -504,13 +508,14 @@ public class ReadRecord
             extraBaseLength = (int)(readEndPos - region.end());
         }
 
-        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S)
+        if(Cigar.getLastCigarElement().getOperator() == CigarOperator.S && readEndPos == region.end())
         {
             extraBaseLength += Cigar.getLastCigarElement().getLength();
         }
 
         if(extraBaseLength >= 1)
         {
+            // now check for a match to the next exon up
             final String extraBases = ReadBases.substring(ReadBases.length() - extraBaseLength, ReadBases.length());
 
             final List<RegionReadData> matchedRegions = region.getPostRegions().stream()
