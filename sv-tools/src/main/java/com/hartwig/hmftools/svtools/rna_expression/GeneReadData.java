@@ -40,6 +40,7 @@ public class GeneReadData
     // summary results
     private final Map<String, int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final Map<String, Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
+    private double mFitResiduals;
     private final List<TranscriptResults> mTranscriptResults;
 
     private final int[] mFragmentCounts;
@@ -59,6 +60,7 @@ public class GeneReadData
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
         mTranscriptReadCounts = Maps.newHashMap();
         mTranscriptAllocations = Maps.newHashMap();
+        mFitResiduals = 0;
 
         mTranscriptsRange = new long[SE_PAIR];
     }
@@ -162,6 +164,9 @@ public class GeneReadData
     }
 
     public Map<String,Double> getTranscriptAllocations() { return mTranscriptAllocations; }
+
+    public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
+    public double getFitResiduals() { return mFitResiduals; }
 
     public double getTranscriptAllocation(final String transId)
     {

@@ -270,6 +270,8 @@ public class RnaExpression
         LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
                 geneReadData.name(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
 
+        geneReadData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
+
         Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
 
         for(int transId = 0; transId < transcriptNames.size(); ++transId)

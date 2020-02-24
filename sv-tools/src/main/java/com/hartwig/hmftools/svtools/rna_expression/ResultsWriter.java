@@ -70,7 +70,7 @@ public class ResultsWriter
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write("GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
-                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc");
+                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc,FitResiduals");
                 mGeneDataWriter.newLine();
             }
 
@@ -90,7 +90,9 @@ public class ResultsWriter
                     fragmentCounts[typeAsInt(CHIMERIC)], fragmentCounts[typeAsInt(DUPLICATE)]));
 
             Double unsplicedAlloc = geneReadData.getTranscriptAllocations().get(UNSPLICED_ID);
-            mGeneDataWriter.write(String.format(",%.1f", unsplicedAlloc != null && !Double.isNaN(unsplicedAlloc) ? unsplicedAlloc : 0.0));
+            mGeneDataWriter.write(String.format(",%.1f,%.1f",
+                    unsplicedAlloc != null && !Double.isNaN(unsplicedAlloc) ? unsplicedAlloc : 0.0,
+                    geneReadData.getFitResiduals()));
 
             mGeneDataWriter.newLine();
 
