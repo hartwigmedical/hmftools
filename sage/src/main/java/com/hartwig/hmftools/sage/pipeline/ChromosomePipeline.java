@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -14,10 +16,10 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.phase.Phase;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
 import com.hartwig.hmftools.sage.vcf.SageChromosomeVCF;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +32,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class ChromosomePipeline implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger(ChromosomePipeline.class);
+    private static final EnumSet<SageVariantTier> PANEL_ONLY_TIERS = EnumSet.of(SageVariantTier.HOTSPOT, SageVariantTier.PANEL);
 
     private final String chromosome;
     private final SageConfig config;
@@ -49,8 +52,8 @@ public class ChromosomePipeline implements AutoCloseable {
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.sageVariantPipeline = config.germlineOnly()
-                ? new GermlineOnlyPipeline(config, executor, hotspots, panelRegions, highConfidenceRegions)
-                : new SomaticPipeline(config, executor, hotspots, panelRegions, highConfidenceRegions);
+                ? new GermlineOnlyPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions)
+                : new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions);
     }
 
     @NotNull
@@ -73,7 +76,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
         for (int i = 0; ; i++) {
             int start = 1 + i * regionSliceSize;
-            int end = Math.min(start + regionSliceSize, maxPosition);
+            int end = Math.min(start + regionSliceSize - 1, maxPosition);
             addRegion(start, end);
 
             if (end >= maxPosition) {
@@ -84,9 +87,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
     public void addRegion(int start, int end) {
         final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
-
-        final RefSequence refSequence = new RefSequence(region, refGenome);
-        regions.add(sageVariantPipeline.variants(region, refSequence));
+        regions.add(sageVariantPipeline.variants(region));
     }
 
     @NotNull
@@ -104,12 +105,16 @@ public class ChromosomePipeline implements AutoCloseable {
         // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        for (final CompletableFuture<List<SageVariant>> region : regions) {
+        Iterator<CompletableFuture<List<SageVariant>>> regionsIterator = regions.iterator();
+        while (regionsIterator.hasNext()) {
+            CompletableFuture<List<SageVariant>> region = regionsIterator.next();
             done = done.thenCombine(region, (aVoid, sageVariants) -> {
 
                 sageVariants.forEach(phase);
                 return null;
             });
+
+            regionsIterator.remove();
         }
 
         return done.thenApply(aVoid -> {
@@ -124,12 +129,21 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     private boolean include(@NotNull final SageVariant entry) {
+
+        if (config.panelOnly() && !PANEL_ONLY_TIERS.contains(entry.tier())) {
+            return false;
+        }
+
         if (entry.isPassing()) {
             return true;
         }
 
         if (config.filter().hardFilter()) {
             return false;
+        }
+
+        if (entry.tier() == SageVariantTier.HOTSPOT) {
+            return true;
         }
 
         if (config.germlineOnly()) {

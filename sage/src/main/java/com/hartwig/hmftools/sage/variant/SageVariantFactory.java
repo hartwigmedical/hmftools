@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.variant;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -39,17 +40,17 @@ public class SageVariantFactory {
         final SageVariantTier tier = tierSelector.tier(normal);
         final Set<String> filters = germlineOnlyFilters(normal);
 
-        return new SageVariant(tier, filters, normal, Collections.emptyList());
+        return new SageVariant(tier, filters, normal, Optional.empty(), Collections.emptyList());
     }
 
     @NotNull
-    public SageVariant create(@NotNull final AltContext normal, @NotNull final List<AltContext> tumorAltContexts) {
+    public SageVariant create(@NotNull final AltContext normal, @NotNull final Optional<AltContext> rna, @NotNull final List<AltContext> tumorAltContexts) {
 
         final SageVariantTier tier = tierSelector.tier(normal);
         final SoftFilterConfig softConfig = config.softConfig(tier);
         final Set<String> filters = pairedFilters(tier, softConfig, normal, tumorAltContexts.get(0));
 
-        return new SageVariant(tier, filters, normal, tumorAltContexts);
+        return new SageVariant(tier, filters, normal, rna, tumorAltContexts);
     }
 
     @NotNull
@@ -110,7 +111,7 @@ public class SageVariantFactory {
     }
 
     private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawDepthAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawSupportAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
                 && Doubles.greaterOrEqual(primaryTumor.rawVaf(), config.hotspotMinRawTumorVafToSkipQualCheck());
     }
 

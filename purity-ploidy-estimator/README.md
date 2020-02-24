@@ -150,7 +150,7 @@ The following arguments control the smoothing process. Changing these values wit
 Argument | Default | Description 
 ---|---|---
 min_diploid_tumor_ratio_count | 30 | Always smooth over contiguous segments which are fewer than this number of depth windows long and which have no SV support on either side and which are bounded on both sides by copy number regions which could be smoothed together using our normal smoothing rules. This is intended to assist with smoothing residual GC noise in regions of very high or low GC content where no SV support exists.   
-min_diploid_tumor_ratio_count_centromere | 50 | Always smooth over copy number breakpoints which are fewer than this number of depth windows from the centromere or telomere and which have no further SV breakpoints nearer to the the centromere or telomere.  This is intended to help smooth over noisy mapping in repetitive regions close to the telomere and centromere. 
+min_diploid_tumor_ratio_count_centromere | 150 | Always smooth over copy number breakpoints which are fewer than this number of depth windows from the centromere or telomere and which have no further SV breakpoints nearer to the the centromere or telomere.  This is intended to help smooth over noisy mapping in repetitive regions close to the telomere and centromere. 
 
 #### Optional Fitting Arguments 
 The following arguments control the fitting behaviour. Changing these values without a thorough understanding of the system is not recommended.
@@ -989,6 +989,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
 - [2.39](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.39) 
   - Use appropriate karyotype in circos plot 
 - [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38) 

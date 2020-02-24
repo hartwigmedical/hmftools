@@ -28,18 +28,16 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class NormalEvidence {
+public class RnaEvidence {
 
-    private static final Logger LOGGER = LogManager.getLogger(NormalEvidence.class);
+    private static final Logger LOGGER = LogManager.getLogger(RnaEvidence.class);
 
-    private final int minQuality;
     private final SageConfig sageConfig;
-    private final SamSlicerFactory samSlicerFactory;
     private final ReferenceSequenceFile refGenome;
+    private final SamSlicerFactory samSlicerFactory;
 
-    public NormalEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
+    public RnaEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
             @NotNull final ReferenceSequenceFile refGenome) {
-        this.minQuality = config.minMapQuality();
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
         this.refGenome = refGenome;
@@ -62,15 +60,13 @@ public class NormalEvidence {
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(sageConfig.referenceBam()))) {
+                .open(new File(sageConfig.rnaBam()))) {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);
 
-                if (samRecord.getMappingQuality() >= minQuality) {
-                    consumerSelector.select(samRecord,
-                            x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
-                }
+                consumerSelector.select(samRecord,
+                        x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
 
             });
         } catch (IOException e) {
@@ -79,5 +75,4 @@ public class NormalEvidence {
 
         return candidates.refContexts();
     }
-
 }

@@ -11,6 +11,7 @@ Key features include:
   - no cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
+  - Option to also search for somatic variant support in RNA data
 
  # Read context 
  
@@ -63,10 +64,11 @@ There are 7 key steps in the SAGE algorithm described in detail below:
   1. [Candidate Variants And Read Contexts](#1-candidate-variants-and-read-contexts)
   2. [Tumor Counts and Quality](#2-tumor-counts-and-quality)
   3. [Normal Counts and Quality](#3-normal-counts-and-quality)
-  4. [Soft Filter](#4-soft-filters)
-  5. [Phasing](#5-phasing)
-  6. [MNV Handling](#6-de-duplication)
-  7. [Output](#7-output)
+  4. [RNA Counts](#4-rna-counts)
+  5. [Soft Filter](#5-soft-filters)
+  6. [Phasing](#6-phasing)
+  7. [MNV Handling](#7-de-duplication)
+  8. [Output](#8-output)
  
  
 ## 1. Candidate Variants And Read Contexts
@@ -181,7 +183,11 @@ These variants are excluded from this point onwards and have no further processi
 
 For each candidate variant evidence in the normal is collected in same manner as step 2. 
 
-## 4. Soft Filters
+## 4. RNA Counts
+
+If the optional `rna_bam` parameter is supplied, gather evidence in the rna in same manner as step 2. 
+
+## 5. Soft Filters
 
 Given evidence of the variants in the tumor and normal we apply somatic filters. 
 The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the normal sample.
@@ -204,7 +210,7 @@ max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[
 
 *** A special filter (max_germline_alt_support) is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 
-## 5. Phasing
+## 6. Phasing
 
 Somatic variants can be phased using the complete read context with nearby germline variants or other somatic variants.
 
@@ -232,7 +238,7 @@ T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
 
 
-## 6. De-duplication
+## 7. De-duplication
 
 ### INDEL
 
@@ -245,7 +251,7 @@ Any passing SNVs that are phased with and part of a passing MNVs will be filtere
 This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants. 
 In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
 
-## 7. Output
+## 8. Output
 
 There are two more 'hard' filters that are lazily applied at the end of the process just before writing to file. 
 They only apply to variants that are already filtered. 
@@ -286,15 +292,24 @@ Peak memory is measure in gigabytes.
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
+1 | 622 | 640 | 58
 8 | 87 | 682 | 91
 16 | 52 | 795 | 100 
 24 | 40 | 850 | 106 
 32 | 34 | 930 | 110
 48 | 33 | 1286 | 109
 64 | 33 | 1680 | 110
-72 | 32 | 1857 | 115
+72 | 30 | 1660 | 82
 
  ## Version History
+ - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
+   - Reduced memory footprint
+   - Add version info to VCF
+   - RNA support
+   - CRAM support
+   - Filter variants with ref containing bases other then G,A,T,C
+   - Look for read context of variants that are partially soft clipped
+   - HG38 support
  - 2.0
    - Revamped small indel / SNV caller
  - 1.1

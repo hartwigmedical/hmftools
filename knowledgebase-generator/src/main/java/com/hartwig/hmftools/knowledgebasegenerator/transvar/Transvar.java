@@ -4,11 +4,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.apache.logging.log4j.LogManager;
@@ -25,15 +27,24 @@ public class Transvar {
     private final String refFastaPath;
     @NotNull
     private final RefVersion refVersion;
+    @NotNull
+    private Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
     public Transvar(@NotNull String refFastaPath, @NotNull RefVersion refVersion) {
         this.refFastaPath = refFastaPath;
         this.refVersion = refVersion;
+        this.transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String transcript,
-            @NotNull String proteinAnnotation) throws IOException, InterruptedException {
+    public List<VariantHotspot> extractHotspotsFromProteinAnnotation(@NotNull String gene, @NotNull String proteinAnnotation)
+            throws IOException, InterruptedException {
+        HmfTranscriptRegion transcript = transcriptPerGeneMap.get(gene);
+        if (transcript == null) {
+            LOGGER.warn("Could not find gene '{}' in HMF exome gene panel. Skipping hotspot extraction for '{}'", gene, proteinAnnotation);
+            return Lists.newArrayList();
+        }
+
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
                 "--reference",
@@ -49,7 +60,7 @@ public class Transvar {
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
 
         // Not sure if below is needed to capture all outputs (esp std err).
-//        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+        //        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
 
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
@@ -73,20 +84,13 @@ public class Transvar {
             }
         }
 
-        List<String> stdout = captureStdout(process);
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        for (String outLine : stdout) {
-            hotspots.add(transvarToHotpot(outLine));
+        for (String stdoutLine : captureStdout(process)) {
+            LOGGER.info("Converting '{}' to Hotspots", stdoutLine);
+            hotspots.addAll(TransvarConverter.transvarToHotpots(stdoutLine, transcript));
         }
 
         return hotspots;
-    }
-
-    @NotNull
-    private static VariantHotspot transvarToHotpot(@NotNull String transvarLine) {
-        LOGGER.info("Converting '{}' to Hotspot", transvarLine);
-        // TODO (implement!)
-        return ImmutableVariantHotspotImpl.builder().chromosome("7").position(0).ref("C").alt("T").build();
     }
 
     @NotNull

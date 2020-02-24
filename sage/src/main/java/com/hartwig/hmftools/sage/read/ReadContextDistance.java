@@ -23,7 +23,7 @@ public class ReadContextDistance {
 
         final StringBuilder differenceBuilder = new StringBuilder();
 
-        int refBasesCurrentIndex = refBases.index();
+        int refBasesCurrentIndex = refBases.index(record.getAlignmentStart());
         int readBasesCurrentIndex = 0;
         for (CigarElement cigarElement : record.getCigar()) {
 

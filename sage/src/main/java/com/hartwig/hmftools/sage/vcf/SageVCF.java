@@ -25,6 +25,7 @@ import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
@@ -61,6 +62,7 @@ public class SageVCF implements AutoCloseable {
     private static final String READ_CONTEXT_DIFFERENCE_DESCRIPTION = "Difference between read context and ref sequence";
     public static final String READ_CONTEXT_IMPROPER_PAIR = "RC_IPC";
     private static final String READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION = "Read context improper pair count";
+
     public static final String RAW_DEPTH = "RDP";
     public static final String RAW_ALLELIC_DEPTH = "RAD";
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
@@ -100,15 +102,21 @@ public class SageVCF implements AutoCloseable {
 
     @NotNull
     static VCFHeader header(@NotNull final SageConfig config) {
-        return config.germlineOnly() ? header(config.reference(), Collections.emptyList()) : header(config.reference(), config.tumor());
+        final List<String> samples = Lists.newArrayList(config.reference());
+        if (!config.germlineOnly()) {
+            samples.addAll(config.tumor());
+            if (config.rnaEnabled()) {
+                samples.add(config.rna());
+            }
+        }
+        return header(config.version(), samples);
     }
 
     @NotNull
-    private static VCFHeader header(@NotNull final String normalSample, @NotNull final List<String> tumorSamples) {
-        final List<String> allSamples = Lists.newArrayList(normalSample);
-        allSamples.addAll(tumorSamples);
+    private static VCFHeader header(@NotNull final String version, @NotNull final List<String> allSamples) {
 
         VCFHeader header = new VCFHeader(Collections.emptySet(), allSamples);
+        header.addMetaDataLine(new VCFHeaderLine("sageVersion", version));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
@@ -152,6 +160,7 @@ public class SageVCF implements AutoCloseable {
                 1,
                 VCFHeaderLineType.String,
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
+
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 

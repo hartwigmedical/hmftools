@@ -39,7 +39,9 @@ public class StructuralRefContextEnrichment implements VariantContextEnrichment 
     @Override
     public void accept(@NotNull final VariantContext context) {
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(reference, context);
-        addRefContext(context, relativePositionAndRef);
+        if (relativePositionAndRef.getFirst() > -1) {
+            addRefContext(context, relativePositionAndRef);
+        }
         consumer.accept(context);
     }
 

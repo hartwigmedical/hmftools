@@ -17,19 +17,14 @@ public final class HmfGenePanelSupplier {
     }
 
     @NotNull
-    public static SortedSetMultimap<String, HmfTranscriptRegion> allGenesPerChromosomeMap37() {
-        return toSortedMap(allGeneList37());
-    }
-
-    @NotNull
     public static List<HmfTranscriptRegion> allGeneList37() {
-        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.37.tsv");
+        InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.37.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 
     @NotNull
     public static List<HmfTranscriptRegion> allGeneList38() {
-        final InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.38.tsv");
+        InputStream inputStream = HmfGenePanelSupplier.class.getResourceAsStream("/genepanel/all_genes.38.tsv");
         return HmfGenomeFileLoader.fromInputStream(inputStream);
     }
 
@@ -44,7 +39,12 @@ public final class HmfGenePanelSupplier {
     }
 
     @NotNull
-    private static Map<String, HmfTranscriptRegion> allGenesMap(List<HmfTranscriptRegion> regions) {
+    public static SortedSetMultimap<String, HmfTranscriptRegion> allGenesPerChromosomeMap37() {
+        return toSortedMap(allGeneList37());
+    }
+
+    @NotNull
+    private static Map<String, HmfTranscriptRegion> allGenesMap(@NotNull List<HmfTranscriptRegion> regions) {
         Map<String, HmfTranscriptRegion> geneMap = Maps.newHashMap();
         for (HmfTranscriptRegion region : regions) {
             assert !geneMap.containsKey(region.gene());
@@ -53,10 +53,9 @@ public final class HmfGenePanelSupplier {
         return geneMap;
     }
 
-
     @NotNull
-    private static SortedSetMultimap<String, HmfTranscriptRegion> toSortedMap(@NotNull final List<HmfTranscriptRegion> regions) {
-        final SortedSetMultimap<String, HmfTranscriptRegion> regionMap = TreeMultimap.create();
+    private static SortedSetMultimap<String, HmfTranscriptRegion> toSortedMap(@NotNull List<HmfTranscriptRegion> regions) {
+        SortedSetMultimap<String, HmfTranscriptRegion> regionMap = TreeMultimap.create();
         for (HmfTranscriptRegion region : regions) {
             regionMap.put(region.chromosome(), region);
         }

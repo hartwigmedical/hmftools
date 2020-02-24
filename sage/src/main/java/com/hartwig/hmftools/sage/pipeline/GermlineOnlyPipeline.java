@@ -19,6 +19,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import htsjdk.samtools.reference.ReferenceSequenceFile;
+
 class GermlineOnlyPipeline implements SageVariantPipeline {
 
     private static final Logger LOGGER = LogManager.getLogger(GermlineOnlyPipeline.class);
@@ -29,28 +31,35 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
     private final List<GenomeRegion> panelRegions;
     private final List<GenomeRegion> highConfidenceRegions;
     private final PrimaryEvidence primaryEvidence;
+    private final ReferenceSequenceFile refGenome;
 
-    GermlineOnlyPipeline(final SageConfig config, final Executor executor, final List<VariantHotspot> hotspots,
-            final List<GenomeRegion> panelRegions, final List<GenomeRegion> highConfidenceRegions) {
+    GermlineOnlyPipeline(final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
+            final List<VariantHotspot> hotspots, final List<GenomeRegion> panelRegions, final List<GenomeRegion> highConfidenceRegions) {
         this.config = config;
         this.executor = executor;
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
 
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory);
+        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
         this.highConfidenceRegions = highConfidenceRegions;
+        this.refGenome = refGenome;
 
     }
 
     @NotNull
     @Override
-    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region, @NotNull final RefSequence refSequence) {
-
+    public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
+
+        final CompletableFuture<RefSequence> refSequenceFuture =
+                CompletableFuture.supplyAsync(() -> new RefSequence(region, refGenome), executor);
+
         final CompletableFuture<List<AltContext>> candidates =
-                CompletableFuture.supplyAsync(() -> primaryEvidence.get(config.reference(), config.referenceBam(), refSequence, region),
-                        executor);
+                refSequenceFuture.thenApply(refSequence -> primaryEvidence.get(config.reference(),
+                        config.referenceBam(),
+                        refSequence,
+                        region));
 
         return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
     }

@@ -49,33 +49,36 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    public static List<HmfTranscriptRegion> fromInputStream(@NotNull final InputStream genomeInputStream) {
+    public static List<HmfTranscriptRegion> fromInputStream(@NotNull InputStream genomeInputStream) {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
     @NotNull
-    private static List<HmfTranscriptRegion> fromLines(@NotNull final List<String> lines) {
-        final Map<String, HmfTranscriptRegion> geneMap = Maps.newLinkedHashMap();
+    private static List<HmfTranscriptRegion> fromLines(@NotNull List<String> lines) {
+        Map<String, HmfTranscriptRegion> geneMap = Maps.newLinkedHashMap();
         for (final String line : lines) {
-            final String[] values = line.split(FIELD_SEPARATOR);
-            final String chromosome = values[CHROMOSOME_COLUMN].trim();
+            String[] values = line.split(FIELD_SEPARATOR);
+            String chromosome = values[CHROMOSOME_COLUMN].trim();
             if (!HumanChromosome.contains(chromosome)) {
                 LOGGER.warn("Skipping line due to unknown chromosome: {}", line);
                 continue;
             }
 
-            final String gene = values[GENE_COLUMN];
-            final long transcriptStart = Long.parseLong(values[TRANSCRIPT_START_COLUMN].trim());
-            final long transcriptEnd = Long.parseLong(values[TRANSCRIPT_END_COLUMN].trim());
+            String gene = values[GENE_COLUMN];
+            long transcriptStart = Long.parseLong(values[TRANSCRIPT_START_COLUMN].trim());
+            long transcriptEnd = Long.parseLong(values[TRANSCRIPT_END_COLUMN].trim());
 
             if (transcriptEnd < transcriptStart) {
-                LOGGER.warn("Invalid transcript region found on chromosome " + chromosome + ": start=" + transcriptStart + ", end="
-                        + transcriptEnd);
+                LOGGER.warn("Invalid transcript region found on chromosome {}: start={}, end={}",
+                        chromosome,
+                        transcriptStart,
+                        transcriptEnd);
+
             } else {
-                final HmfTranscriptRegion geneRegion = geneMap.computeIfAbsent(gene,
+                HmfTranscriptRegion geneRegion = geneMap.computeIfAbsent(gene,
                         geneName -> createRegion(chromosome, transcriptStart, transcriptEnd, geneName, values));
 
-                final HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
+                HmfExonRegion exonRegion = ImmutableHmfExonRegion.builder()
                         .chromosome(chromosome)
                         .exonID(values[EXON_ID_COLUMN])
                         .start(Long.parseLong(values[EXON_START_COLUMN]))
@@ -90,8 +93,8 @@ public final class HmfGenomeFileLoader {
     }
 
     @NotNull
-    private static HmfTranscriptRegion createRegion(final String chromosome, final long transcriptStart, final long transcriptEnd,
-            @NotNull final String gene, @NotNull final String[] values) {
+    private static HmfTranscriptRegion createRegion(@NotNull String chromosome, long transcriptStart, long transcriptEnd,
+            @NotNull String gene, @NotNull String[] values) {
         final String entrezIdString = values[ENTREZ_ID_COLUMN];
 
         final List<Integer> entrezIds = entrezIdString.isEmpty()

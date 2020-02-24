@@ -57,10 +57,11 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
     @Override
     public void accept(@NotNull final VariantContext context) {
         final Pair<Integer, String> relativePositionAndRef = relativePositionAndRef(reference, context);
-
-        addTrinucleotideContext(context, relativePositionAndRef);
-        addMicrohomology(context, relativePositionAndRef);
-        addRepeatContext(context, relativePositionAndRef);
+        if (relativePositionAndRef.getFirst() > -1) {
+            addTrinucleotideContext(context, relativePositionAndRef);
+            addMicrohomology(context, relativePositionAndRef);
+            addRepeatContext(context, relativePositionAndRef);
+        }
 
         consumer.accept(context);
     }
@@ -116,7 +117,7 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment {
         final SAMSequenceRecord samSequenceRecord = reference.getSequenceDictionary().getSequence(variant.getContig());
         if (samSequenceRecord == null) {
             LOGGER.warn("Unable to locate contig {} in ref genome", variant.getContig());
-            return new Pair<>(0, Strings.EMPTY);
+            return new Pair<>(-1, Strings.EMPTY);
         }
 
         final int chromosomeLength = samSequenceRecord.getSequenceLength();

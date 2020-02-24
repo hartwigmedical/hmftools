@@ -23,7 +23,7 @@ public class ReadContextFactory {
     @NotNull
     public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
-        int refIndex = refPosition - refBases.position() + refBases.index();
+        int refIndex = refBases.index(refPosition);
 
         final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -63,7 +63,7 @@ public class ReadContextFactory {
     @NotNull
     public static ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
             @NotNull final SAMRecord record, final IndexedBases refBases) {
-        int refIndex = refPosition - refBases.position() + refBases.index();
+        int refIndex = refBases.index(refPosition);
 
         final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
@@ -110,7 +110,7 @@ public class ReadContextFactory {
     public static ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
 
-        int refIndex = refPosition - refBases.position() + refBases.index();
+        int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;
         int endIndex = readIndex + length - 1 + MIN_CORE_DISTANCE;
 

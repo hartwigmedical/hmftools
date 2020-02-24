@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.NormalRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextCandidates;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -26,10 +26,10 @@ import org.jetbrains.annotations.NotNull;
 class SomaticPipelineData {
 
     private final String normalSample;
-
     private final Set<VariantHotspot> allHotspots = Sets.newHashSet();
     private final List<Map<VariantHotspot, AltContext>> altContextMap = new ArrayList<>();
     private final Map<Long, RefContext> normalMap = Maps.newHashMap();
+    private final Map<Long, RefContext> rnaMap = Maps.newHashMap();
     private final SageVariantFactory variantFactory;
 
     SomaticPipelineData(final String normalSample, final int tumorSampleSize, final SageVariantFactory variantFactory) {
@@ -50,9 +50,9 @@ class SomaticPipelineData {
     }
 
     @NotNull
-    public RefContextCandidates normalCandidates() {
+    public NormalRefContextCandidates normalCandidates(final String sample) {
 
-        NormalRefContextCandidates candidates = new NormalRefContextCandidates(normalSample);
+        NormalRefContextCandidates candidates = new NormalRefContextCandidates(sample);
 
         List<VariantHotspot> sortedHotspots =
                 allHotspots.stream().sorted(Comparator.comparingLong(GenomePosition::position)).collect(Collectors.toList());
@@ -80,6 +80,10 @@ class SomaticPipelineData {
 
     public void addNormal(@NotNull final List<RefContext> altContexts) {
         altContexts.forEach(x -> normalMap.put(x.position(), x));
+    }
+
+    public void addRNA(@NotNull final List<RefContext> altContexts) {
+        altContexts.forEach(x -> rnaMap.put(x.position(), x));
     }
 
     @NotNull
@@ -116,6 +120,10 @@ class SomaticPipelineData {
 
         for (VariantHotspot sortedHotspot : sortedHotspots) {
 
+            final RefContext rnaRefContext = rnaMap.get(sortedHotspot.position());
+            final Optional<AltContext> rnaAltContext =
+                    Optional.ofNullable(rnaRefContext).map(x -> x.altContext(sortedHotspot.ref(), sortedHotspot.alt()));
+
             final RefContext normalRefContext = normalMap.get(sortedHotspot.position());
             final AltContext normalAltContext = normalRefContext == null
                     ? new AltContext(normalSample, sortedHotspot)
@@ -129,7 +137,7 @@ class SomaticPipelineData {
                 }
             }
 
-            result.add(variantFactory.create(normalAltContext, tumorAltContexts));
+            result.add(variantFactory.create(normalAltContext, rnaAltContext, tumorAltContexts));
         }
 
         return result;

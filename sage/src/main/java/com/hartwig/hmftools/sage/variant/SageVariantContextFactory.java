@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.TIER;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -59,9 +58,9 @@ public class SageVariantContextFactory {
 
         final AltContext firstTumor = tumorContexts.get(0);
 
-        final Genotype normalGenotype = createGenotype(true, normal);
-        final List<Genotype> genotypes = tumorContexts.stream().map(x -> createGenotype(false, x)).collect(Collectors.toList());
-        genotypes.add(0, normalGenotype);
+        final List<Genotype> genotypes = Lists.newArrayList(createGenotype(true, normal));
+        tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
+        entry.rna().map(x -> createGenotype(false, x)).ifPresent(genotypes::add);
 
         final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
         return createContext(entry, createAlleles(entry.normal()), genotypes, firstTumorCounter);
@@ -115,8 +114,8 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
-                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawDepthRef(), evidence.rawDepthAlt() })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[]{evidence.rawBaseQualityRef(), evidence.rawBaseQualityAlt()})
+                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawSupportRef(), evidence.rawSupportAlt() })
+                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { evidence.rawBaseQualityRef(), evidence.rawBaseQualityAlt() })
                 .attribute(RAW_DEPTH, evidence.rawDepth())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();

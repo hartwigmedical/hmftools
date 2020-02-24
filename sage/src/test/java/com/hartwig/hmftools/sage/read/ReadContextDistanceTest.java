@@ -38,7 +38,7 @@ public class ReadContextDistanceTest {
 
     @Test
     public void testOnlyAltDifferent() {
-        final String refBases = "ATTACAAT";
+        final String refBases  = "ATTACAAT";
         final String readBases = "ATTAGAAT";
         final String readCigar = "8M";
 
