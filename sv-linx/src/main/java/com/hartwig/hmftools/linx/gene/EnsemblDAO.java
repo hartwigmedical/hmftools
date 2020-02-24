@@ -292,7 +292,7 @@ public class EnsemblDAO
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("GeneId,CanonicalTranscriptId,Strand,TransId,Trans,BioType,TransStart,TransEnd");
+            writer.write("GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd");
             writer.write(",ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd");
             writer.newLine();
 
