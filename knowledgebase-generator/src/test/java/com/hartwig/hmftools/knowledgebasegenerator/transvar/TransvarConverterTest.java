@@ -33,6 +33,19 @@ public class TransvarConverterTest {
         assertEquals("GTC", record.candidateCodons().get(1));
         assertEquals("GTG", record.candidateCodons().get(2));
         assertEquals("GTT", record.candidateCodons().get(3));
+    }
+
+    @Test
+    public void canConvertRecordToHotspots() {
+        TransvarRecord record = ImmutableTransvarRecord.builder()
+                .transcript("Irrelevant")
+                .chromosome("1")
+                .gdnaPosition(11182158)
+                .gdnaRef("A")
+                .gdnaAlt("C")
+                .referenceCodon("TTA")
+                .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
+                .build();
 
         List<VariantHotspot> hotspots = TransvarConverter.convertRecordToHotspots(record, Strand.REVERSE);
 

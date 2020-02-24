@@ -103,8 +103,7 @@ final class TransvarConverter {
         for (String infoField : infoFields) {
             if (infoField.contains("reference_codon")) {
                 builder.referenceCodon(infoField.split("=")[1]);
-            }
-            else if (infoField.contains("candidate_codons")) {
+            } else if (infoField.contains("candidate_codons")) {
                 String candidates = infoField.split("=")[1];
                 builder.addCandidateCodons(candidates.split(","));
             }
@@ -114,26 +113,28 @@ final class TransvarConverter {
     @NotNull
     @VisibleForTesting
     static List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        int codonIndex = deriveCodonIndexFromRefAlt(record, strand);
+        int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
 
         List<VariantHotspot> hotspots = Lists.newArrayList();
         for (String candidateCodon : record.candidateCodons()) {
-            hotspots.add(fromCandidateCodon(record, candidateCodon, codonIndex, strand));
+            hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
         }
 
         return hotspots;
     }
 
-    private static int deriveCodonIndexFromRefAlt(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        String ref = strand.equals(Strand.FORWARD) ? record.gdnaRef() : flipBase(record.gdnaRef());
-        String alt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : flipBase(record.gdnaAlt());
+    private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarRecord record, @NotNull Strand strand) {
+        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : flipBase(record.gdnaRef());
+        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : flipBase(record.gdnaAlt());
 
+        // We look for the reference codon and candidate codon where the mutation is exclusively the mutation implied by the ref>alt
         for (String candidateCodon : record.candidateCodons()) {
             for (int i = 0; i < 3; i++) {
-                if (record.referenceCodon().substring(i, i+1).equals(ref) && candidateCodon.substring(i, i+1).equals(alt)) {
+                if (record.referenceCodon().substring(i, i + 1).equals(codonCompatibleRef) && candidateCodon.substring(i, i + 1)
+                        .equals(codonCompatibleAlt)) {
                     boolean match = true;
                     for (int j = 0; j < 3; j++) {
-                        if (j != i && !record.referenceCodon().substring(j, j+1).equals(candidateCodon.substring(j, j+1))) {
+                        if (j != i && !record.referenceCodon().substring(j, j + 1).equals(candidateCodon.substring(j, j + 1))) {
                             match = false;
                         }
                     }
@@ -144,20 +145,20 @@ final class TransvarConverter {
             }
         }
 
-        throw new IllegalStateException("Could not derive codon index for " + record);
+        throw new IllegalStateException("Could not find codon index for GDNA match for " + record);
     }
 
     @NotNull
-    private static VariantHotspot fromCandidateCodon(@NotNull TransvarRecord record, @NotNull String candidateCodon, int codonIndex,
+    private static VariantHotspot fromCandidateCodon(@NotNull TransvarRecord record, @NotNull String candidateCodon, int gdnaCodonIndex,
             @NotNull Strand strand) {
-        String correctedRefCodon = strand == Strand.FORWARD ? record.referenceCodon() : reverseAndFlip(record.referenceCodon());
-        String correctedCandidateCodon = strand == Strand.FORWARD ? candidateCodon : reverseAndFlip(candidateCodon);
-        int correctedCodingIndex = strand == Strand.FORWARD ? codonIndex : 2 - codonIndex;
+        String strandAdjustedRefCodon = strand == Strand.FORWARD ? record.referenceCodon() : reverseAndFlip(record.referenceCodon());
+        String strandAdjustedCandidateCodon = strand == Strand.FORWARD ? candidateCodon : reverseAndFlip(candidateCodon);
+        int strandAdjustedGdnaCodingIndex = strand == Strand.FORWARD ? gdnaCodonIndex : 2 - gdnaCodonIndex;
 
         int firstMutatedPosition = -1;
         int lastMutatedPosition = -1;
         for (int i = 0; i < 3; i++) {
-            if (!correctedRefCodon.substring(i, i+1).equals(correctedCandidateCodon.substring(i, i+1))) {
+            if (!strandAdjustedRefCodon.substring(i, i + 1).equals(strandAdjustedCandidateCodon.substring(i, i + 1))) {
                 if (firstMutatedPosition == -1) {
                     firstMutatedPosition = i;
                 }
@@ -165,12 +166,12 @@ final class TransvarConverter {
             }
         }
 
-        String ref = correctedRefCodon.substring(firstMutatedPosition, lastMutatedPosition+1);
-        String alt = correctedCandidateCodon.substring(firstMutatedPosition, lastMutatedPosition+1);
+        String ref = strandAdjustedRefCodon.substring(firstMutatedPosition, lastMutatedPosition + 1);
+        String alt = strandAdjustedCandidateCodon.substring(firstMutatedPosition, lastMutatedPosition + 1);
 
         return ImmutableVariantHotspotImpl.builder()
                 .chromosome(record.chromosome())
-                .position(record.gdnaPosition() - correctedCodingIndex + firstMutatedPosition)
+                .position(record.gdnaPosition() - strandAdjustedGdnaCodingIndex + firstMutatedPosition)
                 .ref(ref)
                 .alt(alt)
                 .build();
@@ -180,7 +181,7 @@ final class TransvarConverter {
     private static String reverseAndFlip(@NotNull String string) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = string.length() - 1; i >= 0; i--) {
-            stringBuilder.append(flipBase(string.substring(i, i+1)));
+            stringBuilder.append(flipBase(string.substring(i, i + 1)));
         }
         return stringBuilder.toString();
     }
@@ -199,6 +200,7 @@ final class TransvarConverter {
             case "C":
                 return "G";
         }
+
         throw new IllegalArgumentException("Cannot flip base: " + base);
     }
 }
