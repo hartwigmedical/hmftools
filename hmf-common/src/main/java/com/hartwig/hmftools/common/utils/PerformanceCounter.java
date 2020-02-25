@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.utils;
 
 import static java.lang.Math.floor;
+import static java.lang.Math.max;
 
 import java.util.List;
 
@@ -22,8 +23,8 @@ public class PerformanceCounter
 
     private long mStartTime;
     private long mPausedTime; // accumulates interval times when timer is paused
-    private List<Double> mTimes;
-    private List<String> mTimeNames;
+    private final List<Double> mTimes;
+    private final List<String> mTimeNames;
 
     private static final double NANOS_IN_SECOND = 1000000000;
 
@@ -88,7 +89,7 @@ public class PerformanceCounter
         sampleTime += mPausedTime;
         double sampleTimeSeconds = sampleTime / NANOS_IN_SECOND;
 
-        mMaxTime = Math.max(sampleTimeSeconds, mMaxTime);
+        mMaxTime = max(sampleTimeSeconds, mMaxTime);
         mTotalTime += sampleTimeSeconds;
 
         mTimes.add(sampleTimeSeconds);
@@ -165,4 +166,12 @@ public class PerformanceCounter
             }
         }
     }
+
+    public void merge(final PerformanceCounter other)
+    {
+        mTimes.addAll(other.getSamples());
+        mTotalTime += other.getTotalTime();
+        mMaxTime = max(mMaxTime, other.getMaxTime());
+    }
+
 }

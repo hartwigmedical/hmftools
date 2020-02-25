@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
@@ -103,7 +104,7 @@ public class RnaExpression
 
             final String chromosome = entry.getKey();
 
-            if(mConfig.skipChromosome(chromosome))
+            if(mConfig.skipChromosome(chromosome) || geneDataList.isEmpty())
                 continue;
 
             ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter);
@@ -129,7 +130,10 @@ public class RnaExpression
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
         RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
-        chrTasks.forEach(x -> x.logPerfStats());
+        PerformanceCounter combinedPerf = new PerformanceCounter("RnaExp");
+
+        chrTasks.forEach(x -> combinedPerf.merge(x.getPerfStats()));
+        combinedPerf.logStats();
 
         mResultsWriter.close();
         mRnaBamReader.close();

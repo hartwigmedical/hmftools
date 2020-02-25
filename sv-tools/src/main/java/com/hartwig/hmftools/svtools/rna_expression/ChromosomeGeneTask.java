@@ -88,7 +88,7 @@ public class ChromosomeGeneTask implements Callable
 
     public void analyseGenes()
     {
-        if(mConfig.RestrictedGeneIds.isEmpty())
+        if(mGeneDataList.size() > 10)
         {
             RE_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
@@ -114,9 +114,9 @@ public class ChromosomeGeneTask implements Callable
         }
     }
 
-    public void logPerfStats()
+    public PerformanceCounter getPerfStats()
     {
-        mPerfCounter.logStats();
+        return mPerfCounter;
     }
 
     private List<EnsemblGeneData> findNextOverlappingGenes()
