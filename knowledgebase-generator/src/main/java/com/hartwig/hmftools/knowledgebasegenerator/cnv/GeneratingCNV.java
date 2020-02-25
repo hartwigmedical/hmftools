@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.CNV;
+package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
 import java.util.List;
 
