@@ -18,6 +18,8 @@ public class ViccReaderTestApplication {
 
         LOGGER.info("Reading VICC json from {}", viccJsonPath);
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFileWithMaxEntries(viccJsonPath, 100);
-        LOGGER.info("Read {} entries", viccEntries.size());
+        List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(viccJsonPath);
+
+        LOGGER.info("Read {} entries", viccEntriesSpecificKnowledgeBase.size());
     }
 }

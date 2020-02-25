@@ -28,6 +28,7 @@ public class GeneratingCNV {
                         + DELIMITER + "Level" + DELIMITER + "Direction"  + NEW_LINE;
         String headerknownCNV =
                 "Gene" + DELIMITER + "Type" + DELIMITER + "Sources" + DELIMITER + "Links" + NEW_LINE;
+        extractCNV(viccEntries);
     }
 
     public static void extractCNV(@NotNull ViccEntry viccEntry) {

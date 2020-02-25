@@ -63,6 +63,27 @@ public final class ViccJsonReader {
     }
 
     @NotNull
+    public static List<ViccEntry> readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(@NotNull String jsonPath) throws IOException {
+        List<ViccEntry> entries = Lists.newArrayList();
+
+        JsonParser parser = new JsonParser();
+        JsonReader reader = new JsonReader(new FileReader(jsonPath));
+        reader.setLenient(true);
+
+        while (reader.peek() != JsonToken.END_DOCUMENT) {
+            JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
+            if (string(viccEntryObject, "source").equals("sage")) {
+                entries.add(createViccEntry(viccEntryObject));
+
+            }
+        }
+
+        reader.close();
+
+        return entries;
+    }
+
+    @NotNull
     public static List<ViccEntry> readViccKnowledgebaseJsonFile(@NotNull String jsonPath) throws IOException {
         return readViccKnowledgebaseJsonFileWithMaxEntries(jsonPath, Integer.MAX_VALUE);
     }
