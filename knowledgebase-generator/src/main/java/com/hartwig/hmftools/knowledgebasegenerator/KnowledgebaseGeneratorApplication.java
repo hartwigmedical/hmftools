@@ -28,7 +28,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class KnowledgebaseGeneratorApplication {
@@ -78,34 +77,44 @@ public class KnowledgebaseGeneratorApplication {
             KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
             if (viccEntry.source().equals("brca")) {
                 Brca kbBrca = (Brca) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("cgi")) {
                 Cgi kbCgi = (Cgi) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("civic")) {
                 Civic kbCivic = (Civic) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("jax")) {
                 Jax kbJax = (Jax) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("jax_trials")) {
                 JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("molecularmatch")) {
                 MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("molecularmatch_trials")) {
                 MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("oncokb")) {
                 OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("pmkb")) {
                 Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else if (viccEntry.source().equals("sage")) {
                 Sage kbSage = (Sage) kbSpecificObject;
-                String CNV = "TODO";
+                String actionableCNV = "TODO";
+                String knownCNV = "TODO";
             } else {
                 LOGGER.warn("Unknown source");
             }
