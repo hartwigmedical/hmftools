@@ -79,11 +79,7 @@ public class KnowledgebaseGeneratorApplication {
         for (ViccEntry viccEntry : viccEntries) {
             hotspotExtractor.extractHotspots(viccEntry);
 
-
-
-                GeneratingCNV.generatingCNVs(viccEntry);
-
-
+            GeneratingCNV.generatingCNVs(viccEntry);
 
         }
     }
@@ -139,8 +135,8 @@ public class KnowledgebaseGeneratorApplication {
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
         return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAM_TSV)
-                && paramExists(cmd, REF_GENOME_VERSION) && valueIsPermitted(cmd, REF_GENOME_VERSION, PERMITTED_REF_GENOME_VERSIONS) && fileExists(cmd,
-                REF_GENOME_FASTA_FILE);
+                && paramExists(cmd, REF_GENOME_VERSION) && valueIsPermitted(cmd, REF_GENOME_VERSION, PERMITTED_REF_GENOME_VERSIONS)
+                && fileExists(cmd, REF_GENOME_FASTA_FILE);
     }
 
     private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {

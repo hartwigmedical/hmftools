@@ -41,7 +41,7 @@ public class GeneratingCNV {
                 if (event.equals("NA")) {
                     event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
                     if (Pattern.compile("[0-9]").matcher(event).find()) {
-                        LOGGER.info("hand curated: " + event);
+                        LOGGER.info("hand curated: " + event + " to mutation");
                         event = "mutation";
                     }
                 }
@@ -49,12 +49,25 @@ public class GeneratingCNV {
             } else if (viccEntry.source().equals("cgi")) { // extract info for cgi
                 event = feature.biomarkerType();
                 LOGGER.info("event cgi: " + event);
-
-
+            } else if (viccEntry.source().equals("brca")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("civic")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("jax")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("jax_trials")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("molecularmatch")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("molecularmatch_trials")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("pmkb")) {
+                // TODO: extract event type
+            } else if (viccEntry.source().equals("sage")) {
+                // TODO: extract event type
+            } else {
+                LOGGER.info("Unknown knowledgebase");
             }
-
         }
-
     }
-
 }
