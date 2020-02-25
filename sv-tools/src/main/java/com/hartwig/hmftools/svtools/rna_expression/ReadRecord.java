@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_I
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
@@ -110,35 +111,48 @@ public class ReadRecord
 
     public boolean overlapsMappedReads(long posStart, long posEnd)
     {
-        return mMappedCoords.stream().anyMatch(x -> (!(x[SE_START] > posEnd || x[SE_END] < posStart)));
+        return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
     }
 
     private void generateMappedCoords()
     {
         // first establish whether the read is split across 2 distant regions, and if so which it maps to
         int posOffset = 0;
+        boolean continueRegion = false;
 
         for(CigarElement element : Cigar.getCigarElements())
         {
-            if(element.getOperator() == CigarOperator.S || element.getOperator() == CigarOperator.I)
+            if(element.getOperator() == CigarOperator.S)
             {
                 // nothing to skip
             }
-            else if(element.getOperator() == CigarOperator.D)
+            else if(element.getOperator() == CigarOperator.D || element.getOperator() == CigarOperator.I)
             {
+                // nothing to skip
+                continueRegion = true;
             }
             else if(element.getOperator() == CigarOperator.N)
             {
                 posOffset += element.getLength();
+                continueRegion = false;
             }
             else if(element.getOperator() == CigarOperator.M)
             {
                 long readStartPos = PosStart + posOffset;
                 long readEndPos = readStartPos + element.getLength() - 1;
 
-                mMappedCoords.add(new long[] {readStartPos, readEndPos});
+                if(continueRegion && !mMappedCoords.isEmpty())
+                {
+                    long[] lastRegion = mMappedCoords.get(mMappedCoords.size() - 1);
+                    lastRegion[SE_END] = readEndPos;
+                }
+                else
+                {
+                    mMappedCoords.add(new long[] { readStartPos, readEndPos });
+                }
 
                 posOffset += element.getLength();
+                continueRegion = false;
             }
         }
     }
