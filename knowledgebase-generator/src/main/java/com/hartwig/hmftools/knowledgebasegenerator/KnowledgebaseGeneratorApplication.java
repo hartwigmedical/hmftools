@@ -78,46 +78,33 @@ public class KnowledgebaseGeneratorApplication {
             KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
             if (viccEntry.source().equals("brca")) {
                 Brca kbBrca = (Brca) kbSpecificObject;
-                String variant =
-                        kbBrca.geneSymbol() + DELIMTER + "transcript" + DELIMTER + kbBrca.chr() + DELIMTER + kbBrca.pos() + DELIMTER
-                                + kbBrca.alt() + DELIMTER + kbBrca.ref() + NEW_LINE;
                 String CNV = "TODO";
-
             } else if (viccEntry.source().equals("cgi")) {
                 Cgi kbCgi = (Cgi) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("civic")) {
                 Civic kbCivic = (Civic) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("jax")) {
                 Jax kbJax = (Jax) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("jax_trials")) {
                 JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("molecularmatch")) {
                 MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("molecularmatch_trials")) {
                 MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("oncokb")) {
                 OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("pmkb")) {
                 Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else if (viccEntry.source().equals("sage")) {
                 Sage kbSage = (Sage) kbSpecificObject;
-                String variant = "TODO";
                 String CNV = "TODO";
             } else {
                 LOGGER.warn("Unknown source");
