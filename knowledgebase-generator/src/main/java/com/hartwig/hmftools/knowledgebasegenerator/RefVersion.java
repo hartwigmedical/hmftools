@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.transvar;
+package com.hartwig.hmftools.knowledgebasegenerator;
 
 import org.jetbrains.annotations.NotNull;
 

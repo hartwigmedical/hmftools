@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.knowledgebasegenerator.RefVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,15 +25,15 @@ public class Transvar {
     private static final int TRANSVAR_TIMEOUT_SEC = 10;
 
     @NotNull
-    private final String refFastaPath;
-    @NotNull
     private final RefVersion refVersion;
+    @NotNull
+    private final String refGenomeFastaFile;
     @NotNull
     private Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    public Transvar(@NotNull String refFastaPath, @NotNull RefVersion refVersion) {
-        this.refFastaPath = refFastaPath;
+    public Transvar(@NotNull RefVersion refVersion, @NotNull String refGenomeFastaFile) {
         this.refVersion = refVersion;
+        this.refGenomeFastaFile = refGenomeFastaFile;
         this.transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
     }
 
@@ -63,8 +64,7 @@ public class Transvar {
             throws InterruptedException, IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
-                "--reference",
-                refFastaPath,
+                "--reference", refGenomeFastaFile,
                 "--refversion",
                 refVersion.refVersionString(),
                 "--noheader",

@@ -12,8 +12,7 @@ import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
-import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
-import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
+import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
@@ -46,8 +45,8 @@ public class KnowledgebaseGeneratorApplication {
     private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
     private static final String COMPASSIONATE_USE_PROGRAM_TSV = "compassionate_use_program_tsv";
 
-    private static final String REF_VERSION = "ref_version";
-    private static final String REF_GENOME_FASTA_PATH = "ref_genome_fasta";
+    private static final String REF_GENOME_VERSION = "ref_genome_version";
+    private static final String REF_GENOME_FASTA_FILE = "ref_genome_fasta";
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
@@ -68,7 +67,7 @@ public class KnowledgebaseGeneratorApplication {
         List<ViccEntry> viccEntries = readViccEntries(cmd.getOptionValue(VICC_JSON));
 
         // Currently only support hg19.
-        String refVersionString = cmd.getOptionValue(REF_VERSION);
+        String refVersionString = cmd.getOptionValue(REF_GENOME_VERSION);
         assert PERMITTED_REF_GENOME_VERSIONS.contains(refVersionString);
 
         RefVersion refVersion = refVersionString.equals("hg19") ? RefVersion.HG19 : null;
@@ -77,12 +76,12 @@ public class KnowledgebaseGeneratorApplication {
             System.exit(1);
         }
 
-        String refFastaPath = cmd.getOptionValue(REF_GENOME_FASTA_PATH);
+        HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
-        Transvar transvar = new Transvar(refFastaPath, refVersion);
-
-        LOGGER.info("Generating known and actionable amps and dels");
+        LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
+            hotspotExtractor.extractHotspots(viccEntry);
+
             extractVicc(viccEntry);
             GeneratingCNV.generatingCNVs(viccEntry);
         }
@@ -139,8 +138,8 @@ public class KnowledgebaseGeneratorApplication {
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
         return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAM_TSV)
-                && paramExists(cmd, REF_VERSION) && valueIsPermitted(cmd, REF_VERSION, PERMITTED_REF_GENOME_VERSIONS) && fileExists(cmd,
-                REF_GENOME_FASTA_PATH);
+                && paramExists(cmd, REF_GENOME_VERSION) && valueIsPermitted(cmd, REF_GENOME_VERSION, PERMITTED_REF_GENOME_VERSIONS) && fileExists(cmd,
+                REF_GENOME_FASTA_FILE);
     }
 
     private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -186,8 +185,8 @@ public class KnowledgebaseGeneratorApplication {
         options.addOption(ICLUSION_TRIAL_TSV, true, "iClusion input trial tsv");
         options.addOption(COMPASSIONATE_USE_PROGRAM_TSV, true, "Compassionate use program input tsv");
 
-        options.addOption(REF_VERSION, true, "Ref version. Should be 'hgxx'");
-        options.addOption(REF_GENOME_FASTA_PATH, true, "Path to the ref genome fasta file");
+        options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgxx'");
+        options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
 
         return options;
     }

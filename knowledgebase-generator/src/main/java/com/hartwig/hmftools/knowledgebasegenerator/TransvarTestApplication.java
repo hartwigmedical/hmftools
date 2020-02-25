@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
 
 import org.apache.logging.log4j.Level;
@@ -20,10 +19,10 @@ public class TransvarTestApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
 
-        String refFastaPath = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
         RefVersion refVersion = RefVersion.HG19;
+        String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
 
-        Transvar transvar = new Transvar(refFastaPath, refVersion);
+        Transvar transvar = new Transvar(refVersion, refGenomeFastaFile);
 
         extractAndPrintHotspots(transvar, "MTOR", "L2230V");
         extractAndPrintHotspots(transvar, "ALK", "L1152R");
