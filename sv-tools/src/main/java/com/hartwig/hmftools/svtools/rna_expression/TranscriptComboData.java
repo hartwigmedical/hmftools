@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.MAX_FRAG_TYPE;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
@@ -16,12 +15,12 @@ import com.google.common.collect.Lists;
 
 public class TranscriptComboData
 {
-    private final List<String> mTranscripts;
+    private final List<Integer> mTranscripts;
     private final int[] mCounts;
 
     private final String mTranscriptsKey;
 
-    public TranscriptComboData(final List<String> transcripts)
+    public TranscriptComboData(final List<Integer> transcripts)
     {
         mTranscripts = transcripts;
         mCounts = new int[MAX_FRAG_TYPE];
@@ -29,25 +28,17 @@ public class TranscriptComboData
         mTranscriptsKey = formTranscriptIds(transcripts);
     }
 
-    public final List<String> getTranscripts() { return mTranscripts; }
+    public final List<Integer> getTranscriptIds() { return mTranscripts; }
     public final String getTranscriptsKey() { return mTranscriptsKey; }
 
-    public String getTranscriptStr(int maxCount)
-    {
-        if(mTranscripts.size() > maxCount)
-            return appendStrList(mTranscripts.subList(0, 10), ';');
-        else
-            return appendStrList(mTranscripts, ';');
-    }
-
-    public boolean matches(final List<String> transcripts)
+    public boolean matches(final List<Integer> transcripts)
     {
         if(mTranscripts.size() != transcripts.size())
             return false;
 
-        for(final String trans : transcripts)
+        for(int transId : transcripts)
         {
-            if(!mTranscripts.stream().anyMatch(x -> x.equals(trans)))
+            if(!mTranscripts.stream().anyMatch(x -> x == transId))
                 return false;
         }
 
@@ -68,47 +59,37 @@ public class TranscriptComboData
     public final int getCount(int type) { return type < mCounts.length ? mCounts[type] : 0; }
     public int totalCount() { return Arrays.stream(mCounts).sum(); }
 
-    public static TranscriptComboData findMatchingData(final List<String> transcripts, final List<TranscriptComboData> dataList)
+    public static TranscriptComboData findMatchingData(final List<Integer> transcripts, final List<TranscriptComboData> dataList)
     {
         return dataList.stream().filter(x -> x.matches(transcripts)).findFirst().orElse(null);
     }
 
-    public static String formTranscriptIds(final List<String> transcripts)
+    public static String formTranscriptIds(final List<Integer> transcripts)
     {
         // convert into an order list of ints
         List<Integer> transIds = Lists.newArrayList();
 
-        try
+        for (Integer transId : transcripts)
         {
-            for (String trans : transcripts)
+            int index = 0;
+            while (index < transIds.size())
             {
-                // attempt conversion to int
-                int transInt = Integer.parseInt(trans.replaceAll("[A-Z]*", ""));
+                if (transId < transIds.get(index))
+                    break;
 
-                int index = 0;
-                while (index < transIds.size())
-                {
-                    if (transInt < transIds.get(index))
-                        break;
-
-                    ++index;
-                }
-
-                transIds.add(index, transInt);
+                ++index;
             }
 
-            String transIdStr = "";
-            for (Integer transId : transIds)
-            {
-                transIdStr = appendStr(transIdStr, String.valueOf(transId), '-');
-            }
+            transIds.add(index, transId);
+        }
 
-            return transIdStr;
-        }
-        catch (Exception e)
+        String transIdStr = "";
+        for (Integer transId : transIds)
         {
-            return appendStrList(transcripts, '-');
+            transIdStr = appendStr(transIdStr, String.valueOf(transId), '-');
         }
+
+        return transIdStr;
     }
 
     public String toString()

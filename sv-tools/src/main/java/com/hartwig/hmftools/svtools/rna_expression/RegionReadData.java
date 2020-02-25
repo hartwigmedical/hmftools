@@ -30,8 +30,8 @@ public class RegionReadData implements Comparable< RegionReadData>
     private int[] mRefBasesMatched;
     private boolean[] mUniqueRefBases; // bases not covered by any other region
 
-    private final Map<String, int[]> mTranscriptReadCounts; // count of reads which support this region and a specific transcript
-    private final Map<String, int[][]> mTranscriptJunctionCounts; // count of reads which support each exon junction and a specific transcript
+    private final Map<Integer,int[]> mTranscriptReadCounts; // count of reads which support this region and a specific transcript
+    private final Map<Integer,int[][]> mTranscriptJunctionCounts; // count of reads which support each exon junction and a specific transcript
 
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
     private List<RegionReadData> mPostRegions;
@@ -55,36 +55,42 @@ public class RegionReadData implements Comparable< RegionReadData>
     public long start() { return Region.start(); }
     public long end() { return Region.end(); }
 
-    public void resetRegionBounds(long posStart, long posEnd)
-    {
-        Region = GenomeRegions.create(Region.chromosome(), posStart, posEnd);
-    }
-
     public static final int NO_EXON = -1;
     public static final int TRANS_ID = 0;
-    public static final int EXON_RANK = 1;
+    public static final int TRANS_NAME = 1;
+    public static final int EXON_RANK = 2;
 
-    private static String formExonRefId(final String transId, int exonRank) {  return String.format("%s:%d", transId, exonRank); }
-    public static String extractTransId(final String ref) { return ref.split(":")[TRANS_ID]; }
+    private static String formExonRefId(int transId, final String transName, int exonRank)
+    {
+        return String.format("%d:%s:%d", transId, transName, exonRank);
+    }
+
+    public static int extractTransId(final String ref) { return Integer.valueOf(ref.split(":")[TRANS_ID]); }
+    public static String extractTransName(final String ref) { return ref.split(":")[TRANS_NAME]; }
     public static int extractExonRank(final String ref) { return Integer.valueOf(ref.split(":")[EXON_RANK]); }
 
-    public int getExonRank(final String transId)
+    public int getExonRank(final int transId)
     {
-        final String exonRefId = mRefRegions.stream().filter(x -> x.contains(transId)).findFirst().orElse(null);
-        return exonRefId != null ? extractExonRank(exonRefId) : NO_EXON;
+        for(String transRef : mRefRegions)
+        {
+            if(extractTransId(transRef) == transId)
+                return extractExonRank(transRef);
+        }
+
+        return NO_EXON;
     }
 
     public final List<String> getRefRegions() { return mRefRegions; }
 
-    public boolean hasTransId(final String transId)
+    public boolean hasTransId(final int transId)
     {
-        return mRefRegions.stream().anyMatch(x -> x.contains(transId));
+        return mRefRegions.stream().anyMatch(x -> extractTransId(x) == transId);
     }
 
-    public void addExonRef(final String transId, int exonRank)
+    public void addExonRef(int transId, final String transName, int exonRank)
     {
         if(!mRefRegions.contains(transId))
-            mRefRegions.add(formExonRefId(transId, exonRank));
+            mRefRegions.add(formExonRefId(transId, transName, exonRank));
     }
 
     public final String refBases() { return mRefBases; }
@@ -118,19 +124,19 @@ public class RegionReadData implements Comparable< RegionReadData>
             mPostRegions.add(region);
     }
 
-    public int[] getTranscriptReadCount(final String trans)
+    public int[] getTranscriptReadCount(int transId)
     {
-        int[] counts = mTranscriptReadCounts.get(trans);
+        int[] counts = mTranscriptReadCounts.get(transId);
         return counts != null ? counts : new int[]{0, 0};
     }
 
-    public void addTranscriptReadMatch(final String trans, boolean isUnique)
+    public void addTranscriptReadMatch(int transId, boolean isUnique)
     {
-        int[] counts = mTranscriptReadCounts.get(trans);
+        int[] counts = mTranscriptReadCounts.get(transId);
         if(counts == null)
         {
             counts = new int[2];
-            mTranscriptReadCounts.put(trans,  counts);
+            mTranscriptReadCounts.put(transId,  counts);
         }
 
         if(isUnique)
@@ -139,19 +145,19 @@ public class RegionReadData implements Comparable< RegionReadData>
         ++counts[TRANS_COUNT];
     }
 
-    public int[] getTranscriptJunctionMatchCount(final String trans, int seIndex)
+    public int[] getTranscriptJunctionMatchCount(int transId, int seIndex)
     {
-        int[][] counts = mTranscriptJunctionCounts.get(trans);
+        int[][] counts = mTranscriptJunctionCounts.get(transId);
         return counts != null ? counts[seIndex] : new int[]{0, 0};
     }
 
-    public void addTranscriptJunctionMatch(final String trans, int seIndex, boolean isUnique)
+    public void addTranscriptJunctionMatch(int transId, int seIndex, boolean isUnique)
     {
-        int[][] counts = mTranscriptJunctionCounts.get(trans);
+        int[][] counts = mTranscriptJunctionCounts.get(transId);
         if(counts == null)
         {
             counts = new int[SE_PAIR][2];
-            mTranscriptJunctionCounts.put(trans, counts);
+            mTranscriptJunctionCounts.put(transId, counts);
         }
 
         if(isUnique)

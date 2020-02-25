@@ -284,12 +284,6 @@ public class ChromosomeGeneTask implements Callable
 
         final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
 
-        /*
-        final double[] lsqFitAllocations = allocateTranscriptCountsByLeastSquares(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
-        final double[] lsqFittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), lsqFitAllocations);
-        double[] lsqResiduals = calcResiduals(transComboCounts, lsqFittedCounts, totalCounts);
-        */
-
         final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
         final double[] fittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), fitAllocations);
 
@@ -302,17 +296,17 @@ public class ChromosomeGeneTask implements Callable
 
         Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
 
-        for(int transId = 0; transId < transcriptNames.size(); ++transId)
+        for(int transIndex = 0; transIndex < transcriptNames.size(); ++transIndex)
         {
-            double transAllocation = fitAllocations[transId];
-            final String trancriptDefn = transcriptNames.get(transId);
+            double transAllocation = fitAllocations[transIndex];
+            final String transName = transcriptNames.get(transIndex);
 
             if(transAllocation > 0)
             {
-                RE_LOGGER.debug("transcript({}) allocated count({})", trancriptDefn, String.format("%.2f", transAllocation));
+                RE_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
 
-            transAllocations.put(trancriptDefn, transAllocation);
+            transAllocations.put(transName, transAllocation);
         }
 
         if(mConfig.WriteTransComboData)

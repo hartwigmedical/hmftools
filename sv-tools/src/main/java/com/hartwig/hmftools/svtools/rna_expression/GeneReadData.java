@@ -38,8 +38,8 @@ public class GeneReadData
     private final List<long[]> mOtherGeneExonicRegions; // a set of exons from other genes which overlap this gene
 
     // summary results
-    private final Map<String, int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
-    private final Map<String, Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
+    private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
+    private final Map<String,Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
     private double mFitResiduals;
     private final List<TranscriptResults> mTranscriptResults;
 
@@ -114,7 +114,7 @@ public class GeneReadData
                     addExonRegion(exonReadData);
                 }
 
-                exonReadData.addExonRef(transData.TransName, exon.ExonRank);
+                exonReadData.addExonRef(transData.TransId, transData.TransName, exon.ExonRank);
 
                 if(prevRegionReadData != null)
                 {
@@ -146,13 +146,13 @@ public class GeneReadData
         return counts != null ? counts : new int[MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
     }
 
-    public void addTranscriptReadMatch(final String trans, boolean isUnique, FragmentMatchType type)
+    public void addTranscriptReadMatch(int transId, boolean isUnique, FragmentMatchType type)
     {
-        int[][] counts = mTranscriptReadCounts.get(trans);
+        int[][] counts = mTranscriptReadCounts.get(transId);
         if(counts == null)
         {
             counts = new int[MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
-            mTranscriptReadCounts.put(trans,  counts);
+            mTranscriptReadCounts.put(transId,  counts);
         }
 
         if(isUnique)
@@ -168,9 +168,9 @@ public class GeneReadData
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
 
-    public double getTranscriptAllocation(final String transId)
+    public double getTranscriptAllocation(final String transName)
     {
-        Double allocation = mTranscriptAllocations.get(transId);
+        Double allocation = mTranscriptAllocations.get(transName);
         return allocation != null ? allocation : 0;
     }
 

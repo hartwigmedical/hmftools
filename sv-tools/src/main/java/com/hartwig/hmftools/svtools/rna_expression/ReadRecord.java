@@ -3,7 +3,6 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -55,7 +54,7 @@ public class ReadRecord
 
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
 
-    private final Map<String,TransMatchType> mTranscriptClassification;
+    private final Map<Integer,TransMatchType> mTranscriptClassification;
 
     private static final Logger LOGGER = LogManager.getLogger(ReadRecord.class);
 
@@ -160,13 +159,13 @@ public class ReadRecord
     public void processOverlappingRegions(final List<RegionReadData> regions)
     {
         // process all regions for each transcript as a group to look for inconsistencies with the transcript definition
-        List<String> transcripts = Lists.newArrayList();
+        List<Integer> transcripts = Lists.newArrayList();
 
         for(RegionReadData region : regions)
         {
             for(final String ref : region.getRefRegions())
             {
-                final String transId = extractTransId(ref);
+                final int transId = extractTransId(ref);
 
                 if (!transcripts.contains(transId))
                     transcripts.add(transId);
@@ -182,12 +181,12 @@ public class ReadRecord
                 checkMissedJunctions(region);
         }
 
-        for(final String transId : transcripts)
+        for(int transId : transcripts)
         {
             TransMatchType transMatchType = UNKNOWN;
 
             List<RegionReadData> transRegions = regions.stream()
-                    .filter(x -> x.getRefRegions().stream().anyMatch(y -> y.contains(transId)))
+                    .filter(x -> x.getRefRegions().stream().anyMatch(y -> extractTransId(y) == transId))
                     .collect(Collectors.toList());
 
             // if any reads cross and exon-intron boundary, then mark the transcript as unspliced
@@ -320,7 +319,7 @@ public class ReadRecord
         return regions;
     }
 
-    public static boolean hasSkippedExons(final List<RegionReadData> regions, final String trans, int longFragmentLimit)
+    public static boolean hasSkippedExons(final List<RegionReadData> regions, int transId, int longFragmentLimit)
     {
         int minExonRank = -1;
         int maxExonRank = 0;
@@ -331,11 +330,11 @@ public class ReadRecord
 
         for(RegionReadData region : regions)
         {
-            if(!region.hasTransId(trans))
+            if(!region.hasTransId(transId))
                 continue;
 
             ++regionCount;
-            int exonRank = region.getExonRank(trans);
+            int exonRank = region.getExonRank(transId);
 
             maxExonRank = max(maxExonRank, exonRank);
             minExonRank = minExonRank == -1 ? exonRank : min(exonRank, exonRank);
@@ -600,11 +599,11 @@ public class ReadRecord
 
     public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
-    public final Map<String,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
+    public final Map<Integer,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
 
-    public TransMatchType getTranscriptClassification(final String trans)
+    public TransMatchType getTranscriptClassification(int transId)
     {
-        TransMatchType transType = mTranscriptClassification.get(trans);
+        TransMatchType transType = mTranscriptClassification.get(transId);
         return transType != null ? transType : UNKNOWN;
     }
 

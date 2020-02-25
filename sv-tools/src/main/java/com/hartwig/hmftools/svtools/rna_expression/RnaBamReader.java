@@ -256,13 +256,13 @@ public class RnaBamReader
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
             return;
 
-        final Map<String,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
+        final Map<Integer,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
 
-        final Map<String,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
+        final Map<Integer,TransMatchType> secondReadTransTypes = read2.getTranscriptClassifications();
 
         // first find valid transcripts in both reads
-        final List<String> validTranscripts = Lists.newArrayList();
-        final List<String> invalidTranscripts = Lists.newArrayList();
+        final List<Integer> validTranscripts = Lists.newArrayList();
+        final List<Integer> invalidTranscripts = Lists.newArrayList();
         int calcFragmentLength = calcFragmentLength(read1, read2);
         boolean validFragmentLength = calcFragmentLength <= mConfig.MaxFragmentLength;
 
@@ -279,24 +279,24 @@ public class RnaBamReader
             }
         }
 
-        for(Map.Entry<String,TransMatchType> entry : firstReadTransTypes.entrySet())
+        for(Map.Entry<Integer,TransMatchType> entry : firstReadTransTypes.entrySet())
         {
-            final String trans = entry.getKey();
+            int transId = entry.getKey();
 
             if(validFragmentLength && validTranscriptType(entry.getValue()))
             {
-                if(secondReadTransTypes.containsKey(trans) && validTranscriptType(secondReadTransTypes.get(trans)))
+                if(secondReadTransTypes.containsKey(transId) && validTranscriptType(secondReadTransTypes.get(transId)))
                 {
-                    if(!hasSkippedExons(validRegions, trans, mConfig.MaxFragmentLength))
+                    if(!hasSkippedExons(validRegions, transId, mConfig.MaxFragmentLength))
                     {
-                        validTranscripts.add(trans);
+                        validTranscripts.add(transId);
                         continue;
                     }
                 }
             }
 
-            if(!invalidTranscripts.contains(trans))
-                invalidTranscripts.add(trans);
+            if(!invalidTranscripts.contains(transId))
+                invalidTranscripts.add(transId);
         }
 
         GeneMatchType geneReadType = UNSPLICED;
@@ -316,15 +316,15 @@ public class RnaBamReader
             else
             {
                 // look for alternative splicing from long reads involving more than one region and not spanning into an intron
-                for(String trans : invalidTranscripts)
+                for(int transId : invalidTranscripts)
                 {
                     List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
-                            .filter(x -> x.getKey().hasTransId(trans))
+                            .filter(x -> x.getKey().hasTransId(transId))
                             .filter(x -> x.getValue() != EXON_INTRON)
                             .map(x -> x.getKey()).collect(Collectors.toList());;
 
                     final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
-                            .filter(x -> x.getKey().hasTransId(trans))
+                            .filter(x -> x.getKey().hasTransId(transId))
                             .filter(x -> x.getValue() != EXON_INTRON)
                             .map(x -> x.getKey()).collect(Collectors.toList());
 
@@ -379,13 +379,13 @@ public class RnaBamReader
 
             FragmentMatchType comboTransMatchType = FragmentMatchType.SHORT;
 
-            for (final String trans : validTranscripts)
+            for (int transId : validTranscripts)
             {
-                int regionCount = (int)validRegions.stream().filter(x -> x.hasTransId(trans)).count();
+                int regionCount = (int)validRegions.stream().filter(x -> x.hasTransId(transId)).count();
 
                 FragmentMatchType transMatchType;
 
-                if(read1.getTranscriptClassification(trans) == SPLICE_JUNCTION || read2.getTranscriptClassification(trans) == SPLICE_JUNCTION)
+                if(read1.getTranscriptClassification(transId) == SPLICE_JUNCTION || read2.getTranscriptClassification(transId) == SPLICE_JUNCTION)
                 {
                     transMatchType = FragmentMatchType.SPLICED;
                     comboTransMatchType = FragmentMatchType.SPLICED;
@@ -402,13 +402,13 @@ public class RnaBamReader
                     transMatchType = FragmentMatchType.SHORT;
                 }
 
-                mCurrentGene.addTranscriptReadMatch(trans, isUniqueTrans, transMatchType);
+                mCurrentGene.addTranscriptReadMatch(transId, isUniqueTrans, transMatchType);
 
                 // keep track of which regions have been allocated from this fragment as a whole, so not counting each read separately
                 final List<RegionReadData> processedRegions = Lists.newArrayList();
 
-                processValidTranscript(trans, read1, processedRegions, isUniqueTrans);
-                processValidTranscript(trans, read2, processedRegions, isUniqueTrans);
+                processValidTranscript(transId, read1, processedRegions, isUniqueTrans);
+                processValidTranscript(transId, read2, processedRegions, isUniqueTrans);
             }
 
             addTransComboData(validTranscripts, comboTransMatchType);
@@ -425,7 +425,7 @@ public class RnaBamReader
 
     public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
 
-    private void addTransComboData(final List<String> transcripts, FragmentMatchType transMatchType)
+    private void addTransComboData(final List<Integer> transcripts, FragmentMatchType transMatchType)
     {
         TranscriptComboData transComboCounts = mTransComboData.stream()
                 .filter(x -> x.matches(transcripts)).findFirst().orElse(null);
@@ -440,10 +440,10 @@ public class RnaBamReader
     }
 
     private void processValidTranscript(
-            final String trans, final ReadRecord read, final List<RegionReadData> processedRegions, boolean isUniqueTrans)
+            int transId, final ReadRecord read, final List<RegionReadData> processedRegions, boolean isUniqueTrans)
     {
         List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
-                .filter(x -> x.getKey().hasTransId(trans))
+                .filter(x -> x.getKey().hasTransId(transId))
                 .filter(x -> validRegionMatchType(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
@@ -452,12 +452,12 @@ public class RnaBamReader
             if (!processedRegions.contains(region))
             {
                 // register a read against this valid transcript region
-                region.addTranscriptReadMatch(trans, isUniqueTrans);
+                region.addTranscriptReadMatch(transId, isUniqueTrans);
             }
         }
 
         // any adjacent reads can record a splice junction count
-        if(regions.size() > 1 && read.getTranscriptClassification(trans) == SPLICE_JUNCTION)
+        if(regions.size() > 1 && read.getTranscriptClassification(transId) == SPLICE_JUNCTION)
         {
             for(int r1 = 0; r1 < regions.size() - 1; ++r1)
             {
@@ -472,13 +472,13 @@ public class RnaBamReader
 
                     if(region1.getPostRegions().contains(region2))
                     {
-                        region1.addTranscriptJunctionMatch(trans, SE_END, isUniqueTrans);
-                        region2.addTranscriptJunctionMatch(trans, SE_START, isUniqueTrans);
+                        region1.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
+                        region2.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
                     }
                     else if(region1.getPreRegions().contains(region2))
                     {
-                        region1.addTranscriptJunctionMatch(trans, SE_START, isUniqueTrans);
-                        region2.addTranscriptJunctionMatch(trans, SE_END, isUniqueTrans);
+                        region1.addTranscriptJunctionMatch(transId, SE_START, isUniqueTrans);
+                        region2.addTranscriptJunctionMatch(transId, SE_END, isUniqueTrans);
                     }
                 }
             }
@@ -661,9 +661,9 @@ public class RnaBamReader
                 mReadDataWriter.newLine();
             }
 
-            for(Map.Entry<String,TransMatchType> entry : read.getTranscriptClassifications().entrySet())
+            for(Map.Entry<Integer,TransMatchType> entry : read.getTranscriptClassifications().entrySet())
             {
-                final String trans = entry.getKey();
+                int transId = entry.getKey();
                 TransMatchType transType = entry.getValue();
 
                 for(Map.Entry<RegionReadData,RegionMatchType> rEntry : read.getMappedRegions().entrySet())
@@ -671,7 +671,7 @@ public class RnaBamReader
                     RegionReadData region = rEntry.getKey();
                     RegionMatchType matchType = rEntry.getValue();
 
-                    if(!region.hasTransId(trans))
+                    if(!region.hasTransId(transId))
                         continue;
 
                     mReadDataWriter.write(String.format("%s,%s,%d,%s",
@@ -681,9 +681,9 @@ public class RnaBamReader
                             read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(),
                             read.fragmentInsertSize(), calcFragmentLength));
 
-                    mReadDataWriter.write(String.format(",%s,%s,%s,%s,%d,%d,%d,%s",
-                            geneReadType, trans, transType, validTranscripts,
-                            region.getExonRank(trans), region.start(), region.end(), matchType));
+                    mReadDataWriter.write(String.format(",%s,%d,%s,%s,%d,%d,%d,%s",
+                            geneReadType, transId, transType, validTranscripts,
+                            region.getExonRank(transId), region.start(), region.end(), matchType));
 
                     mReadDataWriter.newLine();
                 }

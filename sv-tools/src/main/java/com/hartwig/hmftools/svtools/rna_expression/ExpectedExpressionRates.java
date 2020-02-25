@@ -31,6 +31,7 @@ public class ExpectedExpressionRates
 {
     private final RnaExpConfig mConfig;
 
+    // map of transcript (or unspliced) to all category counts covering it (and others)
     private final Map<String,List<TranscriptComboData>> mTransComboData;
 
     private final List<String> mCategories; // equivalent of buckets - 0-N transcripts and the fragment type (eg SHORT, SPLICED etc)
@@ -127,7 +128,7 @@ public class ExpectedExpressionRates
             }
 
             // and generate fragments assuming an unspliced gene
-            List<String> emptyTrans = Lists.newArrayList();
+            List<Integer> emptyTrans = Lists.newArrayList();
 
             if(commonExonicRegions.size() > 1)
             {
@@ -190,13 +191,13 @@ public class ExpectedExpressionRates
         if(readRegions.isEmpty())
             return false;
 
-        final List<String> longAndSplicedTrans = Lists.newArrayList();
-        final List<String> shortTrans = Lists.newArrayList();
+        final List<Integer> longAndSplicedTrans = Lists.newArrayList();
+        final List<Integer> shortTrans = Lists.newArrayList();
 
         if(matchType == SPLICED || matchType == LONG)
-            longAndSplicedTrans.add(transData.TransName);
+            longAndSplicedTrans.add(transData.TransId);
         else
-            shortTrans.add(transData.TransName);
+            shortTrans.add(transData.TransId);
 
         // now check whether these regions are supported by each other transcript
         for(TranscriptData otherTransData : transDataList)
@@ -207,9 +208,9 @@ public class ExpectedExpressionRates
             if(readsSupportFragment(otherTransData, readRegions, matchType, spliceJunctions))
             {
                 if(matchType == SPLICED || matchType == LONG)
-                    longAndSplicedTrans.add(otherTransData.TransName);
+                    longAndSplicedTrans.add(otherTransData.TransId);
                 else
-                    shortTrans.add(otherTransData.TransName);
+                    shortTrans.add(otherTransData.TransId);
             }
         }
 
@@ -246,21 +247,21 @@ public class ExpectedExpressionRates
             readRegions.add(new long[] {secondReadStart, secondReadEnd});
         }
 
-        final List<String> shortTrans = Lists.newArrayList();
+        final List<Integer> shortTrans = Lists.newArrayList();
 
         // check whether these unspliced reads support exonic regions
         for(TranscriptData transData : transDataList)
         {
             if(readsSupportFragment(transData, readRegions, SHORT, noSpliceJunctions))
             {
-                shortTrans.add(transData.TransName);
+                shortTrans.add(transData.TransId);
             }
         }
 
         addTransComboData(UNSPLICED_ID, shortTrans, !shortTrans.isEmpty() ? SHORT : UNSPLICED);
     }
 
-    private void addTransComboData(final String transId, final List<String> transcripts, FragmentMatchType transMatchType)
+    private void addTransComboData(final String transId, final List<Integer> transcripts, FragmentMatchType transMatchType)
     {
         List<TranscriptComboData> transComboDataList = mTransComboData.get(transId);
 
@@ -543,7 +544,7 @@ public class ExpectedExpressionRates
 
             for(TranscriptComboData tcData : entry.getValue())
             {
-                final String transKey = !tcData.getTranscripts().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
+                final String transKey = !tcData.getTranscriptIds().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
 
                 final int[] counts = tcData.getCounts();
 
@@ -589,7 +590,7 @@ public class ExpectedExpressionRates
 
         for(TranscriptComboData tcData : transComboData)
         {
-            final String transKey = !tcData.getTranscripts().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
+            final String transKey = !tcData.getTranscriptIds().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
 
             int shortCount = tcData.getShortCount();
             int splicedCount = tcData.getSplicedCount();
@@ -667,7 +668,7 @@ public class ExpectedExpressionRates
         {
             for(TranscriptComboData tcData : entry.getValue())
             {
-                boolean hasTrans = !tcData.getTranscripts().isEmpty();
+                boolean hasTrans = !tcData.getTranscriptIds().isEmpty();
                 final String transKey = hasTrans ? tcData.getTranscriptsKey() : UNSPLICED_ID;
 
                 if(tcData.getShortCount() > 0)

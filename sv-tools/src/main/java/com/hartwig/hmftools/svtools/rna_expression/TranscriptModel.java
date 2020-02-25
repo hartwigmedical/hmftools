@@ -76,7 +76,7 @@ public class TranscriptModel
 
             if(i > 0)
             {
-                int[] sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransName, SE_START);
+                int[] sjReads = exonReadData.getTranscriptJunctionMatchCount(transData.TransId, SE_START);
 
                 final ExonData prevExon = exons.get(i - 1);
                 boolean sjUnique = isSpliceJunctionUnique(transData.TransName, geneReadData.getTranscripts(), prevExon.ExonEnd, exon.ExonStart);

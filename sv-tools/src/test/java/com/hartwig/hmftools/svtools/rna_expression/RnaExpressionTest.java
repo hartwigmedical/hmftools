@@ -150,7 +150,7 @@ public class RnaExpressionTest
     @Test
     public void testReadTranscriptClassification()
     {
-        String trans1 = "TRANS01";
+        int trans1 = 1;
 
         RegionReadData region = createRegion(trans1, 1, "1", 100, 200);
 
@@ -218,7 +218,7 @@ public class RnaExpressionTest
         region1 = createRegion(trans1, 1, "1", 100, 200);
         region2 = createRegion(trans1, 2, "1", 300, 400);
 
-        String trans2 = "TRANS02";
+        int trans2 = 2;
         region3 = createRegion(trans2, 1, "1", 100, 220);
 
         regions = Lists.newArrayList(region1, region2, region3);
@@ -237,7 +237,7 @@ public class RnaExpressionTest
 
         GeneReadData geneReadData = createGeneReadData("GEN01", "1",(byte)1, 1000, 5000);
 
-        String trans1 = "TRANS01";
+        int trans1 = 1;
         RegionReadData region1 = createRegion(trans1,1,"1", 1000, 1200);
         geneReadData.addExonRegion(region1);
         RegionReadData region2 = createRegion(trans1,2,"1", 2000, 2500);
@@ -336,10 +336,10 @@ public class RnaExpressionTest
         return new ReadRecord(null, String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar);
     }
 
-    private RegionReadData createRegion(final String trans, int exonRank, final String chromosome, long posStart, long posEnd)
+    private RegionReadData createRegion(int trans, int exonRank, final String chromosome, long posStart, long posEnd)
     {
         RegionReadData region = new RegionReadData(GenomeRegions.create(chromosome, posStart, posEnd));
-        region.addExonRef(trans, exonRank);
+        region.addExonRef(trans, String.valueOf(trans), exonRank);
         return region;
     }
 
@@ -479,7 +479,7 @@ public class RnaExpressionTest
     @Test
     public void testBaseAssignment()
     {
-        RegionReadData region = createRegion("TRANS01",1,"1", 100, 119);
+        RegionReadData region = createRegion(1,1,"1", 100, 119);
         region.setRefBases(REF_BASE_STR_1);
 
         List<long[]> readCoords = Lists.newArrayList();
@@ -502,20 +502,20 @@ public class RnaExpressionTest
     @Test
     public void testUniqueRegionBases()
     {
-        RegionReadData region1 = createRegion("TRANS01",1,"1", 100, 119);
+        RegionReadData region1 = createRegion(1,1,"1", 100, 119);
         region1.setRefBases(REF_BASE_STR_1);
 
         // covers the first region entirely
-        RegionReadData region2 = createRegion("TRANS02",1,"1", 95, 124);
+        RegionReadData region2 = createRegion(2,1,"1", 95, 124);
         region2.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
 
-        RegionReadData region3 = createRegion("TRANS03",1,"1", 80, 99);
+        RegionReadData region3 = createRegion(3,1,"1", 80, 99);
         region3.setRefBases(REF_BASE_STR_1);
 
-        RegionReadData region4 = createRegion("TRANS04",1,"1", 70, 89);
+        RegionReadData region4 = createRegion(4,1,"1", 70, 89);
         region4.setRefBases(REF_BASE_STR_1);
 
-        RegionReadData region5 = createRegion("TRANS04",1,"1", 130, 149);
+        RegionReadData region5 = createRegion(5,1,"1", 130, 149);
         region5.setRefBases(REF_BASE_STR_1);
 
         List<RegionReadData> regions = Lists.newArrayList(region1, region2, region3, region4, region5);

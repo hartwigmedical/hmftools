@@ -39,14 +39,15 @@ public class RnaExpectedRates
 
         eeRates.setFragmentLengthData(fragmentLength, 1);
 
-        TranscriptData transData = new TranscriptData(1, "TRANS01", "GENE01", true, (byte)1,
+        int transId1 = 1;
+        TranscriptData transData = new TranscriptData(transId1, "TRANS01", "GENE01", true, (byte)1,
                 0, 1000, null,null, "");
 
-        transData.exons().add(new ExonData(1, 100, 200, 1, -1, -1));
-        transData.exons().add(new ExonData(1, 300, 400, 2, -1, -1));
-        transData.exons().add(new ExonData(1, 440, 449, 3, -1, -1));
-        transData.exons().add(new ExonData(1, 460, 469, 4, -1, -1));
-        transData.exons().add(new ExonData(1, 600, 800, 5, -1, -1));
+        transData.exons().add(new ExonData(transId1, 100, 200, 1, -1, -1));
+        transData.exons().add(new ExonData(transId1, 300, 400, 2, -1, -1));
+        transData.exons().add(new ExonData(transId1, 440, 449, 3, -1, -1));
+        transData.exons().add(new ExonData(transId1, 460, 469, 4, -1, -1));
+        transData.exons().add(new ExonData(transId1, 600, 800, 5, -1, -1));
 
         // fully contained fragment
         long startPos = 100;
@@ -63,16 +64,17 @@ public class RnaExpectedRates
         assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         // test for another transcript
+        int transId2 = 2;
         TranscriptData transData2 = new TranscriptData(2, "TRANS02", "GENE01", true, (byte)1,
                 0, 1000, null,null, "");
 
-        transData2.exons().add(new ExonData(2, 90, 210, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 300, 400, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 90, 210, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 300, 400, 2, -1, -1));
         assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
-        transData2.exons().add(new ExonData(2, 150, 250, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 300, 400, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 150, 250, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 300, 400, 2, -1, -1));
         assertFalse(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // 2 fully contained reads but in 2 exons
@@ -88,14 +90,14 @@ public class RnaExpectedRates
         assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
-        transData2.exons().add(new ExonData(2, 250, 400, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 450, 550, 2, -1, -1));
-        transData2.exons().add(new ExonData(2, 600, 700, 3, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 250, 400, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 450, 550, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 600, 700, 3, -1, -1));
         assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
-        transData2.exons().add(new ExonData(2, 250, 300, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 350, 700, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 250, 300, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 350, 700, 2, -1, -1));
         assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // within an exon then spanning a junction
@@ -133,16 +135,16 @@ public class RnaExpectedRates
         assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
-        transData2.exons().add(new ExonData(2, 150, 200, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 300, 320, 2, -1, -1));
-        transData2.exons().add(new ExonData(2, 340, 380, 3, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 150, 200, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 300, 320, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 340, 380, 3, -1, -1));
         assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // invalid since an exon is skipped in the splicing read
         transData2.exons().clear();
-        transData2.exons().add(new ExonData(2, 150, 200, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 210, 290, 2, -1, -1));
-        transData2.exons().add(new ExonData(2, 300, 450, 3, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 150, 200, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 210, 290, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 300, 450, 3, -1, -1));
         assertFalse(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // 2 sets of exon junctions
@@ -199,9 +201,9 @@ public class RnaExpectedRates
         assertTrue(eeRates.readsSupportFragment(transData, readRegions, matchType, spliceJunctions));
 
         transData2.exons().clear();
-        transData2.exons().add(new ExonData(2, 150, 200, 1, -1, -1));
-        transData2.exons().add(new ExonData(2, 300, 320, 2, -1, -1));
-        transData2.exons().add(new ExonData(2, 340, 380, 3, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 150, 200, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 300, 320, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 340, 380, 3, -1, -1));
         assertTrue(eeRates.readsSupportFragment(transData2, readRegions, matchType, spliceJunctions));
 
         // now with a fragment length less than the read length
@@ -243,14 +245,15 @@ public class RnaExpectedRates
 
         EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", (byte)1, 100, 1000, "");
 
-        String transId = "TRANS01";
+        int transId = 1;
+        String transName = "TRANS01";
 
-        TranscriptData transData = new TranscriptData(1, transId, geneId, true, (byte)1,
+        TranscriptData transData = new TranscriptData(transId, transName, geneId, true, (byte)1,
                 100, 414, null,null, "");
 
-        transData.exons().add(new ExonData(1, 100, 158, 1, -1, -1));
-        transData.exons().add(new ExonData(1, 228, 286, 2, -1, -1));
-        transData.exons().add(new ExonData(1, 356, 414, 3, -1, -1));
+        transData.exons().add(new ExonData(transId, 100, 158, 1, -1, -1));
+        transData.exons().add(new ExonData(transId, 228, 286, 2, -1, -1));
+        transData.exons().add(new ExonData(transId, 356, 414, 3, -1, -1));
 
         GeneReadData geneReadData = new GeneReadData(geneData);
 
@@ -269,7 +272,7 @@ public class RnaExpectedRates
         List<TranscriptComboData> tcDataList = transComboData.get(transId);
         assertEquals(1, tcDataList.size());
 
-        List<String> tranIds = Lists.newArrayList(transId);
+        List<Integer> tranIds = Lists.newArrayList(transId);
 
         TranscriptComboData tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
@@ -304,24 +307,24 @@ public class RnaExpectedRates
 
         EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", (byte)1, 100, 1000, "");
 
-        String transId1 = "TRANS01";
+        int transId1 = 1;
 
-        TranscriptData transData1 = new TranscriptData(1, transId1, geneId, true, (byte)1,
+        TranscriptData transData1 = new TranscriptData(1, "TRANS01", geneId, true, (byte)1,
                 100, 600, null,null, "");
 
-        transData1.exons().add(new ExonData(1, 100, 200, 1, -1, -1));
-        transData1.exons().add(new ExonData(1, 300, 400, 2, -1, -1));
-        transData1.exons().add(new ExonData(1, 500, 600, 3, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 100, 200, 1, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 300, 400, 2, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 500, 600, 3, -1, -1));
 
-        String transId2 = "TRANS02";
+        int transId2 = 2;
 
-        TranscriptData transData2 = new TranscriptData(1, transId2, geneId, true, (byte)1,
+        TranscriptData transData2 = new TranscriptData(1, "TRANS02", geneId, true, (byte)1,
                 150, 1000, null,null, "");
 
-        transData2.exons().add(new ExonData(1, 150, 200, 1, -1, -1));
-        transData2.exons().add(new ExonData(1, 300, 450, 2, -1, -1));
-        transData2.exons().add(new ExonData(1, 700, 800, 3, -1, -1));
-        transData2.exons().add(new ExonData(1, 900, 1000, 4, -1, -1));
+        transData2.exons().add(new ExonData(transId1, 150, 200, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId1, 300, 450, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId1, 700, 800, 3, -1, -1));
+        transData2.exons().add(new ExonData(transId1, 900, 1000, 4, -1, -1));
 
         GeneReadData geneReadData = new GeneReadData(geneData);
 
@@ -354,7 +357,7 @@ public class RnaExpectedRates
         List<TranscriptComboData> tcDataList = transComboData.get(transId1);
         assertEquals(2, tcDataList.size());
 
-        List<String> tranIds = Lists.newArrayList(transId1);
+        List<Integer> tranIds = Lists.newArrayList(transId1);
 
         TranscriptComboData tcData = findMatchingData(tranIds, tcDataList);
         assertTrue(tcData != null);
@@ -408,12 +411,12 @@ public class RnaExpectedRates
         EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, "1", (byte)1, 100, 400, "");
 
         // first the single transcript and single exon
-        String transId1 = "TRANS01";
+        int transId = 1;
 
-        TranscriptData transData1 = new TranscriptData(1, transId1, geneId, true, (byte)1,
+        TranscriptData transData1 = new TranscriptData(transId, "TRANS01", geneId, true, (byte)1,
                 100, 300, null,null, "");
 
-        transData1.exons().add(new ExonData(1, 100, 300, 1, -1, -1));
+        transData1.exons().add(new ExonData(transId, 100, 300, 1, -1, -1));
 
         GeneReadData geneReadData = new GeneReadData(geneData);
 
@@ -425,7 +428,7 @@ public class RnaExpectedRates
 
         Map<String,List<TranscriptComboData>> transComboData = eeRates.getTransComboData();
         assertEquals(2, transComboData.size());
-        assertTrue(transComboData.containsKey(transId1));
+        assertTrue(transComboData.containsKey(transId));
         assertTrue(transComboData.containsKey(UNSPLICED_ID));
 
         SigMatrix rates = eeRates.getTranscriptDefinitions();
@@ -445,7 +448,7 @@ public class RnaExpectedRates
         TranscriptData transData2 = new TranscriptData(1, transId2, geneId, true, (byte)1,
                 200, 400, null,null, "");
 
-        transData2.exons().add(new ExonData(1, 200, 400, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId, 200, 400, 1, -1, -1));
 
         geneReadData = new GeneReadData(geneData);
 
@@ -463,7 +466,7 @@ public class RnaExpectedRates
 
         transComboData = eeRates.getTransComboData();
         assertEquals(3, transComboData.size());
-        assertTrue(transComboData.containsKey(transId1));
+        assertTrue(transComboData.containsKey(transId));
         assertTrue(transComboData.containsKey(transId2));
         assertTrue(transComboData.containsKey(UNSPLICED_ID));
     }
