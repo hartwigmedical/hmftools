@@ -45,6 +45,18 @@ public class Transvar {
             return Lists.newArrayList();
         }
 
+        List<VariantHotspot> hotspots = Lists.newArrayList();
+        for (TransvarRecord record : runTransvarPanno(gene, proteinAnnotation)) {
+            LOGGER.debug("Converting transvar record to hotspots: '{}'", record);
+            hotspots.addAll(TransvarInterpreter.extractHotspotsFromTransvarRecord(record, transcript));
+        }
+
+        return hotspots;
+    }
+
+    @NotNull
+    private List<TransvarRecord> runTransvarPanno(@NotNull String gene, @NotNull String proteinAnnotation)
+            throws InterruptedException, IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
                 "--reference",
@@ -62,6 +74,7 @@ public class Transvar {
         // Not sure if below is needed to capture all outputs (esp std err).
         //        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
 
+        LOGGER.debug("Running '{}'", command(processBuilder));
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
             throw new RuntimeException(String.format("Timeout. [%s] took more than [%s %s] to execute",
@@ -84,13 +97,13 @@ public class Transvar {
             }
         }
 
-        List<VariantHotspot> hotspots = Lists.newArrayList();
+        List<TransvarRecord> records = Lists.newArrayList();
         for (String stdoutLine : captureStdout(process)) {
-            LOGGER.info("Converting '{}' to Hotspots", stdoutLine);
-            hotspots.addAll(TransvarConverter.transvarToHotpots(stdoutLine, transcript));
+            LOGGER.debug("Converting transvar output line to TransvarRecord: '{}'", stdoutLine);
+            records.add(TransvarConverter.toTransvarRecord(stdoutLine));
         }
 
-        return hotspots;
+        return records;
     }
 
     @NotNull
