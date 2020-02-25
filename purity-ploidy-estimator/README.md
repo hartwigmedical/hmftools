@@ -991,6 +991,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 ## Version History and Download Links
 - Upcoming
   - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
+  - Update driver catalog DNDS values
 - [2.39](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.39) 
   - Use appropriate karyotype in circos plot 
 - [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38) 
