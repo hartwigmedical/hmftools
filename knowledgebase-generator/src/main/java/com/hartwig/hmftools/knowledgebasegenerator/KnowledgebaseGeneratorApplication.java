@@ -46,7 +46,7 @@ public class KnowledgebaseGeneratorApplication {
     private static final String COMPASSIONATE_USE_PROGRAM_TSV = "compassionate_use_program_tsv";
 
     private static final String REF_GENOME_VERSION = "ref_genome_version";
-    private static final String REF_GENOME_FASTA_FILE = "ref_genome_fasta";
+    private static final String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
