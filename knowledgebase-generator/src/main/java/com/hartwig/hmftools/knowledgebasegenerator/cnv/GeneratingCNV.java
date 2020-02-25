@@ -24,7 +24,8 @@ public class GeneratingCNV {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneratingCNV.class);
 
-    private static final String DELIMTER = "\t";
+    private static final String DELIMITER = "\t";
+    private static final String SOURCE_LINK_SEPARATOR = ";";
     private static final String NEW_LINE = "\n";
 
     private static final List<String> AMPLIFICATION =
@@ -34,11 +35,10 @@ public class GeneratingCNV {
 
     public static void generatingCNVs(@NotNull List<ViccEntry> viccEntries) {
         String headerActionableCNV =
-                "Gene" + DELIMTER + "Type" + DELIMTER + "Source" + DELIMTER + "Drug" + DELIMTER + "Drug Type" + DELIMTER + "Cancer Type"
-                        + DELIMTER + "Level" + DELIMTER + "Direction" + DELIMTER + "Link" + NEW_LINE;
+                "Gene" + DELIMITER + "Type" + DELIMITER + "Sources" + DELIMITER + "Drug" + DELIMITER + "Drug Type" + DELIMITER + "Cancer Type"
+                        + DELIMITER + "Level" + DELIMITER + "Direction" + DELIMITER + "Links" + NEW_LINE;
         String headerknownCNV =
-                "Gene" + DELIMTER + "Type" + DELIMTER + "Source" + DELIMTER + "Drug" + DELIMTER + "Drug Type" + DELIMTER + "Cancer Type"
-                        + DELIMTER + "Level" + DELIMTER + "Direction" + DELIMTER + "Link" + NEW_LINE;
+                "Gene" + DELIMITER + "Type" + DELIMITER + "Sources" + DELIMITER + "Links" + NEW_LINE;
 
         for (ViccEntry viccEntry : viccEntries) {
             extractCNV(viccEntry);

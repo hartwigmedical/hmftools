@@ -61,7 +61,6 @@ public class KnowledgebaseGeneratorApplication {
 
         LOGGER.info("Generating known and actionable amps and dels");
         GeneratingCNV.generatingCNVs(viccEntries);
-
     }
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
