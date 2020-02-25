@@ -69,14 +69,10 @@ public class KnowledgebaseGeneratorApplication {
         // Currently only support hg19.
         String refVersionString = cmd.getOptionValue(REF_GENOME_VERSION);
         assert PERMITTED_REF_GENOME_VERSIONS.contains(refVersionString);
+        assert refVersionString.equals("hg19");
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
-        RefVersion refVersion = refVersionString.equals("hg19") ? RefVersion.HG19 : null;
-        if (refVersion == null) {
-            LOGGER.error("RefVersion has to be 'hg19': {}", refVersionString);
-            System.exit(1);
-        }
-
-        HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
+        HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {

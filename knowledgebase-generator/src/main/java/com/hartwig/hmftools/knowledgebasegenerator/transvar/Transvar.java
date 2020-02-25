@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.knowledgebasegenerator.RefVersion;
+import com.hartwig.hmftools.knowledgebasegenerator.RefGenomeVersion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,14 +25,14 @@ public class Transvar {
     private static final int TRANSVAR_TIMEOUT_SEC = 10;
 
     @NotNull
-    private final RefVersion refVersion;
+    private final RefGenomeVersion refGenomeVersion;
     @NotNull
     private final String refGenomeFastaFile;
     @NotNull
     private Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    public Transvar(@NotNull RefVersion refVersion, @NotNull String refGenomeFastaFile) {
-        this.refVersion = refVersion;
+    public Transvar(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
+        this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
         this.transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
     }
@@ -66,7 +66,7 @@ public class Transvar {
                 "panno",
                 "--reference", refGenomeFastaFile,
                 "--refversion",
-                refVersion.refVersionString(),
+                refGenomeVersion.refVersionString(),
                 "--noheader",
                 "--ensembl",
                 "-i",
