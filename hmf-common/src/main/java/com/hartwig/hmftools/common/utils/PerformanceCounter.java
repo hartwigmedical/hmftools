@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class PerformanceCounter {
-
+public class PerformanceCounter
+{
     private static final Logger LOGGER = LogManager.getLogger(PerformanceCounter.class);
 
     private final String mName;
@@ -128,7 +128,8 @@ public class PerformanceCounter {
         return mTimes.get(medianIndex);
     }
 
-    public void logStats() {
+    public void logStats()
+    {
         logStats(false);
     }
 

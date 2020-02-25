@@ -129,6 +129,8 @@ public class RnaExpression
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
         RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
+        chrTasks.forEach(x -> x.logPerfStats());
+
         mResultsWriter.close();
         mRnaBamReader.close();
     }

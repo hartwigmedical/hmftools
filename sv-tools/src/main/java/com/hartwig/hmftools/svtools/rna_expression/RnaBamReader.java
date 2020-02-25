@@ -162,8 +162,6 @@ public class RnaBamReader
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
-        // recordFragmentLength(record); // now an stand-alone routine
-
         if(mConfig.GeneStatsOnly)
             return;
 

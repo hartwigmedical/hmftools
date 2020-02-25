@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -47,6 +48,8 @@ public class ChromosomeGeneTask implements Callable
     private int mCurrentGeneIndex;
     public int mGenesProcessed;
 
+    private final PerformanceCounter mPerfCounter;
+
     public ChromosomeGeneTask(
             final RnaExpConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
             final SvGeneTranscriptCollection geneTransCache, final ResultsWriter resultsWriter)
@@ -61,6 +64,8 @@ public class ChromosomeGeneTask implements Callable
         mCurrentGeneIndex = 0;
         mRnaBamReader = new RnaBamReader(mConfig);
         mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig) : null;
+
+        mPerfCounter = new PerformanceCounter(String.format("chr(%s) genes(%d)", mChromosome, mGeneDataList.size()));
     }
 
     public void setWriters(BufferedWriter expRatesWriter, BufferedWriter readsWriter)
@@ -95,7 +100,10 @@ public class ChromosomeGeneTask implements Callable
 
             for (GeneReadData geneReadData : geneReadDataList)
             {
+                mPerfCounter.start();
                 processGene(geneReadData);
+                mPerfCounter.stop();
+
                 ++mGenesProcessed;
 
                 if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
@@ -104,6 +112,11 @@ public class ChromosomeGeneTask implements Callable
                 }
             }
         }
+    }
+
+    public void logPerfStats()
+    {
+        mPerfCounter.logStats();
     }
 
     private List<EnsemblGeneData> findNextOverlappingGenes()
