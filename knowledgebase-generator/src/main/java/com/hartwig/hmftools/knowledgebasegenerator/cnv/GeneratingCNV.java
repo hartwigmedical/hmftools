@@ -41,7 +41,7 @@ public class GeneratingCNV {
                 if (event.equals("NA")) {
                     event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
                     if (Pattern.compile("[0-9]").matcher(event).find()) {
-                        LOGGER.info("hand curated: " + event + " to mutation");
+                        LOGGER.info("manual curated: " + event + " to mutation");
                         event = "mutation";
                     }
                 }
