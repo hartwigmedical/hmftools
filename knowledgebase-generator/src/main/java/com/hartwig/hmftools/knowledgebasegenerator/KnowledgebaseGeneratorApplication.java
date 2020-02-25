@@ -8,7 +8,18 @@ import java.util.List;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
+import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
+import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
+import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
+import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
+import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
+import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
+import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
+import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
+import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -54,13 +65,47 @@ public class KnowledgebaseGeneratorApplication {
 
         LOGGER.info("Convert VICC entries");
 
+        for (ViccEntry viccEntry : viccEntries) {
+            extractVicc(viccEntry);
+            GeneratingCNV.generatingCNVs(viccEntry);
+        }
+
         String refFastaPath = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
         RefVersion refVersion = RefVersion.HG19;
 
         Transvar transvar = new Transvar(refFastaPath, refVersion);
 
         LOGGER.info("Generating known and actionable amps and dels");
-        GeneratingCNV.generatingCNVs(viccEntries);
+
+    }
+
+    private static void extractVicc(@NotNull ViccEntry viccEntry) {
+        KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
+        String source = viccEntry.source();
+
+        if (viccEntry.source().equals("brca")) {
+            Brca kbBrca = (Brca) kbSpecificObject;
+        } else if (viccEntry.source().equals("cgi")) {
+            Cgi kbCgi = (Cgi) kbSpecificObject;
+        } else if (viccEntry.source().equals("civic")) {
+            Civic kbCivic = (Civic) kbSpecificObject;
+        } else if (viccEntry.source().equals("jax")) {
+            Jax kbJax = (Jax) kbSpecificObject;
+        } else if (viccEntry.source().equals("jax_trials")) {
+            JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
+        } else if (viccEntry.source().equals("molecularmatch")) {
+            MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
+        } else if (viccEntry.source().equals("molecularmatch_trials")) {
+            MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
+        } else if (viccEntry.source().equals("oncokb")) {
+            OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
+        } else if (viccEntry.source().equals("pmkb")) {
+            Pmkb kbPmkb = (Pmkb) kbSpecificObject;
+        } else if (viccEntry.source().equals("sage")) {
+            Sage kbSage = (Sage) kbSpecificObject;
+        } else {
+            LOGGER.warn("Unknown source");
+        }
     }
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
