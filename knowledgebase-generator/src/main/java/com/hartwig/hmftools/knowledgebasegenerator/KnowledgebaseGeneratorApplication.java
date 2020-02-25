@@ -4,8 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
@@ -34,10 +40,14 @@ import org.jetbrains.annotations.NotNull;
 public class KnowledgebaseGeneratorApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(KnowledgebaseGeneratorApplication.class);
+    private static final Set<String> PERMITTED_REF_GENOME_VERSIONS = Sets.newHashSet("hg19");
 
     private static final String VICC_JSON = "vicc_json";
     private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
-    private static final String COMPASSIONATE_USE_PROGRAMS_TSV = "compassionate_use_programs_tsv";
+    private static final String COMPASSIONATE_USE_PROGRAM_TSV = "compassionate_use_program_tsv";
+
+    private static final String REF_VERSION = "ref_version";
+    private static final String REF_GENOME_FASTA_PATH = "ref_genome_fasta";
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
@@ -51,32 +61,31 @@ public class KnowledgebaseGeneratorApplication {
             printUsageAndExit(options);
         }
 
-        //        String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIAL_TSV);
-        //        List<IclusionTrial> trials = IclusionTrialFile.read(cmd.getOptionValue(ICLUSION_TRIAL_TSV));
-        //        LOGGER.info("Read {} trials from {}", trials.size(), iClusionTrialTsv);
-        //
-        String viccJson = cmd.getOptionValue(VICC_JSON);
-        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJson);
-        LOGGER.info("Read {} VICC entries from {}", viccEntries.size(), viccJson);
-        //
-        //        String compassionateUseProgramsTsv = cmd.getOptionValue(COMPASSIONATE_USE_PROGRAMS_TSV);
-        //        List<CompassionateUseProgram> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramsTsv);
-        //        LOGGER.info("Read {} compassionate use programs from {}", compassionateUsePrograms.size(), compassionateUseProgramsTsv);
+        // These are just to test the reading of the files. Handling will happen later.
+        readIclusionTrials(cmd.getOptionValue(ICLUSION_TRIAL_TSV));
+        readCompassionateUsePrograms(cmd.getOptionValue(COMPASSIONATE_USE_PROGRAM_TSV));
 
-        LOGGER.info("Convert VICC entries");
+        List<ViccEntry> viccEntries = readViccEntries(cmd.getOptionValue(VICC_JSON));
 
-        for (ViccEntry viccEntry : viccEntries) {
-            extractVicc(viccEntry);
-            GeneratingCNV.generatingCNVs(viccEntry);
+        // Currently only support hg19.
+        String refVersionString = cmd.getOptionValue(REF_VERSION);
+        assert PERMITTED_REF_GENOME_VERSIONS.contains(refVersionString);
+
+        RefVersion refVersion = refVersionString.equals("hg19") ? RefVersion.HG19 : null;
+        if (refVersion == null) {
+            LOGGER.error("RefVersion has to be 'hg19': {}", refVersionString);
+            System.exit(1);
         }
 
-        String refFastaPath = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-        RefVersion refVersion = RefVersion.HG19;
+        String refFastaPath = cmd.getOptionValue(REF_GENOME_FASTA_PATH);
 
         Transvar transvar = new Transvar(refFastaPath, refVersion);
 
         LOGGER.info("Generating known and actionable amps and dels");
-
+        for (ViccEntry viccEntry : viccEntries) {
+            extractVicc(viccEntry);
+            GeneratingCNV.generatingCNVs(viccEntry);
+        }
     }
 
     private static void extractVicc(@NotNull ViccEntry viccEntry) {
@@ -108,16 +117,56 @@ public class KnowledgebaseGeneratorApplication {
         }
     }
 
+    private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {
+        LOGGER.info("Reading iClusion trials from {}", iClusionTrialTsv);
+        List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
+        LOGGER.info(" Read {} iClusion trials", trials.size());
+    }
+
+    private static void readCompassionateUsePrograms(@NotNull String compassionateUseProgramTsv) throws IOException {
+        LOGGER.info("Reading compassionate use programs from {}", compassionateUseProgramTsv);
+        List<CompassionateUseProgram> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramTsv);
+        LOGGER.info(" Read {} compassionate use programs", compassionateUsePrograms.size());
+    }
+
+    @NotNull
+    private static List<ViccEntry> readViccEntries(@NotNull String viccJson) throws IOException {
+        LOGGER.info("Reading VICC entries from {}", viccJson);
+        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJson);
+        LOGGER.info(" Read {} VICC entries", viccEntries.size());
+        return viccEntries;
+    }
+
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
-        return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAMS_TSV);
+        return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAM_TSV)
+                && paramExists(cmd, REF_VERSION) && valueIsPermitted(cmd, REF_VERSION, PERMITTED_REF_GENOME_VERSIONS) && fileExists(cmd,
+                REF_GENOME_FASTA_PATH);
     }
 
     private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        if (!cmd.hasOption(param)) {
-            LOGGER.warn("{} has to be provided", param);
+        if (paramExists(cmd, param) && !Files.exists(new File(cmd.getOptionValue(param)).toPath())) {
+            LOGGER.warn("{} does not exist while '{}' has to be an existing path", cmd.getOptionValue(param), param);
             return false;
-        } else if (!Files.exists(new File(cmd.getOptionValue(param)).toPath())) {
-            LOGGER.warn("{} has to be an existing path", cmd.getOptionValue(param));
+        }
+
+        return true;
+    }
+
+    private static boolean paramExists(@NotNull CommandLine cmd, @NotNull String param) {
+        if (!cmd.hasOption(param)) {
+            LOGGER.warn("Param '{}' has to be provided", param);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean valueIsPermitted(@NotNull CommandLine cmd, @NotNull String param, @NotNull Set<String> permittedValues) {
+        assert paramExists(cmd, param);
+        String value = cmd.getOptionValue(param);
+
+        if (!permittedValues.contains(value)) {
+            LOGGER.warn("Value '{}' is not permitted for '{}'", value, param);
             return false;
         }
 
@@ -135,7 +184,10 @@ public class KnowledgebaseGeneratorApplication {
 
         options.addOption(VICC_JSON, true, "VICC JSON knowledgebase");
         options.addOption(ICLUSION_TRIAL_TSV, true, "iClusion input trial tsv");
-        options.addOption(COMPASSIONATE_USE_PROGRAMS_TSV, true, "compassionate use pgram input tsv");
+        options.addOption(COMPASSIONATE_USE_PROGRAM_TSV, true, "Compassionate use program input tsv");
+
+        options.addOption(REF_VERSION, true, "Ref version. Should be 'hgxx'");
+        options.addOption(REF_GENOME_FASTA_PATH, true, "Path to the ref genome fasta file");
 
         return options;
     }
