@@ -25,7 +25,7 @@ final class TransvarInterpreter {
         if (record.transcript().equals(transcript.transcriptID())) {
             return convertRecordToHotspots(record, transcript.strand());
         } else {
-            LOGGER.warn("Skipped conversion for record as transcript '{}' does not match canonical transcript '{}'",
+            LOGGER.debug(" Skipped interpretation as transvar transcript '{}' does not match canonical transcript '{}'",
                     record.transcript(),
                     transcript.transcriptID());
             return Lists.newArrayList();

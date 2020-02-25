@@ -13,9 +13,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
-public class TempRunner {
+public class TransvarTestApplication {
 
-    private static final Logger LOGGER = LogManager.getLogger(TempRunner.class);
+    private static final Logger LOGGER = LogManager.getLogger(TransvarTestApplication.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
@@ -26,13 +26,16 @@ public class TempRunner {
         Transvar transvar = new Transvar(refFastaPath, refVersion);
 
         extractAndPrintHotspots(transvar, "MTOR", "L2230V");
+        extractAndPrintHotspots(transvar, "ALK", "L1152R");
+        extractAndPrintHotspots(transvar, "AKT1", "E17K");
+        extractAndPrintHotspots(transvar, "ABL1", "F486S");
     }
 
     private static void extractAndPrintHotspots(@NotNull Transvar transvar, @NotNull String gene, @NotNull String proteinAnnotation)
             throws IOException, InterruptedException {
         List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(gene,  proteinAnnotation);
 
-        LOGGER.info("Printing hotspots for {}:p.{}", gene, proteinAnnotation);
+        LOGGER.info("Printing hotspots for '{}:p.{}'", gene, proteinAnnotation);
         for (VariantHotspot hotspot : hotspots) {
             LOGGER.info(" {}", hotspot);
         }

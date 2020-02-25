@@ -51,6 +51,10 @@ public class Transvar {
             hotspots.addAll(TransvarInterpreter.extractHotspotsFromTransvarRecord(record, transcript));
         }
 
+        if (hotspots.isEmpty()) {
+            LOGGER.warn("Could not derive any hotspots from '{}:p.{}'", gene, proteinAnnotation);
+        }
+
         return hotspots;
     }
 
