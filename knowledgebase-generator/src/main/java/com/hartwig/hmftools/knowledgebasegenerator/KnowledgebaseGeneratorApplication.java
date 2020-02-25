@@ -75,11 +75,16 @@ public class KnowledgebaseGeneratorApplication {
         HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         LOGGER.info("Analyzing all VICC entries");
+        int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
             hotspotExtractor.extractHotspots(viccEntry);
 
-            extractVicc(viccEntry);
-            GeneratingCNV.generatingCNVs(viccEntry);
+
+
+                GeneratingCNV.generatingCNVs(viccEntry);
+
+
+
         }
     }
 

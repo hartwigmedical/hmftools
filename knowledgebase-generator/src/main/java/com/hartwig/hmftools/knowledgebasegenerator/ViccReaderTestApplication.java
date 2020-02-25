@@ -17,8 +17,8 @@ public class ViccReaderTestApplication {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
         LOGGER.info("Reading VICC json from {}", viccJsonPath);
-        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFileWithMaxEntries(viccJsonPath, 100);
-        List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(viccJsonPath);
+       // List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFileWithMaxEntries(viccJsonPath, 100);
+        List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(viccJsonPath, "cgi");
 
         LOGGER.info("Read {} entries", viccEntriesSpecificKnowledgeBase.size());
     }
