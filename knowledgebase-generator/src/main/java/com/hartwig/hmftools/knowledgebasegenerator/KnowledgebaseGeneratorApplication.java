@@ -68,10 +68,13 @@ public class KnowledgebaseGeneratorApplication {
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
-            hotspotExtractor.extractHotspots(viccEntry);
 
-            GeneratingCNV.generatingCNVs(viccEntry);
+            for (EventType type: eventType) {
+                // Generating actionable vent and known events
+                hotspotExtractor.extractHotspots(viccEntry);
 
+                GeneratingCNV.generatingCNVs(viccEntry);
+            }
         }
     }
 
