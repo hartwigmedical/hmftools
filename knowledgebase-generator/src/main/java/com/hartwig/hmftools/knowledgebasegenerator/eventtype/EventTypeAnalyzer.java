@@ -56,7 +56,8 @@ public class EventTypeAnalyzer {
                     // TODO: extract event type
                 case "civic": // extract info for civic
                     Civic kbCivic = (Civic) kbSpecificObject;
-                    event = Strings.EMPTY;
+                    event = feature.biomarkerType();
+                    LOGGER.info("event civic: " + event);
                     // TODO: extract event type
                 case "jax": // extract info for jax
                     Jax kbJax = (Jax) kbSpecificObject;
