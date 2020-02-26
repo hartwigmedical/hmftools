@@ -38,7 +38,7 @@ public class CompassionateUseProgramFile {
     private static CompassionateUseProgram fromLine(@NotNull String line) {
         final String[] values = line.split(DELIMITER);
         ImmutableCompassionateUseProgram.Builder builder = ImmutableCompassionateUseProgram.builder()
-                .CBGsite(values[0])
+                .siteDrug(values[0])
                 .variants(values[1])
                 .source(values[2])
                 .drug(values[3])

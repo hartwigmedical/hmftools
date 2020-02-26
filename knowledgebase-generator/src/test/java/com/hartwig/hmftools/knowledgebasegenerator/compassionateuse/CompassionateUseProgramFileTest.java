@@ -20,7 +20,7 @@ public class CompassionateUseProgramFileTest {
         assertEquals(1, compassionateUsePrograms.size());
 
         CompassionateUseProgram compassionateUsePrograms1 = compassionateUsePrograms.get(0);
-        assertEquals("AC", compassionateUsePrograms1.CBGsite());
+        assertEquals("AC", compassionateUsePrograms1.siteDrug());
         assertEquals("-", compassionateUsePrograms1.variants());
         assertEquals("Source", compassionateUsePrograms1.source());
         assertEquals("Trametinib", compassionateUsePrograms1.drug());
