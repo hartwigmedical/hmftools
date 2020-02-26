@@ -4,21 +4,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 
-import com.hartwig.hmftools.knowledgebasegenerator.transvar.RefVersion;
-import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
-import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.iclusion.data.IclusionTrial;
+import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
+import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.output.GeneratingOutputFiles;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
-import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
-import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
-import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
-import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
-import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,18 +26,21 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class KnowledgebaseGeneratorApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(KnowledgebaseGeneratorApplication.class);
-    private static final String DELIMTER = "\t";
-    private static final String NEW_LINE = "\n";
+    private static final Set<String> PERMITTED_REF_GENOME_VERSIONS = Sets.newHashSet("hg19");
 
     private static final String VICC_JSON = "vicc_json";
     private static final String ICLUSION_TRIAL_TSV = "iclusion_trial_tsv";
-    private static final String COMPASSIONATE_USE_PROGRAMS_TSV = "compassionate_use_programs_tsv";
+    private static final String COMPASSIONATE_USE_PROGRAM_TSV = "compassionate_use_program_tsv";
+
+    private static final String REF_GENOME_VERSION = "ref_genome_version";
+    private static final String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
+
+    private static final String OUTPUT_DIR = "output_dir";
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
@@ -53,88 +54,105 @@ public class KnowledgebaseGeneratorApplication {
             printUsageAndExit(options);
         }
 
-        //        String iClusionTrialTsv = cmd.getOptionValue(ICLUSION_TRIAL_TSV);
-        //        List<IclusionTrial> trials = IclusionTrialFile.read(cmd.getOptionValue(ICLUSION_TRIAL_TSV));
-        //        LOGGER.info("Read {} trials from {}", trials.size(), iClusionTrialTsv);
-        //
-        String viccJson = cmd.getOptionValue(VICC_JSON);
-        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJson);
-        LOGGER.info("Read {} VICC entries from {}", viccEntries.size(), viccJson);
-        //
-        //        String compassionateUseProgramsTsv = cmd.getOptionValue(COMPASSIONATE_USE_PROGRAMS_TSV);
-        //        List<CompassionateUseProgram> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramsTsv);
-        //        LOGGER.info("Read {} compassionate use programs from {}", compassionateUsePrograms.size(), compassionateUseProgramsTsv);
+        // These are just to test the reading of the files. Handling will happen later.
+        readIclusionTrials(cmd.getOptionValue(ICLUSION_TRIAL_TSV));
+        readCompassionateUsePrograms(cmd.getOptionValue(COMPASSIONATE_USE_PROGRAM_TSV));
 
-        LOGGER.info("Convert VICC entries");
+        List<ViccEntry> viccEntries = readViccEntries(cmd.getOptionValue(VICC_JSON));
 
-        String refFastaPath = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
-        RefVersion refVersion = RefVersion.HG19;
+        // Currently only support hg19.
+        String refVersionString = cmd.getOptionValue(REF_GENOME_VERSION);
+        assert PERMITTED_REF_GENOME_VERSIONS.contains(refVersionString);
+        assert refVersionString.equals("hg19");
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
-        Transvar transvar = new Transvar(refFastaPath, refVersion);
+        HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
-        LOGGER.info("Generating known and actionable amps and dels");
-
+        LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
-            KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
-            if (viccEntry.source().equals("brca")) {
-                Brca kbBrca = (Brca) kbSpecificObject;
-                String variant =
-                        kbBrca.geneSymbol() + DELIMTER + "transcript" + DELIMTER + kbBrca.chr() + DELIMTER + kbBrca.pos() + DELIMTER
-                                + kbBrca.alt() + DELIMTER + kbBrca.ref() + NEW_LINE;
-                String CNV = "TODO";
+            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
-            } else if (viccEntry.source().equals("cgi")) {
-                Cgi kbCgi = (Cgi) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("civic")) {
-                Civic kbCivic = (Civic) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("jax")) {
-                Jax kbJax = (Jax) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("jax_trials")) {
-                JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("molecularmatch")) {
-                MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("molecularmatch_trials")) {
-                MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("oncokb")) {
-                OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("pmkb")) {
-                Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else if (viccEntry.source().equals("sage")) {
-                Sage kbSage = (Sage) kbSpecificObject;
-                String variant = "TODO";
-                String CNV = "TODO";
-            } else {
-                LOGGER.warn("Unknown source");
+            for (EventType type: eventType) {
+                // Generating actionable event and known events
+                hotspotExtractor.extractHotspots(viccEntry);
+
+                GeneratingCNV.generatingCNVs(viccEntry, type);
             }
         }
+        // Create all output files from knowledgebase
+        LOGGER.info("Generating output files");
+        GeneratingOutputFiles.generatingOutputFiles(cmd.getOptionValue(OUTPUT_DIR));
+    }
+
+    private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {
+        LOGGER.info("Reading iClusion trials from {}", iClusionTrialTsv);
+        List<IclusionTrial> trials = IclusionTrialFile.read(iClusionTrialTsv);
+        LOGGER.info(" Read {} iClusion trials", trials.size());
+    }
+
+    private static void readCompassionateUsePrograms(@NotNull String compassionateUseProgramTsv) throws IOException {
+        LOGGER.info("Reading compassionate use programs from {}", compassionateUseProgramTsv);
+        List<CompassionateUseProgram> compassionateUsePrograms = CompassionateUseProgramFile.read(compassionateUseProgramTsv);
+        LOGGER.info(" Read {} compassionate use programs", compassionateUsePrograms.size());
+    }
+
+    @NotNull
+    private static List<ViccEntry> readViccEntries(@NotNull String viccJson) throws IOException {
+        LOGGER.info("Reading VICC entries from {}", viccJson);
+        List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFile(viccJson);
+        LOGGER.info(" Read {} VICC entries", viccEntries.size());
+        return viccEntries;
     }
 
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
-        return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAMS_TSV);
+        return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAM_TSV)
+                && paramExists(cmd, REF_GENOME_VERSION) && valueIsPermitted(cmd, REF_GENOME_VERSION, PERMITTED_REF_GENOME_VERSIONS)
+                && fileExists(cmd, REF_GENOME_FASTA_FILE) && dirExists(cmd, OUTPUT_DIR);
     }
 
     private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
-        if (!cmd.hasOption(param)) {
-            LOGGER.warn("{} has to be provided", param);
+        if (paramExists(cmd, param) && !Files.exists(new File(cmd.getOptionValue(param)).toPath())) {
+            LOGGER.warn("{} does not exist while '{}' has to be an existing path", cmd.getOptionValue(param), param);
             return false;
-        } else if (!Files.exists(new File(cmd.getOptionValue(param)).toPath())) {
-            LOGGER.warn("{} has to be an existing path", cmd.getOptionValue(param));
+        }
+
+        return true;
+    }
+
+    private static boolean dirExists(@NotNull CommandLine cmd, @NotNull String param) {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
+            LOGGER.warn(param + " has to be an existing directory: " + value);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean pathExists(@NotNull String path) {
+        return Files.exists(new File(path).toPath());
+    }
+
+    private static boolean pathIsDirectory(@NotNull String path) {
+        return Files.isDirectory(new File(path).toPath());
+    }
+
+    private static boolean paramExists(@NotNull CommandLine cmd, @NotNull String param) {
+        if (!cmd.hasOption(param)) {
+            LOGGER.warn("Param '{}' has to be provided", param);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean valueIsPermitted(@NotNull CommandLine cmd, @NotNull String param, @NotNull Set<String> permittedValues) {
+        assert paramExists(cmd, param);
+        String value = cmd.getOptionValue(param);
+
+        if (!permittedValues.contains(value)) {
+            LOGGER.warn("Value '{}' is not permitted for '{}'", value, param);
             return false;
         }
 
@@ -152,7 +170,12 @@ public class KnowledgebaseGeneratorApplication {
 
         options.addOption(VICC_JSON, true, "VICC JSON knowledgebase");
         options.addOption(ICLUSION_TRIAL_TSV, true, "iClusion input trial tsv");
-        options.addOption(COMPASSIONATE_USE_PROGRAMS_TSV, true, "compassionate use pgram input tsv");
+        options.addOption(COMPASSIONATE_USE_PROGRAM_TSV, true, "Compassionate use program input tsv");
+
+        options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgxx'");
+        options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
+
+        options.addOption(OUTPUT_DIR, true, "Path to the output dir of the files");
 
         return options;
     }
