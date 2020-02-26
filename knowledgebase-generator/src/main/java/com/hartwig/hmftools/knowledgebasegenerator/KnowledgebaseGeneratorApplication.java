@@ -70,7 +70,7 @@ public class KnowledgebaseGeneratorApplication {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type: eventType) {
-                // Generating actionable vent and known events
+                // Generating actionable event and known events
                 hotspotExtractor.extractHotspots(viccEntry);
 
                 GeneratingCNV.generatingCNVs(viccEntry);
