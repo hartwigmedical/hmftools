@@ -42,7 +42,7 @@ public class ExpectedExpressionRates
     private int mCurrentFragFrequency;
     private int mCurrentReadLength;
 
-    private BufferedWriter mExpRateWriter;
+    private final BufferedWriter mExpRateWriter;
 
     public static final String UNSPLICED_ID = "UNSPLICED";
 
@@ -51,7 +51,7 @@ public class ExpectedExpressionRates
 
     private static final Logger LOGGER = LogManager.getLogger(ExpectedExpressionRates.class);
 
-    public ExpectedExpressionRates(final RnaExpConfig config)
+    public ExpectedExpressionRates(final RnaExpConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mCurrentFragSize = 0;
@@ -62,10 +62,14 @@ public class ExpectedExpressionRates
         mCategories = Lists.newArrayList();
         mTranscriptIds = Lists.newArrayList();
         mTranscriptDefinitions = null;
-        mExpRateWriter = null;
+        mExpRateWriter = resultsWriter != null ? resultsWriter.getExpRatesWriter() : null;
     }
 
-    public void setWriter(BufferedWriter writer) { mExpRateWriter = writer; }
+    public static ExpectedExpressionRates from(final RnaExpConfig config)
+    {
+        return new ExpectedExpressionRates(config, null);
+    }
+
     public Map<String,List<TranscriptComboData>> getTransComboData() { return mTransComboData; }
 
     public List<String> getCategories() { return mCategories; }
@@ -720,7 +724,7 @@ public class ExpectedExpressionRates
         }
     }
 
-    public synchronized static void writeExpectedRates(
+    private synchronized static void writeExpectedRates(
             final BufferedWriter writer, final GeneReadData geneReadData,
             final List<String> categories, final List<String> transcriptIds, SigMatrix transcriptDefinitions)
     {

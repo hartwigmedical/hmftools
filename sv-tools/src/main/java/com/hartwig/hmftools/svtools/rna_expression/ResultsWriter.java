@@ -37,7 +37,10 @@ public class ResultsWriter
     private BufferedWriter mExonDataWriter;
     private BufferedWriter mTransComboWriter;
 
+    // controlled by other components but instantiated once for output synchronosation
     private BufferedWriter mExpRateWriter;
+    private BufferedWriter mReadDataWriter;
+    private BufferedWriter mAltSpliceJunctionWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
@@ -50,6 +53,10 @@ public class ResultsWriter
         mExonDataWriter = null;
         mTransComboWriter = null;
         mExpRateWriter = null;
+        mReadDataWriter = null;
+        mAltSpliceJunctionWriter = null;
+
+        initialiseExternalWriters();
     }
 
     public void close()
@@ -59,13 +66,24 @@ public class ResultsWriter
         closeBufferedWriter(mExonDataWriter);
         closeBufferedWriter(mTransComboWriter);
         closeBufferedWriter(mExpRateWriter);
+        closeBufferedWriter(mReadDataWriter);
+        closeBufferedWriter(mAltSpliceJunctionWriter);
     }
 
-    public BufferedWriter initialiseExpRatesWriter()
+    private void initialiseExternalWriters()
     {
-        mExpRateWriter = ExpectedExpressionRates.createWriter(mConfig);
-        return mExpRateWriter;
+        if(mConfig.WriteExpectedRates)
+            mExpRateWriter = ExpectedExpressionRates.createWriter(mConfig);
+
+        if(mConfig.WriteReadData)
+            mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
+
+        mAltSpliceJunctionWriter = GeneBamReader.createAltSpliceJunctionWriter(mConfig);
     }
+
+    public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}
+    public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
+    public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
 
     public synchronized void writeGeneData(final GeneReadData geneReadData)
     {

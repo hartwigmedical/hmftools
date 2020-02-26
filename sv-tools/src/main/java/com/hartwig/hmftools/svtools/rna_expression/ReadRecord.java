@@ -96,12 +96,12 @@ public class ReadRecord
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
-    public boolean translocation()
+    public boolean isTranslocation()
     {
         return mSamRecord != null && !mSamRecord.getMateReferenceName().equals(mSamRecord.getReferenceName());
     }
 
-    public boolean localInversion()
+    public boolean isLocalInversion()
     {
         return mSamRecord != null && mSamRecord.getReadNegativeStrandFlag() == mSamRecord.getMateNegativeStrandFlag();
     }

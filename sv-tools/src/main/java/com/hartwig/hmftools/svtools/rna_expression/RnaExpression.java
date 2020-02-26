@@ -32,7 +32,6 @@ import org.jetbrains.annotations.NotNull;
 public class RnaExpression
 {
     private final RnaExpConfig mConfig;
-    private final RnaBamReader mRnaBamReader;
     private final ResultsWriter mResultsWriter;
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
@@ -43,7 +42,6 @@ public class RnaExpression
     {
         mConfig = new RnaExpConfig(cmd);
 
-        mRnaBamReader = new RnaBamReader(mConfig);
         mGcBiasAdjuster = new GcBiasAdjuster(mConfig);
 
         mResultsWriter = new ResultsWriter(mConfig);
@@ -79,7 +77,7 @@ public class RnaExpression
         if(mGcBiasAdjuster.enabled())
         {
             mGcBiasAdjuster.loadData();
-            mGcBiasAdjuster.generateDepthCounts(mRnaBamReader, mGeneTransCache.getChrGeneDataMap());
+            mGcBiasAdjuster.generateDepthCounts(mGeneTransCache.getChrGeneDataMap());
             return; // for now
         }
 
@@ -90,10 +88,6 @@ public class RnaExpression
             if (mConfig.WriteFragmentLengths)
                 return;
         }
-
-        // prepared writers for threaded execution
-        BufferedWriter expRatesWriter = mResultsWriter.initialiseExpRatesWriter();
-        BufferedWriter readsWriter = null; // mResultsWriter.initialiseExpRatesWriter();
 
         List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
         List<ChromosomeGeneTask> chrTasks = Lists.newArrayList();
@@ -108,7 +102,6 @@ public class RnaExpression
                 continue;
 
             ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter);
-            chrGeneTask.setWriters(expRatesWriter, readsWriter);
             chrTasks.add(chrGeneTask);
 
             if(mExecutorService != null)
@@ -136,7 +129,6 @@ public class RnaExpression
         combinedPerf.logStats();
 
         mResultsWriter.close();
-        mRnaBamReader.close();
     }
 
     private void checkThreadCompletion(final List<FutureTask> taskList)

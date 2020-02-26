@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_I
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaBamReader.overlaps;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.overlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
@@ -233,7 +233,7 @@ public class RnaExpressionTest
     {
         // one read outside the gene
         RnaExpConfig config = new RnaExpConfig();
-        RnaBamReader bamReader = new RnaBamReader(config);
+        GeneBamReader bamReader = GeneBamReader.from(config);
 
         GeneReadData geneReadData = createGeneReadData("GEN01", "1",(byte)1, 1000, 5000);
 

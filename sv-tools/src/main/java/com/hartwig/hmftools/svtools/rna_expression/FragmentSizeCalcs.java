@@ -31,7 +31,7 @@ public class FragmentSizeCalcs
 {
     private final RnaExpConfig mConfig;
     private final SvGeneTranscriptCollection mGeneTransCache;
-    private final RnaBamReader mRnaBamReader;
+    private final GeneBamReader mBamReader;
 
     private final List<int[]> mFragmentLengths;
     private BufferedWriter mWriter;
@@ -52,7 +52,7 @@ public class FragmentSizeCalcs
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
-        mRnaBamReader = new RnaBamReader(config);
+        mBamReader = GeneBamReader.from(config);
 
         mCurrentGeneData = null;
         mCurrentTransDataList = null;
@@ -121,7 +121,7 @@ public class FragmentSizeCalcs
 
                 mCurrentReadCount = 0;
                 mCurrentGeneData = geneData;
-                mRnaBamReader.readBamCounts(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd), this::processBamRead);
+                mBamReader.readBamCounts(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd), this::processBamRead);
 
                 if(mConfig.FragmentLengthsByGene)
                 {
@@ -231,7 +231,7 @@ public class FragmentSizeCalcs
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
-        if(!record.getFirstOfPairFlag() || mRnaBamReader.checkDuplicates(record))
+        if(!record.getFirstOfPairFlag() || mBamReader.checkDuplicates(record))
             return false;
 
         // ignore translocations and inversions

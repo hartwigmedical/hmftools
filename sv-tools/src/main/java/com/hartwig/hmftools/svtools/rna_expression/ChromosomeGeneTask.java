@@ -24,7 +24,6 @@ import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -42,7 +41,7 @@ public class ChromosomeGeneTask implements Callable
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final ResultsWriter mResultsWriter;
 
-    private final RnaBamReader mRnaBamReader;
+    private final GeneBamReader mBamReader;
     private final ExpectedExpressionRates mExpExpressionRates;
     private final List<EnsemblGeneData> mGeneDataList;
     private int mCurrentGeneIndex;
@@ -62,22 +61,13 @@ public class ChromosomeGeneTask implements Callable
         mGeneDataList = geneDataList;
 
         mCurrentGeneIndex = 0;
-        mRnaBamReader = new RnaBamReader(mConfig);
-        mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig) : null;
+        mBamReader = new GeneBamReader(mConfig, resultsWriter);
+        mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig, resultsWriter) : null;
 
         mPerfCounter = new PerformanceCounter(String.format("chr(%s) genes(%d)", mChromosome, mGeneDataList.size()));
     }
 
-    public void setWriters(BufferedWriter expRatesWriter, BufferedWriter readsWriter)
-    {
-        if(mExpExpressionRates == null)
-            return;
-
-        mExpExpressionRates.setWriter(expRatesWriter);
-        // mRnaBamReader.setWriter(readsWriter);
-    }
-
-    public final RnaBamReader getBamReader() { return mRnaBamReader; }
+    public final GeneBamReader getBamReader() { return mBamReader; }
 
     @Override
     public Long call()
@@ -234,7 +224,7 @@ public class ChromosomeGeneTask implements Callable
 
         GenomeRegion geneRegion = GenomeRegions.create(geneData.Chromosome, regionStart, regionEnd);
 
-        mRnaBamReader.readBamCounts(geneReadData, geneRegion);
+        mBamReader.readBamCounts(geneReadData, geneRegion);
 
         runTranscriptEstimation(geneReadData);
 
@@ -271,7 +261,7 @@ public class ChromosomeGeneTask implements Callable
             return;
         }
 
-        final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mRnaBamReader.getTransComboData());
+        final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mBamReader.getTransComboData());
 
         double totalCounts = sumVector(transComboCounts);
 

@@ -35,7 +35,7 @@ public class RnaExpectedRates
         int fragmentLength = 100;
         config.ReadLength = 20;
 
-        ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
+        ExpectedExpressionRates eeRates = ExpectedExpressionRates.from(config);
 
         eeRates.setFragmentLengthData(fragmentLength, 1);
 
@@ -239,7 +239,7 @@ public class RnaExpectedRates
         config.ReadLength = 10;
         config.ExpRateFragmentLengths.add(new int[] {30, 1});
 
-        ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
+        ExpectedExpressionRates eeRates = ExpectedExpressionRates.from(config);
 
         String geneId = "GENE01";
 
@@ -301,7 +301,7 @@ public class RnaExpectedRates
         config.ExpRateFragmentLengths.add(new int[] {30, 1});
         config.ReadLength = 10;
 
-        ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
+        ExpectedExpressionRates eeRates = ExpectedExpressionRates.from(config);
 
         String geneId = "GENE01";
 
@@ -404,7 +404,7 @@ public class RnaExpectedRates
         config.ExpRateFragmentLengths.add(new int[] {30, 1});
         config.ReadLength = 10;
 
-        ExpectedExpressionRates eeRates = new ExpectedExpressionRates(config);
+        ExpectedExpressionRates eeRates = ExpectedExpressionRates.from(config);
 
         String geneId = "GENE01";
 

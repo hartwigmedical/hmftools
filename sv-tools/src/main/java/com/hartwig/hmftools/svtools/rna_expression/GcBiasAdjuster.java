@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -224,8 +223,10 @@ public class GcBiasAdjuster
     private static final int DD_DEPTH = 0;
     private static final int DD_FREQ = 1;
 
-    public void generateDepthCounts(final RnaBamReader bamReader, final Map<String, List<EnsemblGeneData>> chrGeneMap)
+    public void generateDepthCounts(final Map<String, List<EnsemblGeneData>> chrGeneMap)
     {
+        final GeneBamReader bamReader = new GeneBamReader(mConfig, null);
+
         int bamSliceCount = 0;
 
         for (Map.Entry<String, List<EnsemblGeneData>> entry : chrGeneMap.entrySet())
