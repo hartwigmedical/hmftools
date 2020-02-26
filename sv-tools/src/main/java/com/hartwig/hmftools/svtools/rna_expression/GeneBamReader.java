@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
@@ -23,6 +24,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveComm
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
+import static com.hartwig.hmftools.svtools.sequence.KmerGenerator.reverseString;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -143,7 +145,7 @@ public class GeneBamReader
             mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
 
-        writeAltSpliceJunctions(mAltSpliceJunctionWriter, mAltSpliceJunctions);
+        writeAltSpliceJunctions(mAltSpliceJunctionWriter, mAltSpliceJunctions, mConfig);
     }
 
     public void readBamCounts(final GenomeRegion genomeRegion, final Consumer<SAMRecord> consumer)
@@ -746,7 +748,8 @@ public class GeneBamReader
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
             writer.write("GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount");
-            writer.write(",Type,StartContext,EndContext,NearestStartExon,NearestEndExon,StartTrans,EndTrans");
+            writer.write(",Type,StartContext,EndContext,NearestStartExon,NearestEndExon");
+            writer.write(",StartBases,EndBases,StartTrans,EndTrans");
             writer.newLine();
             return writer;
         }
@@ -757,7 +760,8 @@ public class GeneBamReader
         }
     }
 
-    private synchronized static void writeAltSpliceJunctions(final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions)
+    private synchronized static void writeAltSpliceJunctions(
+            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final RnaExpConfig config)
     {
         try
         {
@@ -773,8 +777,10 @@ public class GeneBamReader
                 final String startTrans = altSJ.StartTranscripts.isEmpty() ? "NONE" : altSJ.startTranscriptNames();
                 final String endTrans = altSJ.EndTranscripts.isEmpty() ? "NONE" : altSJ.endTranscriptNames();
 
-                writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s",
-                        altSJ.Type, altSJ.StartContext, altSJ.EndContext, altSJ.nearestStartExon(), altSJ.nearestEndExon(),
+                writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s,%s,%s",
+                        altSJ.Type, altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
+                        altSJ.nearestStartExon(), altSJ.nearestEndExon(),
+                        altSJ.getBaseContext(config.RefFastaSeqFile, SE_START), altSJ.getBaseContext(config.RefFastaSeqFile, SE_END),
                         startTrans, endTrans));
 
                 writer.newLine();

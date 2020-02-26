@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.convertBase;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.CRYPTIC_SPLICE_SITE;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NEW_EXONS;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.SKIPPED_EXONS;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class AltSpliceJunction
 {
@@ -30,8 +32,7 @@ public class AltSpliceJunction
     public final List<RegionReadData> StartTranscripts;
     public final List<RegionReadData> EndTranscripts;
 
-    public final String StartContext;
-    public final String EndContext;
+    public final String[] RegionContexts;
 
     public static final String CONTEXT_SJ = "SJ";
     public static final String CONTEXT_EXONIC = "EXONIC";
@@ -63,8 +64,8 @@ public class AltSpliceJunction
     {
         Gene = geneReadData;
         SpliceJunction = spliceJunction;
-        StartContext = startContext;
-        EndContext = endContext;
+
+        RegionContexts = new String[] {startContext, endContext};
 
         mFragmentCount = 0;
         StartTranscripts = Lists.newArrayList();
@@ -259,6 +260,28 @@ public class AltSpliceJunction
         }
 
         return nearestEndExon;
+    }
+
+    public String getBaseContext(final IndexedFastaSequenceFile refGenome, int seIndex)
+    {
+        long position = SpliceJunction[seIndex];
+        int startOffset = ((seIndex == SE_START) == (Gene.GeneData.Strand == 1)) ? 1 : 10;
+        int endOffset = startOffset == 1 ? 10: 1;
+
+        final String baseStr = refGenome
+                .getSubsequenceAt(Gene.GeneData.Chromosome, position - startOffset, position + endOffset).getBaseString();
+
+        if(Gene.GeneData.Strand == 1)
+            return baseStr;
+
+        String reverseStr = "";
+
+        for(int i = baseStr.length() - 1; i >= 0; --i)
+        {
+            reverseStr += String.valueOf(convertBase(baseStr.charAt(i)));
+        }
+
+        return reverseStr;
     }
 
 

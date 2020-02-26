@@ -131,7 +131,7 @@ public class KmerGenerator
             return mRefGenome.getBaseString(chromosome, position, position + length);
     }
 
-    private final String reverseString(final String str)
+    public static final String reverseString(final String str)
     {
         String reverse = "";
 
