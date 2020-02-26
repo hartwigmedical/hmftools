@@ -18,7 +18,7 @@ public class ViccReaderTestApplication {
 
         LOGGER.info("Reading VICC json from {}", viccJsonPath);
        // List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFileWithMaxEntries(viccJsonPath, 100);
-        List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(viccJsonPath, "jax");
+        List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(viccJsonPath, "molecularmatch");
 
         LOGGER.info("Read {} entries", viccEntriesSpecificKnowledgeBase.size());
     }

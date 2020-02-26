@@ -28,7 +28,7 @@ public class EventTypeAnalyzer {
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
 
     @NotNull
-    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry) {
+    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry, int num) {
         KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String event = Strings.EMPTY;
         List<EventType> eventType = Lists.newArrayList();
@@ -52,46 +52,48 @@ public class EventTypeAnalyzer {
                     event = feature.biomarkerType();
                     LOGGER.info("event cgi: " + event);
                     break;
-                case "brca": // extract info for brca
+                case "brca": // extract info for brca  //TODO
                     Brca kbBrca = (Brca) kbSpecificObject;
                     event = Strings.EMPTY;
-                    // TODO: extract event type
                     break;
-                case "civic": // extract info for civic
+                case "civic": // extract info for civic //TODO
                     Civic kbCivic = (Civic) kbSpecificObject;
                     event = feature.biomarkerType();
+                    LOGGER.info(num);
                     LOGGER.info("event civic: " + event);
-                    // TODO: extract event type
                     break;
-                case "jax": // extract info for jax
+                case "jax": // extract info for jax //TODO
                     Jax kbJax = (Jax) kbSpecificObject;
-                    event = Strings.EMPTY;
-                    // TODO: extract event type
+                    event = feature.biomarkerType();
+                    LOGGER.info("event jax: " + event);
                     break;
-                case "jax_trials": // extract info for jax trials
+                case "jax_trials": // extract info for jax trials //TODO
                     JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-                    event = Strings.EMPTY;
-                    // TODO: extract event type
+                    event = feature.biomarkerType();
+                    LOGGER.info("event jax trials: " + event);
                     break;
-                case "molecularmatch": // extract info for molecular match
+                case "molecularmatch": // extract info for molecular match //TODO
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-                    event = Strings.EMPTY;
-                    // TODO: extract event type
+                    event = feature.biomarkerType();
+                    if (event == null) {
+                        event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
+                    }
+                    LOGGER.info("event molecular match: " + event);
                     break;
-                case "molecularmatch_trials": // extract info for molecular match trials
+                case "molecularmatch_trials": // extract info for molecular match trials //TODO
                     MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-                    event = Strings.EMPTY;
-                    // TODO: extract event type
+                    event = feature.biomarkerType();
+                    LOGGER.info("event molecular match trials: " + event);
                     break;
-                case "pmkb": // extract info for pmkb
+                case "pmkb": // extract info for pmkb //TODO
                     Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-                    event = Strings.EMPTY;
-                    // TODO: extract event type
+                    event = feature.biomarkerType();
+                    LOGGER.info("event pmkb: " + event);
                     break;
-                case "sage": // extract info for sage
+                case "sage": // extract info for sage //TODO
                     Sage kbSage = (Sage) kbSpecificObject;
-                    event = Strings.EMPTY;
-                    // TODO: extract event type
+                    event = feature.biomarkerType();
+                    LOGGER.info("event sage: " + event);
                     break;
                 default:
                     LOGGER.info("Unknown knowledgebase");
