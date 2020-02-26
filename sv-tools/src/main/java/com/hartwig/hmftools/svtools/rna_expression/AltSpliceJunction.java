@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.SKIPPED_EXONS;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransName;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionWithin;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -82,7 +84,34 @@ public class AltSpliceJunction
         if(read.getTranscriptClassifications().values().contains(SPLICE_JUNCTION))
             return false;
 
-        return read.getMappedRegionCoords().size() >= 2;
+        if(read.getMappedRegionCoords().size() == 1)
+            return false;
+
+        return true;
+    }
+
+    public static boolean junctionMatchesGene(final long[] spliceJunction, final GeneReadData gene, final List<Integer> transIds)
+    {
+        for(TranscriptData transData : gene.getTranscripts())
+        {
+            if(!transIds.contains(transData.TransId))
+                continue;
+
+            for(int i = 0; i < transData.exons().size() - 1; ++i)
+            {
+                if(transData.exons().get(i).ExonEnd == spliceJunction[SE_START] && transData.exons().get(i).ExonStart == spliceJunction[SE_END])
+                    return true;
+            }
+        }
+
+        // also check any overlapping gene's exonic regions
+        if(gene.getOtherGeneExonicRegions().stream()
+                .anyMatch(x -> positionsOverlap(spliceJunction[SE_START], spliceJunction[SE_END], x[SE_START], x[SE_END])))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public boolean matches(final AltSpliceJunction other)
@@ -271,9 +300,9 @@ public class AltSpliceJunction
         final String baseStr = refGenome
                 .getSubsequenceAt(Gene.GeneData.Chromosome, position - startOffset, position + endOffset).getBaseString();
 
-        if(Gene.GeneData.Strand == 1)
-            return baseStr;
+        return baseStr;
 
+        /*
         String reverseStr = "";
 
         for(int i = baseStr.length() - 1; i >= 0; --i)
@@ -282,6 +311,7 @@ public class AltSpliceJunction
         }
 
         return reverseStr;
+        */
     }
 
 

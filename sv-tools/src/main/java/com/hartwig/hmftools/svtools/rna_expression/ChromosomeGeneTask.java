@@ -163,10 +163,7 @@ public class ChromosomeGeneTask implements Callable
             geneReadDataList.add(geneReadData);
         }
 
-        if(mConfig.RestrictedGeneIds.isEmpty())
-        {
-            markOverlappingGeneRegions(geneReadDataList, false);
-        }
+        markOverlappingGeneRegions(geneReadDataList, false);
 
         // if(geneReadDataList.size() > 1)
         //    logOverlappingGenes(geneReadDataList);

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.junctionMatchesGene;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
@@ -320,11 +321,19 @@ public class GeneBamReader
             {
                 geneReadType = GeneMatchType.ALT;
 
-                if(AltSpliceJunction.isCandidate(read1))
+                boolean read1CandidateAltSJ = AltSpliceJunction.isCandidate(read1);
+
+                if(read1CandidateAltSJ)
+                {
                     registerAltSpliceJunction(read1, invalidTranscripts);
+                }
 
                 if(AltSpliceJunction.isCandidate(read2))
-                    registerAltSpliceJunction(read2, invalidTranscripts);
+                {
+                    // avoid double-counting overlapping reads
+                    if(!read1CandidateAltSJ && !positionsOverlap(read1.PosStart, read1.PosEnd, read2.PosStart, read2.PosEnd))
+                        registerAltSpliceJunction(read2, invalidTranscripts);
+                }
             }
             else
             {
@@ -448,6 +457,10 @@ public class GeneBamReader
             existingSpliceJunc.addFragmentCount();
             return;
         }
+
+        // extra check that the SJ doesn't match any transcript
+        if(junctionMatchesGene(altSpliceJunc.SpliceJunction, mCurrentGene, invalidTranscripts))
+            return;
 
         altSpliceJunc.addFragmentCount();
         mAltSpliceJunctions.add(altSpliceJunc);
