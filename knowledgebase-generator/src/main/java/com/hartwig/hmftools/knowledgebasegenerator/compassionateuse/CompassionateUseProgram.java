@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class CompassionateUseProgram {
 
     @NotNull
-    public abstract String siteDrug();
+    public abstract String trialAcronymSite();
 
     @NotNull
     public abstract String variants();
