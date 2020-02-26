@@ -1,15 +1,12 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
 import java.util.List;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneratingCNV {
@@ -34,40 +31,5 @@ public class GeneratingCNV {
     }
 
     public static void extractCNV(@NotNull ViccEntry viccEntry) {
-        String event = Strings.EMPTY;
-        for (Feature feature : viccEntry.features()) {
-            if (viccEntry.source().equals("oncokb")) { // extract info oncokb
-                event = feature.biomarkerType();
-                if (event.equals("NA")) {
-                    event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
-                    if (Pattern.compile("[0-9]").matcher(event).find()) {
-                        LOGGER.info("manual curated: " + event + " to mutation");
-                        event = "mutation";
-                    }
-                }
-                LOGGER.info("event oncokb: " + event);
-            } else if (viccEntry.source().equals("cgi")) { // extract info for cgi
-                event = feature.biomarkerType();
-                LOGGER.info("event cgi: " + event);
-            } else if (viccEntry.source().equals("brca")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("civic")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("jax")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("jax_trials")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("molecularmatch")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("molecularmatch_trials")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("pmkb")) {
-                // TODO: extract event type
-            } else if (viccEntry.source().equals("sage")) {
-                // TODO: extract event type
-            } else {
-                LOGGER.info("Unknown knowledgebase");
-            }
-        }
     }
 }

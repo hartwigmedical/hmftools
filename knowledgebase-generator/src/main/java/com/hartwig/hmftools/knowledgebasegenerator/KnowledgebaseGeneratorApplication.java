@@ -12,19 +12,10 @@ import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
-import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
-import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
-import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
-import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
-import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -75,41 +66,12 @@ public class KnowledgebaseGeneratorApplication {
         HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         LOGGER.info("Analyzing all VICC entries");
-        int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
+            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
             hotspotExtractor.extractHotspots(viccEntry);
 
             GeneratingCNV.generatingCNVs(viccEntry);
 
-        }
-    }
-
-    private static void extractVicc(@NotNull ViccEntry viccEntry) {
-        KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
-        String source = viccEntry.source();
-
-        if (viccEntry.source().equals("brca")) {
-            Brca kbBrca = (Brca) kbSpecificObject;
-        } else if (viccEntry.source().equals("cgi")) {
-            Cgi kbCgi = (Cgi) kbSpecificObject;
-        } else if (viccEntry.source().equals("civic")) {
-            Civic kbCivic = (Civic) kbSpecificObject;
-        } else if (viccEntry.source().equals("jax")) {
-            Jax kbJax = (Jax) kbSpecificObject;
-        } else if (viccEntry.source().equals("jax_trials")) {
-            JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-        } else if (viccEntry.source().equals("molecularmatch")) {
-            MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-        } else if (viccEntry.source().equals("molecularmatch_trials")) {
-            MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-        } else if (viccEntry.source().equals("oncokb")) {
-            OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-        } else if (viccEntry.source().equals("pmkb")) {
-            Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-        } else if (viccEntry.source().equals("sage")) {
-            Sage kbSage = (Sage) kbSpecificObject;
-        } else {
-            LOGGER.warn("Unknown source");
         }
     }
 
