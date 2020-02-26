@@ -40,6 +40,8 @@ public class KnowledgebaseGeneratorApplication {
     private static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
 
+    private static final String OUTPUT_DIR = "output_dir";
+
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws ParseException, IOException {
@@ -80,7 +82,8 @@ public class KnowledgebaseGeneratorApplication {
             }
         }
         // Create all output files from knowledgebase
-        GeneratingOutputFiles.generatingOutputFiles();
+        LOGGER.info("Generating output files");
+        GeneratingOutputFiles.generatingOutputFiles(cmd.getOptionValue(OUTPUT_DIR));
     }
 
     private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {
@@ -106,7 +109,7 @@ public class KnowledgebaseGeneratorApplication {
     private static boolean validInputForKnowledgebaseGeneration(@NotNull CommandLine cmd) {
         return fileExists(cmd, ICLUSION_TRIAL_TSV) && fileExists(cmd, VICC_JSON) && fileExists(cmd, COMPASSIONATE_USE_PROGRAM_TSV)
                 && paramExists(cmd, REF_GENOME_VERSION) && valueIsPermitted(cmd, REF_GENOME_VERSION, PERMITTED_REF_GENOME_VERSIONS)
-                && fileExists(cmd, REF_GENOME_FASTA_FILE);
+                && fileExists(cmd, REF_GENOME_FASTA_FILE) && dirExists(cmd, OUTPUT_DIR);
     }
 
     private static boolean fileExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -116,6 +119,25 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         return true;
+    }
+
+    private static boolean dirExists(@NotNull CommandLine cmd, @NotNull String param) {
+        String value = cmd.getOptionValue(param);
+
+        if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
+            LOGGER.warn(param + " has to be an existing directory: " + value);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean pathExists(@NotNull String path) {
+        return Files.exists(new File(path).toPath());
+    }
+
+    private static boolean pathIsDirectory(@NotNull String path) {
+        return Files.isDirectory(new File(path).toPath());
     }
 
     private static boolean paramExists(@NotNull CommandLine cmd, @NotNull String param) {
@@ -154,6 +176,8 @@ public class KnowledgebaseGeneratorApplication {
 
         options.addOption(REF_GENOME_VERSION, true, "Ref version. Should be 'hgxx'");
         options.addOption(REF_GENOME_FASTA_FILE, true, "Path to the ref genome fasta file");
+
+        options.addOption(OUTPUT_DIR, true, "Path to the output dir of the files");
 
         return options;
     }

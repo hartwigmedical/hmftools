@@ -41,20 +41,21 @@ public class EventTypeAnalyzer {
                     if (event.equals("NA")) {
                         event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
                         if (Pattern.compile("[0-9]").matcher(event).find()) {
-                            LOGGER.info("manual curated: " + event + " to mutation");
+                          //  LOGGER.info("manual curated: " + event + " to mutation");
                             event = "mutation";
                         }
                     }
-                    LOGGER.info("event oncokb: " + event);
+                   // LOGGER.info("event oncokb: " + event);
                     break;
                 case "cgi": // extract info for cgi
                     Cgi kbCgi = (Cgi) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info("event cgi: " + event);
+                  //  LOGGER.info("event cgi: " + event);
                     break;
                 case "brca": // extract info for brca  //TODO
                     Brca kbBrca = (Brca) kbSpecificObject;
                     event = Strings.EMPTY;
+                    //  LOGGER.info("event brca: " + event);
                     break;
                 case "civic": // extract info for civic //TODO
                     Civic kbCivic = (Civic) kbSpecificObject;
@@ -65,12 +66,12 @@ public class EventTypeAnalyzer {
                 case "jax": // extract info for jax //TODO
                     Jax kbJax = (Jax) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info("event jax: " + event);
+                 //   LOGGER.info("event jax: " + event);
                     break;
                 case "jax_trials": // extract info for jax trials //TODO
                     JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info("event jax trials: " + event);
+                  //  LOGGER.info("event jax trials: " + event);
                     break;
                 case "molecularmatch": // extract info for molecular match //TODO
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
@@ -78,22 +79,22 @@ public class EventTypeAnalyzer {
                     if (event == null) {
                         event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
                     }
-                    LOGGER.info("event molecular match: " + event);
+                 //   LOGGER.info("event molecular match: " + event);
                     break;
                 case "molecularmatch_trials": // extract info for molecular match trials //TODO
                     MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info("event molecular match trials: " + event);
+                  //  LOGGER.info("event molecular match trials: " + event);
                     break;
                 case "pmkb": // extract info for pmkb //TODO
                     Pmkb kbPmkb = (Pmkb) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info("event pmkb: " + event);
+                //    LOGGER.info("event pmkb: " + event);
                     break;
                 case "sage": // extract info for sage //TODO
                     Sage kbSage = (Sage) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info("event sage: " + event);
+                 //   LOGGER.info("event sage: " + event);
                     break;
                 default:
                     LOGGER.info("Unknown knowledgebase");
