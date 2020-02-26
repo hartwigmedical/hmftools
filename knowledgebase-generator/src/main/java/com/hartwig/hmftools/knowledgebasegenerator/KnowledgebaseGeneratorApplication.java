@@ -15,6 +15,7 @@ import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.Compassionat
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.output.GeneratingOutputFiles;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -75,9 +76,11 @@ public class KnowledgebaseGeneratorApplication {
                 // Generating actionable event and known events
                 hotspotExtractor.extractHotspots(viccEntry);
 
-                GeneratingCNV.generatingCNVs(viccEntry);
+                GeneratingCNV.generatingCNVs(viccEntry, type);
             }
         }
+        // Create all output files from knowledgebase
+        GeneratingOutputFiles.generatingOutputFiles();
     }
 
     private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {
