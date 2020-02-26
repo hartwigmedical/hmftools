@@ -28,7 +28,7 @@ public class EventTypeAnalyzer {
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
 
     @NotNull
-    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry, int num) {
+    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry) {
         KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String event = Strings.EMPTY;
         List<EventType> eventType = Lists.newArrayList();
@@ -42,7 +42,7 @@ public class EventTypeAnalyzer {
                         event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
                         if (Pattern.compile("[0-9]").matcher(event).find()) {
                           //  LOGGER.info("manual curated: " + event + " to mutation");
-                            event = "mutation";
+                            event = "manual curated mutation";
                         }
                     }
                    // LOGGER.info("event oncokb: " + event);
@@ -60,7 +60,17 @@ public class EventTypeAnalyzer {
                 case "civic": // extract info for civic //TODO
                     Civic kbCivic = (Civic) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num);
+                    if (event == null) {
+                        if (Pattern.compile("[0-9]").matcher(event).find()) {
+                            //  LOGGER.info("manual curated: " + event + " to mutation");
+                            event = "manual curated mutation";
+                        } else {
+                            LOGGER.warn("event could not curated!");
+                        }
+                    } else if (event.equals("N/A")) {
+                        event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
+                    }
+
                     LOGGER.info("event civic: " + event);
                     break;
                 case "jax": // extract info for jax //TODO
@@ -97,7 +107,7 @@ public class EventTypeAnalyzer {
                  //   LOGGER.info("event sage: " + event);
                     break;
                 default:
-                    LOGGER.info("Unknown knowledgebase");
+                    LOGGER.warn("Unknown knowledgebase");
             }
             if (event == null) {
                 event = Strings.EMPTY;

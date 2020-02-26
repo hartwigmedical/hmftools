@@ -69,10 +69,8 @@ public class KnowledgebaseGeneratorApplication {
         HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         LOGGER.info("Analyzing all VICC entries");
-        int num =0;
         for (ViccEntry viccEntry : viccEntries) {
-            num +=1;
-            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
+            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type: eventType) {
                 // Generating actionable event and known events
