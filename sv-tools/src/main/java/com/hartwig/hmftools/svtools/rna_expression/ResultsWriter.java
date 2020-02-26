@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_ID;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedTransRates.UNSPLICED_ID;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
@@ -72,13 +72,17 @@ public class ResultsWriter
 
     private void initialiseExternalWriters()
     {
-        if(mConfig.WriteExpectedRates)
-            mExpRateWriter = ExpectedExpressionRates.createWriter(mConfig);
+        if(mConfig.GenerateExpectedRates)
+        {
+            mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
+        }
+        else
+        {
+            if (mConfig.WriteReadData)
+                mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
 
-        if(mConfig.WriteReadData)
-            mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
-
-        mAltSpliceJunctionWriter = GeneBamReader.createAltSpliceJunctionWriter(mConfig);
+            mAltSpliceJunctionWriter = GeneBamReader.createAltSpliceJunctionWriter(mConfig);
+        }
     }
 
     public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}

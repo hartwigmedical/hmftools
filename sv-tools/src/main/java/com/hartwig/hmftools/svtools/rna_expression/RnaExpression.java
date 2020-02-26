@@ -38,9 +38,9 @@ public class RnaExpression
     private final FragmentSizeCalcs mFragmentSizeCalcs;
     private final ExecutorService mExecutorService;
 
-    public RnaExpression(final CommandLine cmd)
+    public RnaExpression(final RnaExpConfig config, final CommandLine cmd)
     {
-        mConfig = new RnaExpConfig(cmd);
+        mConfig = config;
 
         mGcBiasAdjuster = new GcBiasAdjuster(mConfig);
 
@@ -158,13 +158,15 @@ public class RnaExpression
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        if(!RnaExpConfig.checkValid(cmd))
+        RnaExpConfig config = new RnaExpConfig(cmd);
+
+        if(!config.isValid())
         {
             RE_LOGGER.error("missing config options, exiting");
             return;
         }
 
-        RnaExpression rnaExpression = new RnaExpression(cmd);
+        RnaExpression rnaExpression = new RnaExpression(config, cmd);
         rnaExpression.runAnalysis();
 
         RE_LOGGER.info("RNA expression analysis complete");

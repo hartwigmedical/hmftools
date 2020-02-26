@@ -294,7 +294,7 @@ public class AltSpliceJunction
     public String getBaseContext(final IndexedFastaSequenceFile refGenome, int seIndex)
     {
         long position = SpliceJunction[seIndex];
-        int startOffset = ((seIndex == SE_START) == (Gene.GeneData.Strand == 1)) ? 1 : 10;
+        int startOffset = (seIndex == SE_START) ? 1 : 10;
         int endOffset = startOffset == 1 ? 10: 1;
 
         final String baseStr = refGenome

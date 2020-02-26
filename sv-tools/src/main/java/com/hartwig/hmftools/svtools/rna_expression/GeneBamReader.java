@@ -5,7 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
+
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.junctionMatchesGene;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
@@ -25,7 +25,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveComm
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
-import static com.hartwig.hmftools.svtools.sequence.KmerGenerator.reverseString;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -88,7 +87,7 @@ public class GeneBamReader
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
 
-        mSamReader = !mConfig.BamFile.isEmpty() ?
+        mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         mDuplicateCache = Maps.newHashMap();

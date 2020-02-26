@@ -3,8 +3,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_SIZE;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +37,7 @@ public class RnaExpConfig
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
     private static final String GENE_STATS_ONLY = "gene_stats_only";
+    private static final String OUTPUT_ID = "output_id";
 
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
@@ -49,11 +50,12 @@ public class RnaExpConfig
     public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
     // expected expression config
+    public static final String EXP_RATES_FILE = "exp_rates_file";
     public static final String APPLY_EXP_RATES = "apply_exp_rates";
     public static final String READ_LENGTH = "read_length";
     public static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
     public static final String UNSPLICED_WEIGHT = "unspliced_weight";
-    public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
+    public static final String GEN_EXPECTED_RATES = "generate_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
     public static final String SPECIFIC_CHR = "specific_chr";
@@ -64,6 +66,7 @@ public class RnaExpConfig
     public final List<String> RestrictedGeneIds; // specific set of genes to process
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final String OutputDir;
+    public final String OutputIdentifier; // optionally include extra identifier in output files
     public final String GcBiasFile;
     public final boolean CanonicalTranscriptOnly;
     public final String BamFile;
@@ -79,11 +82,12 @@ public class RnaExpConfig
     public final boolean WriteFragmentLengths;
     public final boolean WriteTransComboData;
 
-    public final boolean GenerateExpectedExpression;
+    public final String ExpRatesFile;
+    public final boolean ApplyExpectedRates;
     public int ReadLength;
     public final List<int[]> ExpRateFragmentLengths;
     public final double UnsplicedWeight;
-    public final boolean WriteExpectedRates;
+    public final boolean GenerateExpectedRates;
 
     public final boolean GeneStatsOnly;
     public final int FragmentLengthMinCount;
@@ -125,23 +129,27 @@ public class RnaExpConfig
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
 
         OutputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
 
         BamFile = cmd.getOptionValue(BAM_FILE);
         GcBiasFile = cmd.getOptionValue(GC_BIAS_FILE, "");
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
-        RefGenomeFile = new File(refGenomeFilename);
+        RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
 
         RefFastaSeqFile = null;
 
-        try
+        if(RefGenomeFile != null)
         {
-            RE_LOGGER.debug("loading indexed fasta reference file");
-            RefFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
-        }
-        catch (IOException e)
-        {
-            RE_LOGGER.error("Reference file loading failed: {}", e.toString());
+            try
+            {
+                RE_LOGGER.debug("loading indexed fasta reference file");
+                RefFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
+            }
+            catch (IOException e)
+            {
+                RE_LOGGER.error("Reference file loading failed: {}", e.toString());
+            }
         }
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
@@ -166,11 +174,13 @@ public class RnaExpConfig
         SpecificChromosomes = cmd.hasOption(SPECIFIC_CHR) ? Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
 
-        GenerateExpectedExpression = cmd.hasOption(APPLY_EXP_RATES);
-        ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
-        UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
+        ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
+        ExpRatesFile = cmd.getOptionValue(EXP_RATES_FILE);
 
+        GenerateExpectedRates = cmd.hasOption(GEN_EXPECTED_RATES);
+        ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         ExpRateFragmentLengths = Lists.newArrayList();
+        UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
 
         if(cmd.hasOption(ER_FRAGMENT_LENGTHS))
         {
@@ -183,8 +193,40 @@ public class RnaExpConfig
                 ExpRateFragmentLengths.add(new int[]{ fragLength, fragFrequency });
             }
         }
+    }
 
-        WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
+    public boolean isValid()
+    {
+        if(GenerateExpectedRates)
+        {
+            if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
+            {
+                RE_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
+                return false;
+            }
+
+            return true;
+        }
+
+        if(BamFile == null || BamFile.isEmpty() || !Files.exists(Paths.get(BamFile)))
+        {
+            RE_LOGGER.error("BAM file missing or not found");
+            return false;
+        }
+
+        if(SampleId == null || SampleId.isEmpty())
+        {
+            RE_LOGGER.error("sampleId missing");
+            return false;
+        }
+
+        if(RefFastaSeqFile == null)
+        {
+            RE_LOGGER.error("ref genome missing");
+            return false;
+        }
+
+        return true;
     }
 
     public boolean skipChromosome(final String chromosome)
@@ -194,7 +236,10 @@ public class RnaExpConfig
 
     public String formOutputFile(final String fileId)
     {
-        return OutputDir + SampleId + "." + fileId;
+        if(OutputIdentifier != null)
+            return OutputDir + SampleId + "." + OutputIdentifier + "." + fileId;
+        else
+            return OutputDir + SampleId + "." + fileId;
     }
 
     public RnaExpConfig()
@@ -214,16 +259,18 @@ public class RnaExpConfig
         KeepDuplicates = false;
         MarkDuplicates = false;
 
-        GenerateExpectedExpression = false;
+        ApplyExpectedRates = false;
         ReadLength = 0;
         ExpRateFragmentLengths = Lists.newArrayList();
         UnsplicedWeight = 1;
+        ExpRatesFile = null;
 
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
         WriteTransComboData = false;
-        WriteExpectedRates = false;
+        GenerateExpectedRates = false;
+        OutputIdentifier = null;
         GeneStatsOnly = false;
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
@@ -231,18 +278,6 @@ public class RnaExpConfig
         SpecificChromosomes = Lists.newArrayList();
         RunValidations = true;
         Threads = 0;
-    }
-
-    public static boolean checkValid(final CommandLine cmd)
-    {
-        final String bamFile = cmd.getOptionValue(BAM_FILE);
-        if(bamFile == null || !Files.exists(Paths.get(bamFile)))
-            return false;
-
-        if(!cmd.hasOption(SAMPLE) || !cmd.hasOption(GENE_TRANSCRIPTS_DIR))
-            return false;
-
-        return cmd.hasOption(REF_GENOME) && cmd.hasOption(BAM_FILE);
     }
 
     public static Options createCmdLineOptions()
@@ -272,14 +307,16 @@ public class RnaExpConfig
         options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
+        options.addOption(EXP_RATES_FILE, true, "File with generated expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");
 
-        options.addOption(WRITE_EXPECTED_RATES, false, "Write expected transcript rates to file");
+        options.addOption(GEN_EXPECTED_RATES, false, "Write expected transcript rates to file");
 
+        options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
         options.addOption(SPECIFIC_CHR, true, "Specify a single chromosome to analyse");
         options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");

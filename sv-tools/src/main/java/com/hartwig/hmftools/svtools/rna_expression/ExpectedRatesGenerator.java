@@ -2,16 +2,15 @@ package com.hartwig.hmftools.svtools.rna_expression;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.UNSPLICED;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -24,20 +23,14 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-public class ExpectedExpressionRates
+public class ExpectedRatesGenerator
 {
     private final RnaExpConfig mConfig;
 
-    // map of transcript (or unspliced) to all category counts covering it (and others)
-    private final Map<String,List<TranscriptComboData>> mTransComboData;
+    // map of transcript (or unspliced) to all expected category counts covering it (and others)
+    private final Map<String, List<TranscriptComboData>> mExpectedTransComboCounts;
 
-    private final List<String> mCategories; // equivalent of buckets - 0-N transcripts and the fragment type (eg SHORT, SPLICED etc)
-    private final List<String> mTranscriptIds; // equivalent of signature names - all transcripts and an UNSPLICED definition
-    private SigMatrix mTranscriptDefinitions;
-
+    private ExpectedRatesData mCurrentExpRatesData;
     private int mCurrentFragSize;
     private int mCurrentFragFrequency;
     private int mCurrentReadLength;
@@ -45,61 +38,36 @@ public class ExpectedExpressionRates
     private final BufferedWriter mExpRateWriter;
 
     public static final String UNSPLICED_ID = "UNSPLICED";
+    private static final String EXP_RATES_FILE_ID = "rna_trans_exp_rates";
 
     public static final int FL_SIZE = 0;
     public static final int FL_FREQUENCY = 1;
 
-    private static final Logger LOGGER = LogManager.getLogger(ExpectedExpressionRates.class);
-
-    public ExpectedExpressionRates(final RnaExpConfig config, final ResultsWriter resultsWriter)
+    public ExpectedRatesGenerator(final RnaExpConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mCurrentFragSize = 0;
         mCurrentFragFrequency = 0;
         mCurrentReadLength = mConfig.ReadLength;
 
-        mTransComboData = Maps.newHashMap();
-        mCategories = Lists.newArrayList();
-        mTranscriptIds = Lists.newArrayList();
-        mTranscriptDefinitions = null;
+        mExpectedTransComboCounts = Maps.newHashMap();
+        mCurrentExpRatesData = null;
+
         mExpRateWriter = resultsWriter != null ? resultsWriter.getExpRatesWriter() : null;
     }
 
-    public static ExpectedExpressionRates from(final RnaExpConfig config)
+    public static ExpectedRatesGenerator from(final RnaExpConfig config)
     {
-        return new ExpectedExpressionRates(config, null);
+        return new ExpectedRatesGenerator(config, null);
     }
 
-    public Map<String,List<TranscriptComboData>> getTransComboData() { return mTransComboData; }
-
-    public List<String> getCategories() { return mCategories; }
-    public List<String> getTranscriptNames() { return mTranscriptIds; }
-    public SigMatrix getTranscriptDefinitions() { return mTranscriptDefinitions; }
-
-    public void setFragmentLengthData(int length, int frequency)
-    {
-        mCurrentFragSize = length;
-        mCurrentFragFrequency = frequency;
-        mCurrentReadLength = min(mConfig.ReadLength, mCurrentFragSize);
-    }
-
-    public boolean validData()
-    {
-        if(mCategories.isEmpty() || mTranscriptDefinitions == null || mTransComboData.isEmpty())
-            return false;
-
-        if(mTranscriptDefinitions.Cols != mTranscriptIds.size())
-            return false;
-
-        if(mTranscriptDefinitions.Rows != mCategories.size())
-            return false;
-
-        return true;
-    }
+    public Map<String,List<TranscriptComboData>> getTransComboData() { return mExpectedTransComboCounts; }
+    public ExpectedRatesData getExpectedRatesData() { return mCurrentExpRatesData; }
 
     public void generateExpectedRates(final GeneReadData geneReadData)
     {
-        clearState();
+        mExpectedTransComboCounts.clear();
+        mCurrentExpRatesData = new ExpectedRatesData(geneReadData.GeneData.GeneId);
 
         final List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
 
@@ -178,7 +146,7 @@ public class ExpectedExpressionRates
             {
                 // force an empty entry even though it won't have an category ratios set for it
                 List<TranscriptComboData> emptyList = Lists.newArrayList(new TranscriptComboData(emptyTrans));
-                mTransComboData.put(UNSPLICED_ID, emptyList);
+                mExpectedTransComboCounts.put(UNSPLICED_ID, emptyList);
             }
         }
 
@@ -267,12 +235,12 @@ public class ExpectedExpressionRates
 
     private void addTransComboData(final String transId, final List<Integer> transcripts, FragmentMatchType transMatchType)
     {
-        List<TranscriptComboData> transComboDataList = mTransComboData.get(transId);
+        List<TranscriptComboData> transComboDataList = mExpectedTransComboCounts.get(transId);
 
         if(transComboDataList == null)
         {
             transComboDataList = Lists.newArrayList();
-            mTransComboData.put(transId, transComboDataList);
+            mExpectedTransComboCounts.put(transId, transComboDataList);
         }
 
         TranscriptComboData matchingCounts = transComboDataList.stream()
@@ -532,21 +500,21 @@ public class ExpectedExpressionRates
     {
         collectCategories();
 
-        int categoryCount = mCategories.size();
-        int definitionsCount = mTransComboData.size();
+        int categoryCount = mCurrentExpRatesData.Categories.size();
 
-        mTranscriptDefinitions = new SigMatrix(categoryCount, definitionsCount);
+        mExpectedTransComboCounts.keySet().forEach(x -> mCurrentExpRatesData.TranscriptIds.add(x));
 
-        for(Map.Entry<String,List<TranscriptComboData>> entry : mTransComboData.entrySet())
+        mCurrentExpRatesData.initialiseTranscriptDefinitions();
+
+        for(int transIndex = 0; transIndex < mCurrentExpRatesData.TranscriptIds.size(); ++transIndex)
         {
-            final String transId = entry.getKey();
-
-            int definitionIndex = mTranscriptIds.size();
-            mTranscriptIds.add(transId);
+            final String transId = mCurrentExpRatesData.TranscriptIds.get(transIndex);
 
             double[] categoryCounts = new double[categoryCount];
 
-            for(TranscriptComboData tcData : entry.getValue())
+            final List<TranscriptComboData> transCounts = mExpectedTransComboCounts.get(transId);
+
+            for(TranscriptComboData tcData : transCounts)
             {
                 final String transKey = !tcData.getTranscriptIds().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
 
@@ -559,11 +527,11 @@ public class ExpectedExpressionRates
                     if(catCount > 0)
                     {
                         final String categoryStr = formCategory(transKey, FragmentMatchType.intAsType(i));
-                        int categoryId = getCategoryIndex(categoryStr);
+                        int categoryId = mCurrentExpRatesData.getCategoryIndex(categoryStr);
 
                         if(categoryId < 0)
                         {
-                            LOGGER.error("invalid category index from transKey({})", transKey);
+                            RE_LOGGER.error("invalid category index from transKey({})", transKey);
                             return;
                         }
 
@@ -577,88 +545,13 @@ public class ExpectedExpressionRates
 
             // convert counts to ratios and add against this transcript definition
             convertToPercentages(categoryCounts);
-            mTranscriptDefinitions.setCol(definitionIndex, categoryCounts);
+            mCurrentExpRatesData.getTranscriptDefinitions().setCol(transIndex, categoryCounts);
         }
 
-        mTranscriptDefinitions.cacheTranspose();
+        mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
 
-        if(mConfig.WriteExpectedRates)
-            writeExpectedRates(mExpRateWriter, geneReadData, mCategories, mTranscriptIds, mTranscriptDefinitions);
-    }
-
-    public double[] generateTranscriptCounts(final GeneReadData geneReadData, final List<TranscriptComboData> transComboData)
-    {
-        double[] categoryCounts = new double[mCategories.size()];
-
-        int skippedComboCounts = 0;
-
-        for(TranscriptComboData tcData : transComboData)
-        {
-            final String transKey = !tcData.getTranscriptIds().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
-
-            int shortCount = tcData.getShortCount();
-            int splicedCount = tcData.getSplicedCount();
-
-            if(shortCount > 0)
-            {
-                final String categoryStr = formCategory(transKey, SHORT);
-                int categoryId = getCategoryIndex(categoryStr);
-
-                // for now if a category isn't found just log and then ignore the count in it
-                if(categoryId < 0)
-                {
-                    LOGGER.debug("category({}) skipped with count({})", categoryStr, shortCount);
-                    skippedComboCounts += shortCount;
-                }
-                else
-                {
-                    categoryCounts[categoryId] = shortCount; //  * mConfig.UnsplicedWeight;
-                }
-            }
-
-            if(splicedCount > 0)
-            {
-                final String categoryStr = formCategory(transKey, SPLICED);
-                int categoryId = getCategoryIndex(categoryStr);
-
-                if(categoryId < 0)
-                {
-                    LOGGER.debug("category({}) skipped with count({})", categoryStr, splicedCount);
-                    skippedComboCounts += splicedCount;
-                }
-                else
-                {
-                    categoryCounts[categoryId] = splicedCount;
-                }
-            }
-        }
-
-        if(skippedComboCounts > 0)
-        {
-            double totalCounts = sumVector(categoryCounts) + skippedComboCounts;
-
-            LOGGER.debug(String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
-                    geneReadData.GeneData.GeneName, skippedComboCounts, skippedComboCounts/totalCounts, totalCounts));
-        }
-
-        return categoryCounts;
-    }
-
-    private int getCategoryIndex(final String category)
-    {
-        for(int i = 0; i < mCategories.size(); ++i)
-        {
-            if(mCategories.get(i).equals(category))
-                return i;
-        }
-
-        return -1;
-    }
-
-    private void addCategory(final String category)
-    {
-        if(!mCategories.contains(category))
-            mCategories.add(category);
+        if(mConfig.GenerateExpectedRates)
+            writeExpectedRates(mExpRateWriter, geneReadData,mCurrentExpRatesData);
     }
 
     private static final String UNSPLICED_STR = "UNSPLC";
@@ -666,9 +559,9 @@ public class ExpectedExpressionRates
 
     private void collectCategories()
     {
-        addCategory(UNSPLICED_ID);
+        mCurrentExpRatesData.addCategory(UNSPLICED_ID);
 
-        for(Map.Entry<String,List<TranscriptComboData>> entry : mTransComboData.entrySet())
+        for(Map.Entry<String,List<TranscriptComboData>> entry : mExpectedTransComboCounts.entrySet())
         {
             for(TranscriptComboData tcData : entry.getValue())
             {
@@ -677,18 +570,18 @@ public class ExpectedExpressionRates
 
                 if(tcData.getShortCount() > 0)
                 {
-                    addCategory(formCategory(transKey, SHORT));
+                    mCurrentExpRatesData.addCategory(formCategory(transKey, SHORT));
                 }
 
                 if(tcData.getSplicedCount() > 0)
                 {
-                    addCategory(transKey);
+                    mCurrentExpRatesData.addCategory(transKey);
                 }
             }
         }
     }
 
-    private static String formCategory(final String transKey, FragmentMatchType countsType)
+    public static String formCategory(final String transKey, FragmentMatchType countsType)
     {
         if(countsType == SHORT)
             return String.format("%s-%s", transKey, UNSPLICED_STR);
@@ -698,44 +591,60 @@ public class ExpectedExpressionRates
             return UNSPLICED_ID;
     }
 
-    private void clearState()
+    public void setFragmentLengthData(int length, int frequency)
     {
-        mTransComboData.clear();
-        mTranscriptDefinitions = null;
-        mCategories.clear();
-        mTranscriptIds.clear();
+        mCurrentFragSize = length;
+        mCurrentFragFrequency = frequency;
+        mCurrentReadLength = min(mConfig.ReadLength, mCurrentFragSize);
     }
 
     public static BufferedWriter createWriter(final RnaExpConfig config)
     {
         try
         {
-            final String outputFileName = config.formOutputFile("expected_rates.csv");
+            String outputFileName;
+
+            if(config.ExpRatesFile != null)
+            {
+                outputFileName = config.ExpRatesFile;
+            }
+            else
+            {
+                outputFileName = config.OutputDir + EXP_RATES_FILE_ID;
+
+                if(config.OutputIdentifier != null)
+                    outputFileName += "." + config.OutputIdentifier;
+
+                outputFileName += ".csv";
+            }
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,Transcript,Category,Rate");
+            writer.write("GeneId,GeneName,TransId,Category,Rate");
             writer.newLine();
             return writer;
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
+            RE_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
             return null;
         }
     }
 
     private synchronized static void writeExpectedRates(
-            final BufferedWriter writer, final GeneReadData geneReadData,
-            final List<String> categories, final List<String> transcriptIds, SigMatrix transcriptDefinitions)
+            final BufferedWriter writer, final GeneReadData geneReadData, final ExpectedRatesData expExpData)
     {
         if(writer == null)
             return;
 
-        if(transcriptDefinitions == null || categories.isEmpty() || transcriptIds.isEmpty())
+        if(expExpData.getTranscriptDefinitions() == null || expExpData.Categories.isEmpty() || expExpData.TranscriptIds.isEmpty())
             return;
 
         try
         {
+            final SigMatrix transcriptDefinitions = expExpData.getTranscriptDefinitions();
+            final List<String> categories = expExpData.Categories;
+            final List<String> transcriptIds = expExpData.TranscriptIds;
+
             final String geneId = geneReadData.GeneData.GeneId;
             final String geneName = geneReadData.GeneData.GeneName;
 
@@ -760,13 +669,8 @@ public class ExpectedExpressionRates
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
+            RE_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
         }
-    }
-
-    public void close()
-    {
-        closeBufferedWriter(mExpRateWriter);
     }
 
 

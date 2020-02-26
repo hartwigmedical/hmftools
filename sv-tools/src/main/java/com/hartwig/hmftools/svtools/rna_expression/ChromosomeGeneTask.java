@@ -6,13 +6,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.UNSPLICED_CAT_INDEX;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.markOverlappingGeneRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
@@ -20,9 +13,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calculateTranscriptResults;
 
-import java.io.BufferedWriter;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -42,7 +33,8 @@ public class ChromosomeGeneTask implements Callable
     private final ResultsWriter mResultsWriter;
 
     private final GeneBamReader mBamReader;
-    private final ExpectedExpressionRates mExpExpressionRates;
+    private final ExpectedTransRates mExpTransRates;
+    private final ExpectedRatesGenerator mExpRatesGenerator;
     private final List<EnsemblGeneData> mGeneDataList;
     private int mCurrentGeneIndex;
     public int mGenesProcessed;
@@ -62,7 +54,9 @@ public class ChromosomeGeneTask implements Callable
 
         mCurrentGeneIndex = 0;
         mBamReader = new GeneBamReader(mConfig, resultsWriter);
-        mExpExpressionRates = mConfig.GenerateExpectedExpression ? new ExpectedExpressionRates(mConfig, resultsWriter) : null;
+        mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, resultsWriter) : null;
+
+        mExpRatesGenerator = mConfig.GenerateExpectedRates ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mPerfCounter = new PerformanceCounter(String.format("chr(%s) genes(%d)", mChromosome, mGeneDataList.size()));
     }
@@ -91,7 +85,13 @@ public class ChromosomeGeneTask implements Callable
             for (GeneReadData geneReadData : geneReadDataList)
             {
                 mPerfCounter.start();
-                processGene(geneReadData);
+
+                // at the moment it is one or the other
+                if(mExpRatesGenerator != null)
+                    generateExpectedTransRates(geneReadData);
+                else
+                    analyseBamReads(geneReadData);
+
                 mPerfCounter.stop();
 
                 ++mGenesProcessed;
@@ -191,7 +191,12 @@ public class ChromosomeGeneTask implements Callable
                 mChromosome, overlappingGenes.size(), transcriptCount, minRange, maxRange, geneNamesStr);
     }
 
-    private void processGene(final GeneReadData geneReadData)
+    private void generateExpectedTransRates(final GeneReadData geneReadData)
+    {
+        mExpRatesGenerator.generateExpectedRates(geneReadData);
+    }
+
+    private void analyseBamReads(final GeneReadData geneReadData)
     {
         // cache reference bases for comparison with read bases
         if(mConfig.RefFastaSeqFile != null)
@@ -223,7 +228,8 @@ public class ChromosomeGeneTask implements Callable
 
         mBamReader.readBamCounts(geneReadData, geneRegion);
 
-        runTranscriptEstimation(geneReadData);
+        if(mExpTransRates != null)
+            mExpTransRates.runTranscriptEstimation(geneReadData, mBamReader.getTransComboData());
 
         mResultsWriter.writeGeneData(geneReadData);
 
@@ -242,64 +248,6 @@ public class ChromosomeGeneTask implements Callable
                     mResultsWriter.writeExonData(geneReadData, transData);
                 }
             }
-        }
-    }
-
-    private void runTranscriptEstimation(final GeneReadData geneReadData)
-    {
-        if(mExpExpressionRates == null)
-            return;
-
-        mExpExpressionRates.generateExpectedRates(geneReadData);
-
-        if(!mExpExpressionRates.validData())
-        {
-            RE_LOGGER.debug("gene({}) invalid expected rates or actuals data", geneReadData.name());
-            return;
-        }
-
-        final double[] transComboCounts = mExpExpressionRates.generateTranscriptCounts(geneReadData, mBamReader.getTransComboData());
-
-        double totalCounts = sumVector(transComboCounts);
-
-        if(totalCounts == 0)
-            return;
-
-        // add in counts for the unspliced category
-        int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
-        transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
-
-        final List<String> transcriptNames = mExpExpressionRates.getTranscriptNames();
-
-        final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mExpExpressionRates.getTranscriptDefinitions());
-        final double[] fittedCounts = calculateFittedCounts(mExpExpressionRates.getTranscriptDefinitions(), fitAllocations);
-
-        double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
-
-        RE_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
-                geneReadData.name(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
-
-        geneReadData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
-
-        Map<String,Double> transAllocations = geneReadData.getTranscriptAllocations();
-
-        for(int transIndex = 0; transIndex < transcriptNames.size(); ++transIndex)
-        {
-            double transAllocation = fitAllocations[transIndex];
-            final String transName = transcriptNames.get(transIndex);
-
-            if(transAllocation > 0)
-            {
-                RE_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
-            }
-
-            transAllocations.put(transName, transAllocation);
-        }
-
-        if(mConfig.WriteTransComboData)
-        {
-            mResultsWriter.writeTransComboCounts(
-                    geneReadData, mExpExpressionRates.getCategories(), transComboCounts, fittedCounts);
         }
     }
 

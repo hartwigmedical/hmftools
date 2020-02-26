@@ -3,8 +3,8 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_FREQUENCY;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedExpressionRates.FL_SIZE;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_SIZE;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COU
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 
 import java.util.List;
-import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
