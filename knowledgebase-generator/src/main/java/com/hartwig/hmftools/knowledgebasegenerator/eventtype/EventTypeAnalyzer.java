@@ -61,12 +61,7 @@ public class EventTypeAnalyzer {
                     Civic kbCivic = (Civic) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
-                        if (Pattern.compile("[0-9]").matcher(event).find()) {
-                            //  LOGGER.info("manual curated: " + event + " to mutation");
-                            event = "manual curated mutation";
-                        } else {
-                            LOGGER.warn("event could not curated!");
-                        }
+                        event = "manual curated mutation";
                     } else if (event.equals("N/A")) {
                         event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
                     }
