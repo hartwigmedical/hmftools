@@ -15,9 +15,9 @@ public class GeneratingCNV {
     private static final Logger LOGGER = LogManager.getLogger(GeneratingCNV.class);
 
     private static final List<String> AMPLIFICATION =
-            Lists.newArrayList("amplification", "Amplification", "Gain", "overexpression", "amp", "over exp");
+            Lists.newArrayList("amplification", "Amplification", "Gain", "overexpression", "amp", "over exp"); //TODO determine values
     private static final List<String> DELETION =
-            Lists.newArrayList("deletion", "Deletion", "Copy Number Loss", "Loss", "loss", "undexpression");
+            Lists.newArrayList("deletion", "Deletion", "Copy Number Loss", "Loss", "loss", "undexpression"); //TODO determine values
 
     public static void generatingCNVs(@NotNull ViccEntry viccEntries, @NotNull EventType type) {
 
