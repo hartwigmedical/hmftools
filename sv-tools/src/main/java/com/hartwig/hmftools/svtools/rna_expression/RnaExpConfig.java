@@ -249,7 +249,7 @@ public class RnaExpConfig
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
         OutputDir = "";
-        BamFile = "";
+        BamFile = null;
         RefGenomeFile = null;
         RefFastaSeqFile = null;
         CanonicalTranscriptOnly = false;
