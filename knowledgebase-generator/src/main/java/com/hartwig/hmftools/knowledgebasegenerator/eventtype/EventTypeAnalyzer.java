@@ -116,9 +116,9 @@ public class EventTypeAnalyzer {
                         }
 
                     }
-                    LOGGER.info(num + ": event jax trials: " + event);
+                 //   LOGGER.info(num + ": event jax trials: " + event);
                     break;
-                case "molecularmatch": // extract info for molecular match //TODO
+                case "molecularmatch": // extract info for molecular match //TODO what to do when features is empty
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
@@ -134,17 +134,28 @@ public class EventTypeAnalyzer {
                 case "molecularmatch_trials": // extract info for molecular match trials //TODO
                     MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                     event = feature.biomarkerType();
-                //    LOGGER.info(num + ": event molecular match trials: " + event);
+                    if (event == null) {
+                        String [] eventArray = feature.description().split(" ");
+                        if (eventArray.length == 1) {
+                            event = event + "array: " + feature.description().split(" ", 2)[0];
+                        } else {
+                            event = event + "array: " + feature.description().split(" ", 2)[1];
+                        }
+                    }
+                    LOGGER.info(num + ": event molecular match trials: " + event);
                     break;
-                case "pmkb": // extract info for pmkb //TODO
+                case "pmkb": // extract info for pmkb
                     Pmkb kbPmkb = (Pmkb) kbSpecificObject;
                     event = feature.biomarkerType();
-                //    LOGGER.info(num + ": event pmkb: " + event);
+                 //   LOGGER.info(num + ": event pmkb: " + event);
                     break;
-                case "sage": // extract info for sage //TODO
+                case "sage": // extract info for sage
                     Sage kbSage = (Sage) kbSpecificObject;
                     event = feature.biomarkerType();
-                 //   LOGGER.info(num + ": event sage: " + event);
+                    if (event == null) {
+                        event = feature.description();
+                    }
+                   // LOGGER.info(num + ": event sage: " + event);
                     break;
                 default:
                     LOGGER.warn(num + ": Unknown knowledgebase");

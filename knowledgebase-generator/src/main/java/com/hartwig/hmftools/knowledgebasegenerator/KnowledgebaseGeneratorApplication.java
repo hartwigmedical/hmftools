@@ -71,7 +71,7 @@ public class KnowledgebaseGeneratorApplication {
         LOGGER.info("Analyzing all VICC entries");
         int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
-            if (viccEntry.source().equals("jax_trials")) {
+            if (viccEntry.source().equals("molecularmatch_trials")) {
                 num+=1;
             }
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
