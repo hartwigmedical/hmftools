@@ -86,14 +86,10 @@ public class BamSlicerApplication {
         System.setProperty("samjdk.buffer_size", "0");
         if (cmd.hasOption(INPUT_MODE_FILE)) {
             sliceFromVCF(cmd);
-        }
-
-        if (cmd.hasOption(INPUT_MODE_S3)) {
+        } else if (cmd.hasOption(INPUT_MODE_S3)) {
             Pair<URL, URL> urls = generateURLs(cmd);
             sliceFromURLs(urls.getValue(), urls.getKey(), cmd);
-        }
-
-        if (cmd.hasOption(INPUT_MODE_URL)) {
+        } else if (cmd.hasOption(INPUT_MODE_URL)) {
             URL bamURL = new URL(cmd.getOptionValue(INPUT));
             URL indexURL = new URL(cmd.getOptionValue(INDEX));
             sliceFromURLs(indexURL, bamURL, cmd);
@@ -415,7 +411,6 @@ public class BamSlicerApplication {
             Options s3Options = createS3Options();
             try {
                 return parser.parse(s3Options, args);
-
             } catch (ParseException e) {
                 LOGGER.error(e.getMessage());
                 printHelpAndExit("Slice an s3 BAM file based on BED", s3Options);
