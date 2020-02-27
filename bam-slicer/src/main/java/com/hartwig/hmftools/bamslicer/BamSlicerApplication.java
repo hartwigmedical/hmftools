@@ -53,16 +53,19 @@ import htsjdk.variant.vcf.VCFFileReader;
 import okhttp3.OkHttpClient;
 
 public class BamSlicerApplication {
+
     private static final Logger LOGGER = LogManager.getLogger(BamSlicerApplication.class);
-    private static final String SBP_ENDPOINT_URL = System.getenv("SBP_ENDPOINT_URL");
-    private static final String SBP_PROFILE = "download";
+
     private static final int S3_EXPIRATION_HOURS = 2;
 
     private static final String INPUT_MODE_S3 = "s3";
     private static final String INPUT_MODE_URL = "url";
     private static final String INPUT_MODE_FILE = "file";
+
+    private static final String S3_ENDPOINT_URL = "s3_endpoint";
+    private static final String S3_PROFILE = "s3_profile";
+    private static final String S3_BUCKET = "bucket";
     private static final String INPUT = "input";
-    private static final String BUCKET = "bucket";
     private static final String INDEX = "index";
     private static final String OUTPUT = "output";
     private static final String PROXIMITY = "proximity";
@@ -77,45 +80,50 @@ public class BamSlicerApplication {
     private static final Chunk HEADER_CHUNK = new Chunk(0, (long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE << 16);
 
     public static void main(final String... args) throws ParseException, IOException {
-        final CommandLine cmd = createCommandLine(args);
-        assert cmd != null;
+        CommandLine cmd = createCommandLine(args);
+
         // Disable default samtools buffering
         System.setProperty("samjdk.buffer_size", "0");
         if (cmd.hasOption(INPUT_MODE_FILE)) {
             sliceFromVCF(cmd);
         }
+
         if (cmd.hasOption(INPUT_MODE_S3)) {
-            final Pair<URL, URL> urls = generateURLs(cmd);
+            Pair<URL, URL> urls = generateURLs(cmd);
             sliceFromURLs(urls.getValue(), urls.getKey(), cmd);
         }
+
         if (cmd.hasOption(INPUT_MODE_URL)) {
-            final URL bamURL = new URL(cmd.getOptionValue(INPUT));
-            final URL indexURL = new URL(cmd.getOptionValue(INDEX));
+            URL bamURL = new URL(cmd.getOptionValue(INPUT));
+            URL indexURL = new URL(cmd.getOptionValue(INDEX));
             sliceFromURLs(indexURL, bamURL, cmd);
         }
+
         LOGGER.info("Done.");
     }
 
-    private static void sliceFromVCF(@NotNull final CommandLine cmd) throws IOException {
-        final String inputPath = cmd.getOptionValue(INPUT);
-        final String vcfPath = cmd.getOptionValue(VCF);
-        final int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
-        final SamReader reader = SamReaderFactory.makeDefault().open(new File(inputPath));
-        final QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
-        final CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+    private static void sliceFromVCF(@NotNull CommandLine cmd) throws IOException {
+        String inputPath = cmd.getOptionValue(INPUT);
+        String vcfPath = cmd.getOptionValue(VCF);
+        int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
+
+        SamReader reader = SamReaderFactory.makeDefault().open(new File(inputPath));
+        QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
+        CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
+        SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
+
         writeToSlice(writer, iterator);
+
         writer.close();
         reader.close();
     }
 
     @NotNull
-    private static QueryInterval[] getIntervalsFromVCF(@NotNull final String vcfPath, @NotNull final SAMFileHeader header,
-            final int proximity) {
-        final File vcfFile = new File(vcfPath);
-        final VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
-        final List<QueryInterval> queryIntervals = Lists.newArrayList();
+    private static QueryInterval[] getIntervalsFromVCF(@NotNull String vcfPath, @NotNull SAMFileHeader header, int proximity) {
+        File vcfFile = new File(vcfPath);
+        VCFFileReader vcfReader = new VCFFileReader(vcfFile, false);
+        List<QueryInterval> queryIntervals = Lists.newArrayList();
 
         for (VariantContext variant : vcfReader) {
             queryIntervals.add(new QueryInterval(header.getSequenceIndex(variant.getContig()),
@@ -123,12 +131,12 @@ public class BamSlicerApplication {
                     variant.getStart() + proximity));
 
             if (variant.getStructuralVariantType() == StructuralVariantType.BND) {
-                final String call = variant.getAlternateAllele(0).getDisplayString();
-                final String[] leftSplit = call.split("]");
-                final String[] rightSplit = call.split("\\[");
+                String call = variant.getAlternateAllele(0).getDisplayString();
+                String[] leftSplit = call.split("]");
+                String[] rightSplit = call.split("\\[");
 
-                final String contig;
-                final int position;
+                String contig;
+                int position;
                 if (leftSplit.length >= 2) {
                     final String[] location = leftSplit[1].split(":");
                     contig = location[0];
@@ -155,34 +163,35 @@ public class BamSlicerApplication {
     }
 
     @NotNull
-    private static Pair<URL, URL> generateURLs(@NotNull final CommandLine cmd) {
+    private static Pair<URL, URL> generateURLs(@NotNull CommandLine cmd) {
         try {
-            LOGGER.info("Attempting to generate S3 URLs for endpoint: {} using profile: {}", SBP_ENDPOINT_URL, SBP_PROFILE);
-            final S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(SBP_ENDPOINT_URL, SBP_PROFILE);
-            final URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INPUT), S3_EXPIRATION_HOURS);
-            final URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
+            String s3Endpoint = cmd.getOptionValue(S3_ENDPOINT_URL);
+            String s3Profile = cmd.getOptionValue(S3_PROFILE);
+
+            LOGGER.info("Attempting to generate S3 URLs for endpoint: {} using profile: {}", s3Endpoint, s3Profile);
+            S3UrlGenerator urlGenerator = ImmutableS3UrlGenerator.of(s3Endpoint, s3Profile);
+            URL bamUrl = urlGenerator.generateUrl(cmd.getOptionValue(S3_BUCKET), cmd.getOptionValue(INPUT), S3_EXPIRATION_HOURS);
+            URL indexUrl = urlGenerator.generateUrl(cmd.getOptionValue(S3_BUCKET), cmd.getOptionValue(INDEX), S3_EXPIRATION_HOURS);
             return Pair.of(bamUrl, indexUrl);
         } catch (Exception e) {
             LOGGER.error("Could not create S3 URLs. Error: {}", e.toString());
-            LOGGER.error("You must run this with the sbp user or set up aws credentials and the SBP_ENDPOINT_URL environment variable");
             System.exit(1);
         }
         return null;
     }
 
-    private static void sliceFromURLs(@NotNull final URL indexUrl, @NotNull final URL bamUrl, @NotNull final CommandLine cmd)
-            throws IOException {
-        final File indexFile = downloadIndex(indexUrl);
+    private static void sliceFromURLs(@NotNull URL indexUrl, @NotNull URL bamUrl, @NotNull CommandLine cmd) throws IOException {
+        File indexFile = downloadIndex(indexUrl);
         indexFile.deleteOnExit();
-        final SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
-        final SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+        SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
+        SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
-        final BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+        BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
 
-        final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
-        final Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
-        final List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
-        final SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
+        Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
+        Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
+        List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
+        SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
 
         queryIntervalsAndSpan.ifPresent(pair -> {
             LOGGER.info("Slicing bam on bed regions...");
@@ -190,6 +199,7 @@ public class BamSlicerApplication {
             writeToSlice(writer, bedIterator);
             LOGGER.info("Done writing bed slices.");
         });
+
         unmappedChunk.ifPresent(chunk -> {
             LOGGER.info("Slicing unmapped reads...");
             final CloseableIterator<SAMRecord> unmappedIterator = cachingReader.queryUnmapped();
@@ -206,29 +216,29 @@ public class BamSlicerApplication {
     private static Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan(@NotNull final SamReader reader,
             @NotNull final BAMIndex bamIndex, @NotNull final CommandLine cmd) throws IOException {
         if (cmd.hasOption(BED)) {
-            final String bedPath = cmd.getOptionValue(BED);
+            String bedPath = cmd.getOptionValue(BED);
             LOGGER.info("Reading query intervals from BED file: {}", bedPath);
-            final QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
-            final BAMFileSpan span = BAMFileReader.getFileSpan(intervals, bamIndex);
+            QueryInterval[] intervals = getIntervalsFromBED(bedPath, reader.getFileHeader());
+            BAMFileSpan span = BAMFileReader.getFileSpan(intervals, bamIndex);
             return Optional.of(Pair.of(intervals, span));
         }
         return Optional.empty();
     }
 
-    private static SamReader createCachingReader(@NotNull final File indexFile, @NotNull final URL bamUrl, @NotNull final CommandLine cmd,
-            @NotNull final List<Chunk> sliceChunks) throws IOException {
-        final OkHttpClient httpClient =
+    private static SamReader createCachingReader(@NotNull File indexFile, @NotNull URL bamUrl, @NotNull CommandLine cmd,
+            @NotNull List<Chunk> sliceChunks) throws IOException {
+        OkHttpClient httpClient =
                 SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_REQUESTS_DEFAULT)));
-        final int maxBufferSize = readMaxBufferSize(cmd);
-        final SamInputResource bamResource =
+        int maxBufferSize = readMaxBufferSize(cmd);
+        SamInputResource bamResource =
                 SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, sliceChunks, maxBufferSize)).index(indexFile);
         return SamReaderFactory.makeDefault().open(bamResource);
     }
 
     @NotNull
-    private static List<Chunk> sliceChunks(@NotNull final Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan,
-            @NotNull final Optional<Chunk> unmappedChunk) {
-        final List<Chunk> chunks = Lists.newArrayList();
+    private static List<Chunk> sliceChunks(@NotNull Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan,
+            @NotNull Optional<Chunk> unmappedChunk) {
+        List<Chunk> chunks = Lists.newArrayList();
         chunks.add(HEADER_CHUNK);
         queryIntervalsAndSpan.ifPresent(pair -> {
             chunks.addAll(expandChunks(pair.getValue().getChunks()));
@@ -239,42 +249,44 @@ public class BamSlicerApplication {
     }
 
     @NotNull
-    private static List<Chunk> expandChunks(@NotNull final List<Chunk> chunks) {
-        final List<Chunk> result = Lists.newArrayList();
-        for (final Chunk chunk : chunks) {
-            final long chunkEndBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
-            final long extendedEndBlockAddress = chunkEndBlockAddress + BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
-            final long newChunkEnd = Math.min(extendedEndBlockAddress, MAX_BLOCK_ADDRESS);
-            final long chunkEndVirtualPointer = newChunkEnd << 16;
+    private static List<Chunk> expandChunks(@NotNull List<Chunk> chunks) {
+        List<Chunk> result = Lists.newArrayList();
+        for (Chunk chunk : chunks) {
+            long chunkEndBlockAddress = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
+            long extendedEndBlockAddress = chunkEndBlockAddress + BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE;
+            long newChunkEnd = Math.min(extendedEndBlockAddress, MAX_BLOCK_ADDRESS);
+            long chunkEndVirtualPointer = newChunkEnd << 16;
             result.add(new Chunk(chunk.getChunkStart(), chunkEndVirtualPointer));
         }
         return result;
     }
 
     @NotNull
-    private static File downloadIndex(@NotNull final URL indexUrl) throws IOException {
-        LOGGER.info("Downloading index...");
-        final ReadableByteChannel indexChannel = Channels.newChannel(indexUrl.openStream());
-        final File index = File.createTempFile("tmp", ".bai");
-        final FileOutputStream indexOutputStream = new FileOutputStream(index);
+    private static File downloadIndex(@NotNull URL indexUrl) throws IOException {
+        LOGGER.info("Downloading index from {}", indexUrl);
+
+        ReadableByteChannel indexChannel = Channels.newChannel(indexUrl.openStream());
+        File index = File.createTempFile("tmp", ".bai");
+        FileOutputStream indexOutputStream = new FileOutputStream(index);
         indexOutputStream.getChannel().transferFrom(indexChannel, 0, Long.MAX_VALUE);
         indexOutputStream.close();
         indexChannel.close();
+
         return index;
     }
 
     @NotNull
-    private static Optional<Chunk> getUnmappedChunk(@NotNull final BAMIndex bamIndex, @Nullable final String contentLengthString,
-            @NotNull final CommandLine cmd) {
+    private static Optional<Chunk> getUnmappedChunk(@NotNull BAMIndex bamIndex, @Nullable String contentLengthString,
+            @NotNull CommandLine cmd) {
         if (cmd.hasOption(UNMAPPED)) {
-            final long startOfLastLinearBin = bamIndex.getStartOfLastLinearBin();
+            long startOfLastLinearBin = bamIndex.getStartOfLastLinearBin();
             if (startOfLastLinearBin == -1) {
                 LOGGER.warn("Start of last linear bin was -1. No mapped reads found in BAM.");
                 return Optional.empty();
             }
             if (contentLengthString != null) {
                 try {
-                    final long contentLength = Long.parseLong(contentLengthString);
+                    long contentLength = Long.parseLong(contentLengthString);
                     // We multiply content length with 2^16 = ~64k. Presumably 'content length' is "in terms of number of 64Kb packets".
                     return Optional.of(new Chunk(startOfLastLinearBin, contentLength << 16));
                 } catch (NumberFormatException ignored) {
@@ -287,33 +299,32 @@ public class BamSlicerApplication {
     }
 
     @NotNull
-    private static QueryInterval[] getIntervalsFromBED(@NotNull final String bedPath, @NotNull final SAMFileHeader header)
-            throws IOException {
-        final Slicer bedSlicer = SlicerFactory.fromBedFile(bedPath);
-        final List<QueryInterval> queryIntervals = Lists.newArrayList();
-        for (final GenomeRegion region : bedSlicer.regions()) {
+    private static QueryInterval[] getIntervalsFromBED(@NotNull String bedPath, @NotNull SAMFileHeader header) throws IOException {
+        Slicer bedSlicer = SlicerFactory.fromBedFile(bedPath);
+        List<QueryInterval> queryIntervals = Lists.newArrayList();
+        for (GenomeRegion region : bedSlicer.regions()) {
             queryIntervals.add(new QueryInterval(header.getSequenceIndex(region.chromosome()), (int) region.start(), (int) region.end()));
         }
         return QueryInterval.optimizeIntervals(queryIntervals.toArray(new QueryInterval[queryIntervals.size()]));
     }
 
     @NotNull
-    private static CloseableIterator<SAMRecord> getIterator(@NotNull final SamReader reader, @NotNull final QueryInterval[] intervals,
+    private static CloseableIterator<SAMRecord> getIterator(@NotNull SamReader reader, @NotNull QueryInterval[] intervals,
             @NotNull final long[] filePointers) {
         if (reader instanceof SamReader.PrimitiveSamReaderToSamReaderAdapter) {
-            final SamReader.PrimitiveSamReaderToSamReaderAdapter adapter = (SamReader.PrimitiveSamReaderToSamReaderAdapter) reader;
+            SamReader.PrimitiveSamReaderToSamReaderAdapter adapter = (SamReader.PrimitiveSamReaderToSamReaderAdapter) reader;
             if (adapter.underlyingReader() instanceof BAMFileReader) {
-                final BAMFileReader bamReader = (BAMFileReader) adapter.underlyingReader();
+                BAMFileReader bamReader = (BAMFileReader) adapter.underlyingReader();
                 return bamReader.createIndexIterator(intervals, false, filePointers);
             }
         }
         return reader.queryOverlapping(intervals);
     }
 
-    private static void writeToSlice(final SAMFileWriter writer, @NotNull final CloseableIterator<SAMRecord> iterator) {
+    private static void writeToSlice(@NotNull SAMFileWriter writer, @NotNull CloseableIterator<SAMRecord> iterator) {
         String contig = "";
         while (iterator.hasNext()) {
-            final SAMRecord record = iterator.next();
+            SAMRecord record = iterator.next();
             if (record.getContig() != null && !contig.equals(record.getContig())) {
                 contig = record.getContig();
                 LOGGER.info("Reading contig: {}", contig);
@@ -324,9 +335,9 @@ public class BamSlicerApplication {
     }
 
     private static int readMaxBufferSize(@NotNull final CommandLine cmd) {
-        final String optionValue = cmd.getOptionValue(MAX_CHUNKS_IN_MEMORY, MAX_CHUNKS_IN_MEMORY_DEFAULT);
+        String optionValue = cmd.getOptionValue(MAX_CHUNKS_IN_MEMORY, MAX_CHUNKS_IN_MEMORY_DEFAULT);
         try {
-            final int bufferSize = Integer.parseInt(optionValue);
+            int bufferSize = Integer.parseInt(optionValue);
             if (bufferSize <= 0) {
                 throw new IllegalArgumentException("Buffer size cannot be <= 0.");
             }
@@ -338,8 +349,8 @@ public class BamSlicerApplication {
 
     @NotNull
     private static Options createOptions() {
-        final Options options = new Options();
-        final OptionGroup inputModeOptionGroup = new OptionGroup();
+        Options options = new Options();
+        OptionGroup inputModeOptionGroup = new OptionGroup();
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_S3).required().desc("read input BAM from s3").build());
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from file").build());
         inputModeOptionGroup.addOption(Option.builder(INPUT_MODE_URL).required().desc("read input BAM from url").build());
@@ -349,7 +360,7 @@ public class BamSlicerApplication {
 
     @NotNull
     private static Options createURLOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(Option.builder(INPUT_MODE_URL).required().desc("Read input BAM from url").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("url of BAM file (required)").build());
         options.addOption(Option.builder(INDEX).required().hasArg().desc("url of BAM index file(required)").build());
@@ -358,9 +369,11 @@ public class BamSlicerApplication {
 
     @NotNull
     private static Options createS3Options() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(Option.builder(INPUT_MODE_S3).required().desc("Read input BAM from s3").build());
-        options.addOption(Option.builder(BUCKET).required().hasArg().desc("s3 bucket for BAM and index files (required)").build());
+        options.addOption(Option.builder(S3_ENDPOINT_URL).required().hasArg().desc("URL of the s3 end point").build());
+        options.addOption(Option.builder(S3_PROFILE).required().hasArg().desc("Name of the profile to access the s3 bucket").build());
+        options.addOption(Option.builder(S3_BUCKET).required().hasArg().desc("s3 bucket for BAM and index files (required)").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("s3 BAM file location (required)").build());
         options.addOption(Option.builder(INDEX).required().hasArg().desc("s3 BAM index location (required)").build());
         return addHttpSlicerOptions(options);
@@ -384,7 +397,7 @@ public class BamSlicerApplication {
 
     @NotNull
     private static Options createVcfOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(Option.builder(INPUT_MODE_FILE).required().desc("read input BAM from the filesystem").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("the input BAM to slice (required)").build());
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
@@ -393,13 +406,13 @@ public class BamSlicerApplication {
         return options;
     }
 
-    @Nullable
-    private static CommandLine createCommandLine(@NotNull final String... args) throws ParseException {
-        final Options options = createOptions();
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args, true);
+    @NotNull
+    private static CommandLine createCommandLine(@NotNull String... args) throws ParseException {
+        Options options = createOptions();
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(options, args, true);
         if (cmd.hasOption(INPUT_MODE_S3)) {
-            final Options s3Options = createS3Options();
+            Options s3Options = createS3Options();
             try {
                 return parser.parse(s3Options, args);
 
@@ -408,7 +421,7 @@ public class BamSlicerApplication {
                 printHelpAndExit("Slice an s3 BAM file based on BED", s3Options);
             }
         } else if (cmd.hasOption(INPUT_MODE_FILE)) {
-            final Options vcfOptions = createVcfOptions();
+            Options vcfOptions = createVcfOptions();
             try {
                 return parser.parse(vcfOptions, args);
             } catch (final ParseException e) {
@@ -416,10 +429,9 @@ public class BamSlicerApplication {
                 printHelpAndExit("Slice a local BAM file based on VCF", vcfOptions);
             }
         } else if (cmd.hasOption(INPUT_MODE_URL)) {
-            final Options urlOptions = createURLOptions();
+            Options urlOptions = createURLOptions();
             try {
                 return parser.parse(urlOptions, args);
-
             } catch (ParseException e) {
                 LOGGER.error(e.getMessage());
                 printHelpAndExit("Slice a BAM file based on URLs", urlOptions);
@@ -427,11 +439,12 @@ public class BamSlicerApplication {
         } else {
             printHelpAndExit("Slice a BAM", options);
         }
-        return null;
+
+        throw new IllegalStateException("Option creation reached end of options. Shouldn't be possible");
     }
 
-    private static void printHelpAndExit(@NotNull final String header, @NotNull final Options options) {
-        final HelpFormatter formatter = new HelpFormatter();
+    private static void printHelpAndExit(@NotNull String header, @NotNull Options options) {
+        HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("bam-slicer", header, options, "", true);
         System.exit(1);
     }
