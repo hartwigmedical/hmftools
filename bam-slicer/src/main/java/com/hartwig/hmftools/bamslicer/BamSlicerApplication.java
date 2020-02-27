@@ -103,6 +103,7 @@ public class BamSlicerApplication {
         String vcfPath = cmd.getOptionValue(VCF);
         int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
+        // TODO Create a SamReader that uses embedded ref for a CRAM file.
         SamReader reader = SamReaderFactory.makeDefault().open(new File(inputPath));
         QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
         CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
