@@ -43,6 +43,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
 import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.samtools.util.CloseableIterator;
@@ -77,6 +78,8 @@ public class BamSlicerApplication {
     private static final String MAX_CONCURRENT_REQUESTS = "max_concurrent_requests";
     private static final String MAX_CONCURRENT_REQUESTS_DEFAULT = "50";
 
+    private static final String REF_GENOME_FASTA_FILE = "ref_genome_fasta_file";
+
     private static final Chunk HEADER_CHUNK = new Chunk(0, (long) BlockCompressedStreamConstants.MAX_COMPRESSED_BLOCK_SIZE << 16);
 
     public static void main(final String... args) throws ParseException, IOException {
@@ -104,7 +107,13 @@ public class BamSlicerApplication {
         int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
         // TODO Create a SamReader that uses embedded ref for a CRAM file.
-        SamReader reader = SamReaderFactory.makeDefault().open(new File(inputPath));
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+
+        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
+            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
+        }
+
+        SamReader reader = readerFactory.open(new File(inputPath));
         QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
         CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
         SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
@@ -400,6 +409,10 @@ public class BamSlicerApplication {
         options.addOption(Option.builder(OUTPUT).required().hasArg().desc("the output BAM (required)").build());
         options.addOption(Option.builder(PROXIMITY).hasArg().desc("distance to slice around breakpoint (optional, default=500)").build());
         options.addOption(Option.builder(VCF).required().hasArg().desc("VCF to slice BAM with (required)").build());
+        options.addOption(Option.builder(REF_GENOME_FASTA_FILE)
+                .hasArg()
+                .desc("(Optional) path to the ref genome fasta (for reading CRAMs)")
+                .build());
         return options;
     }
 
