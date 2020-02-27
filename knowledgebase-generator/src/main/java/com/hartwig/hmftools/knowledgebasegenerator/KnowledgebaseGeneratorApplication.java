@@ -71,9 +71,11 @@ public class KnowledgebaseGeneratorApplication {
         LOGGER.info("Analyzing all VICC entries");
         int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
-            num+=1;
+            if (viccEntry.source().equals("civic")) {
+                num+=1;
+            }
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
-            LOGGER.info("eventType: " + eventType);
+          //  LOGGER.info("eventType: " + eventType);
 
             for (EventType type: eventType) {
                 // Generating actionable event and known events

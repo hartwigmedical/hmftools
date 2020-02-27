@@ -39,67 +39,85 @@ public class EventTypeAnalyzer {
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event.equals("NA")) {
-                        event = feature.description().split(" ",2)[1];
+                        String [] eventArray = feature.description().split(" ");
+                        if (eventArray.length == 1) {
+                            event = "array: " + feature.description().split(" ", 2)[0];
+                        } else {
+                            event = "array: " + feature.description().split(" ", 2)[1];
+                        }
+
                         if (Pattern.compile("[0-9]").matcher(event).find()) {
-                          //  LOGGER.info("manual curated: " + event + " to mutation");
                             event = "manual curated mutation";
                         }
                     }
-                    LOGGER.info(num + ": event oncokb: " + event);
+                 //   LOGGER.info(num + ": event oncokb: " + event);
                     break;
                 case "cgi": // extract info for cgi
                     Cgi kbCgi = (Cgi) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num + ": event cgi: " + event);
+                 //   LOGGER.info(num + ": event cgi: " + event);
                     break;
                 case "brca": // extract info for brca  //TODO
                     Brca kbBrca = (Brca) kbSpecificObject;
                     event = Strings.EMPTY;
-                      LOGGER.info(num + ": event brca: " + event);
+                  //    LOGGER.info(num + ": event brca: " + event);
                     break;
-                case "civic": // extract info for civic //TODO
+                case "civic": // extract info for civic
                     Civic kbCivic = (Civic) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         event = "manual curated mutation";
                     } else if (event.equals("N/A")) {
-                        event = feature.description().split(" ",2)[1];
+                        String [] eventArray = feature.description().split(" ");
+                        if (eventArray.length == 1) {
+                            event = "array: " + feature.description().split(" ", 2)[0];
+                        } else {
+                            event = "array: " + feature.description().split(" ", 2)[1];
+                            if (Pattern.compile("[0-9]").matcher(event).find()) {
+                                event = feature.description().split(" ", 2)[1].split(" ", 2)[1];
+                            }
+                        }
                     }
 
-                    LOGGER.info(num + ": event civic: " + event);
+                  //  LOGGER.info(num + ": event civic: " + event);
                     break;
                 case "jax": // extract info for jax //TODO
                     Jax kbJax = (Jax) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num + ": event jax: " + event);
+                  //  LOGGER.info(num + ": event jax: " + event);
                     break;
                 case "jax_trials": // extract info for jax trials //TODO
                     JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num + ": event jax trials: " + event);
+                //    LOGGER.info(num + ": event jax trials: " + event);
                     break;
                 case "molecularmatch": // extract info for molecular match //TODO
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
-                        event = feature.description().split(" ",2)[1];
+                        String [] eventArray = feature.description().split(" ");
+                        if (eventArray.length == 1) {
+                            event = "array: " + feature.description().split(" ", 2)[0];
+                        } else {
+                            event = "array: " + feature.description().split(" ", 2)[1];
+                        }
                     }
-                    LOGGER.info(num + ": event molecular match: " + event);
+                //    LOGGER.info(num + ": event molecular match: " + event);
                     break;
                 case "molecularmatch_trials": // extract info for molecular match trials //TODO
                     MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num + ": event molecular match trials: " + event);
+                //    LOGGER.info(num + ": event molecular match trials: " + event);
                     break;
                 case "pmkb": // extract info for pmkb //TODO
                     Pmkb kbPmkb = (Pmkb) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num + ": event pmkb: " + event);
+                //    LOGGER.info(num + ": event pmkb: " + event);
                     break;
                 case "sage": // extract info for sage //TODO
                     Sage kbSage = (Sage) kbSpecificObject;
                     event = feature.biomarkerType();
-                    LOGGER.info(num + ": event sage: " + event);
+                 //   LOGGER.info(num + ": event sage: " + event);
                     break;
                 default:
                     LOGGER.warn(num + ": Unknown knowledgebase");
