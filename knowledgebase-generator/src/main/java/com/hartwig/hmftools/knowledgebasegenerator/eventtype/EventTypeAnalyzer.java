@@ -81,10 +81,23 @@ public class EventTypeAnalyzer {
 
                   //  LOGGER.info(num + ": event civic: " + event);
                     break;
-                case "jax": // extract info for jax //TODO
+                case "jax": // extract info for jax
                     Jax kbJax = (Jax) kbSpecificObject;
                     event = feature.biomarkerType();
-                  //  LOGGER.info(num + ": event jax: " + event);
+                    if (event == null) {
+                        if (feature.description() != null){
+                            event = feature.description();
+                            if (Pattern.compile("[0-9]").matcher(event).find()) {
+                                event = event + " : description manual curated mutation";
+                            }
+                        } else {
+                            event = feature.name();
+                            if (Pattern.compile("[0-9]").matcher(event).find()) {
+                                event = event + " : name manual curated mutation";
+                            }
+                        }
+                    }
+                    LOGGER.info(num + ": event jax: " + event);
                     break;
                 case "jax_trials": // extract info for jax trials //TODO
                     JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
