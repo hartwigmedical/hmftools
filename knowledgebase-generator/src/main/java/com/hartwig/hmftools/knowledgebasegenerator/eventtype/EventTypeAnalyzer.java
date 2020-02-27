@@ -39,7 +39,7 @@ public class EventTypeAnalyzer {
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event.equals("NA")) {
-                        event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
+                        event = feature.description().split(" ",2)[1];
                         if (Pattern.compile("[0-9]").matcher(event).find()) {
                           //  LOGGER.info("manual curated: " + event + " to mutation");
                             event = "manual curated mutation";
@@ -63,7 +63,7 @@ public class EventTypeAnalyzer {
                     if (event == null) {
                         event = "manual curated mutation";
                     } else if (event.equals("N/A")) {
-                        event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
+                        event = feature.description().split(" ",2)[1];
                     }
 
                     LOGGER.info(num + ": event civic: " + event);
@@ -82,7 +82,7 @@ public class EventTypeAnalyzer {
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
-                        event = feature.description().substring(feature.description().lastIndexOf(" ") + 1);
+                        event = feature.description().split(" ",2)[1];
                     }
                     LOGGER.info(num + ": event molecular match: " + event);
                     break;
