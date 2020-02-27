@@ -97,12 +97,26 @@ public class EventTypeAnalyzer {
                             }
                         }
                     }
-                    LOGGER.info(num + ": event jax: " + event);
+                  //  LOGGER.info(num + ": event jax: " + event);
                     break;
-                case "jax_trials": // extract info for jax trials //TODO
+                case "jax_trials": // extract info for jax trials
                     JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
                     event = feature.biomarkerType();
-                //    LOGGER.info(num + ": event jax trials: " + event);
+                    if (event == null) {
+                        if (feature.description() != null){
+                            event = feature.description();
+                            if (Pattern.compile("[0-9]").matcher(event).find()) {
+                                event = event + " :  manual curated mutation";
+                            }
+                        } else {
+                            event = feature.name();
+                            if (Pattern.compile("[0-9]").matcher(event).find()) {
+                                event = event + " : name manual curated mutation";
+                            }
+                        }
+
+                    }
+                    LOGGER.info(num + ": event jax trials: " + event);
                     break;
                 case "molecularmatch": // extract info for molecular match //TODO
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
