@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.junctionMatchesGene;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
@@ -44,6 +43,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -52,6 +52,7 @@ public class GeneBamReader
 {
     private final RnaExpConfig mConfig;
     private final SamReader mSamReader;
+    private final BamSlicer mBamSlicer;
 
     // state relating to the current gene
     private GeneReadData mCurrentGene;
@@ -60,17 +61,16 @@ public class GeneBamReader
     private int mGeneReadCount;
     private int mTotalBamReadCount;
 
-    private static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
+    public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
     private final Map<String,ReadRecord> mFragmentReads;
     private final Map<Long,List<long[]>> mDuplicateCache;
     private final List<String> mDuplicateReadIds;
 
     private final List<TranscriptComboData> mTransComboData;
-    private final List<AltSpliceJunction> mAltSpliceJunctions;
+    private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
 
     private final BufferedWriter mReadDataWriter;
-    private final BufferedWriter mAltSpliceJunctionWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(GeneBamReader.class);
 
@@ -82,7 +82,6 @@ public class GeneBamReader
         mFragmentReads = Maps.newHashMap();
         mDiscardedReads = Lists.newArrayList();
         mTransComboData = Lists.newArrayList();
-        mAltSpliceJunctions = Lists.newArrayList();
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
@@ -90,11 +89,15 @@ public class GeneBamReader
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false);
+
         mDuplicateCache = Maps.newHashMap();
         mDuplicateReadIds = Lists.newArrayList();
 
         mReadDataWriter = resultsWriter != null ? resultsWriter.getReadDataWriter() : null;
-        mAltSpliceJunctionWriter = resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null;
+
+        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
+                mConfig, mSamReader, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
     }
 
     public static GeneBamReader from(final RnaExpConfig config)
@@ -103,7 +106,6 @@ public class GeneBamReader
     }
 
     public int totalBamCount() { return mTotalBamReadCount; }
-    public List<AltSpliceJunction> getAltSpliceJunctions() { return mAltSpliceJunctions; }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
@@ -115,12 +117,13 @@ public class GeneBamReader
         mCurrentGene = geneReadData;
         mGeneReadCount = 0;
         mTransComboData.clear();
-        mAltSpliceJunctions.clear();
+        mAltSpliceJunctionFinder.setGeneData(geneReadData);
 
-        SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
-        samSlicer.setDropDuplicates(false);
+        // SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
+        // samSlicer.setDropDuplicates(false);
+        // samSlicer.slice(mSamReader, this::processSamRecord);
 
-        samSlicer.slice(mSamReader, this::processSamRecord);
+        mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
         if(!mFragmentReads.isEmpty())
         {
@@ -133,8 +136,6 @@ public class GeneBamReader
             }
 
             // only paired reads can be processed - otherwise implies a link to another gene or non-genic region
-
-            // mFragmentReads.values().forEach(x -> processingUnmatchedRead(x));
             mFragmentReads.clear();
         }
 
@@ -145,7 +146,8 @@ public class GeneBamReader
             mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
 
-        writeAltSpliceJunctions(mAltSpliceJunctionWriter, mAltSpliceJunctions, mConfig);
+        mAltSpliceJunctionFinder.recordDepthCounts();
+        mAltSpliceJunctionFinder.writeAltSpliceJunctions();
     }
 
     public void readBamCounts(final GenomeRegion genomeRegion, final Consumer<SAMRecord> consumer)
@@ -320,18 +322,20 @@ public class GeneBamReader
             {
                 geneReadType = GeneMatchType.ALT;
 
-                boolean read1CandidateAltSJ = AltSpliceJunction.isCandidate(read1);
+                boolean read1CandidateAltSJ = AltSpliceJunctionFinder.isCandidate(read1);
 
                 if(read1CandidateAltSJ)
                 {
-                    registerAltSpliceJunction(read1, invalidTranscripts);
+                    mAltSpliceJunctionFinder.registerAltSpliceJunction(read1, invalidTranscripts);
                 }
 
-                if(AltSpliceJunction.isCandidate(read2))
+                if(AltSpliceJunctionFinder.isCandidate(read2))
                 {
                     // avoid double-counting overlapping reads
                     if(!read1CandidateAltSJ && !positionsOverlap(read1.PosStart, read1.PosEnd, read2.PosStart, read2.PosEnd))
-                        registerAltSpliceJunction(read2, invalidTranscripts);
+                    {
+                        mAltSpliceJunctionFinder.registerAltSpliceJunction(read2, invalidTranscripts);
+                    }
                 }
             }
             else
@@ -444,26 +448,6 @@ public class GeneBamReader
         }
     }
 
-    public void registerAltSpliceJunction(final ReadRecord read, final List<Integer> invalidTranscripts)
-    {
-        AltSpliceJunction altSpliceJunc = AltSpliceJunction.fromRead(mCurrentGene, read, invalidTranscripts);
-
-        AltSpliceJunction existingSpliceJunc = mAltSpliceJunctions.stream()
-                .filter(x -> x.matches(altSpliceJunc)).findFirst().orElse(null);
-
-        if(existingSpliceJunc != null)
-        {
-            existingSpliceJunc.addFragmentCount();
-            return;
-        }
-
-        // extra check that the SJ doesn't match any transcript
-        if(junctionMatchesGene(altSpliceJunc.SpliceJunction, mCurrentGene, invalidTranscripts))
-            return;
-
-        altSpliceJunc.addFragmentCount();
-        mAltSpliceJunctions.add(altSpliceJunc);
-    }
 
     public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
 
@@ -551,7 +535,7 @@ public class GeneBamReader
 
         if(read.Cigar.containsOperator(CigarOperator.N))
         {
-            registerAltSpliceJunction(read, Lists.newArrayList());
+            mAltSpliceJunctionFinder.registerAltSpliceJunction(read, Lists.newArrayList());
             return;
         }
 
@@ -749,59 +733,6 @@ public class GeneBamReader
         catch(IOException e)
         {
             LOGGER.error("failed to write read data file: {}", e.toString());
-        }
-    }
-
-    public static BufferedWriter createAltSpliceJunctionWriter(final RnaExpConfig config)
-    {
-        try
-        {
-            final String outputFileName = config.formOutputFile("alt_splice_junc.csv");
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount");
-            writer.write(",Type,StartContext,EndContext,NearestStartExon,NearestEndExon");
-            writer.write(",StartBases,EndBases,StartTrans,EndTrans");
-            writer.newLine();
-            return writer;
-        }
-        catch (IOException e)
-        {
-            LOGGER.error("failed to create at splice junction writer: {}", e.toString());
-            return null;
-        }
-    }
-
-    private synchronized static void writeAltSpliceJunctions(
-            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final RnaExpConfig config)
-    {
-        try
-        {
-            for(final AltSpliceJunction altSJ : altSpliceJunctions)
-            {
-                writer.write(String.format("%s,%s,%s,%d",
-                        altSJ.Gene.GeneData.GeneId, altSJ.Gene.GeneData.GeneName,
-                        altSJ.Gene.GeneData.Chromosome, altSJ.Gene.GeneData.Strand));
-
-                writer.write(String.format(",%d,%d,%d",
-                        altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], altSJ.getFragmentCount()));
-
-                final String startTrans = altSJ.StartTranscripts.isEmpty() ? "NONE" : altSJ.startTranscriptNames();
-                final String endTrans = altSJ.EndTranscripts.isEmpty() ? "NONE" : altSJ.endTranscriptNames();
-
-                writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s,%s,%s",
-                        altSJ.Type, altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
-                        altSJ.nearestStartExon(), altSJ.nearestEndExon(),
-                        altSJ.getBaseContext(config.RefFastaSeqFile, SE_START), altSJ.getBaseContext(config.RefFastaSeqFile, SE_END),
-                        startTrans, endTrans));
-
-                writer.newLine();
-            }
-
-        }
-        catch(IOException e)
-        {
-            LOGGER.error("failed to write alt splice junction file: {}", e.toString());
         }
     }
 
