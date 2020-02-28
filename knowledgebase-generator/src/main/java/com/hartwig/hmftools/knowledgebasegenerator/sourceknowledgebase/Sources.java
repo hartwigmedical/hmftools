@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.knowledgebasegenerator.sourceKnowledgebase;
+package com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 

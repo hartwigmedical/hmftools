@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.knowledgebasegenerator.sourceKnowledgebase.Sources;
+import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Sources;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -60,7 +60,7 @@ public class EventTypeAnalyzer {
                     event = feature.biomarkerType();
                  //   LOGGER.info(num + ": event cgi: " + event);
                     break;
-                case BRCA: // extract info for brca  //TODO
+                case BRCA: // extract info for brca
                     Brca kbBrca = (Brca) kbSpecificObject;
                     event = Strings.EMPTY;
                   //    LOGGER.info(num + ": event brca: " + event);
@@ -126,7 +126,7 @@ public class EventTypeAnalyzer {
 
                     LOGGER.info(num + "skip because it is from source molecularmatch");
                     break;
-                case MOLECULARMATCH_TRIALS: // extract info for molecular match trials //TODO
+                case MOLECULARMATCH_TRIALS: // extract info for molecular match trials
                     MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
