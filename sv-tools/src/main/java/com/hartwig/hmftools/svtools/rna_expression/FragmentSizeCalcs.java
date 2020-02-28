@@ -6,14 +6,18 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.from;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -26,12 +30,13 @@ import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class FragmentSizeCalcs
 {
     private final RnaExpConfig mConfig;
     private final SvGeneTranscriptCollection mGeneTransCache;
-    private final GeneBamReader mBamReader;
 
     private final List<int[]> mFragmentLengths;
     private BufferedWriter mWriter;
@@ -52,7 +57,6 @@ public class FragmentSizeCalcs
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;
-        mBamReader = GeneBamReader.from(config);
 
         mCurrentGeneData = null;
         mCurrentTransDataList = null;
@@ -77,6 +81,9 @@ public class FragmentSizeCalcs
 
     public void calcSampleFragmentSize()
     {
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        BamSlicer bamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
+
         for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
         {
             final List<EnsemblGeneData> geneDataList = entry.getValue();
@@ -121,7 +128,9 @@ public class FragmentSizeCalcs
 
                 mCurrentReadCount = 0;
                 mCurrentGeneData = geneData;
-                mBamReader.readBamCounts(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd), this::processBamRead);
+                List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd));
+
+                bamSlicer.slice(samReader, regions, this::processBamRead);
 
                 if(mConfig.FragmentLengthsByGene)
                 {
@@ -231,7 +240,7 @@ public class FragmentSizeCalcs
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
-        if(!record.getFirstOfPairFlag() || mBamReader.checkDuplicates(record))
+        if(!record.getFirstOfPairFlag())
             return false;
 
         // ignore translocations and inversions

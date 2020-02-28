@@ -5,9 +5,11 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 
@@ -28,6 +31,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class GcBiasAdjuster
 {
@@ -225,7 +230,8 @@ public class GcBiasAdjuster
 
     public void generateDepthCounts(final Map<String, List<EnsemblGeneData>> chrGeneMap)
     {
-        final GeneBamReader bamReader = new GeneBamReader(mConfig, null);
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        BamSlicer bamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
 
         int bamSliceCount = 0;
 
@@ -279,7 +285,9 @@ public class GcBiasAdjuster
                     mCurrentRegionEnd = currentRegionStart + SEGMENT_LENGTH - 1;
                     mCurrentReadCount = 0;
 
-                    bamReader.readBamCounts(GenomeRegions.create(chromosome, currentRegionStart, mCurrentRegionEnd), this::processBamRead);
+                    List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd));
+
+                    bamSlicer.slice(samReader, regions, this::processBamRead);
                     ++bamSliceCount;
 
                     if((bamSliceCount % 10000) == 0)

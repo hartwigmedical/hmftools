@@ -30,20 +30,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -148,13 +145,6 @@ public class GeneBamReader
 
         mAltSpliceJunctionFinder.recordDepthCounts();
         mAltSpliceJunctionFinder.writeAltSpliceJunctions();
-    }
-
-    public void readBamCounts(final GenomeRegion genomeRegion, final Consumer<SAMRecord> consumer)
-    {
-        clearDuplicates();
-        SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
-        samSlicer.slice(mSamReader, consumer);
     }
 
     private void processSamRecord(@NotNull final SAMRecord record)

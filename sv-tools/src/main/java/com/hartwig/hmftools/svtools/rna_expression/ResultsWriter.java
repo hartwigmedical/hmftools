@@ -81,7 +81,7 @@ public class ResultsWriter
             if (mConfig.WriteReadData)
                 mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
 
-            mAltSpliceJunctionWriter = GeneBamReader.createAltSpliceJunctionWriter(mConfig);
+            mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createAltSpliceJunctionWriter(mConfig);
         }
     }
 
