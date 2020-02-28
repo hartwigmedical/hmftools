@@ -220,24 +220,6 @@ public class FragmentSizeCalcs
         addFragmentLength(record);
     }
 
-    public void recordFragmentLength(final SAMRecord record, final GeneReadData geneReadData)
-    {
-        if(!mConfig.WriteFragmentLengths || mConfig.FragmentLengthMinCount > 0)
-            return;
-
-        if(!isCandidateRecord(record))
-            return;
-
-        long posStart = record.getStart();
-        long posEnd = record.getEnd();
-
-        // no part of the read can overlap with any exon
-        if(geneReadData.getExonRegions().stream().anyMatch(x -> !(posStart > x.end() || posEnd < x.start())))
-            return;
-
-        addFragmentLength(record);
-    }
-
     private boolean isCandidateRecord(final SAMRecord record)
     {
         if(!record.getFirstOfPairFlag())

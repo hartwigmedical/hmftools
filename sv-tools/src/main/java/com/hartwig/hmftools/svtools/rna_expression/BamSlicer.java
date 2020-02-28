@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 

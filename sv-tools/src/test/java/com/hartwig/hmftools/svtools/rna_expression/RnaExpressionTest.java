@@ -38,7 +38,7 @@ import htsjdk.samtools.CigarOperator;
 
 public class RnaExpressionTest
 {
-    private static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
+    public static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
 
     @Test
     public void testReadRegionTypes()
@@ -329,7 +329,7 @@ public class RnaExpressionTest
         return new GeneReadData(geneData);
     }
 
-    private ReadRecord createReadRecord(
+    public static ReadRecord createReadRecord(
             final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int)(posEnd - posStart + 1), 0);

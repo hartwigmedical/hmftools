@@ -11,10 +11,15 @@ import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONT
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_MIXED;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_SJ;
-import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.CRYPTIC_SPLICE_SITE;
-import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NEW_EXONS;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_3_PRIME;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_5_PRIME;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_EXON;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.SKIPPED_EXONS;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.UNKNOWN;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionWithin;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
@@ -24,14 +29,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.variant.hotspot.SAMSlicer;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
@@ -67,7 +68,39 @@ public class AltSpliceJunctionFinder
         mAltSpliceJunctions.clear();
     }
 
-    public static boolean isCandidate(final ReadRecord read)
+    public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
+    {
+        AltSpliceJunction firstAltSJ = null;
+
+        if(AltSpliceJunctionFinder.isCandidate(read1))
+        {
+            firstAltSJ = registerAltSpliceJunction(read1, relatedTransIds);
+        }
+
+        AltSpliceJunction secondAltSJ = null;
+
+        if(AltSpliceJunctionFinder.isCandidate(read2))
+        {
+            // avoid double-counting overlapping reads
+            if(firstAltSJ != null && positionsOverlap(read1.PosStart, read1.PosEnd, read2.PosStart, read2.PosEnd))
+                return;
+
+            secondAltSJ = registerAltSpliceJunction(read2, relatedTransIds);
+        }
+
+        if(firstAltSJ != null && secondAltSJ != null)
+        {
+            checkNovelExon(firstAltSJ, secondAltSJ);
+        }
+    }
+
+    public void evaluateIntronicRead(final ReadRecord read)
+    {
+        if(isCandidate(read))
+            registerAltSpliceJunction(read, Lists.newArrayList());
+    }
+
+    private static boolean isCandidate(final ReadRecord read)
     {
         if(!read.Cigar.containsOperator(CigarOperator.N))
             return false;
@@ -105,7 +138,7 @@ public class AltSpliceJunctionFinder
         return false;
     }
 
-    private AltSpliceJunction createFromRead(final ReadRecord read, final List<Integer> relatedTransIds)
+    public AltSpliceJunction createFromRead(final ReadRecord read, final List<Integer> relatedTransIds)
     {
         // related transcripts will any of those where either read covers one or more of its exons
         long[] spliceJunction = new long[SE_PAIR];
@@ -118,8 +151,7 @@ public class AltSpliceJunctionFinder
         List<RegionReadData> sjStartRegions = Lists.newArrayList(); // transcript regions with an exon matching the start of the alt SJ
         List<RegionReadData> sjEndRegions = Lists.newArrayList();
 
-        String startContext = "";
-        String endContext = "";
+        String[] regionContexts = {"", ""};
 
         for (Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
         {
@@ -129,21 +161,7 @@ public class AltSpliceJunctionFinder
             String regionStartContext = CONTEXT_INTRONIC;
             String regionEndContext = CONTEXT_INTRONIC;
 
-            if (matchType == RegionMatchType.EXON_BOUNDARY || matchType == RegionMatchType.EXON_MATCH)
-            {
-                if (region.end() == spliceJunction[SE_START])
-                {
-                    startContext = CONTEXT_SJ;
-                    sjStartRegions.add(region);
-                }
-
-                if (region.start() == spliceJunction[SE_END])
-                {
-                    endContext = CONTEXT_SJ;
-                    sjEndRegions.add(region);
-                }
-            }
-            else if(matchType == RegionMatchType.WITHIN_EXON)
+            if(matchType == RegionMatchType.WITHIN_EXON)
             {
                 if(positionWithin(spliceJunction[SE_START], region.start(), region.end()))
                 {
@@ -155,72 +173,142 @@ public class AltSpliceJunctionFinder
                     regionEndContext = CONTEXT_EXONIC;
                 }
             }
-
-            if(startContext != CONTEXT_SJ)
-                startContext = startContext == "" ? regionStartContext : CONTEXT_MIXED;
-
-            if(endContext != CONTEXT_SJ)
-                endContext = endContext == "" ? regionEndContext : CONTEXT_MIXED;
-        }
-
-        if(startContext == "")
-            startContext = CONTEXT_INTRONIC;
-
-        if(endContext == "")
-            endContext = CONTEXT_INTRONIC;
-
-        AltSpliceJunctionType type = CRYPTIC_SPLICE_SITE;
-
-        // check for skipped exons indicated by the same transcript matching the start and end of the alt SJ, but skipping an exon
-        long nearestStartExon = !sjStartRegions.isEmpty() ? 0 : -1;
-        long nearestEndExon = !sjEndRegions.isEmpty() ? 0 : -1;
-
-        if (!sjStartRegions.isEmpty() || !sjEndRegions.isEmpty())
-        {
-            for (Integer transId : relatedTransIds)
+            else if(matchType != RegionMatchType.NONE) // some exon-intron matches cover match a splice junction at one end
+            // if (matchType == RegionMatchType.EXON_BOUNDARY || matchType == RegionMatchType.EXON_MATCH) // some
             {
-                boolean matchesStart = sjStartRegions.stream().anyMatch(x -> x.hasTransId(transId));
-                boolean matchesEnd = sjEndRegions.stream().anyMatch(x -> x.hasTransId(transId));
-                if (matchesStart && matchesEnd)
+                if (region.end() == spliceJunction[SE_START])
                 {
-                    type = SKIPPED_EXONS;
-                    break;
+                    regionContexts[SE_START] = CONTEXT_SJ;
+                    sjStartRegions.add(region);
+                }
+
+                if (region.start() == spliceJunction[SE_END])
+                {
+                    regionContexts[SE_END] = CONTEXT_SJ;
+                    sjEndRegions.add(region);
                 }
             }
 
-            if(type != SKIPPED_EXONS)
-                type = NEW_EXONS;
-        }
-        else
-        {
-            for(RegionReadData region : mGene.getExonRegions())
-            {
-                if(nearestStartExon != 0)
-                {
-                    long exonDistance = abs(region.end() - spliceJunction[SE_START]);
-                    nearestStartExon = nearestStartExon > 0 ? min(nearestStartExon, exonDistance) : exonDistance;
-                }
+            if(regionContexts[SE_START] != CONTEXT_SJ)
+                regionContexts[SE_START] = regionContexts[SE_START] == "" ? regionStartContext : CONTEXT_MIXED;
 
-                if(nearestEndExon != 0)
-                {
-                    long exonDistance = abs(region.start() - spliceJunction[SE_END]);
-                    nearestEndExon = nearestEndExon > 0 ? min(nearestEndExon, exonDistance) : exonDistance;
-                }
-            }
+            if(regionContexts[SE_END] != CONTEXT_SJ)
+                regionContexts[SE_END] = regionContexts[SE_END] == "" ? regionEndContext : CONTEXT_MIXED;
         }
 
-        AltSpliceJunction altSplicJunction = new AltSpliceJunction(mGene, spliceJunction, type, startContext, endContext);
+        if(regionContexts[SE_START] == "")
+            regionContexts[SE_START] = CONTEXT_INTRONIC;
 
-        altSplicJunction.StartTranscripts.addAll(sjStartRegions);
-        altSplicJunction.EndTranscripts.addAll(sjEndRegions);
+        if(regionContexts[SE_END] == "")
+            regionContexts[SE_END] = CONTEXT_INTRONIC;
+
+        AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
+
+        AltSpliceJunction altSplicJunction = new AltSpliceJunction(mGene, spliceJunction, sjType, regionContexts);
+
+        altSplicJunction.StartRegions.addAll(sjStartRegions);
+        altSplicJunction.EndRegions.addAll(sjEndRegions);
 
         return altSplicJunction;
     }
 
-    public void registerAltSpliceJunction(final ReadRecord read, final List<Integer> invalidTranscripts)
+    private AltSpliceJunctionType classifySpliceJunction(
+            final List<Integer> transIds, final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions,
+            final String[] regionContexts)
+    {
+        /* classify the overall type of novel splice junction
+            - Exon_skipping - both sides match known SJ
+            - Novel 5’ or 3' splice site (one side matches known SJ
+            - Novel exon - phased Novel 5’ and 3’ splice site from 2 reads in the same fragment
+            - Novel intron - both sides exonic - may also be a transcribed somatic DEL
+            - Intronic - both sides Intronic  - may also be a transcribed somatic DEL
+        */
+
+        if (!sjStartRegions.isEmpty() || !sjEndRegions.isEmpty())
+        {
+            boolean hasStartMatch = false;
+            boolean hasEndMatch = false;
+
+            for (Integer transId : transIds)
+            {
+                // check for skipped exons indicated by the same transcript matching the start and end of the alt SJ, but skipping an exon
+                boolean matchesStart = sjStartRegions.stream().anyMatch(x -> x.hasTransId(transId));
+                boolean matchesEnd = sjEndRegions.stream().anyMatch(x -> x.hasTransId(transId));
+
+                if (matchesStart && matchesEnd)
+                    return SKIPPED_EXONS;
+
+                hasStartMatch |= matchesStart;
+                hasEndMatch |= matchesEnd;
+            }
+
+            if(hasStartMatch)
+                return mGene.GeneData.forwardStrand() ? NOVEL_3_PRIME : NOVEL_5_PRIME;
+            else if(hasEndMatch)
+                return mGene.GeneData.forwardStrand() ? NOVEL_5_PRIME : NOVEL_3_PRIME;
+        }
+
+        if(regionContexts[SE_START] == CONTEXT_INTRONIC && regionContexts[SE_END] == CONTEXT_INTRONIC)
+            return INTRONIC;
+
+        if(regionContexts[SE_START] == CONTEXT_EXONIC && regionContexts[SE_END] == CONTEXT_EXONIC)
+            return NOVEL_INTRON;
+
+        return UNKNOWN;
+    }
+
+    public void checkNovelExon(AltSpliceJunction firstAltSJ, AltSpliceJunction secondAltSJ)
+    {
+        if(!(firstAltSJ.type() == NOVEL_3_PRIME && secondAltSJ.type() == NOVEL_5_PRIME)
+        && !(firstAltSJ.type() == NOVEL_5_PRIME && secondAltSJ.type() == NOVEL_3_PRIME))
+        {
+            return;
+        }
+
+        final List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.StartRegions);
+        regions1.addAll(firstAltSJ.EndRegions);
+
+        final List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.StartRegions);
+        regions2.addAll(secondAltSJ.EndRegions);
+
+        List<Integer> commonTranscripts = Lists.newArrayList();
+
+        for(final RegionReadData region1 : regions1)
+        {
+            List<Integer> transIds1 = region1.getRefRegions().stream().map(x -> extractTransId(x)).collect(Collectors.toList());
+
+            for(Integer transId1 : transIds1)
+            {
+                for(final RegionReadData region2 : regions2)
+                {
+                    List<Integer> transIds2 = region2.getRefRegions().stream().map(x -> extractTransId(x)).collect(Collectors.toList());
+
+                    if (transIds2.contains(transId1))
+                    {
+                        if(!commonTranscripts.contains(transId1))
+                            commonTranscripts.add(transId1);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(commonTranscripts.isEmpty())
+            return;
+
+        firstAltSJ.overrideType(NOVEL_EXON);
+        secondAltSJ.overrideType(NOVEL_EXON);
+
+        // remove any transcripts not supported by both reads
+        firstAltSJ.cullNonMatchedTranscripts(commonTranscripts);
+        secondAltSJ.cullNonMatchedTranscripts(commonTranscripts);
+    }
+
+    private AltSpliceJunction registerAltSpliceJunction(final ReadRecord read, final List<Integer> invalidTranscripts)
     {
         if(mGene == null)
-            return;
+            return null;
 
         AltSpliceJunction altSpliceJunc = createFromRead(read, invalidTranscripts);
 
@@ -230,15 +318,16 @@ public class AltSpliceJunctionFinder
         if(existingSpliceJunc != null)
         {
             existingSpliceJunc.addFragmentCount();
-            return;
+            return existingSpliceJunc;
         }
 
         // extra check that the SJ doesn't match any transcript
         if(junctionMatchesGene(altSpliceJunc.SpliceJunction, invalidTranscripts))
-            return;
+            return null;
 
         altSpliceJunc.addFragmentCount();
         mAltSpliceJunctions.add(altSpliceJunc);
+        return altSpliceJunc;
     }
 
     public void recordDepthCounts()
@@ -254,7 +343,20 @@ public class AltSpliceJunctionFinder
             {
                 int position = (int)altSJ.SpliceJunction[se];
                 queryInterval[0] = new QueryInterval(chrSeqIndex, position, position);
-                int depth = slicer.slice(mSamReader, queryInterval).size();
+
+                final List<SAMRecord> reads = slicer.slice(mSamReader, queryInterval);
+                final List<String> processed = Lists.newArrayList();
+                int depth = 0;
+
+                for(SAMRecord record : reads)
+                {
+                    if(!processed.contains(record.getReadName()))
+                    {
+                        processed.add(record.getReadName());
+                        ++depth;
+                    }
+                }
+
                 altSJ.setFragmentCount(se, depth);
             }
         }
@@ -267,7 +369,7 @@ public class AltSpliceJunctionFinder
             final String outputFileName = config.formOutputFile("alt_splice_junc.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount");
+            writer.write("GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,StartDepth,EndDepth");
             writer.write(",Type,StartContext,EndContext,NearestStartExon,NearestEndExon");
             writer.write(",StartBases,EndBases,StartTrans,EndTrans");
             writer.newLine();
@@ -282,7 +384,8 @@ public class AltSpliceJunctionFinder
 
     public void writeAltSpliceJunctions()
     {
-        writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mConfig);
+        if(mWriter != null)
+            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mConfig);
     }
 
     private synchronized static void writeAltSpliceJunctions(
@@ -296,15 +399,16 @@ public class AltSpliceJunctionFinder
                         altSJ.Gene.GeneData.GeneId, altSJ.Gene.GeneData.GeneName,
                         altSJ.Gene.GeneData.Chromosome, altSJ.Gene.GeneData.Strand));
 
-                writer.write(String.format(",%d,%d,%d",
-                        altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], altSJ.getFragmentCount()));
+                writer.write(String.format(",%d,%d,%d,%d,%d",
+                        altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], altSJ.getFragmentCount(),
+                        altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END)));
 
-                final String startTrans = altSJ.StartTranscripts.isEmpty() ? "NONE" : altSJ.startTranscriptNames();
-                final String endTrans = altSJ.EndTranscripts.isEmpty() ? "NONE" : altSJ.endTranscriptNames();
+                final String startTrans = altSJ.StartRegions.isEmpty() ? "NONE" : altSJ.startTranscriptNames();
+                final String endTrans = altSJ.EndRegions.isEmpty() ? "NONE" : altSJ.endTranscriptNames();
 
                 writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s,%s,%s",
-                        altSJ.Type, altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
-                        altSJ.nearestStartExon(), altSJ.nearestEndExon(),
+                        altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
+                        altSJ.calcNearestExonBoundary(SE_START), altSJ.calcNearestExonBoundary(SE_END),
                         altSJ.getBaseContext(config.RefFastaSeqFile, SE_START), altSJ.getBaseContext(config.RefFastaSeqFile, SE_END),
                         startTrans, endTrans));
 

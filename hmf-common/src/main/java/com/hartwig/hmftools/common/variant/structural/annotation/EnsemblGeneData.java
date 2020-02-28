@@ -32,6 +32,9 @@ public class EnsemblGeneData
         mReverseListIndex = -1;
     }
 
+    public boolean forwardStrand() { return Strand == 1; }
+    public boolean reverseStrand() { return Strand == -1; }
+
     public int getListIndex() { return mListIndex; }
     public void setListIndex(int index) { mListIndex = index; }
 

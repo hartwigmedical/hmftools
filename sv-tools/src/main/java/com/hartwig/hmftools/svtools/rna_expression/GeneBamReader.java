@@ -214,9 +214,7 @@ public class GeneBamReader
         }
 
         // the read is fully within the exon
-        List<RegionReadData> overlappingRegions = mCurrentGene.getExonRegions().stream()
-                .filter(x -> read.overlapsMappedReads(x.Region.start(), x.Region.end()))
-                .collect(Collectors.toList());
+        List<RegionReadData> overlappingRegions = mCurrentGene.findOverlappingRegions(read);
 
         if(!overlappingRegions.isEmpty())
         {
@@ -298,6 +296,12 @@ public class GeneBamReader
                 invalidTranscripts.add(transId);
         }
 
+        for(Integer transId : secondReadTransTypes.keySet())
+        {
+            if(!validTranscripts.contains(transId) && !invalidTranscripts.contains(transId))
+                invalidTranscripts.add(transId);
+        }
+
         GeneMatchType geneReadType = UNSPLICED;
 
         // now mark all other transcripts which aren't valid either due to the read pair
@@ -311,22 +315,7 @@ public class GeneBamReader
             else if(read1.containsSplit() || read2.containsSplit())
             {
                 geneReadType = GeneMatchType.ALT;
-
-                boolean read1CandidateAltSJ = AltSpliceJunctionFinder.isCandidate(read1);
-
-                if(read1CandidateAltSJ)
-                {
-                    mAltSpliceJunctionFinder.registerAltSpliceJunction(read1, invalidTranscripts);
-                }
-
-                if(AltSpliceJunctionFinder.isCandidate(read2))
-                {
-                    // avoid double-counting overlapping reads
-                    if(!read1CandidateAltSJ && !positionsOverlap(read1.PosStart, read1.PosEnd, read2.PosStart, read2.PosEnd))
-                    {
-                        mAltSpliceJunctionFinder.registerAltSpliceJunction(read2, invalidTranscripts);
-                    }
-                }
+                mAltSpliceJunctionFinder.evaluateFragmentReads(read1, read2, invalidTranscripts);
             }
             else
             {
@@ -525,7 +514,7 @@ public class GeneBamReader
 
         if(read.Cigar.containsOperator(CigarOperator.N))
         {
-            mAltSpliceJunctionFinder.registerAltSpliceJunction(read, Lists.newArrayList());
+            mAltSpliceJunctionFinder.evaluateIntronicRead(read);
             return;
         }
 

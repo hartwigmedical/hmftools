@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveComm
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -242,6 +243,13 @@ public class GeneReadData
             }
            */
         }
+    }
+
+    public List<RegionReadData> findOverlappingRegions(final ReadRecord read)
+    {
+        return mExonRegions.stream()
+                .filter(x -> read.overlapsMappedReads(x.Region.start(), x.Region.end()))
+                .collect(Collectors.toList());
     }
 
     public static void logGeneExonOverlaps(final GeneReadData gene1, final GeneReadData gene2)
