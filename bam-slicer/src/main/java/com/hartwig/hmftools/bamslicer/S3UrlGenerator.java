@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.bamslicer;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 
@@ -23,31 +22,34 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 abstract class S3UrlGenerator {
+
     private static final Logger LOGGER = LogManager.getLogger(S3UrlGenerator.class);
 
-    abstract String endpoint_url();
+    @NotNull
+    abstract String endpointUrl();
 
+    @NotNull
     abstract String profile();
 
     @Value.Lazy
     AmazonS3 s3Client() {
         return AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint_url(), null))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpointUrl(), null))
                 .withCredentials(new ProfileCredentialsProvider(profile()))
                 .build();
     }
 
     @NotNull
-    URL generateUrl(@NotNull final String bucketName, @NotNull final String objectKey, final int expirationHours) throws IOException {
+    URL generateUrl(@NotNull String bucketName, @NotNull String objectKey, int expirationHours) {
         try {
             LOGGER.info("Generating pre-signed URL for bucket: {}\tobject: {}\texpirationTime: {} hours",
                     bucketName,
                     objectKey,
                     expirationHours);
-            final long millisNow = System.currentTimeMillis();
-            final long expirationMillis = millisNow + 1000 * 60 * 60 * expirationHours;
-            final Date expiration = new java.util.Date(expirationMillis);
-            final GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, objectKey);
+            long millisNow = System.currentTimeMillis();
+            long expirationMillis = millisNow + 1000 * 60 * 60 * expirationHours;
+            Date expiration = new java.util.Date(expirationMillis);
+            GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, objectKey);
             generatePresignedUrlRequest.setMethod(HttpMethod.GET);
             generatePresignedUrlRequest.setExpiration(expiration);
 
@@ -62,6 +64,6 @@ abstract class S3UrlGenerator {
             LOGGER.error("The client encountered an internal error while trying to communicate with S3");
             LOGGER.error("Error Message: {}", ace.getMessage());
         }
-        throw new IOException("Failed to create sbp URL.");
+        throw new IllegalStateException("Failed to create URL based on the S3 input configurations.");
     }
 }

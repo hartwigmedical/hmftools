@@ -29,7 +29,9 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 class ChunkHttpBuffer {
+
     private static final Logger LOGGER = LogManager.getLogger(ChunkHttpBuffer.class);
+
     @NotNull
     private final LoadingCache<Long, ListenableFuture<byte[]>> chunkBuffer;
     private final int maxSize;
@@ -40,34 +42,35 @@ class ChunkHttpBuffer {
     @NotNull
     private final OkHttpClient httpClient;
 
-    ChunkHttpBuffer(@NotNull final OkHttpClient httpClient, @NotNull final URL url, final int maxSize, @NotNull final List<Chunk> chunks) {
+    ChunkHttpBuffer(@NotNull OkHttpClient httpClient, @NotNull URL url, int maxSize, @NotNull List<Chunk> chunks) {
         this.httpClient = httpClient;
         this.url = url;
         this.maxSize = maxSize;
-        for (final Chunk chunk : chunks) {
-            final long chunkStart = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkStart());
+
+        for (Chunk chunk : chunks) {
+            long chunkStart = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkStart());
             chunksPerOffset.put(chunkStart, chunk);
         }
+
         chunkBuffer = CacheBuilder.newBuilder().maximumSize(maxSize).build(new CacheLoader<Long, ListenableFuture<byte[]>>() {
             @Override
             @NotNull
-            public ListenableFuture<byte[]> load(@NotNull final Long offset) {
-                final Chunk chunkAtOffset = chunksPerOffset.get(offset);
+            public ListenableFuture<byte[]> load(@NotNull Long offset) {
+                Chunk chunkAtOffset = chunksPerOffset.get(offset);
                 return getBytesForChunk(chunkAtOffset);
             }
 
             @Override
-            public ListenableFuture<ListenableFuture<byte[]>> reload(@NotNull final Long offset,
-                    @NotNull final ListenableFuture<byte[]> oldBytes) {
+            public ListenableFuture<ListenableFuture<byte[]>> reload(@NotNull Long offset, @NotNull ListenableFuture<byte[]> oldBytes) {
                 return Futures.immediateFuture(oldBytes);
             }
         });
     }
 
     @NotNull
-    Pair<Long, byte[]> getEntryAtPosition(final long position) throws IOException {
-        final long chunkOffset = chunksPerOffset.floorEntry(position).getKey();
-        final byte[] bytesAtOffset;
+    Pair<Long, byte[]> getEntryAtPosition(long position) throws IOException {
+        long chunkOffset = chunksPerOffset.floorEntry(position).getKey();
+        byte[] bytesAtOffset;
         try {
             if (chunkBuffer.getIfPresent(chunkOffset) == null) {
                 refillBuffer(chunkOffset);
@@ -83,8 +86,8 @@ class ChunkHttpBuffer {
         }
     }
 
-    private void refillBuffer(final long chunkOffset) {
-        final int fillSize = (int) (maxSize * .75);
+    private void refillBuffer(long chunkOffset) {
+        int fillSize = (int) (maxSize * .75);
         chunksPerOffset.tailMap(chunkOffset, false).keySet().stream().limit(fillSize).forEach(key -> {
             if (chunkBuffer.getIfPresent(key) == null) {
                 chunkBuffer.refresh(key);
@@ -93,9 +96,9 @@ class ChunkHttpBuffer {
     }
 
     @NotNull
-    private ListenableFuture<byte[]> getBytesForChunk(@NotNull final Chunk chunk) {
-        final long start = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkStart());
-        final long end = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
+    private ListenableFuture<byte[]> getBytesForChunk(@NotNull Chunk chunk) {
+        long start = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkStart());
+        long end = BlockCompressedFilePointerUtil.getBlockAddress(chunk.getChunkEnd());
         if (start <= end) {
             return readUrlBytes(start, end - start);
         } else {
@@ -104,31 +107,31 @@ class ChunkHttpBuffer {
     }
 
     @NotNull
-    private ListenableFuture<byte[]> readUrlBytes(final long offset, final long count) {
-        final Headers httpHeaders = new Headers.Builder().add("Range", "bytes=" + offset + "-" + (offset + count - 1)).build();
-        final Request request = new Request.Builder().url(url).headers(httpHeaders).build();
-        final SettableFuture<byte[]> bytesFuture = SettableFuture.create();
+    private ListenableFuture<byte[]> readUrlBytes(long offset, long count) {
+        Headers httpHeaders = new Headers.Builder().add("Range", "bytes=" + offset + "-" + (offset + count - 1)).build();
+        Request request = new Request.Builder().url(url).headers(httpHeaders).build();
+        SettableFuture<byte[]> bytesFuture = SettableFuture.create();
         httpClient.newCall(request).enqueue(retryingCallback(10, bytesFuture));
         return bytesFuture;
     }
 
     @NotNull
-    private Callback retryingCallback(final int retryCount, @NotNull final SettableFuture<byte[]> resultFuture) {
+    private Callback retryingCallback(int retryCount, @NotNull SettableFuture<byte[]> resultFuture) {
         return new Callback() {
             @Override
-            public void onFailure(@NotNull final Call call, @NotNull final IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 retryCall(call, e, retryCount, resultFuture);
             }
 
             @Override
-            public void onResponse(@NotNull final Call call, @NotNull final Response response) {
-                final ResponseBody body = response.body();
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
+                ResponseBody body = response.body();
                 try {
                     if (response.isSuccessful() && body != null) {
                         resultFuture.set(body.bytes());
                     } else {
-                        final String nullBody = body == null ? "body = null" : "";
-                        final Exception e = new IOException("Response " + response.code() + ": " + response.message() + "; " + nullBody);
+                        String nullBody = body == null ? "body = null" : "";
+                        Exception e = new IOException("Response " + response.code() + ": " + response.message() + "; " + nullBody);
                         retryCall(call, e, retryCount, resultFuture);
                     }
                 } catch (final Exception e) {
@@ -142,8 +145,8 @@ class ChunkHttpBuffer {
         };
     }
 
-    private void retryCall(@NotNull final Call call, @NotNull final Exception exception, final int remainingRetries,
-            @NotNull final SettableFuture<byte[]> resultFuture) {
+    private void retryCall(@NotNull  Call call, @NotNull  Exception exception,  int remainingRetries,
+            @NotNull  SettableFuture<byte[]> resultFuture) {
         if (remainingRetries <= 0) {
             LOGGER.error("Call {} [{}] failed with exception: {}",
                     call.request().method(),
