@@ -7,6 +7,7 @@ public enum AltSpliceJunctionType
     NOVEL_3_PRIME,
     NOVEL_EXON,
     NOVEL_INTRON,
+    MIXED_TRANS,
     INTRONIC,
     MIXED,
     UNKNOWN

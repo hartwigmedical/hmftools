@@ -197,6 +197,12 @@ public class RnaExpConfig
 
     public boolean isValid()
     {
+        if(OutputDir == null)
+        {
+            RE_LOGGER.error("not output directory specified");
+            return false;
+        }
+
         if(GenerateExpectedRates)
         {
             if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
@@ -210,7 +216,7 @@ public class RnaExpConfig
 
         if(BamFile == null || BamFile.isEmpty() || !Files.exists(Paths.get(BamFile)))
         {
-            RE_LOGGER.error("BAM file missing or not found");
+            RE_LOGGER.error("BAM file({}) missing or not found", BamFile);
             return false;
         }
 

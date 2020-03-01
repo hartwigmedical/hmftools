@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONT
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_SJ;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.MIXED_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_3_PRIME;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_5_PRIME;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_EXON;
@@ -173,6 +174,7 @@ public class AltSpliceJunctionFinder
             final ReadRecord read, final long[] spliceJunction,
             final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, String[] regionContexts)
     {
+        // collect up all exon regions matching the observed novel splice junction
         for (Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
         {
             final RegionReadData region = entry.getKey();
@@ -183,6 +185,10 @@ public class AltSpliceJunctionFinder
 
             if (region.end() == spliceJunction[SE_START])
             {
+                // the region cannot only be from a transcript ending here
+                if(region.getPostRegions().isEmpty())
+                    continue;
+
                 regionContexts[SE_START] = CONTEXT_SJ;
                 sjStartRegions.add(region);
             }
@@ -194,6 +200,9 @@ public class AltSpliceJunctionFinder
 
             if (region.start() == spliceJunction[SE_END])
             {
+                if(region.getPreRegions().isEmpty())
+                    continue;
+
                 regionContexts[SE_END] = CONTEXT_SJ;
                 sjEndRegions.add(region);
             }
@@ -241,7 +250,9 @@ public class AltSpliceJunctionFinder
                 hasEndMatch |= matchesEnd;
             }
 
-            if(hasStartMatch)
+            if(hasStartMatch && hasEndMatch) // 2 different transcripts match the SJs
+                return MIXED_TRANS;
+            else if(hasStartMatch)
                 return mGene.GeneData.forwardStrand() ? NOVEL_3_PRIME : NOVEL_5_PRIME;
             else if(hasEndMatch)
                 return mGene.GeneData.forwardStrand() ? NOVEL_5_PRIME : NOVEL_3_PRIME;

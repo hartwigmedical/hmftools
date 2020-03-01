@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransName;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionWithin;
 
@@ -29,7 +30,7 @@ public class AltSpliceJunction
     private AltSpliceJunctionType mType;
     private int mFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
-    public final List<String> mProcessedReads;
+    private final List<String> mProcessedReads;
 
     public static final String CONTEXT_SJ = "SPLICE_JUNC";
     public static final String CONTEXT_EXONIC = "EXONIC";
@@ -82,7 +83,6 @@ public class AltSpliceJunction
     public void addFragmentCount() { ++mFragmentCount;}
 
     public int getPositionCount(int seIndex) { return mPositionCounts[seIndex]; }
-    public int[] getPositionCounts() { return mPositionCounts; }
     public void setFragmentCount(int seIndex, int count) { mPositionCounts[seIndex] = count; }
 
     public String startTranscriptNames() { return generateTranscriptNames(StartRegions); }
@@ -91,10 +91,13 @@ public class AltSpliceJunction
     private String generateTranscriptNames(final List<RegionReadData> regions)
     {
         List<String> transNames = Lists.newArrayList();
+        List<Integer> validTransIds = candidateTransIds();
 
         for(RegionReadData region: regions)
         {
-            transNames.addAll(region.getRefRegions().stream().map(x -> extractTransName(x)).collect(Collectors.toList()));
+            transNames.addAll(region.getRefRegions().stream()
+                    .filter(x -> validTransIds.contains(extractTransId(x)))
+                    .map(x -> extractTransName(x)).collect(Collectors.toList()));
         }
 
         return appendStrList(transNames, ';');
@@ -162,7 +165,7 @@ public class AltSpliceJunction
         return baseStr;
     }
 
-    public void cullNonMatchedTranscripts(final List<Integer> trandsIds)
+    public void cullNonMatchedTranscripts(final List<Integer> validTransIds)
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -173,7 +176,7 @@ public class AltSpliceJunction
             {
                 RegionReadData region = regions.get(index);
 
-                if(trandsIds.stream().anyMatch(x -> region.hasTransId(x)))
+                if(validTransIds.stream().anyMatch(x -> region.hasTransId(x)))
                 {
                     ++index;
                 }
@@ -184,6 +187,32 @@ public class AltSpliceJunction
             }
         }
     }
+
+    public List<Integer> candidateTransIds()
+    {
+        final List<Integer> uniqueTransIds = Lists.newArrayList();
+
+        for(RegionReadData region : StartRegions)
+        {
+            uniqueTransIds.addAll(region.getRefRegions().stream().map(x -> extractTransId(x))
+                    .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
+        }
+
+        for(RegionReadData region : EndRegions)
+        {
+            final List<Integer> endTransIds = region.getRefRegions().stream().map(x -> extractTransId(x))
+                    .filter(x -> region.getPreRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList());
+
+            for(Integer transId : endTransIds)
+            {
+                if(!uniqueTransIds.contains(transId))
+                    uniqueTransIds.add(transId);
+            }
+        }
+
+        return uniqueTransIds;
+    }
+
 
     public boolean checkProcessedRead(final String readId)
     {
@@ -203,7 +232,7 @@ public class AltSpliceJunction
 
     public String toString()
     {
-        return String.format("%s sj(%d - %d) context(%s - %s) type(%d) frags(%d)",
+        return String.format("%s sj(%d - %d) context(%s - %s) type(%s) frags(%d)",
                 Gene.GeneData.GeneId, SpliceJunction[SE_START], SpliceJunction[SE_END],
                 RegionContexts[SE_START], RegionContexts[SE_END], mType, mFragmentCount);
     }

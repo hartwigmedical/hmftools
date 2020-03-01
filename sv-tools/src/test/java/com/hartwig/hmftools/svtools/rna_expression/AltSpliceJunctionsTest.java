@@ -3,7 +3,10 @@ package com.hartwig.hmftools.svtools.rna_expression;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_SJ;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.INTRONIC;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.MIXED_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_3_PRIME;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_5_PRIME;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_EXON;
@@ -18,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -52,7 +56,7 @@ public class AltSpliceJunctionsTest
         transData1.exons().add(new ExonData(transId1, 1400, 1500, 4, -1, -1));
 
         int transId2 = 2;
-        String transName2 = "TRANS01";
+        String transName2 = "TRANS02";
 
         TranscriptData transData2 = new TranscriptData(transId2, transName2, geneId, true, (byte) 1,
                 100, 300, null, null, "");
@@ -61,10 +65,27 @@ public class AltSpliceJunctionsTest
         transData2.exons().add(new ExonData(transId2, 400, 500, 2, -1, -1));
         transData2.exons().add(new ExonData(transId2, 600, 700, 3, -1, -1));
 
+        // single exons cannot match a splice junction
+        int transId3 = 3;
+        String transName3 = "TRANS03";
+
+        TranscriptData transData3 = new TranscriptData(transId3, transName3, geneId, true, (byte) 1,
+                100, 300, null, null, "");
+
+        transData3.exons().add(new ExonData(transId3, 100, 300, 1, -1, -1));
+
+        int transId4 = 4;
+        String transName4 = "TRANS04";
+
+        TranscriptData transData4 = new TranscriptData(transId4, transName4, geneId, true, (byte) 1,
+                360, 500, null, null, "");
+
+        transData4.exons().add(new ExonData(transId4, 360, 500, 1, -1, -1));
+
         GeneReadData gene = new GeneReadData(geneData);
 
-        List<TranscriptData> transcripts = Lists.newArrayList(transData1, transData2);
-        List<Integer> transIds = Lists.newArrayList(transId1, transId2);
+        List<TranscriptData> transcripts = Lists.newArrayList(transData1, transData2, transData3, transData4);
+        List<Integer> transIds = Lists.newArrayList(transId1, transId2, transId3, transId4);
 
         gene.setTranscripts(transcripts);
         gene.generateExonicRegions();
@@ -89,12 +110,33 @@ public class AltSpliceJunctionsTest
         // test out various types of novel junctions:
 
         // known 5' to novel intronic 3'
-        ReadRecord read = createReadRecord(1, chromosome, 491, 559, REF_BASE_STR_1, createCigar(0, 10, 49, 10, 0));
+        ReadRecord read = createReadRecord(1, chromosome, 291, 369, REF_BASE_STR_1, createCigar(0, 10, 59, 10, 0));
 
         List<RegionReadData> overlappingRegions = gene.findOverlappingRegions(read);
 
         read.processOverlappingRegions(overlappingRegions);
         AltSpliceJunction altSJ = asjFinder.createFromRead(read, transIds);
+
+        assertEquals(NOVEL_3_PRIME, altSJ.type());
+        assertEquals(300, altSJ.SpliceJunction[SE_START]);
+        assertEquals(360, altSJ.SpliceJunction[SE_END]);
+        assertEquals(CONTEXT_SJ, altSJ.RegionContexts[SE_START]);
+        assertEquals(CONTEXT_INTRONIC, altSJ.RegionContexts[SE_END]);
+        assertTrue(altSJ.StartRegions.stream().anyMatch(x -> x.hasTransId(transId1)));
+        assertTrue(altSJ.EndRegions.isEmpty());
+
+        List<Integer> validTransIds = altSJ.candidateTransIds();
+        assertTrue(validTransIds.contains(transId1));
+        assertFalse(validTransIds.contains(transId3));
+        assertFalse(validTransIds.contains(transId4));
+
+        // known 5' to novel intronic 3'
+        read = createReadRecord(1, chromosome, 491, 559, REF_BASE_STR_1, createCigar(0, 10, 49, 10, 0));
+
+        overlappingRegions = gene.findOverlappingRegions(read);
+
+        read.processOverlappingRegions(overlappingRegions);
+        altSJ = asjFinder.createFromRead(read, transIds);
 
         assertEquals(NOVEL_3_PRIME, altSJ.type());
         assertEquals(0, altSJ.calcNearestExonBoundary(SE_START));
@@ -158,5 +200,23 @@ public class AltSpliceJunctionsTest
         assertEquals(NOVEL_EXON, firstAltSJ.type());
         assertEquals(NOVEL_EXON, secondAltSJ.type());
 
+        // SJs matching different transcripts
+        read = createReadRecord(1, chromosome, 291, 609, REF_BASE_STR_1, createCigar(0, 10, 299, 10, 0));
+
+        overlappingRegions = gene.findOverlappingRegions(read);
+        read.processOverlappingRegions(overlappingRegions);
+        transIds = read.getTranscriptClassifications().keySet().stream().collect(Collectors.toList());
+
+        altSJ = asjFinder.createFromRead(read, transIds);
+
+        assertEquals(MIXED_TRANS, altSJ.type());
+        assertEquals(300, altSJ.SpliceJunction[SE_START]);
+        assertEquals(600, altSJ.SpliceJunction[SE_END]);
+        assertEquals(CONTEXT_SJ, altSJ.RegionContexts[SE_START]);
+        assertEquals(CONTEXT_SJ, altSJ.RegionContexts[SE_END]);
+
+        validTransIds = altSJ.candidateTransIds();
+        assertTrue(validTransIds.contains(transId1));
+        assertTrue(validTransIds.contains(transId2));
     }
 }
