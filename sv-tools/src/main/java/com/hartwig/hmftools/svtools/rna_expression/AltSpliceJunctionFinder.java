@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_EXONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_INTRONIC;
-import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_MIXED;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_SJ;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_3_PRIME;
@@ -97,7 +96,13 @@ public class AltSpliceJunctionFinder
     public void evaluateIntronicRead(final ReadRecord read)
     {
         if(isCandidate(read))
-            registerAltSpliceJunction(read, Lists.newArrayList());
+        {
+            if(mAltSpliceJunctions.stream().anyMatch(x -> x.checkProcessedRead(read.Id)))
+                return;
+
+            AltSpliceJunction altSJ = registerAltSpliceJunction(read, Lists.newArrayList());
+            altSJ.checkProcessedRead(read.Id);
+        }
     }
 
     private static boolean isCandidate(final ReadRecord read)
@@ -150,57 +155,9 @@ public class AltSpliceJunctionFinder
 
         List<RegionReadData> sjStartRegions = Lists.newArrayList(); // transcript regions with an exon matching the start of the alt SJ
         List<RegionReadData> sjEndRegions = Lists.newArrayList();
-
         String[] regionContexts = {"", ""};
 
-        for (Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
-        {
-            final RegionReadData region = entry.getKey();
-            RegionMatchType matchType = entry.getValue();
-
-            String regionStartContext = CONTEXT_INTRONIC;
-            String regionEndContext = CONTEXT_INTRONIC;
-
-            if(matchType == RegionMatchType.WITHIN_EXON)
-            {
-                if(positionWithin(spliceJunction[SE_START], region.start(), region.end()))
-                {
-                    regionStartContext = CONTEXT_EXONIC;
-                }
-
-                if(positionWithin(spliceJunction[SE_END], region.start(), region.end()))
-                {
-                    regionEndContext = CONTEXT_EXONIC;
-                }
-            }
-            else if(matchType != RegionMatchType.NONE) // some exon-intron matches cover match a splice junction at one end
-            // if (matchType == RegionMatchType.EXON_BOUNDARY || matchType == RegionMatchType.EXON_MATCH) // some
-            {
-                if (region.end() == spliceJunction[SE_START])
-                {
-                    regionContexts[SE_START] = CONTEXT_SJ;
-                    sjStartRegions.add(region);
-                }
-
-                if (region.start() == spliceJunction[SE_END])
-                {
-                    regionContexts[SE_END] = CONTEXT_SJ;
-                    sjEndRegions.add(region);
-                }
-            }
-
-            if(regionContexts[SE_START] != CONTEXT_SJ)
-                regionContexts[SE_START] = regionContexts[SE_START] == "" ? regionStartContext : CONTEXT_MIXED;
-
-            if(regionContexts[SE_END] != CONTEXT_SJ)
-                regionContexts[SE_END] = regionContexts[SE_END] == "" ? regionEndContext : CONTEXT_MIXED;
-        }
-
-        if(regionContexts[SE_START] == "")
-            regionContexts[SE_START] = CONTEXT_INTRONIC;
-
-        if(regionContexts[SE_END] == "")
-            regionContexts[SE_END] = CONTEXT_INTRONIC;
+        classifyRegions(read, spliceJunction, sjStartRegions, sjEndRegions, regionContexts);
 
         AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
 
@@ -210,6 +167,48 @@ public class AltSpliceJunctionFinder
         altSplicJunction.EndRegions.addAll(sjEndRegions);
 
         return altSplicJunction;
+    }
+
+    private void classifyRegions(
+            final ReadRecord read, final long[] spliceJunction,
+            final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, String[] regionContexts)
+    {
+        for (Map.Entry<RegionReadData, RegionMatchType> entry : read.getMappedRegions().entrySet())
+        {
+            final RegionReadData region = entry.getKey();
+            RegionMatchType matchType = entry.getValue();
+
+            if(matchType == RegionMatchType.NONE)
+                continue;
+
+            if (region.end() == spliceJunction[SE_START])
+            {
+                regionContexts[SE_START] = CONTEXT_SJ;
+                sjStartRegions.add(region);
+            }
+            else if(positionWithin(spliceJunction[SE_START], region.start(), region.end()))
+            {
+                if(regionContexts[SE_START] != CONTEXT_SJ)
+                    regionContexts[SE_START] = CONTEXT_EXONIC;
+            }
+
+            if (region.start() == spliceJunction[SE_END])
+            {
+                regionContexts[SE_END] = CONTEXT_SJ;
+                sjEndRegions.add(region);
+            }
+            else if(positionWithin(spliceJunction[SE_END], region.start(), region.end()))
+            {
+                if(regionContexts[SE_END] != CONTEXT_SJ)
+                    regionContexts[SE_END] = CONTEXT_EXONIC;
+            }
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if(regionContexts[se] == "")
+                regionContexts[se] = CONTEXT_INTRONIC;
+        }
     }
 
     private AltSpliceJunctionType classifySpliceJunction(
@@ -350,9 +349,15 @@ public class AltSpliceJunctionFinder
 
                 for(SAMRecord record : reads)
                 {
-                    if(!processed.contains(record.getReadName()))
+                    if(processed.contains(record.getReadName()))
+                        continue;
+
+                    processed.add(record.getReadName());
+
+                    ReadRecord read = ReadRecord.from(record);
+
+                    if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
                     {
-                        processed.add(record.getReadName());
                         ++depth;
                     }
                 }

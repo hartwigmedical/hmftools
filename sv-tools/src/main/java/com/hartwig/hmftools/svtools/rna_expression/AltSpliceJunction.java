@@ -29,6 +29,7 @@ public class AltSpliceJunction
     private AltSpliceJunctionType mType;
     private int mFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
+    public final List<String> mProcessedReads;
 
     public static final String CONTEXT_SJ = "SPLICE_JUNC";
     public static final String CONTEXT_EXONIC = "EXONIC";
@@ -58,6 +59,7 @@ public class AltSpliceJunction
 
         StartRegions = Lists.newArrayList();
         EndRegions = Lists.newArrayList();
+        mProcessedReads = Lists.newArrayList();
 
         mType = type;
 
@@ -183,6 +185,27 @@ public class AltSpliceJunction
         }
     }
 
+    public boolean checkProcessedRead(final String readId)
+    {
+        // return true and remove if found, otherwise add the new read
+        for(int i = 0; i < mProcessedReads.size(); ++i)
+        {
+            if(mProcessedReads.get(i).equals(readId))
+            {
+                mProcessedReads.remove(i);
+                return true;
+            }
+        }
 
+        mProcessedReads.add(readId);
+        return false;
+    }
+
+    public String toString()
+    {
+        return String.format("%s sj(%d - %d) context(%s - %s) type(%d) frags(%d)",
+                Gene.GeneData.GeneId, SpliceJunction[SE_START], SpliceJunction[SE_END],
+                RegionContexts[SE_START], RegionContexts[SE_END], mType, mFragmentCount);
+    }
 
 }
