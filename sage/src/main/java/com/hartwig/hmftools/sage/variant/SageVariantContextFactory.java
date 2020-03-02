@@ -59,8 +59,8 @@ public class SageVariantContextFactory {
         final AltContext firstTumor = tumorContexts.get(0);
 
         final List<Genotype> genotypes = Lists.newArrayList(createGenotype(true, normal));
-        tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
         entry.rna().map(x -> createGenotype(false, x)).ifPresent(genotypes::add);
+        tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
 
         final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
         return createContext(entry, createAlleles(entry.normal()), genotypes, firstTumorCounter);

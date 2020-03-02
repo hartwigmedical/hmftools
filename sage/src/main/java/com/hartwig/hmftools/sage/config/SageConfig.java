@@ -79,10 +79,10 @@ public interface SageConfig {
     int threads();
 
     @NotNull
-    String reference();
+    List<String> reference();
 
     @NotNull
-    String referenceBam();
+    List<String> referenceBam();
 
     @NotNull
     String rna();
@@ -147,15 +147,8 @@ public interface SageConfig {
     static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
 
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
-        final String reference = cmd.getOptionValue(REFERENCE);
-        final String reference_bam = cmd.getOptionValue(REFERENCE_BAM);
-
         final String rna = cmd.getOptionValue(RNA, Strings.EMPTY);
         final String rna_bam = cmd.getOptionValue(RNA_BAM, Strings.EMPTY);
-
-        if (!new File(reference_bam).exists()) {
-            throw new ParseException("Unable to locate reference bam " + reference_bam);
-        }
 
         if (!rna_bam.isEmpty() && !new File(rna_bam).exists()) {
             throw new ParseException("Unable to locate rna bam " + rna_bam);
@@ -163,6 +156,25 @@ public interface SageConfig {
 
         if (!rna_bam.isEmpty() && rna.isEmpty()) {
             throw new ParseException("Parameter " + RNA + " is mandatory when " + RNA_BAM + " supplied");
+        }
+
+        final List<String> referenceList = Lists.newArrayList();
+        referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
+        if (referenceList.isEmpty()) {
+            throw new ParseException("At least one reference sample required");
+        }
+
+        final List<String> referenceBamList = Lists.newArrayList();
+        referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
+
+        if (referenceList.size() != referenceBamList.size()) {
+            throw new ParseException("Each reference sample must have matching bam");
+        }
+
+        for (String referenceBam : referenceBamList) {
+            if (!new File(referenceBam).exists()) {
+                throw new ParseException("Unable to locate reference bam " + referenceBam);
+            }
         }
 
         final List<String> tumorList = Lists.newArrayList();
@@ -189,8 +201,8 @@ public interface SageConfig {
                 .version(version)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
-                .reference(reference)
-                .referenceBam(reference_bam)
+                .reference(referenceList)
+                .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
                 .rna(rna)

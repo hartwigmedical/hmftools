@@ -53,7 +53,8 @@ public class NormalEvidence {
     }
 
     @NotNull
-    private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final NormalRefContextCandidates candidates) {
+    private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer,
+            @NotNull final NormalRefContextCandidates candidates) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
@@ -62,7 +63,7 @@ public class NormalEvidence {
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))
-                .open(new File(sageConfig.referenceBam()))) {
+                .open(new File(sageConfig.referenceBam().get(0)))) {
             slicer.slice(tumorReader, samRecord -> {
 
                 recordConsumer.accept(samRecord);
