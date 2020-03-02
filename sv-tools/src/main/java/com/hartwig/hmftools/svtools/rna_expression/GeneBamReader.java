@@ -53,14 +53,13 @@ public class GeneBamReader
 
     // state relating to the current gene
     private GeneReadData mCurrentGene;
-    private final List<String> mDiscardedReads;
+    private final Map<String,ReadRecord> mFragmentReads; // delay processing of read until both have been read
 
     private int mGeneReadCount;
     private int mTotalBamReadCount;
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
-    private final Map<String,ReadRecord> mFragmentReads;
     private final Map<Long,List<long[]>> mDuplicateCache;
     private final List<String> mDuplicateReadIds;
 
@@ -77,7 +76,6 @@ public class GeneBamReader
 
         mCurrentGene = null;
         mFragmentReads = Maps.newHashMap();
-        mDiscardedReads = Lists.newArrayList();
         mTransComboData = Lists.newArrayList();
 
         mGeneReadCount = 0;
@@ -107,7 +105,6 @@ public class GeneBamReader
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
         mFragmentReads.clear();
-        mDiscardedReads.clear();
 
         clearDuplicates();
 
@@ -121,20 +118,6 @@ public class GeneBamReader
         // samSlicer.slice(mSamReader, this::processSamRecord);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
-
-        if(!mFragmentReads.isEmpty())
-        {
-            if(LOGGER.isDebugEnabled())
-            {
-                int discardedReadMatches = (int) mFragmentReads.keySet().stream().filter(x -> mDiscardedReads.contains(x)).count();
-
-                LOGGER.debug("gene({}) has {} unmatched reads, discarded({})",
-                        mCurrentGene.GeneData.GeneName, mFragmentReads.size(), discardedReadMatches);
-            }
-
-            // only paired reads can be processed - otherwise implies a link to another gene or non-genic region
-            mFragmentReads.clear();
-        }
 
         LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
 
@@ -189,14 +172,18 @@ public class GeneBamReader
 
         if(read.isTranslocation())
         {
-            mCurrentGene.addCount(TOTAL, 1);
-            mCurrentGene.addCount(CHIMERIC, 1);
+            if(read.samRecord().getFirstOfPairFlag())
+            {
+                mCurrentGene.addCount(TOTAL, 1);
+                mCurrentGene.addCount(CHIMERIC, 1);
+            }
             return;
         }
 
         boolean exonOverlap = mCurrentGene.getExonRegions().stream()
-                .anyMatch(x -> !(read.PosEnd < x.start() || read.PosStart > x.Region.end()));
+                .anyMatch(x -> positionsOverlap(read.PosStart, read.PosEnd, x.start(), x.end()));
 
+        /*
         if(!exonOverlap)
         {
             boolean outsideGene = !positionsOverlap(read.PosStart, read.PosEnd, mCurrentGene.GeneData.GeneStart, mCurrentGene.GeneData.GeneEnd);
@@ -212,28 +199,55 @@ public class GeneBamReader
 
             return;
         }
+        */
 
-        // the read is fully within the exon
-        List<RegionReadData> overlappingRegions = mCurrentGene.findOverlappingRegions(read);
-
-        if(!overlappingRegions.isEmpty())
+        if(exonOverlap)
         {
-            // look at all matched reads within the context of a transcript
-            read.processOverlappingRegions(overlappingRegions);
+            List<RegionReadData> overlappingRegions = mCurrentGene.findOverlappingRegions(read);
+
+            if (!overlappingRegions.isEmpty())
+            {
+                // look at all matched reads within the context of a transcript
+                read.processOverlappingRegions(overlappingRegions);
+            }
         }
 
         checkFragmentRead(read);
     }
 
-    private void processFragmentReads(@NotNull final ReadRecord read1, @NotNull final ReadRecord read2)
+    private boolean checkFragmentRead(ReadRecord read)
     {
-        /* use of fragment read pair:
-            - supporting a transcript:
+        // check if the 2 reads from a fragment exist and if so handle them a pair, returning true
+        if(read.samRecord() != null)
+        {
+            if(read.isTranslocation() || read.samRecord().getMateReferenceIndex() == null)
+                return false;
+        }
+
+        ReadRecord otherRead = mFragmentReads.get(read.Id);
+
+        if(otherRead != null)
+        {
+            mFragmentReads.remove(read.Id);
+            processFragmentReads(read, otherRead);
+            return true;
+        }
+
+        mFragmentReads.put(read.Id, read);
+        return false;
+    }
+
+    private void processFragmentReads(final ReadRecord read1, final ReadRecord read2)
+    {
+        /* process the pair of reads from a fragment:
+            - fully outside the gene (due to the buffer used, ignore
+            - read through a gene ie start or end outside
+            - purely intronic
+            - chimeric an inversion or translocation
+            - supporting 1 or more transcripts
                 - both reads fully with an exon - if exon has only 1 transcript then consider unambiguous
                 - both reads within 2 exons (including spanning intermediary ones) and/or either exon at the boundary
-            - not supporting a transcript
-                - both reads touch the same exon if there is a gap in the reads
-                - one read in an intron -> UNSPLICED
+            - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
         boolean r1OutsideGene = read1.PosStart > mCurrentGene.GeneData.GeneEnd || read1.PosEnd < mCurrentGene.GeneData.GeneStart;
@@ -251,7 +265,11 @@ public class GeneBamReader
         }
 
         if(read1.getMappedRegions().isEmpty() && read2.getMappedRegions().isEmpty())
+        {
+            // fully intronic read
+            processIntronicReads(read1, read2);
             return;
+        }
 
         final Map<Integer,TransMatchType> firstReadTransTypes = read1.getTranscriptClassifications();
 
@@ -427,7 +445,6 @@ public class GeneBamReader
         }
     }
 
-
     public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
 
     private void addTransComboData(final List<Integer> transcripts, FragmentMatchType transMatchType)
@@ -492,18 +509,27 @@ public class GeneBamReader
         regions.forEach(x -> processedRegions.add(x));
     }
 
-    public static boolean overlaps(final GenomeRegion region, final ReadRecord record)
+    private void processIntronicReads(final ReadRecord read1, final ReadRecord read2)
     {
-        // overlapping but neither wholy contained within
-        if(region.start() >= record.PosStart && region.start() <= record.PosEnd && region.end() > record.PosEnd)
-            return true; // region starts at or within and ends after
+        if(read1.Cigar.containsOperator(CigarOperator.N) || read2.Cigar.containsOperator(CigarOperator.N))
+        {
+            if(mCurrentGene.overlapsOtherGeneExon(read1.PosStart, read1.PosEnd) || mCurrentGene.overlapsOtherGeneExon(read2.PosStart, read2.PosEnd))
+                return;
 
-        if(region.end() >= record.PosStart && region.end() <= record.PosEnd && region.start() < record.PosStart)
-            return true; // region starts before and ends at the record end or before
+            mAltSpliceJunctionFinder.evaluateFragmentReads(read1, read2, Lists.newArrayList());
+            return;
+        }
 
-        return false;
+        long fragMinPos = min(read1.PosStart, read2.PosStart);
+        long fragMaxPos = max(read1.PosEnd, read2.PosEnd);
+
+        if(mCurrentGene.overlapsOtherGeneExon(fragMinPos, fragMaxPos))
+            return;
+
+        mCurrentGene.addCount(UNSPLICED, 1);
     }
 
+    /*
     private void checkIntronicRegions(final ReadRecord read)
     {
         if(read.Cigar == null)
@@ -514,7 +540,11 @@ public class GeneBamReader
 
         if(read.Cigar.containsOperator(CigarOperator.N))
         {
-            mAltSpliceJunctionFinder.evaluateIntronicRead(read);
+            if(!mCurrentGene.overlapsOtherGeneExon(read.PosStart, read.PosEnd))
+            {
+                mAltSpliceJunctionFinder.evaluateIntronicRead(read);
+            }
+
             return;
         }
 
@@ -542,7 +572,7 @@ public class GeneBamReader
             return;
         }
 
-        // only count this read as intronic if it doesn't overlap with other gene's exons
+        // only count this read as intronic if it doesn't overlap with other genes' exons
         long fragMinPos = min(otherReadStartPos, read.PosStart);
         long fragMaxPos = max(otherReadEndPos, read.PosEnd);
 
@@ -554,46 +584,8 @@ public class GeneBamReader
             mCurrentGene.addCount(UNSPLICED, 1);
             mCurrentGene.addCount(TOTAL, 1);
         }
-
-        if(LOGGER.isDebugEnabled())
-        {
-            if(mDiscardedReads.contains(read.Id))
-            {
-                // both reads intronic so ignore
-                mDiscardedReads.remove(read.Id);
-                mFragmentReads.remove(read.Id);
-            }
-            else
-            {
-                mDiscardedReads.add(read.Id);
-            }
-        }
     }
-
-    private boolean checkFragmentRead(ReadRecord read)
-    {
-        // check if the 2 reads from a fragment exist and if so handle them a pair, returning true
-        if(read.samRecord() != null)
-        {
-            if(!read.samRecord().getMateReferenceName().equals(read.Chromosome)
-            || read.samRecord().getMateReferenceIndex() == null)
-            {
-                return false;
-            }
-        }
-
-        ReadRecord otherRead = mFragmentReads.get(read.Id);
-
-        if(otherRead != null)
-        {
-            mFragmentReads.remove(read.Id);
-            processFragmentReads(read, otherRead);
-            return true;
-        }
-
-        mFragmentReads.put(read.Id, read);
-        return false;
-    }
+    */
 
     private static final int DUP_DATA_SECOND_START = 0;
     private static final int DUP_DATA_READ_LEN = 1;
@@ -678,9 +670,11 @@ public class GeneBamReader
             final BufferedWriter writer, final GeneReadData geneReadData, int readIndex, final ReadRecord read,
             GeneMatchType geneReadType, int validTranscripts, int calcFragmentLength)
     {
+        if(read.getTranscriptClassifications().isEmpty())
+            return;
+
         try
         {
-
             for(Map.Entry<Integer,TransMatchType> entry : read.getTranscriptClassifications().entrySet())
             {
                 int transId = entry.getKey();

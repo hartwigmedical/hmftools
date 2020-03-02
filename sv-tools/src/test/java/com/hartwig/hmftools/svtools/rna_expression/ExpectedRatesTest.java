@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.Test;
 
-public class RnaExpectedRatesTest
+public class ExpectedRatesTest
 {
     @Test
     public void testRegionMatching()

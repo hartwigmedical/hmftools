@@ -12,9 +12,9 @@ import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaExpressionTest.REF_BASE_STR_1;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaExpressionTest.createCigar;
-import static com.hartwig.hmftools.svtools.rna_expression.RnaExpressionTest.createReadRecord;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.REF_BASE_STR_1;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.createCigar;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.createReadRecord;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

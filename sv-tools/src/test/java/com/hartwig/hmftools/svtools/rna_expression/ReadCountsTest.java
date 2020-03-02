@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_I
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.overlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.findStringOverlaps;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
@@ -36,7 +35,7 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 
-public class RnaExpressionTest
+public class ReadCountsTest
 {
     public static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
 
@@ -171,9 +170,9 @@ public class RnaExpressionTest
         assertEquals(EXONIC, read.getTranscriptClassification(trans1));
 
         // skipped exon
-        RegionReadData region1 = createRegion(trans1,1,"1", 100, 120);
-        RegionReadData region2 = createRegion(trans1,2, "1", 140, 160);
-        RegionReadData region3 = createRegion(trans1,3, "1", 180, 200);
+        RegionReadData region1 = createRegion(trans1, 1, "1", 100, 120);
+        RegionReadData region2 = createRegion(trans1, 2, "1", 140, 160);
+        RegionReadData region3 = createRegion(trans1, 3, "1", 180, 200);
 
         // read covering multiple exons but skips the middle exon
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, createCigar(0, 11, 59, 21, 0));
@@ -235,14 +234,14 @@ public class RnaExpressionTest
         RnaExpConfig config = new RnaExpConfig();
         GeneBamReader bamReader = GeneBamReader.from(config);
 
-        GeneReadData geneReadData = createGeneReadData("GEN01", "1",(byte)1, 1000, 5000);
+        GeneReadData geneReadData = createGeneReadData("GEN01", "1", (byte) 1, 1000, 5000);
 
         int trans1 = 1;
-        RegionReadData region1 = createRegion(trans1,1,"1", 1000, 1200);
+        RegionReadData region1 = createRegion(trans1, 1, "1", 1000, 1200);
         geneReadData.addExonRegion(region1);
-        RegionReadData region2 = createRegion(trans1,2,"1", 2000, 2500);
+        RegionReadData region2 = createRegion(trans1, 2, "1", 2000, 2500);
         geneReadData.addExonRegion(region2);
-        RegionReadData region3 = createRegion(trans1,3,"1", 4500, 5000);
+        RegionReadData region3 = createRegion(trans1, 3, "1", 4500, 5000);
         geneReadData.addExonRegion(region3);
 
         ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 10, 0));
@@ -295,7 +294,7 @@ public class RnaExpressionTest
         // alternative splicing - first from reads with splits
         geneReadData.clearCounts();
 
-        read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100,  0));
+        read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100, 0));
         read1.setFragmentInsertSize(500);
         read2 = createReadRecord(1, "1", 3100, 3300, REF_BASE_STR_1, createCigar(0, 100, 0));
         read2.setFragmentInsertSize(-500);
@@ -332,7 +331,7 @@ public class RnaExpressionTest
     public static ReadRecord createReadRecord(
             final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
     {
-        Cigar readCigar = cigar != null ? cigar : createCigar(0, (int)(posEnd - posStart + 1), 0);
+        Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
         return new ReadRecord(null, String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar);
     }
 
@@ -346,30 +345,30 @@ public class RnaExpressionTest
     @Test
     public void testCigarCreation()
     {
-        Cigar cigar = createCigar(2, 10,1);
+        Cigar cigar = createCigar(2, 10, 1);
         assertTrue(cigar.toString().equals("2S10M1S"));
 
-        cigar = createCigar(0, 10,100, 12, 0);
+        cigar = createCigar(0, 10, 100, 12, 0);
         assertTrue(cigar.toString().equals("10M100N12M"));
 
-        cigar = createCigar(2, 10,100, 12, 4);
+        cigar = createCigar(2, 10, 100, 12, 4);
         assertTrue(cigar.toString().equals("2S10M100N12M4S"));
     }
 
     public static Cigar createCigar(int preSc, int match, int postSc)
     {
-        if(preSc == 0 && match == 0 &&postSc == 0)
+        if (preSc == 0 && match == 0 && postSc == 0)
             return null;
 
         Cigar cigar = new Cigar();
 
-        if(preSc > 0)
+        if (preSc > 0)
             cigar.add(new CigarElement(preSc, CigarOperator.SOFT_CLIP));
 
-        if(match > 0)
+        if (match > 0)
             cigar.add(new CigarElement(match, CigarOperator.MATCH_OR_MISMATCH));
 
-        if(postSc > 0)
+        if (postSc > 0)
             cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
 
         return cigar;
@@ -378,24 +377,24 @@ public class RnaExpressionTest
 
     public static Cigar createCigar(int preSc, int preMatch, int nonRef, int postMatch, int postSc)
     {
-        if(preSc == 0 && preMatch == 0 && nonRef == 0 && postMatch == 0 && postSc == 0)
+        if (preSc == 0 && preMatch == 0 && nonRef == 0 && postMatch == 0 && postSc == 0)
             return null;
 
         Cigar cigar = new Cigar();
 
-        if(preSc > 0)
+        if (preSc > 0)
             cigar.add(new CigarElement(preSc, CigarOperator.SOFT_CLIP));
 
-        if(preMatch > 0)
+        if (preMatch > 0)
             cigar.add(new CigarElement(preMatch, CigarOperator.MATCH_OR_MISMATCH));
 
-        if(nonRef > 0)
+        if (nonRef > 0)
             cigar.add(new CigarElement(nonRef, CigarOperator.SKIPPED_REGION));
 
-        if(postMatch > 0)
+        if (postMatch > 0)
             cigar.add(new CigarElement(postMatch, CigarOperator.MATCH_OR_MISMATCH));
 
-        if(postSc > 0)
+        if (postSc > 0)
             cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
 
         return cigar;
@@ -406,16 +405,16 @@ public class RnaExpressionTest
     {
         List<long[]> mappings1 = Lists.newArrayList();
 
-        mappings1.add(new long[]{10,20});
-        mappings1.add(new long[]{40,50});
-        mappings1.add(new long[]{70,80});
+        mappings1.add(new long[] { 10, 20 });
+        mappings1.add(new long[] { 40, 50 });
+        mappings1.add(new long[] { 70, 80 });
 
         List<long[]> mappings2 = Lists.newArrayList();
 
         // no overlaps
-        mappings2.add(new long[]{25,35});
-        mappings2.add(new long[]{55,65});
-        mappings2.add(new long[]{85,95});
+        mappings2.add(new long[] { 25, 35 });
+        mappings2.add(new long[] { 55, 65 });
+        mappings2.add(new long[] { 85, 95 });
 
         List<long[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(6, commonMappings.size());
@@ -429,9 +428,9 @@ public class RnaExpressionTest
         // widening of all regions only
         mappings2.clear();
 
-        mappings2.add(new long[]{5,15});
-        mappings2.add(new long[]{35,45});
-        mappings2.add(new long[]{55,75});
+        mappings2.add(new long[] { 5, 15 });
+        mappings2.add(new long[] { 35, 45 });
+        mappings2.add(new long[] { 55, 75 });
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(3, commonMappings.size());
@@ -445,7 +444,7 @@ public class RnaExpressionTest
         // one other region overlapping all others
         mappings2.clear();
 
-        mappings2.add(new long[]{5,95});
+        mappings2.add(new long[] { 5, 95 });
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(1, commonMappings.size());
@@ -456,18 +455,18 @@ public class RnaExpressionTest
         mappings1.clear();
 
         // a mix of various scenarios
-        mappings1.add(new long[]{10,20});
+        mappings1.add(new long[] { 10, 20 });
 
-        mappings2.add(new long[]{30,40});
+        mappings2.add(new long[] { 30, 40 });
 
-        mappings2.add(new long[]{50,60});
-        mappings1.add(new long[]{55,75});
-        mappings1.add(new long[]{85,95});
-        mappings2.add(new long[]{70,110});
+        mappings2.add(new long[] { 50, 60 });
+        mappings1.add(new long[] { 55, 75 });
+        mappings1.add(new long[] { 85, 95 });
+        mappings2.add(new long[] { 70, 110 });
 
-        mappings2.add(new long[]{120,130});
+        mappings2.add(new long[] { 120, 130 });
 
-        mappings1.add(new long[]{140,150});
+        mappings1.add(new long[] { 140, 150 });
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(5, commonMappings.size());
@@ -479,11 +478,11 @@ public class RnaExpressionTest
     @Test
     public void testBaseAssignment()
     {
-        RegionReadData region = createRegion(1,1,"1", 100, 119);
+        RegionReadData region = createRegion(1, 1, "1", 100, 119);
         region.setRefBases(REF_BASE_STR_1);
 
         List<long[]> readCoords = Lists.newArrayList();
-        readCoords.add(new long[]{100, 119});
+        readCoords.add(new long[] { 100, 119 });
 
         markRegionBases(readCoords, region);
         assertEquals(20, region.baseCoverage(1));
@@ -491,9 +490,9 @@ public class RnaExpressionTest
         region.clearState();
 
         readCoords.clear();
-        readCoords.add(new long[]{100, 104});
-        readCoords.add(new long[]{110, 114});
-        readCoords.add(new long[]{118, 119});
+        readCoords.add(new long[] { 100, 104 });
+        readCoords.add(new long[] { 110, 114 });
+        readCoords.add(new long[] { 118, 119 });
 
         markRegionBases(readCoords, region);
         assertEquals(12, region.baseCoverage(1));
@@ -502,20 +501,20 @@ public class RnaExpressionTest
     @Test
     public void testUniqueRegionBases()
     {
-        RegionReadData region1 = createRegion(1,1,"1", 100, 119);
+        RegionReadData region1 = createRegion(1, 1, "1", 100, 119);
         region1.setRefBases(REF_BASE_STR_1);
 
         // covers the first region entirely
-        RegionReadData region2 = createRegion(2,1,"1", 95, 124);
+        RegionReadData region2 = createRegion(2, 1, "1", 95, 124);
         region2.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
 
-        RegionReadData region3 = createRegion(3,1,"1", 80, 99);
+        RegionReadData region3 = createRegion(3, 1, "1", 80, 99);
         region3.setRefBases(REF_BASE_STR_1);
 
-        RegionReadData region4 = createRegion(4,1,"1", 70, 89);
+        RegionReadData region4 = createRegion(4, 1, "1", 70, 89);
         region4.setRefBases(REF_BASE_STR_1);
 
-        RegionReadData region5 = createRegion(5,1,"1", 130, 149);
+        RegionReadData region5 = createRegion(5, 1, "1", 130, 149);
         region5.setRefBases(REF_BASE_STR_1);
 
         List<RegionReadData> regions = Lists.newArrayList(region1, region2, region3, region4, region5);
@@ -559,27 +558,4 @@ public class RnaExpressionTest
         assertEquals(19, overlap);
     }
 
-    @Test
-    public void testPositionOverlaps()
-    {
-        GenomeRegion region = GenomeRegions.create("1", 1000, 2000);
-
-        ReadRecord record = createReadRecord(1, "1", 800, 900, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 2200, 2300, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 1500, 1600, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 800, 2200, "", null);
-        assertFalse(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 800, 1200, "", null);
-        assertTrue(overlaps(region, record));
-
-        record = createReadRecord(1, "1", 1900, 2200, "", null);
-        assertTrue(overlaps(region, record));
-    }
 }

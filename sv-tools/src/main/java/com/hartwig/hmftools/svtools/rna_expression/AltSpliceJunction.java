@@ -30,9 +30,7 @@ public class AltSpliceJunction
     private AltSpliceJunctionType mType;
     private int mFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
-    private final List<String> mProcessedReads;
     private final List<Integer> mCandidateTransIds;
-
 
     public static final String CONTEXT_SJ = "SPLICE_JUNC";
     public static final String CONTEXT_EXONIC = "EXONIC";
@@ -63,7 +61,6 @@ public class AltSpliceJunction
         StartRegions = Lists.newArrayList();
         EndRegions = Lists.newArrayList();
 
-        mProcessedReads = Lists.newArrayList();
         mCandidateTransIds = Lists.newArrayList();
 
         mType = type;
@@ -244,22 +241,6 @@ public class AltSpliceJunction
             if(!mCandidateTransIds.contains(transId))
                 mCandidateTransIds.add(transId);
         }
-    }
-
-    public boolean checkProcessedRead(final String readId)
-    {
-        // return true and remove if found, otherwise add the new read
-        for(int i = 0; i < mProcessedReads.size(); ++i)
-        {
-            if(mProcessedReads.get(i).equals(readId))
-            {
-                mProcessedReads.remove(i);
-                return true;
-            }
-        }
-
-        mProcessedReads.add(readId);
-        return false;
     }
 
     public String toString()

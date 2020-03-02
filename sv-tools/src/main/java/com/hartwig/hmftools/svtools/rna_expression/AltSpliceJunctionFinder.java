@@ -71,6 +71,9 @@ public class AltSpliceJunctionFinder
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
     {
+        if(mGene == null)
+            return;
+        
         // for now exclude SJs outside known transcripts
         if(read1.PosStart < mGene.GeneData.GeneStart || read2.PosStart < mGene.GeneData.GeneStart
         || read1.PosEnd > mGene.GeneData.GeneEnd || read2.PosEnd > mGene.GeneData.GeneEnd)
@@ -102,6 +105,7 @@ public class AltSpliceJunctionFinder
         }
     }
 
+    /*
     public void evaluateIntronicRead(final ReadRecord read)
     {
         if(isCandidate(read))
@@ -115,6 +119,7 @@ public class AltSpliceJunctionFinder
                 altSJ.checkProcessedRead(read.Id);
         }
     }
+    */
 
     private static boolean isCandidate(final ReadRecord read)
     {

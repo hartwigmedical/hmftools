@@ -238,19 +238,6 @@ public class FragmentSizeCalcs
 
     private void addFragmentLength(final SAMRecord record)
     {
-        // long mateStartPos = record.getMateAlignmentStart();
-
-        // long inferredFragLength = mateStartPos > record.getStart() ?
-        //        mateStartPos - record.getStart() + record.getReadLength() : record.getEnd() - mateStartPos;
-
-        /* don't discard long reads
-        if(inferredFragLength > FRAG_LENGTH_LIMIT)
-        {
-            // more likely a split exonic read pair
-            return;
-        }
-        */
-
         int fragmentLength = min(abs(record.getInferredInsertSize()), FRAG_LENGTH_CAP);
 
         if(fragmentLength == 0)
