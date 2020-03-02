@@ -189,7 +189,13 @@ public class BamSlicerApplication {
     private static void sliceFromURLs(@NotNull URL indexUrl, @NotNull URL bamUrl, @NotNull CommandLine cmd) throws IOException {
         File indexFile = downloadIndex(indexUrl);
         indexFile.deleteOnExit();
-        SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+
+        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
+            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
+        }
+
+        SamReader reader = readerFactory.open(SamInputResource.of(bamUrl).index(indexFile));
         SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
         BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
@@ -370,6 +376,10 @@ public class BamSlicerApplication {
         options.addOption(Option.builder(INPUT_MODE_URL).required().desc("Read input BAM from url").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("url of BAM file (required)").build());
         options.addOption(Option.builder(INDEX).required().hasArg().desc("url of BAM index file(required)").build());
+        options.addOption(Option.builder(REF_GENOME_FASTA_FILE)
+                .hasArg()
+                .desc("(Optional) path to the ref genome fasta (for reading CRAMs)")
+                .build());
         return addHttpSlicerOptions(options);
     }
 
