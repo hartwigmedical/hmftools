@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.RefGenomeVersion;
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Sources;
+import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.knowledgebasegenerator.transvar.Transvar;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -33,7 +33,7 @@ public class HotspotExtractor {
     @NotNull
     public List<VariantHotspot> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        if (Sources.courceFromKnowledgebase(viccEntry.source()) == Sources.ONCOKB) {
+        if (Source.sourceFromKnowledgebase(viccEntry.source()) == Source.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 if (feature.biomarkerType().equals("missense_variant")) {
                     LOGGER.info("Converting feature on {} with name '{}'", feature.geneSymbol(), feature.name());

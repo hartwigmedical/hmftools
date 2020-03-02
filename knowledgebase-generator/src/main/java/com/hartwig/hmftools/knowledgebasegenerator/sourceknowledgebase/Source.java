@@ -2,7 +2,7 @@ package com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum Sources {
+public enum Source {
     ONCOKB,
     CGI,
     CIVIC,
@@ -16,7 +16,7 @@ public enum Sources {
     UNKNOWN;
 
     @NotNull
-    public static Sources courceFromKnowledgebase(@NotNull String source) {
+    public static Source sourceFromKnowledgebase(@NotNull String source) {
         if (source.equals("oncokb")) {
             return ONCOKB;
         } else if (source.equals("cgi")) {

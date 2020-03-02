@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Sources;
+import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -34,7 +34,7 @@ public class EventTypeAnalyzer {
         String event = Strings.EMPTY;
         List<EventType> eventType = Lists.newArrayList();
 
-        Sources type = Sources.courceFromKnowledgebase(viccEntry.source());
+        Source type = Source.sourceFromKnowledgebase(viccEntry.source());
 
         for (Feature feature : viccEntry.features()) {
             switch (type) {
