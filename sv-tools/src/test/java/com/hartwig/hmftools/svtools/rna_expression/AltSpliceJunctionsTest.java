@@ -155,6 +155,8 @@ public class AltSpliceJunctionsTest
         read = createReadRecord(1, chromosome, 721, 779, REF_BASE_STR_1, createCigar(0, 10, 39, 10, 0));
 
         overlappingRegions = gene.findOverlappingRegions(read);
+        read.processOverlappingRegions(overlappingRegions);
+
         assertTrue(overlappingRegions.isEmpty());
         altSJ = asjFinder.createFromRead(read, transIds);
 

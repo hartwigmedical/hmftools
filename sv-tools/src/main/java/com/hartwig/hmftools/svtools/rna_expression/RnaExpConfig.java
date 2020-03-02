@@ -331,6 +331,8 @@ public class RnaExpConfig
         return options;
     }
 
+    private static final int COL_GENE_ID = 0;
+
     private static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
     {
         if (!Files.exists(Paths.get(filename)))
@@ -346,13 +348,13 @@ public class RnaExpConfig
             if(fileContents.isEmpty())
                 return;
 
-            if (fileContents.get(0).contains("GeneId"))
+            if (fileContents.get(COL_GENE_ID).contains("GeneId"))
             {
                 // check for header row
                 fileContents.remove(0);
             }
 
-            geneIdList.addAll(fileContents.stream().map(x -> x.split(",")[0]).collect(Collectors.toList()));
+            geneIdList.addAll(fileContents.stream().map(x -> x.split(",")[COL_GENE_ID]).collect(Collectors.toList()));
         }
         catch (IOException e)
         {

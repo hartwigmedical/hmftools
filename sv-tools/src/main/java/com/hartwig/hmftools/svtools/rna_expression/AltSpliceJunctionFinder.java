@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_EXONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunction.CONTEXT_SJ;
+import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.INTRONIC;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.MIXED_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_3_PRIME;
@@ -70,6 +71,13 @@ public class AltSpliceJunctionFinder
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
     {
+        // for now exclude SJs outside known transcripts
+        if(read1.PosStart < mGene.GeneData.GeneStart || read2.PosStart < mGene.GeneData.GeneStart
+        || read1.PosEnd > mGene.GeneData.GeneEnd || read2.PosEnd > mGene.GeneData.GeneEnd)
+        {
+            return;
+        }
+
         AltSpliceJunction firstAltSJ = null;
 
         if(AltSpliceJunctionFinder.isCandidate(read1))
@@ -178,6 +186,8 @@ public class AltSpliceJunctionFinder
         altSplicJunction.StartRegions.addAll(sjStartRegions);
         altSplicJunction.EndRegions.addAll(sjEndRegions);
 
+        altSplicJunction.setCandidateTranscripts(read.getMappedRegions().keySet().stream().collect(Collectors.toList()));
+
         return altSplicJunction;
     }
 
@@ -275,7 +285,7 @@ public class AltSpliceJunctionFinder
         if(regionContexts[SE_START] == CONTEXT_EXONIC && regionContexts[SE_END] == CONTEXT_EXONIC)
             return NOVEL_INTRON;
 
-        return UNKNOWN;
+        return EXON_INTRON;
     }
 
     public void checkNovelExon(AltSpliceJunction firstAltSJ, AltSpliceJunction secondAltSJ)
@@ -326,12 +336,12 @@ public class AltSpliceJunctionFinder
         secondAltSJ.cullNonMatchedTranscripts(commonTranscripts);
     }
 
-    private AltSpliceJunction registerAltSpliceJunction(final ReadRecord read, final List<Integer> invalidTranscripts)
+    private AltSpliceJunction registerAltSpliceJunction(final ReadRecord read, final List<Integer> regionTranscripts)
     {
         if(mGene == null)
             return null;
 
-        AltSpliceJunction altSpliceJunc = createFromRead(read, invalidTranscripts);
+        AltSpliceJunction altSpliceJunc = createFromRead(read, regionTranscripts);
 
         AltSpliceJunction existingSpliceJunc = mAltSpliceJunctions.stream()
                 .filter(x -> x.matches(altSpliceJunc)).findFirst().orElse(null);
@@ -343,10 +353,11 @@ public class AltSpliceJunctionFinder
         }
 
         // extra check that the SJ doesn't match any transcript
-        if(junctionMatchesGene(altSpliceJunc.SpliceJunction, invalidTranscripts))
+        if(junctionMatchesGene(altSpliceJunc.SpliceJunction, regionTranscripts))
             return null;
 
         altSpliceJunc.addFragmentCount();
+
         mAltSpliceJunctions.add(altSpliceJunc);
         return altSpliceJunc;
     }
@@ -357,6 +368,48 @@ public class AltSpliceJunctionFinder
 
         QueryInterval[] queryInterval = new QueryInterval[1];
         int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mGene.GeneData.Chromosome);
+
+        if(mAltSpliceJunctions.size() >= 100)
+        {
+            // take all reads for the gene together and then test each against each SJ
+            long altSJMinPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_START]).min().orElse(mGene.GeneData.GeneStart);
+            long altSJMaxPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_START]).max().orElse(mGene.GeneData.GeneEnd);
+
+            queryInterval[0] = new QueryInterval(chrSeqIndex, (int)altSJMinPos, (int)altSJMaxPos);
+
+            final List<SAMRecord> reads = slicer.slice(mSamReader, queryInterval);
+            final List<String> processed = Lists.newArrayList();
+
+            for(SAMRecord record : reads)
+            {
+                if(processed.contains(record.getReadName()))
+                {
+                    processed.remove(record.getReadName());
+                    continue;
+                }
+
+                processed.add(record.getReadName());
+
+                ReadRecord read = ReadRecord.from(record);
+
+                for(AltSpliceJunction altSJ : mAltSpliceJunctions)
+                {
+                    for (int se = SE_START; se <= SE_END; ++se)
+                    {
+                        int position = (int) altSJ.SpliceJunction[se];
+
+                        if (read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
+                        {
+                            altSJ.setFragmentCount(se, 1);
+                        }
+                    }
+                }
+            }
+
+            return;
+        }
+
+        int totalReadsProcessed = 0;
 
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
@@ -372,9 +425,13 @@ public class AltSpliceJunctionFinder
                 for(SAMRecord record : reads)
                 {
                     if(processed.contains(record.getReadName()))
+                    {
+                        processed.remove(record.getReadName());
                         continue;
+                    }
 
                     processed.add(record.getReadName());
+                    ++totalReadsProcessed;
 
                     ReadRecord read = ReadRecord.from(record);
 
@@ -387,6 +444,8 @@ public class AltSpliceJunctionFinder
                 altSJ.setFragmentCount(se, depth);
             }
         }
+
+        RE_LOGGER.debug("gene({}) total altSJs({}) readsProcessed({})", mGene.name(), mAltSpliceJunctions.size(), totalReadsProcessed);
     }
 
     public static BufferedWriter createAltSpliceJunctionWriter(final RnaExpConfig config)

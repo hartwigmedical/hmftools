@@ -31,6 +31,8 @@ public class AltSpliceJunction
     private int mFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
     private final List<String> mProcessedReads;
+    private final List<Integer> mCandidateTransIds;
+
 
     public static final String CONTEXT_SJ = "SPLICE_JUNC";
     public static final String CONTEXT_EXONIC = "EXONIC";
@@ -60,7 +62,9 @@ public class AltSpliceJunction
 
         StartRegions = Lists.newArrayList();
         EndRegions = Lists.newArrayList();
+
         mProcessedReads = Lists.newArrayList();
+        mCandidateTransIds = Lists.newArrayList();
 
         mType = type;
 
@@ -132,6 +136,9 @@ public class AltSpliceJunction
 
             if(positionWithin(position, region.start(), region.end()))
             {
+                if(!region.getRefRegions().stream().anyMatch(x -> mCandidateTransIds.contains(extractTransId(x))))
+                    continue;
+
                 // will be negative
                 distance = (int)(searchForwards ? position - region.end() : region.start() - position);
                 nearestBoundary = nearestBoundary == 0 ? distance : max(distance, nearestBoundary);
@@ -186,33 +193,58 @@ public class AltSpliceJunction
                 }
             }
         }
+
+        int index = 0;
+        while(index < mCandidateTransIds.size())
+        {
+            if(validTransIds.contains(mCandidateTransIds.get(index)))
+            {
+                ++index;
+            }
+            else
+            {
+                mCandidateTransIds.remove(index);
+            }
+        }
     }
 
-    public List<Integer> candidateTransIds()
+    public List<Integer> candidateTransIds() { return mCandidateTransIds; }
+
+    public void setCandidateTranscripts(final List<RegionReadData> candidateRegions)
     {
-        final List<Integer> uniqueTransIds = Lists.newArrayList();
+        mCandidateTransIds.clear();
 
-        for(RegionReadData region : StartRegions)
+        final List<Integer> validTransIds = Lists.newArrayList();
+
+        for(RegionReadData region : candidateRegions)
         {
-            uniqueTransIds.addAll(region.getRefRegions().stream().map(x -> extractTransId(x))
-                    .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
-        }
-
-        for(RegionReadData region : EndRegions)
-        {
-            final List<Integer> endTransIds = region.getRefRegions().stream().map(x -> extractTransId(x))
-                    .filter(x -> region.getPreRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList());
-
-            for(Integer transId : endTransIds)
+            if(positionWithin(SpliceJunction[SE_START], region.start(), region.end()) && positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
             {
-                if(!uniqueTransIds.contains(transId))
-                    uniqueTransIds.add(transId);
+                validTransIds.addAll(region.getRefRegions().stream().map(x -> extractTransId(x)).collect(Collectors.toList()));
+                continue;
+            }
+
+            if(positionWithin(SpliceJunction[SE_START], region.start(), region.end()))
+            {
+                // each transcript must be present in the next region to be valid
+
+                validTransIds.addAll(region.getRefRegions().stream().map(x -> extractTransId(x))
+                        .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
+            }
+
+            if(positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
+            {
+                validTransIds.addAll(region.getRefRegions().stream().map(x -> extractTransId(x))
+                        .filter(x -> region.getPreRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
             }
         }
 
-        return uniqueTransIds;
+        for(Integer transId : validTransIds)
+        {
+            if(!mCandidateTransIds.contains(transId))
+                mCandidateTransIds.add(transId);
+        }
     }
-
 
     public boolean checkProcessedRead(final String readId)
     {
