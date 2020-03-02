@@ -66,7 +66,7 @@ public class KnowledgebaseGeneratorApplication {
         assert refVersionString.equals("hg19");
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
-        HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
+        HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         LOGGER.info("Analyzing all VICC entries");
         int num = 0;

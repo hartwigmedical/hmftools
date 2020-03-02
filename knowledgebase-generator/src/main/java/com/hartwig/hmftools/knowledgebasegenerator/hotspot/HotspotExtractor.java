@@ -2,8 +2,11 @@ package com.hartwig.hmftools.knowledgebasegenerator.hotspot;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.RefGenomeVersion;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
@@ -19,10 +22,13 @@ public class HotspotExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(HotspotExtractor.class);
 
+    private static final Set<String> ONCOKB_VALID_BIOMARKER_TYPES =
+            Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
+
     @NotNull
     private final Transvar transvar;
 
-    public static HotspotExtractor fromRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
+    public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
         return new HotspotExtractor(new Transvar(refGenomeVersion, refGenomeFastaFile));
     }
 
@@ -35,15 +41,46 @@ public class HotspotExtractor {
         List<VariantHotspot> hotspots = Lists.newArrayList();
         if (Source.sourceFromKnowledgebase(viccEntry.source()) == Source.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
-                if (feature.biomarkerType().equals("missense_variant")) {
-                    LOGGER.info("Converting feature on {} with name '{}'", feature.geneSymbol(), feature.name());
-                    hotspots.addAll(transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name()));
+                if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType())) {
+//                    LOGGER.info("Converting '{}' on {} with name '{}'", feature.biomarkerType(), feature.geneSymbol(), feature.name());
+                    //                    hotspots.addAll(transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name()));
+                } else if (isProteinAnnotation(feature.name())) {
+                    LOGGER.info("Attempt to convert '{}' on {}", feature.name(), feature.geneSymbol());
                 } else {
-                    LOGGER.info("Skipping feature interpretation because of biomarket type '{}'", feature.biomarkerType());
+                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}'",
+                            feature.name(),
+                            feature.geneSymbol(),
+                            feature.biomarkerType());
                 }
             }
         }
 
         return hotspots;
+    }
+
+    @VisibleForTesting
+    static boolean isProteinAnnotation(@NotNull String featureName) {
+        if (featureName.length() < 3) {
+            return false;
+        }
+
+        if (!Character.isLetter(featureName.charAt(0))) {
+            return false;
+        }
+
+        if (!Character.isDigit(featureName.charAt(1))) {
+            return false;
+        }
+
+        boolean haveObservedNonDigit = !Character.isDigit(featureName.charAt(2));
+        for (int i = 3; i < featureName.length(); i++) {
+            char charToEvaluate = featureName.charAt(i);
+            if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
+                return false;
+            }
+            haveObservedNonDigit = haveObservedNonDigit || !Character.isDigit(charToEvaluate);
+        }
+
+        return haveObservedNonDigit;
     }
 }
