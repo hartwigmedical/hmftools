@@ -44,7 +44,7 @@ public class KnowledgebaseGeneratorApplication {
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void main(String[] args) throws ParseException, IOException, InterruptedException {
         LOGGER.info("Running Knowledgebase Generator v{}", VERSION);
 
         Options options = createOptions();
