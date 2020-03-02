@@ -34,7 +34,7 @@ public final class TumorContaminationFile {
     }
 
     @NotNull
-    private static List<TumorContamination> fromLines(@NotNull List<String> lines) {
+    static List<TumorContamination> fromLines(@NotNull List<String> lines) {
         final List<TumorContamination> result = Lists.newArrayList();
         for (String line : lines) {
             if (!line.startsWith(HEADER_PREFIX)) {
@@ -54,18 +54,27 @@ public final class TumorContaminationFile {
                 .setPosition(Long.parseLong(values[1]))
                 .setRef(BaseDepth.Base.valueOf(values[2]))
                 .setAlt(BaseDepth.Base.valueOf(values[3]))
+                .setReadDepth(0)
+                .setRefSupport(0)
+                .setAltSupport(0)
                 .setIndelCount(0);
 
-        final BaseDepth normalDepth =
-                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.parseInt(values[4])).setRefSupport(5).setAltSupport(6);
-        final BaseDepth tumorDepth =
-                ModifiableBaseDepth.create().from(template).setReadDepth(Integer.parseInt(values[7])).setRefSupport(9).setAltSupport(9);
+        final BaseDepth normalDepth = ModifiableBaseDepth.create()
+                .from(template)
+                .setReadDepth(Integer.parseInt(values[4]))
+                .setRefSupport(Integer.parseInt(values[5]))
+                .setAltSupport(Integer.parseInt(values[6]));
+        final BaseDepth tumorDepth = ModifiableBaseDepth.create()
+                .from(template)
+                .setReadDepth(Integer.parseInt(values[7]))
+                .setRefSupport(Integer.parseInt(values[8]))
+                .setAltSupport(Integer.parseInt(values[9]));
 
         return ImmutableTumorContamination.builder().from(template).normal(normalDepth).tumor(tumorDepth).build();
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final List<TumorContamination> contamination) {
+    static List<String> toLines(@NotNull final List<TumorContamination> contamination) {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         contamination.stream().map(TumorContaminationFile::toString).forEach(lines::add);
