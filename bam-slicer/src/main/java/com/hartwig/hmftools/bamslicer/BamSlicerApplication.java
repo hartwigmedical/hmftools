@@ -188,7 +188,7 @@ public class BamSlicerApplication {
 
     private static void sliceFromURLs(@NotNull URL indexUrl, @NotNull URL bamUrl, @NotNull CommandLine cmd) throws IOException {
         File indexFile = downloadIndex(indexUrl);
-        indexFile.deleteOnExit();
+//        indexFile.deleteOnExit();
         SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
 
         if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
@@ -278,11 +278,20 @@ public class BamSlicerApplication {
         LOGGER.info("Downloading index from {}", indexUrl);
 
         ReadableByteChannel indexChannel = Channels.newChannel(indexUrl.openStream());
-        File index = File.createTempFile("tmp", ".bai");
+
+        String extension = ".bai";
+        if (indexUrl.getPath().contains(".crai")) {
+            LOGGER.debug("Located crai from the index on {}", indexUrl);
+            extension = ".crai";
+        }
+
+        File index = File.createTempFile("tmp", extension);
         FileOutputStream indexOutputStream = new FileOutputStream(index);
         indexOutputStream.getChannel().transferFrom(indexChannel, 0, Long.MAX_VALUE);
         indexOutputStream.close();
         indexChannel.close();
+
+        LOGGER.info("Downloaded index to {}", index.getPath());
 
         return index;
     }
