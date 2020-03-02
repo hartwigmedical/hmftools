@@ -43,7 +43,9 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.CRAIIndex;
 import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
 import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.samtools.util.CloseableIterator;
@@ -106,14 +108,9 @@ public class BamSlicerApplication {
         String vcfPath = cmd.getOptionValue(VCF);
         int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
-        // TODO Create a SamReader that uses embedded ref for a CRAM file.
-        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
-
-        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
-            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
-        }
-
+        SamReaderFactory readerFactory = createFromCommandLine(cmd);
         SamReader reader = readerFactory.open(new File(inputPath));
+
         QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
         CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
         SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
@@ -188,17 +185,20 @@ public class BamSlicerApplication {
 
     private static void sliceFromURLs(@NotNull URL indexUrl, @NotNull URL bamUrl, @NotNull CommandLine cmd) throws IOException {
         File indexFile = downloadIndex(indexUrl);
-//        indexFile.deleteOnExit();
-        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+        indexFile.deleteOnExit();
 
-        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
-            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
-        }
-
+        SamReaderFactory readerFactory = createFromCommandLine(cmd);
         SamReader reader = readerFactory.open(SamInputResource.of(bamUrl).index(indexFile));
         SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
                 .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
-        BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+
+        BAMIndex bamIndex;
+        if (indexFile.getPath().contains(".crai")) {
+            SeekableStream craiIndex = CRAIIndex.openCraiFileAsBaiStream(indexFile, reader.getFileHeader().getSequenceDictionary());
+            bamIndex = new DiskBasedBAMFileIndex(craiIndex, reader.getFileHeader().getSequenceDictionary());
+        } else {
+            bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+        }
 
         Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
         Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
@@ -237,14 +237,18 @@ public class BamSlicerApplication {
         return Optional.empty();
     }
 
+    @NotNull
     private static SamReader createCachingReader(@NotNull File indexFile, @NotNull URL bamUrl, @NotNull CommandLine cmd,
             @NotNull List<Chunk> sliceChunks) throws IOException {
         OkHttpClient httpClient =
                 SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_REQUESTS_DEFAULT)));
         int maxBufferSize = readMaxBufferSize(cmd);
+
         SamInputResource bamResource =
                 SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, sliceChunks, maxBufferSize)).index(indexFile);
-        return SamReaderFactory.makeDefault().open(bamResource);
+        SamReaderFactory readerFactory = createFromCommandLine(cmd);
+
+        return readerFactory.open(bamResource);
     }
 
     @NotNull
@@ -366,6 +370,17 @@ public class BamSlicerApplication {
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("Could not parse buffer size");
         }
+    }
+
+    @NotNull
+    private static SamReaderFactory createFromCommandLine(@NotNull CommandLine cmd) {
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+
+        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
+            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
+        }
+
+        return readerFactory;
     }
 
     @NotNull
