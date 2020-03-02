@@ -35,7 +35,7 @@ class LocalPhaseSet implements Consumer<SageVariant> {
             final AltContext oldAltContext = altContext(oldEntry);
             final ReadContext oldReadContext = oldAltContext.primaryReadContext().readContext();
             long distance = newAltContext.position() - oldAltContext.position();
-            int offset = offset(oldEntry.normal(), newEntry.normal());
+            int offset = offset(oldEntry.primaryNormal(), newEntry.primaryNormal());
 
             if (distance > 30 || distance < 0) {
                 iterator.remove();
@@ -57,7 +57,7 @@ class LocalPhaseSet implements Consumer<SageVariant> {
     }
 
     private AltContext altContext(@NotNull final SageVariant newEntry) {
-        return germline ? newEntry.normal() : newEntry.primaryTumor();
+        return germline ? newEntry.primaryNormal() : newEntry.primaryTumor();
     }
 
     public void flush() {

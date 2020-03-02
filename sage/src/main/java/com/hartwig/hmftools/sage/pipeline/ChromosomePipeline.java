@@ -150,7 +150,7 @@ public class ChromosomePipeline implements AutoCloseable {
             return true;
         }
 
-        final AltContext normal = entry.normal();
+        final AltContext normal = entry.primaryNormal();
         if (normal.primaryReadContext().altSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }

@@ -42,13 +42,13 @@ public class DedupIndel implements Consumer<SageVariant> {
     }
 
     private void processDel(@NotNull final SageVariant left, @NotNull final SageVariant right) {
-        if (!left.normal().alt().equals(right.normal().alt())) {
+        if (!left.alt().equals(right.alt())) {
             return;
         }
 
         final SageVariant shorter;
         final SageVariant longer;
-        if (left.normal().ref().length() < right.normal().ref().length()) {
+        if (left.ref().length() < right.ref().length()) {
             shorter = left;
             longer = right;
         } else {
@@ -56,19 +56,19 @@ public class DedupIndel implements Consumer<SageVariant> {
             longer = left;
         }
 
-        if (longer.normal().ref().substring(0, shorter.normal().ref().length()).equals(shorter.normal().ref())) {
+        if (longer.ref().substring(0, shorter.ref().length()).equals(shorter.ref())) {
             longer.filters().add(SageVCF.DEDUP_FILTER);
         }
     }
 
     private void processIns(@NotNull final SageVariant left, @NotNull final SageVariant right) {
-        if (!left.normal().ref().equals(right.normal().ref())) {
+        if (!left.ref().equals(right.ref())) {
             return;
         }
 
         final SageVariant shorter;
         final SageVariant longer;
-        if (left.normal().alt().length() < right.normal().alt().length()) {
+        if (left.alt().length() < right.alt().length()) {
             shorter = left;
             longer = right;
         } else {
@@ -76,7 +76,7 @@ public class DedupIndel implements Consumer<SageVariant> {
             longer = left;
         }
 
-        if (longer.normal().alt().substring(0, shorter.normal().alt().length()).equals(shorter.normal().alt())) {
+        if (longer.alt().substring(0, shorter.alt().length()).equals(shorter.alt())) {
             longer.filters().add(SageVCF.DEDUP_FILTER);
         }
 

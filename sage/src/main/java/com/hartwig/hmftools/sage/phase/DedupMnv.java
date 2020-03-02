@@ -29,10 +29,10 @@ public class DedupMnv implements Consumer<SageVariant> {
 
         if (newVariant.isPassing() && !newVariant.isIndel() && lps > 0) {
 
-            int newVariantSize = newVariant.normal().alt().length();
+            int newVariantSize = newVariant.alt().length();
             for (final SageVariant oldVariant : buffer) {
                 if (oldVariant.isPassing() && !oldVariant.isIndel() && oldVariant.localPhaseSet() == lps) {
-                    int oldVariantSize = oldVariant.normal().alt().length();
+                    int oldVariantSize = oldVariant.alt().length();
                     if (newVariantSize != oldVariantSize) {
                         final SageVariant shorter;
                         final SageVariant longer;
@@ -56,19 +56,19 @@ public class DedupMnv implements Consumer<SageVariant> {
 
     private static boolean filterShorter(@NotNull final SageVariant shorter, @NotNull final SageVariant longer) {
         long longerStart = longer.position();
-        long longerEnd = longer.normal().end();
+        long longerEnd = longer.end();
 
         long shorterStart = shorter.position();
-        long shorterEnd = shorter.normal().end();
+        long shorterEnd = shorter.end();
 
         if (shorterStart < longerStart || shorterEnd > longerEnd) {
             return false;
         }
 
-        final String shorterAlt = shorter.normal().alt();
+        final String shorterAlt = shorter.alt();
 
         int offset = (int) (shorterStart - longerStart);
-        final String longerAlt = new String(longer.normal().alt().getBytes(), offset, shorter.normal().alt().length());
+        final String longerAlt = new String(longer.alt().getBytes(), offset, shorter.alt().length());
         return shorterAlt.equals(longerAlt);
 
     }
@@ -82,7 +82,7 @@ public class DedupMnv implements Consumer<SageVariant> {
         final Iterator<SageVariant> iterator = buffer.iterator();
         while (iterator.hasNext()) {
             final SageVariant entry = iterator.next();
-            long entryEnd = entry.position() + entry.normal().ref().length() - 1;
+            long entryEnd = entry.position() + entry.ref().length() - 1;
             if (!entry.chromosome().equals(position.chromosome()) || entryEnd < position.position() - BUFFER) {
                 iterator.remove();
                 consumer.accept(entry);
