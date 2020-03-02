@@ -566,6 +566,8 @@ public class ReadRecord
         return mMappedCoords.size() - (mLowerInferredAdded ? 1 : 0) - (mUpperInferredAdded ? 1 : 0);
     }
 
+    public boolean inferredCoordAdded(boolean isLower) { return isLower ? mLowerInferredAdded : mUpperInferredAdded; }
+
     private void addInferredMappingRegion(boolean isLower, long posStart, long posEnd)
     {
         if(isLower)

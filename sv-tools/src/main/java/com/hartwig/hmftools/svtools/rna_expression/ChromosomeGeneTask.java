@@ -86,6 +86,9 @@ public class ChromosomeGeneTask implements Callable
             {
                 mPerfCounter.start();
 
+                RE_LOGGER.debug("chr({}) gene({}) processed({} of {})",
+                        mChromosome, geneReadData.name(), mCurrentGeneIndex, mGeneDataList.size());
+
                 // at the moment it is one or the other
                 if(mExpRatesGenerator != null)
                     generateExpectedTransRates(geneReadData);
@@ -180,7 +183,7 @@ public class ChromosomeGeneTask implements Callable
 
         for(GeneReadData geneReadData : overlappingGenes)
         {
-            geneNamesStr = appendStr(geneNamesStr, geneReadData.GeneData.GeneName, ';');
+            geneNamesStr = appendStr(geneNamesStr, geneReadData.GeneData.GeneId, ';');
             transcriptCount += geneReadData.getTranscripts().size();
             maxRange =  max(maxRange, geneReadData.GeneData.GeneEnd);
             minRange =  minRange < 0 ? geneReadData.GeneData.GeneStart : min(minRange, geneReadData.GeneData.GeneStart);

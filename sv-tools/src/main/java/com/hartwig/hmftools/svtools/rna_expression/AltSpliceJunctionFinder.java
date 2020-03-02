@@ -102,7 +102,9 @@ public class AltSpliceJunctionFinder
                 return;
 
             AltSpliceJunction altSJ = registerAltSpliceJunction(read, Lists.newArrayList());
-            altSJ.checkProcessedRead(read.Id);
+
+            if(altSJ != null)
+                altSJ.checkProcessedRead(read.Id);
         }
     }
 
@@ -151,8 +153,17 @@ public class AltSpliceJunctionFinder
 
         // find the novel splice junction, and all associated transcripts
         final List<long[]> mappedCoords = read.getMappedRegionCoords();
-        spliceJunction[SE_START] = mappedCoords.get(0)[SE_END];
-        spliceJunction[SE_END] = mappedCoords.get(1)[SE_START];
+
+        if(read.inferredCoordAdded(true))
+        {
+            spliceJunction[SE_START] = mappedCoords.get(1)[SE_END];
+            spliceJunction[SE_END] = mappedCoords.get(2)[SE_START];
+        }
+        else
+        {
+            spliceJunction[SE_START] = mappedCoords.get(0)[SE_END];
+            spliceJunction[SE_END] = mappedCoords.get(1)[SE_START];
+        }
 
         List<RegionReadData> sjStartRegions = Lists.newArrayList(); // transcript regions with an exon matching the start of the alt SJ
         List<RegionReadData> sjEndRegions = Lists.newArrayList();

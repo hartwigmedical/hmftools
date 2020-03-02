@@ -117,8 +117,10 @@ public class RnaExpression
             }
         }
 
-        if(mExecutorService != null)
-            checkThreadCompletion(threadTaskList);
+        boolean validExecution = mExecutorService != null ? checkThreadCompletion(threadTaskList) : true;
+
+        if(!validExecution)
+            return;
 
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
         RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
@@ -131,7 +133,7 @@ public class RnaExpression
         mResultsWriter.close();
     }
 
-    private void checkThreadCompletion(final List<FutureTask> taskList)
+    private boolean checkThreadCompletion(final List<FutureTask> taskList)
     {
         try
         {
@@ -143,9 +145,12 @@ public class RnaExpression
         catch (Exception e)
         {
             RE_LOGGER.error("task execution error: {}", e.toString());
+            e.printStackTrace();
+            return false;
         }
 
         mExecutorService.shutdown();
+        return true;
     }
 
     public static void main(@NotNull final String[] args) throws ParseException
