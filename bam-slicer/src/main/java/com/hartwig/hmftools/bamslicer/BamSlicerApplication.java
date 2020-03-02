@@ -187,10 +187,7 @@ public class BamSlicerApplication {
         File indexFile = downloadIndex(indexUrl);
         indexFile.deleteOnExit();
 
-        SamReaderFactory readerFactory = createFromCommandLine(cmd);
-        SamReader reader = readerFactory.open(SamInputResource.of(bamUrl).index(indexFile));
-        SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
-                .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
+        SamReader reader = createFromCommandLine(cmd).open(SamInputResource.of(bamUrl).index(indexFile));
 
         BAMIndex bamIndex;
         if (indexFile.getPath().contains(".crai")) {
@@ -205,16 +202,19 @@ public class BamSlicerApplication {
         List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
         SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
 
+        SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+                .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
+
         queryIntervalsAndSpan.ifPresent(pair -> {
             LOGGER.info("Slicing bam on bed regions...");
-            final CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
+            CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
             writeToSlice(writer, bedIterator);
             LOGGER.info("Done writing bed slices.");
         });
 
         unmappedChunk.ifPresent(chunk -> {
             LOGGER.info("Slicing unmapped reads...");
-            final CloseableIterator<SAMRecord> unmappedIterator = cachingReader.queryUnmapped();
+            CloseableIterator<SAMRecord> unmappedIterator = cachingReader.queryUnmapped();
             writeToSlice(writer, unmappedIterator);
             LOGGER.info("Done writing unmapped reads.");
         });
@@ -225,8 +225,8 @@ public class BamSlicerApplication {
     }
 
     @NotNull
-    private static Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan(@NotNull final SamReader reader,
-            @NotNull final BAMIndex bamIndex, @NotNull final CommandLine cmd) throws IOException {
+    private static Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan(@NotNull SamReader reader, @NotNull BAMIndex bamIndex,
+            @NotNull CommandLine cmd) throws IOException {
         if (cmd.hasOption(BED)) {
             String bedPath = cmd.getOptionValue(BED);
             LOGGER.info("Reading query intervals from BED file: {}", bedPath);
