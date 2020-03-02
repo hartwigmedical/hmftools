@@ -63,7 +63,8 @@ public final class ViccJsonReader {
     }
 
     @NotNull
-    public static List<ViccEntry> readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(@NotNull String jsonPath, @NotNull String knowledgebase) throws IOException {
+    public static List<ViccEntry> readSingleKnowledgebase(@NotNull String jsonPath,
+            @NotNull String knowledgebase) throws IOException {
         List<ViccEntry> entries = Lists.newArrayList();
 
         JsonParser parser = new JsonParser();
@@ -74,7 +75,6 @@ public final class ViccJsonReader {
             JsonObject viccEntryObject = parser.parse(reader).getAsJsonObject();
             if (string(viccEntryObject, "source").equals(knowledgebase)) {
                 entries.add(createViccEntry(viccEntryObject));
-
             }
         }
 
