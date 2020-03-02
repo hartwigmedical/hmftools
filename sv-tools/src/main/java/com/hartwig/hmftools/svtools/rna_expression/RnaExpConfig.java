@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_SIZE;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_LENGTH;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,6 @@ public class RnaExpConfig
     private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String CANONICAL_ONLY = "canonical_only";
     private static final String WRITE_EXON_DATA = "write_exon_data";
-    private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
     private static final String GENE_STATS_ONLY = "gene_stats_only";
@@ -42,10 +41,11 @@ public class RnaExpConfig
     public static final String REF_GENOME = "ref_genome";
     public static final String BAM_FILE = "bam_file";
     public static final String GC_BIAS_FILE = "gcbias_file";
-    public static final String READ_COUNT_LIMIT = "read_count_limit";
     public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     public static final String KEEP_DUPLICATES = "keep_dups";
     public static final String MARK_DUPLICATES = "mark_dups";
+
+    private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
     public static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
@@ -54,11 +54,13 @@ public class RnaExpConfig
     public static final String APPLY_EXP_RATES = "apply_exp_rates";
     public static final String READ_LENGTH = "read_length";
     public static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
+    public static final String ER_CALC_FRAG_LENGTHS = "use_calc_frag_lengths";
     public static final String UNSPLICED_WEIGHT = "unspliced_weight";
-    public static final String GEN_EXPECTED_RATES = "generate_exp_rates";
+    public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
     public static final String SPECIFIC_TRANS_IDS = "specific_trans";
     public static final String SPECIFIC_CHR = "specific_chr";
+    public static final String READ_COUNT_LIMIT = "read_count_limit";
     public static final String RUN_VALIDATIONS = "validate";
     public static final String THREADS = "threads";
 
@@ -84,10 +86,11 @@ public class RnaExpConfig
 
     public final String ExpRatesFile;
     public final boolean ApplyExpectedRates;
+    public final boolean UseCalculatedFragmentLengths;
     public int ReadLength;
     public final List<int[]> ExpRateFragmentLengths;
     public final double UnsplicedWeight;
-    public final boolean GenerateExpectedRates;
+    public final boolean WriteExpectedRates;
 
     public final boolean GeneStatsOnly;
     public final int FragmentLengthMinCount;
@@ -177,7 +180,8 @@ public class RnaExpConfig
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
         ExpRatesFile = cmd.getOptionValue(EXP_RATES_FILE);
 
-        GenerateExpectedRates = cmd.hasOption(GEN_EXPECTED_RATES);
+        WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
+        UseCalculatedFragmentLengths = cmd.hasOption(ER_CALC_FRAG_LENGTHS);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         ExpRateFragmentLengths = Lists.newArrayList();
         UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
@@ -188,7 +192,7 @@ public class RnaExpConfig
             for(int i = 0; i < fragLengths.length; ++i)
             {
                 String[] flItem = fragLengths[i].split("-");
-                int fragLength = Integer.parseInt(flItem[FL_SIZE]);
+                int fragLength = Integer.parseInt(flItem[FL_LENGTH]);
                 int fragFrequency = Integer.parseInt(flItem[FL_FREQUENCY]);
                 ExpRateFragmentLengths.add(new int[]{ fragLength, fragFrequency });
             }
@@ -203,7 +207,7 @@ public class RnaExpConfig
             return false;
         }
 
-        if(GenerateExpectedRates)
+        if(WriteExpectedRates)
         {
             if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
             {
@@ -275,7 +279,9 @@ public class RnaExpConfig
         WriteReadData = false;
         WriteFragmentLengths = false;
         WriteTransComboData = false;
-        GenerateExpectedRates = false;
+
+        WriteExpectedRates = false;
+        UseCalculatedFragmentLengths = false;
         OutputIdentifier = null;
         GeneStatsOnly = false;
         FragmentLengthsByGene = false;
@@ -316,11 +322,12 @@ public class RnaExpConfig
         options.addOption(EXP_RATES_FILE, true, "File with generated expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
+        options.addOption(ER_CALC_FRAG_LENGTHS, false, "Use sample fragment length distribution in expected rate calcs");
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");
 
-        options.addOption(GEN_EXPECTED_RATES, false, "Write expected transcript rates to file");
+        options.addOption(WRITE_EXPECTED_RATES, false, "Write expected transcript rates to file");
 
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");

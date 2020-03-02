@@ -40,7 +40,7 @@ public class ExpectedRatesGenerator
     public static final String UNSPLICED_ID = "UNSPLICED";
     private static final String EXP_RATES_FILE_ID = "rna_trans_exp_rates";
 
-    public static final int FL_SIZE = 0;
+    public static final int FL_LENGTH = 0;
     public static final int FL_FREQUENCY = 1;
 
     public ExpectedRatesGenerator(final RnaExpConfig config, final ResultsWriter resultsWriter)
@@ -76,7 +76,7 @@ public class ExpectedRatesGenerator
 
         for(final int[] flData : mConfig.ExpRateFragmentLengths)
         {
-            mCurrentFragSize = flData[FL_SIZE];
+            mCurrentFragSize = flData[FL_LENGTH];
             mCurrentFragFrequency = flData[FL_FREQUENCY];
 
             for (TranscriptData transData : geneReadData.getTranscripts())
@@ -550,7 +550,7 @@ public class ExpectedRatesGenerator
 
         mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
 
-        if(mConfig.GenerateExpectedRates)
+        if(mConfig.WriteExpectedRates)
             writeExpectedRates(mExpRateWriter, geneReadData,mCurrentExpRatesData);
     }
 

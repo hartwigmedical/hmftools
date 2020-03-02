@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.MAX_FRAG_TYPE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 
 import java.util.List;
 import java.util.Map;
@@ -198,7 +199,7 @@ public class GeneReadData
 
     public boolean overlapsOtherGeneExon(long posStart, long posEnd)
     {
-        return mOtherGeneExonicRegions.stream().anyMatch(x -> x[SE_START] <= posStart && x[SE_END] >= posEnd);
+        return mOtherGeneExonicRegions.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
     }
 
     public long calcExonicRegionLength()

@@ -41,6 +41,7 @@ public class ResultsWriter
     private BufferedWriter mExpRateWriter;
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
+    private BufferedWriter mFragLengthWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
@@ -55,6 +56,7 @@ public class ResultsWriter
         mExpRateWriter = null;
         mReadDataWriter = null;
         mAltSpliceJunctionWriter = null;
+        mFragLengthWriter = null;
 
         initialiseExternalWriters();
     }
@@ -68,11 +70,12 @@ public class ResultsWriter
         closeBufferedWriter(mExpRateWriter);
         closeBufferedWriter(mReadDataWriter);
         closeBufferedWriter(mAltSpliceJunctionWriter);
+        closeBufferedWriter(mFragLengthWriter);
     }
 
     private void initialiseExternalWriters()
     {
-        if(mConfig.GenerateExpectedRates)
+        if(mConfig.WriteExpectedRates)
         {
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
         }
@@ -82,12 +85,16 @@ public class ResultsWriter
                 mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
 
             mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createAltSpliceJunctionWriter(mConfig);
+
+            if(mConfig.WriteFragmentLengths)
+                mFragLengthWriter = FragmentSizeCalcs.createFragmentLengthWriter(mConfig);
         }
     }
 
     public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
+    public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
 
     public synchronized void writeGeneData(final GeneReadData geneReadData)
     {

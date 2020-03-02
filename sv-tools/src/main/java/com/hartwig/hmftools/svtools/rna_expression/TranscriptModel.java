@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_SIZE;
+import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.svtools.rna_expression.FragmentMatchType.SPLICED;
@@ -129,7 +129,7 @@ public class TranscriptModel
 
         for(final int[] flData : fragmentLengthData)
         {
-            int fragLength = flData[FL_SIZE];
+            int fragLength = flData[FL_LENGTH];
             int fragFrequency = flData[FL_FREQUENCY];
 
             if(fragLength >= transLength)

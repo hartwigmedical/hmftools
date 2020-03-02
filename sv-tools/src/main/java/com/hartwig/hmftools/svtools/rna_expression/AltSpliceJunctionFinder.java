@@ -73,7 +73,7 @@ public class AltSpliceJunctionFinder
     {
         if(mGene == null)
             return;
-        
+
         // for now exclude SJs outside known transcripts
         if(read1.PosStart < mGene.GeneData.GeneStart || read2.PosStart < mGene.GeneData.GeneStart
         || read1.PosEnd > mGene.GeneData.GeneEnd || read2.PosEnd > mGene.GeneData.GeneEnd)
@@ -104,22 +104,6 @@ public class AltSpliceJunctionFinder
             checkNovelExon(firstAltSJ, secondAltSJ);
         }
     }
-
-    /*
-    public void evaluateIntronicRead(final ReadRecord read)
-    {
-        if(isCandidate(read))
-        {
-            if(mAltSpliceJunctions.stream().anyMatch(x -> x.checkProcessedRead(read.Id)))
-                return;
-
-            AltSpliceJunction altSJ = registerAltSpliceJunction(read, Lists.newArrayList());
-
-            if(altSJ != null)
-                altSJ.checkProcessedRead(read.Id);
-        }
-    }
-    */
 
     private static boolean isCandidate(final ReadRecord read)
     {

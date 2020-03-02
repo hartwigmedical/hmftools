@@ -73,9 +73,16 @@ public class ExpectedTransRates
     }
 
     public void runTranscriptEstimation(
-            final GeneReadData geneReadData, final List<TranscriptComboData> transCategoryCounts)
+            final GeneReadData geneReadData, final List<TranscriptComboData> transCategoryCounts, final ExpectedRatesData expRatesData)
     {
-        loadGeneExpectedRatesData(geneReadData);
+        if(expRatesData == null)
+        {
+            loadGeneExpectedRatesData(geneReadData);
+        }
+        else
+        {
+            mCurrentExpRatesData = expRatesData;
+        }
 
         if(!validData())
         {

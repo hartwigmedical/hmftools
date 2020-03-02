@@ -35,6 +35,8 @@ public class ChromosomeGeneTask implements Callable
     private final GeneBamReader mBamReader;
     private final ExpectedTransRates mExpTransRates;
     private final ExpectedRatesGenerator mExpRatesGenerator;
+    private final FragmentSizeCalcs mFragmentSizeCalc;
+
     private final List<EnsemblGeneData> mGeneDataList;
     private int mCurrentGeneIndex;
     public int mGenesProcessed;
@@ -53,10 +55,15 @@ public class ChromosomeGeneTask implements Callable
         mGeneDataList = geneDataList;
 
         mCurrentGeneIndex = 0;
-        mBamReader = new GeneBamReader(mConfig, resultsWriter);
+
+        mFragmentSizeCalc = mConfig.WriteFragmentLengths || mConfig.UseCalculatedFragmentLengths
+                ? new FragmentSizeCalcs(config, null, resultsWriter.getFragmentLengthWriter()) : null;
+
+        mBamReader = new GeneBamReader(mConfig, resultsWriter, mFragmentSizeCalc);
         mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, resultsWriter) : null;
 
-        mExpRatesGenerator = mConfig.GenerateExpectedRates ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
+        mExpRatesGenerator = mConfig.WriteExpectedRates || (mConfig.ApplyExpectedRates && mConfig.UseCalculatedFragmentLengths)
+                ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mPerfCounter = new PerformanceCounter(String.format("chr(%s) genes(%d)", mChromosome, mGeneDataList.size()));
     }
@@ -77,6 +84,8 @@ public class ChromosomeGeneTask implements Callable
             RE_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
+        boolean generateExpRatesOnly = mConfig.WriteExpectedRates && !mConfig.UseCalculatedFragmentLengths && !mConfig.ApplyExpectedRates;
+
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
             final List<EnsemblGeneData> overlappingGenes = findNextOverlappingGenes();
@@ -90,10 +99,14 @@ public class ChromosomeGeneTask implements Callable
                         mChromosome, geneReadData.name(), mCurrentGeneIndex, mGeneDataList.size());
 
                 // at the moment it is one or the other
-                if(mExpRatesGenerator != null)
+                if(generateExpRatesOnly)
+                {
                     generateExpectedTransRates(geneReadData);
+                }
                 else
+                {
                     analyseBamReads(geneReadData);
+                }
 
                 mPerfCounter.stop();
 
@@ -232,7 +245,20 @@ public class ChromosomeGeneTask implements Callable
         mBamReader.readBamCounts(geneReadData, geneRegion);
 
         if(mExpTransRates != null)
-            mExpTransRates.runTranscriptEstimation(geneReadData, mBamReader.getTransComboData());
+        {
+            ExpectedRatesData expRatesData = null;
+
+            if(mExpRatesGenerator != null)
+            {
+                if (mConfig.UseCalculatedFragmentLengths)
+                    mFragmentSizeCalc.setConfigLengthDistribution();
+
+                generateExpectedTransRates(geneReadData);
+                expRatesData = mExpRatesGenerator.getExpectedRatesData();
+            }
+
+            mExpTransRates.runTranscriptEstimation(geneReadData, mBamReader.getTransComboData(), expRatesData);
+        }
 
         mResultsWriter.writeGeneData(geneReadData);
 
@@ -252,7 +278,9 @@ public class ChromosomeGeneTask implements Callable
                 }
             }
         }
-    }
 
+        if(mFragmentSizeCalc != null)
+            mFragmentSizeCalc.writeFragmentLengths(geneData);
+    }
 
 }

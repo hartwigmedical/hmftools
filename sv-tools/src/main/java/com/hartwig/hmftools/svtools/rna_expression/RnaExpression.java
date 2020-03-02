@@ -57,7 +57,7 @@ public class RnaExpression
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.loadEnsemblData(false);
 
-        mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache);
+        mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
 
         if(mConfig.Threads > 1)
         {
@@ -81,12 +81,11 @@ public class RnaExpression
             return; // for now
         }
 
-        if(mConfig.FragmentLengthMinCount > 0)
+        if(mConfig.FragmentLengthMinCount > 0 && mConfig.WriteFragmentLengths)
         {
+            // for now a way of only calculating fragment lengths and nothing more
             mFragmentSizeCalcs.calcSampleFragmentSize();
-
-            if (mConfig.WriteFragmentLengths)
-                return;
+            return;
         }
 
         List<FutureTask> threadTaskList = new ArrayList<FutureTask>();

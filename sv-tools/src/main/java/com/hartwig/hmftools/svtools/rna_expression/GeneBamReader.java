@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
@@ -65,12 +66,13 @@ public class GeneBamReader
 
     private final List<TranscriptComboData> mTransComboData;
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
+    private final FragmentSizeCalcs mFragmentSizeCalc;
 
     private final BufferedWriter mReadDataWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(GeneBamReader.class);
 
-    public GeneBamReader(final RnaExpConfig config, final ResultsWriter resultsWriter)
+    public GeneBamReader(final RnaExpConfig config, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc)
     {
         mConfig = config;
 
@@ -93,11 +95,13 @@ public class GeneBamReader
 
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
                 mConfig, mSamReader, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
+
+        mFragmentSizeCalc = fragmentSizeCalc;
     }
 
     public static GeneBamReader from(final RnaExpConfig config)
     {
-        return new GeneBamReader(config, null);
+        return new GeneBamReader(config, null, null);
     }
 
     public int totalBamCount() { return mTotalBamReadCount; }
@@ -112,10 +116,6 @@ public class GeneBamReader
         mGeneReadCount = 0;
         mTransComboData.clear();
         mAltSpliceJunctionFinder.setGeneData(geneReadData);
-
-        // SAMSlicer samSlicer = new SAMSlicer(DEFAULT_MIN_MAPPING_QUALITY, Lists.newArrayList(genomeRegion));
-        // samSlicer.setDropDuplicates(false);
-        // samSlicer.slice(mSamReader, this::processSamRecord);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
@@ -516,6 +516,7 @@ public class GeneBamReader
             if(mCurrentGene.overlapsOtherGeneExon(read1.PosStart, read1.PosEnd) || mCurrentGene.overlapsOtherGeneExon(read2.PosStart, read2.PosEnd))
                 return;
 
+            mCurrentGene.addCount(ALT, 1);
             mAltSpliceJunctionFinder.evaluateFragmentReads(read1, read2, Lists.newArrayList());
             return;
         }
@@ -527,6 +528,10 @@ public class GeneBamReader
             return;
 
         mCurrentGene.addCount(UNSPLICED, 1);
+
+        // both reads will report the same fragment length (ie insert size for non-split reads)
+        if(mFragmentSizeCalc != null)
+            mFragmentSizeCalc.addFragmentLength(read1.samRecord());
     }
 
     /*
