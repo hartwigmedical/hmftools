@@ -658,6 +658,18 @@ Shown below is an example of a SS18-SSX1 fusion:
      - germline SV parsing and filtering from GRIDSS VCF - annotate assembly and gene overlaps or disruptions
      - write fusion priority value to verbose output file
      - optionally write all possible fusion combinations to verbose output, including for single-sample run
+- 1.8
+    - Visualiser - when specifying a gene to display, this can now be referenced in the Ensembl data cache rather than the more limited internal gene panel by providing a path to the data cache with config: 'gene_transcripts_dir'
+    - cluster 3 or more overlapping DELs and DUPs with matching copy number and forming potential links
+    - added INDEL annotation for shattering analysis with config: 'indel_annotation' and 'indel_input_file'
+    - chain consistency now checks for valid centromere traversal
+    - re-search for chained foldbacks once chaining is complete
+    - germline SVs disruption logic added
+    - Double Minutes:
+        - criteria to identify possible BFB ploidy, pairs of SGL breakends
+        - allow closed DM loops to amplify centromere
+        - check all arms in cluster for telo/centro CN vs DM ploidy or require 50x sample ploidy 
+    - fail if fusion reference files aren't found, DEV-1121
    
     
     
