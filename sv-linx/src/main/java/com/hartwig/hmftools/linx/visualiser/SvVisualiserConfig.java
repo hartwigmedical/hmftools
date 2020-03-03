@@ -114,18 +114,18 @@ public interface SvVisualiserConfig
         options.addOption(PLOT_OUT, true, "Plot output directory");
         options.addOption(DATA_OUT, true, "Data output directory");
         options.addOption(SAMPLE, true, "Sample name");
-        options.addOption(SEGMENT, true, "Path to segment file");
-        options.addOption(LINK, true, "Path to link file");
-        options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file");
-        options.addOption(FUSION, true, "Path to fusion file");
+        options.addOption(SEGMENT, true, "Path to segment file - eg 'COLO829T.linx.vis_segments.tsv");
+        options.addOption(LINK, true, "Path to sv-data file eg 'COLO829T.linx.vis_sv_data.tsv'");
+        options.addOption(PROTEIN_DOMAIN, true, "Path to protein domain file - eg 'COLO829T.linx.vis_protein_domain.tsv'");
+        options.addOption(FUSION, true, "Path to fusion file - eg 'COLO829T.linx.fusions.tsv'");
+        options.addOption(CNA, true, "Path to copy number alteration file - eg 'COLO829T.linx.vis_copy_number.tsv'");
+        options.addOption(EXON, true, "Path to exon file - eg 'COLO829T.linx.vis_gene_exon.tsv'");
         options.addOption(CIRCOS, true, "Path to circos binary");
 
         options.addOption(GENE, true, "Add canonical transcriptions of supplied comma separated genes to image");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache files");
         options.addOption(CLUSTERS, true, "Only generate image for specified comma separated clusters");
         options.addOption(CHROMOSOMES, true, "Only generate image for specified comma separated chromosomes");
-        options.addOption(CNA, true, "Path to copy number alteration file");
-        options.addOption(EXON, true, "Path to exon file");
 
         options.addOption(DEBUG, false, "Enabled debug mode");
         options.addOption(THREADS, true, "Number of threads to use");
