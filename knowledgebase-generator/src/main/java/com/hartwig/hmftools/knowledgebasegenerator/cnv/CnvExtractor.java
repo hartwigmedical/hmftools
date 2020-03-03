@@ -37,7 +37,7 @@ public class CnvExtractor {
     public static ActionableGene extractingCNVs(@NotNull ViccEntry viccEntries, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntries.source());
         KbSpecificObject kbSpecificObject = viccEntries.KbSpecificObject();
-        String gene = Strings.EMPTY;
+        String gene = type.gene();
         String typeEvent = Strings.EMPTY;
         String drug = Strings.EMPTY;
         String drugType = Strings.EMPTY;
@@ -46,24 +46,36 @@ public class CnvExtractor {
         String direction = Strings.EMPTY;
         String link = Strings.EMPTY;
 
-        if (AMPLIFICATION.contains(type.eventType())) {
-            // extract evidence items
-
             switch (source) {
                 case ONCOKB:
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-
+                    drug = Strings.EMPTY;
+                    drugType = Strings.EMPTY;
+                    cancerType = Strings.EMPTY;
+                    level = Strings.EMPTY;
+                    direction = Strings.EMPTY;
+                    link = Strings.EMPTY;
 
                     LOGGER.info("AMP oncokb");
                     break;
                 case CGI:
                     Cgi kbCgi = (Cgi) kbSpecificObject;
-
+                    drug = kbCgi.drug();
+                    drugType = kbCgi.drugFamily();
+                    cancerType = kbCgi.primaryTumorType();
+                    level = viccEntries.association().evidenceLabel();
+                    direction = viccEntries.association().responseType();
+                    link = "https://www.cancergenomeinterpreter.org/biomarkers";
                     LOGGER.info("AMP cgi");
                     break;
                 case CIVIC:
                     Civic kbCivic = (Civic) kbSpecificObject;
-
+                    drug = Strings.EMPTY;
+                    drugType = Strings.EMPTY;
+                    cancerType = Strings.EMPTY;
+                    level = Strings.EMPTY;
+                    direction = Strings.EMPTY;
+                    link = Strings.EMPTY;
                     LOGGER.info("AMP civic");
                     break;
                 case JAX:
@@ -97,61 +109,13 @@ public class CnvExtractor {
                 default:
                     LOGGER.warn("Unknown knowledgebase");
             }
-            gene = type.gene();
+        if (AMPLIFICATION.contains(type.eventType())) {
             typeEvent = "Amplification";
-
         } else if (DELETION.contains(type.eventType())) {
-            // extract evidence items
-
-            switch (source) {
-                case ONCOKB:
-                    OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-
-                    LOGGER.info("DEL oncokb");
-                    break;
-                case CGI:
-                    Cgi kbCgi = (Cgi) kbSpecificObject;
-                    LOGGER.info("DEL cgi");
-                    break;
-                case CIVIC:
-                    Civic kbCivic = (Civic) kbSpecificObject;
-
-                    LOGGER.info("DEL civic");
-                    break;
-                case JAX:
-                    Jax kbJax = (Jax) kbSpecificObject;
-
-                    break;
-                case JAX_TRIALS:
-                    JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-
-                    break;
-                case BRCA:
-                    Brca kbBrca = (Brca) kbSpecificObject;
-
-                    break;
-                case SAGE:
-                    Sage kbSage = (Sage) kbSpecificObject;
-
-                    break;
-                case PMKB:
-                    Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-
-                    break;
-                case MOLECULARMATCH:
-                    MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-
-                    break;
-                case MOLECULARMATCH_TRIALS:
-                    MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-
-                    break;
-                default:
-                    LOGGER.warn("Unknown knowledgebase");
-            }
-            gene = type.gene();
             typeEvent = "Deletion";
+
         }
+
         return  ImmutableActionableGene.builder()
                 .gene(gene)
                 .type(typeEvent)
