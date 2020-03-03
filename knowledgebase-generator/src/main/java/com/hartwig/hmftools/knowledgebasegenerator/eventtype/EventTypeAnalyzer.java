@@ -38,52 +38,89 @@ public class EventTypeAnalyzer {
 
         for (Feature feature : viccEntry.features()) {
             switch (type) {
-                case ONCOKB: // extract info oncokb
+                case ONCOKB: // extract info oncokb //TODO
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
                     event = feature.biomarkerType();
+
+                    if (feature.provenanceRule() == null){
+                        LOGGER.info("No provencence rule known");
+                    } else if (feature.provenanceRule().equals("gene_only")) {
+                        event = "gene_level";
+                    }
+
                     if (event.equals("NA")) {
-//                        String [] eventArray = feature.description().split(" ");
-//                        if (eventArray.length == 1) {
-//                            event = "array: " + feature.description().split(" ", 2)[0];
-//                        } else {
-//                            event = "array: " + feature.description().split(" ", 2)[1];
-//                        }
-//
-                        if (Pattern.compile("[0-9]").matcher(event).find()) {
+                        String[] eventArray = feature.name().split(" ", 2);
+                        if (eventArray.length == 1) {
+                            event = eventArray[0];
+                        } else if (eventArray.length == 2) {
+                            if (eventArray[1].equals("Fusion")) {
+                                event = eventArray[1];
+                            } else {
+                                event = feature.name();
+                            }
+                        }
+                        if (event.contains("Exon")) {
+                            event = feature.name();
+                        } else if (Pattern.compile("[0-9]").matcher(event).find()) {
                             event = "manual curated mutation";
                         }
                     }
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
-                 //   LOGGER.info(num + ": event oncokb: " + event);
+
+                    if (event.isEmpty() || event.equals("NA")) {
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                                feature.name(),
+                                feature.geneSymbol(),
+                                feature.biomarkerType(),
+                                feature.description(),
+                                type,
+                                event);
+                    }
+                    LOGGER.info("event: " + event);
+
+//                    LOGGER.info(
+//                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+//                            feature.name(),
+//                            feature.geneSymbol(),
+//                            feature.biomarkerType(),
+//                            feature.description(),
+//                            type,
+//                            event);
+
                     break;
-                case CGI: // extract info for cgi
+                case CGI: // extract info for cgi //TODO
                     Cgi kbCgi = (Cgi) kbSpecificObject;
                     event = feature.biomarkerType();
-                 //   LOGGER.info(num + ": event cgi: " + event);
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    //   LOGGER.info(num + ": event cgi: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
                     break;
-                case BRCA: // extract info for brca
+                case BRCA: // extract info for brca //TODO
                     Brca kbBrca = (Brca) kbSpecificObject;
                     event = Strings.EMPTY;
-                  //    LOGGER.info(num + ": event brca: " + event);
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    //    LOGGER.info(num + ": event brca: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
                     break;
-                case CIVIC: // extract info for civic
+                case CIVIC: // extract info for civic //TODO
                     Civic kbCivic = (Civic) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         event = "manual curated mutation";
                     } else if (event.equals("N/A")) {
-                        String [] eventArray = feature.description().split(" ");
+                        String[] eventArray = feature.description().split(" ");
                         if (eventArray.length == 1) {
                             event = "array: " + feature.description().split(" ", 2)[0];
                         } else {
@@ -93,18 +130,22 @@ public class EventTypeAnalyzer {
                             }
                         }
                     }
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
 
-                  //  LOGGER.info(num + ": event civic: " + event);
+                    //  LOGGER.info(num + ": event civic: " + event);
                     break;
-                case JAX: // extract info for jax
+                case JAX: // extract info for jax //TODO
                     Jax kbJax = (Jax) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
-                        if (feature.description() != null){
+                        if (feature.description() != null) {
                             event = feature.description();
                             if (Pattern.compile("[0-9]").matcher(event).find()) {
                                 event = event + " : description manual curated mutation";
@@ -116,17 +157,21 @@ public class EventTypeAnalyzer {
                             }
                         }
                     }
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
-                  //  LOGGER.info(num + ": event jax: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
+                    //  LOGGER.info(num + ": event jax: " + event);
                     break;
-                case JAX_TRIALS: // extract info for jax trials
+                case JAX_TRIALS: // extract info for jax trials //TODO
                     JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
-                        if (feature.description() != null){
+                        if (feature.description() != null) {
                             event = feature.description();
                             if (Pattern.compile("[0-9]").matcher(event).find()) {
                                 event = event + " :  manual curated mutation";
@@ -139,58 +184,78 @@ public class EventTypeAnalyzer {
                         }
 
                     }
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
-                 //   LOGGER.info(num + ": event jax trials: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
+                    //   LOGGER.info(num + ": event jax trials: " + event);
                     break;
-                case MOLECULARMATCH: // extract info for molecular match //TODO what to do when features is empty
+                case MOLECULARMATCH: // extract info for molecular match //TODO
                     MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
 
-                    LOGGER.info(num + "skip because it is from source molecularmatch");
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    //                    LOGGER.info(num + "skip because it is from source molecularmatch");
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
                     break;
-                case MOLECULARMATCH_TRIALS: // extract info for molecular match trials
+                case MOLECULARMATCH_TRIALS: // extract info for molecular match trials //TODO
                     MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
-                        String [] eventArray = feature.description().split(" ");
+                        String[] eventArray = feature.description().split(" ");
                         if (eventArray.length == 1) {
                             event = event + "array: " + feature.description().split(" ", 2)[0];
                         } else {
                             event = event + "array: " + feature.description().split(" ", 2)[1];
                         }
                     }
-                    LOGGER.info(num + ": event molecular match trials: " + event);
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    //                    LOGGER.info(num + ": event molecular match trials: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
                     break;
-                case PMKB: // extract info for pmkb
+                case PMKB: // extract info for pmkb //TODO
                     Pmkb kbPmkb = (Pmkb) kbSpecificObject;
                     event = feature.biomarkerType();
-                 //   LOGGER.info(num + ": event pmkb: " + event);
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    //   LOGGER.info(num + ": event pmkb: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
                     break;
-                case SAGE: // extract info for sage
+                case SAGE: // extract info for sage //TODO
                     Sage kbSage = (Sage) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         event = feature.description();
                     }
-                   // LOGGER.info(num + ": event sage: " + event);
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType(),feature.description(), type, event);
+                    // LOGGER.info(num + ": event sage: " + event);
+                    //                    LOGGER.info(
+                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                    //                            feature.name(),
+                    //                            feature.geneSymbol(),
+                    //                            feature.biomarkerType(),
+                    //                            feature.description(),
+                    //                            type,
+                    //                            event);
                     break;
                 default:
                     LOGGER.warn(num + ": Unknown knowledgebase");

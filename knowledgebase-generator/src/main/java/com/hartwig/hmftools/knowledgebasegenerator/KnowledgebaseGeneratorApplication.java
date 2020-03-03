@@ -79,7 +79,7 @@ public class KnowledgebaseGeneratorApplication {
 
             for (EventType type: eventType) {
                 // Generating actionable event and known events
-                hotspotExtractor.extractHotspots(viccEntry);
+               // hotspotExtractor.extractHotspots(viccEntry);
 
                 GeneratingCNV.generatingCNVs(viccEntry, type);
             }
