@@ -38,7 +38,7 @@ public class EventTypeAnalyzer {
 
         for (Feature feature : viccEntry.features()) {
             switch (type) {
-                case ONCOKB: // extract info oncokb //TODO
+                case ONCOKB: // extract info oncokb
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
 
                     event = feature.biomarkerType();
@@ -77,21 +77,23 @@ public class EventTypeAnalyzer {
                                 type,
                                 event);
                     }
-                    LOGGER.info("event: " + event);
 
                     break;
-                case CGI: // extract info for cgi //TODO
+                case CGI: // extract info for cgi
                     Cgi kbCgi = (Cgi) kbSpecificObject;
                     event = feature.biomarkerType();
-                    //   LOGGER.info(num + ": event cgi: " + event);
-                    //                    LOGGER.info(
-                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                            feature.name(),
-                    //                            feature.geneSymbol(),
-                    //                            feature.biomarkerType(),
-                    //                            feature.description(),
-                    //                            type,
-                    //                            event);
+
+                    if (event.isEmpty() || event.equals("NA")) {
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                                feature.name(),
+                                feature.geneSymbol(),
+                                feature.biomarkerType(),
+                                feature.description(),
+                                type,
+                                event);
+                    }
+
                     break;
                 case BRCA: // extract info for brca //TODO
                     Brca kbBrca = (Brca) kbSpecificObject;
