@@ -36,8 +36,6 @@ public class SageConfigTest {
                 .referenceBam(Lists.newArrayList("referenceBam"))
                 .tumor(Lists.newArrayList("tumorList"))
                 .tumorBam(Lists.newArrayList("tumorBamList"))
-                .rna("rna")
-                .rnaBam("rna_bam")
                 .refGenome("refGenome")
                 .panelBed("panel")
                 .highConfidenceBed("highConfidence")

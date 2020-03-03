@@ -85,6 +85,11 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
+    public List<AltContext> normalAltContexts() {
+        return normalAltContexts;
+    }
+
+    @NotNull
     public List<AltContext> tumorAltContexts() {
         return tumorAltContexts;
     }
