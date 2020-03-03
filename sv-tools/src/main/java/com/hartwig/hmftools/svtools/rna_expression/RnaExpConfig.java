@@ -39,30 +39,31 @@ public class RnaExpConfig
     private static final String OUTPUT_ID = "output_id";
 
     public static final String REF_GENOME = "ref_genome";
-    public static final String BAM_FILE = "bam_file";
-    public static final String GC_BIAS_FILE = "gcbias_file";
-    public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
-    public static final String KEEP_DUPLICATES = "keep_dups";
-    public static final String MARK_DUPLICATES = "mark_dups";
+    private static final String BAM_FILE = "bam_file";
+    private static final String GC_BIAS_FILE = "gcbias_file";
+    private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
+    private static final String KEEP_DUPLICATES = "keep_dups";
+    private static final String MARK_DUPLICATES = "mark_dups";
 
-    private static final String WRITE_FRAGMENT_LENGTHS = "write_frag_lengths";
-    public static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
-    public static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
+    private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
+    private static final String WRITE_FRAG_LENGTHS_ONLY = "write_frag_lengths_only";
+    private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
+    private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
     // expected expression config
-    public static final String EXP_RATES_FILE = "exp_rates_file";
-    public static final String APPLY_EXP_RATES = "apply_exp_rates";
-    public static final String READ_LENGTH = "read_length";
-    public static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
-    public static final String ER_CALC_FRAG_LENGTHS = "use_calc_frag_lengths";
-    public static final String UNSPLICED_WEIGHT = "unspliced_weight";
-    public static final String WRITE_EXPECTED_RATES = "write_exp_rates";
+    private static final String EXP_RATES_FILE = "exp_rates_file";
+    private static final String APPLY_EXP_RATES = "apply_exp_rates";
+    private static final String READ_LENGTH = "read_length";
+    private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
+    private static final String ER_CALC_FRAG_LENGTHS = "use_calc_frag_lengths";
+    private static final String UNSPLICED_WEIGHT = "unspliced_weight";
+    private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
 
-    public static final String SPECIFIC_TRANS_IDS = "specific_trans";
-    public static final String SPECIFIC_CHR = "specific_chr";
-    public static final String READ_COUNT_LIMIT = "read_count_limit";
-    public static final String RUN_VALIDATIONS = "validate";
-    public static final String THREADS = "threads";
+    private static final String SPECIFIC_TRANS_IDS = "specific_trans";
+    private static final String SPECIFIC_CHR = "specific_chr";
+    private static final String READ_COUNT_LIMIT = "read_count_limit";
+    private static final String RUN_VALIDATIONS = "validate";
+    private static final String THREADS = "threads";
 
     public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
@@ -81,7 +82,6 @@ public class RnaExpConfig
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
-    public final boolean WriteFragmentLengths;
     public final boolean WriteTransComboData;
 
     public final String ExpRatesFile;
@@ -93,8 +93,11 @@ public class RnaExpConfig
     public final boolean WriteExpectedRates;
 
     public final boolean GeneStatsOnly;
+
+    public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
     public final boolean FragmentLengthsByGene;
+    public final boolean WriteFragmentLengthsOnly;
 
     public final List<String> SpecificTransIds;
     public final List<String> SpecificChromosomes;
@@ -163,7 +166,8 @@ public class RnaExpConfig
         FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
-        WriteFragmentLengths = cmd.hasOption(WRITE_FRAGMENT_LENGTHS);
+        WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
+        WriteFragmentLengthsOnly = cmd.hasOption(WRITE_FRAG_LENGTHS_ONLY);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         GeneStatsOnly = cmd.hasOption(GENE_STATS_ONLY);
@@ -207,7 +211,7 @@ public class RnaExpConfig
             return false;
         }
 
-        if(WriteExpectedRates)
+        if(ApplyExpectedRates && ExpRatesFile == null)
         {
             if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
             {
@@ -278,6 +282,7 @@ public class RnaExpConfig
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
+        WriteFragmentLengthsOnly = false;
         WriteTransComboData = false;
 
         WriteExpectedRates = false;
@@ -316,7 +321,8 @@ public class RnaExpConfig
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
         options.addOption(GENE_STATS_ONLY, false, "Skip all processing except gene summary data");
-        options.addOption(WRITE_FRAGMENT_LENGTHS, false, "Write intronic fragment lengths to log");
+        options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
+        options.addOption(WRITE_FRAG_LENGTHS_ONLY, false, "Only write intronic fragment lengths then exit");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(EXP_RATES_FILE, true, "File with generated expected expression rates for transcripts");

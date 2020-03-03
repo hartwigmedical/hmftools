@@ -66,13 +66,12 @@ public class GeneBamReader
 
     private final List<TranscriptComboData> mTransComboData;
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
-    private final FragmentSizeCalcs mFragmentSizeCalc;
 
     private final BufferedWriter mReadDataWriter;
 
     private static final Logger LOGGER = LogManager.getLogger(GeneBamReader.class);
 
-    public GeneBamReader(final RnaExpConfig config, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc)
+    public GeneBamReader(final RnaExpConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
 
@@ -95,13 +94,11 @@ public class GeneBamReader
 
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
                 mConfig, mSamReader, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
-
-        mFragmentSizeCalc = fragmentSizeCalc;
     }
 
     public static GeneBamReader from(final RnaExpConfig config)
     {
-        return new GeneBamReader(config, null, null);
+        return new GeneBamReader(config, null);
     }
 
     public int totalBamCount() { return mTotalBamReadCount; }
@@ -528,10 +525,6 @@ public class GeneBamReader
             return;
 
         mCurrentGene.addCount(UNSPLICED, 1);
-
-        // both reads will report the same fragment length (ie insert size for non-split reads)
-        if(mFragmentSizeCalc != null)
-            mFragmentSizeCalc.addFragmentLength(read1.samRecord());
     }
 
     /*

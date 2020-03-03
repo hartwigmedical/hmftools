@@ -84,7 +84,8 @@ public class ResultsWriter
             if (mConfig.WriteReadData)
                 mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
 
-            mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createAltSpliceJunctionWriter(mConfig);
+            if(!mConfig.WriteFragmentLengthsOnly)
+                mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createAltSpliceJunctionWriter(mConfig);
 
             if(mConfig.WriteFragmentLengths)
                 mFragLengthWriter = FragmentSizeCalcs.createFragmentLengthWriter(mConfig);

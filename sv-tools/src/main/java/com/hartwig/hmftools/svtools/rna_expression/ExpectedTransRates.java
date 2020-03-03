@@ -156,7 +156,7 @@ public class ExpectedTransRates
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    RE_LOGGER.debug("category({}) skipped with count({})", categoryStr, shortCount);
+                    RE_LOGGER.debug("category({}) short frag skipped with count({})", categoryStr, shortCount);
                     skippedComboCounts += shortCount;
                 }
                 else
@@ -172,7 +172,7 @@ public class ExpectedTransRates
 
                 if(categoryId < 0)
                 {
-                    RE_LOGGER.debug("category({}) skipped with count({})", categoryStr, splicedCount);
+                    RE_LOGGER.debug("category({}) spliced frag skipped with count({})", categoryStr, splicedCount);
                     skippedComboCounts += splicedCount;
                 }
                 else

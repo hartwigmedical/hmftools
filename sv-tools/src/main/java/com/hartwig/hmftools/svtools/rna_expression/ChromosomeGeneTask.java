@@ -41,11 +41,15 @@ public class ChromosomeGeneTask implements Callable
     private int mCurrentGeneIndex;
     public int mGenesProcessed;
 
+    private int mCurrentTaskType;
+    public static final int CHR_TASK_FRAGMENT_LENGTHS = 0;
+    public static final int CHR_TASK_TRANSCRIPT_COUNTS = 1;
+
     private final PerformanceCounter mPerfCounter;
 
     public ChromosomeGeneTask(
             final RnaExpConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
-            final SvGeneTranscriptCollection geneTransCache, final ResultsWriter resultsWriter)
+            final SvGeneTranscriptCollection geneTransCache, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -55,11 +59,11 @@ public class ChromosomeGeneTask implements Callable
         mGeneDataList = geneDataList;
 
         mCurrentGeneIndex = 0;
+        mCurrentTaskType = -1;
 
-        mFragmentSizeCalc = mConfig.WriteFragmentLengths || mConfig.UseCalculatedFragmentLengths
-                ? new FragmentSizeCalcs(config, null, resultsWriter.getFragmentLengthWriter()) : null;
+        mFragmentSizeCalc = fragmentSizeCalc;
 
-        mBamReader = new GeneBamReader(mConfig, resultsWriter, mFragmentSizeCalc);
+        mBamReader = new GeneBamReader(mConfig, resultsWriter);
         mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, resultsWriter) : null;
 
         mExpRatesGenerator = mConfig.WriteExpectedRates || (mConfig.ApplyExpectedRates && mConfig.UseCalculatedFragmentLengths)
@@ -70,14 +74,25 @@ public class ChromosomeGeneTask implements Callable
 
     public final GeneBamReader getBamReader() { return mBamReader; }
 
+    public void setTaskType(int taskType) { mCurrentTaskType = taskType; }
+
     @Override
     public Long call()
     {
-        analyseGenes();
+        if(mCurrentTaskType == CHR_TASK_TRANSCRIPT_COUNTS)
+        {
+            assignTranscriptCounts();
+            RE_LOGGER.debug("chromosome({}) transcript counting comolete", mChromosome);
+        }
+        else if(mCurrentTaskType == CHR_TASK_FRAGMENT_LENGTHS)
+        {
+            calcFragmentLengths();
+        }
+
         return (long)1; // return value not used
     }
 
-    public void analyseGenes()
+    public void assignTranscriptCounts()
     {
         if(mGeneDataList.size() > 10)
         {
@@ -118,6 +133,11 @@ public class ChromosomeGeneTask implements Callable
                 }
             }
         }
+    }
+
+    public void calcFragmentLengths()
+    {
+        mFragmentSizeCalc.calcSampleFragmentSize(mChromosome, mGeneDataList);
     }
 
     public PerformanceCounter getPerfStats()
@@ -250,9 +270,6 @@ public class ChromosomeGeneTask implements Callable
 
             if(mExpRatesGenerator != null)
             {
-                if (mConfig.UseCalculatedFragmentLengths)
-                    mFragmentSizeCalc.setConfigLengthDistribution();
-
                 generateExpectedTransRates(geneReadData);
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
             }
@@ -279,7 +296,7 @@ public class ChromosomeGeneTask implements Callable
             }
         }
 
-        if(mFragmentSizeCalc != null)
+        if(mFragmentSizeCalc != null && mConfig.FragmentLengthsByGene)
             mFragmentSizeCalc.writeFragmentLengths(geneData);
     }
 

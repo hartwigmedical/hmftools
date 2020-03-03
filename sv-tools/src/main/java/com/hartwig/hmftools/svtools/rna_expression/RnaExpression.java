@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRAN
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
 
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,11 +80,16 @@ public class RnaExpression
             return; // for now
         }
 
-        if(mConfig.FragmentLengthMinCount > 0 && mConfig.WriteFragmentLengths)
+        if((mConfig.FragmentLengthMinCount > 0 && mConfig.WriteFragmentLengths) || mConfig.UseCalculatedFragmentLengths)
         {
             // for now a way of only calculating fragment lengths and nothing more
-            mFragmentSizeCalcs.calcSampleFragmentSize();
-            return;
+            calcFragmentLengths();
+
+            if(mConfig.WriteFragmentLengthsOnly)
+            {
+                mResultsWriter.close();
+                return;
+            }
         }
 
         List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
@@ -100,7 +104,10 @@ public class RnaExpression
             if(mConfig.skipChromosome(chromosome) || geneDataList.isEmpty())
                 continue;
 
-            ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter);
+            ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mFragmentSizeCalcs);
+
+            chrGeneTask.setTaskType(ChromosomeGeneTask.CHR_TASK_TRANSCRIPT_COUNTS);
             chrTasks.add(chrGeneTask);
 
             if(mExecutorService != null)
@@ -112,7 +119,7 @@ public class RnaExpression
             }
             else
             {
-                chrGeneTask.analyseGenes();
+                chrGeneTask.assignTranscriptCounts();
             }
         }
 
@@ -130,6 +137,50 @@ public class RnaExpression
         combinedPerf.logStats();
 
         mResultsWriter.close();
+    }
+
+    private void calcFragmentLengths()
+    {
+        for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
+        {
+            final List<EnsemblGeneData> geneDataList = entry.getValue();
+
+            final String chromosome = entry.getKey();
+
+            if(mConfig.skipChromosome(chromosome) || geneDataList.isEmpty())
+                continue;
+
+            ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mFragmentSizeCalcs);
+
+            chrGeneTask.calcFragmentLengths();
+
+            /*
+            chrTasks.add(chrGeneTask);
+            chrGeneTask.setTaskType(ChromosomeGeneTask.CHR_TASK_FRAGMENT_LENGTHS);
+
+            if(mExecutorService != null)
+            {
+                FutureTask futureTask = new FutureTask(chrGeneTask);
+
+                threadTaskList.add(futureTask);
+                mExecutorService.execute(futureTask);
+            }
+            else
+            {
+                chrGeneTask.analyseGenes();
+            }
+            */
+
+        }
+
+        if(mConfig.UseCalculatedFragmentLengths)
+            mFragmentSizeCalcs.setConfigLengthDistribution();
+
+        if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
+        {
+            mFragmentSizeCalcs.writeFragmentLengths(null);
+        }
     }
 
     private boolean checkThreadCompletion(final List<FutureTask> taskList)

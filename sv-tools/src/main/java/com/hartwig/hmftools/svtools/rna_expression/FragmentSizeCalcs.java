@@ -45,6 +45,7 @@ public class FragmentSizeCalcs
     private final SvGeneTranscriptCollection mGeneTransCache;
 
     private final List<int[]> mFragmentLengths;
+    private final List<int[]> mFragmentLengthsByGene;
     private BufferedWriter mWriter;
 
     private EnsemblGeneData mCurrentGeneData;
@@ -68,6 +69,7 @@ public class FragmentSizeCalcs
         mWriter = writer;
 
         mFragmentLengths = Lists.newArrayList();
+        mFragmentLengthsByGene = Lists.newArrayList();
     }
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
@@ -80,8 +82,11 @@ public class FragmentSizeCalcs
 
     private static int FRAG_LENGTH_CAP = 3000; // to prevent map blowing out in size
 
-    public void calcSampleFragmentSize()
+    public void calcSampleFragmentSize(final String chromosome, final List<EnsemblGeneData> geneDataList)
     {
+        if (geneDataList == null || geneDataList.isEmpty())
+            return;
+
         // measure fragment lengths for non-split reads in purely intronic regions
         if(mGeneTransCache == null)
         {
@@ -89,78 +94,64 @@ public class FragmentSizeCalcs
             return;
         }
 
+        if (mConfig.FragmentLengthMinCount > 0 && mProcessedFragments >= mConfig.FragmentLengthMinCount)
+            return;
+
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
         BamSlicer bamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
 
         // walk through each chromosome, ignoring any gene which overlaps the previous gene
-        for(Map.Entry<String,List<EnsemblGeneData>> entry : mGeneTransCache.getChrGeneDataMap().entrySet())
-        {
-            final List<EnsemblGeneData> geneDataList = entry.getValue();
-            final String chromosome = entry.getKey();
+        LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
 
-            if (geneDataList == null || geneDataList.isEmpty())
+        long lastGeneEnd = 0;
+
+        for (int i = 0; i < geneDataList.size(); ++i)
+        {
+            EnsemblGeneData geneData = geneDataList.get(i);
+
+            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
                 continue;
 
-            LOGGER.debug("calculating fragment size for chromosome({}), fragCount({})", chromosome, mProcessedFragments);
+            if (geneData.GeneStart < lastGeneEnd)
+                continue;
 
-            long lastGeneEnd = 0;
+            long geneLength = geneData.GeneEnd - geneData.GeneStart;
 
-            for (int i = 0; i < geneDataList.size(); ++i)
+            if (geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
+                continue;
+
+            mCurrentTransDataList = mGeneTransCache.getTranscripts(geneData.GeneId).stream()
+                    .filter(x -> x.exons().size() <= MAX_TRAN_EXONS)
+                    .collect(Collectors.toList());
+
+            if (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
+                continue;
+
+            if(i > 0 && (i % 100) == 0)
             {
-                EnsemblGeneData geneData = geneDataList.get(i);
-
-                if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
-                    continue;
-
-                if (geneData.GeneStart < lastGeneEnd)
-                    continue;
-
-                long geneLength = geneData.GeneEnd - geneData.GeneStart;
-
-                if (geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
-                    continue;
-
-                mCurrentTransDataList = mGeneTransCache.getTranscripts(geneData.GeneId).stream()
-                        .filter(x -> x.exons().size() <= MAX_TRAN_EXONS)
-                        .collect(Collectors.toList());
-
-                if (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
-                    continue;
-
-                if(i > 0 && (i % 100) == 0)
-                {
-                    LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
-                            chromosome, i, lastGeneEnd, mProcessedFragments, mTotalReadCount);
-                }
-
-                lastGeneEnd = geneData.GeneEnd;
-
-                mCurrentReadCount = 0;
-                mCurrentGeneData = geneData;
-                List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd));
-
-                bamSlicer.slice(samReader, regions, this::processBamRead);
-
-                if(mConfig.FragmentLengthsByGene)
-                {
-                    writeFragmentLengths(mWriter, mFragmentLengths, geneData);
-                    mFragmentLengths.clear();
-                }
-
-                if (mProcessedFragments >= mConfig.FragmentLengthMinCount)
-                {
-                    LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
-                    break;
-                }
+                LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
+                        chromosome, i, lastGeneEnd, mProcessedFragments, mTotalReadCount);
             }
 
-            if (mProcessedFragments >= mConfig.FragmentLengthMinCount)
-                break;
-        }
+            lastGeneEnd = geneData.GeneEnd;
 
-        if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
-        {
-            writeFragmentLengths(mWriter, mFragmentLengths, null);
+            mCurrentReadCount = 0;
+            mCurrentGeneData = geneData;
+            List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd));
+
+            bamSlicer.slice(samReader, regions, this::processBamRead);
+
+            if(mConfig.FragmentLengthsByGene)
+            {
+                writeFragmentLengths(mWriter, mFragmentLengthsByGene, geneData);
+                mFragmentLengthsByGene.clear();
+            }
+
+            if (mConfig.FragmentLengthMinCount > 0 && mProcessedFragments >= mConfig.FragmentLengthMinCount)
+            {
+                LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
+                break;
+            }
         }
     }
 
@@ -189,7 +180,10 @@ public class FragmentSizeCalcs
                 return;
         }
 
-        addFragmentLength(record);
+        addFragmentLength(record, mFragmentLengths);
+
+        if(mConfig.FragmentLengthsByGene)
+            addFragmentLength(record, mFragmentLengthsByGene);
     }
 
     private boolean isCandidateRecord(final SAMRecord record)
@@ -208,7 +202,7 @@ public class FragmentSizeCalcs
         return true;
     }
 
-    public void addFragmentLength(final SAMRecord record)
+    public synchronized void addFragmentLength(final SAMRecord record, final List<int[]> fragmentLengths)
     {
         int fragmentLength = min(abs(record.getInferredInsertSize()), FRAG_LENGTH_CAP);
 
@@ -217,9 +211,9 @@ public class FragmentSizeCalcs
 
         int index = 0;
         boolean exists = false;
-        while(index < mFragmentLengths.size())
+        while(index < fragmentLengths.size())
         {
-            final int[] fragLengthCount = mFragmentLengths.get(index);
+            final int[] fragLengthCount = fragmentLengths.get(index);
 
             if(fragLengthCount[FL_LENGTH] < fragmentLength)
             {
@@ -239,7 +233,7 @@ public class FragmentSizeCalcs
         if(!exists)
         {
             int[] newFragLengthCount = { fragmentLength, 1 };
-            mFragmentLengths.add(index, newFragLengthCount);
+            fragmentLengths.add(index, newFragLengthCount);
         }
 
         ++mProcessedFragments;
@@ -280,6 +274,7 @@ public class FragmentSizeCalcs
             }
 
             lengthFrequency[FL_FREQUENCY] = lengthCount;
+            LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FL_LENGTH], lengthCount);
         }
     }
 
@@ -287,7 +282,8 @@ public class FragmentSizeCalcs
     {
         try
         {
-            final String outputFileName = config.formOutputFile("fragment_lengths.csv");
+            final String outputFileName = config.FragmentLengthsByGene ?
+                    config.formOutputFile("frag_length_by_gene.csv") : config.formOutputFile("frag_length.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
@@ -309,10 +305,10 @@ public class FragmentSizeCalcs
 
     public void writeFragmentLengths(final EnsemblGeneData geneData)
     {
-        writeFragmentLengths(mWriter,mFragmentLengths, mConfig.FragmentLengthsByGene ? geneData : null);
+        writeFragmentLengths(mWriter, mFragmentLengths, null);
     }
 
-    public synchronized static void writeFragmentLengths(
+    private synchronized static void writeFragmentLengths(
             final BufferedWriter writer, @Nullable final List<int[]> fragmentLengths, final EnsemblGeneData geneData)
     {
         if(writer == null)
