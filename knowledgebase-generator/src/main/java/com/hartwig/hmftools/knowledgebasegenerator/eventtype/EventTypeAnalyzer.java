@@ -43,12 +43,6 @@ public class EventTypeAnalyzer {
 
                     event = feature.biomarkerType();
 
-                    if (feature.provenanceRule() == null) {
-                        LOGGER.info("No provencence rule known");
-                    } else if (feature.provenanceRule().equals("gene_only")) {
-                        event = "gene_level";
-                    }
-
                     if (event.equals("NA")) {
                         String[] eventArray = feature.name().split(" ", 2);
                         if (eventArray.length == 1) {
@@ -65,6 +59,12 @@ public class EventTypeAnalyzer {
                         } else if (Pattern.compile("[0-9]").matcher(event).find()) {
                             event = "manual curated mutation";
                         }
+                    }
+
+                    if (feature.provenanceRule() == null) {
+                        LOGGER.info("No provencence rule known");
+                    } else if (feature.provenanceRule().equals("gene_only")) {
+                        event = "gene_level";
                     }
 
                     if (event.isEmpty() || event.equals("NA")) {
