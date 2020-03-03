@@ -42,7 +42,8 @@ public class EventTypeAnalyzer {
             switch (type) {
                 case ONCOKB: // extract info oncokb
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-
+                    gene = feature.geneSymbol();
+                    genomicMutation = feature.name();
                     event = feature.biomarkerType();
 
                     if (event.equals("NA")) {
@@ -83,6 +84,8 @@ public class EventTypeAnalyzer {
                     break;
                 case CGI: // extract info for cgi
                     Cgi kbCgi = (Cgi) kbSpecificObject;
+                    gene = feature.geneSymbol();
+                    genomicMutation = feature.name();
                     event = feature.biomarkerType();
 
                     if (feature.provenanceRule() == null) {
@@ -117,6 +120,8 @@ public class EventTypeAnalyzer {
                     break;
                 case CIVIC: // extract info for civic
                     Civic kbCivic = (Civic) kbSpecificObject;
+                    gene = feature.geneSymbol();
+                    genomicMutation = feature.name();
                     event = feature.biomarkerType();
                     if (event == null || event.equals("N/A")) {
                         event = feature.name();
