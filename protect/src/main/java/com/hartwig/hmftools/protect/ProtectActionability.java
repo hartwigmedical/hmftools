@@ -125,8 +125,8 @@ public class ProtectActionability {
         }
 
         LOGGER.info("Reading knowledgebase generator v2 from {}", knowledgebaseDirectory_v2);
-        com.hartwig.hmftools.protect.actionability_v2.ActionabilityAnalyzer actionabilityAnalyzer_v2 =
-                com.hartwig.hmftools.protect.actionability_v2.ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory_v2);
+        com.hartwig.hmftools.knowledgebasegenerator.actionability.ActionabilityAnalyzer actionabilityAnalyzer_v2 =
+                com.hartwig.hmftools.knowledgebasegenerator.actionability.ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory_v2);
 
         LOGGER.info("Reading knowledgebase from {}", knowledgebaseDirectory);
         ActionabilityAnalyzer actionabilityAnalyzer = ActionabilityAnalyzer.fromKnowledgebase(knowledgebaseDirectory);

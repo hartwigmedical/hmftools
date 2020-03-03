@@ -25,7 +25,7 @@ public class GeneratingOutputFiles {
     }
 
     private static void generateKnownAmplification(@NotNull String outputFile) throws IOException {
-        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Sources" + DELIMITER + "Links" + NEW_LINE;
+        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
@@ -33,7 +33,7 @@ public class GeneratingOutputFiles {
     }
 
     private static void generateKnownDeletions(@NotNull String outputFile) throws IOException {
-        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Sources" + DELIMITER + "Links" + NEW_LINE;
+        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         writer.close();
@@ -41,7 +41,7 @@ public class GeneratingOutputFiles {
 
     private static void generateActionableCNV(@NotNull String outputFile) throws IOException{
         String headerActionableCNV =
-                "Gene" + DELIMITER + "Type" + DELIMITER + "Sources" + DELIMITER + "Links" + DELIMITER + "Drug" + DELIMITER + "Drug Type"
+                "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + DELIMITER + "Drug" + DELIMITER + "Drug Type"
                         + DELIMITER + "Cancer Type" + DELIMITER + "Level" + DELIMITER + "Direction" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerActionableCNV);

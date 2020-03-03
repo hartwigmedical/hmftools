@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase;
 
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public enum Sources {
+public enum Source {
     ONCOKB,
     CGI,
     CIVIC,
@@ -15,8 +19,11 @@ public enum Sources {
     MOLECULARMATCH_TRIALS,
     UNKNOWN;
 
+    private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
+
+
     @NotNull
-    public static Sources courceFromKnowledgebase(@NotNull String source) {
+    public static Source sourceFromKnowledgebase(@NotNull String source) {
         if (source.equals("oncokb")) {
             return ONCOKB;
         } else if (source.equals("cgi")) {
@@ -38,6 +45,7 @@ public enum Sources {
         } else if (source.equals("molecularmatch_trials")) {
             return MOLECULARMATCH_TRIALS;
         } else {
+            LOGGER.warn("Unknown source in knowledgebase!");
             return UNKNOWN;
         }
     }

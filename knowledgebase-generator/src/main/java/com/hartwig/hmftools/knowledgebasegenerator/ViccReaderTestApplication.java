@@ -16,10 +16,13 @@ public class ViccReaderTestApplication {
     public static void main(String[] args) throws IOException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
-        LOGGER.info("Reading VICC json from {}", viccJsonPath);
+        LOGGER.info("Reading VICC json from {} with max entries 100", viccJsonPath);
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFileWithMaxEntries(viccJsonPath, 100);
-       // List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readViccKnowledgebaseJsonFileWithSpecificKnowledgebase(viccJsonPath, "sage");
-
         LOGGER.info("Read {} entries", viccEntries.size());
+
+        String source = "oncokb";
+        LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
+        List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
+        LOGGER.info("Read {} entries", viccEntriesSpecificKnowledgeBase.size());
     }
 }

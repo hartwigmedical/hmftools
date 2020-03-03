@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2.variant;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability.variant;
 
 import java.io.File;
 import java.io.IOException;

@@ -13,5 +13,8 @@ public abstract class EventType {
     public abstract String gene();
 
     @NotNull
+    public abstract String genomicMutation();
+
+    @NotNull
     public abstract String eventType();
 }

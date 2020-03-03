@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2.range;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability.range;
 
 import java.util.List;
 

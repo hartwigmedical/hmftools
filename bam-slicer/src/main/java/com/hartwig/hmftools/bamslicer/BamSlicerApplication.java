@@ -43,7 +43,9 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.CRAIIndex;
 import htsjdk.samtools.cram.ref.ReferenceSource;
+import htsjdk.samtools.seekablestream.SeekableStream;
 import htsjdk.samtools.util.BlockCompressedFilePointerUtil;
 import htsjdk.samtools.util.BlockCompressedStreamConstants;
 import htsjdk.samtools.util.CloseableIterator;
@@ -106,14 +108,9 @@ public class BamSlicerApplication {
         String vcfPath = cmd.getOptionValue(VCF);
         int proximity = Integer.parseInt(cmd.getOptionValue(PROXIMITY, "500"));
 
-        // TODO Create a SamReader that uses embedded ref for a CRAM file.
-        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
-
-        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
-            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
-        }
-
+        SamReaderFactory readerFactory = createFromCommandLine(cmd);
         SamReader reader = readerFactory.open(new File(inputPath));
+
         QueryInterval[] intervals = getIntervalsFromVCF(vcfPath, reader.getFileHeader(), proximity);
         CloseableIterator<SAMRecord> iterator = reader.queryOverlapping(intervals);
         SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
@@ -189,26 +186,35 @@ public class BamSlicerApplication {
     private static void sliceFromURLs(@NotNull URL indexUrl, @NotNull URL bamUrl, @NotNull CommandLine cmd) throws IOException {
         File indexFile = downloadIndex(indexUrl);
         indexFile.deleteOnExit();
-        SamReader reader = SamReaderFactory.makeDefault().open(SamInputResource.of(bamUrl).index(indexFile));
-        SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
-                .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
-        BAMIndex bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+
+        SamReader reader = createFromCommandLine(cmd).open(SamInputResource.of(bamUrl).index(indexFile));
+
+        BAMIndex bamIndex;
+        if (indexFile.getPath().contains(".crai")) {
+            SeekableStream craiIndex = CRAIIndex.openCraiFileAsBaiStream(indexFile, reader.getFileHeader().getSequenceDictionary());
+            bamIndex = new DiskBasedBAMFileIndex(craiIndex, reader.getFileHeader().getSequenceDictionary());
+        } else {
+            bamIndex = new DiskBasedBAMFileIndex(indexFile, reader.getFileHeader().getSequenceDictionary(), false);
+        }
 
         Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan = queryIntervalsAndSpan(reader, bamIndex, cmd);
         Optional<Chunk> unmappedChunk = getUnmappedChunk(bamIndex, HttpUtils.getHeaderField(bamUrl, "Content-Length"), cmd);
         List<Chunk> sliceChunks = sliceChunks(queryIntervalsAndSpan, unmappedChunk);
         SamReader cachingReader = createCachingReader(indexFile, bamUrl, cmd, sliceChunks);
 
+        SAMFileWriter writer = new SAMFileWriterFactory().setCreateIndex(true)
+                .makeBAMWriter(reader.getFileHeader(), true, new File(cmd.getOptionValue(OUTPUT)));
+
         queryIntervalsAndSpan.ifPresent(pair -> {
             LOGGER.info("Slicing bam on bed regions...");
-            final CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
+            CloseableIterator<SAMRecord> bedIterator = getIterator(cachingReader, pair.getKey(), pair.getValue().toCoordinateArray());
             writeToSlice(writer, bedIterator);
             LOGGER.info("Done writing bed slices.");
         });
 
         unmappedChunk.ifPresent(chunk -> {
             LOGGER.info("Slicing unmapped reads...");
-            final CloseableIterator<SAMRecord> unmappedIterator = cachingReader.queryUnmapped();
+            CloseableIterator<SAMRecord> unmappedIterator = cachingReader.queryUnmapped();
             writeToSlice(writer, unmappedIterator);
             LOGGER.info("Done writing unmapped reads.");
         });
@@ -219,8 +225,8 @@ public class BamSlicerApplication {
     }
 
     @NotNull
-    private static Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan(@NotNull final SamReader reader,
-            @NotNull final BAMIndex bamIndex, @NotNull final CommandLine cmd) throws IOException {
+    private static Optional<Pair<QueryInterval[], BAMFileSpan>> queryIntervalsAndSpan(@NotNull SamReader reader, @NotNull BAMIndex bamIndex,
+            @NotNull CommandLine cmd) throws IOException {
         if (cmd.hasOption(BED)) {
             String bedPath = cmd.getOptionValue(BED);
             LOGGER.info("Reading query intervals from BED file: {}", bedPath);
@@ -231,14 +237,18 @@ public class BamSlicerApplication {
         return Optional.empty();
     }
 
+    @NotNull
     private static SamReader createCachingReader(@NotNull File indexFile, @NotNull URL bamUrl, @NotNull CommandLine cmd,
             @NotNull List<Chunk> sliceChunks) throws IOException {
         OkHttpClient httpClient =
                 SlicerHttpClient.create(Integer.parseInt(cmd.getOptionValue(MAX_CONCURRENT_REQUESTS, MAX_CONCURRENT_REQUESTS_DEFAULT)));
         int maxBufferSize = readMaxBufferSize(cmd);
+
         SamInputResource bamResource =
                 SamInputResource.of(new CachingSeekableHTTPStream(httpClient, bamUrl, sliceChunks, maxBufferSize)).index(indexFile);
-        return SamReaderFactory.makeDefault().open(bamResource);
+        SamReaderFactory readerFactory = createFromCommandLine(cmd);
+
+        return readerFactory.open(bamResource);
     }
 
     @NotNull
@@ -272,11 +282,20 @@ public class BamSlicerApplication {
         LOGGER.info("Downloading index from {}", indexUrl);
 
         ReadableByteChannel indexChannel = Channels.newChannel(indexUrl.openStream());
-        File index = File.createTempFile("tmp", ".bai");
+
+        String extension = ".bai";
+        if (indexUrl.getPath().contains(".crai")) {
+            LOGGER.debug("Located crai from the index on {}", indexUrl);
+            extension = ".crai";
+        }
+
+        File index = File.createTempFile("tmp", extension);
         FileOutputStream indexOutputStream = new FileOutputStream(index);
         indexOutputStream.getChannel().transferFrom(indexChannel, 0, Long.MAX_VALUE);
         indexOutputStream.close();
         indexChannel.close();
+
+        LOGGER.info("Downloaded index to {}", index.getPath());
 
         return index;
     }
@@ -354,6 +373,17 @@ public class BamSlicerApplication {
     }
 
     @NotNull
+    private static SamReaderFactory createFromCommandLine(@NotNull CommandLine cmd) {
+        SamReaderFactory readerFactory = SamReaderFactory.makeDefault();
+
+        if (cmd.hasOption(REF_GENOME_FASTA_FILE)) {
+            readerFactory.referenceSource(new ReferenceSource(new File(cmd.getOptionValue(REF_GENOME_FASTA_FILE))));
+        }
+
+        return readerFactory;
+    }
+
+    @NotNull
     private static Options createOptions() {
         Options options = new Options();
         OptionGroup inputModeOptionGroup = new OptionGroup();
@@ -370,6 +400,10 @@ public class BamSlicerApplication {
         options.addOption(Option.builder(INPUT_MODE_URL).required().desc("Read input BAM from url").build());
         options.addOption(Option.builder(INPUT).required().hasArg().desc("url of BAM file (required)").build());
         options.addOption(Option.builder(INDEX).required().hasArg().desc("url of BAM index file(required)").build());
+        options.addOption(Option.builder(REF_GENOME_FASTA_FILE)
+                .hasArg()
+                .desc("(Optional) path to the ref genome fasta (for reading CRAMs)")
+                .build());
         return addHttpSlicerOptions(options);
     }
 

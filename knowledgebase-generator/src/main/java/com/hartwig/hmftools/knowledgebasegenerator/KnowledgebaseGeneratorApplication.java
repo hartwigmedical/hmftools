@@ -9,7 +9,8 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
@@ -44,7 +45,7 @@ public class KnowledgebaseGeneratorApplication {
 
     private static final String VERSION = KnowledgebaseGeneratorApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void main(String[] args) throws ParseException, IOException, InterruptedException {
         LOGGER.info("Running Knowledgebase Generator v{}", VERSION);
 
         Options options = createOptions();
@@ -66,7 +67,7 @@ public class KnowledgebaseGeneratorApplication {
         assert refVersionString.equals("hg19");
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
-        HotspotExtractor hotspotExtractor = HotspotExtractor.fromRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
+        HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         LOGGER.info("Analyzing all VICC entries");
         int num = 0;
@@ -79,9 +80,9 @@ public class KnowledgebaseGeneratorApplication {
 
             for (EventType type: eventType) {
                 // Generating actionable event and known events
-                hotspotExtractor.extractHotspots(viccEntry);
+               // hotspotExtractor.extractHotspots(viccEntry);
 
-                GeneratingCNV.generatingCNVs(viccEntry, type);
+                ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
             }
         }
         // Create all output files from knowledgebase
