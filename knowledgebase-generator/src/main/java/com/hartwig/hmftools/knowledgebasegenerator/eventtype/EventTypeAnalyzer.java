@@ -67,7 +67,7 @@ public class EventTypeAnalyzer {
                         event = "gene_level";
                     }
 
-                    if (event.isEmpty() || event.equals("NA")) {
+                    if (event.isEmpty()) {
                         LOGGER.warn(
                                 "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
                                 feature.name(),
@@ -83,7 +83,13 @@ public class EventTypeAnalyzer {
                     Cgi kbCgi = (Cgi) kbSpecificObject;
                     event = feature.biomarkerType();
 
-                    if (event.isEmpty() || event.equals("NA")) {
+                    if (feature.provenanceRule() == null) {
+                        LOGGER.info("No provencence rule known");
+                    } else if (feature.provenanceRule().equals("gene_only")) {
+                        event = "gene_level";
+                    }
+
+                    if (event.isEmpty()) {
                         LOGGER.warn(
                                 "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
                                 feature.name(),
@@ -93,7 +99,6 @@ public class EventTypeAnalyzer {
                                 type,
                                 event);
                     }
-
                     break;
                 case BRCA: // extract info for brca //TODO
                     Brca kbBrca = (Brca) kbSpecificObject;
@@ -108,32 +113,30 @@ public class EventTypeAnalyzer {
                     //                            type,
                     //                            event);
                     break;
-                case CIVIC: // extract info for civic //TODO
+                case CIVIC: // extract info for civic
                     Civic kbCivic = (Civic) kbSpecificObject;
                     event = feature.biomarkerType();
-                    if (event == null) {
-                        event = "manual curated mutation";
-                    } else if (event.equals("N/A")) {
-                        String[] eventArray = feature.description().split(" ");
-                        if (eventArray.length == 1) {
-                            event = "array: " + feature.description().split(" ", 2)[0];
-                        } else {
-                            event = "array: " + feature.description().split(" ", 2)[1];
-                            if (Pattern.compile("[0-9]").matcher(event).find()) {
-                                event = feature.description().split(" ", 2)[1].split(" ", 2)[1];
-                            }
-                        }
+                    if (event == null || event.equals("N/A")) {
+                        event = feature.name();
                     }
-                    //                    LOGGER.info(
-                    //                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                            feature.name(),
-                    //                            feature.geneSymbol(),
-                    //                            feature.biomarkerType(),
-                    //                            feature.description(),
-                    //                            type,
-                    //                            event);
 
-                    //  LOGGER.info(num + ": event civic: " + event);
+                    if (feature.provenanceRule() == null) {
+                        LOGGER.info("No provencence rule known");
+                    } else if (feature.provenanceRule().equals("gene_only")) {
+                        event = "gene_level";
+                    }
+
+                    if (event.isEmpty()) {
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
+                                feature.name(),
+                                feature.geneSymbol(),
+                                feature.biomarkerType(),
+                                feature.description(),
+                                type,
+                                event);
+                    }
+
                     break;
                 case JAX: // extract info for jax //TODO
                     Jax kbJax = (Jax) kbSpecificObject;
