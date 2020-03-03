@@ -6,18 +6,7 @@ import java.util.regex.Pattern;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
-import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
-import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
-import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
-import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
-import com.hartwig.hmftools.vicc.datamodel.jax.Jax;
-import com.hartwig.hmftools.vicc.datamodel.jaxtrials.JaxTrials;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatch.MolecularMatch;
-import com.hartwig.hmftools.vicc.datamodel.molecularmatchtrials.MolecularMatchTrials;
-import com.hartwig.hmftools.vicc.datamodel.oncokb.OncoKb;
-import com.hartwig.hmftools.vicc.datamodel.pmkb.Pmkb;
-import com.hartwig.hmftools.vicc.datamodel.sage.Sage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +19,6 @@ public class EventTypeAnalyzer {
 
     @NotNull
     public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry, int num) {
-        KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String event = Strings.EMPTY;
         List<EventType> eventType = Lists.newArrayList();
         String gene = Strings.EMPTY;
@@ -41,7 +29,6 @@ public class EventTypeAnalyzer {
         for (Feature feature : viccEntry.features()) {
             switch (type) {
                 case ONCOKB: // extract info oncokb
-                    OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
                     gene = feature.geneSymbol();
                     genomicMutation = feature.name();
                     event = feature.biomarkerType();
@@ -83,7 +70,6 @@ public class EventTypeAnalyzer {
 
                     break;
                 case CGI: // extract info for cgi
-                    Cgi kbCgi = (Cgi) kbSpecificObject;
                     gene = feature.geneSymbol();
                     genomicMutation = feature.name();
                     event = feature.biomarkerType();
@@ -106,7 +92,6 @@ public class EventTypeAnalyzer {
                     }
                     break;
                 case BRCA: // extract info for brca //TODO
-                    Brca kbBrca = (Brca) kbSpecificObject;
                     event = Strings.EMPTY;
                     //    LOGGER.info(num + ": event brca: " + event);
                     //                    LOGGER.info(
@@ -119,7 +104,6 @@ public class EventTypeAnalyzer {
                     //                            event);
                     break;
                 case CIVIC: // extract info for civic
-                    Civic kbCivic = (Civic) kbSpecificObject;
                     gene = feature.geneSymbol();
                     genomicMutation = feature.name();
                     event = feature.biomarkerType();
@@ -154,7 +138,6 @@ public class EventTypeAnalyzer {
 
                     break;
                 case JAX: // extract info for jax //TODO
-                    Jax kbJax = (Jax) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         if (feature.description() != null) {
@@ -180,7 +163,6 @@ public class EventTypeAnalyzer {
                     //  LOGGER.info(num + ": event jax: " + event);
                     break;
                 case JAX_TRIALS: // extract info for jax trials //TODO
-                    JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         if (feature.description() != null) {
@@ -207,7 +189,6 @@ public class EventTypeAnalyzer {
                     //   LOGGER.info(num + ": event jax trials: " + event);
                     break;
                 case MOLECULARMATCH: // extract info for molecular match //TODO
-                    MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
 
                     //                    LOGGER.info(num + "skip because it is from source molecularmatch");
                     //                    LOGGER.info(
@@ -220,7 +201,6 @@ public class EventTypeAnalyzer {
                     //                            event);
                     break;
                 case MOLECULARMATCH_TRIALS: // extract info for molecular match trials //TODO
-                    MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         String[] eventArray = feature.description().split(" ");
@@ -241,7 +221,6 @@ public class EventTypeAnalyzer {
                     //                            event);
                     break;
                 case PMKB: // extract info for pmkb //TODO
-                    Pmkb kbPmkb = (Pmkb) kbSpecificObject;
                     event = feature.biomarkerType();
                     //   LOGGER.info(num + ": event pmkb: " + event);
                     //                    LOGGER.info(
@@ -254,7 +233,6 @@ public class EventTypeAnalyzer {
                     //                            event);
                     break;
                 case SAGE: // extract info for sage //TODO
-                    Sage kbSage = (Sage) kbSpecificObject;
                     event = feature.biomarkerType();
                     if (event == null) {
                         event = feature.description();
