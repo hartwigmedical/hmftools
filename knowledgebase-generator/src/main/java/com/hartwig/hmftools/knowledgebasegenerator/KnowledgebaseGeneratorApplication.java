@@ -9,7 +9,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
@@ -81,7 +81,7 @@ public class KnowledgebaseGeneratorApplication {
                 // Generating actionable event and known events
                // hotspotExtractor.extractHotspots(viccEntry);
 
-                GeneratingCNV.generatingCNVs(viccEntry, type);
+                CnvExtractor.extractingCNVs(viccEntry, type);
             }
         }
         // Create all output files from knowledgebase

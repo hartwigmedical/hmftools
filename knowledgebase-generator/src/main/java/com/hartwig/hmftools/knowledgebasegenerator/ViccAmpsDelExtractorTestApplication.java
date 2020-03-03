@@ -3,7 +3,7 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.GeneratingCNV;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -35,7 +35,7 @@ public class ViccAmpsDelExtractorTestApplication {
             for (EventType type: eventType) {
                 // Generating actionable event and known events
 
-                GeneratingCNV.generatingCNVs(viccEntry, type);
+                CnvExtractor.extractingCNVs(viccEntry, type);
             }
         }
     }

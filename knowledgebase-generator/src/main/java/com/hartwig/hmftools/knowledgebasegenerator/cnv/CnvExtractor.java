@@ -10,16 +10,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class GeneratingCNV {
+public class CnvExtractor {
 
-    private static final Logger LOGGER = LogManager.getLogger(GeneratingCNV.class);
+    private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
 
     private static final List<String> AMPLIFICATION =
-            Lists.newArrayList("amplification", "Amplification", "Gain", "overexpression", "amp", "over exp"); //TODO determine values
+            Lists.newArrayList("Amplification", "Overexpression", "amp", "OVEREXPRESSION", "Transcript Amplification");
     private static final List<String> DELETION =
-            Lists.newArrayList("deletion", "Deletion", "Copy Number Loss", "Loss", "loss", "undexpression"); //TODO determine values
+            Lists.newArrayList("Copy Number Loss", "Deletion", "del", "DELETION", "UNDEREXPRESSION");
 
-    public static void generatingCNVs(@NotNull ViccEntry viccEntries, @NotNull EventType type) {
+    public static void extractingCNVs(@NotNull ViccEntry viccEntries, @NotNull EventType type) {
 
         if (AMPLIFICATION.contains(type.eventType())) {
             // extract evidence items
