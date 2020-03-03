@@ -40,29 +40,29 @@ public class EventTypeAnalyzer {
             switch (type) {
                 case ONCOKB: // extract info oncokb //TODO
                     OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-                    event = feature.biomarkerType();
 
                     if (feature.provenanceRule() == null){
                         LOGGER.info("No provencence rule known");
                     } else if (feature.provenanceRule().equals("gene_only")) {
                         event = "gene_level";
-                    }
-
-                    if (event.equals("NA")) {
-                        String[] eventArray = feature.name().split(" ", 2);
-                        if (eventArray.length == 1) {
-                            event = eventArray[0];
-                        } else if (eventArray.length == 2) {
-                            if (eventArray[1].equals("Fusion")) {
-                                event = eventArray[1];
-                            } else {
-                                event = feature.name();
+                    } else {
+                        event = feature.biomarkerType();
+                        if (event.equals("NA")) {
+                            String[] eventArray = feature.name().split(" ", 2);
+                            if (eventArray.length == 1) {
+                                event = eventArray[0];
+                            } else if (eventArray.length == 2) {
+                                if (eventArray[1].equals("Fusion")) {
+                                    event = eventArray[1];
+                                } else {
+                                    event = feature.name();
+                                }
                             }
-                        }
-                        if (event.contains("Exon")) {
-                            event = feature.name();
-                        } else if (Pattern.compile("[0-9]").matcher(event).find()) {
-                            event = "manual curated mutation";
+                            if (event.contains("Exon")) {
+                                event = feature.name();
+                            } else if (Pattern.compile("[0-9]").matcher(event).find()) {
+                                event = "manual curated mutation";
+                            }
                         }
                     }
 
@@ -77,15 +77,6 @@ public class EventTypeAnalyzer {
                                 event);
                     }
                     LOGGER.info("event: " + event);
-
-//                    LOGGER.info(
-//                            "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-//                            feature.name(),
-//                            feature.geneSymbol(),
-//                            feature.biomarkerType(),
-//                            feature.description(),
-//                            type,
-//                            event);
 
                     break;
                 case CGI: // extract info for cgi //TODO
