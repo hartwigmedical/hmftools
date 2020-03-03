@@ -82,11 +82,12 @@ public class ChromosomeGeneTask implements Callable
         if(mCurrentTaskType == CHR_TASK_TRANSCRIPT_COUNTS)
         {
             assignTranscriptCounts();
-            RE_LOGGER.debug("chromosome({}) transcript counting comolete", mChromosome);
+            RE_LOGGER.debug("chromosome({}) transcript counting complete", mChromosome);
         }
         else if(mCurrentTaskType == CHR_TASK_FRAGMENT_LENGTHS)
         {
             calcFragmentLengths();
+            RE_LOGGER.debug("chromosome({}) frag length measurement complete", mChromosome);
         }
 
         return (long)1; // return value not used
@@ -110,9 +111,6 @@ public class ChromosomeGeneTask implements Callable
             {
                 mPerfCounter.start();
 
-                RE_LOGGER.debug("chr({}) gene({}) processed({} of {})",
-                        mChromosome, geneReadData.name(), mCurrentGeneIndex, mGeneDataList.size());
-
                 // at the moment it is one or the other
                 if(generateExpRatesOnly)
                 {
@@ -124,6 +122,9 @@ public class ChromosomeGeneTask implements Callable
                 }
 
                 mPerfCounter.stop();
+
+                RE_LOGGER.debug("chr({}) gene({}) processed({} of {})",
+                        mChromosome, geneReadData.name(), mCurrentGeneIndex, mGeneDataList.size());
 
                 ++mGenesProcessed;
 
