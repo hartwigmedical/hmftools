@@ -33,6 +33,8 @@ public class EventTypeAnalyzer {
         KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String event = Strings.EMPTY;
         List<EventType> eventType = Lists.newArrayList();
+        String gene = Strings.EMPTY;
+        String genomicMutation = Strings.EMPTY;
 
         Source type = Source.sourceFromKnowledgebase(viccEntry.source());
 
@@ -260,7 +262,7 @@ public class EventTypeAnalyzer {
             if (event == null) {
                 event = Strings.EMPTY;
             }
-            eventType.add(ImmutableEventType.builder().gene("").eventType(event).build());
+            eventType.add(ImmutableEventType.builder().gene(gene).genomicMutation(genomicMutation).eventType(event).build());
         }
         return eventType;
     }
