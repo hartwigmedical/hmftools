@@ -82,7 +82,7 @@ public class KnowledgebaseGeneratorApplication {
                 // Generating actionable event and known events
                // hotspotExtractor.extractHotspots(viccEntry);
 
-                CnvExtractor.extractingCNVs(viccEntry, type);
+                ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
             }
         }
         // Create all output files from knowledgebase

@@ -39,84 +39,99 @@ public class CnvExtractor {
         KbSpecificObject kbSpecificObject = viccEntries.KbSpecificObject();
         String gene = type.gene();
         String typeEvent = Strings.EMPTY;
+
+        if (AMPLIFICATION.contains(type.eventType())) {
+            typeEvent = "Amplification";
+            LOGGER.info(determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries));
+            return determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries);
+        } else if (DELETION.contains(type.eventType())) {
+            typeEvent = "Deletion";
+            LOGGER.info(determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries));
+            return determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries);
+        } else {
+            return ImmutableActionableGene.builder()
+                    .gene(Strings.EMPTY)
+                    .type(Strings.EMPTY)
+                    .source(Strings.EMPTY)
+                    .drug(Strings.EMPTY)
+                    .drugType(Strings.EMPTY)
+                    .cancerType(Strings.EMPTY)
+                    .level(Strings.EMPTY)
+                    .direction(Strings.EMPTY)
+                    .link(Strings.EMPTY)
+                    .build();
+        }
+    }
+
+    @NotNull
+    public static ActionableGene determineInfoOfEvent(@NotNull Source source, @NotNull String typeEvent,
+            @NotNull KbSpecificObject kbSpecificObject, @NotNull String gene, @NotNull ViccEntry viccEntries) {
         String drug = Strings.EMPTY;
         String drugType = Strings.EMPTY;
         String cancerType = Strings.EMPTY;
         String level = Strings.EMPTY;
         String direction = Strings.EMPTY;
         String link = Strings.EMPTY;
+        switch (source) {
+            case ONCOKB:
+                OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
+                drug = Strings.EMPTY;
+                drugType = Strings.EMPTY;
+                cancerType = Strings.EMPTY;
+                level = Strings.EMPTY;
+                direction = Strings.EMPTY;
+                link = Strings.EMPTY;
+                break;
+            case CGI:
+                Cgi kbCgi = (Cgi) kbSpecificObject;
+                drug = kbCgi.drug();
+                drugType = kbCgi.drugFamily();
+                cancerType = kbCgi.primaryTumorType();
+                level = viccEntries.association().evidenceLabel();
+                direction = viccEntries.association().responseType();
+                link = "https://www.cancergenomeinterpreter.org/biomarkers";
+                break;
+            case CIVIC:
+                Civic kbCivic = (Civic) kbSpecificObject;
+                drug = Strings.EMPTY;
+                drugType = Strings.EMPTY;
+                cancerType = Strings.EMPTY;
+                level = Strings.EMPTY;
+                direction = Strings.EMPTY;
+                link = Strings.EMPTY;
+                break;
+            case JAX:
+                Jax kbJax = (Jax) kbSpecificObject;
 
-            switch (source) {
-                case ONCOKB:
-                    OncoKb kbOncoKb = (OncoKb) kbSpecificObject;
-                    drug = Strings.EMPTY;
-                    drugType = Strings.EMPTY;
-                    cancerType = Strings.EMPTY;
-                    level = Strings.EMPTY;
-                    direction = Strings.EMPTY;
-                    link = Strings.EMPTY;
+                break;
+            case JAX_TRIALS:
+                JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
 
-                    LOGGER.info("AMP oncokb");
-                    break;
-                case CGI:
-                    Cgi kbCgi = (Cgi) kbSpecificObject;
-                    drug = kbCgi.drug();
-                    drugType = kbCgi.drugFamily();
-                    cancerType = kbCgi.primaryTumorType();
-                    level = viccEntries.association().evidenceLabel();
-                    direction = viccEntries.association().responseType();
-                    link = "https://www.cancergenomeinterpreter.org/biomarkers";
-                    LOGGER.info("AMP cgi");
-                    break;
-                case CIVIC:
-                    Civic kbCivic = (Civic) kbSpecificObject;
-                    drug = Strings.EMPTY;
-                    drugType = Strings.EMPTY;
-                    cancerType = Strings.EMPTY;
-                    level = Strings.EMPTY;
-                    direction = Strings.EMPTY;
-                    link = Strings.EMPTY;
-                    LOGGER.info("AMP civic");
-                    break;
-                case JAX:
-                    Jax kbJax = (Jax) kbSpecificObject;
+                break;
+            case BRCA:
+                Brca kbBrca = (Brca) kbSpecificObject;
 
-                    break;
-                case JAX_TRIALS:
-                    JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
+                break;
+            case SAGE:
+                Sage kbSage = (Sage) kbSpecificObject;
 
-                    break;
-                case BRCA:
-                    Brca kbBrca = (Brca) kbSpecificObject;
+                break;
+            case PMKB:
+                Pmkb kbPmkb = (Pmkb) kbSpecificObject;
 
-                    break;
-                case SAGE:
-                    Sage kbSage = (Sage) kbSpecificObject;
+                break;
+            case MOLECULARMATCH:
+                MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
 
-                    break;
-                case PMKB:
-                    Pmkb kbPmkb = (Pmkb) kbSpecificObject;
+                break;
+            case MOLECULARMATCH_TRIALS:
+                MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
 
-                    break;
-                case MOLECULARMATCH:
-                    MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-
-                    break;
-                case MOLECULARMATCH_TRIALS:
-                    MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-
-                    break;
-                default:
-                    LOGGER.warn("Unknown knowledgebase");
-            }
-        if (AMPLIFICATION.contains(type.eventType())) {
-            typeEvent = "Amplification";
-        } else if (DELETION.contains(type.eventType())) {
-            typeEvent = "Deletion";
-
+                break;
+            default:
+                LOGGER.warn("Unknown knowledgebase");
         }
-
-        return  ImmutableActionableGene.builder()
+        return ImmutableActionableGene.builder()
                 .gene(gene)
                 .type(typeEvent)
                 .source(source.toString())
