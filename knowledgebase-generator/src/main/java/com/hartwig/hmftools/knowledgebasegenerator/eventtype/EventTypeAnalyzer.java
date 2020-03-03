@@ -128,6 +128,14 @@ public class EventTypeAnalyzer {
                         event = "gene_level";
                     }
 
+                    if (event.contains("Prime") || event.contains("Exon") || event.contains("EXON") || event.contains("Frameshift") || event
+                            .contains("EXPRESSION") || event.equals("RS34743033") || event.contains("SPLICE VARIANT") || event.contains(
+                            "PHOSPHORYLATION")) {
+                        event = event;
+                    } else if (Pattern.compile("[0-9]").matcher(event).find()) {
+                        event = "manual curated mutation";
+                    }
+
                     if (event.isEmpty()) {
                         LOGGER.warn(
                                 "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
