@@ -54,7 +54,7 @@
         <hmf-api-clients.version>local-SNAPSHOT</hmf-api-clients.version>
         <hmf-extensions.version>local-SNAPSHOT</hmf-extensions.version>
 
-        <bam-slicer.version>1.4</bam-slicer.version>
+        <bam-slicer.version>1.5</bam-slicer.version>
         <bachelor.version>1.9</bachelor.version>
         <sv-linx.version>1.7</sv-linx.version>
         <sig-analyser.version>1.0</sig-analyser.version>
