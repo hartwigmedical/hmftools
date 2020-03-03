@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2.fusion;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability.range;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -7,10 +7,22 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class ActionableFusion {
+public abstract class ActionableRange {
 
     @NotNull
-    public abstract String fusion();
+    public abstract String gene();
+
+    @NotNull
+    public abstract String chromosome();
+
+    @NotNull
+    public abstract String start();
+
+    @NotNull
+    public abstract String end();
+
+    @NotNull
+    public abstract String mutationType();
 
     @NotNull
     public abstract String source();

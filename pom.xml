@@ -169,6 +169,11 @@
             </dependency>
             <dependency>
                 <groupId>com.hartwig</groupId>
+                <artifactId>knowledgebase-generator</artifactId>
+                <version>${knowledgebase-generator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
                 <artifactId>sv-linx</artifactId>
                 <version>${sv-linx.version}</version>
             </dependency>

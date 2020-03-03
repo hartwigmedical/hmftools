@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2.fusion;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability.fusion;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2.gene;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability.gene;
 
 import java.util.List;
 

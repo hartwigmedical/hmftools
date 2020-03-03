@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2.signature;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability.signature;
 
 import java.util.List;
 

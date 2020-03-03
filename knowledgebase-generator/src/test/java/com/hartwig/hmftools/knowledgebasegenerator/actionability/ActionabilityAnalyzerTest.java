@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.protect.actionability_v2;
-
-import static org.junit.Assert.*;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability;
 
 import java.io.IOException;
 
@@ -10,7 +8,7 @@ import org.junit.Test;
 
 public class ActionabilityAnalyzerTest {
 
-    private static final String KNOWLEDGEBASE_DIRECTORY_V2 = Resources.getResource("actionabilty_v2").getPath();
+    private static final String KNOWLEDGEBASE_DIRECTORY_V2 = Resources.getResource("actionabilty").getPath();
 
     @Test
     public void canGenerateFromTestKnowledgebase() throws IOException {

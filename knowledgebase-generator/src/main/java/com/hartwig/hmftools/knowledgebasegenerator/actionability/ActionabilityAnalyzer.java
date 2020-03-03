@@ -1,19 +1,19 @@
-package com.hartwig.hmftools.protect.actionability_v2;
+package com.hartwig.hmftools.knowledgebasegenerator.actionability;
 
 import java.io.File;
 import java.io.IOException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.hartwig.hmftools.protect.actionability_v2.fusion.FusionEvidenceAnalyzer;
-import com.hartwig.hmftools.protect.actionability_v2.fusion.FusionEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.protect.actionability_v2.gene.GeneEvidenceAnalyzer;
-import com.hartwig.hmftools.protect.actionability_v2.gene.GeneEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.protect.actionability_v2.range.RangeEvidenceAnalyzer;
-import com.hartwig.hmftools.protect.actionability_v2.range.RangeEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.protect.actionability_v2.signature.SignatureEvidenceAnalyzer;
-import com.hartwig.hmftools.protect.actionability_v2.signature.SignatureEvidenceAnalyzerFactory;
-import com.hartwig.hmftools.protect.actionability_v2.variant.VariantEvidenceAnalyzer;
-import com.hartwig.hmftools.protect.actionability_v2.variant.VariantEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.fusion.FusionEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.GeneEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.range.RangeEvidenceAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.range.RangeEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.signature.SignatureEvidenceAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.signature.SignatureEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.variant.VariantEvidenceAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.variant.VariantEvidenceAnalyzerFactory;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.fusion.FusionEvidenceAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.GeneEvidenceAnalyzer;
 
 import org.jetbrains.annotations.NotNull;
 
