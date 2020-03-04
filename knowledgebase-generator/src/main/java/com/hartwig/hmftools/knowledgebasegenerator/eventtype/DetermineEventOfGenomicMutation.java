@@ -40,12 +40,12 @@ public class DetermineEventOfGenomicMutation {
 
         if (AMPLIFICATION.contains(type.eventType())) {
             typeEvent = "Amplification";
-            ActionableGene actionableAmpsDels = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
-            ActionableGene knownAmpsDels = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
+            ActionableGene actionableAmplification = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
+            ActionableGene knownAmplification = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
         } else if (DELETION.contains(type.eventType())) {
             typeEvent = "Deletion";
-            ActionableGene actionableAmpsDels = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
-            ActionableGene knownAmpsDels = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
+            ActionableGene actionableDeletion = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
+            ActionableGene knownDeletions = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
         } else if (VARIANTS.contains(type.eventType())) {
             // TODO: Determine hotspots
             hotspotExtractor.extractHotspots(viccEntry);
