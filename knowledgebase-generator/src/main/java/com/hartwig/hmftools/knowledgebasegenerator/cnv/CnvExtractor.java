@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
-import java.util.List;
-
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
@@ -28,13 +26,71 @@ public class CnvExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
 
     @NotNull
-    public static KnownAmplificationDeletion determineKnownAmplificationDeletion(){
-        return ImmutableKnownAmplificationDeletion.builder().gene(Strings.EMPTY).eventType(Strings.EMPTY).source(Strings.EMPTY).build();
+    public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene){
+        return knownInformation(source, typeEvent, gene);
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(){
-        return ImmutableActionableAmplificationDeletion.builder().gene(Strings.EMPTY).eventType(Strings.EMPTY).source(Strings.EMPTY).build();
+    public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene){
+        return actionableInformation(source, typeEvent, gene);
+    }
+
+    @NotNull
+    private static KnownAmplificationDeletion knownInformation(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
+        switch (source) {
+            case ONCOKB:
+                break;
+            case CGI:
+                break;
+            case CIVIC:
+                break;
+            case JAX:
+                break;
+            case JAX_TRIALS:
+                break;
+            case BRCA:
+                break;
+            case SAGE:
+                break;
+            case PMKB:
+                break;
+            case MOLECULARMATCH:
+                break;
+            case MOLECULARMATCH_TRIALS:
+                break;
+            default:
+                LOGGER.warn("Unknown knowledgebase");
+        }
+        return ImmutableKnownAmplificationDeletion.builder().gene(gene).eventType(typeEvent).source(source.toString()).build();
+    }
+
+    @NotNull
+    private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
+        switch (source) {
+            case ONCOKB:
+                break;
+            case CGI:
+                break;
+            case CIVIC:
+                break;
+            case JAX:
+                break;
+            case JAX_TRIALS:
+                break;
+            case BRCA:
+                break;
+            case SAGE:
+                break;
+            case PMKB:
+                break;
+            case MOLECULARMATCH:
+                break;
+            case MOLECULARMATCH_TRIALS:
+                break;
+            default:
+                LOGGER.warn("Unknown knowledgebase");
+        }
+        return ImmutableActionableAmplificationDeletion.builder().gene(Strings.EMPTY).eventType(typeEvent).source(Strings.EMPTY).build();
     }
 
     @NotNull
