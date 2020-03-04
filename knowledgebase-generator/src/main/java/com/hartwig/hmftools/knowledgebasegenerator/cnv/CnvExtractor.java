@@ -102,31 +102,24 @@ public class CnvExtractor {
                 break;
             case JAX:
                 Jax kbJax = (Jax) kbSpecificObject;
-
                 break;
             case JAX_TRIALS:
                 JaxTrials kbJaxTrials = (JaxTrials) kbSpecificObject;
-
                 break;
             case BRCA:
                 Brca kbBrca = (Brca) kbSpecificObject;
-
                 break;
             case SAGE:
                 Sage kbSage = (Sage) kbSpecificObject;
-
                 break;
             case PMKB:
                 Pmkb kbPmkb = (Pmkb) kbSpecificObject;
-
                 break;
             case MOLECULARMATCH:
                 MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
-
                 break;
             case MOLECULARMATCH_TRIALS:
                 MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
-
                 break;
             default:
                 LOGGER.warn("Unknown knowledgebase");
