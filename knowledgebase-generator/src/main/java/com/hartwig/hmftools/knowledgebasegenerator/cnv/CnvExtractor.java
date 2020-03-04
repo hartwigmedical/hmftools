@@ -29,40 +29,6 @@ public class CnvExtractor {
 
     private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
 
-    private static final List<String> AMPLIFICATION =
-            Lists.newArrayList("Amplification", "Overexpression", "amp", "OVEREXPRESSION", "Transcript Amplification");
-    private static final List<String> DELETION = Lists.newArrayList("Copy Number Loss", "Deletion", "del", "DELETION", "UNDEREXPRESSION");
-
-    @NotNull
-    public static ActionableGene extractingCNVs(@NotNull ViccEntry viccEntries, @NotNull EventType type) {
-        Source source = Source.sourceFromKnowledgebase(viccEntries.source());
-        KbSpecificObject kbSpecificObject = viccEntries.KbSpecificObject();
-        String gene = type.gene();
-        String typeEvent = Strings.EMPTY;
-
-        if (AMPLIFICATION.contains(type.eventType())) {
-            typeEvent = "Amplification";
-            LOGGER.info(determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries));
-            return determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries);
-        } else if (DELETION.contains(type.eventType())) {
-            typeEvent = "Deletion";
-            LOGGER.info(determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries));
-            return determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntries);
-        } else {
-            return ImmutableActionableGene.builder()
-                    .gene(Strings.EMPTY)
-                    .type(Strings.EMPTY)
-                    .source(Strings.EMPTY)
-                    .drug(Strings.EMPTY)
-                    .drugType(Strings.EMPTY)
-                    .cancerType(Strings.EMPTY)
-                    .level(Strings.EMPTY)
-                    .direction(Strings.EMPTY)
-                    .link(Strings.EMPTY)
-                    .build();
-        }
-    }
-
     @NotNull
     public static ActionableGene determineInfoOfEvent(@NotNull Source source, @NotNull String typeEvent,
             @NotNull KbSpecificObject kbSpecificObject, @NotNull String gene, @NotNull ViccEntry viccEntries) {

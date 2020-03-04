@@ -13,6 +13,7 @@ import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.Actionable
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGenomicMutation;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
@@ -80,9 +81,8 @@ public class KnowledgebaseGeneratorApplication {
 
             for (EventType type: eventType) {
                 // Generating actionable event and known events
-               // hotspotExtractor.extractHotspots(viccEntry);
 
-                ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
+                DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry, type, hotspotExtractor);
             }
         }
         // Create all output files from knowledgebase
