@@ -7,7 +7,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
@@ -30,7 +32,6 @@ public class DetermineEventOfGenomicMutation {
 
     public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor)
             throws IOException, InterruptedException {
-        //hotspotExtractor.extractHotspots(viccEntry);
 
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
@@ -40,15 +41,16 @@ public class DetermineEventOfGenomicMutation {
 
         if (AMPLIFICATION.contains(type.eventType())) {
             typeEvent = "Amplification";
-            ActionableGene actionableAmplification = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
-            ActionableGene knownAmplification = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
+            KnownAmplificationDeletion knownAmplification = CnvExtractor.determineKnownAmplificationDeletion();
+            ActionableAmplificationDeletion actionableAmplification = CnvExtractor.determineActionableAmplificationDeletion();
+
         } else if (DELETION.contains(type.eventType())) {
             typeEvent = "Deletion";
-            ActionableGene actionableDeletion = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
-            ActionableGene knownDeletions = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
+            KnownAmplificationDeletion knownDeletion = CnvExtractor.determineKnownAmplificationDeletion();;
+            ActionableAmplificationDeletion actionableDeletion = CnvExtractor.determineActionableAmplificationDeletion();;
         } else if (VARIANTS.contains(type.eventType())) {
             // TODO: Determine hotspots
-            hotspotExtractor.extractHotspots(viccEntry);
+            //hotspotExtractor.extractHotspots(viccEntry);
         } else if (FUSIONS.contains(type.eventType())) {
             // TODO: Determine fusions
         } else {

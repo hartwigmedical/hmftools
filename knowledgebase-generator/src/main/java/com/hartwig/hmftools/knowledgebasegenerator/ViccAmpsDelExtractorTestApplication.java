@@ -36,7 +36,7 @@ public class ViccAmpsDelExtractorTestApplication {
             for (EventType type: eventType) {
                 // Generating actionable event and known events
 
-                ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
+               // ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
             }
         }
     }
