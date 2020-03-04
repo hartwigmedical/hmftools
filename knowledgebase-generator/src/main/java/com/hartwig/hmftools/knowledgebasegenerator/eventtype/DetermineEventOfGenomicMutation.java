@@ -11,7 +11,6 @@ import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
-import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
