@@ -27,6 +27,8 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> VARIANTS =
             Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet();
+    private static final Set<String> RANGE = Sets.newHashSet();
+    private static final Set<String> SIGNATURE = Sets.newHashSet();
 
     public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor)
             throws IOException, InterruptedException {
@@ -47,8 +49,12 @@ public class DetermineEventOfGenomicMutation {
         } else if (VARIANTS.contains(type.eventType())) {
             // TODO: Determine hotspots
             //hotspotExtractor.extractHotspots(viccEntry);
+        } else if (RANGE.contains(type.eventType())) {
+            // TODO: Determine range
         } else if (FUSIONS.contains(type.eventType())) {
             // TODO: Determine fusions
+        } else if (SIGNATURE.contains(type.eventType())) {
+            // TODO: Determine signature
         } else {
             LOGGER.info("skipping");
         }
