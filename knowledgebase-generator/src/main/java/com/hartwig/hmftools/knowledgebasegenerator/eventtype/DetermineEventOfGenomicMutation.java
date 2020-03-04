@@ -2,10 +2,11 @@ package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
@@ -23,6 +24,9 @@ public class DetermineEventOfGenomicMutation {
     private static final List<String> AMPLIFICATION =
             Lists.newArrayList("Amplification", "Overexpression", "amp", "OVEREXPRESSION", "Transcript Amplification");
     private static final List<String> DELETION = Lists.newArrayList("Copy Number Loss", "Deletion", "del", "DELETION", "UNDEREXPRESSION");
+    private static final Set<String> VARIANTS =
+            Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
+    private static final Set<String> FUSIONS = Sets.newHashSet();
 
     public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor)
             throws IOException, InterruptedException {
@@ -42,12 +46,13 @@ public class DetermineEventOfGenomicMutation {
             typeEvent = "Deletion";
             ActionableGene actionableAmpsDels = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
             ActionableGene knownAmpsDels = CnvExtractor.determineInfoOfEvent(source, typeEvent, kbSpecificObject, gene, viccEntry);
-
+        } else if (VARIANTS.contains(type.eventType())) {
+            // TODO: Determine hotspots
+            hotspotExtractor.extractHotspots(viccEntry);
+        } else if (FUSIONS.contains(type.eventType())) {
+            // TODO: Determine fusions
         } else {
             LOGGER.info("skipping");
-
         }
-
     }
-
 }
