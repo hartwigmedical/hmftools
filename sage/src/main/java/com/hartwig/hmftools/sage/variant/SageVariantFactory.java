@@ -40,17 +40,19 @@ public class SageVariantFactory {
         final SageVariantTier tier = tierSelector.tier(normal);
         final Set<String> filters = germlineOnlyFilters(normal);
 
-        return new SageVariant(tier, filters, normal, Optional.empty(), Collections.emptyList());
+        return new SageVariant(tier, filters, Collections.singletonList(normal),  Collections.emptyList());
     }
 
     @NotNull
-    public SageVariant create(@NotNull final AltContext normal, @NotNull final Optional<AltContext> rna, @NotNull final List<AltContext> tumorAltContexts) {
+    public SageVariant create(@NotNull final List<AltContext> normal, @NotNull final List<AltContext> tumorAltContexts) {
 
-        final SageVariantTier tier = tierSelector.tier(normal);
+        final AltContext primaryNormal = normal.get(0);
+
+        final SageVariantTier tier = tierSelector.tier(primaryNormal);
         final SoftFilterConfig softConfig = config.softConfig(tier);
-        final Set<String> filters = pairedFilters(tier, softConfig, normal, tumorAltContexts.get(0));
+        final Set<String> filters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContexts.get(0));
 
-        return new SageVariant(tier, filters, normal, rna, tumorAltContexts);
+        return new SageVariant(tier, filters, normal, tumorAltContexts);
     }
 
     @NotNull

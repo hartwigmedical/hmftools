@@ -17,18 +17,15 @@ public class SageVariant implements GenomePosition {
     private final SageVariantTier tier;
     private final List<AltContext> normalAltContexts;
     private final List<AltContext> tumorAltContexts;
-    private final Optional<AltContext> rna;
 
     private int localPhaseSet;
 
-    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal,
-            final Optional<AltContext> rna, final List<AltContext> tumorAltContexts) {
+    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final List<AltContext> normal, final List<AltContext> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
         this.tier = tier;
-        this.normalAltContexts = Lists.newArrayList(normal);
+        this.normalAltContexts = normal;
         this.tumorAltContexts = tumorAltContexts;
         this.filters = filters;
-        this.rna = rna;
     }
 
     @NotNull
@@ -108,10 +105,5 @@ public class SageVariant implements GenomePosition {
     @Override
     public long position() {
         return primaryNormal().position();
-    }
-
-    @NotNull
-    public Optional<AltContext> rna() {
-        return rna;
     }
 }

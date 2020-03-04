@@ -54,8 +54,7 @@ public class SomaticPipeline implements SageVariantPipeline {
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
 
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
-        final SomaticPipelineData somaticPipelineData =
-                new SomaticPipelineData(config.reference().get(0), config.tumor().size(), variantFactory);
+        final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config, variantFactory);
         List<String> samples = config.tumor();
         List<String> bams = config.tumorBam();
 
@@ -102,16 +101,14 @@ public class SomaticPipeline implements SageVariantPipeline {
             return CompletableFuture.allOf(normalFutures.toArray(new CompletableFuture[normalFutures.size()]));
         });
 
-
-        return doneNormal.thenApply(aVoid -> {
-
-            somaticPipelineData.addNormal(normalFutures.get(0).join());
-            if (normalFutures.size() > 1) {
-                somaticPipelineData.addRNA(normalFutures.get(1).join());
+        final CompletableFuture<Void> doneMergedNormal = doneNormal.thenCompose(aVoid -> {
+            for (int i = 0; i < normalFutures.size(); i++) {
+                CompletableFuture<List<RefContext>> future = normalFutures.get(i);
+                somaticPipelineData.addNormal(i, future.join());
             }
-
-            return somaticPipelineData.results();
+            return CompletableFuture.completedFuture(null);
         });
-    }
 
+        return doneMergedNormal.thenApply(aVoid -> somaticPipelineData.results());
+    }
 }

@@ -51,15 +51,18 @@ public class SageVariantContextFactory {
 
     @NotNull
     public static VariantContext pairedTumorNormal(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.primaryNormal();
         final List<AltContext> tumorContexts = entry.tumorAltContexts();
 
         assert (tumorContexts.size() >= 1);
 
         final AltContext firstTumor = tumorContexts.get(0);
 
-        final List<Genotype> genotypes = Lists.newArrayList(createGenotype(true, normal));
-        entry.rna().map(x -> createGenotype(false, x)).ifPresent(genotypes::add);
+        final List<Genotype> genotypes = Lists.newArrayList();
+        for (int i = 0; i < entry.normalAltContexts().size(); i++) {
+            AltContext normalContext = entry.normalAltContexts().get(i);
+            genotypes.add(createGenotype(i == 0, normalContext));
+        }
+
         tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
 
         final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
