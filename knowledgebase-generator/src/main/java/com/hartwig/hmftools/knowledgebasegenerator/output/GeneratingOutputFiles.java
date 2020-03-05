@@ -17,35 +17,33 @@ public class GeneratingOutputFiles {
     private static final String KNOWN_DELETION_TSV = "knownDeletion.tsv";
     private static final String ACTIONABLE_CNV_TSV = "actionableCNV.tsv";
 
-
-    public static void generatingOutputFiles(@NotNull String outputDir)  throws IOException{
-        generateKnownAmplification(outputDir + File.separator + KNOWN_AMPLIFICATION_TSV);
-        generateKnownDeletions(outputDir + File.separator + KNOWN_DELETION_TSV);
-        generateActionableCNV(outputDir + File.separator + ACTIONABLE_CNV_TSV);
-    }
-
-    private static void generateKnownAmplification(@NotNull String outputFile) throws IOException {
+    @NotNull
+    public static BufferedWriter generateKnownAmplification(@NotNull String outputDir) throws IOException {
+        String outputFile = outputDir + File.separator + KNOWN_AMPLIFICATION_TSV;
         String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
-        writer.close();
+        return writer;
     }
 
-    private static void generateKnownDeletions(@NotNull String outputFile) throws IOException {
+    @NotNull
+    public static BufferedWriter generateKnownDeletions(@NotNull String outputDir) throws IOException {
+        String outputFile = outputDir + File.separator + KNOWN_DELETION_TSV;
         String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
-        writer.close();
+        return writer;
     }
 
-    private static void generateActionableCNV(@NotNull String outputFile) throws IOException{
+    @NotNull
+    public static BufferedWriter generateActionableCNV(@NotNull String outputDir) throws IOException{
+        String outputFile = outputDir + File.separator + ACTIONABLE_CNV_TSV;
         String headerActionableCNV =
                 "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + DELIMITER + "Drug" + DELIMITER + "Drug Type"
                         + DELIMITER + "Cancer Type" + DELIMITER + "Level" + DELIMITER + "Direction" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerActionableCNV);
-        writer.close();
-
+        return writer;
     }
 }

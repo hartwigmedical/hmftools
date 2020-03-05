@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebasegenerator;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,24 +71,34 @@ public class KnowledgebaseGeneratorApplication {
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
+        // Create all output files from knowledgebase
+        LOGGER.info("Generating output files");
+        BufferedWriter writerKnownAmplification = GeneratingOutputFiles.generateKnownAmplification(cmd.getOptionValue(OUTPUT_DIR));
+        BufferedWriter writerKnownDeletions = GeneratingOutputFiles.generateKnownDeletions(cmd.getOptionValue(OUTPUT_DIR));
+        BufferedWriter writerActionableCNV = GeneratingOutputFiles.generateActionableCNV(cmd.getOptionValue(OUTPUT_DIR));
+
         LOGGER.info("Analyzing all VICC entries");
         int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
             if (viccEntry.source().equals("molecularmatch_trials")) {
-                num+=1;
+                num += 1;
             }
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
-          //  LOGGER.info("eventType: " + eventType);
+            //  LOGGER.info("eventType: " + eventType);
 
-            for (EventType type: eventType) {
+            for (EventType type : eventType) {
                 // Generating actionable event and known events
 
-                DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry, type, hotspotExtractor);
+                DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry,
+                        type,
+                        hotspotExtractor,
+                        writerKnownAmplification,
+                        writerKnownDeletions,
+                        writerActionableCNV);
             }
         }
-        // Create all output files from knowledgebase
-        LOGGER.info("Generating output files");
-        GeneratingOutputFiles.generatingOutputFiles(cmd.getOptionValue(OUTPUT_DIR));
+        writerKnownAmplification.close();
+        writerKnownDeletions.close();
     }
 
     private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {
