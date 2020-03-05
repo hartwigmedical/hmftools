@@ -18,7 +18,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class DetermineEventOfGenomicMutation {
@@ -27,29 +26,32 @@ public class DetermineEventOfGenomicMutation {
     private static final List<String> AMPLIFICATION =
             Lists.newArrayList("Amplification", "Overexpression", "amp", "OVEREXPRESSION", "Transcript Amplification");
     private static final List<String> DELETION = Lists.newArrayList("Copy Number Loss", "Deletion", "del", "DELETION", "UNDEREXPRESSION");
-    private static final Set<String> VARIANTS =
-            Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
+    private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet();
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE = Sets.newHashSet();
 
-    public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor, @NotNull
-            BufferedWriter writerKnownAmplification, @NotNull BufferedWriter writerKnownDeletions, @NotNull BufferedWriter writerActionableCNV)
-            throws IOException, InterruptedException {
+    public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor,
+            @NotNull BufferedWriter writerKnownAmplification, @NotNull BufferedWriter writerKnownDeletions,
+            @NotNull BufferedWriter writerActionableCNV) throws IOException, InterruptedException {
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (AMPLIFICATION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            KnownAmplificationDeletion knownAmplification = CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            KnownAmplificationDeletion knownAmplification =
+                    CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
             WriteDataToOutputFile.writeKnownAmplifications(knownAmplification, writerKnownAmplification);
-            ActionableAmplificationDeletion actionableAmplification = CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            ActionableAmplificationDeletion actionableAmplification =
+                    CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
             LOGGER.info("amplification: " + knownAmplification);
         } else if (DELETION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            KnownAmplificationDeletion knownDeletion = CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            KnownAmplificationDeletion knownDeletion =
+                    CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
             WriteDataToOutputFile.writeKnownDeletion(knownDeletion, writerKnownDeletions);
-            ActionableAmplificationDeletion actionableDeletion = CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            ActionableAmplificationDeletion actionableDeletion =
+                    CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
             LOGGER.info("deletion: " + knownDeletion);
         } else if (VARIANTS.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
