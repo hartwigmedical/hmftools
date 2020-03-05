@@ -34,8 +34,12 @@ public class GeneratingOutputFiles {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         for (AllGenomicEvents events : genomicEvents) {
-            writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
-                    + events.knownAmplifications().source() + NEW_LINE);
+            if (!events.knownAmplifications().gene().isEmpty() && !events.knownAmplifications().eventType().isEmpty()
+                    && !events.knownAmplifications().source().isEmpty()) {
+                writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER + events
+                        .knownAmplifications()
+                        .source() + NEW_LINE);
+            }
         }
         writer.close();
     }
@@ -46,8 +50,11 @@ public class GeneratingOutputFiles {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         for (AllGenomicEvents events : genomicEvents) {
-            writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
-                    + events.knownDeletions().source() + NEW_LINE);
+            if (!events.knownDeletions().gene().isEmpty() && !events.knownDeletions().eventType().isEmpty()
+                    && !events.knownDeletions().source().isEmpty()) {
+                writer.write(events.knownDeletions().gene() + DELIMITER + events.knownDeletions().eventType() + DELIMITER
+                        + events.knownDeletions().source() + NEW_LINE);
+            }
         }
         writer.close();
     }
