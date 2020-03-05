@@ -1,23 +1,25 @@
 package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.knowledgebasegenerator.AllGenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.GenomicEvents;
+import com.hartwig.hmftools.knowledgebasegenerator.ImmutableAllGenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableKnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
-import com.hartwig.hmftools.knowledgebasegenerator.output.WriteDataToOutputFile;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class DetermineEventOfGenomicMutation {
@@ -31,9 +33,9 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE = Sets.newHashSet();
 
-    public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor,
-            @NotNull BufferedWriter writerKnownAmplification, @NotNull BufferedWriter writerKnownDeletions,
-            @NotNull BufferedWriter writerActionableCNV) throws IOException, InterruptedException {
+    @NotNull
+    public static AllGenomicEvents checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+            @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
@@ -41,14 +43,12 @@ public class DetermineEventOfGenomicMutation {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
             KnownAmplificationDeletion knownAmplification =
                     CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
-            WriteDataToOutputFile.writeKnownAmplifications(knownAmplification, writerKnownAmplification);
             ActionableAmplificationDeletion actionableAmplification =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
         } else if (DELETION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
             KnownAmplificationDeletion knownDeletion =
                     CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
-            WriteDataToOutputFile.writeKnownDeletion(knownDeletion, writerKnownDeletions);
             ActionableAmplificationDeletion actionableDeletion =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
         } else if (VARIANTS.contains(type.eventType())) {
@@ -67,5 +67,17 @@ public class DetermineEventOfGenomicMutation {
         } else {
             LOGGER.info("skipping");
         }
+        return ImmutableAllGenomicEvents.builder()
+                .knownAmplifications(ImmutableKnownAmplificationDeletion.builder()
+                        .gene(Strings.EMPTY)
+                        .eventType(Strings.EMPTY)
+                        .source(Strings.EMPTY)
+                        .build())
+                .knownDeletions(ImmutableKnownAmplificationDeletion.builder()
+                        .gene(Strings.EMPTY)
+                        .eventType(Strings.EMPTY)
+                        .source(Strings.EMPTY)
+                        .build())
+                .build();
     }
 }

@@ -4,6 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+
+import com.hartwig.hmftools.knowledgebasegenerator.AllGenomicEvents;
+import com.hartwig.hmftools.knowledgebasegenerator.GenomicEvents;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,33 +21,45 @@ public class GeneratingOutputFiles {
     private static final String KNOWN_DELETION_TSV = "knownDeletion.tsv";
     private static final String ACTIONABLE_CNV_TSV = "actionableCNV.tsv";
 
-    @NotNull
-    public static BufferedWriter generateKnownAmplification(@NotNull String outputDir) throws IOException {
-        String outputFile = outputDir + File.separator + KNOWN_AMPLIFICATION_TSV;
+    public static void generatingOutputFiles(@NotNull String outputDir, @NotNull List<AllGenomicEvents> genomicEvents) throws IOException {
+        generateKnownAmplification(outputDir + File.separator + KNOWN_AMPLIFICATION_TSV, genomicEvents);
+        generateKnownDeletions(outputDir + File.separator + KNOWN_DELETION_TSV, genomicEvents);
+        generateActionableCNV(outputDir + File.separator + ACTIONABLE_CNV_TSV, genomicEvents);
+    }
+
+    private static void generateKnownAmplification(@NotNull String outputFile, @NotNull List<AllGenomicEvents> genomicEvents)
+            throws IOException {
         String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
-        return writer;
+        for (AllGenomicEvents events : genomicEvents) {
+            writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
+                    + events.knownAmplifications().source() + NEW_LINE);
+        }
+        writer.close();
     }
 
-    @NotNull
-    public static BufferedWriter generateKnownDeletions(@NotNull String outputDir) throws IOException {
-        String outputFile = outputDir + File.separator + KNOWN_DELETION_TSV;
+    private static void generateKnownDeletions(@NotNull String outputFile, @NotNull List<AllGenomicEvents> genomicEvents)
+            throws IOException {
         String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
-        return writer;
+        for (AllGenomicEvents events : genomicEvents) {
+            writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
+                    + events.knownAmplifications().source() + NEW_LINE);
+        }
+        writer.close();
     }
 
-    @NotNull
-    public static BufferedWriter generateActionableCNV(@NotNull String outputDir) throws IOException{
-        String outputFile = outputDir + File.separator + ACTIONABLE_CNV_TSV;
+    private static void generateActionableCNV(@NotNull String outputFile, @NotNull List<AllGenomicEvents> genomicEvents)
+            throws IOException {
         String headerActionableCNV =
                 "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + DELIMITER + "Drug" + DELIMITER + "Drug Type"
                         + DELIMITER + "Cancer Type" + DELIMITER + "Level" + DELIMITER + "Direction" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerActionableCNV);
-        return writer;
+        writer.close();
+
     }
 }
