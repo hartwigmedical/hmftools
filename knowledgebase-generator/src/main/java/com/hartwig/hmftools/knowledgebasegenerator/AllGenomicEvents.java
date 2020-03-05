@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator;
 
+import java.util.List;
+
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 
 import org.immutables.value.Value;
@@ -12,8 +14,8 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AllGenomicEvents {
 
     @NotNull
-    public abstract KnownAmplificationDeletion knownAmplifications();
+    public abstract List<KnownAmplificationDeletion> knownAmplifications();
 
     @NotNull
-    public abstract KnownAmplificationDeletion knownDeletions();
+    public abstract List<KnownAmplificationDeletion> knownDeletions();
 }

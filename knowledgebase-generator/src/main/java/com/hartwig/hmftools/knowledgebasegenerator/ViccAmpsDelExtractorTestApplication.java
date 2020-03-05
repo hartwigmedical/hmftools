@@ -30,14 +30,14 @@ public class ViccAmpsDelExtractorTestApplication {
                 num+=1;
             }
 
-            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
+            //List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
             //  LOGGER.info("eventType: " + eventType);
 
-            for (EventType type: eventType) {
+           // for (EventType type: eventType) {
                 // Generating actionable event and known events
 
                // ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
-            }
+            //}
         }
     }
 }
