@@ -130,7 +130,7 @@ public class ChromosomeGeneTask implements Callable
 
                 if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
                 {
-                    RE_LOGGER.info("chr({}) processed {} genes", mChromosome, mGenesProcessed);
+                    RE_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
                 }
             }
         }

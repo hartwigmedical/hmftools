@@ -133,7 +133,10 @@ public class PerformanceCounter
 
     public void logStats()
     {
-        logStats(false);
+        if(LOGGER.isDebugEnabled())
+        {
+            logStats(false);
+        }
     }
 
     public void logStats(boolean logIntervals)

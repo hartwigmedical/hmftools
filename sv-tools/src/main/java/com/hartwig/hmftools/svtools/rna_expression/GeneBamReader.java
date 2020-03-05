@@ -180,24 +180,6 @@ public class GeneBamReader
         boolean exonOverlap = mCurrentGene.getExonRegions().stream()
                 .anyMatch(x -> positionsOverlap(read.PosStart, read.PosEnd, x.start(), x.end()));
 
-        /*
-        if(!exonOverlap)
-        {
-            boolean outsideGene = !positionsOverlap(read.PosStart, read.PosEnd, mCurrentGene.GeneData.GeneStart, mCurrentGene.GeneData.GeneEnd);
-
-            if(outsideGene)
-            {
-                checkFragmentRead(read);
-            }
-            else
-            {
-                checkIntronicRegions(read);
-            }
-
-            return;
-        }
-        */
-
         if(exonOverlap)
         {
             List<RegionReadData> overlappingRegions = mCurrentGene.findOverlappingRegions(read);
