@@ -18,7 +18,7 @@ public class EventTypeAnalyzer {
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
 
     @NotNull
-    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry, int num) {
+    public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry) {
         String event = Strings.EMPTY;
         List<EventType> eventType = Lists.newArrayList();
         String gene = Strings.EMPTY;
@@ -140,11 +140,9 @@ public class EventTypeAnalyzer {
                 case SAGE: // extract info for sage
                     break;
                 default:
-                    LOGGER.warn(num + ": Unknown knowledgebase");
+                    LOGGER.warn("Unknown knowledgebase!");
             }
-            if (event == null) {
-                event = Strings.EMPTY;
-            }
+
             eventType.add(ImmutableEventType.builder().gene(gene).genomicMutation(genomicMutation).eventType(event).build());
         }
         return eventType;
