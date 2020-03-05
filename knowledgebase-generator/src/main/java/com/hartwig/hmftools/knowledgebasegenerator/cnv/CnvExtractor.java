@@ -27,41 +27,12 @@ public class CnvExtractor {
 
     @NotNull
     public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene){
-        return knownInformation(source, typeEvent, gene);
+        return ImmutableKnownAmplificationDeletion.builder().gene(gene).eventType(typeEvent).source(source.toString()).build();
     }
 
     @NotNull
     public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene){
         return actionableInformation(source, typeEvent, gene);
-    }
-
-    @NotNull
-    private static KnownAmplificationDeletion knownInformation(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
-        switch (source) {
-            case ONCOKB:
-                break;
-            case CGI:
-                break;
-            case CIVIC:
-                break;
-            case JAX:
-                break;
-            case JAX_TRIALS:
-                break;
-            case BRCA:
-                break;
-            case SAGE:
-                break;
-            case PMKB:
-                break;
-            case MOLECULARMATCH:
-                break;
-            case MOLECULARMATCH_TRIALS:
-                break;
-            default:
-                LOGGER.warn("Unknown knowledgebase");
-        }
-        return ImmutableKnownAmplificationDeletion.builder().gene(gene).eventType(typeEvent).source(source.toString()).build();
     }
 
     @NotNull
