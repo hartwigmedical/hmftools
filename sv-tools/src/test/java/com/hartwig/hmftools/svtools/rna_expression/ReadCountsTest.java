@@ -476,6 +476,49 @@ public class ReadCountsTest
     }
 
     @Test
+    public void testFragmentTracking()
+    {
+        FragmentTracker fragTracker = new FragmentTracker();
+
+        String readId1 = "read1";
+        String readId2 = "read2";
+        String readId3 = "read3";
+
+        assertFalse(fragTracker.checkReadId(readId1));
+        assertFalse(fragTracker.checkReadId(readId2));
+        assertFalse(fragTracker.checkReadId(readId3));
+
+        assertEquals(3, fragTracker.readsCount());
+
+        assertTrue(fragTracker.checkReadId(readId1));
+        assertEquals(2, fragTracker.readsCount());
+        assertTrue(fragTracker.checkReadId(readId2));
+        assertEquals(1, fragTracker.readsCount());
+        assertTrue(fragTracker.checkReadId(readId3));
+        assertEquals(0, fragTracker.readsCount());
+
+        ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        ReadRecord read2 = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        ReadRecord read3 = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+
+        assertEquals(null, fragTracker.checkRead(read1));
+        assertEquals(null, fragTracker.checkRead(read2));
+        assertEquals(null, fragTracker.checkRead(read3));
+
+        assertEquals(3, fragTracker.readsCount());
+
+        ReadRecord read1b = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        ReadRecord read2b = createReadRecord(2, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+        ReadRecord read3b = createReadRecord(3, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
+
+        assertEquals(read1, fragTracker.checkRead(read1b));
+        assertEquals(read2, fragTracker.checkRead(read2b));
+        assertEquals(read3, fragTracker.checkRead(read3b));
+
+        assertEquals(0, fragTracker.readsCount());
+    }
+
+    @Test
     public void testBaseAssignment()
     {
         RegionReadData region = createRegion(1, 1, "1", 100, 119);

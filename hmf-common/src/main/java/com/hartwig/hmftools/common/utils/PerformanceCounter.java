@@ -103,8 +103,10 @@ public class PerformanceCounter
         return mTimes.size();
     }
 
-    public final List<Double> getSamples() {
+    public final List<Double> getTimes() {
         return mTimes;
+    }
+    public final List<String> getTimeNames() { return mTimeNames;
     }
 
     // time values are in seconds
@@ -169,7 +171,7 @@ public class PerformanceCounter
 
     public void merge(final PerformanceCounter other)
     {
-        mTimes.addAll(other.getSamples());
+        mTimes.addAll(other.getTimes());
         mTotalTime += other.getTotalTime();
         mMaxTime = max(mMaxTime, other.getMaxTime());
     }

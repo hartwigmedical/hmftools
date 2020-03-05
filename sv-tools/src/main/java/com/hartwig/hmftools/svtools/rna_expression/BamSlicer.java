@@ -43,10 +43,20 @@ public class BamSlicer
         }
     }
 
-    public List<SAMRecord> slice(@NotNull final SamReader samReader, final List<GenomeRegion> regions)
+    public void slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals, @NotNull final Consumer<SAMRecord> consumer)
     {
-        final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
-        return slice(samReader, queryIntervals);
+        try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
+        {
+            while (iterator.hasNext())
+            {
+                final SAMRecord record = iterator.next();
+
+                if (passesFilters(record))
+                {
+                    consumer.accept(record);
+                }
+            }
+        }
     }
 
     public List<SAMRecord> slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals)

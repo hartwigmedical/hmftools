@@ -134,6 +134,8 @@ public class ChromosomeGeneTask implements Callable
                 }
             }
         }
+
+        mBamReader.logStats();
     }
 
     public void calcFragmentLengths()

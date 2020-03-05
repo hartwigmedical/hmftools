@@ -54,7 +54,7 @@ public class GeneBamReader
 
     // state relating to the current gene
     private GeneReadData mCurrentGene;
-    private final Map<String,ReadRecord> mFragmentReads; // delay processing of read until both have been read
+    private final FragmentTracker mFragmentReads; // delay processing of read until both have been read
 
     private int mGeneReadCount;
     private int mTotalBamReadCount;
@@ -76,7 +76,7 @@ public class GeneBamReader
         mConfig = config;
 
         mCurrentGene = null;
-        mFragmentReads = Maps.newHashMap();
+        mFragmentReads = new FragmentTracker();
         mTransComboData = Lists.newArrayList();
 
         mGeneReadCount = 0;
@@ -123,7 +123,7 @@ public class GeneBamReader
             mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
 
-        mAltSpliceJunctionFinder.recordDepthCounts();
+        mAltSpliceJunctionFinder.recordDepthCounts(mGeneReadCount);
         mAltSpliceJunctionFinder.writeAltSpliceJunctions();
     }
 
@@ -221,16 +221,14 @@ public class GeneBamReader
                 return false;
         }
 
-        ReadRecord otherRead = mFragmentReads.get(read.Id);
+        ReadRecord otherRead = mFragmentReads.checkRead(read);
 
         if(otherRead != null)
         {
-            mFragmentReads.remove(read.Id);
             processFragmentReads(read, otherRead);
             return true;
         }
 
-        mFragmentReads.put(read.Id, read);
         return false;
     }
 
@@ -527,64 +525,6 @@ public class GeneBamReader
         mCurrentGene.addCount(UNSPLICED, 1);
     }
 
-    /*
-    private void checkIntronicRegions(final ReadRecord read)
-    {
-        if(read.Cigar == null)
-            return;
-
-        if(!read.Cigar.containsOperator(CigarOperator.M) || read.isLocalInversion())
-            return;
-
-        if(read.Cigar.containsOperator(CigarOperator.N))
-        {
-            if(!mCurrentGene.overlapsOtherGeneExon(read.PosStart, read.PosEnd))
-            {
-                mAltSpliceJunctionFinder.evaluateIntronicRead(read);
-            }
-
-            return;
-        }
-
-        // process the fragment if both reads are now available, and implies one of the reads covers an exon
-        if(mFragmentReads.containsKey(read.Id))
-        {
-            checkFragmentRead(read);
-            return;
-        }
-
-        // cache this read if it's pair is expected to reach an exon with its pair
-        // (for testing assume that the first read encountered is the lower of the 2)
-        long otherReadStartPos = read.samRecord() != null ? read.samRecord().getMateAlignmentStart() : read.PosEnd + read.fragmentInsertSize();
-        long otherReadEndPos = otherReadStartPos + read.Length; // assume similar length
-
-        // measure distance to nearest exon region and cache if within range of being a fragment read pair
-        boolean otherReadExonic = mCurrentGene.getExonRegions().stream()
-                .anyMatch(x -> (otherReadStartPos >= x.start() && otherReadStartPos <= x.end())
-                        || (otherReadEndPos >= x.start() && otherReadEndPos <= x.end()));
-
-        if(otherReadExonic)
-        {
-            // cache the read until the exonic-read is processed
-            checkFragmentRead(read);
-            return;
-        }
-
-        // only count this read as intronic if it doesn't overlap with other genes' exons
-        long fragMinPos = min(otherReadStartPos, read.PosStart);
-        long fragMaxPos = max(otherReadEndPos, read.PosEnd);
-
-        if(mCurrentGene.overlapsOtherGeneExon(fragMinPos, fragMaxPos))
-            return;
-
-        if(read.PosStart < otherReadStartPos)
-        {
-            mCurrentGene.addCount(UNSPLICED, 1);
-            mCurrentGene.addCount(TOTAL, 1);
-        }
-    }
-    */
-
     private static final int DUP_DATA_SECOND_START = 0;
     private static final int DUP_DATA_READ_LEN = 1;
     private static final int DUP_DATA_INSERT_SIZE = 2;
@@ -705,6 +645,11 @@ public class GeneBamReader
         {
             LOGGER.error("failed to write read data file: {}", e.toString());
         }
+    }
+
+    public void logStats()
+    {
+        mAltSpliceJunctionFinder.logStats();
     }
 
     @VisibleForTesting

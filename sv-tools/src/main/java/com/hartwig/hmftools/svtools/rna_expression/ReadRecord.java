@@ -79,8 +79,7 @@ public class ReadRecord
         Length = ReadBases.length();
         Cigar = cigar;
 
-        mMappedCoords = Lists.newArrayList();
-        generateMappedCoords();
+        mMappedCoords = generateMappedCoords(Cigar, PosStart);
 
         mMappedRegions = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
@@ -113,13 +112,15 @@ public class ReadRecord
         return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
     }
 
-    private void generateMappedCoords()
+    public static final List<long[]> generateMappedCoords(final Cigar cigar, long posStart)
     {
+        final List<long[]> mappedCoords = Lists.newArrayList();
+
         // first establish whether the read is split across 2 distant regions, and if so which it maps to
         int posOffset = 0;
         boolean continueRegion = false;
 
-        for(CigarElement element : Cigar.getCigarElements())
+        for(CigarElement element : cigar.getCigarElements())
         {
             if(element.getOperator() == CigarOperator.S)
             {
@@ -137,23 +138,25 @@ public class ReadRecord
             }
             else if(element.getOperator() == CigarOperator.M)
             {
-                long readStartPos = PosStart + posOffset;
+                long readStartPos = posStart + posOffset;
                 long readEndPos = readStartPos + element.getLength() - 1;
 
-                if(continueRegion && !mMappedCoords.isEmpty())
+                if(continueRegion && !mappedCoords.isEmpty())
                 {
-                    long[] lastRegion = mMappedCoords.get(mMappedCoords.size() - 1);
+                    long[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
                     lastRegion[SE_END] = readEndPos;
                 }
                 else
                 {
-                    mMappedCoords.add(new long[] { readStartPos, readEndPos });
+                    mappedCoords.add(new long[] { readStartPos, readEndPos });
                 }
 
                 posOffset += element.getLength();
                 continueRegion = false;
             }
         }
+
+        return mappedCoords;
     }
 
     public void processOverlappingRegions(final List<RegionReadData> regions)

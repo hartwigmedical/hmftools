@@ -361,7 +361,7 @@ public class RnaExpConfig
             if(fileContents.isEmpty())
                 return;
 
-            if (fileContents.get(COL_GENE_ID).contains("GeneId"))
+            if (fileContents.get(0).contains("GeneId"))
             {
                 // check for header row
                 fileContents.remove(0);

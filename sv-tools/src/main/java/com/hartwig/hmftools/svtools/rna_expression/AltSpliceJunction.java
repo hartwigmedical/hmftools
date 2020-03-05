@@ -84,7 +84,8 @@ public class AltSpliceJunction
     public void addFragmentCount() { ++mFragmentCount;}
 
     public int getPositionCount(int seIndex) { return mPositionCounts[seIndex]; }
-    public void setFragmentCount(int seIndex, int count) { mPositionCounts[seIndex] = count; }
+    public void setPositionCount(int seIndex, int count) { mPositionCounts[seIndex] = count; }
+    public void addPositionCount(int seIndex) { ++mPositionCounts[seIndex]; }
 
     public String startTranscriptNames() { return generateTranscriptNames(StartRegions); }
     public String endTranscriptNames() { return generateTranscriptNames(EndRegions); }

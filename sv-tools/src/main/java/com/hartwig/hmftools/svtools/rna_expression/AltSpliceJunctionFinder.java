@@ -18,10 +18,11 @@ import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.UNKNOWN;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.generateMappedCoords;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionWithin;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
@@ -33,7 +34,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
@@ -67,6 +71,7 @@ public class AltSpliceJunctionFinder
     {
         mGene = gene;
         mAltSpliceJunctions.clear();
+        mFragmentTracker.clear();
     }
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
@@ -351,90 +356,176 @@ public class AltSpliceJunctionFinder
         return altSpliceJunc;
     }
 
-    public void recordDepthCounts()
+    private PerformanceCounter mReadDepthPerf = new PerformanceCounter("AltSJ ReadDepth");
+    // private PerformanceCounter mMethod2 = new PerformanceCounter("Method2");
+    private FragmentTracker mFragmentTracker = new FragmentTracker();
+    private int mTotalReadsProcessed = 0;
+
+    public void recordDepthCounts(int totalReadCount)
     {
+        if(mAltSpliceJunctions.isEmpty())
+            return;
+
         BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
 
         QueryInterval[] queryInterval = new QueryInterval[1];
         int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mGene.GeneData.Chromosome);
 
-        if(mAltSpliceJunctions.size() >= 100)
+        // boolean assessAllReads = mAltSpliceJunctions.size() >= 50 || totalReadCount > 100000;
+
+        boolean assessAllReads = true;
+
+        if(assessAllReads)
         {
-            // take all reads for the gene together and then test each against each SJ
+            mFragmentTracker.clear();
+            mTotalReadsProcessed = 0;
+
+            if(RE_LOGGER.isDebugEnabled() && (mAltSpliceJunctions.size() >= 50 || totalReadCount > 100000))
+            {
+                long totalSJRange =
+                        mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_END] - x.SpliceJunction[SE_START]).sum();
+                double avgSJLength = totalSJRange / (double) mAltSpliceJunctions.size();
+                long geneLength = mGene.GeneData.GeneEnd - mGene.GeneData.GeneStart;
+                double expReadsPerSJ = avgSJLength / (double) geneLength * totalReadCount;
+
+                RE_LOGGER.debug(String.format("gene(%s) length(%d) totalReads(%d) altSJs(count=%d totalLen=%d avgLen=%.0f) expReads(%.0f)",
+                        mGene.name(), geneLength, totalReadCount, mAltSpliceJunctions.size(), totalSJRange, avgSJLength, expReadsPerSJ));
+            }
+
+            // String geneDetails = String.format("%s,%d,%d", mGene.name(), totalReadCount, mAltSpliceJunctions.size());
+            // mMethod1.start(geneDetails);
+            mReadDepthPerf.start();
+
+            // for genes of super high depth, take all reads for the gene together and then test each against each SJ
             long altSJMinPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_START]).min().orElse(mGene.GeneData.GeneStart);
-            long altSJMaxPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_START]).max().orElse(mGene.GeneData.GeneEnd);
+            long altSJMaxPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_END]).max().orElse(mGene.GeneData.GeneEnd);
 
             queryInterval[0] = new QueryInterval(chrSeqIndex, (int)altSJMinPos, (int)altSJMaxPos);
 
-            final List<SAMRecord> reads = slicer.slice(mSamReader, queryInterval);
-            final List<String> processed = Lists.newArrayList();
+            slicer.slice(mSamReader, queryInterval, this::setPositionDepthFromRead);
 
-            for(SAMRecord record : reads)
-            {
-                if(processed.contains(record.getReadName()))
-                {
-                    processed.remove(record.getReadName());
-                    continue;
-                }
+            mReadDepthPerf.stop();
 
-                processed.add(record.getReadName());
+            RE_LOGGER.debug("gene({}) method1: total altSJs({}) readsProcessed({}) fragReads({})",
+                    mGene.name(), mAltSpliceJunctions.size(), mTotalReadsProcessed, mFragmentTracker.readsCount());
 
-                ReadRecord read = ReadRecord.from(record);
-
-                for(AltSpliceJunction altSJ : mAltSpliceJunctions)
-                {
-                    for (int se = SE_START; se <= SE_END; ++se)
-                    {
-                        int position = (int) altSJ.SpliceJunction[se];
-
-                        if (read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
-                        {
-                            altSJ.setFragmentCount(se, 1);
-                        }
-                    }
-                }
-            }
-
-            return;
+            // return;
         }
 
-        int totalReadsProcessed = 0;
+        /*
+        mTotalReadsProcessed = 0;
+
+        mMethod2.start(geneDetails);
+
+        int altSjIndex = 0;
 
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
-            for(int se = SE_START; se <= SE_END; ++se)
+            mFragmentTracker.clear();
+            ++altSjIndex;
+
+            int[] depthCounts = {0, 0};
+            queryInterval[0] = new QueryInterval(chrSeqIndex, (int)altSJ.SpliceJunction[SE_START], (int)altSJ.SpliceJunction[SE_END]);
+
+            final List<SAMRecord> reads = slicer.slice(mSamReader, queryInterval);
+            boolean dedupReads = reads.size() < 10000;
+
+            if(reads.size() > 10000)
             {
-                int position = (int)altSJ.SpliceJunction[se];
-                queryInterval[0] = new QueryInterval(chrSeqIndex, position, position);
+                RE_LOGGER.debug("gene({}) alSJ({}) reads({})", mGene.name(), altSjIndex, reads.size());
+            }
 
-                final List<SAMRecord> reads = slicer.slice(mSamReader, queryInterval);
-                final List<String> processed = Lists.newArrayList();
-                int depth = 0;
-
-                for(SAMRecord record : reads)
+            for(SAMRecord record : reads)
+            {
+                if(dedupReads)
                 {
-                    if(processed.contains(record.getReadName()))
-                    {
-                        processed.remove(record.getReadName());
+                    if (mFragmentTracker.checkReadId(record.getReadName()))
                         continue;
-                    }
-
-                    processed.add(record.getReadName());
-                    ++totalReadsProcessed;
-
-                    ReadRecord read = ReadRecord.from(record);
-
-                    if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
-                    {
-                        ++depth;
-                    }
                 }
 
-                altSJ.setFragmentCount(se, depth);
+                ++mTotalReadsProcessed;
+
+                if((mTotalReadsProcessed % 100000) == 0)
+                {
+                    RE_LOGGER.debug("gene({}) altSJ({}) totalReadsProcessed({}) fragReads({})",
+                            mGene.name(), altSjIndex, mTotalReadsProcessed, mFragmentTracker.readsCount());
+                }
+
+                final List<long[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
+
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    int position = (int) altSJ.SpliceJunction[se];
+
+                    if (readCoords.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
+                        ++depthCounts[se];
+                }
+            }
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                if(!dedupReads)
+                    depthCounts[se] /= 2;
+
+                altSJ.setPositionCount(se, depthCounts[se]);
             }
         }
 
-        RE_LOGGER.debug("gene({}) total altSJs({}) readsProcessed({})", mGene.name(), mAltSpliceJunctions.size(), totalReadsProcessed);
+        mMethod2.stop();
+
+        RE_LOGGER.debug("gene({}) method2: total altSJs({}) readsProcessed({}) fragReads({})",
+                mGene.name(), mAltSpliceJunctions.size(), mTotalReadsProcessed, mFragmentTracker.readsCount());
+
+       */
+    }
+
+    public void logStats()
+    {
+        mReadDepthPerf.logStats();
+
+        /*
+        for(int i = 0; i < mReadDepthPerf.getTimes().size(); ++i)
+        {
+            double time = mReadDepthPerf.getTimes().get(i);
+            String internalName = mReadDepthPerf.getTimeNames().get(i);
+            RE_LOGGER.debug("METHOD1,{},{}", internalName, String.format("%.6f", time));
+        }
+
+        mMethod2.logStats();
+
+        for(int i = 0; i < mMethod2.getTimes().size(); ++i)
+        {
+            double time = mMethod2.getTimes().get(i);
+            String internalName = mMethod2.getTimeNames().get(i);
+            RE_LOGGER.debug("METHOD2,{},{}", internalName, String.format("%.6f", time));
+        }
+        */
+    }
+
+    private void setPositionDepthFromRead(@NotNull final SAMRecord record)
+    {
+        final List<long[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
+        final List<long[]> otherReadCoords = (List<long[]>)mFragmentTracker.checkRead(record.getReadName(), readCoords);
+
+        if(otherReadCoords == null)
+            return;
+
+        ++mTotalReadsProcessed;
+
+        final List<long[]> commonMappings = deriveCommonRegions(readCoords, otherReadCoords);
+
+        for(AltSpliceJunction altSJ : mAltSpliceJunctions)
+        {
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                int position = (int) altSJ.SpliceJunction[se];
+
+                if (commonMappings.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
+                {
+                    altSJ.addPositionCount(se);
+                }
+            }
+        }
     }
 
     public static BufferedWriter createAltSpliceJunctionWriter(final RnaExpConfig config)
