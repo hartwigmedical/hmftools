@@ -44,7 +44,6 @@ public class DetermineEventOfGenomicMutation {
             WriteDataToOutputFile.writeKnownAmplifications(knownAmplification, writerKnownAmplification);
             ActionableAmplificationDeletion actionableAmplification =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
-            LOGGER.info("amplification: " + knownAmplification);
         } else if (DELETION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
             KnownAmplificationDeletion knownDeletion =
@@ -52,7 +51,6 @@ public class DetermineEventOfGenomicMutation {
             WriteDataToOutputFile.writeKnownDeletion(knownDeletion, writerKnownDeletions);
             ActionableAmplificationDeletion actionableDeletion =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
-            LOGGER.info("deletion: " + knownDeletion);
         } else if (VARIANTS.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
             // TODO: Determine hotspots
