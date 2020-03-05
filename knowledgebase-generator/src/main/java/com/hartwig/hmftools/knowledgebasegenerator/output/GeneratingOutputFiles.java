@@ -29,29 +29,25 @@ public class GeneratingOutputFiles {
 
     private static void generateKnownAmplification(@NotNull String outputFile, @NotNull List<AllGenomicEvents> genomicEvents)
             throws IOException {
-        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
+        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         for (AllGenomicEvents events : genomicEvents) {
-            String source = events.knownAmplifications().source();
-            //TODO merge source and gene
             writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
-                    + source + NEW_LINE);
+                    + events.knownAmplifications().source() + NEW_LINE);
         }
         writer.close();
     }
 
     private static void generateKnownDeletions(@NotNull String outputFile, @NotNull List<AllGenomicEvents> genomicEvents)
             throws IOException {
-        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + DELIMITER + "Links" + NEW_LINE;
+        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         for (AllGenomicEvents events : genomicEvents) {
-            String source = events.knownAmplifications().source();
-            //TODO merge source and gene
             writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
-                    + source + NEW_LINE);
+                    + events.knownDeletions().source() + NEW_LINE);
         }
         writer.close();
     }

@@ -39,16 +39,44 @@ public class DetermineEventOfGenomicMutation {
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
+        AllGenomicEvents allGenomicEvents = ImmutableAllGenomicEvents.builder()
+                .knownAmplifications(ImmutableKnownAmplificationDeletion.builder()
+                        .gene(Strings.EMPTY)
+                        .eventType(Strings.EMPTY)
+                        .source(Strings.EMPTY)
+                        .build())
+                .knownDeletions(ImmutableKnownAmplificationDeletion.builder()
+                        .gene(Strings.EMPTY)
+                        .eventType(Strings.EMPTY)
+                        .source(Strings.EMPTY)
+                        .build())
+                .build();
         if (AMPLIFICATION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
             KnownAmplificationDeletion knownAmplification =
                     CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
             ActionableAmplificationDeletion actionableAmplification =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            allGenomicEvents = ImmutableAllGenomicEvents.builder()
+                    .knownAmplifications(knownAmplification)
+                    .knownDeletions(ImmutableKnownAmplificationDeletion.builder()
+                            .gene(Strings.EMPTY)
+                            .eventType(Strings.EMPTY)
+                            .source(Strings.EMPTY)
+                            .build())
+                    .build();
         } else if (DELETION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
             KnownAmplificationDeletion knownDeletion =
                     CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            allGenomicEvents = ImmutableAllGenomicEvents.builder()
+                    .knownAmplifications(ImmutableKnownAmplificationDeletion.builder()
+                            .gene(Strings.EMPTY)
+                            .eventType(Strings.EMPTY)
+                            .source(Strings.EMPTY)
+                            .build())
+                    .knownDeletions(knownDeletion)
+                    .build();
             ActionableAmplificationDeletion actionableDeletion =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
         } else if (VARIANTS.contains(type.eventType())) {
@@ -67,17 +95,6 @@ public class DetermineEventOfGenomicMutation {
         } else {
             LOGGER.info("skipping");
         }
-        return ImmutableAllGenomicEvents.builder()
-                .knownAmplifications(ImmutableKnownAmplificationDeletion.builder()
-                        .gene(Strings.EMPTY)
-                        .eventType(Strings.EMPTY)
-                        .source(Strings.EMPTY)
-                        .build())
-                .knownDeletions(ImmutableKnownAmplificationDeletion.builder()
-                        .gene(Strings.EMPTY)
-                        .eventType(Strings.EMPTY)
-                        .source(Strings.EMPTY)
-                        .build())
-                .build();
+        return allGenomicEvents;
     }
 }
