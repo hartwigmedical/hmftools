@@ -66,6 +66,10 @@ public class GeneratingOutputFiles {
                         + DELIMITER + "Cancer Type" + DELIMITER + "Level" + DELIMITER + "Direction" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerActionableCNV);
+        //TODO determine actionable CNVs
+        for (AllGenomicEvents events: genomicEvents) {
+            writer.write("");
+        }
         writer.close();
 
     }

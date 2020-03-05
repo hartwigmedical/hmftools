@@ -75,7 +75,6 @@ public class KnowledgebaseGeneratorApplication {
         for (ViccEntry viccEntry : viccEntries) {
 
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
-            //  LOGGER.info("eventType: " + eventType);
 
             for (EventType type : eventType) {
                 // Generating actionable event and known events
@@ -85,7 +84,7 @@ public class KnowledgebaseGeneratorApplication {
                         hotspotExtractor));
             }
         }
-        // Create all output files from knowledgebase
+        // Create all output files from knowledgebase with data
         LOGGER.info("Generating output files");
         GeneratingOutputFiles.generatingOutputFiles(cmd.getOptionValue(OUTPUT_DIR), genomicEvents);
     }
