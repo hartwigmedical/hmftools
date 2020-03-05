@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.knowledgebasegenerator.GenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
@@ -34,26 +35,29 @@ public class DetermineEventOfGenomicMutation {
             throws IOException, InterruptedException {
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        String typeEvent = Strings.EMPTY;
 
         if (AMPLIFICATION.contains(type.eventType())) {
-            typeEvent = "Amplification";
-            KnownAmplificationDeletion knownAmplification = CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent, type.gene());
-            ActionableAmplificationDeletion actionableAmplification = CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent, type.gene());
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
+            KnownAmplificationDeletion knownAmplification = CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            ActionableAmplificationDeletion actionableAmplification = CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
             LOGGER.info("amplification: " + knownAmplification);
         } else if (DELETION.contains(type.eventType())) {
-            typeEvent = "Deletion";
-            KnownAmplificationDeletion knownDeletion = CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent, type.gene());
-            ActionableAmplificationDeletion actionableDeletion = CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent, type.gene());
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
+            KnownAmplificationDeletion knownDeletion = CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            ActionableAmplificationDeletion actionableDeletion = CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
             LOGGER.info("deletion: " + knownDeletion);
         } else if (VARIANTS.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
             // TODO: Determine hotspots
             //hotspotExtractor.extractHotspots(viccEntry);
         } else if (RANGE.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Range");
             // TODO: Determine range
         } else if (FUSIONS.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
             // TODO: Determine fusions
         } else if (SIGNATURE.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signature");
             // TODO: Determine signature
         } else {
             LOGGER.info("skipping");
