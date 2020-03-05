@@ -10,8 +10,6 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGenomicMutation;
