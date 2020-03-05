@@ -34,8 +34,10 @@ public class GeneratingOutputFiles {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         for (AllGenomicEvents events : genomicEvents) {
+            String source = events.knownAmplifications().source();
+            //TODO merge source and gene
             writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
-                    + events.knownAmplifications().source() + NEW_LINE);
+                    + source + NEW_LINE);
         }
         writer.close();
     }
@@ -46,8 +48,10 @@ public class GeneratingOutputFiles {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
         for (AllGenomicEvents events : genomicEvents) {
+            String source = events.knownAmplifications().source();
+            //TODO merge source and gene
             writer.write(events.knownAmplifications().gene() + DELIMITER + events.knownAmplifications().eventType() + DELIMITER
-                    + events.knownAmplifications().source() + NEW_LINE);
+                    + source + NEW_LINE);
         }
         writer.close();
     }
