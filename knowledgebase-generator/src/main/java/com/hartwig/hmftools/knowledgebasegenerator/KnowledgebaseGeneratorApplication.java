@@ -97,6 +97,7 @@ public class KnowledgebaseGeneratorApplication {
                         writerActionableCNV);
             }
         }
+        LOGGER.info("Closing output files");
         writerKnownAmplification.close();
         writerKnownDeletions.close();
     }
