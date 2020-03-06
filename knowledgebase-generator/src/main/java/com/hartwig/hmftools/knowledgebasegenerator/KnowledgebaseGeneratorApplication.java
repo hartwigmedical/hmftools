@@ -84,7 +84,6 @@ public class KnowledgebaseGeneratorApplication {
         }
         AllGenomicEvents allGenomicEvents = genomicEventsBuilder.build();
 
-        //TODO: collapse
         List<KnownAmplificationDeletion> mergedAmps = CollapseSources.collapeeSourseInformation(allGenomicEvents);
         List<KnownAmplificationDeletion> mergedDels = CollapseSources.collapeeSourseInformation(allGenomicEvents);
 
