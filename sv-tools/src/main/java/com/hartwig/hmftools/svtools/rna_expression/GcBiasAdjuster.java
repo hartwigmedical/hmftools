@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -50,8 +51,6 @@ public class GcBiasAdjuster
 
     private static final double RATIO_BUCKET = 0.01;
     private static final int SEGMENT_LENGTH = 1000;
-
-    private static final Logger LOGGER = LogManager.getLogger(GcBiasAdjuster.class);
 
     public GcBiasAdjuster(final RnaExpConfig config)
     {
@@ -117,7 +116,7 @@ public class GcBiasAdjuster
 
             if (line == null)
             {
-                LOGGER.error("Empty patient sample IDs file({})", mConfig.GcBiasFile);
+                RE_LOGGER.error("Empty patient sample IDs file({})", mConfig.GcBiasFile);
             }
 
             String currentChr = "";
@@ -128,7 +127,7 @@ public class GcBiasAdjuster
 
                 if (items.length != 3)
                 {
-                    LOGGER.warn("invalid GC-bias record: {}", line);
+                    RE_LOGGER.warn("invalid GC-bias record: {}", line);
                     return;
                 }
 
@@ -150,13 +149,13 @@ public class GcBiasAdjuster
         }
         catch (IOException e)
         {
-            LOGGER.warn("failed to load GC-bias file({}): {}", mConfig.GcBiasFile, e.toString());
+            RE_LOGGER.warn("failed to load GC-bias file({}): {}", mConfig.GcBiasFile, e.toString());
         }
     }
 
     private void generateGcCounts()
     {
-        LOGGER.info("generating GC-bias ratios");
+        RE_LOGGER.info("generating GC-bias ratios");
 
         try
         {
@@ -169,7 +168,7 @@ public class GcBiasAdjuster
                 final String chromosome = chr.toString();
                 long length = chromsomeLengths.get(chr);
 
-                LOGGER.debug("generating GC-bias ratios for chromosome({})", chromosome);
+                RE_LOGGER.debug("generating GC-bias ratios for chromosome({})", chromosome);
 
                 List<Double> ratios = Lists.newArrayList();
 
@@ -192,7 +191,7 @@ public class GcBiasAdjuster
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write GC-bias file: {}", e.toString());
+            RE_LOGGER.error("failed to write GC-bias file: {}", e.toString());
         }
     }
 
@@ -243,11 +242,11 @@ public class GcBiasAdjuster
 
             if (ratios == null || ratios.isEmpty())
             {
-                LOGGER.error("missing chr({}) ratios", chromosome);
+                RE_LOGGER.error("missing chr({}) ratios", chromosome);
                 return;
             }
 
-            LOGGER.debug("measuring read depth for chromosome({})", chromosome);
+            RE_LOGGER.debug("measuring read depth for chromosome({})", chromosome);
 
             long currentRegionStart = 0;
             int geneCount = 0;
@@ -292,7 +291,7 @@ public class GcBiasAdjuster
 
                     if((bamSliceCount % 10000) == 0)
                     {
-                        LOGGER.debug("chr({}) gene({}) GC-region({}) BAM slice count({}) readCount()",
+                        RE_LOGGER.debug("chr({}) gene({}) GC-region({}) BAM slice count({}) readCount()",
                                 chromosome, geneData.GeneName, currentRegionStart, bamSliceCount, mTotalReadCount);
                     }
 
@@ -381,7 +380,7 @@ public class GcBiasAdjuster
             double adjustmentFactor = medianDepthCount / (double)ratioMedianDepth;
             double avgDepth = gcAvgCounts.get(gcRatio);
 
-            LOGGER.info(String.format("GC-Bias ratio(%.2f) depth(median=%d avg=%.2f) adjFactor(%.4f) vs medianDepth(%d)",
+            RE_LOGGER.info(String.format("GC-Bias ratio(%.2f) depth(median=%d avg=%.2f) adjFactor(%.4f) vs medianDepth(%d)",
                     gcRatio, ratioMedianDepth, avgDepth, adjustmentFactor, medianDepthCount));
 
             mGcBiasAdjustmentFactors.put(gcRatio, adjustmentFactor);
@@ -431,7 +430,7 @@ public class GcBiasAdjuster
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write GC depth frequency data file: {}", e.toString());
+            RE_LOGGER.error("failed to write GC depth frequency data file: {}", e.toString());
         }
     }
 

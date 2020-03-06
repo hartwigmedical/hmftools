@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionB
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validRegionMatchType;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
@@ -69,8 +70,6 @@ public class GeneBamReader
 
     private final BufferedWriter mReadDataWriter;
 
-    private static final Logger LOGGER = LogManager.getLogger(GeneBamReader.class);
-
     public GeneBamReader(final RnaExpConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
@@ -116,7 +115,7 @@ public class GeneBamReader
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
-        LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+        RE_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
 
         if(mConfig.GeneStatsOnly)
         {
@@ -154,14 +153,14 @@ public class GeneBamReader
 
         if(mGeneReadCount > 0 && (mGeneReadCount % 100000) == 0)
         {
-            LOGGER.debug("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+            RE_LOGGER.debug("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
         }
 
         if(mConfig.ReadCountLimit > 0 && mGeneReadCount >= mConfig.ReadCountLimit)
         {
             if(mGeneReadCount == mConfig.ReadCountLimit)
             {
-                LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+                RE_LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mGeneReadCount);
             }
 
             return;
@@ -266,7 +265,7 @@ public class GeneBamReader
             {
                 if(validRegions.stream().filter(x -> x == region).count() > 1)
                 {
-                    LOGGER.error("repeated exon region");
+                    RE_LOGGER.error("repeated exon region");
                 }
             }
         }
@@ -366,7 +365,7 @@ public class GeneBamReader
                 {
                     if(commonMappings.stream().filter(x -> x[SE_START] == readRegion[SE_START] && x[SE_END] == readRegion[SE_END]).count() > 1)
                     {
-                        LOGGER.error("repeated read region");
+                        RE_LOGGER.error("repeated read region");
                     }
                 }
             }
@@ -546,7 +545,7 @@ public class GeneBamReader
             if(dupDataList.stream().anyMatch(x -> x[DUP_DATA_SECOND_START] == secondStartPos
                     && x[DUP_DATA_READ_LEN] == readLength && insertSize == x[DUP_DATA_INSERT_SIZE]))
             {
-                LOGGER.trace("duplicate fragment: id({}) chr({}) pos({}->{}) otherReadStart({}) insertSize({})",
+                RE_LOGGER.trace("duplicate fragment: id({}) chr({}) pos({}->{}) otherReadStart({}) insertSize({})",
                         record.getReadName(), record.getReferenceName(), firstStartPos, record.getEnd(), secondStartPos, insertSize);
 
                 // cache so the second read can be identified immediately
@@ -581,7 +580,7 @@ public class GeneBamReader
         }
         catch (IOException e)
         {
-            LOGGER.error("failed to create read data writer: {}", e.toString());
+            RE_LOGGER.error("failed to create read data writer: {}", e.toString());
             return null;
         }
     }
@@ -625,7 +624,7 @@ public class GeneBamReader
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write read data file: {}", e.toString());
+            RE_LOGGER.error("failed to write read data file: {}", e.toString());
         }
     }
 

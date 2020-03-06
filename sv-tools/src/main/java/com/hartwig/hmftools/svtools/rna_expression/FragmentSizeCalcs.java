@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
@@ -55,7 +57,7 @@ public class FragmentSizeCalcs
     private int mTotalReadCount;
     private int mProcessedFragments;
 
-    private static final Logger LOGGER = LogManager.getLogger(FragmentSizeCalcs.class);
+    private PerformanceCounter mPerfCounter;
 
     public FragmentSizeCalcs(final RnaExpConfig config, final SvGeneTranscriptCollection geneTransCache, final BufferedWriter writer)
     {
@@ -74,11 +76,15 @@ public class FragmentSizeCalcs
 
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
+        mPerfCounter = new PerformanceCounter("FragLengthDist");
     }
 
     public void close()
     {
         closeBufferedWriter(mFragReadWriter);
+
+        if(RE_LOGGER.isDebugEnabled())
+            mPerfCounter.logStats();
     }
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
@@ -100,7 +106,7 @@ public class FragmentSizeCalcs
         // measure fragment lengths for non-split reads in purely intronic regions
         if(mGeneTransCache == null)
         {
-            LOGGER.error("fragment length calculator missing gene cache");
+            RE_LOGGER.error("fragment length calculator missing gene cache");
             return;
         }
 
@@ -111,7 +117,7 @@ public class FragmentSizeCalcs
         BamSlicer bamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
 
         // walk through each chromosome, ignoring any gene which overlaps the previous gene
-        LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
+        RE_LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
 
         long lastGeneEnd = 0;
 
@@ -139,17 +145,21 @@ public class FragmentSizeCalcs
 
             if(i > 0 && (i % 100) == 0)
             {
-                LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
+                RE_LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
                         chromosome, i, lastGeneEnd, mProcessedFragments, mTotalReadCount);
             }
 
             lastGeneEnd = geneData.GeneEnd;
+
+            mPerfCounter.start();
 
             mCurrentReadCount = 0;
             mCurrentGeneData = geneData;
             List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd));
 
             bamSlicer.slice(samReader, regions, this::processBamRead);
+
+            mPerfCounter.stop();
 
             if(mConfig.FragmentLengthsByGene)
             {
@@ -159,7 +169,7 @@ public class FragmentSizeCalcs
 
             if (mConfig.FragmentLengthMinCount > 0 && mProcessedFragments >= mConfig.FragmentLengthMinCount)
             {
-                LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
+                RE_LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
                 break;
             }
         }
@@ -172,7 +182,7 @@ public class FragmentSizeCalcs
 
         if(mTotalReadCount > 0 && (mTotalReadCount % 10000) == 0)
         {
-            LOGGER.trace("currentGene({}:{}) totalReads({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mTotalReadCount);
+            RE_LOGGER.trace("currentGene({}:{}) totalReads({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mTotalReadCount);
         }
 
         if(mCurrentReadCount >= MAX_GENE_READ_COUNT)
@@ -259,11 +269,11 @@ public class FragmentSizeCalcs
         if(mMaxReadLength > 0)
         {
             mConfig.ReadLength = mMaxReadLength;
-            LOGGER.info("max read length({}) set", mMaxReadLength);
+            RE_LOGGER.info("max read length({}) set", mMaxReadLength);
         }
         else
         {
-            LOGGER.warn("max read length not determined from fragment length calcs");
+            RE_LOGGER.warn("max read length not determined from fragment length calcs");
         }
 
         final List<int[]> lengthFrequencies = mConfig.ExpRateFragmentLengths;
@@ -299,7 +309,7 @@ public class FragmentSizeCalcs
             }
 
             lengthFrequency[FL_FREQUENCY] = lengthCount;
-            LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FL_LENGTH], lengthCount);
+            RE_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FL_LENGTH], lengthCount);
         }
     }
 
@@ -323,7 +333,7 @@ public class FragmentSizeCalcs
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write fragment length file: {}", e.toString());
+            RE_LOGGER.error("failed to write fragment length file: {}", e.toString());
             return null;
         }
     }
@@ -358,7 +368,7 @@ public class FragmentSizeCalcs
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write fragment length file: {}", e.toString());
+            RE_LOGGER.error("failed to write fragment length file: {}", e.toString());
         }
 
     }
@@ -406,7 +416,7 @@ public class FragmentSizeCalcs
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write fragment length read data file: {}", e.toString());
+            RE_LOGGER.error("failed to write fragment length read data file: {}", e.toString());
         }
     }
 

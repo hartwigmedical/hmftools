@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_I
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.extractTransId;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.ALT;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.EXONIC;
@@ -55,8 +56,6 @@ public class ReadRecord
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
 
     private final Map<Integer,TransMatchType> mTranscriptClassification;
-
-    private static final Logger LOGGER = LogManager.getLogger(ReadRecord.class);
 
     public static ReadRecord from(final SAMRecord record)
     {
@@ -428,7 +427,7 @@ public class ReadRecord
 
             if(regionBaseIndex + overlap > regionBaseDepth.length)
             {
-                LOGGER.error("region({}) read coords({} -> {}) regionBaseIndex({}) overlap({}) regionLength({})",
+                RE_LOGGER.error("region({}) read coords({} -> {}) regionBaseIndex({}) overlap({}) regionLength({})",
                         region, readStartPos, readEndPos, regionBaseIndex, overlap, regionBaseDepth.length);
                 return;
             }

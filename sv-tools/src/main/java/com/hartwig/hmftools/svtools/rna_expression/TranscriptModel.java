@@ -24,8 +24,6 @@ import org.apache.logging.log4j.Logger;
 
 public class TranscriptModel
 {
-    private static final Logger LOGGER = LogManager.getLogger(TranscriptModel.class);
-
     public static TranscriptResults calculateTranscriptResults(final GeneReadData geneReadData, final TranscriptData transData)
     {
         int exonsFound = 0;

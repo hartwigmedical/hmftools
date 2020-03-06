@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICE
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calcEffectiveLength;
 
 import java.io.BufferedWriter;
@@ -42,8 +43,6 @@ public class ResultsWriter
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
     private BufferedWriter mFragLengthWriter;
-
-    private static final Logger LOGGER = LogManager.getLogger(RnaExpression.class);
 
     public ResultsWriter(final RnaExpConfig config)
     {
@@ -139,7 +138,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write gene data file: {}", e.toString());
+            RE_LOGGER.error("failed to write gene data file: {}", e.toString());
         }
     }
 
@@ -191,7 +190,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write transcripts data file: {}", e.toString());
+            RE_LOGGER.error("failed to write transcripts data file: {}", e.toString());
         }
     }
 
@@ -251,7 +250,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write exon expression file: {}", e.toString());
+            RE_LOGGER.error("failed to write exon expression file: {}", e.toString());
         }
     }
 
@@ -286,7 +285,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to write trans combo data file: {}", e.toString());
+            RE_LOGGER.error("failed to write trans combo data file: {}", e.toString());
         }
     }
 }
