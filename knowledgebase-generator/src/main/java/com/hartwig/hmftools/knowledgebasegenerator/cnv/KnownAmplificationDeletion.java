@@ -17,4 +17,7 @@ public abstract class KnownAmplificationDeletion {
 
     @NotNull
     public abstract String source();
+
+    @NotNull
+    public abstract String sourceLink();
 }

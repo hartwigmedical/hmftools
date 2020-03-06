@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 public class GeneratingOutputFiles {
 
     private static final String DELIMITER = "\t";
-    private static final String SOURCE_LINK_SEPARATOR = ";";
     private static final String NEW_LINE = "\n";
 
     private static final String KNOWN_AMPLIFICATION_TSV = "knownAmplification.tsv";

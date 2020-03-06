@@ -31,15 +31,55 @@ public class CnvExtractor {
     @NotNull
     public static List<KnownAmplificationDeletion> determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent,
             @NotNull String gene) {
-        List<KnownAmplificationDeletion> knownAmpsDels = Lists.newArrayList();
-        knownAmpsDels.add(ImmutableKnownAmplificationDeletion.builder().gene(gene).eventType(typeEvent).source(source.toString()).build());
-        return knownAmpsDels;
+        return knownInformation(source, typeEvent, gene);
+
     }
 
     @NotNull
     public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source,
             @NotNull String typeEvent, @NotNull String gene) {
         return actionableInformation(source, typeEvent, gene);
+    }
+
+    @NotNull
+    private static List<KnownAmplificationDeletion> knownInformation(@NotNull Source source, @NotNull String typeEvent,
+            @NotNull String gene) {
+        List<KnownAmplificationDeletion> knownAmpsDels = Lists.newArrayList();
+        String link = Strings.EMPTY;
+        switch (source) {
+            case ONCOKB:
+                link = "link_oncokb";
+                break;
+            case CGI:
+                link = "link_cgi";
+                break;
+            case CIVIC:
+                link = "link_civic";
+                break;
+            case JAX:
+                break;
+            case JAX_TRIALS:
+                break;
+            case BRCA:
+                break;
+            case SAGE:
+                break;
+            case PMKB:
+                break;
+            case MOLECULARMATCH:
+                break;
+            case MOLECULARMATCH_TRIALS:
+                break;
+            default:
+                LOGGER.warn("Unknown knowledgebase");
+        }
+        knownAmpsDels.add(ImmutableKnownAmplificationDeletion.builder()
+                .gene(gene)
+                .eventType(typeEvent)
+                .source(source.toString())
+                .sourceLink(link)
+                .build());
+        return knownAmpsDels;
     }
 
     @NotNull
