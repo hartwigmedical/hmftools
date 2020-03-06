@@ -25,9 +25,9 @@ public class DetermineEventOfGenomicMutation {
             Lists.newArrayList("Amplification", "Overexpression", "amp", "OVEREXPRESSION", "Transcript Amplification");
     private static final List<String> DELETION = Lists.newArrayList("Copy Number Loss", "Deletion", "del", "DELETION", "UNDEREXPRESSION");
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
-    private static final Set<String> FUSIONS = Sets.newHashSet();
+    private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
     private static final Set<String> RANGE = Sets.newHashSet();
-    private static final Set<String> SIGNATURE = Sets.newHashSet();
+    private static final Set<String> SIGNATURE = Sets.newHashSet("Microsatellite Instability-High", "Microsatellite");
 
     @NotNull
     public static KnownAmplificationDeletion checkAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
