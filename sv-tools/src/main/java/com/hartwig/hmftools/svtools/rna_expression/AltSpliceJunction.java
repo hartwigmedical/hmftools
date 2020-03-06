@@ -32,6 +32,11 @@ public class AltSpliceJunction
     private final int[] mPositionCounts; // counts at the start and end
     private final List<Integer> mCandidateTransIds;
 
+    // calculated values
+    private String[] mTranscriptNames;
+    private String[] mBaseContext;
+    private int[] mNearestExonDistance;
+
     public static final String CONTEXT_SJ = "SPLICE_JUNC";
     public static final String CONTEXT_EXONIC = "EXONIC";
     public static final String CONTEXT_INTRONIC = "INTRONIC";
@@ -87,8 +92,20 @@ public class AltSpliceJunction
     public void setPositionCount(int seIndex, int count) { mPositionCounts[seIndex] = count; }
     public void addPositionCount(int seIndex) { ++mPositionCounts[seIndex]; }
 
-    public String startTranscriptNames() { return generateTranscriptNames(StartRegions); }
-    public String endTranscriptNames() { return generateTranscriptNames(EndRegions); }
+    public String[] getTranscriptNames() { return mTranscriptNames; }
+    public String[] getBaseContext() { return mBaseContext; }
+    public int[] getNearestExonDistance() { return mNearestExonDistance; }
+
+    public void calcSummaryData(final IndexedFastaSequenceFile RefFastaSeqFile)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            final List<RegionReadData> regions = (se == SE_START) ? StartRegions : EndRegions;
+            mTranscriptNames[se] = regions.isEmpty() ? "NONE" : generateTranscriptNames(regions);
+            mNearestExonDistance[se] = calcNearestExonBoundary(se);
+            mBaseContext[se] = getBaseContext(RefFastaSeqFile, se);
+        }
+    }
 
     private String generateTranscriptNames(final List<RegionReadData> regions)
     {

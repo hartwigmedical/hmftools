@@ -121,7 +121,10 @@ public class GeneBamReader
         {
             mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
+    }
 
+    public void annotateAltSpliceJunctions()
+    {
         mAltSpliceJunctionFinder.recordDepthCounts(mGeneReadCount);
         mAltSpliceJunctionFinder.writeAltSpliceJunctions();
     }
@@ -626,11 +629,6 @@ public class GeneBamReader
         {
             RE_LOGGER.error("failed to write read data file: {}", e.toString());
         }
-    }
-
-    public void logStats()
-    {
-        mAltSpliceJunctionFinder.logStats();
     }
 
     @VisibleForTesting

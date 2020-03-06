@@ -43,7 +43,6 @@ public class GeneReadData
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final Map<String,Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
     private double mFitResiduals;
-    private final List<TranscriptResults> mTranscriptResults;
 
     private final int[] mFragmentCounts;
 
@@ -58,7 +57,6 @@ public class GeneReadData
         mCommonExonicRegions = Lists.newArrayList();
         mOtherGeneExonicRegions = Lists.newArrayList();
 
-        mTranscriptResults = Lists.newArrayList();
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
         mTranscriptReadCounts = Maps.newHashMap();
         mTranscriptAllocations = Maps.newHashMap();
@@ -175,8 +173,6 @@ public class GeneReadData
         Double allocation = mTranscriptAllocations.get(transName);
         return allocation != null ? allocation : 0;
     }
-
-    public List<TranscriptResults> getTranscriptResults() { return mTranscriptResults; }
 
     private void generateCommonExonicRegions()
     {

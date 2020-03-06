@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -131,10 +132,19 @@ public class RnaExpression
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
         RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
-        PerformanceCounter combinedPerf = new PerformanceCounter("RnaExp");
+        final PerformanceCounter[] perfCounters = chrTasks.get(0).getPerfCounters();
 
-        chrTasks.forEach(x -> combinedPerf.merge(x.getPerfStats()));
-        combinedPerf.logStats();
+        for(int i = 1; i < chrTasks.size(); ++i)
+        {
+            final PerformanceCounter[] chrPCs = chrTasks.get(i).getPerfCounters();
+
+            for(int j = 0; j < perfCounters.length; ++j)
+            {
+                perfCounters[j].merge(chrPCs[j]);
+            }
+        }
+
+        Arrays.stream(perfCounters).forEach(x -> x.logStats());
 
         mResultsWriter.close();
     }

@@ -5,18 +5,14 @@ import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class ExpectationMaxFit
 {
     private static final int MAX_ITERATIONS = 20;
     private static final double RESIDUALS_EXIT_PERC = 0.001;
-
-    private static final Logger LOGGER = LogManager.getLogger(TranscriptModel.class);
 
     public static final double[] performFit(final double[] transCounts, final SigMatrix transDefinitions)
     {
@@ -79,7 +75,7 @@ public class ExpectationMaxFit
 
             double[] residuals = calcResiduals(transCounts, fittedCounts, totalCounts);
 
-            LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
+            RE_LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
                     totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC], iteration));
 
             /*

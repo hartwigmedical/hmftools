@@ -4,19 +4,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.ExpectedTransRates.UNSPLICED_ID;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.ALT;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.CHIMERIC;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.DUPLICATE;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.READ_THROUGH;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TOTAL;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TRANS_SUPPORTING;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICED;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
-import static com.hartwig.hmftools.svtools.rna_expression.TranscriptModel.calcEffectiveLength;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -25,9 +15,6 @@ import java.util.List;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class ResultsWriter
 {
@@ -96,7 +83,7 @@ public class ResultsWriter
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
 
-    public synchronized void writeGeneData(final GeneReadData geneReadData)
+    public synchronized void writeGeneResult(final GeneResult geneResult)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -113,25 +100,20 @@ public class ResultsWriter
                 mGeneDataWriter.newLine();
             }
 
-            final EnsemblGeneData geneData = geneReadData.GeneData;
+            final EnsemblGeneData geneData = geneResult.geneData();
 
             long geneLength = geneData.GeneEnd - geneData.GeneStart;
 
             mGeneDataWriter.write(String.format("%s,%s,%s,%d,%d,%d",
                     geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneLength,
-                    geneLength - geneReadData.calcExonicRegionLength(), geneReadData.getTranscripts().size()));
-
-            final int[] fragmentCounts = geneReadData.getCounts();
+                    geneResult.intronicLength(), geneResult.transCount()));
 
             mGeneDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
-                    fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)], fragmentCounts[typeAsInt(ALT)],
-                    fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(READ_THROUGH)],
-                    fragmentCounts[typeAsInt(CHIMERIC)], fragmentCounts[typeAsInt(DUPLICATE)]));
+                    geneResult.totalFragments(), geneResult.supportingTrans(), geneResult.altFragments(), geneResult.unsplicedFragments(),
+                    geneResult.readThroughFragments(), geneResult.chimericFragments(), geneResult.duplicates()));
 
-            Double unsplicedAlloc = geneReadData.getTranscriptAllocations().get(UNSPLICED_ID);
             mGeneDataWriter.write(String.format(",%.1f,%.1f",
-                    unsplicedAlloc != null && !Double.isNaN(unsplicedAlloc) ? unsplicedAlloc : 0.0,
-                    geneReadData.getFitResiduals()));
+                    geneResult.unsplicedAlloc(), geneResult.fitResiduals()));
 
             mGeneDataWriter.newLine();
 
@@ -142,7 +124,7 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeTranscriptResults(final GeneReadData geneReadData, final TranscriptResults transResults)
+    public synchronized void writeTranscriptResults(final EnsemblGeneData geneData, final TranscriptResult transResults)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -164,17 +146,13 @@ public class ResultsWriter
 
             final TranscriptData transData = transResults.trans();
 
-            double effectiveLength = calcEffectiveLength(transResults.exonicBases(), mConfig.ExpRateFragmentLengths);
-
             mTransDataWriter.write(String.format("%s,%s,%d,%s,%s,%d,%.0f",
-                    geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName,
-                    transData.TransId, transData.TransName, transData.IsCanonical, transData.exons().size(), effectiveLength));
-
-            double expRateAllocation = geneReadData.getTranscriptAllocation(transData.TransName);
+                    geneData.GeneId, geneData.GeneName,
+                    transData.TransId, transData.TransName, transData.IsCanonical, transData.exons().size(), transResults.effectiveLength()));
 
             mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%d,%d,%.0f",
                     transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage(),
-                    expRateAllocation, transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
+                    transResults.fitAllocation(), transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
 
             mTransDataWriter.write(String.format(",%d,%d,%d",
                     transResults.spliceJunctionsSupported(), transResults.uniqueSpliceJunctions(), transResults.uniqueSpliceJunctionsSupported()));
@@ -183,7 +161,6 @@ public class ResultsWriter
                     transResults.shortSupportingFragments(), transResults.shortUniqueFragments(),
                     transResults.longSupportingFragments(), transResults.longUniqueFragments(),
                     transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
-
 
             mTransDataWriter.newLine();
 

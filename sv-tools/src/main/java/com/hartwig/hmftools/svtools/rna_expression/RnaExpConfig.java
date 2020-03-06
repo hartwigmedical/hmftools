@@ -243,6 +243,11 @@ public class RnaExpConfig
             return false;
         }
 
+        if(RestrictedGeneIds.isEmpty() && (WriteExonData || WriteReadData))
+        {
+            RE_LOGGER.warn("writing exon and/or read data for all transcripts may be slow and generate large output files");
+        }
+
         return true;
     }
 

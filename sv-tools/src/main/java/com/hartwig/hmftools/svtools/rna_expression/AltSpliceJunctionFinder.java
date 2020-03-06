@@ -404,11 +404,6 @@ public class AltSpliceJunctionFinder
         //        mGene.name(), mAltSpliceJunctions.size(), mTotalReadsProcessed, mFragmentTracker.readsCount());
     }
 
-    public void logStats()
-    {
-        mReadDepthPerf.logStats();
-    }
-
     private void setPositionDepthFromRead(@NotNull final SAMRecord record)
     {
         final List<long[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
@@ -463,7 +458,10 @@ public class AltSpliceJunctionFinder
     public void writeAltSpliceJunctions()
     {
         if(mWriter != null)
+        {
+            mAltSpliceJunctions.forEach(x -> x.calcSummaryData(mConfig.RefFastaSeqFile));
             writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mConfig);
+        }
     }
 
     private synchronized static void writeAltSpliceJunctions(
@@ -481,14 +479,11 @@ public class AltSpliceJunctionFinder
                         altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], altSJ.getFragmentCount(),
                         altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END)));
 
-                final String startTrans = altSJ.StartRegions.isEmpty() ? "NONE" : altSJ.startTranscriptNames();
-                final String endTrans = altSJ.EndRegions.isEmpty() ? "NONE" : altSJ.endTranscriptNames();
-
                 writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s,%s,%s",
                         altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
-                        altSJ.calcNearestExonBoundary(SE_START), altSJ.calcNearestExonBoundary(SE_END),
-                        altSJ.getBaseContext(config.RefFastaSeqFile, SE_START), altSJ.getBaseContext(config.RefFastaSeqFile, SE_END),
-                        startTrans, endTrans));
+                        altSJ.getNearestExonDistance()[SE_START], altSJ.getNearestExonDistance()[SE_END],
+                        altSJ.getBaseContext()[SE_START], altSJ.getBaseContext()[SE_END],
+                        altSJ.getTranscriptNames()[SE_START], altSJ.getTranscriptNames()[SE_END]));
 
                 writer.newLine();
             }

@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_LENGTH;
@@ -16,15 +14,36 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.sig_analyser.common.LeastSquaresFit;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.immutables.value.Value;
 
-public class TranscriptModel
+@Value.Immutable
+public abstract class TranscriptResult
 {
-    public static TranscriptResults calculateTranscriptResults(final GeneReadData geneReadData, final TranscriptData transData)
+    public abstract TranscriptData trans();
+
+    public abstract int exonsFound();
+    public abstract int shortSupportingFragments();
+    public abstract int shortUniqueFragments();
+    public abstract int longSupportingFragments();
+    public abstract int longUniqueFragments();
+    public abstract int spliceJunctionsSupported();
+    public abstract int spliceJunctionFragments();
+    public abstract int spliceJunctionUniqueFragments();
+    public abstract int uniqueSpliceJunctions();
+    public abstract int uniqueSpliceJunctionsSupported();
+    public abstract int exonicBases();
+    public abstract int exonicBaseCoverage();
+    public abstract int uniqueBases();
+    public abstract int uniqueBaseCoverage();
+    public abstract double uniqueBaseAvgDepth();
+
+    public abstract double effectiveLength();
+    public abstract double fitAllocation();
+
+    public static TranscriptResult createTranscriptResults(
+            final GeneReadData geneReadData, final TranscriptData transData,
+            final List<int[]> expRateFragmentLengths, double expRateAllocation)
     {
         int exonsFound = 0;
 
@@ -95,7 +114,9 @@ public class TranscriptModel
 
         int[][] supportingFragments = geneReadData.getTranscriptReadCount(transData.TransName);
 
-        TranscriptResults results = ImmutableTranscriptResults.builder()
+        double effectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
+
+        TranscriptResult results = ImmutableTranscriptResult.builder()
                 .trans(transData)
                 .exonsFound(exonsFound)
                 .spliceJunctionsSupported(spliceJunctionsSupported)
@@ -112,6 +133,8 @@ public class TranscriptModel
                 .uniqueBases(uniqueExonicBases)
                 .uniqueBaseCoverage(uniqueExonicBaseCoverage)
                 .uniqueBaseAvgDepth(uniqueBaseAvgDepth)
+                .effectiveLength(effectiveLength)
+                .fitAllocation(expRateAllocation)
                 .build();
 
         return results;
@@ -160,21 +183,4 @@ public class TranscriptModel
 
         return true;
     }
-
-    public static final double[] allocateTranscriptCountsByLeastSquares(final double[] transcriptCounts, final SigMatrix transcriptDefinitions)
-    {
-        int transDefinitionCount = transcriptDefinitions.Cols;
-        int categoryCount = transcriptDefinitions.Rows;
-
-        LeastSquaresFit lsqFit = new LeastSquaresFit(categoryCount, transDefinitionCount);
-        lsqFit.initialise(transcriptDefinitions.getData(), transcriptCounts);
-        lsqFit.solve();
-
-        // extract the allocation per transcript and unspliced
-        final double[] transcriptAllocs = lsqFit.getContribs();
-        return transcriptAllocs;
-    }
-
-
-
 }
