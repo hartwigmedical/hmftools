@@ -103,7 +103,7 @@ public class SageApplication implements AutoCloseable {
         }
 
 //        ChromosomePipeline custom = createChromosomePipeline("20");
-//        custom.addAllRegions();
+//        custom.addAllRegions(4_000_000);
 //        chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
@@ -121,7 +121,7 @@ public class SageApplication implements AutoCloseable {
     }
 
     private SAMSequenceDictionary dictionary() throws IOException {
-        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(config.referenceBam()));
+        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(config.referenceBam().get(0)));
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
         tumorReader.close();
         return dictionary;

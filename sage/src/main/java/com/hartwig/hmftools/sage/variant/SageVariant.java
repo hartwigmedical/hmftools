@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 
@@ -12,34 +13,45 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class SageVariant implements GenomePosition {
 
-    private final AltContext normal;
     private final Set<String> filters;
     private final SageVariantTier tier;
+    private final List<AltContext> normalAltContexts;
     private final List<AltContext> tumorAltContexts;
-    private final Optional<AltContext> rna;
 
     private int localPhaseSet;
 
-    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final AltContext normal,
-            final Optional<AltContext> rna, final List<AltContext> tumorAltContexts) {
+    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final List<AltContext> normal, final List<AltContext> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
         this.tier = tier;
-        this.normal = normal;
+        this.normalAltContexts = normal;
         this.tumorAltContexts = tumorAltContexts;
         this.filters = filters;
-        this.rna = rna;
+    }
+
+    @NotNull
+    public String ref() {
+        return primaryNormal().alt();
+    }
+
+    @NotNull
+    public String alt() {
+        return primaryNormal().alt();
+    }
+
+    public long end() {
+        return position() + ref().length() - 1;
     }
 
     public boolean isIndel() {
-        return normal.ref().length() != normal.alt().length();
+        return primaryNormal().ref().length() != primaryNormal().alt().length();
     }
 
     public boolean isInsert() {
-        return normal.ref().length() < normal.alt().length();
+        return primaryNormal().ref().length() < primaryNormal().alt().length();
     }
 
     public boolean isDelete() {
-        return normal.ref().length() > normal.alt().length();
+        return primaryNormal().ref().length() > primaryNormal().alt().length();
     }
 
     public int localPhaseSet() {
@@ -65,8 +77,13 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
-    public AltContext normal() {
-        return normal;
+    public AltContext primaryNormal() {
+        return normalAltContexts.get(0);
+    }
+
+    @NotNull
+    public List<AltContext> normalAltContexts() {
+        return normalAltContexts;
     }
 
     @NotNull
@@ -82,16 +99,11 @@ public class SageVariant implements GenomePosition {
     @NotNull
     @Override
     public String chromosome() {
-        return normal.chromosome();
+        return primaryNormal().chromosome();
     }
 
     @Override
     public long position() {
-        return normal.position();
-    }
-
-    @NotNull
-    public Optional<AltContext> rna() {
-        return rna;
+        return primaryNormal().position();
     }
 }

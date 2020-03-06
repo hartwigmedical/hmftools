@@ -41,7 +41,7 @@ public class SageVariantContextFactory {
 
     @NotNull
     public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.normal();
+        final AltContext normal = entry.primaryNormal();
 
         final Genotype normalGenotype = createGenotype(true, normal);
         final List<Genotype> genotypes = Collections.singletonList(normalGenotype);
@@ -51,19 +51,22 @@ public class SageVariantContextFactory {
 
     @NotNull
     public static VariantContext pairedTumorNormal(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.normal();
         final List<AltContext> tumorContexts = entry.tumorAltContexts();
 
         assert (tumorContexts.size() >= 1);
 
         final AltContext firstTumor = tumorContexts.get(0);
 
-        final List<Genotype> genotypes = Lists.newArrayList(createGenotype(true, normal));
+        final List<Genotype> genotypes = Lists.newArrayList();
+        for (int i = 0; i < entry.normalAltContexts().size(); i++) {
+            AltContext normalContext = entry.normalAltContexts().get(i);
+            genotypes.add(createGenotype(i == 0, normalContext));
+        }
+
         tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
-        entry.rna().map(x -> createGenotype(false, x)).ifPresent(genotypes::add);
 
         final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
-        return createContext(entry, createAlleles(entry.normal()), genotypes, firstTumorCounter);
+        return createContext(entry, createAlleles(entry.primaryNormal()), genotypes, firstTumorCounter);
     }
 
     @NotNull

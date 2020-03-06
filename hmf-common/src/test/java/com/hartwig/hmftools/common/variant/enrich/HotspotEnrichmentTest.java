@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class HotspotEnrichmentTest {
 
@@ -49,6 +50,18 @@ public class HotspotEnrichmentTest {
 
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("11").position(100).ref(hotspotRef).alt("A").build();
         assertOverlap(Hotspot.HOTSPOT, hotspot, 100, hotspotRef);
+    }
+
+    @Test
+    public void testFromVariant() {
+        VariantContext variant = createNonHotspotHG37(1, "G");
+        assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(variant));
+
+        VariantContext tierPanel = new VariantContextBuilder(variant).attribute("TIER", "PANEL").make();
+        assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(tierPanel));
+
+        VariantContext tierHotspot = new VariantContextBuilder(variant).attribute("TIER", "HOTSPOT").make();
+        assertEquals(Hotspot.HOTSPOT, HotspotEnrichment.fromVariant(tierHotspot));
     }
 
     private void assertOverlap(Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart, @NotNull final String variantRef) {

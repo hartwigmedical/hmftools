@@ -3,16 +3,19 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGenomicMutation;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
@@ -69,25 +72,60 @@ public class KnowledgebaseGeneratorApplication {
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
+        ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
+
+        List<KnownAmplificationDeletion> listAmps = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listDels = Lists.newArrayList();
+
         LOGGER.info("Analyzing all VICC entries");
-        int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
-            if (viccEntry.source().equals("molecularmatch_trials")) {
-                num+=1;
-            }
-            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
-          //  LOGGER.info("eventType: " + eventType);
 
-            for (EventType type: eventType) {
+            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
+
+            for (EventType type : eventType) {
                 // Generating actionable event and known events
-               // hotspotExtractor.extractHotspots(viccEntry);
+                //TODO: map every genomic event to one object
+                listAmps.add(DetermineEventOfGenomicMutation.checkAmplification(viccEntry, type, hotspotExtractor));
+                listDels.add(DetermineEventOfGenomicMutation.checkDeletion(viccEntry, type, hotspotExtractor));
 
-                ActionableGene actionableGene = CnvExtractor.extractingCNVs(viccEntry, type);
             }
         }
-        // Create all output files from knowledgebase
+        AllGenomicEvents allGenomicEvents = genomicEventsBuilder.build();
+
+        List<KnownAmplificationDeletion> listAmpsFilter = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listDelsFIlter = Lists.newArrayList();
+        Set<String> uniqueAmps = Sets.newHashSet();
+        Set<String> uniqueDels = Sets.newHashSet();
+        for (KnownAmplificationDeletion amps : listAmps) {
+            if (!amps.eventType().isEmpty()) {
+                listAmpsFilter.add(amps);
+                uniqueAmps.add(amps.gene());
+            }
+        }
+
+        List<String> sortedUniqueAmps = new ArrayList<String>(uniqueAmps);
+        Collections.sort(sortedUniqueAmps);
+
+        for (KnownAmplificationDeletion dels : listDels) {
+            if (!dels.eventType().isEmpty()) {
+                listDelsFIlter.add(dels);
+                uniqueDels.add(dels.gene());
+            }
+        }
+        List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
+        Collections.sort(sortedUniqueDels);
+
+
+        AllGenomicEvents finalAllGenomicEvents = ImmutableAllGenomicEvents.builder()
+                .knownAmplifications(listAmpsFilter)
+                .uniqueAmplification(sortedUniqueAmps)
+                .knownDeletions(listDelsFIlter)
+                .uniqueDeletions(sortedUniqueDels)
+                .build();
+
+        // Create all output files from knowledgebase with data
         LOGGER.info("Generating output files");
-        GeneratingOutputFiles.generatingOutputFiles(cmd.getOptionValue(OUTPUT_DIR));
+        GeneratingOutputFiles.generatingOutputFiles(cmd.getOptionValue(OUTPUT_DIR), finalAllGenomicEvents);
     }
 
     private static void readIclusionTrials(@NotNull String iClusionTrialTsv) throws IOException {

@@ -3,8 +3,12 @@ package com.hartwig.hmftools.amber;
 import static com.hartwig.hmftools.common.cli.Configs.defaultDoubleValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
@@ -113,16 +117,16 @@ public interface AmberConfig {
     String tumorBamPath();
 
     @NotNull
-    String referenceBamPath();
+    List<String> reference();
+
+    @NotNull
+    List<String> referenceBamPath();
 
     @NotNull
     String refGenomePath();
 
     @NotNull
     String outputDirectory();
-
-    @NotNull
-    String normal();
 
     @NotNull
     String tumor();
@@ -154,8 +158,10 @@ public interface AmberConfig {
         final double tumorOnlyMinVaf = defaultDoubleValue(cmd, TUMOR_ONLY_MIN_VAF, DEFAULT_TUMOR_ONLY_MIN_VAF);
 
         final StringJoiner missingJoiner = new StringJoiner(", ");
-        final String reference = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE, missingJoiner);
-        final String referenceBamPath = isTumorOnly ? Strings.EMPTY : parameter(cmd, REFERENCE_BAM, missingJoiner);
+        final List<String> reference =
+                isTumorOnly ? Collections.emptyList() : Arrays.asList(parameter(cmd, REFERENCE, missingJoiner).split(","));
+        final List<String> referenceBamPath =
+                isTumorOnly ? Collections.emptyList() : Arrays.asList(parameter(cmd, REFERENCE_BAM, missingJoiner).split(","));
         final String bafLociPath = parameter(cmd, BAF_LOCI, missingJoiner);
         final String tumorBamPath = parameter(cmd, TUMOR_BAM, missingJoiner);
         final String outputDirectory = parameter(cmd, OUTPUT_DIR, missingJoiner);
@@ -163,7 +169,12 @@ public interface AmberConfig {
         final String missing = missingJoiner.toString();
         final String refGenomePath = cmd.getOptionValue(REF_GENOME, Strings.EMPTY);
 
-        final ValidationStringency validationStringency = Configs.defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
+        if (reference.size() != referenceBamPath.size()) {
+            throw new ParseException("Each reference sample must have matching bam");
+        }
+
+        final ValidationStringency validationStringency =
+                Configs.defaultEnumValue(cmd, VALIDATION_STRINGENCY, ValidationStringency.DEFAULT_STRINGENCY);
 
         if (!missing.isEmpty()) {
             throw new ParseException("Missing the following parameters: " + missing);
@@ -185,12 +196,11 @@ public interface AmberConfig {
                 .referenceBamPath(referenceBamPath)
                 .refGenomePath(refGenomePath)
                 .outputDirectory(outputDirectory)
-                .normal(reference)
+                .reference(reference)
                 .tumor(tumor)
                 .validationStringency(validationStringency)
                 .build();
     }
-
 
     @NotNull
     static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing) {

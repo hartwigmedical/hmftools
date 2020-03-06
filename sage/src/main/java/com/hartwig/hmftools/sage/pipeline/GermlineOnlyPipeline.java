@@ -56,8 +56,8 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
                 CompletableFuture.supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
         final CompletableFuture<List<AltContext>> candidates =
-                refSequenceFuture.thenApply(refSequence -> primaryEvidence.get(config.reference(),
-                        config.referenceBam(),
+                refSequenceFuture.thenApply(refSequence -> primaryEvidence.get(config.reference().get(0),
+                        config.referenceBam().get(0),
                         refSequence,
                         region));
 

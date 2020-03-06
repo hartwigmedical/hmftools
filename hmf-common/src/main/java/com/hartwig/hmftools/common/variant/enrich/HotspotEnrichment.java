@@ -19,6 +19,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class HotspotEnrichment implements SomaticEnrichment {
 
     public static final int DISTANCE = 5;
+    public static final String TIER_FLAG = "TIER";
     public static final String HOTSPOT_FLAG = "HOTSPOT";
     public static final String NEAR_HOTSPOT_FLAG = "NEAR_HOTSPOT";
 
@@ -50,6 +51,10 @@ public class HotspotEnrichment implements SomaticEnrichment {
 
     @NotNull
     public static Hotspot fromVariant(@NotNull final VariantContext context) {
+        if (context.getAttributeAsString(TIER_FLAG, "NONE").equals(HOTSPOT_FLAG)) {
+            return Hotspot.HOTSPOT;
+        }
+
         if (context.hasAttribute(HOTSPOT_FLAG)) {
             return Hotspot.HOTSPOT;
         }

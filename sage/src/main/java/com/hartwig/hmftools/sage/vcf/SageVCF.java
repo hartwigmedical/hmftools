@@ -37,7 +37,6 @@ public class SageVCF implements AutoCloseable {
     public final static String DEDUP_FILTER = "dedup";
     public final static String MIN_GERMLINE_VAF = "min_germline_vaf";
 
-
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
     public final static String READ_CONTEXT_JITTER = "RC_JIT";
     private final static String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
@@ -105,9 +104,6 @@ public class SageVCF implements AutoCloseable {
         final List<String> samples = Lists.newArrayList(config.reference());
         if (!config.germlineOnly()) {
             samples.addAll(config.tumor());
-            if (config.rnaEnabled()) {
-                samples.add(config.rna());
-            }
         }
         return header(config.version(), samples);
     }
@@ -171,7 +167,8 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.toString(), "Excess germline VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(), "Excess germline relative quality"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString(),
+                "Excess germline relative quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString(), "Excess germline alt support"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 

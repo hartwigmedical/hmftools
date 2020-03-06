@@ -29,20 +29,42 @@ final class TransvarConverter {
     }
 
     private static void populateCoordinates(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
-        // Field looks like "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
-        String[] chromosomeAndGNDA = (field.split("/")[0]).split(":");
+        // General case: "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
+        //  For MNV the g. part looks like ${gdnaPosStart}_${gdnaPosEnd}del${ref}ins${alt}
+        String[] chromosomeAndGDNA = (field.split("/")[0]).split(":");
 
         // Remove "chr" from the chromosome
-        builder.chromosome(chromosomeAndGNDA[0].substring(3));
+        builder.chromosome(chromosomeAndGDNA[0].substring(3));
 
+        // Remove "g." from the gdna annotation
+        String gdna = chromosomeAndGDNA[1].substring(2);
+
+        if (gdna.contains("_")) {
+            populateForMNV(builder, gdna);
+        } else {
+            populateForSNV(builder, gdna);
+        }
+    }
+
+    private static void populateForMNV(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+        String[] gdnaParts = gdna.split("_");
+        builder.gdnaPosition(Integer.parseInt(gdnaParts[0]));
+
+        int delStart = gdnaParts[1].indexOf("del");
+        int insStart = gdnaParts[1].indexOf("ins");
+        builder.gdnaRef(gdnaParts[1].substring(delStart+3, insStart));
+        builder.gdnaAlt(gdnaParts[1].substring(insStart+3));
+    }
+
+    private static void populateForSNV(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
         StringBuilder gdnaPos = new StringBuilder();
         StringBuilder gdnaRef = new StringBuilder();
         StringBuilder gdnaAlt = new StringBuilder();
 
         boolean foundNonInteger = false;
         boolean foundRefToAltChar = false;
-        for (int i = 2; i < chromosomeAndGNDA[1].length(); i++) {
-            char charToEvaluate = chromosomeAndGNDA[1].charAt(i);
+        for (int i = 0; i < gdna.length(); i++) {
+            char charToEvaluate = gdna.charAt(i);
 
             if (!foundNonInteger) {
                 if (Character.isDigit(charToEvaluate)) {

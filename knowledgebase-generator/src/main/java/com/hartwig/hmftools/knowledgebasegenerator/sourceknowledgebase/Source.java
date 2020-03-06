@@ -21,7 +21,6 @@ public enum Source {
 
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
 
-
     @NotNull
     public static Source sourceFromKnowledgebase(@NotNull String source) {
         if (source.equals("oncokb")) {

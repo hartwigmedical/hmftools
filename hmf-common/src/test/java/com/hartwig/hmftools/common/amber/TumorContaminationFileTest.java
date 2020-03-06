@@ -40,9 +40,13 @@ public class TumorContaminationFileTest {
         return ImmutableTumorContamination.builder().from(template).normal(normalDepth).tumor(tumorDepth).build();
     }
 
-    private static BaseDepth createRandom(@NotNull final Random random) {
+    static BaseDepth createRandom(@NotNull final Random random) {
+        return createRandom(String.valueOf(random.nextInt(22)), random);
+    }
+
+    static BaseDepth createRandom(@NotNull final String chromosome, @NotNull final Random random) {
         return ModifiableBaseDepth.create()
-                .setChromosome(String.valueOf(random.nextInt()))
+                .setChromosome(chromosome)
                 .setPosition(random.nextLong())
                 .setRef(BaseDepth.Base.A)
                 .setAlt(BaseDepth.Base.T)

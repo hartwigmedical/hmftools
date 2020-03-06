@@ -38,43 +38,50 @@ public class HotspotExtractor {
 
     @NotNull
     public List<VariantHotspot> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
-        List<VariantHotspot> hotspots = Lists.newArrayList();
+        List<VariantHotspot> allHotspots = Lists.newArrayList();
         if (Source.sourceFromKnowledgebase(viccEntry.source()) == Source.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
-                if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType())) {
-//                    LOGGER.info("Converting '{}' on {} with name '{}'", feature.biomarkerType(), feature.geneSymbol(), feature.name());
-                    //                    hotspots.addAll(transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name()));
-                } else if (isProteinAnnotation(feature.name())) {
-                    LOGGER.info("Attempt to convert '{}' on {}", feature.name(), feature.geneSymbol());
-                } else {
-                    LOGGER.info("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}'",
-                            feature.name(),
-                            feature.geneSymbol(),
-                            feature.biomarkerType());
+                if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
+                    List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
+                    LOGGER.info("Converted '{}' on gene '{}' to {} hotspot(s)", feature.name(), feature.geneSymbol(), hotspots.size());
+                    allHotspots.addAll(hotspots);
                 }
             }
         }
 
-        return hotspots;
+        return allHotspots;
     }
 
     @VisibleForTesting
     static boolean isProteinAnnotation(@NotNull String featureName) {
-        if (featureName.length() < 3) {
+        String featureToTest;
+        // Features could be ranges such as E102_I103del
+        if (featureName.contains("_")) {
+            featureToTest = featureName.split("_")[1];
+            // We only want to explicitly filter on ranges that involve insertions, deletions or duplication.
+            if (!(featureToTest.contains("ins") || featureToTest.contains("del") || featureToTest.contains("dup"))) {
+                return false;
+            }
+        } else {
+            featureToTest = featureName;
+        }
+
+        // Features are expected to look something like V600E (1 char - N digits - M chars)
+        if (featureToTest.length() < 3) {
             return false;
         }
 
-        if (!Character.isLetter(featureName.charAt(0))) {
+        if (!Character.isLetter(featureToTest.charAt(0))) {
             return false;
         }
 
-        if (!Character.isDigit(featureName.charAt(1))) {
+        if (!Character.isDigit(featureToTest.charAt(1))) {
             return false;
         }
 
-        boolean haveObservedNonDigit = !Character.isDigit(featureName.charAt(2));
-        for (int i = 3; i < featureName.length(); i++) {
-            char charToEvaluate = featureName.charAt(i);
+        boolean haveObservedNonDigit = !Character.isDigit(featureToTest.charAt(2));
+        for (int i = 3; i < featureToTest.length(); i++) {
+            char charToEvaluate = featureToTest.charAt(i);
             if (haveObservedNonDigit && Character.isDigit(charToEvaluate)) {
                 return false;
             }

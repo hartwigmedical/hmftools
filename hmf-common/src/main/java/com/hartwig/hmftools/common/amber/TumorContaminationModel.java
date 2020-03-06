@@ -19,12 +19,16 @@ public class TumorContaminationModel {
     private static final Logger LOGGER = LogManager.getLogger(TumorContaminationModel.class);
 
     private static final double INCREMENT = 0.001;
+    private static final int MIN_NORMAL_READ_DEPTH = 7;
     private static final long MIN_THREE_PLUS_READS = 2000;
 
-    public double contamination(@NotNull final List<TumorContamination> contamination) {
+    public double contamination(@NotNull final List<TumorContamination> unfiltered) {
+        final List<TumorContamination> contamination =
+                unfiltered.stream().filter(x -> x.normal().readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
         long medianTumorReadDepth = medianDepth(contamination);
         LOGGER.info("Median tumor depth at potential contamination sites is {} reads", medianTumorReadDepth);
-        final Map<Integer, Long> map = contamination.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
+        final Map<Integer, Long> map =
+                contamination.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
         return contamination(medianTumorReadDepth, map);
     }
 

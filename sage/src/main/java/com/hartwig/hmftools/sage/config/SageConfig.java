@@ -29,8 +29,6 @@ public interface SageConfig {
     String REFERENCE_BAM = "reference_bam";
     String TUMOR = "tumor";
     String TUMOR_BAM = "tumor_bam";
-    String RNA = "rna";
-    String RNA_BAM = "rna_bam";
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
     String MIN_MAP_QUALITY = "min_map_quality";
@@ -55,8 +53,6 @@ public interface SageConfig {
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
         options.addOption(TUMOR, true, "Name of tumor sample");
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
-        options.addOption(RNA, true, "Name of RNA sample");
-        options.addOption(RNA_BAM, true, "Path to RNA bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
@@ -79,16 +75,10 @@ public interface SageConfig {
     int threads();
 
     @NotNull
-    String reference();
+    List<String> reference();
 
     @NotNull
-    String referenceBam();
-
-    @NotNull
-    String rna();
-
-    @NotNull
-    String rnaBam();
+    List<String> referenceBam();
 
     @NotNull
     String refGenome();
@@ -135,10 +125,6 @@ public interface SageConfig {
         return 1000;
     }
 
-    default boolean rnaEnabled() {
-        return !rnaBam().isEmpty();
-    }
-
     default int maxSkippedReferenceRegions() {
         return 50;
     }
@@ -147,22 +133,24 @@ public interface SageConfig {
     static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
 
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
-        final String reference = cmd.getOptionValue(REFERENCE);
-        final String reference_bam = cmd.getOptionValue(REFERENCE_BAM);
 
-        final String rna = cmd.getOptionValue(RNA, Strings.EMPTY);
-        final String rna_bam = cmd.getOptionValue(RNA_BAM, Strings.EMPTY);
-
-        if (!new File(reference_bam).exists()) {
-            throw new ParseException("Unable to locate reference bam " + reference_bam);
+        final List<String> referenceList = Lists.newArrayList();
+        referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
+        if (referenceList.isEmpty()) {
+            throw new ParseException("At least one reference sample required");
         }
 
-        if (!rna_bam.isEmpty() && !new File(rna_bam).exists()) {
-            throw new ParseException("Unable to locate rna bam " + rna_bam);
+        final List<String> referenceBamList = Lists.newArrayList();
+        referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
+
+        if (referenceList.size() != referenceBamList.size()) {
+            throw new ParseException("Each reference sample must have matching bam");
         }
 
-        if (!rna_bam.isEmpty() && rna.isEmpty()) {
-            throw new ParseException("Parameter " + RNA + " is mandatory when " + RNA_BAM + " supplied");
+        for (String referenceBam : referenceBamList) {
+            if (!new File(referenceBam).exists()) {
+                throw new ParseException("Unable to locate reference bam " + referenceBam);
+            }
         }
 
         final List<String> tumorList = Lists.newArrayList();
@@ -189,12 +177,10 @@ public interface SageConfig {
                 .version(version)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
-                .reference(reference)
-                .referenceBam(reference_bam)
+                .reference(referenceList)
+                .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
-                .rna(rna)
-                .rnaBam(rna_bam)
                 .mnvDetection(!cmd.hasOption(DISABLE_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))

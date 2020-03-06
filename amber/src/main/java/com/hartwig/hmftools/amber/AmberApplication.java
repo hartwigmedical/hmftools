@@ -100,8 +100,12 @@ public class AmberApplication implements AutoCloseable {
             throw new IOException("Unable to locate tumor bam file " + config.tumorBamPath());
         }
 
-        if (!config.tumorOnly() && !new File(config.referenceBamPath()).exists()) {
-            throw new IOException("Unable to locate reference bam file " + config.referenceBamPath());
+        if (!config.tumorOnly()) {
+            for (String referenceBam : config.referenceBamPath()) {
+                if (!new File(referenceBam).exists()) {
+                    throw new ParseException("Unable to locate reference bam " + referenceBam);
+                }
+            }
         }
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("-%d").build();
@@ -123,7 +127,7 @@ public class AmberApplication implements AutoCloseable {
     private void runNormalMode() throws InterruptedException, ExecutionException, IOException {
         final SamReaderFactory readerFactory = readerFactory(config);
 
-        final ListMultimap<Chromosome, BaseDepth> unfilteredNormal = normalDepth(readerFactory, sites);
+        final ListMultimap<Chromosome, BaseDepth> unfilteredNormal = normalDepth(readerFactory, config.referenceBamPath().get(0), sites);
 
         final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), unfilteredNormal);
         final ListMultimap<Chromosome, BaseDepth> homNormal = filterEntries(unfilteredNormal, depthFilter.and(homozygousFilter));
@@ -171,12 +175,12 @@ public class AmberApplication implements AutoCloseable {
     }
 
     @NotNull
-    private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory,
+    private ListMultimap<Chromosome, BaseDepth> normalDepth(final SamReaderFactory readerFactory, final String bamPath,
             final ListMultimap<Chromosome, AmberSite> bedRegionsSortedSet) throws InterruptedException, ExecutionException {
 
         final int partitionSize = Math.max(config.minPartition(), bedRegionsSortedSet.size() / config.threadCount());
 
-        LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), config.referenceBamPath());
+        LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), bamPath);
         final AmberTaskCompletion completion = new AmberTaskCompletion();
 
         final List<Future<BaseDepthEvidence>> futures = Lists.newArrayList();
@@ -186,7 +190,7 @@ public class AmberApplication implements AutoCloseable {
                         config.minMappingQuality(),
                         config.minBaseQuality(),
                         inner.get(0).chromosome(),
-                        config.referenceBamPath(),
+                        bamPath,
                         readerFactory,
                         inner);
                 futures.add(executorService.submit(completion.task(evidence)));

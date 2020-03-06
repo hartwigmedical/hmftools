@@ -137,6 +137,8 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
  
 # Version History and Download Links
 To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
+- Upcoming
+  - Improved contamination check for very shallow sequencing
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.2)
   - Fixed IndexOutOfBoundsException.
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.1)
