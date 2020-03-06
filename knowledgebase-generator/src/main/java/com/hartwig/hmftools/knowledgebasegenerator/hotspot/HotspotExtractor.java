@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebasegenerator.hotspot;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -36,17 +37,19 @@ public class HotspotExtractor {
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspots(@NotNull ViccEntry viccEntry) {
-        List<VariantHotspot> hotspots = Lists.newArrayList();
+    public List<VariantHotspot> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
+        List<VariantHotspot> allHotspots = Lists.newArrayList();
         if (Source.sourceFromKnowledgebase(viccEntry.source()) == Source.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
                 if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
-                    LOGGER.info("Attempt to convert '{}' on {}", feature.name(), feature.geneSymbol());
+                    List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
+                    LOGGER.info("Converted '{}' on gene '{}' to {} hotspot(s)", feature.name(), feature.geneSymbol(), hotspots.size());
+                    allHotspots.addAll(hotspots);
                 }
             }
         }
 
-        return hotspots;
+        return allHotspots;
     }
 
     @VisibleForTesting

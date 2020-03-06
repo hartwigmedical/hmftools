@@ -3,18 +3,24 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 public class ViccHotspotExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccHotspotExtractorTestApplication.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        Configurator.setRootLevel(Level.DEBUG);
+
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
         String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
@@ -25,8 +31,11 @@ public class ViccHotspotExtractorTestApplication {
         LOGGER.info("Read {} entries", viccEntries.size());
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
+        List<VariantHotspot> hotspots = Lists.newArrayList();
         for (ViccEntry viccEntry : viccEntries) {
-            hotspotExtractor.extractHotspots(viccEntry);
+            hotspots.addAll(hotspotExtractor.extractHotspots(viccEntry));
         }
+
+        LOGGER.info("Done extracting {} hotspots.", hotspots.size());
     }
 }
