@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
@@ -10,13 +10,11 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
-import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.from;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -46,7 +44,10 @@ public class FragmentSizeCalcs
 
     private final List<int[]> mFragmentLengths;
     private final List<int[]> mFragmentLengthsByGene;
-    private BufferedWriter mWriter;
+    private int mMaxReadLength;
+
+    private BufferedWriter mFragLengthWriter;
+    private BufferedWriter mFragReadWriter;
 
     private EnsemblGeneData mCurrentGeneData;
     private List<TranscriptData> mCurrentTransDataList;
@@ -66,13 +67,22 @@ public class FragmentSizeCalcs
         mCurrentReadCount = 0;
         mTotalReadCount = 0;
         mProcessedFragments = 0;
-        mWriter = writer;
+        mMaxReadLength = 0;
+
+        mFragLengthWriter = writer;
+        mFragReadWriter = null;
 
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
     }
 
+    public void close()
+    {
+        closeBufferedWriter(mFragReadWriter);
+    }
+
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
+    public final int getMaxReadLength() { return mMaxReadLength; }
 
     private static final int MIN_GENE_LENGTH = 1000;
     private static final int MAX_GENE_LENGTH = 1000000;
@@ -143,7 +153,7 @@ public class FragmentSizeCalcs
 
             if(mConfig.FragmentLengthsByGene)
             {
-                writeFragmentLengths(mWriter, mFragmentLengthsByGene, geneData);
+                writeFragmentLengths(mFragLengthWriter, mFragmentLengthsByGene, geneData);
                 mFragmentLengthsByGene.clear();
             }
 
@@ -171,6 +181,8 @@ public class FragmentSizeCalcs
         if(!isCandidateRecord(record))
             return;
 
+        mMaxReadLength = max(mMaxReadLength, record.getReadLength());
+
         long posStart = record.getStart();
         long posEnd = record.getEnd();
 
@@ -184,6 +196,9 @@ public class FragmentSizeCalcs
 
         if(mConfig.FragmentLengthsByGene)
             addFragmentLength(record, mFragmentLengthsByGene);
+
+        if(mConfig.WriteFragmentReads)
+            writeReadData(mCurrentGeneData, record);
     }
 
     private boolean isCandidateRecord(final SAMRecord record)
@@ -239,8 +254,18 @@ public class FragmentSizeCalcs
         ++mProcessedFragments;
     }
 
-    public void setConfigLengthDistribution()
+    public void setConfigFragmentLengthData()
     {
+        if(mMaxReadLength > 0)
+        {
+            mConfig.ReadLength = mMaxReadLength;
+            LOGGER.info("max read length({}) set", mMaxReadLength);
+        }
+        else
+        {
+            LOGGER.warn("max read length not determined from fragment length calcs");
+        }
+
         final List<int[]> lengthFrequencies = mConfig.ExpRateFragmentLengths;
 
         int currentRangeMin = 0;
@@ -305,7 +330,7 @@ public class FragmentSizeCalcs
 
     public void writeFragmentLengths(final EnsemblGeneData geneData)
     {
-        writeFragmentLengths(mWriter, mFragmentLengths, null);
+        writeFragmentLengths(mFragLengthWriter, mFragmentLengths, null);
     }
 
     private synchronized static void writeFragmentLengths(
@@ -336,6 +361,53 @@ public class FragmentSizeCalcs
             LOGGER.error("failed to write fragment length file: {}", e.toString());
         }
 
+    }
+
+    private void writeReadData(final EnsemblGeneData geneData, final SAMRecord read)
+    {
+        if(mConfig.Threads > 1) // not currently synchronised
+            return;
+
+        try
+        {
+            if(mFragReadWriter == null)
+            {
+                final String outputFileName = mConfig.formOutputFile("frag_length_reads.csv");
+
+                mFragReadWriter = createBufferedWriter(outputFileName, false);
+                mFragReadWriter.write("GeneId,GeneName,Chromosome,ReadId,PosStart,PosEnd,Cigar");
+                mFragReadWriter.write(",InsertSize,ReadLength,OtherReadStart,HasReadOverlap,ReadBases");
+                mFragReadWriter.newLine();
+            }
+
+            mFragReadWriter.write(String.format("%s,%s,%s",
+                    geneData.GeneId, geneData.GeneName, geneData.Chromosome));
+
+            long otherReadStart = read.getMateAlignmentStart();
+            int readLength = read.getReadLength();
+
+            boolean hasReadOverlap;
+            if(otherReadStart < read.getStart())
+            {
+                hasReadOverlap = otherReadStart + readLength - 1 >= read.getStart();
+            }
+            else
+            {
+                hasReadOverlap = read.getEnd() >= otherReadStart;
+            }
+
+            mFragReadWriter.write(String.format(",%s,%d,%d,%s",
+                    read.getReadName(), read.getStart(), read.getEnd(), read.getCigar().toString()));
+
+            mFragReadWriter.write(String.format(",%d,%d,%d,%s,%s",
+                    read.getInferredInsertSize(), readLength, otherReadStart, hasReadOverlap, read.getReadString()));
+
+            mFragReadWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            LOGGER.error("failed to write fragment length read data file: {}", e.toString());
+        }
     }
 
 }

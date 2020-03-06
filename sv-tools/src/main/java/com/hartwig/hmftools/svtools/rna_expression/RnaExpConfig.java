@@ -49,6 +49,7 @@ public class RnaExpConfig
     private static final String WRITE_FRAG_LENGTHS_ONLY = "write_frag_lengths_only";
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
+    private static final String WRITE_FRAG_READS = "write_frag_length_reads";
 
     // expected expression config
     private static final String EXP_RATES_FILE = "exp_rates_file";
@@ -98,6 +99,7 @@ public class RnaExpConfig
     public final int FragmentLengthMinCount;
     public final boolean FragmentLengthsByGene;
     public final boolean WriteFragmentLengthsOnly;
+    public final boolean WriteFragmentReads;
 
     public final List<String> SpecificTransIds;
     public final List<String> SpecificChromosomes;
@@ -167,6 +169,7 @@ public class RnaExpConfig
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
+        WriteFragmentReads = cmd.hasOption(WRITE_FRAG_READS);
         WriteFragmentLengthsOnly = cmd.hasOption(WRITE_FRAG_LENGTHS_ONLY);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
@@ -213,7 +216,7 @@ public class RnaExpConfig
 
         if(ApplyExpectedRates && ExpRatesFile == null)
         {
-            if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
+            if(!UseCalculatedFragmentLengths && (ReadLength == 0 || ExpRateFragmentLengths.isEmpty()))
             {
                 RE_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
                 return false;
@@ -284,6 +287,7 @@ public class RnaExpConfig
         WriteFragmentLengths = false;
         WriteFragmentLengthsOnly = false;
         WriteTransComboData = false;
+        WriteFragmentReads = false;
 
         WriteExpectedRates = false;
         UseCalculatedFragmentLengths = false;
@@ -316,6 +320,7 @@ public class RnaExpConfig
         options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate reads");
         options.addOption(FRAG_LENGTH_MIN_COUNT, true, "Fragment length measurement - min read fragments required");
         options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
+        options.addOption(WRITE_FRAG_READS, false, "Write fragment read data from length determination");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");

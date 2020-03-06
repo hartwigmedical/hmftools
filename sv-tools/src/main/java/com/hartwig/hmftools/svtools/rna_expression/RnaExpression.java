@@ -175,12 +175,14 @@ public class RnaExpression
         }
 
         if(mConfig.UseCalculatedFragmentLengths)
-            mFragmentSizeCalcs.setConfigLengthDistribution();
+            mFragmentSizeCalcs.setConfigFragmentLengthData();
 
         if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
         {
             mFragmentSizeCalcs.writeFragmentLengths(null);
         }
+
+        mFragmentSizeCalcs.close();
     }
 
     private boolean checkThreadCompletion(final List<FutureTask> taskList)
