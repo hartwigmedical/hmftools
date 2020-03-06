@@ -31,18 +31,16 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE = Sets.newHashSet();
 
-    public static AllGenomicEvents checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+    @NotNull
+    public static List<KnownAmplificationDeletion> checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type,
             @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-
-        AllGenomicEvents allGenomicEvents = ImmutableAllGenomicEvents.of(Lists.newArrayList(), Lists.newArrayList());
-
+        List<KnownAmplificationDeletion> listAmpsOrDels = Lists.newArrayList();
         if (AMPLIFICATION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            List<KnownAmplificationDeletion> knownAmplification =
+            listAmpsOrDels =
                     CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
-            allGenomicEvents = ImmutableAllGenomicEvents.of(knownAmplification, Lists.newArrayList());
 
 
             ActionableAmplificationDeletion actionableAmplification =
@@ -50,9 +48,8 @@ public class DetermineEventOfGenomicMutation {
 
         } else if (DELETION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            List<KnownAmplificationDeletion> knownDeletion =
+            listAmpsOrDels =
                     CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
-            allGenomicEvents = ImmutableAllGenomicEvents.of(Lists.newArrayList(), knownDeletion);
 
             ActionableAmplificationDeletion actionableDeletion =
                     CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
@@ -72,6 +69,6 @@ public class DetermineEventOfGenomicMutation {
         } else {
             LOGGER.info("skipping");
         }
-        return allGenomicEvents;
+        return listAmpsOrDels;
     }
 }

@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
@@ -71,6 +72,7 @@ public class KnowledgebaseGeneratorApplication {
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
+        List<KnownAmplificationDeletion> listOfAmpsOrDels = Lists.newArrayList();
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
 
@@ -78,14 +80,16 @@ public class KnowledgebaseGeneratorApplication {
 
             for (EventType type : eventType) {
                 // Generating actionable event and known events
-                genomicEventsBuilder.from(DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry, type, hotspotExtractor));
+                //TODO: map every genomic event to one object
+                listOfAmpsOrDels = DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry, type, hotspotExtractor);
             }
 
         }
         AllGenomicEvents allGenomicEvents = genomicEventsBuilder.build();
 
-        List<KnownAmplificationDeletion> mergedAmps = CollapseSources.collapeeSourseInformation(allGenomicEvents);
-        List<KnownAmplificationDeletion> mergedDels = CollapseSources.collapeeSourseInformation(allGenomicEvents);
+        LOGGER.info(listOfAmpsOrDels);
+        List<KnownAmplificationDeletion> mergedAmps = CollapseSources.collapeeSourseInformation(listOfAmpsOrDels);
+        List<KnownAmplificationDeletion> mergedDels = CollapseSources.collapeeSourseInformation(listOfAmpsOrDels);
 
         AllGenomicEvents finalAllGenomicEvents =
                 ImmutableAllGenomicEvents.builder().knownAmplifications(mergedAmps).knownDeletions(mergedDels).build();

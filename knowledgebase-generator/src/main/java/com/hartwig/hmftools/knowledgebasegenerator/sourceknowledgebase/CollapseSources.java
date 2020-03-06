@@ -19,10 +19,10 @@ public class CollapseSources {
     private static final Logger LOGGER = LogManager.getLogger(CollapseSources.class);
     private static final String SOURCE_LINK_SEPARATOR = ";";
 
-    public static List<KnownAmplificationDeletion> collapeeSourseInformation(@NotNull AllGenomicEvents allGenomicEvents) {
+    public static List<KnownAmplificationDeletion> collapeeSourseInformation(@NotNull List<KnownAmplificationDeletion> listOfAmpsOrDels) {
 
         Map<SourceKey, List<KnownAmplificationDeletion>> collapseSource = Maps.newHashMap();
-        for (KnownAmplificationDeletion amplification : allGenomicEvents.knownAmplifications()) {
+        for (KnownAmplificationDeletion amplification : listOfAmpsOrDels) {
             SourceKey key = new SourceKey(amplification.gene());
             List<KnownAmplificationDeletion> items = collapseSource.get(key);
             if (items == null) {
