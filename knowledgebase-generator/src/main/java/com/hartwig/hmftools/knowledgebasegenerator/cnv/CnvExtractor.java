@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
@@ -29,7 +26,7 @@ public class CnvExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
 
     @NotNull
-    public static List<KnownAmplificationDeletion> determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent,
+    public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent,
             @NotNull String gene) {
         return knownInformation(source, typeEvent, gene);
 
@@ -42,9 +39,8 @@ public class CnvExtractor {
     }
 
     @NotNull
-    private static List<KnownAmplificationDeletion> knownInformation(@NotNull Source source, @NotNull String typeEvent,
+    private static KnownAmplificationDeletion knownInformation(@NotNull Source source, @NotNull String typeEvent,
             @NotNull String gene) {
-        List<KnownAmplificationDeletion> knownAmpsDels = Lists.newArrayList();
         String link = Strings.EMPTY;
         switch (source) {
             case ONCOKB:
@@ -73,13 +69,12 @@ public class CnvExtractor {
             default:
                 LOGGER.warn("Unknown knowledgebase");
         }
-        knownAmpsDels.add(ImmutableKnownAmplificationDeletion.builder()
+        return ImmutableKnownAmplificationDeletion.builder()
                 .gene(gene)
                 .eventType(typeEvent)
                 .source(source.toString())
                 .sourceLink(link)
-                .build());
-        return knownAmpsDels;
+                .build();
     }
 
     @NotNull

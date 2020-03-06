@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.hartwig.hmftools.knowledgebasegenerator.AllGenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.GenomicEvents;
@@ -28,30 +29,23 @@ public class GeneratingOutputFiles {
     }
 
     private static void generateKnownAmplification(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
-        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + NEW_LINE;
+        String headerknownCNV = "Gene" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
-        for (KnownAmplificationDeletion amplification : genomicEvents.knownAmplifications()) {
-            if (!amplification.gene().isEmpty() && !amplification.eventType().isEmpty() && !amplification.source().isEmpty()) {
-
-                writer.write(amplification.gene() + DELIMITER + amplification.eventType() + DELIMITER + amplification.source() + NEW_LINE);
-            }
+        for (String amplification : genomicEvents.uniqueAmplification()) {
+            writer.write(amplification + NEW_LINE);
         }
-
         writer.close();
     }
 
     private static void generateKnownDeletions(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
-        String headerknownCNV = "Gene" + DELIMITER + "Type" + DELIMITER + "Source" + NEW_LINE;
+        String headerknownCNV = "Gene" + NEW_LINE;
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerknownCNV);
-        for (KnownAmplificationDeletion deletion : genomicEvents.knownDeletions()) {
-            if (!deletion.gene().isEmpty() && !deletion.eventType().isEmpty() && !deletion.source().isEmpty()) {
-                writer.write(deletion.gene() + DELIMITER + deletion.eventType() + DELIMITER + deletion.source() + NEW_LINE);
-            }
+        for (String deletion : genomicEvents.uniqueDeletions()) {
+            writer.write(deletion + NEW_LINE);
         }
-
         writer.close();
     }
 

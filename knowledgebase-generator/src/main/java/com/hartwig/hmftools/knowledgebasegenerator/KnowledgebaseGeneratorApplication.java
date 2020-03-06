@@ -3,6 +3,8 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +20,6 @@ import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.output.GeneratingOutputFiles;
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.CollapseSources;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -72,7 +73,10 @@ public class KnowledgebaseGeneratorApplication {
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
-        List<KnownAmplificationDeletion> listOfAmpsOrDels = Lists.newArrayList();
+
+        List<KnownAmplificationDeletion> listAmps = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listDels = Lists.newArrayList();
+
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
 
@@ -81,18 +85,43 @@ public class KnowledgebaseGeneratorApplication {
             for (EventType type : eventType) {
                 // Generating actionable event and known events
                 //TODO: map every genomic event to one object
-                listOfAmpsOrDels = DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry, type, hotspotExtractor);
-            }
+                listAmps.add(DetermineEventOfGenomicMutation.checkAmplification(viccEntry, type, hotspotExtractor));
+                listDels.add(DetermineEventOfGenomicMutation.checkDeletion(viccEntry, type, hotspotExtractor));
 
+            }
         }
         AllGenomicEvents allGenomicEvents = genomicEventsBuilder.build();
 
-        LOGGER.info(listOfAmpsOrDels);
-        List<KnownAmplificationDeletion> mergedAmps = CollapseSources.collapeeSourseInformation(listOfAmpsOrDels);
-        List<KnownAmplificationDeletion> mergedDels = CollapseSources.collapeeSourseInformation(listOfAmpsOrDels);
+        List<KnownAmplificationDeletion> listAmpsFilter = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listDelsFIlter = Lists.newArrayList();
+        Set<String> uniqueAmps = Sets.newHashSet();
+        Set<String> uniqueDels = Sets.newHashSet();
+        for (KnownAmplificationDeletion amps : listAmps) {
+            if (!amps.eventType().isEmpty()) {
+                listAmpsFilter.add(amps);
+                uniqueAmps.add(amps.gene());
+            }
+        }
 
-        AllGenomicEvents finalAllGenomicEvents =
-                ImmutableAllGenomicEvents.builder().knownAmplifications(mergedAmps).knownDeletions(mergedDels).build();
+        List<String> sortedUniqueAmps = new ArrayList<String>(uniqueAmps);
+        Collections.sort(sortedUniqueAmps);
+
+        for (KnownAmplificationDeletion dels : listDels) {
+            if (!dels.eventType().isEmpty()) {
+                listDelsFIlter.add(dels);
+                uniqueDels.add(dels.gene());
+            }
+        }
+        List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
+        Collections.sort(sortedUniqueDels);
+
+
+        AllGenomicEvents finalAllGenomicEvents = ImmutableAllGenomicEvents.builder()
+                .knownAmplifications(listAmpsFilter)
+                .uniqueAmplification(sortedUniqueAmps)
+                .knownDeletions(listDelsFIlter)
+                .uniqueDeletions(sortedUniqueDels)
+                .build();
 
         // Create all output files from knowledgebase with data
         LOGGER.info("Generating output files");
