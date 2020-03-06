@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
@@ -26,17 +29,22 @@ public class CnvExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
 
     @NotNull
-    public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene){
-        return ImmutableKnownAmplificationDeletion.builder().gene(gene).eventType(typeEvent).source(source.toString()).build();
+    public static List<KnownAmplificationDeletion> determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent,
+            @NotNull String gene) {
+        List<KnownAmplificationDeletion> knownAmpsDels = Lists.newArrayList();
+        knownAmpsDels.add(ImmutableKnownAmplificationDeletion.builder().gene(gene).eventType(typeEvent).source(source.toString()).build());
+        return knownAmpsDels;
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene){
+    public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source,
+            @NotNull String typeEvent, @NotNull String gene) {
         return actionableInformation(source, typeEvent, gene);
     }
 
     @NotNull
-    private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
+    private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent,
+            @NotNull String gene) {
         switch (source) {
             case ONCOKB:
                 break;

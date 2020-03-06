@@ -11,7 +11,6 @@ import com.hartwig.hmftools.knowledgebasegenerator.GenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.ImmutableAllGenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
-import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableKnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
@@ -19,7 +18,6 @@ import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class DetermineEventOfGenomicMutation {
@@ -33,67 +31,47 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE = Sets.newHashSet();
 
-    public static void checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+    public static AllGenomicEvents checkGenomicEvent(@NotNull ViccEntry viccEntry, @NotNull EventType type,
             @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
 
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-//        AllGenomicEvents allGenomicEvents = ImmutableAllGenomicEvents.builder()
-//                .knownAmplifications(ImmutableKnownAmplificationDeletion.builder()
-//                        .gene(Strings.EMPTY)
-//                        .eventType(Strings.EMPTY)
-//                        .source(Strings.EMPTY)
-//                        .build())
-//                .knownDeletions(ImmutableKnownAmplificationDeletion.builder()
-//                        .gene(Strings.EMPTY)
-//                        .eventType(Strings.EMPTY)
-//                        .source(Strings.EMPTY)
-//                        .build())
-//                .build();
-//        if (AMPLIFICATION.contains(type.eventType())) {
-//            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-//            KnownAmplificationDeletion knownAmplification =
-//                    CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
-//            ActionableAmplificationDeletion actionableAmplification =
-//                    CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
-//            allGenomicEvents = ImmutableAllGenomicEvents.builder()
-//                    .knownAmplifications(knownAmplification)
-//                    .knownDeletions(ImmutableKnownAmplificationDeletion.builder()
-//                            .gene(Strings.EMPTY)
-//                            .eventType(Strings.EMPTY)
-//                            .source(Strings.EMPTY)
-//                            .build())
-//                    .build();
-//        } else if (DELETION.contains(type.eventType())) {
-//            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-//            KnownAmplificationDeletion knownDeletion =
-//                    CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
-//            allGenomicEvents = ImmutableAllGenomicEvents.builder()
-//                    .knownAmplifications(ImmutableKnownAmplificationDeletion.builder()
-//                            .gene(Strings.EMPTY)
-//                            .eventType(Strings.EMPTY)
-//                            .source(Strings.EMPTY)
-//                            .build())
-//                    .knownDeletions(knownDeletion)
-//                    .build();
-//            ActionableAmplificationDeletion actionableDeletion =
-//                    CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
-//        } else if (VARIANTS.contains(type.eventType())) {
-//            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
-//            // TODO: Determine hotspots
-//            //hotspotExtractor.extractHotspots(viccEntry);
-//        } else if (RANGE.contains(type.eventType())) {
-//            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Range");
-//            // TODO: Determine range
-//        } else if (FUSIONS.contains(type.eventType())) {
-//            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
-//            // TODO: Determine fusions
-//        } else if (SIGNATURE.contains(type.eventType())) {
-//            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signature");
-//            // TODO: Determine signature
-//        } else {
-//            LOGGER.info("skipping");
-//        }
-//        return allGenomicEvents;
+        AllGenomicEvents allGenomicEvents = ImmutableAllGenomicEvents.of(Lists.newArrayList(), Lists.newArrayList());
+
+        if (AMPLIFICATION.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
+            List<KnownAmplificationDeletion> knownAmplification =
+                    CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            allGenomicEvents = ImmutableAllGenomicEvents.of(knownAmplification, Lists.newArrayList());
+
+
+            ActionableAmplificationDeletion actionableAmplification =
+                    CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
+
+        } else if (DELETION.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
+            List<KnownAmplificationDeletion> knownDeletion =
+                    CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            allGenomicEvents = ImmutableAllGenomicEvents.of(Lists.newArrayList(), knownDeletion);
+
+            ActionableAmplificationDeletion actionableDeletion =
+                    CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene());
+        } else if (VARIANTS.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
+            // TODO: Determine hotspots
+            //hotspotExtractor.extractHotspots(viccEntry);
+        } else if (RANGE.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Range");
+            // TODO: Determine range
+        } else if (FUSIONS.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
+            // TODO: Determine fusions
+        } else if (SIGNATURE.contains(type.eventType())) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signature");
+            // TODO: Determine signature
+        } else {
+            LOGGER.info("skipping");
+        }
+        return allGenomicEvents;
     }
 }

@@ -13,6 +13,7 @@ import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGenomicMutation;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
@@ -69,7 +70,6 @@ public class KnowledgebaseGeneratorApplication {
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, cmd.getOptionValue(REF_GENOME_FASTA_FILE));
 
-
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
@@ -79,9 +79,7 @@ public class KnowledgebaseGeneratorApplication {
             for (EventType type : eventType) {
                 // Generating actionable event and known events
 
-//                genomicEventsBuild.add(DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry,
-//                        type,
-//                        hotspotExtractor));
+                genomicEventsBuilder.from(DetermineEventOfGenomicMutation.checkGenomicEvent(viccEntry, type, hotspotExtractor));
             }
 
         }
