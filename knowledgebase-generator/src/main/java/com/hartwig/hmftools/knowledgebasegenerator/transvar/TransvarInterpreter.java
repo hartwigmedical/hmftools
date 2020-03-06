@@ -46,17 +46,24 @@ final class TransvarInterpreter {
     }
 
     private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : flipBase(record.gdnaRef());
-        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : flipBase(record.gdnaAlt());
+        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : flipBases(record.gdnaRef());
+        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : flipBases(record.gdnaAlt());
+
+        // Function only supports SNV and MNV
+        assert codonCompatibleRef.length() == codonCompatibleAlt.length();
 
         // We look for the reference codon and candidate codon where the mutation is exclusively the mutation implied by the ref>alt
+        int mutLength = codonCompatibleRef.length();
         for (String candidateCodon : record.candidateCodons()) {
-            for (int i = 0; i < 3; i++) {
-                if (record.referenceCodon().substring(i, i + 1).equals(codonCompatibleRef) && candidateCodon.substring(i, i + 1)
-                        .equals(codonCompatibleAlt)) {
+            for (int i = 0; i < 4 - mutLength; i++) {
+                if (record.referenceCodon().substring(i, i + mutLength).equals(codonCompatibleRef) && candidateCodon.substring(i,
+                        i + mutLength).equals(codonCompatibleAlt)) {
                     boolean match = true;
                     for (int j = 0; j < 3; j++) {
-                        if (j != i && !record.referenceCodon().substring(j, j + 1).equals(candidateCodon.substring(j, j + 1))) {
+                        // No match if we find another mismatch outside of the ref->alt range.
+                        if ((j - i >= mutLength || j - i < 0) && !record.referenceCodon()
+                                .substring(j, j + 1)
+                                .equals(candidateCodon.substring(j, j + 1))) {
                             match = false;
                         }
                     }
@@ -103,24 +110,31 @@ final class TransvarInterpreter {
     private static String reverseAndFlip(@NotNull String string) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = string.length() - 1; i >= 0; i--) {
-            stringBuilder.append(flipBase(string.substring(i, i + 1)));
+            stringBuilder.append(flipBases(string.substring(i, i + 1)));
         }
         return stringBuilder.toString();
     }
 
     @NotNull
-    private static String flipBase(@NotNull String base) {
-        assert base.length() == 1;
+    private static String flipBases(@NotNull String bases) {
+        StringBuilder flippedBases = new StringBuilder();
+        for (char base : bases.toCharArray()) {
+            flippedBases.append(flipBase(base));
+        }
 
+        return flippedBases.toString();
+    }
+
+    private static char flipBase(char base) {
         switch (base) {
-            case "A":
-                return "T";
-            case "T":
-                return "A";
-            case "G":
-                return "C";
-            case "C":
-                return "G";
+            case 'A':
+                return 'T';
+            case 'T':
+                return 'A';
+            case 'G':
+                return 'C';
+            case 'C':
+                return 'G';
         }
 
         throw new IllegalArgumentException("Cannot flip base: " + base);
