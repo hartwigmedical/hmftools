@@ -35,7 +35,7 @@ public abstract class GeneResult
 
     public abstract List<TranscriptResult> transcriptResults();
 
-    public static GeneResult createGeneResults(GeneReadData geneReadData)
+    public static GeneResult createGeneResults(GeneReadData geneReadData, final List<TranscriptResult> transResults)
     {
         final EnsemblGeneData geneData = geneReadData.GeneData;
 
@@ -58,7 +58,7 @@ public abstract class GeneResult
                 .duplicates(fragmentCounts[typeAsInt(DUPLICATE)])
                 .unsplicedAlloc(unsplicedAlloc != null && !Double.isNaN(unsplicedAlloc) ? unsplicedAlloc : 0.0)
                 .fitResiduals(geneReadData.getFitResiduals())
-                .transcriptResults(Lists.newArrayList())
+                .transcriptResults(transResults)
                 .build();
     }
 

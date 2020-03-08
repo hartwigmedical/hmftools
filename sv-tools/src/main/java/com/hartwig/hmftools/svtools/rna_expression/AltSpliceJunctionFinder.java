@@ -460,12 +460,11 @@ public class AltSpliceJunctionFinder
         if(mWriter != null)
         {
             mAltSpliceJunctions.forEach(x -> x.calcSummaryData(mConfig.RefFastaSeqFile));
-            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mConfig);
+            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions);
         }
     }
 
-    private synchronized static void writeAltSpliceJunctions(
-            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final RnaExpConfig config)
+    private synchronized static void writeAltSpliceJunctions(final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions)
     {
         try
         {
@@ -494,7 +493,5 @@ public class AltSpliceJunctionFinder
             RE_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
         }
     }
-
-
 
 }

@@ -39,8 +39,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -69,6 +67,7 @@ public class GeneBamReader
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
 
     private final BufferedWriter mReadDataWriter;
+    private final GcRatioCounts mGcRatioCounts;
 
     public GeneBamReader(final RnaExpConfig config, final ResultsWriter resultsWriter)
     {
@@ -90,6 +89,7 @@ public class GeneBamReader
         mDuplicateReadIds = Lists.newArrayList();
 
         mReadDataWriter = resultsWriter != null ? resultsWriter.getReadDataWriter() : null;
+        mGcRatioCounts = mConfig.WriteReadGcRatios ? new GcRatioCounts() : null;
 
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
                 mConfig, mSamReader, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
@@ -101,6 +101,7 @@ public class GeneBamReader
     }
 
     public int totalBamCount() { return mTotalBamReadCount; }
+    public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 
     public void readBamCounts(final GeneReadData geneReadData, final GenomeRegion genomeRegion)
     {
@@ -111,14 +112,16 @@ public class GeneBamReader
         mCurrentGene = geneReadData;
         mGeneReadCount = 0;
         mTransComboData.clear();
+        mGcRatioCounts.clearGeneCounts();
         mAltSpliceJunctionFinder.setGeneData(geneReadData);
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
         RE_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
 
-        if(mConfig.GeneStatsOnly)
+        if(!mConfig.WriteTransData)
         {
+            // set the total now the whole gene has been processed
             mCurrentGene.addCount(TOTAL, mGeneReadCount / 2);
         }
     }
@@ -143,10 +146,14 @@ public class GeneBamReader
         ++mTotalBamReadCount;
         ++mGeneReadCount;
 
-        if(mConfig.GeneStatsOnly)
-            return;
+        if(mConfig.WriteTransData)
+            processRead(ReadRecord.from(record));
 
-        processRead(ReadRecord.from(record));
+        if(mGcRatioCounts != null)
+        {
+            if(mConfig.ReadLength == 0 || (mConfig.ReadLength > 0 && record.getReadLength() == mConfig.ReadLength))
+                mGcRatioCounts.processRead(record.getReadString());
+        }
     }
 
     public void processRead(ReadRecord read)

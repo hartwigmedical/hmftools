@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.svtools.rna_expression.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneReadData.markOverlappingGeneRegions;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_FRAGMENT_BUFFER;
@@ -306,13 +307,16 @@ public class ChromosomeGeneTask implements Callable
 
         if(mFragmentSizeCalc != null && mConfig.FragmentLengthsByGene)
             mFragmentSizeCalc.writeFragmentLengths(geneData);
+
+        if(mConfig.WriteReadGcRatios)
+            writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), geneData, mBamReader.getGcRatioCounts().getGeneRatioCounts());
     }
 
     private void cacheResults(final GeneReadData geneReadData)
     {
-        GeneResult geneResult = GeneResult.createGeneResults(geneReadData);
+        final List<TranscriptResult> transResults = Lists.newArrayList();
 
-        if(!mConfig.GeneStatsOnly)
+        if(mConfig.WriteTransData)
         {
             for (final TranscriptData transData : geneReadData.getTranscripts())
             {
@@ -321,9 +325,11 @@ public class ChromosomeGeneTask implements Callable
                 final TranscriptResult results =
                         createTranscriptResults(geneReadData, transData, mConfig.ExpRateFragmentLengths, expRateAllocation);
 
-                geneResult.transcriptResults().add(results);
+                transResults.add(results);
             }
         }
+
+        GeneResult geneResult = GeneResult.createGeneResults(geneReadData, transResults);
 
         mGeneResults.add(geneResult);
     }

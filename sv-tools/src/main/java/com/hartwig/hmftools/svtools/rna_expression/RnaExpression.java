@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.svtools.rna_expression.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.createCmdLineOptions;
@@ -129,8 +130,18 @@ public class RnaExpression
         if(!validExecution)
             return;
 
+        // final reporting
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
         RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
+
+        if(mConfig.WriteReadGcRatios)
+        {
+            GcRatioCounts ratioCounts = new GcRatioCounts();
+
+            chrTasks.forEach(x -> ratioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getRatioCounts()));
+
+            writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, ratioCounts.getRatioCounts());
+        }
 
         final PerformanceCounter[] perfCounters = chrTasks.get(0).getPerfCounters();
 

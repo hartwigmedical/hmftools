@@ -30,6 +30,7 @@ public class ResultsWriter
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
     private BufferedWriter mFragLengthWriter;
+    private BufferedWriter mReadGcRatioWriter;
 
     public ResultsWriter(final RnaExpConfig config)
     {
@@ -43,6 +44,7 @@ public class ResultsWriter
         mReadDataWriter = null;
         mAltSpliceJunctionWriter = null;
         mFragLengthWriter = null;
+        mReadGcRatioWriter = null;
 
         initialiseExternalWriters();
     }
@@ -57,6 +59,7 @@ public class ResultsWriter
         closeBufferedWriter(mReadDataWriter);
         closeBufferedWriter(mAltSpliceJunctionWriter);
         closeBufferedWriter(mFragLengthWriter);
+        closeBufferedWriter(mReadGcRatioWriter);
     }
 
     private void initialiseExternalWriters()
@@ -75,6 +78,9 @@ public class ResultsWriter
 
             if(mConfig.WriteFragmentLengths)
                 mFragLengthWriter = FragmentSizeCalcs.createFragmentLengthWriter(mConfig);
+
+            if(mConfig.WriteReadGcRatios)
+                mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
         }
     }
 
@@ -82,6 +88,7 @@ public class ResultsWriter
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
+    public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
 
     public synchronized void writeGeneResult(final GeneResult geneResult)
     {

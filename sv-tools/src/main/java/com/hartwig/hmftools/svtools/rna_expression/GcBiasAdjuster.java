@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svtools.rna_expression.GcRatioCounts.roundGcRatio;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 
@@ -49,7 +50,6 @@ public class GcBiasAdjuster
     private int mCurrentReadCount;
     private int mTotalReadCount;
 
-    private static final double RATIO_BUCKET = 0.01;
     private static final int SEGMENT_LENGTH = 1000;
 
     public GcBiasAdjuster(final RnaExpConfig config)
@@ -132,8 +132,7 @@ public class GcBiasAdjuster
                 }
 
                 final String chromosome = items[GC_INDEX_CHR];
-                long position = Long.parseLong(items[GC_INDEX_POS]);
-                double ratio = roundRatio(Double.parseDouble(items[GC_INDEX_RATIO]));
+                double ratio = roundGcRatio(Double.parseDouble(items[GC_INDEX_RATIO]));
 
                 if(!currentChr.equals(chromosome))
                 {
@@ -160,6 +159,9 @@ public class GcBiasAdjuster
         try
         {
             final BufferedWriter writer = createBufferedWriter(mConfig.GcBiasFile, false);
+
+            writer.write("Chromosome,Region,GcRatio");
+            writer.newLine();
 
             final Map<Chromosome, Long> chromsomeLengths = RefGenome.HG19.lengths();
 
@@ -195,11 +197,6 @@ public class GcBiasAdjuster
         }
     }
 
-    private static double roundRatio(double ratio)
-    {
-        return round(ratio/RATIO_BUCKET) * RATIO_BUCKET;
-    }
-
     private double calcGcRatio(final String chromosome, long regionStart)
     {
         long regionEnd = regionStart + SEGMENT_LENGTH - 1;
@@ -216,7 +213,7 @@ public class GcBiasAdjuster
             }
 
             double ratio = gcCount / (double) SEGMENT_LENGTH;
-            return roundRatio(ratio);
+            return roundGcRatio(ratio);
         }
         catch (Exception e)
         {

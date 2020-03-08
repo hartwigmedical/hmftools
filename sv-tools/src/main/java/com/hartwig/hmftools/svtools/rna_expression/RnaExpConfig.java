@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.svtools.common.ConfigUtils.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.svtools.common.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.svtools.rna_expression.ExpectedRatesGenerator.FL_LENGTH;
+import static com.hartwig.hmftools.svtools.rna_expression.GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,15 +33,14 @@ public class RnaExpConfig
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String CANONICAL_ONLY = "canonical_only";
+    private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
-    private static final String GENE_STATS_ONLY = "gene_stats_only";
     private static final String OUTPUT_ID = "output_id";
 
     public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";
-    private static final String GC_BIAS_FILE = "gcbias_file";
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String KEEP_DUPLICATES = "keep_dups";
     private static final String MARK_DUPLICATES = "mark_dups";
@@ -50,6 +50,10 @@ public class RnaExpConfig
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
     private static final String WRITE_FRAG_READS = "write_frag_length_reads";
+
+    private static final String GC_BIAS_FILE = "gcbias_file";
+    private static final String WRITE_READ_GC_RATIOS = "write_read_gc_ratios";
+    private static final String GC_RATIO_BUCKET_SIZE = "gc_ratio_bucket";
 
     // expected expression config
     private static final String EXP_RATES_FILE = "exp_rates_file";
@@ -71,7 +75,6 @@ public class RnaExpConfig
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
-    public final String GcBiasFile;
     public final boolean CanonicalTranscriptOnly;
     public final String BamFile;
     public final File RefGenomeFile;
@@ -81,6 +84,7 @@ public class RnaExpConfig
     public final boolean KeepDuplicates;
     public final boolean MarkDuplicates;
 
+    public final boolean WriteTransData;
     public final boolean WriteExonData;
     public final boolean WriteReadData;
     public final boolean WriteTransComboData;
@@ -93,13 +97,15 @@ public class RnaExpConfig
     public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
 
-    public final boolean GeneStatsOnly;
-
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
     public final boolean FragmentLengthsByGene;
     public final boolean WriteFragmentLengthsOnly;
     public final boolean WriteFragmentReads;
+
+    public final boolean WriteReadGcRatios;
+    public final String GcBiasFile;
+    public static double GC_RATIO_BUCKET = DEFAULT_GC_RATIO_BUCKET;
 
     public final List<String> SpecificTransIds;
     public final List<String> SpecificChromosomes;
@@ -173,7 +179,11 @@ public class RnaExpConfig
         WriteFragmentLengthsOnly = cmd.hasOption(WRITE_FRAG_LENGTHS_ONLY);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
-        GeneStatsOnly = cmd.hasOption(GENE_STATS_ONLY);
+        WriteReadGcRatios = cmd.hasOption(WRITE_READ_GC_RATIOS);
+        WriteTransData = Boolean.parseBoolean(cmd.getOptionValue(WRITE_TRANS_DATA, "true"));
+
+        GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
+                Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
@@ -287,17 +297,17 @@ public class RnaExpConfig
         UnsplicedWeight = 1;
         ExpRatesFile = null;
 
+        WriteTransData = false;
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
         WriteFragmentLengthsOnly = false;
         WriteTransComboData = false;
-        WriteFragmentReads = false;
+        WriteFragmentReads = false;WriteReadGcRatios = false;
 
         WriteExpectedRates = false;
         UseCalculatedFragmentLengths = false;
         OutputIdentifier = null;
-        GeneStatsOnly = false;
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
         SpecificTransIds = Lists.newArrayList();
@@ -318,7 +328,6 @@ public class RnaExpConfig
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
-        options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(KEEP_DUPLICATES, false, "Process duplicate reads (if marked as such eg by picard)");
@@ -327,12 +336,16 @@ public class RnaExpConfig
         options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
         options.addOption(WRITE_FRAG_READS, false, "Write fragment read data from length determination");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
+        options.addOption(WRITE_TRANS_DATA, true, "Produce transcript-level counts data (default=true)");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
-        options.addOption(GENE_STATS_ONLY, false, "Skip all processing except gene summary data");
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
         options.addOption(WRITE_FRAG_LENGTHS_ONLY, false, "Only write intronic fragment lengths then exit");
+
+        options.addOption(WRITE_READ_GC_RATIOS, false, "Write GC Ratio counts from all genic reads");
+        options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
+        options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
         options.addOption(EXP_RATES_FILE, true, "File with generated expected expression rates for transcripts");

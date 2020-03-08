@@ -33,9 +33,9 @@ public class AltSpliceJunction
     private final List<Integer> mCandidateTransIds;
 
     // calculated values
-    private String[] mTranscriptNames;
-    private String[] mBaseContext;
-    private int[] mNearestExonDistance;
+    private final String[] mTranscriptNames;
+    private final String[] mBaseContext;
+    private final int[] mNearestExonDistance;
 
     public static final String CONTEXT_SJ = "SPLICE_JUNC";
     public static final String CONTEXT_EXONIC = "EXONIC";
@@ -72,6 +72,9 @@ public class AltSpliceJunction
 
         mFragmentCount = 0;
         mPositionCounts = new int[SE_PAIR];
+        mTranscriptNames = new String[SE_PAIR];
+        mBaseContext = new String[SE_PAIR];
+        mNearestExonDistance = new int[SE_PAIR];
     }
 
     public boolean matches(final AltSpliceJunction other)
