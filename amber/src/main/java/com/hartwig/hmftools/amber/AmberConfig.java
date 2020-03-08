@@ -132,6 +132,19 @@ public interface AmberConfig {
     String tumor();
 
     @NotNull
+    default String primaryReference() {
+        return reference().get(0);
+    }
+
+    @NotNull
+    default List<String> allSamples() {
+        List<String> samples = Lists.newArrayList();
+        samples.addAll(reference());
+        samples.add(tumor());
+        return samples;
+    }
+
+    @NotNull
     ValidationStringency validationStringency();
 
     default int typicalReadDepth() {

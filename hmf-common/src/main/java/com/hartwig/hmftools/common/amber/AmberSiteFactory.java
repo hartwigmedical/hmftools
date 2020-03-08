@@ -22,6 +22,26 @@ public final class AmberSiteFactory {
     }
 
     @NotNull
+    public static AmberSite tumorSite(@NotNull final TumorBAF baseDepth) {
+        return ImmutableAmberSite.builder()
+                .from(baseDepth)
+                .snpCheck(false)
+                .ref(baseDepth.ref())
+                .alt(baseDepth.alt())
+                .build();
+    }
+
+    @NotNull
+    public static AmberSite asSite(@NotNull final BaseDepth baseDepth) {
+        return ImmutableAmberSite.builder()
+                .from(baseDepth)
+                .snpCheck(false)
+                .ref(baseDepth.ref().toString())
+                .alt(baseDepth.alt().toString())
+                .build();
+    }
+
+    @NotNull
     public static ListMultimap<Chromosome, AmberSite> sites(@NotNull final String vcfFile) throws IOException {
         final ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
 

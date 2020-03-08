@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.amber;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Random;
 
@@ -13,12 +15,12 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.junit.Before;
 import org.junit.Test;
 
-public class BaseDepthIntersectTest {
+public class BaseDepthIntersectFilterTest {
 
     private BaseDepth first;
     private BaseDepth second;
     private BaseDepth third;
-    private BaseDepthIntersect victim;
+    private BaseDepthIntersectFilter victim;
     private ListMultimap<Chromosome, BaseDepth> depth;
 
     @Before
@@ -27,7 +29,7 @@ public class BaseDepthIntersectTest {
         first = TumorContaminationFileTest.createRandom("1", random);
         second = TumorContaminationFileTest.createRandom("2", random);
         third = TumorContaminationFileTest.createRandom("3", random);
-        victim = new BaseDepthIntersect();
+        victim = new BaseDepthIntersectFilter();
 
         depth = ArrayListMultimap.create();
         depth.put(HumanChromosome._1, first);
@@ -38,29 +40,31 @@ public class BaseDepthIntersectTest {
 
     @Test
     public void testSingleSample() {
-        victim.add(depth.values());
-        ListMultimap<Chromosome, BaseDepth> result = victim.intersect(depth);
-        assertEquals(3, result.size());
+        victim.additional(depth.values());
+        assertTrue(victim.test(first));
+        assertTrue(victim.test(second));
+        assertTrue(victim.test(third));
     }
 
     @Test
     public void testTwoSamples() {
-        victim.add(Lists.newArrayList(first, second));
-        victim.add(Lists.newArrayList(third, second));
+        victim.additional(Lists.newArrayList(first, second));
+        victim.additional(Lists.newArrayList(third, second));
 
-        ListMultimap<Chromosome, BaseDepth> result = victim.intersect(depth);
-        assertEquals(1, result.size());
-        assertEquals(second, result.get(HumanChromosome._2).get(0));
+        assertFalse(victim.test(first));
+        assertTrue(victim.test(second));
+        assertFalse(victim.test(third));
     }
 
     @Test
     public void testNoIntersect() {
-        victim.add(Lists.newArrayList(first, second));
-        victim.add(Lists.newArrayList(third, second));
-        victim.add(Lists.newArrayList(first, third));
+        victim.additional(Lists.newArrayList(first, second));
+        victim.additional(Lists.newArrayList(third, second));
+        victim.additional(Lists.newArrayList(first, third));
 
-        ListMultimap<Chromosome, BaseDepth> result = victim.intersect(depth);
-        assertEquals(0, result.size());
+        assertFalse(victim.test(first));
+        assertFalse(victim.test(second));
+        assertFalse(victim.test(third));
     }
 
 }

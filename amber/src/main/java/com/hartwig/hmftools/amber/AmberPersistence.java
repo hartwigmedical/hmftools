@@ -2,6 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,7 +35,7 @@ class AmberPersistence {
         this.config = config;
     }
 
-    void persistVersionInfo(@NotNull final  VersionInfo versionInfo ) throws IOException {
+    void persistVersionInfo(@NotNull final VersionInfo versionInfo) throws IOException {
         versionInfo.write(config.outputDirectory());
     }
 
@@ -50,6 +51,12 @@ class AmberPersistence {
         persistTumorBAF(false, tumorBAFList);
     }
 
+    void persistTumorBAF(@NotNull final List<TumorBAF> tumorBAFList, final List<Collection<BaseDepth>> normals) {
+        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
+        LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
+        new AmberVCF(config).writeBAF(outputVcf, tumorBAFList, normals);
+    }
+
     void persistTumorOnlyBAF(@NotNull final List<TumorBAF> tumorBAFList) {
         persistTumorBAF(true, tumorBAFList);
     }
@@ -57,7 +64,7 @@ class AmberPersistence {
     private void persistTumorBAF(boolean tumorOnly, @NotNull final List<TumorBAF> tumorBAFList) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
-        new AmberVCF(tumorOnly, config.reference().get(0), config.tumor()).write(outputVcf, tumorBAFList);
+        new AmberVCF(config).writeBAF(outputVcf, tumorBAFList);
     }
 
     void persisQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {
@@ -72,7 +79,7 @@ class AmberPersistence {
 
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.contamination.vcf.gz";
         LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
-        new AmberVCF(false, config.reference().get(0), config.tumor()).writeContamination(outputVcf, contaminationList);
+        new AmberVCF(config).writeContamination(outputVcf, contaminationList);
 
         final String filename = TumorContaminationFile.generateContaminationFilename(config.outputDirectory(), config.tumor());
         TumorContaminationFile.write(filename, contaminationList);
@@ -80,9 +87,9 @@ class AmberPersistence {
 
     void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths) {
         if (baseDepths.size() > 0) {
-            final String outputVcf = config.outputDirectory() + File.separator + config.reference() + ".amber.snp.vcf.gz";
+            final String outputVcf = config.outputDirectory() + File.separator + config.reference().get(0) + ".amber.snp.vcf.gz";
             LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
-            new AmberVCF(config.reference().get(0)).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
+            new AmberVCF(config).writeSNPCheck(outputVcf, Lists.newArrayList(baseDepths.values()));
         }
     }
 }
