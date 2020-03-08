@@ -76,6 +76,12 @@ java -Xmx32G -cp amber.jar com.hartwig.hmftools.amber.AmberApplication \
 ## Tumor Only Mode
 In the absence of a reference bam, AMBER can be put into tumor only mode with the `tumor_only` flag.
 
+## Multiple Reference / Donor mode
+The `reference` and `reference_bam` arguments supports multiple arguments separated by commas. 
+When run in this mode the heterozygous baf points are taken as the intersection of each of the reference bams. 
+No change is made to the SNPCheck or contamination output. These will be run on the first reference bam in the list. 
+
+
 ### Mandatory Arguments
 
 Argument | Description 
@@ -139,6 +145,7 @@ REFERENCE.amber.snp.vcf.gz | Entry at each SNP location in the reference.
 To see arguments and usages of AMBER 2 please refer to the old [README](./README_2.md)
 - Upcoming
   - Improved contamination check for very shallow sequencing
+  - Support for multiple references
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.2)
   - Fixed IndexOutOfBoundsException.
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.1)

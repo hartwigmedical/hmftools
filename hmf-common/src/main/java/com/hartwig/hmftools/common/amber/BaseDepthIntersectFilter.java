@@ -30,22 +30,12 @@ public class BaseDepthIntersectFilter implements Predicate<BaseDepth> {
 
     @Override
     public boolean test(final BaseDepth baseDepth) {
-        return !additional || intersection.contains(asSite(baseDepth));
+        return !additional || intersection.contains(AmberSiteFactory.asSite(baseDepth));
     }
 
     @NotNull
     private static Set<AmberSite> asSet(@NotNull final Collection<BaseDepth> depth) {
-        return depth.stream().map(BaseDepthIntersectFilter::asSite).collect(Collectors.toSet());
-    }
-
-    @NotNull
-    private static AmberSite asSite(@NotNull final BaseDepth baseDepth) {
-        return ImmutableAmberSite.builder()
-                .from(baseDepth)
-                .snpCheck(false)
-                .ref(baseDepth.ref().toString())
-                .alt(baseDepth.alt().toString())
-                .build();
+        return depth.stream().map(AmberSiteFactory::asSite).collect(Collectors.toSet());
     }
 
 }
