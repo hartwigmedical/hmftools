@@ -141,13 +141,13 @@ public class AmberApplication implements AutoCloseable {
         for (int i = 1; i < config.reference().size(); i++) {
             final String sample = config.reference().get(i);
             final String sampleBam = config.referenceBamPath().get(i);
-            final Collection<BaseDepth> additional = normalDepth(readerFactory, sampleBam, sites).values();
+            final Collection<BaseDepth> additional = normalDepth(readerFactory, sampleBam, hetNormalEvidence.intersection()).values();
             final Predicate<BaseDepth> filter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), additional);
             final Collection<BaseDepth> additionalHetNormal = additional.stream().filter(filter.and(heterozygousFilter)).collect(toList());
             hetNormalEvidence.add(sample, additionalHetNormal);
         }
 
-        final Predicate<BaseDepth> intersectionFilter = hetNormalEvidence.intersection();
+        final Predicate<BaseDepth> intersectionFilter = hetNormalEvidence.intersectionFilter();
         final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, filterEntries(hetNormal, intersectionFilter));
         final List<TumorBAF> tumorBAFList = tumorBAFMap.values().stream().sorted().collect(toList());
         final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberBAF::create).filter(AmberApplication::isValid).collect(toList());
