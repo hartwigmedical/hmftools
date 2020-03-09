@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntri
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthEvidence;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.amber.BaseDepthFilter;
+import com.hartwig.hmftools.common.amber.BaseDepthIntersectFilter;
 import com.hartwig.hmftools.common.amber.NormalHetrozygousFilter;
 import com.hartwig.hmftools.common.amber.NormalHomozygousFilter;
 import com.hartwig.hmftools.common.amber.TumorBAF;
@@ -126,15 +128,29 @@ public class AmberApplication implements AutoCloseable {
 
     private void runNormalMode() throws InterruptedException, ExecutionException, IOException {
         final SamReaderFactory readerFactory = readerFactory(config);
+        final BaseDepthIntersectFilter intersectFilter = new BaseDepthIntersectFilter();
+
+        final List<Collection<BaseDepth>> additionalNormalList = Lists.newArrayList();
+
+        for (int i = 1; i < config.reference().size(); i++) {
+            final ListMultimap<Chromosome, BaseDepth> additionalNormal =
+                    normalDepth(readerFactory, config.referenceBamPath().get(i), sites);
+            final Predicate<BaseDepth> depthFilter =
+                    new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), additionalNormal);
+            final ListMultimap<Chromosome, BaseDepth> additionalHetNormal =
+                    filterEntries(additionalNormal, depthFilter.and(heterozygousFilter));
+            intersectFilter.additional(additionalHetNormal.values());
+
+            additionalNormalList.add(additionalHetNormal.values());
+        }
 
         final ListMultimap<Chromosome, BaseDepth> unfilteredNormal = normalDepth(readerFactory, config.referenceBamPath().get(0), sites);
-
         final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(config.minDepthPercent(), config.maxDepthPercent(), unfilteredNormal);
         final ListMultimap<Chromosome, BaseDepth> homNormal = filterEntries(unfilteredNormal, depthFilter.and(homozygousFilter));
         final ListMultimap<Chromosome, BaseDepth> hetNormal = filterEntries(unfilteredNormal, depthFilter.and(heterozygousFilter));
         final ListMultimap<Chromosome, BaseDepth> snpCheck = filterEntries(unfilteredNormal, snpCheckFilter);
 
-        final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, hetNormal);
+        final ListMultimap<Chromosome, TumorBAF> tumorBAFMap = tumorBAF(readerFactory, filterEntries(hetNormal, intersectFilter));
 
         final List<TumorBAF> tumorBAFList = tumorBAFMap.values().stream().sorted().collect(Collectors.toList());
         final List<AmberBAF> amberBAFList =
@@ -143,9 +159,16 @@ public class AmberApplication implements AutoCloseable {
         final ListMultimap<Chromosome, TumorContamination> tumorContamination = contamination(readerFactory, homNormal);
         final List<TumorContamination> contaminationList = Lists.newArrayList(tumorContamination.values());
 
+        final List<Collection<BaseDepth>> hetNormalList = Lists.newArrayList();
+        hetNormalList.add(hetNormal.values());
+        for (int i = 1; i < config.reference().size(); i++) {
+            hetNormalList.add(additionalNormalList.get(i - 1));
+        }
+
+
         persistence.persisQC(amberBAFList, contaminationList);
         persistence.persistVersionInfo(versionInfo);
-        persistence.persistTumorBAF(tumorBAFList);
+        persistence.persistTumorBAF(tumorBAFList, hetNormalList);
         persistence.persistContamination(contaminationList);
         persistence.persistSnpCheck(snpCheck);
         persistence.persistAmberBAF(amberBAFList);
