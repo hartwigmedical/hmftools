@@ -31,13 +31,25 @@ class TransvarInterpreter {
     List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
-        // TODO Implement support for INDELs.
         if (record.gdnaRef().length() == record.gdnaAlt().length()) {
+            // We need to look up which index of the ref codon is changed (1, 2 or 3) in case of SNV/MNV.
             int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
 
             for (String candidateCodon : record.candidateCodons()) {
                 hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
             }
+        } else {
+            // For indels we assume we have to look up the base in front of the del or ins
+            String preRefSequence =
+                    refGenome.getSubsequenceAt(record.chromosome(), record.gdnaPosition() - 1, record.gdnaPosition() - 1).getBaseString();
+
+            // We don't consider repeat sequences or microhomology to generate alternate variants with the same coding impact.
+            hotspots.add(ImmutableVariantHotspotImpl.builder()
+                    .chromosome(record.chromosome())
+                    .position(record.gdnaPosition() - 1)
+                    .ref(preRefSequence + record.gdnaRef())
+                    .alt(preRefSequence + record.gdnaAlt())
+                    .build());
         }
 
         return hotspots;

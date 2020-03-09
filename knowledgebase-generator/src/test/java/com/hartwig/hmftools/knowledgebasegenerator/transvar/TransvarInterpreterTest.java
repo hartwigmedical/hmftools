@@ -22,7 +22,7 @@ public class TransvarInterpreterTest {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .transcript("Irrelevant")
                 .chromosome("1")
-                .gdnaPosition(11182158)
+                .gdnaPosition(10)
                 .gdnaRef("A")
                 .gdnaAlt("C")
                 .referenceCodon("TTA")
@@ -33,10 +33,10 @@ public class TransvarInterpreterTest {
 
         assertEquals(4, hotspots.size());
 
-        assertHotspot(chr1().position(11182158).ref("A").alt("C").build(), hotspots.get(0));
-        assertHotspot(chr1().position(11182156).ref("TAA").alt("GAC").build(), hotspots.get(1));
-        assertHotspot(chr1().position(11182156).ref("TAA").alt("CAC").build(), hotspots.get(2));
-        assertHotspot(chr1().position(11182156).ref("TAA").alt("AAC").build(), hotspots.get(3));
+        assertHotspot(chr1().position(10).ref("A").alt("C").build(), hotspots.get(0));
+        assertHotspot(chr1().position(8).ref("TAA").alt("GAC").build(), hotspots.get(1));
+        assertHotspot(chr1().position(8).ref("TAA").alt("CAC").build(), hotspots.get(2));
+        assertHotspot(chr1().position(8).ref("TAA").alt("AAC").build(), hotspots.get(3));
     }
 
     @Test
@@ -44,7 +44,7 @@ public class TransvarInterpreterTest {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .transcript("Irrelevant")
                 .chromosome("1")
-                .gdnaPosition(106180852)
+                .gdnaPosition(10)
                 .gdnaRef("TA")
                 .gdnaAlt("GC")
                 .referenceCodon("TAC")
@@ -55,10 +55,10 @@ public class TransvarInterpreterTest {
 
         assertEquals(4, hotspots.size());
 
-        assertHotspot(chr1().position(106180852).ref("TAC").alt("GCA").build(), hotspots.get(0));
-        assertHotspot(chr1().position(106180852).ref("TA").alt("GC").build(), hotspots.get(1));
-        assertHotspot(chr1().position(106180852).ref("TAC").alt("GCG").build(), hotspots.get(2));
-        assertHotspot(chr1().position(106180852).ref("TAC").alt("GCT").build(), hotspots.get(3));
+        assertHotspot(chr1().position(10).ref("TAC").alt("GCA").build(), hotspots.get(0));
+        assertHotspot(chr1().position(10).ref("TA").alt("GC").build(), hotspots.get(1));
+        assertHotspot(chr1().position(10).ref("TAC").alt("GCG").build(), hotspots.get(2));
+        assertHotspot(chr1().position(10).ref("TAC").alt("GCT").build(), hotspots.get(3));
     }
 
     @Test
@@ -66,17 +66,16 @@ public class TransvarInterpreterTest {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .transcript("Irrelevant")
                 .chromosome("1")
-                .gdnaPosition(139399420)
-                .gdnaRef("CCA")
+                .gdnaPosition(5)
+                .gdnaRef("GA")
                 .gdnaAlt("")
                 .build();
 
         List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
-        assertEquals(0, hotspots.size());
+        assertEquals(1, hotspots.size());
 
-        // TODO Implement support for INDELs.
-//        assertHotspot(chr1().position(139399420).ref("CCA").alt("").build(), hotspots.get(0));
+        assertHotspot(chr1().position(4).ref("CGA").alt("C").build(), hotspots.get(0));
     }
 
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {
