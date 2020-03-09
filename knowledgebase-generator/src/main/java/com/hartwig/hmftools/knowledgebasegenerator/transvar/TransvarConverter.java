@@ -1,23 +1,34 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class TransvarConverter {
 
     private static final String FIELD_DELIMITER = "\t";
 
+    private static final int TRANSCRIPT_COLUMN = 1;
+    private static final int COORDINATES_COLUMN = 4;
+    private static final int MESSAGE_COLUMN = 6;
+
+    private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
+
     private TransvarConverter() {
     }
 
-    @NotNull
+    @Nullable
     static TransvarRecord toTransvarRecord(@NotNull String transvarLine) {
-        ImmutableTransvarRecord.Builder builder = ImmutableTransvarRecord.builder();
-
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
-        populateTranscript(builder, fields[1]);
-        populateCoordinates(builder, fields[4]);
-        populateCodonInfo(builder, fields[6]);
+        if (fields[MESSAGE_COLUMN].equals(MSG_NO_VALID_TRANSCRIPT_FOUND)) {
+            return null;
+        }
+
+        ImmutableTransvarRecord.Builder builder = ImmutableTransvarRecord.builder();
+
+        populateTranscript(builder, fields[TRANSCRIPT_COLUMN]);
+        populateCoordinates(builder, fields[COORDINATES_COLUMN]);
+        populateCodonInfo(builder, fields[MESSAGE_COLUMN]);
 
         return builder.build();
     }

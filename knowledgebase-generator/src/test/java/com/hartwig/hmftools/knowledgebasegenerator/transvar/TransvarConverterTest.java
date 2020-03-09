@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -16,6 +18,7 @@ public class TransvarConverterTest {
 
         TransvarRecord record = TransvarConverter.toTransvarRecord(line);
 
+        assertNotNull(record);
         assertEquals("ENST00000361445", record.transcript());
         assertEquals("1", record.chromosome());
         assertEquals(11182158, record.gdnaPosition());
@@ -38,6 +41,7 @@ public class TransvarConverterTest {
 
         TransvarRecord record = TransvarConverter.toTransvarRecord(line);
 
+        assertNotNull(record);
         assertEquals("ENST00000540549", record.transcript());
         assertEquals("4", record.chromosome());
         assertEquals(106180852, record.gdnaPosition());
@@ -48,5 +52,12 @@ public class TransvarConverterTest {
         assertEquals("GCC", record.candidateCodons().get(1));
         assertEquals("GCG", record.candidateCodons().get(2));
         assertEquals("GCT", record.candidateCodons().get(3));
+    }
+
+    @Test
+    public void unresolvedProteinAnnotationLeadsToNull() {
+        String line = "RAD50:p.L1273F\t.\t.\t.\t././.\t.\tno_valid_transcript_found";
+
+        assertNull(TransvarConverter.toTransvarRecord(line));
     }
 }

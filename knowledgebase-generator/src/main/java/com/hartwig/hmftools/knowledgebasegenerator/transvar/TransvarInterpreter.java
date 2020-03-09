@@ -2,38 +2,19 @@ package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class TransvarInterpreter {
-
-    private static final Logger LOGGER = LogManager.getLogger(TransvarInterpreter.class);
 
     private TransvarInterpreter() {
     }
 
     @NotNull
-    static List<VariantHotspot> extractHotspotsFromTransvarRecord(@NotNull TransvarRecord record, @NotNull HmfTranscriptRegion transcript) {
-        if (record.transcript().equals(transcript.transcriptID())) {
-            return convertRecordToHotspots(record, transcript.strand());
-        } else {
-            LOGGER.debug(" Skipped interpretation as transvar transcript '{}' does not match canonical transcript '{}'",
-                    record.transcript(),
-                    transcript.transcriptID());
-            return Lists.newArrayList();
-        }
-    }
-
-    @NotNull
-    @VisibleForTesting
     static List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
 
@@ -137,6 +118,6 @@ final class TransvarInterpreter {
                 return 'G';
         }
 
-        throw new IllegalArgumentException("Cannot flip base: " + base);
+        throw new IllegalArgumentException("Cannot flip invalid base: " + base);
     }
 }

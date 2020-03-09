@@ -17,6 +17,7 @@ import com.hartwig.hmftools.knowledgebasegenerator.RefGenomeVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class Transvar {
 
@@ -42,21 +43,49 @@ public class Transvar {
             throws IOException, InterruptedException {
         HmfTranscriptRegion transcript = transcriptPerGeneMap.get(gene);
         if (transcript == null) {
-            LOGGER.warn("Could not find gene '{}' in HMF exome gene panel. Skipping hotspot extraction for '{}'", gene, proteinAnnotation);
+            LOGGER.warn("Could not find gene '{}' in HMF gene panel. Skipping hotspot extraction for 'p.{}'", gene, proteinAnnotation);
             return Lists.newArrayList();
         }
 
-        List<VariantHotspot> hotspots = Lists.newArrayList();
-        for (TransvarRecord record : runTransvarPanno(gene, proteinAnnotation)) {
-            LOGGER.debug("Converting transvar record to hotspots: '{}'", record);
-            hotspots.addAll(TransvarInterpreter.extractHotspotsFromTransvarRecord(record, transcript));
+        List<TransvarRecord> records = runTransvarPanno(gene, proteinAnnotation);
+        if (records.isEmpty()) {
+            LOGGER.warn("Could not resolve genomic coordinates. '{}:p.{}' likely does not exist", gene, proteinAnnotation);
+            return Lists.newArrayList();
         }
 
+        TransvarRecord best = pickBestRecord(records, transcript.transcriptID());
+        if (best == null) {
+            LOGGER.warn("Could not find acceptable record amongst {} records for '{}:p.{}'", records.size(), gene, proteinAnnotation);
+            return Lists.newArrayList();
+        }
+
+        LOGGER.debug("Converting transvar record to hotspots: '{}'", best);
+        // This is assuming every transcript on a gene lies on the same strand.
+        List<VariantHotspot> hotspots = TransvarInterpreter.convertRecordToHotspots(best, transcript.strand());
+
         if (hotspots.isEmpty()) {
-            LOGGER.warn("Could not derive any hotspots from '{}:p.{}'", gene, proteinAnnotation);
+            LOGGER.warn("Could not derive any hotspots from record {} for  '{}:p.{}'", best, gene, proteinAnnotation);
         }
 
         return hotspots;
+    }
+
+    @Nullable
+    private TransvarRecord pickBestRecord(@NotNull List<TransvarRecord> records, @NotNull String preferredTranscriptID) {
+        TransvarRecord best = null;
+
+        // We pick a random transcript if the preferred transcript is not found.
+        // Ideally we follow "representative transcript from CiViC here
+        // See also https://civic.readthedocs.io/en/latest/model/variants/coordinates.html#understanding-coordinates
+        for (TransvarRecord record : records) {
+            if (record.transcript().equals(preferredTranscriptID)) {
+                return record;
+            } else {
+                best = record;
+            }
+        }
+
+        return best;
     }
 
     @NotNull
@@ -64,7 +93,8 @@ public class Transvar {
             throws InterruptedException, IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("transvar",
                 "panno",
-                "--reference", refGenomeFastaFile,
+                "--reference",
+                refGenomeFastaFile,
                 "--refversion",
                 refGenomeVersion.refVersionString(),
                 "--noheader",
@@ -75,20 +105,17 @@ public class Transvar {
         // Below is (somehow) necessary to run in intellij. Otherwise it can not find proper locale.
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
 
-        // Not sure if below is needed to capture all outputs (esp std err).
-        //        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-
         LOGGER.debug("Running '{}'", command(processBuilder));
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-            throw new RuntimeException(String.format("Timeout. [%s] took more than [%s %s] to execute",
+            throw new RuntimeException(String.format("Timeout. '%s' took more than '%s %s' to execute",
                     command(processBuilder),
                     TRANSVAR_TIMEOUT_SEC,
                     TimeUnit.SECONDS));
         }
 
         if (process.exitValue() != 0) {
-            throw new RuntimeException(String.format("[%s] failed with non-zero exit code [%s]",
+            throw new RuntimeException(String.format("'%s' failed with non-zero exit code '%s'",
                     command(processBuilder),
                     process.exitValue()));
         }
@@ -104,7 +131,10 @@ public class Transvar {
         List<TransvarRecord> records = Lists.newArrayList();
         for (String stdoutLine : captureStdout(process)) {
             LOGGER.debug("Converting transvar output line to TransvarRecord: '{}'", stdoutLine);
-            records.add(TransvarConverter.toTransvarRecord(stdoutLine));
+            TransvarRecord record = TransvarConverter.toTransvarRecord(stdoutLine);
+            if (record != null) {
+                records.add(record);
+            }
         }
 
         return records;
