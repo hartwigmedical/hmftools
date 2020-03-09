@@ -18,6 +18,7 @@ public abstract class ActionableAmplificationDeletion {
     @NotNull
     public abstract String source();
 
+    //Below items only present when it is a actionable amplification or deletion
     @Nullable
     public abstract String drug();
 
