@@ -33,4 +33,8 @@ public abstract class TransvarRecord {
     @Nullable
     public abstract List<String> candidateCodons();
 
+    // Dups are not very well interpreted by transvar. The dup length is the only extractable piece of information.
+    @Nullable
+    public abstract Integer dupLength();
+
 }

@@ -40,13 +40,13 @@ class TransvarInterpreter {
             }
         } else {
             // For indels we assume we have to look up the base in front of the del or ins
-            String preRefSequence =
-                    refGenome.getSubsequenceAt(record.chromosome(), record.gdnaPosition() - 1, record.gdnaPosition() - 1).getBaseString();
+            long position = record.gdnaPosition() - 1;
+            String preRefSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
             // We don't consider repeat sequences or microhomology to generate alternate variants with the same coding impact.
             hotspots.add(ImmutableVariantHotspotImpl.builder()
                     .chromosome(record.chromosome())
-                    .position(record.gdnaPosition() - 1)
+                    .position(position)
                     .ref(preRefSequence + record.gdnaRef())
                     .alt(preRefSequence + record.gdnaAlt())
                     .build());
@@ -62,7 +62,7 @@ class TransvarInterpreter {
         // Function only supports SNV and MNV
         assert codonCompatibleRef.length() == codonCompatibleAlt.length();
 
-        // We look for the reference codon and candidate codon where the mutation is exclusively the mutation implied by the ref>alt
+        // We look for the candidate codon where the mutation is exclusively the mutation implied by the ref>alt
         int mutLength = codonCompatibleRef.length();
         for (String candidateCodon : record.candidateCodons()) {
             for (int i = 0; i < 4 - mutLength; i++) {
@@ -84,7 +84,7 @@ class TransvarInterpreter {
             }
         }
 
-        throw new IllegalStateException("Could not find codon index for GDNA match for " + record);
+        throw new IllegalStateException("Could not find codon index for gDNA match for " + record);
     }
 
     @NotNull

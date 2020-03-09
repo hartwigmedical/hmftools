@@ -9,7 +9,7 @@ import org.junit.Test;
 public class TransvarConverterTest {
 
     @Test
-    public void canConvertTransvarSNVLineToRecord() {
+    public void canConvertSNVLineToRecord() {
         String line =
                 "MTOR:p.L2230V\tENST00000361445 (protein_coding)\tMTOR\t-\tchr1:g.11182158A>C/c.6688T>G/p.L2230V\tinside_[cds_in_exon_48]"
                         + "\tCSQN=Missense;reference_codon=TTA;candidate_codons=GTA,GTC,GTG,GTT;candidate_mnv_variants="
@@ -32,7 +32,7 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void canConvertTransvarMNVLineToRecord() {
+    public void canConvertMNVLineToRecord() {
         String line = "TET2:p.Y1294A\tENST00000540549 (protein_coding)\tTET2\t+\t"
                 + "chr4:g.106180852_106180853delTAinsGC/c.3880_3881delTAinsGC/p.Y1294A\tinside_[cds_in_exon_7]\t"
                 + "CSQN=Missense;reference_codon=TAC;candidate_codons=GCA,GCC,GCG,GCT;candidate_mnv_variants="
@@ -55,7 +55,7 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void canConvertIndelLineToRecord() {
+    public void canConvertDeletionToRecord() {
         String deletionLine =
                 "NOTCH1:p.V1578del\tENST00000277541 (protein_coding)\tNOTCH1\t-\tchr9:g.139399420_139399422delCCA/c.4732_4734delGTG/"
                         + "p.V1578delV\tinside_[cds_in_exon_26]\tCSQN=InFrameDeletion;left_align_gDNA=g.139399409_139399411delCAC;"
@@ -70,7 +70,10 @@ public class TransvarConverterTest {
         assertEquals(139399420, deletion.gdnaPosition());
         assertEquals("CCA", deletion.gdnaRef());
         assertEquals("", deletion.gdnaAlt());
+    }
 
+    @Test
+    public void canConvertInsertionToRecord() {
         String insertionLine =
                 "ERBB2:p.G776_V777insYVMA\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880999_37881000insTATGTAATGGCA/"
                         + "c.2328_2329insTATGTAATGGCA/p.G776_V777insYVMA\tinside_[cds_in_exon_20]\tCSQN=InFrameInsertion;"
@@ -87,6 +90,23 @@ public class TransvarConverterTest {
         assertEquals(37880999, insertion.gdnaPosition());
         assertEquals("", insertion.gdnaRef());
         assertEquals("TATGTAATGGCA", insertion.gdnaAlt());
+    }
+
+    @Test
+    public void canConvertDuplicationToRecord() {
+        String dupLine = "ERBB2:p.Y772_A775dup\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880985_37880996/"
+                + "c.2314_2325/p.Y772_A775\tinside_[cds_in_exon_20]\tprotein_sequence=YVMA;cDNA_sequence=TAC..GCT;"
+                + "gDNA_sequence=TAC..GCT;aliases=ENSP00000463714;source=Ensembl";
+
+        TransvarRecord duplication = TransvarConverter.toTransvarRecord(dupLine);
+
+        assertNotNull(duplication);
+        assertEquals("ENST00000584450", duplication.transcript());
+        assertEquals("17", duplication.chromosome());
+        assertEquals(37880985, duplication.gdnaPosition());
+        assertEquals("", duplication.gdnaRef());
+        assertEquals("", duplication.gdnaAlt());
+        assertEquals(12, (int) duplication.dupLength());
     }
 
     @Test

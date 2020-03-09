@@ -14,6 +14,7 @@ final class TransvarConverter {
 
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
 
+    private static final String RANGE_INDICATOR = "_";
     private static final String DELETION = "del";
     private static final String INSERTION = "ins";
 
@@ -54,16 +55,20 @@ final class TransvarConverter {
         // Remove "g." from the gdna annotation
         String gdna = chromosomeAndGDNA[1].substring(2);
 
-        if (gdna.contains("_")) {
-            populateForRange(builder, gdna);
+        if (gdna.contains(RANGE_INDICATOR)) {
+            if (gdna.contains(DELETION) || gdna.contains(INSERTION)) {
+                populateForInsertionDeletion(builder, gdna);
+            } else {
+                populateForDuplication(builder, gdna);
+            }
         } else {
             populateForSNV(builder, gdna);
         }
     }
 
-    private static void populateForRange(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
-        String[] gdnaParts = gdna.split("_");
-        builder.gdnaPosition(Integer.parseInt(gdnaParts[0]));
+    private static void populateForInsertionDeletion(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+        String[] gdnaParts = gdna.split(RANGE_INDICATOR);
+        builder.gdnaPosition(Long.parseLong(gdnaParts[0]));
 
         String delInsPart = gdnaParts[1];
         if (delInsPart.contains(DELETION) && delInsPart.contains(INSERTION)) {
@@ -81,7 +86,32 @@ final class TransvarConverter {
             builder.gdnaRef(Strings.EMPTY);
             builder.gdnaAlt(delInsPart.substring(delInsPart.indexOf(INSERTION) + INSERTION.length()));
         } else {
-            throw new IllegalStateException("Cannot process range gdna as no '" + DELETION + "' or '" + INSERTION + "' found: " + gdna);
+            throw new IllegalStateException("Cannot process range gDNA as no '" + DELETION + "' or  '" + INSERTION + "' found: " + gdna);
+        }
+    }
+
+    private static void populateForDuplication(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+        String[] gdnaParts = gdna.split(RANGE_INDICATOR);
+        builder.gdnaPosition(Long.parseLong(gdnaParts[0]));
+
+        if (isLong(gdnaParts[1])) {
+            // Assume the variant is a dup with format 'start_end'
+            builder.gdnaRef(Strings.EMPTY);
+            builder.gdnaAlt(Strings.EMPTY);
+
+            long diff = Long.parseLong(gdnaParts[1]) - Long.parseLong(gdnaParts[0]);
+            builder.dupLength(1 + (int) diff);
+        } else {
+            throw new IllegalStateException("Cannot process duplication: " + gdna);
+        }
+    }
+
+    private static boolean isLong(@NotNull String value) {
+        try {
+            Long.parseLong(value);
+            return true;
+        } catch (NumberFormatException exp) {
+            return false;
         }
     }
 
@@ -114,7 +144,7 @@ final class TransvarConverter {
             }
         }
 
-        builder.gdnaPosition(Integer.parseInt(gdnaPos.toString()));
+        builder.gdnaPosition(Long.parseLong(gdnaPos.toString()));
         builder.gdnaRef(gdnaRef.toString());
         builder.gdnaAlt(gdnaAlt.toString());
     }

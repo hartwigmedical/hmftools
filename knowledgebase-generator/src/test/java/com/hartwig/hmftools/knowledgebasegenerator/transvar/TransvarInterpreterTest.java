@@ -19,63 +19,67 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertSNVRecordToHotspots() throws FileNotFoundException {
-        TransvarRecord record = ImmutableTransvarRecord.builder()
-                .transcript("Irrelevant")
-                .chromosome("1")
-                .gdnaPosition(10)
+        TransvarRecord record = baseRecord().gdnaPosition(10)
                 .gdnaRef("A")
                 .gdnaAlt("C")
                 .referenceCodon("TTA")
                 .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
                 .build();
 
-        List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
 
         assertEquals(4, hotspots.size());
 
-        assertHotspot(chr1().position(10).ref("A").alt("C").build(), hotspots.get(0));
-        assertHotspot(chr1().position(8).ref("TAA").alt("GAC").build(), hotspots.get(1));
-        assertHotspot(chr1().position(8).ref("TAA").alt("CAC").build(), hotspots.get(2));
-        assertHotspot(chr1().position(8).ref("TAA").alt("AAC").build(), hotspots.get(3));
+        assertHotspot(baseHotspot().position(10).ref("A").alt("C").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(8).ref("TAA").alt("GAC").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(8).ref("TAA").alt("CAC").build(), hotspots.get(2));
+        assertHotspot(baseHotspot().position(8).ref("TAA").alt("AAC").build(), hotspots.get(3));
     }
 
     @Test
     public void canConvertMNVRecordToHotspots() throws FileNotFoundException {
-        TransvarRecord record = ImmutableTransvarRecord.builder()
-                .transcript("Irrelevant")
-                .chromosome("1")
-                .gdnaPosition(10)
+        TransvarRecord record = baseRecord().gdnaPosition(10)
                 .gdnaRef("TA")
                 .gdnaAlt("GC")
                 .referenceCodon("TAC")
                 .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
                 .build();
 
-        List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(4, hotspots.size());
 
-        assertHotspot(chr1().position(10).ref("TAC").alt("GCA").build(), hotspots.get(0));
-        assertHotspot(chr1().position(10).ref("TA").alt("GC").build(), hotspots.get(1));
-        assertHotspot(chr1().position(10).ref("TAC").alt("GCG").build(), hotspots.get(2));
-        assertHotspot(chr1().position(10).ref("TAC").alt("GCT").build(), hotspots.get(3));
+        assertHotspot(baseHotspot().position(10).ref("TAC").alt("GCA").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(10).ref("TA").alt("GC").build(), hotspots.get(1));
+        assertHotspot(baseHotspot().position(10).ref("TAC").alt("GCG").build(), hotspots.get(2));
+        assertHotspot(baseHotspot().position(10).ref("TAC").alt("GCT").build(), hotspots.get(3));
     }
 
     @Test
-    public void canConvertIndelRecordToHotspots() throws FileNotFoundException {
-        TransvarRecord record = ImmutableTransvarRecord.builder()
-                .transcript("Irrelevant")
-                .chromosome("1")
-                .gdnaPosition(5)
-                .gdnaRef("GA")
-                .gdnaAlt("")
-                .build();
+    public void canConvertDeletionToHotspots() throws FileNotFoundException {
+        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("GA").gdnaAlt("").build();
 
-        List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(1, hotspots.size());
 
-        assertHotspot(chr1().position(4).ref("CGA").alt("C").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(4).ref("CGA").alt("C").build(), hotspots.get(0));
+    }
+
+    @Test
+    public void canConvertInsertionToHotspots() throws FileNotFoundException {
+        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("GA").build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+
+        assertEquals(1, hotspots.size());
+
+        assertHotspot(baseHotspot().position(4).ref("C").alt("CGA").build(), hotspots.get(0));
+    }
+
+    @Test
+    public void canConvertDuplicationToHotspot() {
+        // TODO
     }
 
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {
@@ -86,12 +90,17 @@ public class TransvarInterpreterTest {
     }
 
     @NotNull
-    private static ImmutableVariantHotspotImpl.Builder chr1() {
+    private static ImmutableTransvarRecord.Builder baseRecord() {
+        return ImmutableTransvarRecord.builder().transcript("irrelevant").chromosome("1");
+    }
+
+    @NotNull
+    private static ImmutableVariantHotspotImpl.Builder baseHotspot() {
         return ImmutableVariantHotspotImpl.builder().chromosome("1");
     }
 
     @NotNull
-    private static TransvarInterpreter testTransvarInterpreter() throws FileNotFoundException {
+    private static TransvarInterpreter testInterpreter() throws FileNotFoundException {
         return TransvarInterpreter.fromRefGenomeFastaFile(REF_GENOME_FASTA_FILE);
     }
 
