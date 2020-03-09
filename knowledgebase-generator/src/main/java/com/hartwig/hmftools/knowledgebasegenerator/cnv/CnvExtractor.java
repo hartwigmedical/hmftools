@@ -93,7 +93,7 @@ public class CnvExtractor {
                 cancerType = Strings.EMPTY;
                 level = viccEntry.association().evidenceLabel();
                 direction = viccEntry.association().responseType();
-                link = "http://oncokb.org/#/gene/" +"[geneId]" + "/alteration/" + "[variantName]";
+                link = "http://oncokb.org/#/gene/" + gene + "/alteration/" + "[variantName]";
 
             break;
             case CGI: // all events are actionable

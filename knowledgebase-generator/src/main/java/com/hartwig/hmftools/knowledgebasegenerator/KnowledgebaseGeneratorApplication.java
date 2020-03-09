@@ -90,8 +90,6 @@ public class KnowledgebaseGeneratorApplication {
         List<ActionableAmplificationDeletion> listActionableDeletion = Lists.newArrayList();
         List<ActionableAmplificationDeletion> listActionableAmplification = Lists.newArrayList();
 
-
-
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
 
@@ -111,7 +109,9 @@ public class KnowledgebaseGeneratorApplication {
 
                 // Generating actionable event
                 listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry, type, hotspotExtractor));
-                listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry, type, hotspotExtractor));
+                listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry,
+                        type,
+                        hotspotExtractor));
 
             }
         }
@@ -140,12 +140,34 @@ public class KnowledgebaseGeneratorApplication {
         List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
         Collections.sort(sortedUniqueDels);
 
+        List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
+
+        // If drug info/tumor location is known then variant is an actionable variant
+        for (ActionableAmplificationDeletion actionableAmplification : listActionableAmplification) {
+            if (actionableAmplification.level() != null && actionableAmplification.drug() != null
+                    && actionableAmplification.drugType() != null && actionableAmplification.direction() != null
+                    && actionableAmplification.sourceLink() != null && actionableAmplification.cancerType() != null) {
+                listFilterActionableAmplifications.add(actionableAmplification);
+            }
+        }
+
+        List<ActionableAmplificationDeletion> listFilterActionableDeletion = Lists.newArrayList();
+
+        for (ActionableAmplificationDeletion actionableDeletion : listActionableDeletion) {
+            if (actionableDeletion.level() != null && actionableDeletion.drug() != null
+                    && actionableDeletion.drugType() != null && actionableDeletion.direction() != null
+                    && actionableDeletion.sourceLink() != null && actionableDeletion.cancerType() != null) {
+                listFilterActionableDeletion.add(actionableDeletion);
+            }
+        }
 
         AllGenomicEvents finalAllGenomicEvents = ImmutableAllGenomicEvents.builder()
                 .knownAmplifications(listAmpsFilter)
                 .uniqueAmplification(sortedUniqueAmps)
                 .knownDeletions(listDelsFIlter)
                 .uniqueDeletions(sortedUniqueDels)
+                .actionableAmplification(listFilterActionableAmplifications)
+                .actionableDeletion(listFilterActionableDeletion)
                 .build();
 
         // Create all output files from knowledgebase with data
