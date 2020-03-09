@@ -74,8 +74,12 @@ public class KnowledgebaseGeneratorApplication {
 
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
 
-        List<KnownAmplificationDeletion> listAmps = Lists.newArrayList();
-        List<KnownAmplificationDeletion> listDels = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listAmplification = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listDeletion = Lists.newArrayList();
+        List<String> listVariants = Lists.newArrayList();
+        List<String> listRange = Lists.newArrayList();
+        List<String> listFusion = Lists.newArrayList();
+        List<String> listSignatures = Lists.newArrayList();
 
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
@@ -85,8 +89,12 @@ public class KnowledgebaseGeneratorApplication {
             for (EventType type : eventType) {
                 // Generating actionable event and known events
                 //TODO: map every genomic event to one object
-                listAmps.add(DetermineEventOfGenomicMutation.checkAmplification(viccEntry, type, hotspotExtractor));
-                listDels.add(DetermineEventOfGenomicMutation.checkDeletion(viccEntry, type, hotspotExtractor));
+                listAmplification.add(DetermineEventOfGenomicMutation.checkAmplification(viccEntry, type, hotspotExtractor));
+                listDeletion.add(DetermineEventOfGenomicMutation.checkDeletion(viccEntry, type, hotspotExtractor));
+                DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, hotspotExtractor);
+                DetermineEventOfGenomicMutation.checkRange(viccEntry, type, hotspotExtractor);
+                DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor);
+                DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, hotspotExtractor);
 
             }
         }
@@ -96,7 +104,7 @@ public class KnowledgebaseGeneratorApplication {
         List<KnownAmplificationDeletion> listDelsFIlter = Lists.newArrayList();
         Set<String> uniqueAmps = Sets.newHashSet();
         Set<String> uniqueDels = Sets.newHashSet();
-        for (KnownAmplificationDeletion amps : listAmps) {
+        for (KnownAmplificationDeletion amps : listAmplification) {
             if (!amps.eventType().isEmpty()) {
                 listAmpsFilter.add(amps);
                 uniqueAmps.add(amps.gene());
@@ -106,7 +114,7 @@ public class KnowledgebaseGeneratorApplication {
         List<String> sortedUniqueAmps = new ArrayList<String>(uniqueAmps);
         Collections.sort(sortedUniqueAmps);
 
-        for (KnownAmplificationDeletion dels : listDels) {
+        for (KnownAmplificationDeletion dels : listDeletion) {
             if (!dels.eventType().isEmpty()) {
                 listDelsFIlter.add(dels);
                 uniqueDels.add(dels.gene());
