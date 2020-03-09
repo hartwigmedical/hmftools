@@ -57,6 +57,24 @@ public class TransvarInterpreterTest {
         assertHotspot(chr1().position(106180852).ref("TAC").alt("GCT").build(), hotspots.get(3));
     }
 
+    @Test
+    public void canConvertIndelRecordToHotspots() {
+        TransvarRecord record = ImmutableTransvarRecord.builder()
+                .transcript("Irrelevant")
+                .chromosome("1")
+                .gdnaPosition(139399420)
+                .gdnaRef("CCA")
+                .gdnaAlt("")
+                .build();
+
+        List<VariantHotspot> hotspots = TransvarInterpreter.convertRecordToHotspots(record, Strand.FORWARD);
+
+        assertEquals(0, hotspots.size());
+
+        // TODO Implement support for INDELs.
+//        assertHotspot(chr1().position(139399420).ref("CCA").alt("").build(), hotspots.get(0));
+    }
+
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {
         assertEquals(expectedHotspot.chromosome(), actualHotspot.chromosome());
         assertEquals(expectedHotspot.position(), actualHotspot.position());

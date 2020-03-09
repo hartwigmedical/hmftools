@@ -55,6 +55,23 @@ public class TransvarConverterTest {
     }
 
     @Test
+    public void canConvertIndelLineToRecord() {
+        String line = "NOTCH1:p.V1578del\tENST00000277541 (protein_coding)\tNOTCH1\t-\tchr9:g.139399420_139399422delCCA/c.4732_4734delGTG/"
+                + "p.V1578delV\tinside_[cds_in_exon_26]\tCSQN=InFrameDeletion;left_align_gDNA=g.139399409_139399411delCAC;"
+                + "unaligned_gDNA=g.139399409_139399411delCAC;left_align_cDNA=c.4721_4723delTGG;unalign_cDNA=c.4732_4734delGTG;"
+                + "left_align_protein=p.V1575delV;unalign_protein=p.V1578delV;imprecise;aliases=ENSP00000277541;source=Ensembl";
+
+        TransvarRecord record = TransvarConverter.toTransvarRecord(line);
+
+        assertNotNull(record);
+        assertEquals("ENST00000277541", record.transcript());
+        assertEquals("9", record.chromosome());
+        assertEquals(139399420, record.gdnaPosition());
+        assertEquals("CCA", record.gdnaRef());
+        assertEquals("", record.gdnaAlt());
+    }
+
+    @Test
     public void unresolvedProteinAnnotationLeadsToNull() {
         String line = "RAD50:p.L1273F\t.\t.\t.\t././.\t.\tno_valid_transcript_found";
 

@@ -16,11 +16,15 @@ final class TransvarInterpreter {
 
     @NotNull
     static List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
-
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        for (String candidateCodon : record.candidateCodons()) {
-            hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
+
+        // TODO Implement support for INDELs.
+        if (record.gdnaRef().length() == record.gdnaAlt().length()) {
+            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
+
+            for (String candidateCodon : record.candidateCodons()) {
+                hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
+            }
         }
 
         return hotspots;

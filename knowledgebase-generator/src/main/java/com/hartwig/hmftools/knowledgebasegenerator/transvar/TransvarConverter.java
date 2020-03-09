@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +13,9 @@ final class TransvarConverter {
     private static final int MESSAGE_COLUMN = 6;
 
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
+
+    private static final String DELETION = "del";
+    private static final String INSERTION = "ins";
 
     private TransvarConverter() {
     }
@@ -51,20 +55,30 @@ final class TransvarConverter {
         String gdna = chromosomeAndGDNA[1].substring(2);
 
         if (gdna.contains("_")) {
-            populateForMNV(builder, gdna);
+            populateForRange(builder, gdna);
         } else {
             populateForSNV(builder, gdna);
         }
     }
 
-    private static void populateForMNV(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+    private static void populateForRange(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
         String[] gdnaParts = gdna.split("_");
         builder.gdnaPosition(Integer.parseInt(gdnaParts[0]));
 
-        int delStart = gdnaParts[1].indexOf("del");
-        int insStart = gdnaParts[1].indexOf("ins");
-        builder.gdnaRef(gdnaParts[1].substring(delStart+3, insStart));
-        builder.gdnaAlt(gdnaParts[1].substring(insStart+3));
+        String delInsPart = gdnaParts[1];
+        if (delInsPart.contains(DELETION) && delInsPart.contains(INSERTION)) {
+            // This should look like 'delCinsG'
+            int delStart = delInsPart.indexOf(DELETION);
+            int insStart = delInsPart.indexOf(INSERTION);
+            builder.gdnaRef(delInsPart.substring(delStart + DELETION.length(), insStart));
+            builder.gdnaAlt(delInsPart.substring(insStart + INSERTION.length()));
+        } else if (delInsPart.contains(DELETION)) {
+            // This should look like 'delC'
+            builder.gdnaRef(delInsPart.substring(delInsPart.indexOf(DELETION) + DELETION.length()));
+            builder.gdnaAlt(Strings.EMPTY);
+        } else {
+            throw new IllegalStateException("Cannot process gdna: " + gdna);
+        }
     }
 
     private static void populateForSNV(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
@@ -102,7 +116,8 @@ final class TransvarConverter {
     }
 
     private static void populateCodonInfo(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
-        // Field is semicolon-separated. Relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
+        // Field is semicolon-separated.
+        //  SNV relevant fields look like "reference_codon=${ref};candidate_codons=${alt1},${alt2},...,${altN};"
         String[] infoFields = field.split(";");
 
         for (String infoField : infoFields) {

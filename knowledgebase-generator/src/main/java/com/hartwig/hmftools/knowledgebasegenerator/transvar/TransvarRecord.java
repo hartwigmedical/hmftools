@@ -25,10 +25,12 @@ public abstract class TransvarRecord {
     @NotNull
     public abstract String gdnaAlt();
 
-    @NotNull
+    // Field is only populated for SNV/MNV
+    @Nullable
     public abstract String referenceCodon();
 
-    @NotNull
+    // Field is only populated for SNV/MNV
+    @Nullable
     public abstract List<String> candidateCodons();
 
 }
