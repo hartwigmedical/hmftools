@@ -76,8 +76,12 @@ final class TransvarConverter {
             // This should look like 'delC'
             builder.gdnaRef(delInsPart.substring(delInsPart.indexOf(DELETION) + DELETION.length()));
             builder.gdnaAlt(Strings.EMPTY);
+        } else if (delInsPart.contains(INSERTION)) {
+            // This should look like 'insTTGT'
+            builder.gdnaRef(Strings.EMPTY);
+            builder.gdnaAlt(delInsPart.substring(delInsPart.indexOf(INSERTION) + INSERTION.length()));
         } else {
-            throw new IllegalStateException("Cannot process gdna: " + gdna);
+            throw new IllegalStateException("Cannot process range gdna as no '" + DELETION + "' or '" + INSERTION + "' found: " + gdna);
         }
     }
 

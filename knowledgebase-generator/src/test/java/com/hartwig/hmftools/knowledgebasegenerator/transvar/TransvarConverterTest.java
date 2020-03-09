@@ -56,19 +56,37 @@ public class TransvarConverterTest {
 
     @Test
     public void canConvertIndelLineToRecord() {
-        String line = "NOTCH1:p.V1578del\tENST00000277541 (protein_coding)\tNOTCH1\t-\tchr9:g.139399420_139399422delCCA/c.4732_4734delGTG/"
-                + "p.V1578delV\tinside_[cds_in_exon_26]\tCSQN=InFrameDeletion;left_align_gDNA=g.139399409_139399411delCAC;"
-                + "unaligned_gDNA=g.139399409_139399411delCAC;left_align_cDNA=c.4721_4723delTGG;unalign_cDNA=c.4732_4734delGTG;"
-                + "left_align_protein=p.V1575delV;unalign_protein=p.V1578delV;imprecise;aliases=ENSP00000277541;source=Ensembl";
+        String deletionLine =
+                "NOTCH1:p.V1578del\tENST00000277541 (protein_coding)\tNOTCH1\t-\tchr9:g.139399420_139399422delCCA/c.4732_4734delGTG/"
+                        + "p.V1578delV\tinside_[cds_in_exon_26]\tCSQN=InFrameDeletion;left_align_gDNA=g.139399409_139399411delCAC;"
+                        + "unaligned_gDNA=g.139399409_139399411delCAC;left_align_cDNA=c.4721_4723delTGG;unalign_cDNA=c.4732_4734delGTG;"
+                        + "left_align_protein=p.V1575delV;unalign_protein=p.V1578delV;imprecise;aliases=ENSP00000277541;source=Ensembl";
 
-        TransvarRecord record = TransvarConverter.toTransvarRecord(line);
+        TransvarRecord deletion = TransvarConverter.toTransvarRecord(deletionLine);
 
-        assertNotNull(record);
-        assertEquals("ENST00000277541", record.transcript());
-        assertEquals("9", record.chromosome());
-        assertEquals(139399420, record.gdnaPosition());
-        assertEquals("CCA", record.gdnaRef());
-        assertEquals("", record.gdnaAlt());
+        assertNotNull(deletion);
+        assertEquals("ENST00000277541", deletion.transcript());
+        assertEquals("9", deletion.chromosome());
+        assertEquals(139399420, deletion.gdnaPosition());
+        assertEquals("CCA", deletion.gdnaRef());
+        assertEquals("", deletion.gdnaAlt());
+
+        String insertionLine =
+                "ERBB2:p.G776_V777insYVMA\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880999_37881000insTATGTAATGGCA/"
+                        + "c.2328_2329insTATGTAATGGCA/p.G776_V777insYVMA\tinside_[cds_in_exon_20]\tCSQN=InFrameInsertion;"
+                        + "left_align_protein=p.G776_V777insYVMA;unalign_protein=p.G776_V777insYVMA;left_align_gDNA="
+                        + "g.37880999_37881000insTATGTAATGGCA;unalign_gDNA=g.37880999_37881000insTATGTAATGGCA;left_align_cDNA="
+                        + "c.2328_2329insTATGTAATGGCA;unalign_cDNA=c.2328_2329insTATGTAATGGCA;32_CandidatesOmitted;"
+                        + "aliases=ENSP00000463714;source=Ensembl";
+
+        TransvarRecord insertion = TransvarConverter.toTransvarRecord(insertionLine);
+
+        assertNotNull(insertion);
+        assertEquals("ENST00000584450", insertion.transcript());
+        assertEquals("17", insertion.chromosome());
+        assertEquals(37880999, insertion.gdnaPosition());
+        assertEquals("", insertion.gdnaRef());
+        assertEquals("TATGTAATGGCA", insertion.gdnaAlt());
     }
 
     @Test
