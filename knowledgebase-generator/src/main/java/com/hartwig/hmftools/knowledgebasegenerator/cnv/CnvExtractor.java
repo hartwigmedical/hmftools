@@ -78,36 +78,7 @@ public class CnvExtractor {
     @NotNull
     private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent,
             @NotNull String gene, @NotNull ViccEntry viccEntry) {
-        switch (source) {
-            case ONCOKB:
-                break;
-            case CGI:
-                break;
-            case CIVIC:
-                break;
-            case JAX:
-                break;
-            case JAX_TRIALS:
-                break;
-            case BRCA:
-                break;
-            case SAGE:
-                break;
-            case PMKB:
-                break;
-            case MOLECULARMATCH:
-                break;
-            case MOLECULARMATCH_TRIALS:
-                break;
-            default:
-                LOGGER.warn("Unknown knowledgebase");
-        }
-        return determineInfoOfEvent(source, typeEvent, viccEntry.KbSpecificObject(), gene, viccEntry);
-    }
-
-    @NotNull
-    public static ActionableAmplificationDeletion determineInfoOfEvent(@NotNull Source source, @NotNull String typeEvent,
-            @NotNull KbSpecificObject kbSpecificObject, @NotNull String gene, @NotNull ViccEntry viccEntries) {
+        KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String drug = Strings.EMPTY;
         String drugType = Strings.EMPTY;
         String cancerType = Strings.EMPTY;
@@ -129,8 +100,8 @@ public class CnvExtractor {
                 drug = kbCgi.drug();
                 drugType = kbCgi.drugFamily();
                 cancerType = kbCgi.primaryTumorType();
-                level = viccEntries.association().evidenceLabel();
-                direction = viccEntries.association().responseType();
+                level = viccEntry.association().evidenceLabel();
+                direction = viccEntry.association().responseType();
                 link = "https://www.cancergenomeinterpreter.org/biomarkers";
                 break;
             case CIVIC:
@@ -177,5 +148,6 @@ public class CnvExtractor {
                 .direction(direction)
                 .sourceLink(link)
                 .build();
+
     }
 }
