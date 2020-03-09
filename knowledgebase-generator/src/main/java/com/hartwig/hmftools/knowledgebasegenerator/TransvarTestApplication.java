@@ -22,7 +22,7 @@ public class TransvarTestApplication {
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
         String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
 
-        Transvar transvar = new Transvar(refGenomeVersion, refGenomeFastaFile);
+        Transvar transvar = Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile);
 
         extractAndPrintHotspots(transvar, "MTOR", "L2230V");
         extractAndPrintHotspots(transvar, "ALK", "L1152R");

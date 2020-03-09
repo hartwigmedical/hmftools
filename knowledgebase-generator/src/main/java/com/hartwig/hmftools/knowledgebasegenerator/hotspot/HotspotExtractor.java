@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.knowledgebasegenerator.hotspot;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -28,8 +29,9 @@ public class HotspotExtractor {
     @NotNull
     private final Transvar transvar;
 
-    public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
-        return new HotspotExtractor(new Transvar(refGenomeVersion, refGenomeFastaFile));
+    public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
+            throws FileNotFoundException {
+        return new HotspotExtractor(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
     }
 
     private HotspotExtractor(@NotNull Transvar transvar) {

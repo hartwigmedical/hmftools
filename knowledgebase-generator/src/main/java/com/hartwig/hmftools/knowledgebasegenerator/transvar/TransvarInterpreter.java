@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -9,13 +11,24 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.jetbrains.annotations.NotNull;
 
-final class TransvarInterpreter {
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
-    private TransvarInterpreter() {
+class TransvarInterpreter {
+
+    @NotNull
+    private final IndexedFastaSequenceFile refGenome;
+
+    @NotNull
+    static TransvarInterpreter fromRefGenomeFastaFile(@NotNull String refGenomeFastaFile) throws FileNotFoundException {
+        return new TransvarInterpreter(new IndexedFastaSequenceFile(new File(refGenomeFastaFile)));
+    }
+
+    private TransvarInterpreter(@NotNull IndexedFastaSequenceFile refGenome) {
+        this.refGenome = refGenome;
     }
 
     @NotNull
-    static List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
+    List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
         // TODO Implement support for INDELs.

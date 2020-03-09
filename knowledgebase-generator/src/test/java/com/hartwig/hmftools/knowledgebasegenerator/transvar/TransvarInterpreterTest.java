@@ -2,8 +2,10 @@ package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -13,8 +15,10 @@ import org.junit.Test;
 
 public class TransvarInterpreterTest {
 
+    private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
+
     @Test
-    public void canConvertSNVRecordToHotspots() {
+    public void canConvertSNVRecordToHotspots() throws FileNotFoundException {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .transcript("Irrelevant")
                 .chromosome("1")
@@ -25,7 +29,7 @@ public class TransvarInterpreterTest {
                 .addCandidateCodons("GTA", "GTC", "GTG", "GTT")
                 .build();
 
-        List<VariantHotspot> hotspots = TransvarInterpreter.convertRecordToHotspots(record, Strand.REVERSE);
+        List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.REVERSE);
 
         assertEquals(4, hotspots.size());
 
@@ -36,7 +40,7 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertMNVRecordToHotspots() {
+    public void canConvertMNVRecordToHotspots() throws FileNotFoundException {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .transcript("Irrelevant")
                 .chromosome("1")
@@ -47,7 +51,7 @@ public class TransvarInterpreterTest {
                 .addCandidateCodons("GCA", "GCC", "GCG", "GCT")
                 .build();
 
-        List<VariantHotspot> hotspots = TransvarInterpreter.convertRecordToHotspots(record, Strand.FORWARD);
+        List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(4, hotspots.size());
 
@@ -58,7 +62,7 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertIndelRecordToHotspots() {
+    public void canConvertIndelRecordToHotspots() throws FileNotFoundException {
         TransvarRecord record = ImmutableTransvarRecord.builder()
                 .transcript("Irrelevant")
                 .chromosome("1")
@@ -67,7 +71,7 @@ public class TransvarInterpreterTest {
                 .gdnaAlt("")
                 .build();
 
-        List<VariantHotspot> hotspots = TransvarInterpreter.convertRecordToHotspots(record, Strand.FORWARD);
+        List<VariantHotspot> hotspots = testTransvarInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(0, hotspots.size());
 
@@ -85,6 +89,11 @@ public class TransvarInterpreterTest {
     @NotNull
     private static ImmutableVariantHotspotImpl.Builder chr1() {
         return ImmutableVariantHotspotImpl.builder().chromosome("1");
+    }
+
+    @NotNull
+    private static TransvarInterpreter testTransvarInterpreter() throws FileNotFoundException {
+        return TransvarInterpreter.fromRefGenomeFastaFile(REF_GENOME_FASTA_FILE);
     }
 
 }

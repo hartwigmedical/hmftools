@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -30,12 +31,25 @@ public class Transvar {
     @NotNull
     private final String refGenomeFastaFile;
     @NotNull
-    private Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
+    private final TransvarInterpreter interpreter;
+    @NotNull
+    private final Map<String, HmfTranscriptRegion> transcriptPerGeneMap;
 
-    public Transvar(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile) {
+    @NotNull
+    public static Transvar withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
+            throws FileNotFoundException {
+        return new Transvar(refGenomeVersion,
+                refGenomeFastaFile,
+                TransvarInterpreter.fromRefGenomeFastaFile(refGenomeFastaFile),
+                HmfGenePanelSupplier.allGenesMap37());
+    }
+
+    private Transvar(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile,
+            @NotNull TransvarInterpreter interpreter, @NotNull Map<String, HmfTranscriptRegion> transcriptPerGeneMap) {
         this.refGenomeVersion = refGenomeVersion;
         this.refGenomeFastaFile = refGenomeFastaFile;
-        this.transcriptPerGeneMap = HmfGenePanelSupplier.allGenesMap37();
+        this.interpreter = interpreter;
+        this.transcriptPerGeneMap = transcriptPerGeneMap;
     }
 
     @NotNull
@@ -61,7 +75,7 @@ public class Transvar {
 
         LOGGER.debug("Converting transvar record to hotspots: '{}'", best);
         // This is assuming every transcript on a gene lies on the same strand.
-        List<VariantHotspot> hotspots = TransvarInterpreter.convertRecordToHotspots(best, transcript.strand());
+        List<VariantHotspot> hotspots = interpreter.convertRecordToHotspots(best, transcript.strand());
 
         if (hotspots.isEmpty()) {
             LOGGER.warn("Could not derive any hotspots from record {} for  '{}:p.{}'", best, gene, proteinAnnotation);

@@ -33,6 +33,5 @@ public enum GenomicEvents {
             LOGGER.warn("Unknown genomic event!");
             return UNKNOWN;
         }
-
     }
 }
