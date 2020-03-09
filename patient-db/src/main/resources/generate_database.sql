@@ -294,6 +294,7 @@ CREATE TABLE somaticVariant
     ploidy DOUBLE PRECISION NOT NULL,
     copyNumber DOUBLE PRECISION NOT NULL,
     highConfidence BOOLEAN NOT NULL,
+    tier varchar(20) NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
     subclonalLikelihood DOUBLE PRECISION NOT NULL,
     biallelic BOOLEAN NOT NULL,

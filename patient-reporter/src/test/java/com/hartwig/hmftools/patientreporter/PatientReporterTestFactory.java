@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientreporter.variants.ImmutableReportableVariant;
 import com.hartwig.hmftools.patientreporter.variants.driver.DriverGeneView;
@@ -93,6 +94,7 @@ public final class PatientReporterTestFactory {
                 .ploidy(0)
                 .biallelic(true)
                 .subclonalLikelihood(0)
+                .tier(VariantTier.UNKNOWN)
                 .mappability(0);
     }
 
