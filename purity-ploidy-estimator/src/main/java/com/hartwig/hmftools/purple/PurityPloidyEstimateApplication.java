@@ -75,6 +75,7 @@ import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -84,27 +85,30 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
-public class PurityPloidyEstimateApplication {
+public class PurityPloidyEstimateApplication   {
 
     private static final Logger LOGGER = LogManager.getLogger(PurityPloidyEstimateApplication.class);
-
     private static final int THREADS_DEFAULT = 2;
-
     private static final String THREADS = "threads";
     private static final String VERSION = "version";
-    private static final String EXPERIMENTAL = "experimental";
 
-    public static void main(final String... args)
-            throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
-        new PurityPloidyEstimateApplication(args);
+    public static void main(final String... args) throws IOException, SQLException, ExecutionException, InterruptedException {
+        final Options options = createOptions();
+        try {
+            new PurityPloidyEstimateApplication(options, args);
+        } catch (ParseException e) {
+            LOGGER.warn(e);
+            final HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("PurityPloidyEstimateApplication", options);
+            System.exit(1);
+        }
     }
 
-    private PurityPloidyEstimateApplication(final String... args)
+    private PurityPloidyEstimateApplication(final Options options, final String... args)
             throws ParseException, IOException, SQLException, ExecutionException, InterruptedException {
         final VersionInfo version = new VersionInfo("purple.version");
         LOGGER.info("PURPLE version: {}", version.version());
 
-        final Options options = createOptions();
         final CommandLine cmd = createCommandLine(options, args);
         if (cmd.hasOption(VERSION)) {
             System.exit(0);
@@ -148,7 +152,8 @@ public class PurityPloidyEstimateApplication {
             LOGGER.info("Fitting purity");
             final FitScoreConfig fitScoreConfig = configSupplier.fitScoreConfig();
             final FittedRegionFactory fittedRegionFactory = createFittedRegionFactory(averageTumorDepth, cobaltGender, fitScoreConfig);
-            final BestFit bestFit = fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
+            final BestFit bestFit =
+                    fitPurity(executorService, configSupplier, cobaltGender, fittingSomatics, observedRegions, fittedRegionFactory);
             final FittedPurity fittedPurity = bestFit.fit();
             final PurityAdjuster purityAdjuster = new PurityAdjuster(cobaltGender, fittedPurity);
 
@@ -196,7 +201,7 @@ public class PurityPloidyEstimateApplication {
             final List<PeakModel> somaticPeaks = modelSomaticPeaks(configSupplier.somaticConfig(), enrichedSomatics);
 
             LOGGER.info("Enriching somatic variants");
-            final SomaticStream somaticStream = new SomaticStream(config, configSupplier.somaticConfig(), configSupplier.refGenomeConfig());
+            final SomaticStream somaticStream = new SomaticStream(configSupplier);
             somaticStream.processAndWrite(purityAdjuster, copyNumbers, enrichedFittedRegions, somaticPeaks);
 
             final PurityContext purityContext = ImmutablePurityContext.builder()
@@ -215,13 +220,6 @@ public class PurityPloidyEstimateApplication {
                     .tumorMutationalBurdenStatus(somaticStream.tumorMutationalBurdenPerMbStatus())
                     .build();
 
-            LOGGER.info("Generating driver catalog");
-            final List<DriverCatalog> driverCatalog = Lists.newArrayList();
-            final CNADrivers cnaDrivers = new CNADrivers();
-            driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
-            driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
-            driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
-
             LOGGER.info("Writing purple data to directory: {}", outputDirectory);
             version.write(outputDirectory);
             PurpleQCFile.write(PurpleQCFile.generateFilename(outputDirectory, tumorSample), qcChecks);
@@ -235,7 +233,16 @@ public class PurityPloidyEstimateApplication {
             SegmentFile.write(SegmentFile.generateFilename(outputDirectory, tumorSample), fittedRegions);
             structuralVariants.write(purityAdjuster, copyNumbers);
             PeakModelFile.write(PeakModelFile.generateFilename(outputDirectory, tumorSample), somaticPeaks);
-            DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
+
+            final List<DriverCatalog> driverCatalog = Lists.newArrayList();
+            if (configSupplier.driverCatalogConfig().enabled()) {
+                LOGGER.info("Generating driver catalog");
+                final CNADrivers cnaDrivers = new CNADrivers();
+                driverCatalog.addAll(cnaDrivers.deletions(geneCopyNumbers));
+                driverCatalog.addAll(cnaDrivers.amplifications(fittedPurity.ploidy(), geneCopyNumbers));
+                driverCatalog.addAll(somaticStream.drivers(geneCopyNumbers));
+                DriverCatalogFile.write(DriverCatalogFile.generateFilename(outputDirectory, tumorSample), driverCatalog);
+            }
 
             final DBConfig dbConfig = configSupplier.dbConfig();
             if (dbConfig.enabled()) {
@@ -370,7 +377,6 @@ public class PurityPloidyEstimateApplication {
         ConfigSupplier.addOptions(options);
 
         options.addOption(THREADS, true, "Number of threads (default 2)");
-        options.addOption(EXPERIMENTAL, false, "Anything goes!");
         options.addOption(VERSION, false, "Exit after displaying version info.");
 
         return options;

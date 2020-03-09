@@ -64,6 +64,7 @@ public class ConfigSupplier {
         StructuralVariantConfig.addOptions(options);
         RefGenomeData.addOptions(options);
         ChartConfig.addOptions(options);
+        DriverCatalogConfig.addOptions(options);
     }
 
     private final CommonConfig commonConfig;
@@ -75,6 +76,7 @@ public class ConfigSupplier {
     private final SmoothingConfig smoothingConfig;
     private final FitScoreConfig fitScoreConfig;
     private final RefGenomeData refGenomeData;
+    private final DriverCatalogConfig driverCatalogConfig;
 
     private final CobaltData cobaltData;
     private final AmberData amberData;
@@ -127,10 +129,12 @@ public class ConfigSupplier {
         fitScoreConfig = FitScoreConfig.createConfig(cmd);
         somaticConfig = SomaticConfig.createSomaticConfig(cmd);
         structuralVariantConfig = createStructuralVariantConfig(cmd, opt);
+        driverCatalogConfig = DriverCatalogConfig.createConfig(cmd);
 
         refGenomeData = RefGenomeData.createRefGenomeConfig(cmd);
         cobaltData = CobaltData.createCobaltData(commonConfig);
         amberData = AmberData.createAmberData(commonConfig);
+
 
     }
 
@@ -187,6 +191,10 @@ public class ConfigSupplier {
     @NotNull
     public SmoothingConfig smoothingConfig() {
         return smoothingConfig;
+    }
+
+    public DriverCatalogConfig driverCatalogConfig() {
+        return driverCatalogConfig;
     }
 
     @NotNull

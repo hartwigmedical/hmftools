@@ -19,6 +19,8 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalLoad;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.CommonConfig;
+import com.hartwig.hmftools.purple.config.ConfigSupplier;
+import com.hartwig.hmftools.purple.config.DriverCatalogConfig;
 import com.hartwig.hmftools.purple.config.RefGenomeData;
 import com.hartwig.hmftools.purple.config.SomaticConfig;
 
@@ -34,6 +36,7 @@ import htsjdk.variant.vcf.VCFHeader;
 public class SomaticStream {
 
     private final SomaticConfig somaticConfig;
+    private final DriverCatalogConfig driverCatalogConfig;
     private final CommonConfig commonConfig;
     private final RefGenomeData refGenomeData;
     private final String inputVCF;
@@ -44,13 +47,14 @@ public class SomaticStream {
     private final SomaticVariantDrivers drivers;
     private final SomaticVariantFactory somaticVariantFactory;
 
-    public SomaticStream(final CommonConfig commonConfig, final SomaticConfig somaticConfig, final RefGenomeData refGenomeData) {
-        this.commonConfig = commonConfig;
+    public SomaticStream(final ConfigSupplier configSupplier) {
+        this.somaticConfig = configSupplier.somaticConfig();
+        this.commonConfig = configSupplier.commonConfig();
+        this.driverCatalogConfig = configSupplier.driverCatalogConfig();
         this.outputVCF = commonConfig.outputDirectory() + File.separator + commonConfig.tumorSample() + ".purple.somatic.vcf.gz";
         this.enabled = somaticConfig.file().isPresent();
         this.inputVCF = enabled ? somaticConfig.file().get().toString() : "";
-        this.refGenomeData = refGenomeData;
-        this.somaticConfig = somaticConfig;
+        this.refGenomeData = configSupplier.refGenomeConfig();
         this.tumorMutationalLoad = new TumorMutationalLoad();
         this.microsatelliteIndels = new MicrosatelliteIndels();
         this.drivers = new SomaticVariantDrivers();
@@ -104,10 +108,10 @@ public class SomaticStream {
                             .setOption(htsjdk.variant.variantcontext.writer.Options.ALLOW_MISSING_FIELDS_IN_HEADER)
                             .build()) {
 
-                final Consumer<VariantContext> consumer =
-                        microsatelliteIndels.andThen(writer::add).andThen(driverConsumer);
+                final Consumer<VariantContext> consumer = microsatelliteIndels.andThen(writer::add).andThen(driverConsumer);
 
-                final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(somaticConfig.clonalityMaxPloidy(),
+                final VariantContextEnrichmentPurple enricher = new VariantContextEnrichmentPurple(driverCatalogConfig.enabled(),
+                        somaticConfig.clonalityMaxPloidy(),
                         somaticConfig.clonalityBinWidth(),
                         commonConfig.version(),
                         commonConfig.tumorSample(),
@@ -116,6 +120,7 @@ public class SomaticStream {
                         copyNumbers,
                         fittedRegions,
                         somaticPeaks,
+                        driverCatalogConfig.hotspots(),
                         consumer);
 
                 final VCFHeader header = enricher.enrichHeader(vcfReader.getFileHeader());
