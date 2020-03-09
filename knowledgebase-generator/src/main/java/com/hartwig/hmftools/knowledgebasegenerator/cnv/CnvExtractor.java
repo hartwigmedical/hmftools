@@ -91,11 +91,12 @@ public class CnvExtractor {
                 drug = Strings.EMPTY;
                 drugType = Strings.EMPTY;
                 cancerType = Strings.EMPTY;
-                level = Strings.EMPTY;
-                direction = Strings.EMPTY;
-                link = Strings.EMPTY;
-                break;
-            case CGI:
+                level = viccEntry.association().evidenceLabel();
+                direction = viccEntry.association().responseType();
+                link = "http://oncokb.org/#/gene/" +"[geneId]" + "/alteration/" + "[variantName]";
+
+            break;
+            case CGI: // all events are actionable
                 Cgi kbCgi = (Cgi) kbSpecificObject;
                 drug = kbCgi.drug();
                 drugType = kbCgi.drugFamily();
@@ -108,10 +109,10 @@ public class CnvExtractor {
                 Civic kbCivic = (Civic) kbSpecificObject;
                 drug = Strings.EMPTY;
                 drugType = Strings.EMPTY;
-                cancerType = Strings.EMPTY;
-                level = Strings.EMPTY;
-                direction = Strings.EMPTY;
-                link = Strings.EMPTY;
+                cancerType = kbCivic.evidenceItem().disease().name();
+                level = viccEntry.association().evidenceLabel();
+                direction = viccEntry.association().responseType();;
+                link = "https://civic.genome.wustl.edu/links/variants/" + kbCivic.id();
                 break;
             case JAX:
                 Jax kbJax = (Jax) kbSpecificObject;
