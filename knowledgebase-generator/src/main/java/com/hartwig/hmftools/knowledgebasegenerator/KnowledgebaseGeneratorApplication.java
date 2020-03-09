@@ -12,12 +12,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
+import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgram;
 import com.hartwig.hmftools.knowledgebasegenerator.compassionateuse.CompassionateUseProgramFile;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGenomicMutation;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
+import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.output.GeneratingOutputFiles;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -74,12 +76,21 @@ public class KnowledgebaseGeneratorApplication {
 
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
 
-        List<KnownAmplificationDeletion> listAmplification = Lists.newArrayList();
-        List<KnownAmplificationDeletion> listDeletion = Lists.newArrayList();
-        List<String> listVariants = Lists.newArrayList();
-        List<String> listRange = Lists.newArrayList();
-        List<String> listFusion = Lists.newArrayList();
+        //Lists of known genomic events
+        List<KnownAmplificationDeletion> listKnownAmplification = Lists.newArrayList();
+        List<KnownAmplificationDeletion> listKnownDeletion = Lists.newArrayList();
+        List<String> listKnownVariants = Lists.newArrayList();
+        List<String> listKnownRange = Lists.newArrayList();
+        List<KnownFusions> listKnownFusionPairs = Lists.newArrayList();
+        List<KnownFusions> listKnownFusionPromiscuousFive = Lists.newArrayList();
+        List<KnownFusions> listKnownFusionPromiscuousThree = Lists.newArrayList();
         List<String> listSignatures = Lists.newArrayList();
+
+        //Lists of actionable genomic events
+        List<ActionableAmplificationDeletion> listActionableDeletion = Lists.newArrayList();
+        List<ActionableAmplificationDeletion> listActionableAmplification = Lists.newArrayList();
+
+
 
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
@@ -87,14 +98,20 @@ public class KnowledgebaseGeneratorApplication {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type : eventType) {
-                // Generating actionable event and known events
+                // Generating known events
                 //TODO: map every genomic event to one object
-                listAmplification.add(DetermineEventOfGenomicMutation.checkAmplification(viccEntry, type, hotspotExtractor));
-                listDeletion.add(DetermineEventOfGenomicMutation.checkDeletion(viccEntry, type, hotspotExtractor));
+                listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type, hotspotExtractor));
+                listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, hotspotExtractor));
                 DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, hotspotExtractor);
                 DetermineEventOfGenomicMutation.checkRange(viccEntry, type, hotspotExtractor);
-                DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor);
+                listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor));
+                listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor));
+                listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor));
                 DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, hotspotExtractor);
+
+                // Generating actionable event
+                listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry, type, hotspotExtractor));
+                listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry, type, hotspotExtractor));
 
             }
         }
@@ -104,7 +121,7 @@ public class KnowledgebaseGeneratorApplication {
         List<KnownAmplificationDeletion> listDelsFIlter = Lists.newArrayList();
         Set<String> uniqueAmps = Sets.newHashSet();
         Set<String> uniqueDels = Sets.newHashSet();
-        for (KnownAmplificationDeletion amps : listAmplification) {
+        for (KnownAmplificationDeletion amps : listKnownAmplification) {
             if (!amps.eventType().isEmpty()) {
                 listAmpsFilter.add(amps);
                 uniqueAmps.add(amps.gene());
@@ -114,7 +131,7 @@ public class KnowledgebaseGeneratorApplication {
         List<String> sortedUniqueAmps = new ArrayList<String>(uniqueAmps);
         Collections.sort(sortedUniqueAmps);
 
-        for (KnownAmplificationDeletion dels : listDeletion) {
+        for (KnownAmplificationDeletion dels : listKnownDeletion) {
             if (!dels.eventType().isEmpty()) {
                 listDelsFIlter.add(dels);
                 uniqueDels.add(dels.gene());

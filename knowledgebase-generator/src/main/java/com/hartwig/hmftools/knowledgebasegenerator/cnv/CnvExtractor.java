@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -34,8 +32,8 @@ public class CnvExtractor {
 
     @NotNull
     public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source,
-            @NotNull String typeEvent, @NotNull String gene) {
-        return actionableInformation(source, typeEvent, gene);
+            @NotNull String typeEvent, @NotNull String gene, @NotNull ViccEntry viccEntry) {
+        return actionableInformation(source, typeEvent, gene, viccEntry);
     }
 
     @NotNull
@@ -79,7 +77,7 @@ public class CnvExtractor {
 
     @NotNull
     private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent,
-            @NotNull String gene) {
+            @NotNull String gene, @NotNull ViccEntry viccEntry) {
         switch (source) {
             case ONCOKB:
                 break;
@@ -104,11 +102,11 @@ public class CnvExtractor {
             default:
                 LOGGER.warn("Unknown knowledgebase");
         }
-        return ImmutableActionableAmplificationDeletion.builder().gene(Strings.EMPTY).eventType(typeEvent).source(Strings.EMPTY).build();
+        return determineInfoOfEvent(source, typeEvent, viccEntry.KbSpecificObject(), gene, viccEntry);
     }
 
     @NotNull
-    public static ActionableGene determineInfoOfEvent(@NotNull Source source, @NotNull String typeEvent,
+    public static ActionableAmplificationDeletion determineInfoOfEvent(@NotNull Source source, @NotNull String typeEvent,
             @NotNull KbSpecificObject kbSpecificObject, @NotNull String gene, @NotNull ViccEntry viccEntries) {
         String drug = Strings.EMPTY;
         String drugType = Strings.EMPTY;
@@ -168,16 +166,16 @@ public class CnvExtractor {
             default:
                 LOGGER.warn("Unknown knowledgebase");
         }
-        return ImmutableActionableGene.builder()
+        return ImmutableActionableAmplificationDeletion.builder()
                 .gene(gene)
-                .type(typeEvent)
+                .eventType(typeEvent)
                 .source(source.toString())
                 .drug(drug)
                 .drugType(drugType)
                 .cancerType(cancerType)
                 .level(level)
                 .direction(direction)
-                .link(link)
+                .sourceLink(link)
                 .build();
     }
 }
