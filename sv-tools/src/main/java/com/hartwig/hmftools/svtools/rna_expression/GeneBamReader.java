@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TOTAL;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.svtools.rna_expression.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.calcFragmentLength;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.generateMappedCoords;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.markRegionBases;
@@ -23,6 +24,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.ReadRecord.validTransc
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionWithin;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionsOverlap;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
@@ -38,9 +40,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -65,6 +69,7 @@ public class GeneBamReader
 
     private final List<TranscriptComboData> mTransComboData;
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
+    private final RetainedIntronFinder mRetainedIntronFinder;
 
     private final BufferedWriter mReadDataWriter;
     private final GcRatioCounts mGcRatioCounts;
@@ -92,7 +97,9 @@ public class GeneBamReader
         mGcRatioCounts = mConfig.WriteReadGcRatios ? new GcRatioCounts() : null;
 
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
-                mConfig, mSamReader, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
+                mConfig, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
+
+        mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter != null ? resultsWriter.getRetainedIntronWriter() : null);
     }
 
     public static GeneBamReader from(final RnaExpConfig config)
@@ -112,8 +119,11 @@ public class GeneBamReader
         mCurrentGene = geneReadData;
         mGeneReadCount = 0;
         mTransComboData.clear();
-        mGcRatioCounts.clearGeneCounts();
         mAltSpliceJunctionFinder.setGeneData(geneReadData);
+        mRetainedIntronFinder.setGeneData(geneReadData);
+
+        if(mGcRatioCounts != null)
+            mGcRatioCounts.clearGeneCounts();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
@@ -126,10 +136,11 @@ public class GeneBamReader
         }
     }
 
-    public void annotateAltSpliceJunctions()
+    public void annotateNovelLocations()
     {
-        mAltSpliceJunctionFinder.recordDepthCounts(mGeneReadCount);
+        recordNovelLocationReadDepth();
         mAltSpliceJunctionFinder.writeAltSpliceJunctions();
+        mRetainedIntronFinder.writeRetainedIntrons();
     }
 
     private void processSamRecord(@NotNull final SAMRecord record)
@@ -275,7 +286,7 @@ public class GeneBamReader
             {
                 if(validRegions.stream().filter(x -> x == region).count() > 1)
                 {
-                    RE_LOGGER.error("repeated exon region");
+                    RE_LOGGER.error("repeated exon region({})", region);
                 }
             }
         }
@@ -348,6 +359,9 @@ public class GeneBamReader
                         break;
                     }
                 }
+
+                if(geneReadType != GeneMatchType.ALT)
+                    mRetainedIntronFinder.evaluateFragmentReads(read1, read2);
             }
         }
         else
@@ -375,7 +389,7 @@ public class GeneBamReader
                 {
                     if(commonMappings.stream().filter(x -> x[SE_START] == readRegion[SE_START] && x[SE_END] == readRegion[SE_END]).count() > 1)
                     {
-                        RE_LOGGER.error("repeated read region");
+                        RE_LOGGER.error("repeated read region({} -> {})", readRegion[SE_START], readRegion[SE_END]);
                     }
                 }
             }
@@ -514,6 +528,49 @@ public class GeneBamReader
             return;
 
         mCurrentGene.addCount(UNSPLICED, 1);
+    }
+
+    // read depth count state
+    private PerformanceCounter mReadDepthPerf = new PerformanceCounter("NovelSites ReadDepth");
+    private FragmentTracker mFragmentTracker = new FragmentTracker();
+
+    private void recordNovelLocationReadDepth()
+    {
+        if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
+            return;
+
+        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
+
+        QueryInterval[] queryInterval = new QueryInterval[1];
+        int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mCurrentGene.GeneData.Chromosome);
+
+        mFragmentTracker.clear();
+
+        mReadDepthPerf.start();
+
+        long[] asjPositionsRange = mAltSpliceJunctionFinder.getPositionsRange();
+        long[] riPositionsRange = mRetainedIntronFinder.getPositionsRange();
+        int minPos = (int)min(asjPositionsRange[SE_START], riPositionsRange[SE_START]);
+        int maxPos = (int)max(asjPositionsRange[SE_END], riPositionsRange[SE_END]);
+
+        queryInterval[0] = new QueryInterval(chrSeqIndex, minPos, maxPos);
+
+        slicer.slice(mSamReader, queryInterval, this::setPositionDepthFromRead);
+        mReadDepthPerf.stop();
+    }
+
+    public void setPositionDepthFromRead(@NotNull final SAMRecord record)
+    {
+        final List<long[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
+        final List<long[]> otherReadCoords = (List<long[]>)mFragmentTracker.checkRead(record.getReadName(), readCoords);
+
+        if(otherReadCoords == null)
+            return;
+
+        final List<long[]> commonMappings = deriveCommonRegions(readCoords, otherReadCoords);
+
+        mAltSpliceJunctionFinder.setPositionDepthFromRead(commonMappings);
+        mRetainedIntronFinder.setPositionDepthFromRead(commonMappings);
     }
 
     private static final int DUP_DATA_SECOND_START = 0;

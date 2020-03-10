@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.svtools.rna_expression.AltSpliceJunctionType.SKIPPED_EXONS;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.REF_BASE_STR_1;
+import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.REF_BASE_STR_2;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.createCigar;
 import static com.hartwig.hmftools.svtools.rna_expression.ReadCountsTest.createReadRecord;
 
@@ -30,7 +31,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 import org.junit.Test;
 
-public class AltSpliceJunctionsTest
+public class NovelJunctionsTest
 {
     @Test
     public void testAltSpliceJunctionTypes()
@@ -90,7 +91,7 @@ public class AltSpliceJunctionsTest
         gene.setTranscripts(transcripts);
         gene.generateExonicRegions();
 
-        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(new RnaExpConfig(), null, null);
+        AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(new RnaExpConfig(), null);
         asjFinder.setGeneData(gene);
 
         long[] spliceJunction = new long[SE_PAIR];
@@ -221,4 +222,108 @@ public class AltSpliceJunctionsTest
         assertTrue(validTransIds.contains(transId1));
         assertTrue(validTransIds.contains(transId2));
     }
+
+    @Test
+    public void testRetainedIntrons()
+    {
+        RnaExpConfig config = new RnaExpConfig();
+        config.ExpRateFragmentLengths.add(new int[] { 30, 1 });
+        config.ReadLength = 10;
+
+        String chromosome = "1";
+        String geneId = "GENE01";
+
+        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
+
+        int transId1 = 1;
+        String transName1 = "TRANS01";
+
+        TranscriptData transData1 = new TranscriptData(transId1, transName1, geneId, true, (byte) 1,
+                100, 300, null, null, "");
+
+        transData1.exons().add(new ExonData(transId1, 100, 300, 1, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 400, 500, 2, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 800, 1000, 3, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 1400, 1500, 4, -1, -1));
+
+        int transId2 = 2;
+        String transName2 = "TRANS02";
+
+        TranscriptData transData2 = new TranscriptData(transId2, transName2, geneId, true, (byte) 1,
+                100, 300, null, null, "");
+
+        transData2.exons().add(new ExonData(transId2, 100, 310, 1, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 400, 500, 2, -1, -1));
+        transData2.exons().add(new ExonData(transId2, 600, 700, 3, -1, -1));
+
+        // single exons cannot match a splice junction
+        int transId3 = 3;
+        String transName3 = "TRANS03";
+
+        TranscriptData transData3 = new TranscriptData(transId3, transName3, geneId, true, (byte) 1,
+                100, 310, null, null, "");
+
+        transData3.exons().add(new ExonData(transId3, 100, 300, 1, -1, -1));
+        transData3.exons().add(new ExonData(transId3, 420, 500, 2, -1, -1));
+
+        GeneReadData gene = new GeneReadData(geneData);
+
+        List<TranscriptData> transcripts = Lists.newArrayList(transData1, transData2, transData3);
+        List<Integer> transIds = Lists.newArrayList(transId1, transId2, transId3);
+
+        gene.setTranscripts(transcripts);
+        gene.generateExonicRegions();
+
+        RetainedIntronFinder riFinder = new RetainedIntronFinder(null);
+        riFinder.setGeneData(gene);
+
+        // first read doesn't span an exon-intron boundary for every transcript
+        ReadRecord read1 = createReadRecord(1, chromosome, 291, 309, REF_BASE_STR_1, createCigar(0, 20, 0));
+        ReadRecord read2 = createReadRecord(1, chromosome, 340, 359, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        List<RegionReadData> overlappingRegions = gene.findOverlappingRegions(read1);
+        read1.processOverlappingRegions(overlappingRegions);
+
+        overlappingRegions = gene.findOverlappingRegions(read2);
+        read2.processOverlappingRegions(overlappingRegions);
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(0, riFinder.getRetainedIntrons().size());
+
+        read1 = createReadRecord(1, chromosome, 281, 319, REF_BASE_STR_2, createCigar(0, 40, 0));
+        read2 = createReadRecord(1, chromosome, 340, 359, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        overlappingRegions = gene.findOverlappingRegions(read1);
+        read1.processOverlappingRegions(overlappingRegions);
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(1, riFinder.getRetainedIntrons().size());
+        RetainedIntron retIntron = riFinder.getRetainedIntrons().get(0);
+        assertEquals(false, retIntron.isStart());
+        assertEquals(310, retIntron.position());
+        assertEquals(1, retIntron.regions().size());
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId2)));
+
+        read1 = createReadRecord(1, chromosome, 391, 429, REF_BASE_STR_2, createCigar(0, 40, 0));
+        read2 = createReadRecord(1, chromosome, 440, 459, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        overlappingRegions = gene.findOverlappingRegions(read1);
+        read1.processOverlappingRegions(overlappingRegions);
+
+        overlappingRegions = gene.findOverlappingRegions(read2);
+        read2.processOverlappingRegions(overlappingRegions);
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(2, riFinder.getRetainedIntrons().size());
+        retIntron = riFinder.getRetainedIntrons().get(1);
+        assertEquals(true, retIntron.isStart());
+        assertEquals(400, retIntron.position());
+        assertEquals(1, retIntron.regions().size());
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId1)));
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId2)));
+    }
+
 }

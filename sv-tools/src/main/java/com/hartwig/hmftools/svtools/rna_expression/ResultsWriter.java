@@ -31,6 +31,7 @@ public class ResultsWriter
     private BufferedWriter mAltSpliceJunctionWriter;
     private BufferedWriter mFragLengthWriter;
     private BufferedWriter mReadGcRatioWriter;
+    private BufferedWriter mRetainedIntronWriter;
 
     public ResultsWriter(final RnaExpConfig config)
     {
@@ -45,6 +46,7 @@ public class ResultsWriter
         mAltSpliceJunctionWriter = null;
         mFragLengthWriter = null;
         mReadGcRatioWriter = null;
+        mRetainedIntronWriter = null;
 
         initialiseExternalWriters();
     }
@@ -60,6 +62,7 @@ public class ResultsWriter
         closeBufferedWriter(mAltSpliceJunctionWriter);
         closeBufferedWriter(mFragLengthWriter);
         closeBufferedWriter(mReadGcRatioWriter);
+        closeBufferedWriter(mRetainedIntronWriter);
     }
 
     private void initialiseExternalWriters()
@@ -73,8 +76,11 @@ public class ResultsWriter
             if (mConfig.WriteReadData)
                 mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
 
-            if(!mConfig.WriteFragmentLengthsOnly)
-                mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createAltSpliceJunctionWriter(mConfig);
+            if(mConfig.WriteTransData)
+            {
+                mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
+                mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
+            }
 
             if(mConfig.WriteFragmentLengths)
                 mFragLengthWriter = FragmentSizeCalcs.createFragmentLengthWriter(mConfig);
@@ -86,6 +92,7 @@ public class ResultsWriter
 
     public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
+    public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }

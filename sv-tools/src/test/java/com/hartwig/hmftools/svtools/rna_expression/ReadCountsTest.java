@@ -38,6 +38,7 @@ import htsjdk.samtools.CigarOperator;
 public class ReadCountsTest
 {
     public static final String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST";
+    public static final String REF_BASE_STR_2 = REF_BASE_STR_1 + REF_BASE_STR_1;
 
     @Test
     public void testReadRegionTypes()

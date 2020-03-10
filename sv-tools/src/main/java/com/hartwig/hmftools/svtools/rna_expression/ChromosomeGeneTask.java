@@ -50,7 +50,7 @@ public class ChromosomeGeneTask implements Callable
 
     private static final int PERF_TOTAL = 0;
     private static final int PERF_READS = 1;
-    private static final int PERF_ALT_SJ = 2;
+    private static final int PERF_NOVEL_LOCATIONS = 2;
     private static final int PERF_FIT = 3;
     private final PerformanceCounter[] mPerfCounters;
 
@@ -81,7 +81,7 @@ public class ChromosomeGeneTask implements Callable
         mPerfCounters = new PerformanceCounter[PERF_FIT+1];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
         mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
-        mPerfCounters[PERF_ALT_SJ] = new PerformanceCounter("AltSJs");
+        mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
         mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
     }
 
@@ -277,9 +277,9 @@ public class ChromosomeGeneTask implements Callable
         mBamReader.readBamCounts(geneReadData, geneRegion);
         mPerfCounters[PERF_READS].stop();
 
-        mPerfCounters[PERF_ALT_SJ].start();
-        mBamReader.annotateAltSpliceJunctions();
-        mPerfCounters[PERF_ALT_SJ].stop();
+        mPerfCounters[PERF_NOVEL_LOCATIONS].start();
+        mBamReader.annotateNovelLocations();
+        mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
 
         if(mExpTransRates != null)
         {

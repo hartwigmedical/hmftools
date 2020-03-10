@@ -59,15 +59,16 @@ public class RegionReadData implements Comparable< RegionReadData>
     public static final int TRANS_ID = 0;
     public static final int TRANS_NAME = 1;
     public static final int EXON_RANK = 2;
+    public static final String TRANS_REF_DELIM = ":";
 
     private static String formExonRefId(int transId, final String transName, int exonRank)
     {
         return String.format("%d:%s:%d", transId, transName, exonRank);
     }
 
-    public static int extractTransId(final String ref) { return Integer.valueOf(ref.split(":")[TRANS_ID]); }
-    public static String extractTransName(final String ref) { return ref.split(":")[TRANS_NAME]; }
-    public static int extractExonRank(final String ref) { return Integer.valueOf(ref.split(":")[EXON_RANK]); }
+    public static int extractTransId(final String ref) { return Integer.valueOf(ref.split(TRANS_REF_DELIM)[TRANS_ID]); }
+    public static String extractTransName(final String ref) { return ref.split(TRANS_REF_DELIM)[TRANS_NAME]; }
+    public static int extractExonRank(final String ref) { return Integer.valueOf(ref.split(TRANS_REF_DELIM)[EXON_RANK]); }
 
     public int getExonRank(final int transId)
     {

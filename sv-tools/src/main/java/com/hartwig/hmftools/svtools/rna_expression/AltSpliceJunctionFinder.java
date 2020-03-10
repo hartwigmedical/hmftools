@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.svtools.rna_expression;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
@@ -37,31 +34,23 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 
 public class AltSpliceJunctionFinder
 {
     private final RnaExpConfig mConfig;
-    private final SamReader mSamReader;
 
     private final List<AltSpliceJunction> mAltSpliceJunctions;
     private final BufferedWriter mWriter;
 
     private GeneReadData mGene;
-    private long mCurrentSjPosition;
 
-    public AltSpliceJunctionFinder(final RnaExpConfig config, final SamReader samReader, final BufferedWriter writer)
+    public AltSpliceJunctionFinder(final RnaExpConfig config, final BufferedWriter writer)
     {
         mConfig = config;
-        mSamReader = samReader;
         mAltSpliceJunctions = Lists.newArrayList();
         mWriter = writer;
-        mCurrentSjPosition = 0;
         mGene = null;
     }
 
@@ -71,7 +60,6 @@ public class AltSpliceJunctionFinder
     {
         mGene = gene;
         mAltSpliceJunctions.clear();
-        mFragmentTracker.clear();
     }
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
@@ -356,24 +344,14 @@ public class AltSpliceJunctionFinder
         return altSpliceJunc;
     }
 
-    // read depth count state
-    private PerformanceCounter mReadDepthPerf = new PerformanceCounter("AltSJ ReadDepth");
-    private FragmentTracker mFragmentTracker = new FragmentTracker();
-    private int mTotalReadsProcessed = 0;
-
-    public void recordDepthCounts(int totalReadCount)
+    public long[] getPositionsRange()
     {
-        if(mAltSpliceJunctions.isEmpty())
-            return;
+        long[] positionsRange = new long[SE_PAIR];
 
-        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
+        positionsRange[SE_START] = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_START]).min().orElse(mGene.GeneData.GeneStart);
+        positionsRange[SE_END] = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_END]).max().orElse(mGene.GeneData.GeneEnd);
 
-        QueryInterval[] queryInterval = new QueryInterval[1];
-        int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mGene.GeneData.Chromosome);
-
-        mFragmentTracker.clear();
-        mTotalReadsProcessed = 0;
-
+        /*
         if(RE_LOGGER.isDebugEnabled() && (mAltSpliceJunctions.size() >= 50 || totalReadCount > 100000))
         {
             long totalSJRange =
@@ -385,38 +363,15 @@ public class AltSpliceJunctionFinder
             RE_LOGGER.debug(String.format("gene(%s) length(%d) totalReads(%d) altSJs(count=%d totalLen=%d avgLen=%.0f) expReads(%.0f)",
                     mGene.name(), geneLength, totalReadCount, mAltSpliceJunctions.size(), totalSJRange, avgSJLength, expReadsPerSJ));
         }
+        */
 
-        // String geneDetails = String.format("%s,%d,%d", mGene.name(), totalReadCount, mAltSpliceJunctions.size());
-        // mReadDepthPerf.start(geneDetails);
-        mReadDepthPerf.start();
-
-        // for genes of super high depth, take all reads for the gene together and then test each against each SJ
-        long altSJMinPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_START]).min().orElse(mGene.GeneData.GeneStart);
-        long altSJMaxPos = mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_END]).max().orElse(mGene.GeneData.GeneEnd);
-
-        queryInterval[0] = new QueryInterval(chrSeqIndex, (int)altSJMinPos, (int)altSJMaxPos);
-
-        slicer.slice(mSamReader, queryInterval, this::setPositionDepthFromRead);
-
-        mReadDepthPerf.stop();
-
-        // RE_LOGGER.debug("gene({}) read depth counts altSJs({}) readsProcessed({}) unmatchedFragReads({})",
-        //        mGene.name(), mAltSpliceJunctions.size(), mTotalReadsProcessed, mFragmentTracker.readsCount());
+        return positionsRange;
     }
 
-    private void setPositionDepthFromRead(@NotNull final SAMRecord record)
+    public void setPositionDepthFromRead(final List<long[]> readCoords)
     {
-        final List<long[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
-        final List<long[]> otherReadCoords = (List<long[]>)mFragmentTracker.checkRead(record.getReadName(), readCoords);
-
-        if(otherReadCoords == null)
-            return;
-
-        ++mTotalReadsProcessed;
-
-        final List<long[]> commonMappings = deriveCommonRegions(readCoords, otherReadCoords);
-        long readMinPos = commonMappings.get(0)[SE_START];
-        long readMaxPos = commonMappings.get(commonMappings.size() - 1)[SE_END];
+        long readMinPos = readCoords.get(0)[SE_START];
+        long readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
 
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
@@ -427,7 +382,7 @@ public class AltSpliceJunctionFinder
                 if(!positionWithin(position, readMinPos, readMaxPos))
                     continue;
 
-                if (commonMappings.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
+                if (readCoords.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
                 {
                     altSJ.addPositionCount(se);
                 }
@@ -435,7 +390,7 @@ public class AltSpliceJunctionFinder
         }
     }
 
-    public static BufferedWriter createAltSpliceJunctionWriter(final RnaExpConfig config)
+    public static BufferedWriter createWriter(final RnaExpConfig config)
     {
         try
         {
@@ -450,7 +405,7 @@ public class AltSpliceJunctionFinder
         }
         catch (IOException e)
         {
-            RE_LOGGER.error("failed to create at splice junction writer: {}", e.toString());
+            RE_LOGGER.error("failed to create alt splice junction writer: {}", e.toString());
             return null;
         }
     }

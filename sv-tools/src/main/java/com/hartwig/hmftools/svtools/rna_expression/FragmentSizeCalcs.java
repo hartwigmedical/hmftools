@@ -227,7 +227,7 @@ public class FragmentSizeCalcs
         return true;
     }
 
-    public synchronized void addFragmentLength(final SAMRecord record, final List<int[]> fragmentLengths)
+    private synchronized void addFragmentLength(final SAMRecord record, final List<int[]> fragmentLengths)
     {
         int fragmentLength = min(abs(record.getInferredInsertSize()), FRAG_LENGTH_CAP);
 
