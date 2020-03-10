@@ -9,11 +9,15 @@ import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 class TransvarInterpreter {
+
+    private static final Logger LOGGER = LogManager.getLogger(TransvarInterpreter.class);
 
     @NotNull
     private final IndexedFastaSequenceFile refGenome;
@@ -32,6 +36,10 @@ class TransvarInterpreter {
         List<VariantHotspot> hotspots = Lists.newArrayList();
 
         if (isSnvOrMnv(record)) {
+            if (record.gdnaRef().length() > 1) {
+                LOGGER.debug("Entering MNV interpretation mode on {} strand for {}", strand, record);
+            }
+
             // We need to look up which index of the ref codon is changed (1, 2 or 3) in case of SNV/MNV.
             int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
 
