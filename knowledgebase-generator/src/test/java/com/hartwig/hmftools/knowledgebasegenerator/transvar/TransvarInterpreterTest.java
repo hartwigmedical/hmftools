@@ -18,7 +18,7 @@ public class TransvarInterpreterTest {
     private static final String REF_GENOME_FASTA_FILE = Resources.getResource("refgenome/ref.fasta").getPath();
 
     @Test
-    public void canConvertSNVRecordToHotspots() throws FileNotFoundException {
+    public void canConvertSnvToHotspots() throws FileNotFoundException {
         TransvarRecord record = baseRecord().gdnaPosition(10)
                 .gdnaRef("A")
                 .gdnaAlt("C")
@@ -37,7 +37,7 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertMNVRecordToHotspots() throws FileNotFoundException {
+    public void canConvertMnvToHotspots() throws FileNotFoundException {
         TransvarRecord record = baseRecord().gdnaPosition(10)
                 .gdnaRef("TA")
                 .gdnaAlt("GC")
@@ -78,8 +78,14 @@ public class TransvarInterpreterTest {
     }
 
     @Test
-    public void canConvertDuplicationToHotspot() {
-        // TODO
+    public void canConvertDuplicationToHotspot() throws FileNotFoundException {
+        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("").dupLength(3).build();
+
+        List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
+
+        assertEquals(1, hotspots.size());
+
+        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAT").build(), hotspots.get(0));
     }
 
     private static void assertHotspot(@NotNull VariantHotspot expectedHotspot, @NotNull VariantHotspot actualHotspot) {
@@ -103,5 +109,4 @@ public class TransvarInterpreterTest {
     private static TransvarInterpreter testInterpreter() throws FileNotFoundException {
         return TransvarInterpreter.fromRefGenomeFastaFile(REF_GENOME_FASTA_FILE);
     }
-
 }

@@ -9,7 +9,7 @@ import org.junit.Test;
 public class TransvarConverterTest {
 
     @Test
-    public void canConvertSNVLineToRecord() {
+    public void canConvertSnvToRecord() {
         String line =
                 "MTOR:p.L2230V\tENST00000361445 (protein_coding)\tMTOR\t-\tchr1:g.11182158A>C/c.6688T>G/p.L2230V\tinside_[cds_in_exon_48]"
                         + "\tCSQN=Missense;reference_codon=TTA;candidate_codons=GTA,GTC,GTG,GTT;candidate_mnv_variants="
@@ -32,7 +32,7 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void canConvertMNVLineToRecord() {
+    public void canConvertMnvToRecord() {
         String line = "TET2:p.Y1294A\tENST00000540549 (protein_coding)\tTET2\t+\t"
                 + "chr4:g.106180852_106180853delTAinsGC/c.3880_3881delTAinsGC/p.Y1294A\tinside_[cds_in_exon_7]\t"
                 + "CSQN=Missense;reference_codon=TAC;candidate_codons=GCA,GCC,GCG,GCT;candidate_mnv_variants="
