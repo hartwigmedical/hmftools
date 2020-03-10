@@ -1002,7 +1002,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.40](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.40) 
   - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
   - Update driver catalog DNDS values
   - Driver catalog does not run by default. Only if `driver_catalog` argument supplied
