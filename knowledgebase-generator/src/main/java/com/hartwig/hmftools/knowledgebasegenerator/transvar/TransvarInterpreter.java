@@ -66,8 +66,8 @@ class TransvarInterpreter {
     }
 
     private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : flipBases(record.gdnaRef());
-        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : flipBases(record.gdnaAlt());
+        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : reverseAndFlip(record.gdnaRef());
+        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : reverseAndFlip(record.gdnaAlt());
 
         // Function only supports SNV and MNV
         assert codonCompatibleRef.length() == codonCompatibleAlt.length();
@@ -88,7 +88,8 @@ class TransvarInterpreter {
                         }
                     }
                     if (match) {
-                        return i;
+                        // For reverse strand searches we need to correct for the flipping of MNVs.
+                        return strand == Strand.FORWARD ? i : i + mutLength - 1;
                     }
                 }
             }
@@ -130,19 +131,9 @@ class TransvarInterpreter {
     private static String reverseAndFlip(@NotNull String string) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = string.length() - 1; i >= 0; i--) {
-            stringBuilder.append(flipBases(string.substring(i, i + 1)));
+            stringBuilder.append(flipBase(string.charAt(i)));
         }
         return stringBuilder.toString();
-    }
-
-    @NotNull
-    private static String flipBases(@NotNull String bases) {
-        StringBuilder flippedBases = new StringBuilder();
-        for (char base : bases.toCharArray()) {
-            flippedBases.append(flipBase(base));
-        }
-
-        return flippedBases.toString();
     }
 
     private static char flipBase(char base) {
