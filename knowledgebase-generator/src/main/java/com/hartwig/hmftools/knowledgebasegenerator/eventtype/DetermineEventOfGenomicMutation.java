@@ -27,17 +27,13 @@ public class DetermineEventOfGenomicMutation {
 
     private static final List<String> AMPLIFICATION = Lists.newArrayList("Amplification",
             "amplification",
-            "Overexpression",
-            "overexpression",
             "amp",
-            "OVEREXPRESSION",
             "Transcript Amplification",
             "Gain-of-function Mutations");
     private static final List<String> DELETION = Lists.newArrayList("Copy Number Loss",
             "Deletion",
             "del",
             "DELETION",
-            "UNDEREXPRESSION",
             "Exon Loss Variant",
             "Loss Of Function Variant",
             "Transcript Ablation");
