@@ -53,7 +53,7 @@ public class Transvar {
 
         List<TransvarRecord> records = process.runTransvarPanno(gene, proteinAnnotation);
         if (records.isEmpty()) {
-            LOGGER.warn("Transvar could not resolve genomic coordinates. '{}:p.{}' likely does not exist", gene, proteinAnnotation);
+            LOGGER.warn("Transvar could not resolve genomic coordinates for '{}:p.{}'", gene, proteinAnnotation);
             return Lists.newArrayList();
         }
 

@@ -32,10 +32,17 @@ final class TransvarConverter {
         ImmutableTransvarRecord.Builder builder = ImmutableTransvarRecord.builder();
 
         populateTranscript(builder, fields[TRANSCRIPT_COLUMN]);
-        populateCoordinates(builder, fields[COORDINATES_COLUMN]);
+        populateCoordinatesRefAlt(builder, fields[COORDINATES_COLUMN]);
         populateCodonInfo(builder, fields[MESSAGE_COLUMN]);
 
-        return builder.build();
+        TransvarRecord record = builder.build();
+
+        if (isLong(record.gdnaRef()) || isLong(record.gdnaAlt())) {
+            // For long indels, transvar gives the length of the indel rather than the exact bases.
+            return null;
+        }
+
+        return record;
     }
 
     private static void populateTranscript(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
@@ -44,7 +51,7 @@ final class TransvarConverter {
         builder.transcript(parts[0]);
     }
 
-    private static void populateCoordinates(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
+    private static void populateCoordinatesRefAlt(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String field) {
         // General case: "chr${chr}:g.${gdnaPos}${gdnaRef}>${dnaAlt}/c.${cdnaPos}${cdnaRef}>${cdnaAlt}/p.${aaRef}${aaPos}{aaAlt}"
         //  For MNV the g. part looks like ${gdnaPosStart}_${gdnaPosEnd}del${ref}ins${alt}
         String[] chromosomeAndGDNA = (field.split("/")[0]).split(":");
@@ -102,7 +109,7 @@ final class TransvarConverter {
             long diff = Long.parseLong(gdnaParts[1]) - Long.parseLong(gdnaParts[0]);
             builder.dupLength(1 + (int) diff);
         } else {
-            throw new IllegalStateException("Cannot process duplication: " + gdna);
+            throw new IllegalStateException("Cannot process duplication for gDNA: " + gdna);
         }
     }
 
