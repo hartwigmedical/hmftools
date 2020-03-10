@@ -278,24 +278,22 @@ public class NovelJunctionsTest
         riFinder.setGeneData(gene);
 
         // first read doesn't span an exon-intron boundary for every transcript
-        ReadRecord read1 = createReadRecord(1, chromosome, 291, 309, REF_BASE_STR_1, createCigar(0, 20, 0));
-        ReadRecord read2 = createReadRecord(1, chromosome, 340, 359, REF_BASE_STR_1, createCigar(0, 20, 0));
+        ReadRecord read1 = createReadRecord(1, chromosome, 291, 310, REF_BASE_STR_1, createCigar(0, 20, 0));
+        ReadRecord read2 = createReadRecord(1, chromosome, 340, 360, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        List<RegionReadData> overlappingRegions = gene.findOverlappingRegions(read1);
-        read1.processOverlappingRegions(overlappingRegions);
-
-        overlappingRegions = gene.findOverlappingRegions(read2);
-        read2.processOverlappingRegions(overlappingRegions);
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
         assertEquals(0, riFinder.getRetainedIntrons().size());
 
-        read1 = createReadRecord(1, chromosome, 281, 319, REF_BASE_STR_2, createCigar(0, 40, 0));
-        read2 = createReadRecord(1, chromosome, 340, 359, REF_BASE_STR_1, createCigar(0, 20, 0));
+        // first read supports a retained intron
+        read1 = createReadRecord(1, chromosome, 281, 320, REF_BASE_STR_2, createCigar(0, 40, 0));
+        read2 = createReadRecord(1, chromosome, 340, 360, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        overlappingRegions = gene.findOverlappingRegions(read1);
-        read1.processOverlappingRegions(overlappingRegions);
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -306,14 +304,11 @@ public class NovelJunctionsTest
         assertEquals(1, retIntron.regions().size());
         assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId2)));
 
-        read1 = createReadRecord(1, chromosome, 391, 429, REF_BASE_STR_2, createCigar(0, 40, 0));
-        read2 = createReadRecord(1, chromosome, 440, 459, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read1 = createReadRecord(1, chromosome, 391, 430, REF_BASE_STR_2, createCigar(0, 40, 0));
+        read2 = createReadRecord(1, chromosome, 440, 460, REF_BASE_STR_1, createCigar(0, 20, 0));
 
-        overlappingRegions = gene.findOverlappingRegions(read1);
-        read1.processOverlappingRegions(overlappingRegions);
-
-        overlappingRegions = gene.findOverlappingRegions(read2);
-        read2.processOverlappingRegions(overlappingRegions);
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 
@@ -324,6 +319,85 @@ public class NovelJunctionsTest
         assertEquals(1, retIntron.regions().size());
         assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId1)));
         assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId2)));
+
+        // with splice support on the other read - updating the same retained intron
+        read1 = createReadRecord(1, chromosome, 391, 430, REF_BASE_STR_2, createCigar(0, 40, 0));
+        read2 = createReadRecord(1, chromosome, 491, 609, REF_BASE_STR_1, createCigar(0, 10, 99, 10, 0));
+
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(2, riFinder.getRetainedIntrons().size());
+        retIntron = riFinder.getRetainedIntrons().get(1);
+        assertEquals(true, retIntron.isStart());
+        assertEquals(400, retIntron.position());
+        assertEquals(1, retIntron.regions().size());
+        assertEquals(2, retIntron.getFragmentCount());
+        assertEquals(1, retIntron.getSplicedFragmentCount());
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId1)));
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId2)));
+
+        // cannot be the first or last exon of a transcript
+        read1 = createReadRecord(1, chromosome, 91, 110, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read2 = createReadRecord(1, chromosome, 121, 140, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(2, riFinder.getRetainedIntrons().size());
+
+        read1 = createReadRecord(1, chromosome, 1491, 1510, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read2 = createReadRecord(1, chromosome, 1551, 1570, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(2, riFinder.getRetainedIntrons().size());
+
+        riFinder.getRetainedIntrons().clear();
+
+        // both reads covering boundaries of the same exon - not permitted
+        read1 = createReadRecord(1, chromosome, 391, 410, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read2 = createReadRecord(1, chromosome, 491, 510, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertTrue(riFinder.getRetainedIntrons().isEmpty());
+
+
+        // both reads covering boundaries of sequential exons is permitted
+        read1 = createReadRecord(1, chromosome, 491, 510, REF_BASE_STR_1, createCigar(0, 20, 0));
+        read2 = createReadRecord(1, chromosome, 591, 610, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
+        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+
+        riFinder.evaluateFragmentReads(read1, read2);
+
+        assertEquals(2, riFinder.getRetainedIntrons().size());
+
+        retIntron = riFinder.getRetainedIntrons().get(0);
+        assertEquals(false, retIntron.isStart());
+        assertEquals(500, retIntron.position());
+        assertEquals(1, retIntron.regions().size());
+        assertEquals(1, retIntron.getFragmentCount());
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId1)));
+        assertTrue(retIntron.regions().stream().anyMatch(x -> x.hasTransId(transId2)));
+
+        retIntron = riFinder.getRetainedIntrons().get(1);
+        assertEquals(true, retIntron.isStart());
+        assertEquals(600, retIntron.position());
+        assertEquals(1, retIntron.regions().size());
+        assertEquals(1, retIntron.getFragmentCount());
     }
 
 }

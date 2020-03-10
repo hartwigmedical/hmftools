@@ -4,11 +4,10 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.svtools.rna_expression.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpConfig.RE_LOGGER;
 import static com.hartwig.hmftools.svtools.rna_expression.RnaExpUtils.positionWithin;
+import static com.hartwig.hmftools.svtools.rna_expression.TransMatchType.SPLICE_JUNCTION;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 
 import ngs.Read;
 
@@ -55,96 +55,150 @@ public class RetainedIntronFinder
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2)
     {
-        if(read1.containsSplit() || read2.containsSplit())
-            return;
-
         // reads must span an exon boundary without being exonic in another transcript
+
+        // scenarios: exon-intron read plus:
+        // -  exonic read
+        // - intronic read
+        // - spliced read
+        // - another exon-intron read - same exon - dismissed as likely unspliced
+        final List<Integer> splicedTrans = Lists.newArrayList();
+
+        List<RetainedIntron> retIntrons = Lists.newArrayList();
+
+        for (int i = 0; i <= 1; ++i)
+        {
+            ReadRecord read = (i == 0) ? read1 : read2;
+
+            if(read.containsSplit())
+            {
+                splicedTrans.addAll(read.getTranscriptClassifications().entrySet().stream()
+                        .filter(x -> x.getValue() == SPLICE_JUNCTION)
+                        .map(x -> x.getKey()).collect(Collectors.toList()));
+
+                continue;
+            }
+
+            RetainedIntron retIntron = evaluateRead(read);
+
+            if(retIntron == null)
+                continue;
+
+            retIntrons.add(retIntron);
+        }
+
+        // skip any fragments where the bounds of an exon are spanned on both sides
+        if(retIntrons.size() == 2)
+        {
+            RetainedIntron retIntron1 = retIntrons.get(0);
+            RetainedIntron retIntron2 = retIntrons.get(1);
+
+             if(retIntron1.isStart() != retIntron2.isStart())
+             {
+                 if(retIntron1.regions().stream().anyMatch(x -> retIntron2.regions().contains(x)))
+                 {
+                     RE_LOGGER.debug("reads({}) support the same exon from exon-intron reads", read1.Id);
+                     return;
+                 }
+             }
+             else if(retIntron1.matches(retIntron2))
+             {
+                 // remove one since both reads support the same retained intron
+                 retIntrons.remove(retIntron2);
+             }
+        }
+
+        for(RetainedIntron retIntron : retIntrons)
+        {
+            boolean hasSpliceSupport = retIntron.regions().stream().anyMatch(x -> splicedTrans.stream().anyMatch(y -> x.hasTransId(y)));
+
+            RetainedIntron existingRetIntron = mRetainedIntrons.stream().filter(x -> x.matches(retIntron)).findFirst().orElse(null);
+
+            if (existingRetIntron != null)
+            {
+                existingRetIntron.addFragmentCount(hasSpliceSupport);
+            }
+            else
+            {
+                retIntron.addFragmentCount(hasSpliceSupport);
+                mRetainedIntrons.add(retIntron);
+            }
+        }
+
+    }
+
+    private RetainedIntron evaluateRead(ReadRecord read)
+    {
         long spannedPosition = 0;
         boolean spannedIsStart = false;
 
         final List<RegionReadData> candidateRegions = Lists.newArrayList();
 
-        for(int i = 0; i <= 1; ++i)
+        if(read.getMappedRegions().values().stream().anyMatch(x -> x != EXON_INTRON))
+            return null;
+
+        for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
         {
-            ReadRecord read = (i == 0) ? read1 : read2;
+            RegionReadData region = entry.getKey();
 
-            if(read.getMappedRegions().values().stream().anyMatch(x -> x != EXON_INTRON))
-                continue;
-
-            for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
+            // check each end in turn
+            for (int se = SE_START; se <= SE_END; ++se)
             {
-                RegionReadData region = entry.getKey();
+                boolean usesStart = se == SE_START;
+                long regionPos = usesStart ? region.start() : region.end();
 
-                if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(region.start(), x[SE_START], x[SE_END])))
+                if (!read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(regionPos, x[SE_START], x[SE_END])))
+                    continue;
+
+                // cannot be the last or first exon
+                if ((usesStart && region.getPreRegions().isEmpty()) || (!usesStart && region.getPostRegions().isEmpty()))
+                    continue;
+
+                spannedIsStart = usesStart;
+
+                // take the outer-most region(s) if there are more than one
+                if (!candidateRegions.isEmpty())
                 {
-                    spannedIsStart = true;
-
-                    // take the outer-most region(s) if there are more than one
-                    if(!candidateRegions.isEmpty())
+                    if (usesStart)
                     {
-                        if(region.start() > spannedPosition)
+                        if (regionPos > spannedPosition)
                             continue;
 
-                        if(spannedPosition > region.start())
+                        if (spannedPosition > regionPos)
                         {
                             candidateRegions.clear();
-                            spannedPosition = region.start();
+                            spannedPosition = regionPos;
                         }
                     }
                     else
                     {
-                        spannedPosition = region.start();
-                    }
-
-                    candidateRegions.add(region);
-                }
-                else if(read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(region.end(), x[SE_START], x[SE_END])))
-                {
-                    spannedIsStart = false;
-
-                    // take the outer-most region(s) if there are more than one
-                    if(!candidateRegions.isEmpty())
-                    {
-                        if(region.end() < spannedPosition)
+                        if (regionPos < spannedPosition)
                             continue;
 
-                        if(spannedPosition < region.end())
+                        if (spannedPosition < regionPos)
                         {
                             candidateRegions.clear();
-                            spannedPosition = region.end();
+                            spannedPosition = regionPos;
                         }
                     }
-                    else
-                    {
-                        spannedPosition = region.end();
-                    }
-
-                    candidateRegions.add(region);
                 }
+                else
+                {
+                    spannedPosition = regionPos;
+                }
+
+                candidateRegions.add(region);
             }
         }
 
         if(candidateRegions.isEmpty())
-            return;
-
-        boolean matchedExisting = false;
-
-        for(RetainedIntron retIntron : mRetainedIntrons)
-        {
-            if(retIntron.position() == spannedPosition && retIntron.isStart() == spannedIsStart)
-            {
-                matchedExisting = true;
-                retIntron.addFragmentCount();
-                break;
-            }
-        }
-
-        if(matchedExisting)
-            return;
+            return null;
 
         RetainedIntron retIntron = new RetainedIntron(mGene.GeneData, candidateRegions, spannedIsStart);
-        retIntron.addFragmentCount();
-        mRetainedIntrons.add(retIntron);
+
+        RE_LOGGER.debug("retained intron({}) supported by read({})", retIntron, read);
+
+        return retIntron;
     }
 
     public void setPositionDepthFromRead(final List<long[]> readCoords)
@@ -178,7 +232,8 @@ public class RetainedIntronFinder
             final String outputFileName = config.formOutputFile("retained_intron.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,Chromosome,Strand,Position,Type,FragCount,TotalDepth,TranscriptInfo");
+            writer.write("GeneId,GeneName,Chromosome,Strand,Position");
+            writer.write(",Type,FragCount,SplicedFragCount,TotalDepth,TranscriptInfo");
             writer.newLine();
             return writer;
         }
@@ -210,9 +265,9 @@ public class RetainedIntronFinder
                         retIntron.GeneData.GeneId,  retIntron.GeneData.GeneName,
                         retIntron.GeneData.Chromosome, retIntron.GeneData.Strand));
 
-                writer.write(String.format(",%d,%s,%d,%d,%s",
-                        retIntron.position(), retIntron.type(), retIntron.getFragmentCount(), retIntron.getDepth(),
-                        retIntron.transcriptInfo()));
+                writer.write(String.format(",%d,%s,%d,%d,%d,%s",
+                        retIntron.position(), retIntron.type(), retIntron.getFragmentCount(),
+                        retIntron.getSplicedFragmentCount(), retIntron.getDepth(), retIntron.transcriptInfo()));
 
                 writer.newLine();
             }

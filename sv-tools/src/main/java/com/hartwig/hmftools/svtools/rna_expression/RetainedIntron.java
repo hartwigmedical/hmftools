@@ -19,6 +19,7 @@ public class RetainedIntron
     private final long mPosition;
 
     private int mFragmentCount;
+    private int mSplicedFragmentCount;
     private int mReadDepth;
 
     private final String mTranscriptInfo;
@@ -30,6 +31,7 @@ public class RetainedIntron
         mIsStart = isStart;
 
         mFragmentCount = 0;
+        mSplicedFragmentCount = 0;
         mReadDepth = 0;
 
         mPosition = isStart ? regions.get(0).start() : regions.get(0).end();
@@ -56,10 +58,27 @@ public class RetainedIntron
 
     public String transcriptInfo() { return mTranscriptInfo; }
 
-    public void addFragmentCount() { ++mFragmentCount; }
+    public void addFragmentCount(boolean spliceSupport)
+    {
+        ++mFragmentCount;
+
+        if(spliceSupport)
+            ++mSplicedFragmentCount;
+    }
+
     public int getFragmentCount() { return mFragmentCount; }
+    public int getSplicedFragmentCount() { return mSplicedFragmentCount; }
 
     public void addReadDepth() { ++mReadDepth; }
     public int getDepth() { return mReadDepth; }
 
+    public boolean matches(final RetainedIntron other)
+    {
+        return other.position() == mPosition && other.isStart() == mIsStart;
+    }
+
+    public String toString()
+    {
+        return String.format("pos(%s @ %s) regions(%d)", mPosition, mIsStart ? "start" : "end", mRegions.size());
+    }
 }
