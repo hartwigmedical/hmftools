@@ -26,6 +26,10 @@ public class HotspotExtractor {
     private static final Set<String> ONCOKB_VALID_BIOMARKER_TYPES =
             Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
 
+    private static final String FEATURE_RANGE_INDICATOR = "_";
+    private static final Set<String> VALID_FEATURE_RANGES = Sets.newHashSet("ins", "dup", "del");
+    private static final String FRAMESHIFT_FEATURE_SUFFIX = "fs";
+
     @NotNull
     private final Transvar transvar;
 
@@ -59,14 +63,24 @@ public class HotspotExtractor {
     @VisibleForTesting
     static boolean isProteinAnnotation(@NotNull String featureName) {
         String featureToTest;
-        // Features could be ranges such as E102_I103del
-        if (featureName.contains("_")) {
-            featureToTest = featureName.split("_")[1];
-            // We only want to explicitly filter on ranges that involve insertions, deletions or duplication.
-            if (!(featureToTest.contains("ins") || featureToTest.contains("del") || featureToTest.contains("dup"))) {
+        if (featureName.contains(FEATURE_RANGE_INDICATOR)) {
+            // Features could be ranges such as E102_I103del. We whitelist specific feature types when analyzing a range.
+            featureToTest = featureName.split(FEATURE_RANGE_INDICATOR)[1];
+            boolean validFeatureFound = false;
+            for (String validFeature : VALID_FEATURE_RANGES) {
+                if (featureToTest.contains(validFeature)) {
+                    validFeatureFound = true;
+                    break;
+                }
+            }
+            if (!validFeatureFound) {
                 return false;
             }
-        } else {
+        } else if (featureName.endsWith(FRAMESHIFT_FEATURE_SUFFIX)) {
+            // Frameshifts are ignored for hotspot determination
+            return false;
+        }
+        else {
             featureToTest = featureName;
         }
 
