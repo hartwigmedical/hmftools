@@ -32,6 +32,7 @@ public class HotspotExtractor {
     @NotNull
     public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
             throws FileNotFoundException {
+        LOGGER.info("Creating hotspot extractor with ref genome version '{}' and fasta path '{}'", refGenomeVersion, refGenomeFastaFile);
         return new HotspotExtractor(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
     }
 
