@@ -29,6 +29,7 @@ public class HotspotExtractor {
     @NotNull
     private final Transvar transvar;
 
+    @NotNull
     public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
             throws FileNotFoundException {
         return new HotspotExtractor(Transvar.withRefGenome(refGenomeVersion, refGenomeFastaFile));
