@@ -110,6 +110,17 @@ public class TransvarConverterTest {
     }
 
     @Test
+    public void longRangeLeadsToNull() {
+        String line = "BRCA2:p.V1839_E1901del\tENST00000544455 (protein_coding)\tBRCA2\t+\tchr13:g.32914008_32914196del189/"
+                + "c.5516_5704del189/p.V1839_E1901del63\tinside_[cds_in_exon_11]\tCSQN=InFrameDeletion;left_align_gDNA="
+                + "g.32914004_32914192del189;unaligned_gDNA=g.32914007_32914195del189;left_align_cDNA=c.5512_5700del189;"
+                + "unalign_cDNA=c.5515_5703del189;left_align_protein=p.E1838_S1900del63;unalign_protein=p.V1839_E1901del63;"
+                + "imprecise;aliases=ENSP00000439902;source=Ensembl";
+
+        assertNull(TransvarConverter.toTransvarRecord(line));
+    }
+
+    @Test
     public void unresolvedProteinAnnotationLeadsToNull() {
         String line = "RAD50:p.L1273F\t.\t.\t.\t././.\t.\tno_valid_transcript_found";
 
@@ -117,12 +128,8 @@ public class TransvarConverterTest {
     }
 
     @Test
-    public void longRangeLeadsToNull() {
-        String line = "BRCA2:p.V1839_E1901del\tENST00000544455 (protein_coding)\tBRCA2\t+\tchr13:g.32914008_32914196del189/"
-                + "c.5516_5704del189/p.V1839_E1901del63\tinside_[cds_in_exon_11]\tCSQN=InFrameDeletion;left_align_gDNA="
-                + "g.32914004_32914192del189;unaligned_gDNA=g.32914007_32914195del189;left_align_cDNA=c.5512_5700del189;"
-                + "unalign_cDNA=c.5515_5703del189;left_align_protein=p.E1838_S1900del63;unalign_protein=p.V1839_E1901del63;"
-                + "imprecise;aliases=ENSP00000439902;source=Ensembl";
+    public void invalidMutationStringLeadsToNull() {
+        String line = "ERBB2:p.Exon 20 insertions\t.\t.\t.\t././.\t.\tError_invalid_mutation_string_p.Exon 20 insertions";
 
         assertNull(TransvarConverter.toTransvarRecord(line));
     }
