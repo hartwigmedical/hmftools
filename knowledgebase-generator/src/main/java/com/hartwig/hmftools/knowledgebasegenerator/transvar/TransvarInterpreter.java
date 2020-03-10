@@ -40,7 +40,7 @@ class TransvarInterpreter {
                 LOGGER.debug("Entering MNV interpretation mode on {} strand for {}", strand, record);
             }
 
-            // We need to look up which index of the ref codon is changed (1, 2 or 3) in case of SNV/MNV.
+            // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
             int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
 
             for (String candidateCodon : record.candidateCodons()) {
@@ -49,18 +49,18 @@ class TransvarInterpreter {
         } else {
             // For indels we assume we have to look up the base in front of the del or ins and set the position 1 before the actual ref/alt
             long position = record.gdnaPosition() - 1;
-            String preRefSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
 
             Integer dupLength = record.dupLength();
             if (dupLength == null) {
-                hotspotBuilder.ref(preRefSequence + record.gdnaRef()).alt(preRefSequence + record.gdnaAlt());
+                hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
             } else {
                 // Dups don't have ref and alt information so need to look it up in ref genome.
                 String dupBases = refGenome.getSubsequenceAt(record.chromosome(), position+1, position+dupLength).getBaseString();
-                hotspotBuilder.ref(preRefSequence).alt(preRefSequence + dupBases);
+                hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
             }
 
             hotspots.add(hotspotBuilder.build());

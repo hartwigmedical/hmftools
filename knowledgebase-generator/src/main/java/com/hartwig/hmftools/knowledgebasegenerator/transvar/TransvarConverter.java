@@ -26,8 +26,8 @@ final class TransvarConverter {
     static TransvarRecord toTransvarRecord(@NotNull String transvarLine) {
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
-        if (fields[MESSAGE_COLUMN].contains(MSG_NO_VALID_TRANSCRIPT_FOUND)
-                || fields[MESSAGE_COLUMN].contains(MSG_INVALID_MUTATION_STRING)) {
+        String message = fields[MESSAGE_COLUMN];
+        if (message.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || message.contains(MSG_INVALID_MUTATION_STRING)) {
             return null;
         }
 
@@ -35,12 +35,12 @@ final class TransvarConverter {
 
         populateTranscript(builder, fields[TRANSCRIPT_COLUMN]);
         populateCoordinatesRefAlt(builder, fields[COORDINATES_COLUMN]);
-        populateCodonInfo(builder, fields[MESSAGE_COLUMN]);
+        populateCodonInfo(builder, message);
 
         TransvarRecord record = builder.build();
 
         if (isLong(record.gdnaRef()) || isLong(record.gdnaAlt())) {
-            // For long indels, transvar gives the length of the indel rather than the exact bases.
+            // For long indels, transvar gives the length of the indel rather than the exact bases. We ignore such records.
             return null;
         }
 
@@ -65,7 +65,7 @@ final class TransvarConverter {
         String gdna = chromosomeAndGDNA[1].substring(2);
 
         if (gdna.contains(RANGE_INDICATOR)) {
-            if (gdna.contains(DELETION) || gdna.contains(INSERTION)) {
+            if (gdna.contains(INSERTION) || gdna.contains(DELETION)) {
                 populateForInsertionDeletion(builder, gdna);
             } else {
                 populateForDuplication(builder, gdna);
@@ -76,6 +76,8 @@ final class TransvarConverter {
     }
 
     private static void populateForInsertionDeletion(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+        assert gdna.contains(RANGE_INDICATOR);
+
         String[] gdnaParts = gdna.split(RANGE_INDICATOR);
         builder.gdnaPosition(Long.parseLong(gdnaParts[0]));
 
@@ -100,11 +102,13 @@ final class TransvarConverter {
     }
 
     private static void populateForDuplication(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+        // DUPs simply look like 'start_end' and come with no ref/alt information.
+        assert gdna.contains(RANGE_INDICATOR);
+
         String[] gdnaParts = gdna.split(RANGE_INDICATOR);
         builder.gdnaPosition(Long.parseLong(gdnaParts[0]));
 
         if (isLong(gdnaParts[1])) {
-            // Assume the variant is a dup with format 'start_end'
             builder.gdnaRef(Strings.EMPTY);
             builder.gdnaAlt(Strings.EMPTY);
 
@@ -125,6 +129,7 @@ final class TransvarConverter {
     }
 
     private static void populateForSNV(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
+        // SNVs look like 1234T>C
         StringBuilder gdnaPos = new StringBuilder();
         StringBuilder gdnaRef = new StringBuilder();
         StringBuilder gdnaAlt = new StringBuilder();

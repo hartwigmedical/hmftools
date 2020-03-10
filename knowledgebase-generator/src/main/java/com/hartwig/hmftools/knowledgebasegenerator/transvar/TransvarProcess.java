@@ -2,6 +2,7 @@ package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +45,7 @@ class TransvarProcess {
                 "-i",
                 gene + ":p." + proteinAnnotation);
 
-        // Below is (somehow) necessary to run in intellij. Otherwise it can not find proper locale.
+        // Below is required on environments where LC_CTYPE is not properly configured (usually on apple).
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
 
         LOGGER.debug("Running '{}'", command(processBuilder));
@@ -66,7 +67,9 @@ class TransvarProcess {
         if (!stderr.isEmpty()) {
             LOGGER.warn("Non-empty stderr when running '{}'!", command(processBuilder));
             for (String errLine : stderr) {
-                LOGGER.warn(" {}", errLine);
+                if (!errLine.trim().isEmpty()) {
+                    LOGGER.warn(" {}", errLine);
+                }
             }
         }
 
@@ -84,23 +87,24 @@ class TransvarProcess {
 
     @NotNull
     private static List<String> captureStdout(@NotNull Process process) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        List<String> stdout = toStringList(reader);
-
-        reader.close();
-
-        return stdout;
+        return captureStream(process.getInputStream());
     }
 
     @NotNull
     private static List<String> captureStderr(@NotNull Process process) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        return captureStream(process.getErrorStream());
+    }
 
-        List<String> stderr = toStringList(reader);
+    @NotNull
+    private static List<String> captureStream(@NotNull InputStream stream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+        List<String> strings = toStringList(reader);
 
         reader.close();
 
-        return stderr;
+        return strings;
+
     }
 
     @NotNull
