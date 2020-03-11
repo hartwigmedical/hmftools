@@ -105,11 +105,15 @@ For each novel splice junction, we also record the distance to the nearest splic
 
 We also search explicitly for evidence of retained introns
 
-Retained introns are hard filtered unless they contain at lease
+Retained introns are hard filtered unless they contain at least . . .
 
 ### Counting and characterisation of chimeric and read through junctions
 
+...
+
 ## Annotation of novel splice features
+
+...
 
 ### Panel of Normals  (TO DO)
 
@@ -130,15 +134,29 @@ Each novel splice junction and retained intron for each sample is annotated with
 
 ### Fragment length distribution
 
+...
+
 ### Gene level data
+
+...
 
 ### Transcriptome level data
 
+...
+
 ### Expected abundance rates per transcript per category
+
+...
 
 ### Observed and fitted counts per category
 
+...
+
 ### Novel splice junctions
 
+...
+
 ### Novel retained introns
+
+...
 
