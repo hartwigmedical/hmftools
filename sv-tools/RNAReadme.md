@@ -63,6 +63,23 @@ TO DO
 
 ### Counting and characterisation of chimeric and read through junctions
 
+## Annotation of novel splice features
+
+### Panel of Normals  (TO DO)
+
+We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
+
+For each novel splice junction  we count
+* # of unique samples with novel splice junction
+* Total # of fragments supporting novel splice junction across all the unique samples
+
+For intron retention cases we count
+* # of unique samples with at least 3 fragments or at least one fragment with a known splice event supporting intron retention
+* Total # of fragments supporting intron retention from those unique samples
+* Total # of fragments supporting intron retention from those unique samples which also have splcing.
+
+Each novel splice junction and retained intron for each sample is annotated with the population level frequencies
+
 ## Outputs
 
 ### Fragment length distribution
