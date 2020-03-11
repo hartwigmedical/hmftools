@@ -28,6 +28,7 @@
         <module>sv-linx</module>
         <module>sig-analyser</module>
         <module>sv-tools</module>
+        <module>isofox</module>
         <module>stat_calcs</module>
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
@@ -59,6 +60,7 @@
         <sv-linx.version>1.8</sv-linx.version>
         <sig-analyser.version>1.0</sig-analyser.version>
         <sv-tools.version>1.0</sv-tools.version>
+        <isofox.version>1.0</isofox.version>
         <amber.version>3.2</amber.version>
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.40</purple.version>
