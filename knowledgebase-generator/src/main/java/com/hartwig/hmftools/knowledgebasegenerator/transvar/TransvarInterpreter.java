@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.knowledgebasegenerator.util.AminoAcidLookup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,12 +60,22 @@ class TransvarInterpreter {
                 String dupBases =
                         refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + record.indelLength()).getBaseString();
                 hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
-            } else {
-                // Inserts and deletes have either ref or alt set.
-                hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
-            }
+                hotspots.add(hotspotBuilder.build());
+            } else if (record.gdnaRef().isEmpty()) {
+                hotspotBuilder.ref(preMutatedSequence);
 
-            hotspots.add(hotspotBuilder.build());
+                // We assume inserts of length 3 are always amino acid inserts.
+                if (record.gdnaAlt().length() == 3) {
+                    for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(record.gdnaAlt(), strand)) {
+                        hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
+                    }
+                } else {
+                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + record.gdnaAlt()).build());
+                }
+            } else {
+                assert record.gdnaAlt().isEmpty();
+                hotspots.add(hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence).build());
+            }
         }
 
         return hotspots;
