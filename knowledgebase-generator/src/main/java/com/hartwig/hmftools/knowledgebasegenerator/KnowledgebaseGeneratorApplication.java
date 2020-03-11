@@ -98,20 +98,18 @@ public class KnowledgebaseGeneratorApplication {
             for (EventType type : eventType) {
                 // Generating known events
                 //TODO: map every genomic event to one object
-                listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type, hotspotExtractor));
-                listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, hotspotExtractor));
-                DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, hotspotExtractor);
-                DetermineEventOfGenomicMutation.checkRange(viccEntry, type, hotspotExtractor);
-                listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor));
-                listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor));
-                listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, hotspotExtractor));
-                DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, hotspotExtractor);
+                listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type));
+                listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type));
+                DetermineEventOfGenomicMutation.checkVariants(viccEntry, type);
+                DetermineEventOfGenomicMutation.checkRange(viccEntry, type);
+                listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type));
+                listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type));
+                listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type));
+                DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type);
 
                 // Generating actionable event
-                listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry, type, hotspotExtractor));
-                listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry,
-                        type,
-                        hotspotExtractor));
+                listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry, type));
+                listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry, type));
 
             }
         }
@@ -154,9 +152,9 @@ public class KnowledgebaseGeneratorApplication {
         List<ActionableAmplificationDeletion> listFilterActionableDeletion = Lists.newArrayList();
 
         for (ActionableAmplificationDeletion actionableDeletion : listActionableDeletion) {
-            if (actionableDeletion.level() != null && actionableDeletion.drug() != null
-                    && actionableDeletion.drugType() != null && actionableDeletion.direction() != null
-                    && actionableDeletion.sourceLink() != null && actionableDeletion.cancerType() != null) {
+            if (actionableDeletion.level() != null && actionableDeletion.drug() != null && actionableDeletion.drugType() != null
+                    && actionableDeletion.direction() != null && actionableDeletion.sourceLink() != null
+                    && actionableDeletion.cancerType() != null) {
                 listFilterActionableDeletion.add(actionableDeletion);
             }
         }
