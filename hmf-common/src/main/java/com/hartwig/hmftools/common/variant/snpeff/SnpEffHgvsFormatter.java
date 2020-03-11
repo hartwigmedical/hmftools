@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.variant.snpeff;
 
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ final class SnpEffHgvsFormatter {
     private static final Map<String, String> ONE_TO_THREE_AMINO_ACID_MAPPING = Maps.newHashMap();
 
     static {
-        ONE_TO_THREE_AMINO_ACID_MAPPING.put("A", "Ala"); // Alanine (GCA, GCC, GCG, GCU)
+        ONE_TO_THREE_AMINO_ACID_MAPPING.put("A", "Ala"); // Alanine (GCA, GCC, GCG, GCT)
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("C", "Cys"); // Cysteine (TGC, TGT)
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("D", "Asp"); // Aspartic acid (GAC, GAT)
         ONE_TO_THREE_AMINO_ACID_MAPPING.put("E", "Glu"); // Glutamic acid (GAA, GAG)
@@ -45,7 +46,8 @@ final class SnpEffHgvsFormatter {
     }
 
     @NotNull
-    public static String formattedHgvsCoding(@NotNull SnpEffAnnotation annotation) {
+    @VisibleForTesting
+    static String formattedHgvsCoding(@NotNull SnpEffAnnotation annotation) {
         String hgvsCoding = annotation.hgvsCoding();
 
         if (hgvsCoding.startsWith(HGVS_CODING_PREFIX_TO_REMOVE)) {
@@ -56,7 +58,8 @@ final class SnpEffHgvsFormatter {
     }
 
     @NotNull
-    public static String formattedHgvsProtein(@NotNull SnpEffAnnotation annotation) {
+    @VisibleForTesting
+    static String formattedHgvsProtein(@NotNull SnpEffAnnotation annotation) {
         String hgvsProtein = annotation.hgvsProtein();
 
         if (hgvsProtein.startsWith(HGVS_PROTEIN_PREFIX_TO_REMOVE)) {

@@ -76,24 +76,24 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDeletionToHotspots() {
-        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("GA").gdnaAlt("").build();
+        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("GAT").gdnaAlt("").build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(1, hotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("CGA").alt("C").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(4).ref("CGAT").alt("C").build(), hotspots.get(0));
     }
 
     @Test
     public void canConvertInsertionToHotspots() {
-        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("GA").build();
+        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("GAA").build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 
         assertEquals(1, hotspots.size());
 
-        assertHotspot(baseHotspot().position(4).ref("C").alt("CGA").build(), hotspots.get(0));
+        assertHotspot(baseHotspot().position(4).ref("C").alt("CGAA").build(), hotspots.get(0));
     }
 
     @Test
