@@ -14,10 +14,22 @@ ISOFOX uses a similar methodology to several previous transcript abundance estim
 
 ### Usage
 
+```
+java TODO
+```
+
 ### Mandatory Arguments
+
+Argument | Description 
+---|---
+ | 
 
 ### Optional Arguments
 
+Argument | Default | Description 
+---|---|---
+ | |
+ 
 ## Algorithm
 
 ### Modelling spliced and unspliced transcripts
