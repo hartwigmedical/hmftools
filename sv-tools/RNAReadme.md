@@ -44,48 +44,42 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
 
-The 
-
-<TO DO:  Specify outputs  Using exclusively reads that overlap exon.    Exclude reads with N in cigar and that unusual gene with huge numbers>
-
-
-
 ### Calculate expected shared and private abundance rates per transcript
 
 For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX).    For any gene with that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered for that category.  
 
 The proportion is calculated by determining which category or set of transcripts that fragments of length 50, 100, 150, ...,550 bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed
 
-For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following potential categories and assigned rates:
+For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
 Category | 'A' Transcript | 'B' Transcript |'UNSPLICED' Transcript 
 ---|---|---|---
 A Only|0.5|0|0
 B only|0|0.2|0
 Both A & B|0.1|0.2|0
-A & UNSPLICED|0.1|0|0.1
+A & UNSPLICED|0.1|0|0.05
 B & UNSPLICED|0|0|0
-Both A & B & UNSPLICED|0.3|0.6|0.1
+Both A & B & UNSPLICED|0.3|0.6|0.15
 UNSPLICED|0|0|0.8
 TOTAL|1.0|1.0|1.0
 
-### Counting abundance per unique group of shared transcripts
-For counting fragments, we first group transcripts together across all genes which overlap each other at all in either in intronic or exonic regions.   Any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
+In this example, 50% of all fragments from transcript A are expected to be uniquely mapped to the A transcript, 30% may be mapped to A,B or UNSPLICED (likely fragments matching a long exon), 10% are expected to be mapped to either A or B but with splicing and the final 10% are expected to be mapped to a region which is either exonic in A or unspliced.     These rates are compared to the observed abundance of each category in subsequent steps to estimate the actual abundance of each transcript.
 
-We consider that a fragment may belong to a transcript if:
-Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
-Every splice junction called exists in that transcript AND
-the distance between the paired reads in that transcript is not > maximum insert size distribution 
+### Counting abundance per unique group of shared transcripts
+Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts.   We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
+
+Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to.   We allow a fragment may belong to a transcript if:
+* Every base of the fragment is exonic in that transcript (allowing for homology with reads that marginally overlap exon boundaries) AND
+* Every splice junction called exists in that transcript AND
+* the distance between the paired reads in that transcript is not > maximum insert size distribution 
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
-
-Each fragment is assigned to a category . . .
 
 Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters   If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
 
 ### Fit abundance estimate per transcript
 
-Like many previous tools (RSEM, Salmon, Kallisto, etc), we have chosen to use an expectations maximisation algorithm . . .
+Like many previous tools (RSEM, Salmon, Kallisto, etc), we have chosen to use an expectations maximisation algorithm to fit
 
 ### Bias Estimation and Correction
 
