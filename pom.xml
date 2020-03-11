@@ -61,7 +61,7 @@
         <sv-tools.version>1.0</sv-tools.version>
         <amber.version>3.2</amber.version>
         <cobalt.version>1.8</cobalt.version>
-        <purple.version>2.39</purple.version>
+        <purple.version>2.40</purple.version>
         <sage.version>2.1</sage.version>
         <strelka-post-process.version>1.6</strelka-post-process.version>
         <health-checker.version>3.1</health-checker.version>

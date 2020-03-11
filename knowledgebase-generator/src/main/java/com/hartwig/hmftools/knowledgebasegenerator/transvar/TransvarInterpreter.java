@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.knowledgebasegenerator.transvar;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -13,46 +13,74 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-final class TransvarInterpreter {
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
+class TransvarInterpreter {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarInterpreter.class);
 
-    private TransvarInterpreter() {
+    @NotNull
+    private final IndexedFastaSequenceFile refGenome;
+
+    @NotNull
+    static TransvarInterpreter fromRefGenomeFastaFile(@NotNull String refGenomeFastaFile) throws FileNotFoundException {
+        return new TransvarInterpreter(new IndexedFastaSequenceFile(new File(refGenomeFastaFile)));
+    }
+
+    private TransvarInterpreter(@NotNull IndexedFastaSequenceFile refGenome) {
+        this.refGenome = refGenome;
     }
 
     @NotNull
-    static List<VariantHotspot> extractHotspotsFromTransvarRecord(@NotNull TransvarRecord record, @NotNull HmfTranscriptRegion transcript) {
-        if (record.transcript().equals(transcript.transcriptID())) {
-            return convertRecordToHotspots(record, transcript.strand());
-        } else {
-            LOGGER.debug(" Skipped interpretation as transvar transcript '{}' does not match canonical transcript '{}'",
-                    record.transcript(),
-                    transcript.transcriptID());
-            return Lists.newArrayList();
-        }
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
-
+    List<VariantHotspot> convertRecordToHotspots(@NotNull TransvarRecord record, @NotNull Strand strand) {
         List<VariantHotspot> hotspots = Lists.newArrayList();
-        for (String candidateCodon : record.candidateCodons()) {
-            hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
+
+        if (isSnvOrMnv(record)) {
+            if (record.gdnaRef().length() > 1) {
+                LOGGER.debug("Entering MNV interpretation mode on {} strand for {}", strand, record);
+            }
+
+            // We need to look up which index of the ref codon is changed (0, 1 or 2) in case of SNV/MNV.
+            int gdnaCodonIndex = findIndexInRefCodonForGdnaMatch(record, strand);
+
+            for (String candidateCodon : record.candidateCodons()) {
+                hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
+            }
+        } else {
+            // For indels we assume we have to look up the base in front of the del or ins and set the position 1 before the actual ref/alt
+            long position = record.gdnaPosition() - 1;
+            String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
+
+            ImmutableVariantHotspotImpl.Builder hotspotBuilder =
+                    ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
+
+            Integer dupLength = record.dupLength();
+            if (dupLength == null) {
+                hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
+            } else {
+                // Dups don't have ref and alt information so need to look it up in ref genome.
+                String dupBases = refGenome.getSubsequenceAt(record.chromosome(), position+1, position+dupLength).getBaseString();
+                hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
+            }
+
+            hotspots.add(hotspotBuilder.build());
         }
 
         return hotspots;
     }
 
+    private static boolean isSnvOrMnv(@NotNull TransvarRecord record) {
+        return record.gdnaRef().length() == record.gdnaAlt().length() && !record.gdnaRef().isEmpty();
+    }
+
     private static int findIndexInRefCodonForGdnaMatch(@NotNull TransvarRecord record, @NotNull Strand strand) {
-        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : flipBases(record.gdnaRef());
-        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : flipBases(record.gdnaAlt());
+        String codonCompatibleRef = strand.equals(Strand.FORWARD) ? record.gdnaRef() : reverseAndFlip(record.gdnaRef());
+        String codonCompatibleAlt = strand.equals(Strand.FORWARD) ? record.gdnaAlt() : reverseAndFlip(record.gdnaAlt());
 
         // Function only supports SNV and MNV
         assert codonCompatibleRef.length() == codonCompatibleAlt.length();
 
-        // We look for the reference codon and candidate codon where the mutation is exclusively the mutation implied by the ref>alt
+        // We look for the candidate codon where the mutation is exclusively the mutation implied by the ref>alt
         int mutLength = codonCompatibleRef.length();
         for (String candidateCodon : record.candidateCodons()) {
             for (int i = 0; i < 4 - mutLength; i++) {
@@ -68,13 +96,14 @@ final class TransvarInterpreter {
                         }
                     }
                     if (match) {
-                        return i;
+                        // For reverse strand searches we need to correct for the flipping of MNVs.
+                        return strand == Strand.FORWARD ? i : i + mutLength - 1;
                     }
                 }
             }
         }
 
-        throw new IllegalStateException("Could not find codon index for GDNA match for " + record);
+        throw new IllegalStateException("Could not find codon index for gDNA match for " + record);
     }
 
     @NotNull
@@ -110,19 +139,9 @@ final class TransvarInterpreter {
     private static String reverseAndFlip(@NotNull String string) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = string.length() - 1; i >= 0; i--) {
-            stringBuilder.append(flipBases(string.substring(i, i + 1)));
+            stringBuilder.append(flipBase(string.charAt(i)));
         }
         return stringBuilder.toString();
-    }
-
-    @NotNull
-    private static String flipBases(@NotNull String bases) {
-        StringBuilder flippedBases = new StringBuilder();
-        for (char base : bases.toCharArray()) {
-            flippedBases.append(flipBase(base));
-        }
-
-        return flippedBases.toString();
     }
 
     private static char flipBase(char base) {
@@ -137,6 +156,6 @@ final class TransvarInterpreter {
                 return 'G';
         }
 
-        throw new IllegalArgumentException("Cannot flip base: " + base);
+        throw new IllegalArgumentException("Cannot flip invalid base: " + base);
     }
 }

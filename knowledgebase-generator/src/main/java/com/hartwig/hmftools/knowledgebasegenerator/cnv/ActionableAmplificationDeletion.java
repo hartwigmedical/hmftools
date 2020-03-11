@@ -18,21 +18,22 @@ public abstract class ActionableAmplificationDeletion {
     @NotNull
     public abstract String source();
 
-    @NotNull
+    //Below items only present when it is a actionable amplification or deletion
+    @Nullable
     public abstract String drug();
 
-    @NotNull
+    @Nullable
     public abstract String drugType();
 
-    @NotNull
+    @Nullable
     public abstract String cancerType();
 
-    @NotNull
+    @Nullable
     public abstract String level();
 
-    @NotNull
+    @Nullable
     public abstract String direction();
 
-    @NotNull
+    @Nullable
     public abstract String sourceLink();
 }

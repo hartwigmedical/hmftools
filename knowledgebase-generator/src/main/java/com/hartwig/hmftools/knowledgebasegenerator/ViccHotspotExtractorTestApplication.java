@@ -18,11 +18,22 @@ public class ViccHotspotExtractorTestApplication {
 
     private static final Logger LOGGER = LogManager.getLogger(ViccHotspotExtractorTestApplication.class);
 
+    private static final boolean RUN_ON_SERVER = true;
+
     public static void main(String[] args) throws IOException, InterruptedException {
         Configurator.setRootLevel(Level.DEBUG);
 
-        String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
-        String refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+        String viccJsonPath;
+        String refGenomeFastaFile;
+
+        if (RUN_ON_SERVER) {
+            viccJsonPath = "/data/common/dbs/vicc/all.json";
+            refGenomeFastaFile = "/data/common/refgenomes/Homo_sapiens.GRCh37.GATK.illumina/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+        } else {
+            viccJsonPath =     System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
+            refGenomeFastaFile = System.getProperty("user.home") + "/hmf/refgenome/Homo_sapiens.GRCh37.GATK.illumina.fasta";
+        }
+
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.HG19;
 
         String source = "oncokb";

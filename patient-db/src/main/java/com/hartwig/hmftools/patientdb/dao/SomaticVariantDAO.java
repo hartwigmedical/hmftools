@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
@@ -90,6 +91,7 @@ class SomaticVariantDAO {
                     .minorAllelePloidy(record.getValue(SOMATICVARIANT.MINORALLELEPLOIDY))
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
+                    .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
                     .build());
         }
         return variants;
@@ -144,6 +146,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.MINORALLELEPLOIDY,
                     SOMATICVARIANT.RECOVERED,
                     SOMATICVARIANT.KATAEGIS,
+                    SOMATICVARIANT.TIER,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
@@ -188,6 +191,7 @@ class SomaticVariantDAO {
                 DatabaseUtil.decimal(variant.minorAllelePloidy()),
                 variant.recovered(),
                 variant.kataegis(),
+                variant.tier().toString(),
                 timestamp);
     }
 

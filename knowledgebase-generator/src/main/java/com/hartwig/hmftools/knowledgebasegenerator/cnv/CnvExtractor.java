@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ActionableGene;
-import com.hartwig.hmftools.knowledgebasegenerator.actionability.gene.ImmutableActionableGene;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -34,8 +32,8 @@ public class CnvExtractor {
 
     @NotNull
     public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source,
-            @NotNull String typeEvent, @NotNull String gene) {
-        return actionableInformation(source, typeEvent, gene);
+            @NotNull String typeEvent, @NotNull String gene, @NotNull ViccEntry viccEntry) {
+        return actionableInformation(source, typeEvent, gene, viccEntry);
     }
 
     @NotNull
@@ -79,37 +77,8 @@ public class CnvExtractor {
 
     @NotNull
     private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent,
-            @NotNull String gene) {
-        switch (source) {
-            case ONCOKB:
-                break;
-            case CGI:
-                break;
-            case CIVIC:
-                break;
-            case JAX:
-                break;
-            case JAX_TRIALS:
-                break;
-            case BRCA:
-                break;
-            case SAGE:
-                break;
-            case PMKB:
-                break;
-            case MOLECULARMATCH:
-                break;
-            case MOLECULARMATCH_TRIALS:
-                break;
-            default:
-                LOGGER.warn("Unknown knowledgebase");
-        }
-        return ImmutableActionableAmplificationDeletion.builder().gene(Strings.EMPTY).eventType(typeEvent).source(Strings.EMPTY).build();
-    }
-
-    @NotNull
-    public static ActionableGene determineInfoOfEvent(@NotNull Source source, @NotNull String typeEvent,
-            @NotNull KbSpecificObject kbSpecificObject, @NotNull String gene, @NotNull ViccEntry viccEntries) {
+            @NotNull String gene, @NotNull ViccEntry viccEntry) {
+        KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String drug = Strings.EMPTY;
         String drugType = Strings.EMPTY;
         String cancerType = Strings.EMPTY;
@@ -122,27 +91,28 @@ public class CnvExtractor {
                 drug = Strings.EMPTY;
                 drugType = Strings.EMPTY;
                 cancerType = Strings.EMPTY;
-                level = Strings.EMPTY;
-                direction = Strings.EMPTY;
-                link = Strings.EMPTY;
-                break;
-            case CGI:
+                level = viccEntry.association().evidenceLabel();
+                direction = viccEntry.association().responseType();
+                link = "http://oncokb.org/#/gene/" + gene + "/alteration/" + "[variantName]";
+
+            break;
+            case CGI: // all events are actionable
                 Cgi kbCgi = (Cgi) kbSpecificObject;
                 drug = kbCgi.drug();
                 drugType = kbCgi.drugFamily();
                 cancerType = kbCgi.primaryTumorType();
-                level = viccEntries.association().evidenceLabel();
-                direction = viccEntries.association().responseType();
+                level = viccEntry.association().evidenceLabel();
+                direction = viccEntry.association().responseType();
                 link = "https://www.cancergenomeinterpreter.org/biomarkers";
                 break;
             case CIVIC:
                 Civic kbCivic = (Civic) kbSpecificObject;
                 drug = Strings.EMPTY;
                 drugType = Strings.EMPTY;
-                cancerType = Strings.EMPTY;
-                level = Strings.EMPTY;
-                direction = Strings.EMPTY;
-                link = Strings.EMPTY;
+                cancerType = kbCivic.evidenceItem().disease().name();
+                level = viccEntry.association().evidenceLabel();
+                direction = viccEntry.association().responseType();;
+                link = "https://civic.genome.wustl.edu/links/variants/" + kbCivic.id();
                 break;
             case JAX:
                 Jax kbJax = (Jax) kbSpecificObject;
@@ -168,16 +138,17 @@ public class CnvExtractor {
             default:
                 LOGGER.warn("Unknown knowledgebase");
         }
-        return ImmutableActionableGene.builder()
+        return ImmutableActionableAmplificationDeletion.builder()
                 .gene(gene)
-                .type(typeEvent)
+                .eventType(typeEvent)
                 .source(source.toString())
                 .drug(drug)
                 .drugType(drugType)
                 .cancerType(cancerType)
                 .level(level)
                 .direction(direction)
-                .link(link)
+                .sourceLink(link)
                 .build();
+
     }
 }

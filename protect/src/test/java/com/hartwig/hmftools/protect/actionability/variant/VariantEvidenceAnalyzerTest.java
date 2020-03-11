@@ -4,12 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzer;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.protect.actionability.cancertype.CancerTypeAnalyzerTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -112,6 +113,7 @@ public class VariantEvidenceAnalyzerTest {
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
                 .subclonalLikelihood(0)
+                .tier(VariantTier.UNKNOWN)
                 .mappability(0D);
     }
 }

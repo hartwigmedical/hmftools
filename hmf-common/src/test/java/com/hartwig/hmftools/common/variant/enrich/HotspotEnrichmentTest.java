@@ -55,13 +55,8 @@ public class HotspotEnrichmentTest {
     @Test
     public void testFromVariant() {
         VariantContext variant = createNonHotspotHG37(1, "G");
-        assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(variant));
-
-        VariantContext tierPanel = new VariantContextBuilder(variant).attribute("TIER", "PANEL").make();
-        assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(tierPanel));
-
-        VariantContext tierHotspot = new VariantContextBuilder(variant).attribute("TIER", "HOTSPOT").make();
-        assertEquals(Hotspot.HOTSPOT, HotspotEnrichment.fromVariant(tierHotspot));
+        VariantContext nonhotspot = new VariantContextBuilder(variant).attribute("HOTSPOT", false).make();
+        assertEquals(Hotspot.NON_HOTSPOT, HotspotEnrichment.fromVariant(nonhotspot));
     }
 
     private void assertOverlap(Hotspot expected, @NotNull VariantHotspot hotspot, int variantStart, @NotNull final String variantRef) {

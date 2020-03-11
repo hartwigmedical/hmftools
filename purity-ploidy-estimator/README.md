@@ -161,6 +161,19 @@ min_purity | 0.08 | Minimum purity to fit to
 max_purity | 1 | Maximum purity to fit to 
 purity_increment | 0.01 | Sets the increment from min to max purity  
 
+
+#### Optional Driver Catalog Arguments
+The following arguments control the driver catalog behaviour.
+
+Argument | Description 
+---|---
+driver_catalog |  Enables the driver catalog
+hotspots | VCF of hotspot locations. Mandatory if driver catalog enabled.
+
+The hotspot VCF used by HMF (KnownHotspots.hg19.vcf.gz) is available to download from [HMFTools-Resources > Sage2](https://resources.hartwigmedicalfoundation.nl). 
+A HG38 equivalent is also available. The file is used to re-annotate all somatic variants with a HOTSPOT or NEAR_HOTSPOT flag if they are on or within 5 bases of a hotspot. 
+Hotspots are assigned a driver likelihood of 1. 
+
 ## Input
 
 The PURPLE algorithm relies on the BAF and read depth ratio output from [AMBER](https://github.com/hartwigmedical/hmftools/tree/master/amber) and [COBALT](https://github.com/hartwigmedical/hmftools/tree/master/count-bam-lines) respectively.
@@ -989,9 +1002,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
-- Upcoming
+- [2.40](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.40) 
   - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
   - Update driver catalog DNDS values
+  - Driver catalog does not run by default. Only if `driver_catalog` argument supplied
+  - Driver catalog requires KnownHotspots vcf
 - [2.39](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.39) 
   - Use appropriate karyotype in circos plot 
 - [2.38](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.38) 

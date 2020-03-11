@@ -2,7 +2,6 @@ package com.hartwig.hmftools.amber;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,7 +38,7 @@ class AmberPersistence {
         versionInfo.write(config.outputDirectory());
     }
 
-    void persistAmberBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException {
+    void persistBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException {
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(config.outputDirectory(), config.tumor());
         AmberBAFFile.write(filename, result);
 
@@ -47,24 +46,11 @@ class AmberPersistence {
         new BAFSegmentation(config.outputDirectory()).applySegmentation(config.tumor());
     }
 
-    void persistTumorBAF(@NotNull final List<TumorBAF> tumorBAFList) {
-        persistTumorBAF(false, tumorBAFList);
-    }
 
-    void persistTumorBAF(@NotNull final List<TumorBAF> tumorBAFList, final List<Collection<BaseDepth>> normals) {
+    void persistBafVcf(@NotNull final List<TumorBAF> tumorBAFList, final AmberHetNormalEvidence amberHetNormalEvidence) {
         final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
         LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
-        new AmberVCF(config).writeBAF(outputVcf, tumorBAFList, normals);
-    }
-
-    void persistTumorOnlyBAF(@NotNull final List<TumorBAF> tumorBAFList) {
-        persistTumorBAF(true, tumorBAFList);
-    }
-
-    private void persistTumorBAF(boolean tumorOnly, @NotNull final List<TumorBAF> tumorBAFList) {
-        final String outputVcf = config.outputDirectory() + File.separator + config.tumor() + ".amber.baf.vcf.gz";
-        LOGGER.info("Writing {} BAF records to {}", tumorBAFList.size(), outputVcf);
-        new AmberVCF(config).writeBAF(outputVcf, tumorBAFList);
+        new AmberVCF(config).writeBAF(outputVcf, tumorBAFList, amberHetNormalEvidence);
     }
 
     void persisQC(@NotNull final List<AmberBAF> result, @NotNull final List<TumorContamination> contaminationRecords) throws IOException {

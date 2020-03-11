@@ -103,6 +103,9 @@ public interface SomaticVariant extends Variant {
     @NotNull
     String kataegis();
 
+    @NotNull
+    VariantTier tier();
+
     double subclonalLikelihood();
 
     default double clonalLikelihood() {

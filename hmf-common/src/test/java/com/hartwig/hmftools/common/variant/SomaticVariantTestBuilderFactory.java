@@ -45,6 +45,7 @@ public final class SomaticVariantTestBuilderFactory {
                 .repeatSequence(Strings.EMPTY)
                 .repeatCount(0)
                 .subclonalLikelihood(0)
+                .tier(VariantTier.UNKNOWN)
                 .mappability(0D);
     }
 }

@@ -25,10 +25,16 @@ public abstract class TransvarRecord {
     @NotNull
     public abstract String gdnaAlt();
 
-    @NotNull
+    // Field is only populated for SNV/MNV
+    @Nullable
     public abstract String referenceCodon();
 
-    @NotNull
+    // Field is only populated for SNV/MNV
+    @Nullable
     public abstract List<String> candidateCodons();
+
+    // Dups are not very well interpreted by transvar. The dup length is the only extractable piece of information.
+    @Nullable
+    public abstract Integer dupLength();
 
 }

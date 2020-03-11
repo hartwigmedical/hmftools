@@ -199,6 +199,7 @@ public class SomaticVariantFactory {
                 .ploidy(context.getAttributeAsDouble(PURPLE_PLOIDY_INFO, 0))
                 .mappability(context.getAttributeAsDouble(MAPPABILITY_TAG, 0))
                 .kataegis(context.getAttributeAsString(KATAEGIS_FLAG, Strings.EMPTY))
+                .tier(VariantTier.fromString(context.getAttributeAsString("TIER", VariantTier.UNKNOWN.toString())))
                 .trinucleotideContext(context.getAttributeAsString(TRINUCLEOTIDE_FLAG, Strings.EMPTY))
                 .microhomology(context.getAttributeAsString(MICROHOMOLOGY_FLAG, Strings.EMPTY))
                 .repeatCount(context.getAttributeAsInt(REPEAT_COUNT_FLAG, 0))
