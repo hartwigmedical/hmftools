@@ -379,7 +379,7 @@ public class NovelJunctionsTest
         read2 = createReadRecord(1, chromosome, 591, 610, REF_BASE_STR_1, createCigar(0, 20, 0));
 
         read1.processOverlappingRegions(gene.findOverlappingRegions(read1));
-        read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
+            read2.processOverlappingRegions(gene.findOverlappingRegions(read2));
 
         riFinder.evaluateFragmentReads(read1, read2);
 

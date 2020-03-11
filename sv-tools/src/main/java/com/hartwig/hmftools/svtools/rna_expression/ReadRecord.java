@@ -499,19 +499,31 @@ public class ReadRecord
             final List<RegionReadData> matchedRegions = region.getPreRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, false)).collect(Collectors.toList());
 
-            if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
+            if(!matchedRegions.isEmpty())
             {
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                for(RegionReadData preRegion : matchedRegions)
+                if (matchedRegions.size() > 1 && extraBaseLength < MIN_BASE_MATCH && region.start() > readStartPos)
                 {
-                    // add matched coordinates for this exon and it as a region
-                    mMappedRegions.put(preRegion, EXON_BOUNDARY);
-                    addInferredMappingRegion(true, preRegion.end() - extraBaseLength + 1, preRegion.end());
+                    // treat the splice support as ambiguous and truncate the read positions
+                    if (!mLowerInferredAdded)
+                    {
+                        readSection[SE_START] += region.start() - readStartPos;
+                    }
+                }
+                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
+                {
+                    for (RegionReadData preRegion : matchedRegions)
+                    {
+                        // add matched coordinates for this exon and it as a region
+                        mMappedRegions.put(preRegion, EXON_BOUNDARY);
+                        addInferredMappingRegion(true, preRegion.end() - extraBaseLength + 1, preRegion.end());
+                    }
                 }
             }
         }
 
+        // check end of read
         readSection = mUpperInferredAdded ? mMappedCoords.get(mMappedCoords.size() - 2) : mMappedCoords.get(mMappedCoords.size() - 1);
         readStartPos = readSection[SE_START];
         readEndPos = readSection[SE_END];
@@ -536,14 +548,24 @@ public class ReadRecord
             final List<RegionReadData> matchedRegions = region.getPostRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, true)).collect(Collectors.toList());
 
-            if(matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
+            if(!matchedRegions.isEmpty())
             {
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
-                for(RegionReadData postRegion : matchedRegions)
+                if (matchedRegions.size() > 1 && extraBaseLength < MIN_BASE_MATCH && readEndPos > region.end())
                 {
-                    mMappedRegions.put(postRegion, EXON_BOUNDARY);
-                    addInferredMappingRegion(false, postRegion.start(), postRegion.start() + extraBaseLength - 1);
+                    if (!mUpperInferredAdded)
+                    {
+                        readSection[SE_END] -= readEndPos - region.end();
+                    }
+                }
+                else if (matchedRegions.size() == 1 || (matchedRegions.size() > 1 && extraBaseLength >= MIN_BASE_MATCH))
+                {
+                    for (RegionReadData postRegion : matchedRegions)
+                    {
+                        mMappedRegions.put(postRegion, EXON_BOUNDARY);
+                        addInferredMappingRegion(false, postRegion.start(), postRegion.start() + extraBaseLength - 1);
+                    }
                 }
             }
         }

@@ -323,6 +323,8 @@ public class GeneBamReader
         if(validTranscripts.isEmpty())
         {
             // no valid transcripts but record against the gene further information about these reads
+            boolean checkRetainedIntrons = false;
+
             if(r1OutsideGene || r2OutsideGene)
             {
                 geneReadType = READ_THROUGH;
@@ -331,6 +333,7 @@ public class GeneBamReader
             {
                 geneReadType = GeneMatchType.ALT;
                 mAltSpliceJunctionFinder.evaluateFragmentReads(read1, read2, invalidTranscripts);
+                checkRetainedIntrons = true;
             }
             else
             {
@@ -360,9 +363,11 @@ public class GeneBamReader
                     }
                 }
 
-                if(geneReadType != GeneMatchType.ALT)
-                    mRetainedIntronFinder.evaluateFragmentReads(read1, read2);
+                checkRetainedIntrons = true;
             }
+
+            if(checkRetainedIntrons)
+                mRetainedIntronFinder.evaluateFragmentReads(read1, read2);
         }
         else
         {

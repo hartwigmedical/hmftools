@@ -16,9 +16,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-
-import ngs.Read;
 
 public class RetainedIntronFinder
 {
@@ -27,6 +24,7 @@ public class RetainedIntronFinder
     private final BufferedWriter mWriter;
 
     private static final int MIN_FRAG_COUNT = 3;
+    private static final int MIN_SPLICED_FRAG_COUNT = 1;
 
     public RetainedIntronFinder(final BufferedWriter writer)
     {
@@ -258,7 +256,7 @@ public class RetainedIntronFinder
         {
             for(final RetainedIntron retIntron: retainedIntrons)
             {
-                if(retIntron.getFragmentCount() < MIN_FRAG_COUNT)
+                if(retIntron.getFragmentCount() < MIN_FRAG_COUNT && retIntron.getSplicedFragmentCount() < MIN_SPLICED_FRAG_COUNT)
                     continue;
 
                 writer.write(String.format("%s,%s,%s,%d",

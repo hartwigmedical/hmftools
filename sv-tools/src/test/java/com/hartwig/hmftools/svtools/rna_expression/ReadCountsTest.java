@@ -97,8 +97,6 @@ public class ReadCountsTest
     @Test
     public void testUnmappedSpliceJunctions()
     {
-        String refBaseString = "ABCDEFGHIJKLMNOPQRST"; // currently unused
-
         // soft-clipping at one end
         RegionReadData region1 = new RegionReadData(GenomeRegions.create("1", 141, 150));
         region1.setRefBases(REF_BASE_STR_1.substring(0, 10));
@@ -145,6 +143,21 @@ public class ReadCountsTest
         assertEquals(2, read.getMappedRegionCoords().size());
         assertEquals(200, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_START]);
         assertEquals(204, read.getMappedRegionCoords().get(read.getMappedRegionCoords().size() - 1)[SE_END]);
+
+        // test again with ambiguous mapping of 1 base to more than 1 adjacent exons, and observe the read coords being truncated
+        read = createReadRecord(1, "1", 132, 151,
+                REF_BASE_STR_1.substring(0, 19) + REF_BASE_STR_1.substring(10, 11), createCigar(0, 20, 0));
+
+        read.processOverlappingRegions(Lists.newArrayList(region1, region4));
+        assertEquals(1, read.getMappedRegionCoords().size());
+        assertEquals(150, read.getMappedRegionCoords().get(0)[SE_END]);
+
+        read = createReadRecord(1, "1", 199, 218,
+                REF_BASE_STR_1.substring(9, 10) + REF_BASE_STR_1.substring(0, 19), createCigar(0, 20, 0));
+
+        read.processOverlappingRegions(Lists.newArrayList(region2, region3));
+        assertEquals(1, read.getMappedRegionCoords().size());
+        assertEquals(200, read.getMappedRegionCoords().get(0)[SE_START]);
     }
 
     @Test
@@ -197,7 +210,7 @@ public class ReadCountsTest
 
         assertEquals(ALT, read.getTranscriptClassification(trans1));
 
-        // read spanning into intro (unspliced)
+        // read spanning into intron (unspliced)
         cigar = new Cigar();
         cigar.add(new CigarElement(11, CigarOperator.M)); // matches half of first exon
         cigar.add(new CigarElement(19, CigarOperator.N));
