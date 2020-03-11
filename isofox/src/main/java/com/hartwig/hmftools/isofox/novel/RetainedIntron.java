@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class RetainedIntron
 {
@@ -38,10 +39,9 @@ public class RetainedIntron
 
         for(RegionReadData region : mRegions)
         {
-            for (final String transRef : region.getRefRegions())
+            for (final TransExonRef transRef : region.getTransExonRefs())
             {
-                String[] items = transRef.split(RegionReadData.TRANS_REF_DELIM);
-                trancriptInfo.add(String.format("%s-%s", items[RegionReadData.TRANS_NAME], items[RegionReadData.EXON_RANK]));
+                trancriptInfo.add(String.format("%s-%s", transRef.TransName, transRef.ExonRank));
             }
         }
 

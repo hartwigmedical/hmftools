@@ -21,7 +21,7 @@ public class RegionReadData implements Comparable< RegionReadData>
 {
     public GenomeRegion Region;
 
-    private final List<String> mRefRegions; // identifiers for this region, eg transcriptId
+    private final List<TransExonRef> mTransExonRefs; // identifiers for this region, eg transcript & exon
 
     private String mRefBases;
     private int[] mRefBasesMatched;
@@ -37,7 +37,7 @@ public class RegionReadData implements Comparable< RegionReadData>
     {
         Region = region;
 
-        mRefRegions = Lists.newArrayList();
+        mTransExonRefs = Lists.newArrayList();
 
         mRefBases = "";
 
@@ -53,42 +53,31 @@ public class RegionReadData implements Comparable< RegionReadData>
     public long end() { return Region.end(); }
 
     public static final int NO_EXON = -1;
-    public static final int TRANS_ID = 0;
-    public static final int TRANS_NAME = 1;
-    public static final int EXON_RANK = 2;
-    public static final String TRANS_REF_DELIM = ":";
-
-    private static String formExonRefId(int transId, final String transName, int exonRank)
-    {
-        return String.format("%d:%s:%d", transId, transName, exonRank);
-    }
-
-    public static int extractTransId(final String ref) { return Integer.valueOf(ref.split(TRANS_REF_DELIM)[TRANS_ID]); }
-    public static String extractTransName(final String ref) { return ref.split(TRANS_REF_DELIM)[TRANS_NAME]; }
-    public static int extractExonRank(final String ref) { return Integer.valueOf(ref.split(TRANS_REF_DELIM)[EXON_RANK]); }
 
     public int getExonRank(final int transId)
     {
-        for(String transRef : mRefRegions)
+        for(final TransExonRef transRef : mTransExonRefs)
         {
-            if(extractTransId(transRef) == transId)
-                return extractExonRank(transRef);
+            if(transRef.TransId == transId)
+                return transRef.ExonRank;
         }
 
         return NO_EXON;
     }
 
-    public final List<String> getRefRegions() { return mRefRegions; }
+    public final List<TransExonRef> getTransExonRefs() { return mTransExonRefs; }
 
     public boolean hasTransId(final int transId)
     {
-        return mRefRegions.stream().anyMatch(x -> extractTransId(x) == transId);
+        return mTransExonRefs.stream().anyMatch(x -> x.TransId == transId);
     }
 
     public void addExonRef(int transId, final String transName, int exonRank)
     {
-        if(!mRefRegions.contains(transId))
-            mRefRegions.add(formExonRefId(transId, transName, exonRank));
+        if(mTransExonRefs.stream().anyMatch(x -> x.TransId == transId && x.ExonRank == exonRank))
+            return;
+
+        mTransExonRefs.add(new TransExonRef(transId, transName, exonRank));
     }
 
     public final String refBases() { return mRefBases; }
@@ -262,7 +251,7 @@ public class RegionReadData implements Comparable< RegionReadData>
         int reads = mTranscriptReadCounts.values().stream().mapToInt(x -> x[TRANS_COUNT]).sum();
 
         return String.format("%s %s:%d -> %d refs(%d) %s",
-                !mRefRegions.isEmpty() ? mRefRegions.get(0) : "unknown", chromosome(), start(), end(), mRefRegions.size(),
+                !mTransExonRefs.isEmpty() ? mTransExonRefs.get(0) : "unknown", chromosome(), start(), end(), mTransExonRefs.size(),
                 mRefBases != null ? String.format("reads(%d sj=%d)",reads, sjReads) : "intron");
     }
 

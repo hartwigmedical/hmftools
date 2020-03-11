@@ -25,6 +25,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
@@ -129,6 +130,8 @@ public class ChromosomeGeneTask implements Callable
             final List<EnsemblGeneData> overlappingGenes = findNextOverlappingGenes();
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
+            GeneCollection geneCollection = new GeneCollection(geneReadDataList);
+
             for (GeneReadData geneReadData : geneReadDataList)
             {
                 mPerfCounters[PERF_TOTAL].start();
@@ -179,7 +182,8 @@ public class ChromosomeGeneTask implements Callable
                 continue;
             }
 
-            if(overlappingGenes.isEmpty() || overlappingGenes.stream().anyMatch(x -> positionsOverlap(geneData.GeneStart, geneData.GeneEnd, x.GeneStart, x.GeneEnd)))
+            if(overlappingGenes.isEmpty()
+            || overlappingGenes.stream().anyMatch(x -> positionsOverlap(geneData.GeneStart, geneData.GeneEnd, x.GeneStart, x.GeneEnd)))
             {
                 overlappingGenes.add(geneData);
                 ++mCurrentGeneIndex;
@@ -221,30 +225,7 @@ public class ChromosomeGeneTask implements Callable
 
         markOverlappingGeneRegions(geneReadDataList, false);
 
-        // if(geneReadDataList.size() > 1)
-        //    logOverlappingGenes(geneReadDataList);
-
         return geneReadDataList;
-    }
-
-    private void logOverlappingGenes(final List<GeneReadData> overlappingGenes)
-    {
-        String geneNamesStr = "";
-        int transcriptCount = 0;
-        long minRange = -1;
-        long maxRange = 0;
-
-        for(GeneReadData geneReadData : overlappingGenes)
-        {
-            geneNamesStr = appendStr(geneNamesStr, geneReadData.GeneData.GeneId, ';');
-            transcriptCount += geneReadData.getTranscripts().size();
-            maxRange =  max(maxRange, geneReadData.GeneData.GeneEnd);
-            minRange =  minRange < 0 ? geneReadData.GeneData.GeneStart : min(minRange, geneReadData.GeneData.GeneStart);
-        }
-
-        // Time,Chromosome,GeneCount,TranscriptCount,RangeStart,RangeEnd,GeneNames
-        ISF_LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{}", // chr({}) genes({}) transcripts({}) range({} -> {}),
-                mChromosome, overlappingGenes.size(), transcriptCount, minRange, maxRange, geneNamesStr);
     }
 
     private void generateExpectedTransRates(final GeneReadData geneReadData)

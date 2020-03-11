@@ -287,13 +287,13 @@ public class AltSpliceJunctionFinder
 
         for(final RegionReadData region1 : regions1)
         {
-            List<Integer> transIds1 = region1.getRefRegions().stream().map(x -> RegionReadData.extractTransId(x)).collect(Collectors.toList());
+            List<Integer> transIds1 = region1.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList());
 
             for(Integer transId1 : transIds1)
             {
                 for(final RegionReadData region2 : regions2)
                 {
-                    List<Integer> transIds2 = region2.getRefRegions().stream().map(x -> RegionReadData.extractTransId(x)).collect(Collectors.toList());
+                    List<Integer> transIds2 = region2.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList());
 
                     if (transIds2.contains(transId1))
                     {

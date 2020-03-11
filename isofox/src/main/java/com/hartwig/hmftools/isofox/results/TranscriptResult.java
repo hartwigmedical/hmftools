@@ -79,7 +79,7 @@ public abstract class TranscriptResult
             if(exonCoverage > 0)
                 ++exonsFound;
 
-            if(exonReadData.getRefRegions().size() == 1)
+            if(exonReadData.getTransExonRefs().size() == 1)
             {
                 uniqueExonicBases += exonReadData.uniqueBaseCount();
                 uniqueExonicBaseCoverage += exonReadData.uniqueBaseCoverage(1);

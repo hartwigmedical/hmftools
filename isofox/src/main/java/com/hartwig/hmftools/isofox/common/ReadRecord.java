@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
-import static com.hartwig.hmftools.isofox.common.RegionReadData.extractTransId;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
@@ -163,12 +162,10 @@ public class ReadRecord
 
         for(RegionReadData region : regions)
         {
-            for(final String ref : region.getRefRegions())
+            for(final TransExonRef ref : region.getTransExonRefs())
             {
-                final int transId = extractTransId(ref);
-
-                if (!transcripts.contains(transId))
-                    transcripts.add(transId);
+                if (!transcripts.contains(ref.TransId))
+                    transcripts.add(ref.TransId);
             }
 
             RegionMatchType matchType = getRegionMatchType(region);
@@ -186,7 +183,7 @@ public class ReadRecord
             TransMatchType transMatchType = UNKNOWN;
 
             List<RegionReadData> transRegions = regions.stream()
-                    .filter(x -> x.getRefRegions().stream().anyMatch(y -> extractTransId(y) == transId))
+                    .filter(x -> x.getTransExonRefs().stream().anyMatch(y -> y.TransId == transId))
                     .collect(Collectors.toList());
 
             // if any reads cross and exon-intron boundary, then mark the transcript as unspliced

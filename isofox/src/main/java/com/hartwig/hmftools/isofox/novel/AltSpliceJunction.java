@@ -118,9 +118,9 @@ public class AltSpliceJunction
 
         for(RegionReadData region: regions)
         {
-            transNames.addAll(region.getRefRegions().stream()
-                    .filter(x -> validTransIds.contains(RegionReadData.extractTransId(x)))
-                    .map(x -> RegionReadData.extractTransName(x)).collect(Collectors.toList()));
+            transNames.addAll(region.getTransExonRefs().stream()
+                    .filter(x -> validTransIds.contains(x.TransId))
+                    .map(x -> x.TransName).collect(Collectors.toList()));
         }
 
         return appendStrList(transNames, ';');
@@ -155,7 +155,7 @@ public class AltSpliceJunction
 
             if(positionWithin(position, region.start(), region.end()))
             {
-                if(!region.getRefRegions().stream().anyMatch(x -> mCandidateTransIds.contains(RegionReadData.extractTransId(x))))
+                if(!region.getTransExonRefs().stream().anyMatch(x -> mCandidateTransIds.contains(x.TransId)))
                     continue;
 
                 // will be negative
@@ -239,7 +239,7 @@ public class AltSpliceJunction
         {
             if(positionWithin(SpliceJunction[SE_START], region.start(), region.end()) && positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
             {
-                validTransIds.addAll(region.getRefRegions().stream().map(x -> RegionReadData.extractTransId(x)).collect(Collectors.toList()));
+                validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList()));
                 continue;
             }
 
@@ -247,13 +247,13 @@ public class AltSpliceJunction
             {
                 // each transcript must be present in the next region to be valid
 
-                validTransIds.addAll(region.getRefRegions().stream().map(x -> RegionReadData.extractTransId(x))
+                validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
                         .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
             }
 
             if(positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
             {
-                validTransIds.addAll(region.getRefRegions().stream().map(x -> RegionReadData.extractTransId(x))
+                validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
                         .filter(x -> region.getPreRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
             }
         }

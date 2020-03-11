@@ -226,7 +226,7 @@ public class ResultsWriter
                         geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, transData.TransId, transData.TransName));
 
                 mExonDataWriter.write(String.format(",%d,%d,%d,%d",
-                        exon.ExonRank, exon.ExonStart, exon.ExonEnd, exonReadData.getRefRegions().size()));
+                        exon.ExonRank, exon.ExonStart, exon.ExonEnd, exonReadData.getTransExonRefs().size()));
 
                 int[] matchCounts = exonReadData.getTranscriptReadCount(transData.TransId);
                 int[] startSjCounts = exonReadData.getTranscriptJunctionMatchCount(transData.TransId, SE_START);
