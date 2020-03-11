@@ -101,11 +101,11 @@ Retained introns are hard filtered unless they contain at lease
 We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
 
 For each novel splice junction  we count
-* # of unique samples with novel splice junction
+* Number of unique samples with novel splice junction
 * Total # of fragments supporting novel splice junction across all the unique samples
 
 For intron retention cases we count
-* # of unique samples with at least 3 fragments or at least one fragment with a known splice event supporting intron retention
+* Number of unique samples with at least 3 fragments or at least one fragment with a known splice event supporting intron retention
 * Total # of fragments supporting intron retention from those unique samples
 * Total # of fragments supporting intron retention from those unique samples which also have splcing.
 
