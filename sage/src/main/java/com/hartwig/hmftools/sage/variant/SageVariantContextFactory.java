@@ -77,7 +77,7 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT, counter.readContext().toString())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
-                .log10PError(variant.quality() / -10d)
+                .log10PError(variant.totalQuality() / -10d)
                 .source("SAGE")
                 .computeEndFromAlleles(alleles, (int) variant.position())
                 .attribute(TIER, variant.tier())

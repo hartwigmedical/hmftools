@@ -49,16 +49,18 @@ public class SageVariantFactory {
 
         final SageVariantTier tier = tierSelector.tier(primaryNormal);
         final SoftFilterConfig softConfig = config.softConfig(tier);
-        final Set<String> filters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContexts.get(0));
 
         boolean passingTumor = false;
-        for (int i = 1; i < tumorAltContexts.size(); i++) {
-            if (pairedFilters(tier, softConfig, primaryNormal, tumorAltContexts.get(i)).isEmpty()) {
+        final Set<String> allFilters = Sets.newHashSet();
+        for (AltContext tumorAltContext : tumorAltContexts) {
+            final Set<String> tumorFilters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContext);
+            if (tumorFilters.isEmpty()) {
                 passingTumor = true;
             }
+            allFilters.addAll(tumorFilters);
         }
 
-        return new SageVariant(tier, passingTumor ? Sets.newHashSet() : filters, normal, tumorAltContexts);
+        return new SageVariant(tier, passingTumor ? Sets.newHashSet() : allFilters, normal, tumorAltContexts);
     }
 
     @NotNull

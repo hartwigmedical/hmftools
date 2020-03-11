@@ -155,7 +155,7 @@ public class ChromosomePipeline implements AutoCloseable {
             return false;
         }
 
-        return entry.primaryTumor().primaryReadContext().tumorQuality() >= config.filter().hardMinTumorQualFiltered();
+        return entry.maxQuality() >= config.filter().hardMinTumorQualFiltered();
     }
 
     @Override

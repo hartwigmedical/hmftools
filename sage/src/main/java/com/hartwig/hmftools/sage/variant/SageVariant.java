@@ -105,8 +105,12 @@ public class SageVariant implements GenomePosition {
         return primaryNormal().position();
     }
 
-    public int quality() {
+    public int totalQuality() {
         return tumorAltContexts.stream().mapToInt(x -> x.primaryReadContext().tumorQuality()).sum();
+    }
+
+    public int maxQuality() {
+        return tumorAltContexts.stream().mapToInt(x -> x.primaryReadContext().tumorQuality()).max().orElse(0);
     }
 
 }

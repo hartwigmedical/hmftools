@@ -62,15 +62,14 @@ public class SomaticPipeline implements SageVariantPipeline {
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
 
         final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
-
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
         // Scan tumors for set of initial candidates
         final CompletableFuture<ReadContextCandidates> doneCandidates = refSequenceFuture.thenCompose(refSequence -> {
-
             if (region.start() == 1) {
                 LOGGER.info("Processing chromosome {}", region.chromosome());
             }
+            LOGGER.debug("Processing initial candidates of {}:{}", region.chromosome(), region.start());
 
             final List<CompletableFuture<Void>> candidateFutures = Lists.newArrayList();
             final ReadContextCandidates readContextCandidates = new ReadContextCandidates();
@@ -90,6 +89,8 @@ public class SomaticPipeline implements SageVariantPipeline {
 
         // Scan tumors for evidence
         final CompletableFuture<AltContextCandidates> doneTumor = doneCandidates.thenCompose(readContextCandidates -> {
+            LOGGER.debug("Scanning tumor bams for evidence in {}:{}", region.chromosome(), region.start());
+
             final FixedRefContextCandidatesFactory candidatesFactory = readContextCandidates.candidateFactory();
             final List<CompletableFuture<Void>> tumorFutures = Lists.newArrayList();
             final AltContextCandidates tumorCandidates = new AltContextCandidates(config.primaryTumor(), candidatesFactory.loci());
@@ -111,6 +112,8 @@ public class SomaticPipeline implements SageVariantPipeline {
 
         // Scan references for evidence
         final CompletableFuture<AltContextCandidates> doneNormal = doneTumor.thenCompose(tumorCandidates -> {
+            LOGGER.debug("Scanning reference bams for evidence in {}:{}", region.chromosome(), region.start());
+
             final Predicate<AltContext> hardFilter = hardFilterEvidence(hotspots);
             final FixedRefContextCandidatesFactory candidatesFactory = tumorCandidates.createFactory(hardFilter);
             final List<CompletableFuture<Void>> normalFutures = Lists.newArrayList();
