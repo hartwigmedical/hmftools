@@ -47,20 +47,21 @@ class TransvarInterpreter {
                 hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
             }
         } else {
-            // For indels we assume we have to look up the base in front of the del or ins and set the position 1 before the actual ref/alt
+            // For indels we assume we have to look up the base in front of the del/ins/dup and set the position 1 before the actual ref/alt
             long position = record.gdnaPosition() - 1;
             String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
 
-            Integer dupLength = record.indelLength();
-            if (dupLength == null) {
-                hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
-            } else {
+            if (record.gdnaRef().isEmpty() && record.gdnaAlt().isEmpty()) {
                 // Dups don't have ref and alt information so need to look it up in ref genome.
-                String dupBases = refGenome.getSubsequenceAt(record.chromosome(), position+1, position+dupLength).getBaseString();
+                String dupBases =
+                        refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + record.indelLength()).getBaseString();
                 hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
+            } else {
+                // Inserts and deletes have either ref or alt set.
+                hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
             }
 
             hotspots.add(hotspotBuilder.build());
