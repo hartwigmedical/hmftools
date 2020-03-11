@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.FixedRefContextCandidatesFactory;
@@ -20,11 +19,9 @@ public class ReadContextCandidates {
 
     public void addCandidates(@NotNull final Collection<AltContext> altContexts) {
         for (final AltContext altContext : altContexts) {
-            final VariantHotspot variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
-            readContextMap.merge(variant, altContext.primaryReadContext(), this::mostSupport);
+            readContextMap.merge(altContext, altContext.primaryReadContext(), this::mostSupport);
         }
     }
-
 
     @NotNull
     public FixedRefContextCandidatesFactory candidateFactory() {

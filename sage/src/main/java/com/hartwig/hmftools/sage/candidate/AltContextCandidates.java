@@ -11,7 +11,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.FixedRefContextCandidatesFactory;
@@ -49,9 +48,8 @@ public class AltContextCandidates {
 
     private void addAltCandidate(@NotNull final Collection<AltContext> altContexts) {
         for (final AltContext altContext : altContexts) {
-            final VariantHotspot variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
-            if (hotspots.contains(variant)) {
-                map.put(variant, altContext);
+            if (hotspots.contains(altContext)) {
+                map.put(altContext, altContext);
             }
         }
     }
