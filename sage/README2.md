@@ -302,6 +302,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 72 | 30 | 1660 | 82
 
  ## Version History
+ - Upcoming
+   - Multiple tumor support
+   - Multiple reference support
  - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
    - Reduced memory footprint
    - Add version info to VCF

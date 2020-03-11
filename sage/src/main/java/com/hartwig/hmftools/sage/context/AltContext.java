@@ -25,18 +25,18 @@ public class AltContext implements VariantHotspot {
     private int rawSupportAlt;
     private int rawBaseQualityAlt;
 
-    public AltContext(final String sample, final VariantHotspot hotspot) {
-        refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
-        this.alt = hotspot.alt();
-        this.ref = hotspot.ref();
-    }
-
     public AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
     }
 
+    public AltContext(final RefContext refContext, final String ref, final String alt, final ReadContext readContext) {
+        this.refContext = refContext;
+        this.ref = ref;
+        this.alt = alt;
+        this.readContextCounter = new ReadContextCounter(this, readContext);
+    }
 
     public void incrementAltRead(int baseQuality) {
         this.rawSupportAlt++;

@@ -13,7 +13,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.context.TumorRefContextCandidates;
+import com.hartwig.hmftools.sage.context.RollingRefContextCandidates;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
@@ -29,16 +29,16 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class PrimaryEvidence {
+public class GermlineEvidence {
 
-    private static final Logger LOGGER = LogManager.getLogger(PrimaryEvidence.class);
+    private static final Logger LOGGER = LogManager.getLogger(GermlineEvidence.class);
 
     private final SageConfig config;
     private final List<VariantHotspot> hotspots;
     private final ReferenceSequenceFile refGenome;
     private final SamSlicerFactory samSlicerFactory;
 
-    public PrimaryEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots,
+    public GermlineEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots,
             @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
         this.config = config;
         this.samSlicerFactory = samSlicerFactory;
@@ -53,17 +53,18 @@ public class PrimaryEvidence {
         if (bounds.start() == 1) {
             LOGGER.info("Beginning processing of {} chromosome {} ", sample, bounds.chromosome());
         }
-        LOGGER.info("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
+
+        LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         final HotspotSelector hotspotSelector = new HotspotSelector(hotspots);
-        final TumorRefContextCandidates candidates = new TumorRefContextCandidates(config, hotspotSelector, sample);
+        final RollingRefContextCandidates candidates = new RollingRefContextCandidates(config, hotspotSelector, sample);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
         return get(bamFile, bounds, refContextConsumer, candidates, hotspotSelector);
     }
 
     @NotNull
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final GenomeRegion bounds,
-            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final TumorRefContextCandidates candidates, @NotNull final HotspotSelector hotspotSelector) {
+            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RollingRefContextCandidates candidates, @NotNull final HotspotSelector hotspotSelector) {
         final List<AltContext> altContexts = Lists.newArrayList();
         final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(config.maxSkippedReferenceRegions(), altContexts);
 

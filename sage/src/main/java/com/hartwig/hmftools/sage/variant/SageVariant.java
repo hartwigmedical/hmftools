@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.sage.variant;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.context.AltContext;
 
@@ -106,4 +104,9 @@ public class SageVariant implements GenomePosition {
     public long position() {
         return primaryNormal().position();
     }
+
+    public int quality() {
+        return tumorAltContexts.stream().mapToInt(x -> x.primaryReadContext().tumorQuality()).sum();
+    }
+
 }

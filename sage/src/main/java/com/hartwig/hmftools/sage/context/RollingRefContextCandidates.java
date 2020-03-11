@@ -11,7 +11,7 @@ import com.hartwig.hmftools.sage.select.HotspotSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TumorRefContextCandidates implements RefContextCandidates {
+public class RollingRefContextCandidates implements RefContextCandidates {
 
     private final SageConfig config;
     private final HotspotSelector hotspotSelector;
@@ -19,7 +19,7 @@ public class TumorRefContextCandidates implements RefContextCandidates {
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
-    public TumorRefContextCandidates(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector, @NotNull final String sample) {
+    public RollingRefContextCandidates(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector, @NotNull final String sample) {
         this.sample = sample;
         this.config = config;
         this.hotspotSelector = hotspotSelector;

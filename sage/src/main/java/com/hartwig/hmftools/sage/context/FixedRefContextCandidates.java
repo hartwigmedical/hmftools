@@ -4,18 +4,19 @@ import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.select.PositionSelector;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class NormalRefContextCandidates implements RefContextCandidates {
+public class FixedRefContextCandidates implements RefContextCandidates {
 
     private final String sample;
     private final List<RefContext> refContexts;
     private final PositionSelector<RefContext> refPositionSelector;
 
-    public NormalRefContextCandidates(@NotNull final String sample) {
+    public FixedRefContextCandidates(@NotNull final String sample) {
         this.sample = sample;
         this.refContexts = Lists.newArrayList();
         this.refPositionSelector = new PositionSelector<>(refContexts);
@@ -36,6 +37,11 @@ public class NormalRefContextCandidates implements RefContextCandidates {
         refContexts.add(refContext);
 
         return refContext;
+    }
+
+    public void create(@NotNull final String chromosome, final long position, final String ref, final String alt, final ReadContext readContext) {
+        final RefContext refContext = add(chromosome, position);
+        refContext.altContext(ref, alt, readContext);
     }
 
     @Nullable

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.variant;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -40,7 +39,7 @@ public class SageVariantFactory {
         final SageVariantTier tier = tierSelector.tier(normal);
         final Set<String> filters = germlineOnlyFilters(normal);
 
-        return new SageVariant(tier, filters, Collections.singletonList(normal),  Collections.emptyList());
+        return new SageVariant(tier, filters, Collections.singletonList(normal), Collections.emptyList());
     }
 
     @NotNull
@@ -52,7 +51,14 @@ public class SageVariantFactory {
         final SoftFilterConfig softConfig = config.softConfig(tier);
         final Set<String> filters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContexts.get(0));
 
-        return new SageVariant(tier, filters, normal, tumorAltContexts);
+        boolean passingTumor = false;
+        for (int i = 1; i < tumorAltContexts.size(); i++) {
+            if (pairedFilters(tier, softConfig, primaryNormal, tumorAltContexts.get(i)).isEmpty()) {
+                passingTumor = true;
+            }
+        }
+
+        return new SageVariant(tier, passingTumor ? Sets.newHashSet() : filters, normal, tumorAltContexts);
     }
 
     @NotNull

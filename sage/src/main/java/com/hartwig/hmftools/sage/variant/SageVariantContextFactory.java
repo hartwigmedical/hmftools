@@ -77,8 +77,7 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT, counter.readContext().toString())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
-                .log10PError(counter.tumorQuality() / -10d)
+                .log10PError(variant.quality() / -10d)
                 .source("SAGE")
                 .computeEndFromAlleles(alleles, (int) variant.position())
                 .attribute(TIER, variant.tier())
@@ -120,6 +119,7 @@ public class SageVariantContextFactory {
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawSupportRef(), evidence.rawSupportAlt() })
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { evidence.rawBaseQualityRef(), evidence.rawBaseQualityAlt() })
                 .attribute(RAW_DEPTH, evidence.rawDepth())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(createGenotypeAlleles(germline, evidence, counter))
                 .make();
     }
