@@ -56,9 +56,8 @@ class TransvarProcess {
             String warning =
                     String.format("Timeout. '%s' took more than '%s %s' to execute", command, TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS);
             LOGGER.warn(warning);
-            return Lists.newArrayList();
-            // TODO: Somehow processing a lot of records becomes sluggish and hits TIMEOUT.
-            // throw new RuntimeException(warning);
+            // We still continue to wait for ever.
+            process.waitFor();
         }
 
         if (process.exitValue() != 0) {
