@@ -23,9 +23,10 @@ import org.jetbrains.annotations.NotNull;
 public class DetermineEventOfGenomicMutation {
     private static final Logger LOGGER = LogManager.getLogger(DetermineEventOfGenomicMutation.class);
 
-    private static final List<String> AMPLIFICATION = Lists.newArrayList("amp", "AMPLIFICATION", "Amplification", "amplification");
+    private static final List<String> AMPLIFICATION =
+            Lists.newArrayList("amp", "AMPLIFICATION", "Amplification", "amplification", "Transcript Amplification");
 
-    private static final List<String> DELETION = Lists.newArrayList("DELETION", "Deletion", "del");
+    private static final List<String> DELETION = Lists.newArrayList("DELETION", "Deletion", "del", "Transcript Ablation");
 
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
