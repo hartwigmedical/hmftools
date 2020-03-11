@@ -54,7 +54,7 @@ class TransvarInterpreter {
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
 
-            Integer dupLength = record.dupLength();
+            Integer dupLength = record.indelLength();
             if (dupLength == null) {
                 hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
             } else {

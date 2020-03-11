@@ -98,7 +98,7 @@ public class TransvarInterpreterTest {
 
     @Test
     public void canConvertDuplicationToHotspot() {
-        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("").dupLength(3).build();
+        TransvarRecord record = baseRecord().gdnaPosition(5).gdnaRef("").gdnaAlt("").indelLength(3).build();
 
         List<VariantHotspot> hotspots = testInterpreter().convertRecordToHotspots(record, Strand.FORWARD);
 

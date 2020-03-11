@@ -79,26 +79,40 @@ final class TransvarConverter {
         assert gdna.contains(RANGE_INDICATOR);
 
         String[] gdnaParts = gdna.split(RANGE_INDICATOR);
-        builder.gdnaPosition(Long.parseLong(gdnaParts[0]));
+        long start = Long.parseLong(gdnaParts[0]);
+        builder.gdnaPosition(start);
 
         String delInsPart = gdnaParts[1];
-        if (delInsPart.contains(DELETION) && delInsPart.contains(INSERTION)) {
-            // This should look like 'delCinsG'
-            int delStart = delInsPart.indexOf(DELETION);
-            int insStart = delInsPart.indexOf(INSERTION);
-            builder.gdnaRef(delInsPart.substring(delStart + DELETION.length(), insStart));
-            builder.gdnaAlt(delInsPart.substring(insStart + INSERTION.length()));
-        } else if (delInsPart.contains(DELETION)) {
-            // This should look like 'delC'
-            builder.gdnaRef(delInsPart.substring(delInsPart.indexOf(DELETION) + DELETION.length()));
-            builder.gdnaAlt(Strings.EMPTY);
-        } else if (delInsPart.contains(INSERTION)) {
-            // This should look like 'insTTGT'
-            builder.gdnaRef(Strings.EMPTY);
-            builder.gdnaAlt(delInsPart.substring(delInsPart.indexOf(INSERTION) + INSERTION.length()));
-        } else {
+        int delStart = delInsPart.indexOf(DELETION);
+        int insStart = delInsPart.indexOf(INSERTION);
+
+        if (delStart < 0 && insStart < 0) {
             throw new IllegalStateException("Cannot process range gDNA as no '" + DELETION + "' or  '" + INSERTION + "' found: " + gdna);
         }
+
+        String gdnaRef = Strings.EMPTY;
+        String gdnaAlt = Strings.EMPTY;
+        if (insStart >= 0) {
+            gdnaAlt = delInsPart.substring(insStart + INSERTION.length());
+
+            if (delStart >= 0) {
+                // This should look like '123delCinsG'
+                gdnaRef = delInsPart.substring(delStart + DELETION.length(), insStart);
+            }
+        } else {
+            // This should look like '123delC'
+            gdnaRef = delInsPart.substring(delStart + DELETION.length());
+        }
+
+        // Fill in the indel length in case of an indel
+        if (!gdnaRef.isEmpty() && gdnaAlt.isEmpty()) {
+            builder.indelLength(gdnaRef.length());
+        } else if (gdnaRef.isEmpty() && !gdnaAlt.isEmpty()) {
+            builder.indelLength(gdnaAlt.length());
+        }
+
+        builder.gdnaRef(gdnaRef);
+        builder.gdnaAlt(gdnaAlt);
     }
 
     private static void populateForDuplication(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
@@ -113,7 +127,7 @@ final class TransvarConverter {
             builder.gdnaAlt(Strings.EMPTY);
 
             long diff = Long.parseLong(gdnaParts[1]) - Long.parseLong(gdnaParts[0]);
-            builder.dupLength(1 + (int) diff);
+            builder.indelLength(1 + (int) diff);
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + gdna);
         }

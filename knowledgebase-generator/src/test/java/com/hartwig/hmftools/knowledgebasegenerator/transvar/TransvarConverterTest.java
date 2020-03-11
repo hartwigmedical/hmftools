@@ -29,6 +29,7 @@ public class TransvarConverterTest {
         assertEquals("GTC", record.candidateCodons().get(1));
         assertEquals("GTG", record.candidateCodons().get(2));
         assertEquals("GTT", record.candidateCodons().get(3));
+        assertNull(record.indelLength());
     }
 
     @Test
@@ -52,6 +53,7 @@ public class TransvarConverterTest {
         assertEquals("GCC", record.candidateCodons().get(1));
         assertEquals("GCG", record.candidateCodons().get(2));
         assertEquals("GCT", record.candidateCodons().get(3));
+        assertNull(record.indelLength());
     }
 
     @Test
@@ -70,6 +72,9 @@ public class TransvarConverterTest {
         assertEquals(139399420, deletion.gdnaPosition());
         assertEquals("CCA", deletion.gdnaRef());
         assertEquals("", deletion.gdnaAlt());
+        assertNull(deletion.referenceCodon());
+        assertNull(deletion.candidateCodons());
+        assertEquals(3, (int) deletion.indelLength());
     }
 
     @Test
@@ -90,6 +95,9 @@ public class TransvarConverterTest {
         assertEquals(37880999, insertion.gdnaPosition());
         assertEquals("", insertion.gdnaRef());
         assertEquals("TATGTAATGGCA", insertion.gdnaAlt());
+        assertNull(insertion.referenceCodon());
+        assertNull(insertion.candidateCodons());
+        assertEquals(12, (int) insertion.indelLength());
     }
 
     @Test
@@ -106,7 +114,9 @@ public class TransvarConverterTest {
         assertEquals(37880985, duplication.gdnaPosition());
         assertEquals("", duplication.gdnaRef());
         assertEquals("", duplication.gdnaAlt());
-        assertEquals(12, (int) duplication.dupLength());
+        assertNull(duplication.referenceCodon());
+        assertNull(duplication.candidateCodons());
+        assertEquals(12, (int) duplication.indelLength());
     }
 
     @Test
