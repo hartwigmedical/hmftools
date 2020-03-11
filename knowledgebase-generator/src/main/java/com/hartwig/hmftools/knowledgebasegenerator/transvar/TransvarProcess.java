@@ -67,6 +67,7 @@ class TransvarProcess {
         if (!stderr.isEmpty()) {
             LOGGER.warn("Non-empty stderr when running '{}'!", command(processBuilder));
             for (String errLine : stderr) {
+                // First line seems to be generally empty, no need to print that line.
                 if (!errLine.trim().isEmpty()) {
                     LOGGER.warn(" {}", errLine);
                 }
