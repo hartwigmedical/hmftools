@@ -32,21 +32,42 @@ TO DO | |
  
 ## Algorithm
 
-### Modelling spliced and unspliced transcripts
+### Modelling and grouping of spliced and unspliced transcripts
 
 For determining transcript abundance, we consider all transcripts in Ensembl, grouped by gene.    Each gene may have 1 to N transcripts.   Since we use ribosomal depletion to collect RNA we need to  explicitly consider that each gene will have unspliced reads.   Hence, we consider an additional ‘unspliced transcript’ per gene which includes all exonic and intronic segments.   Any fragment that overlaps a region which is intronic on all transcripts is assumed to be unspliced.
 
-Genes that overlap each other(either sense, anti-sense or shared exons) are considered together as a group so that each fragment is only counted once.     
+Genes that overlap each other on the same chromosome (either sense, anti-sense or shared exons) are considered together as a group so that each fragment is only counted once.     
 
 <TO DO: NOTE on handling of duplicates>
 
 ### Modelling sample specific fragment distribution
 
-<Using exclusively reads that overlap exon.    Exclude reads with N in cigar and that unusual gene with huge numbers>
+The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
+
+The 
+
+<TO DO:  Specify outputs  Using exclusively reads that overlap exon.    Exclude reads with N in cigar and that unusual gene with huge numbers>
 
 
 
 ### Calculate expected shared and private abundance rates per transcript
+
+For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX).    For any gene with that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered for that category.  
+
+The proportion is calculated by determining which category or set of transcripts that fragments of length 50, 100, 150, ...,550 bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed
+
+For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following potential categories and assigned rates:
+
+Category | 'A' Transcript | 'B' Transcript |'UNSPLICED' Transcript 
+---|---|---|---
+A Only|0.5|0|0
+B only|0|0.2|0
+Both A & B|0.1|0.2|0
+A & UNSPLICED|0.1|0|0.1
+B & UNSPLICED|0|0|0
+Both A & B & UNSPLICED|0.3|0.6|0.1
+UNSPLICED|0|0|0.8
+TOTAL|1.0|1.0|1.0
 
 ### Counting abundance per unique group of shared transcripts
 For counting fragments, we first group transcripts together across all genes which overlap each other at all in either in intronic or exonic regions.   Any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
