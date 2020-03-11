@@ -8,10 +8,10 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sv-tools</artifactId>
+    <artifactId>isofox</artifactId>
     <packaging>jar</packaging>
-    <version>${sv-tools.version}</version>
-    <name>HMF Tools - SV Tools</name>
+    <version>${isofox.version}</version>
+    <name>HMF Tools - Isofox</name>
 
     <dependencies>
         <dependency>
@@ -29,6 +29,10 @@
         <dependency>
             <groupId>com.hartwig</groupId>
             <artifactId>sv-linx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hartwig</groupId>
+            <artifactId>sig-analyser</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>

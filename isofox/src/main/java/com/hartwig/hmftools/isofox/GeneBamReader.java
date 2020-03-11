@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.DUPLICATE;
@@ -140,7 +140,7 @@ public class GeneBamReader
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
-        RE_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+        ISF_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
 
         if(!mConfig.WriteTransData)
         {
@@ -187,14 +187,14 @@ public class GeneBamReader
 
         if(mGeneReadCount > 0 && (mGeneReadCount % 100000) == 0)
         {
-            RE_LOGGER.debug("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+            ISF_LOGGER.debug("gene({}) bamRecordCount({})", mCurrentGene.GeneData.GeneName, mGeneReadCount);
         }
 
         if(mConfig.ReadCountLimit > 0 && mGeneReadCount >= mConfig.ReadCountLimit)
         {
             if(mGeneReadCount == mConfig.ReadCountLimit)
             {
-                RE_LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mGeneReadCount);
+                ISF_LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGene.GeneData.GeneName, mGeneReadCount);
             }
 
             return;
@@ -299,7 +299,7 @@ public class GeneBamReader
             {
                 if(validRegions.stream().filter(x -> x == region).count() > 1)
                 {
-                    RE_LOGGER.error("repeated exon region({})", region);
+                    ISF_LOGGER.error("repeated exon region({})", region);
                 }
             }
         }
@@ -407,7 +407,7 @@ public class GeneBamReader
                 {
                     if(commonMappings.stream().filter(x -> x[SE_START] == readRegion[SE_START] && x[SE_END] == readRegion[SE_END]).count() > 1)
                     {
-                        RE_LOGGER.error("repeated read region({} -> {})", readRegion[SE_START], readRegion[SE_END]);
+                        ISF_LOGGER.error("repeated read region({} -> {})", readRegion[SE_START], readRegion[SE_END]);
                     }
                 }
             }
@@ -630,7 +630,7 @@ public class GeneBamReader
             if(dupDataList.stream().anyMatch(x -> x[DUP_DATA_SECOND_START] == secondStartPos
                     && x[DUP_DATA_READ_LEN] == readLength && insertSize == x[DUP_DATA_INSERT_SIZE]))
             {
-                RE_LOGGER.trace("duplicate fragment: id({}) chr({}) pos({}->{}) otherReadStart({}) insertSize({})",
+                ISF_LOGGER.trace("duplicate fragment: id({}) chr({}) pos({}->{}) otherReadStart({}) insertSize({})",
                         record.getReadName(), record.getReferenceName(), firstStartPos, record.getEnd(), secondStartPos, insertSize);
 
                 // cache so the second read can be identified immediately
@@ -665,7 +665,7 @@ public class GeneBamReader
         }
         catch (IOException e)
         {
-            RE_LOGGER.error("failed to create read data writer: {}", e.toString());
+            ISF_LOGGER.error("failed to create read data writer: {}", e.toString());
             return null;
         }
     }
@@ -709,7 +709,7 @@ public class GeneBamReader
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write read data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write read data file: {}", e.toString());
         }
     }
 

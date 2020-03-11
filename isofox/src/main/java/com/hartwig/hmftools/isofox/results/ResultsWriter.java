@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.results;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -143,7 +143,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write gene data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write gene data file: {}", e.toString());
         }
     }
 
@@ -190,7 +190,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write transcripts data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write transcripts data file: {}", e.toString());
         }
     }
 
@@ -250,7 +250,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write exon expression file: {}", e.toString());
+            ISF_LOGGER.error("failed to write exon expression file: {}", e.toString());
         }
     }
 
@@ -285,7 +285,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write trans combo data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write trans combo data file: {}", e.toString());
         }
     }
 }

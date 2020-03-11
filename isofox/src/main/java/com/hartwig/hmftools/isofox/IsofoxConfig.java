@@ -116,7 +116,7 @@ public class IsofoxConfig
 
     public static final int GENE_FRAGMENT_BUFFER = 1000; // width around a gene within which to search for reads
 
-    public static final Logger RE_LOGGER = LogManager.getLogger(IsofoxConfig.class);
+    public static final Logger ISF_LOGGER = LogManager.getLogger(IsofoxConfig.class);
 
     public IsofoxConfig(final CommandLine cmd)
     {
@@ -129,14 +129,14 @@ public class IsofoxConfig
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
             loadGeneIdsFile(inputFile, RestrictedGeneIds);
-            RE_LOGGER.info("file({}) load {} restricted genes", inputFile, RestrictedGeneIds.size());
+            ISF_LOGGER.info("file({}) load {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
 
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
             loadGeneIdsFile(inputFile, ExcludedGeneIds);
-            RE_LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
+            ISF_LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
@@ -156,12 +156,12 @@ public class IsofoxConfig
         {
             try
             {
-                RE_LOGGER.debug("loading indexed fasta reference file");
+                ISF_LOGGER.debug("loading indexed fasta reference file");
                 RefFastaSeqFile = new IndexedFastaSequenceFile(new File(refGenomeFilename));
             }
             catch (IOException e)
             {
-                RE_LOGGER.error("Reference file loading failed: {}", e.toString());
+                ISF_LOGGER.error("Reference file loading failed: {}", e.toString());
             }
         }
 
@@ -219,7 +219,7 @@ public class IsofoxConfig
     {
         if(OutputDir == null)
         {
-            RE_LOGGER.error("not output directory specified");
+            ISF_LOGGER.error("not output directory specified");
             return false;
         }
 
@@ -227,7 +227,7 @@ public class IsofoxConfig
         {
             if(!UseCalculatedFragmentLengths && (ReadLength == 0 || ExpRateFragmentLengths.isEmpty()))
             {
-                RE_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
+                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
                 return false;
             }
 
@@ -236,25 +236,25 @@ public class IsofoxConfig
 
         if(BamFile == null || BamFile.isEmpty() || !Files.exists(Paths.get(BamFile)))
         {
-            RE_LOGGER.error("BAM file({}) missing or not found", BamFile);
+            ISF_LOGGER.error("BAM file({}) missing or not found", BamFile);
             return false;
         }
 
         if(SampleId == null || SampleId.isEmpty())
         {
-            RE_LOGGER.error("sampleId missing");
+            ISF_LOGGER.error("sampleId missing");
             return false;
         }
 
         if(RefFastaSeqFile == null)
         {
-            RE_LOGGER.error("ref genome missing");
+            ISF_LOGGER.error("ref genome missing");
             return false;
         }
 
         if(RestrictedGeneIds.isEmpty() && (WriteExonData || WriteReadData))
         {
-            RE_LOGGER.warn("writing exon and/or read data for all transcripts may be slow and generate large output files");
+            ISF_LOGGER.warn("writing exon and/or read data for all transcripts may be slow and generate large output files");
         }
 
         return true;
@@ -372,7 +372,7 @@ public class IsofoxConfig
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            RE_LOGGER.warn("invalid gene ID file({})", filename);
+            ISF_LOGGER.warn("invalid gene ID file({})", filename);
             return;
         }
 
@@ -393,7 +393,7 @@ public class IsofoxConfig
         }
         catch (IOException e)
         {
-            RE_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
+            ISF_LOGGER.warn("failed to load gene ID file({}): {}", filename, e.toString());
         }
     }
 

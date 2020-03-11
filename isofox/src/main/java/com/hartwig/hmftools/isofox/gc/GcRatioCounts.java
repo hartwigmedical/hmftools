@@ -4,7 +4,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -99,7 +99,7 @@ public class GcRatioCounts
         }
         catch (IOException e)
         {
-            RE_LOGGER.error("failed to create at splice junction writer: {}", e.toString());
+            ISF_LOGGER.error("failed to create at splice junction writer: {}", e.toString());
             return null;
         }
     }
@@ -120,7 +120,7 @@ public class GcRatioCounts
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
+            ISF_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
         }
     }
 

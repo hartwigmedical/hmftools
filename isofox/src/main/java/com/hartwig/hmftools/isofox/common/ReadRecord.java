@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
@@ -425,7 +425,7 @@ public class ReadRecord
 
             if(regionBaseIndex + overlap > regionBaseDepth.length)
             {
-                RE_LOGGER.error("region({}) read coords({} -> {}) regionBaseIndex({}) overlap({}) regionLength({})",
+                ISF_LOGGER.error("region({}) read coords({} -> {}) regionBaseIndex({}) overlap({}) regionLength({})",
                         region, readStartPos, readEndPos, regionBaseIndex, overlap, regionBaseDepth.length);
                 return;
             }

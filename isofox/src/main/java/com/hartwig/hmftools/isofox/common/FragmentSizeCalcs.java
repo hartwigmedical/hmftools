@@ -7,7 +7,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 
@@ -82,7 +82,7 @@ public class FragmentSizeCalcs
     {
         closeBufferedWriter(mFragReadWriter);
 
-        if(RE_LOGGER.isDebugEnabled())
+        if(ISF_LOGGER.isDebugEnabled())
             mPerfCounter.logStats();
     }
 
@@ -105,7 +105,7 @@ public class FragmentSizeCalcs
         // measure fragment lengths for non-split reads in purely intronic regions
         if(mGeneTransCache == null)
         {
-            RE_LOGGER.error("fragment length calculator missing gene cache");
+            ISF_LOGGER.error("fragment length calculator missing gene cache");
             return;
         }
 
@@ -116,7 +116,7 @@ public class FragmentSizeCalcs
         BamSlicer bamSlicer = new BamSlicer(GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY, true);
 
         // walk through each chromosome, ignoring any gene which overlaps the previous gene
-        RE_LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
+        ISF_LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
 
         long lastGeneEnd = 0;
 
@@ -144,7 +144,7 @@ public class FragmentSizeCalcs
 
             if(i > 0 && (i % 100) == 0)
             {
-                RE_LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
+                ISF_LOGGER.debug("chromosome({}) processed {} genes, lastGenePos({}) fragCount({}) totalReads({})",
                         chromosome, i, lastGeneEnd, mProcessedFragments, mTotalReadCount);
             }
 
@@ -168,7 +168,7 @@ public class FragmentSizeCalcs
 
             if (mConfig.FragmentLengthMinCount > 0 && mProcessedFragments >= mConfig.FragmentLengthMinCount)
             {
-                RE_LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
+                ISF_LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
                 break;
             }
         }
@@ -181,7 +181,7 @@ public class FragmentSizeCalcs
 
         if(mTotalReadCount > 0 && (mTotalReadCount % 10000) == 0)
         {
-            RE_LOGGER.trace("currentGene({}:{}) totalReads({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mTotalReadCount);
+            ISF_LOGGER.trace("currentGene({}:{}) totalReads({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mTotalReadCount);
         }
 
         if(mCurrentReadCount >= MAX_GENE_READ_COUNT)
@@ -268,11 +268,11 @@ public class FragmentSizeCalcs
         if(mMaxReadLength > 0)
         {
             mConfig.ReadLength = mMaxReadLength;
-            RE_LOGGER.info("max read length({}) set", mMaxReadLength);
+            ISF_LOGGER.info("max read length({}) set", mMaxReadLength);
         }
         else
         {
-            RE_LOGGER.warn("max read length not determined from fragment length calcs");
+            ISF_LOGGER.warn("max read length not determined from fragment length calcs");
         }
 
         final List<int[]> lengthFrequencies = mConfig.ExpRateFragmentLengths;
@@ -308,7 +308,7 @@ public class FragmentSizeCalcs
             }
 
             lengthFrequency[FL_FREQUENCY] = lengthCount;
-            RE_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FL_LENGTH], lengthCount);
+            ISF_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FL_LENGTH], lengthCount);
         }
     }
 
@@ -332,7 +332,7 @@ public class FragmentSizeCalcs
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write fragment length file: {}", e.toString());
+            ISF_LOGGER.error("failed to write fragment length file: {}", e.toString());
             return null;
         }
     }
@@ -367,7 +367,7 @@ public class FragmentSizeCalcs
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write fragment length file: {}", e.toString());
+            ISF_LOGGER.error("failed to write fragment length file: {}", e.toString());
         }
 
     }
@@ -415,7 +415,7 @@ public class FragmentSizeCalcs
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write fragment length read data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write fragment length read data file: {}", e.toString());
         }
     }
 

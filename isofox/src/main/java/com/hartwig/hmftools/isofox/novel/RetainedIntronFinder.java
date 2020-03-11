@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.novel;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
@@ -99,7 +99,7 @@ public class RetainedIntronFinder
              {
                  if(retIntron1.regions().stream().anyMatch(x -> retIntron2.regions().contains(x)))
                  {
-                     RE_LOGGER.debug("reads({}) support the same exon from exon-intron reads", read1.Id);
+                     ISF_LOGGER.debug("reads({}) support the same exon from exon-intron reads", read1.Id);
                      return;
                  }
              }
@@ -197,7 +197,7 @@ public class RetainedIntronFinder
 
         RetainedIntron retIntron = new RetainedIntron(mGene.GeneData, candidateRegions, spannedIsStart);
 
-        RE_LOGGER.debug("retained intron({}) supported by read({})", retIntron, read);
+        ISF_LOGGER.debug("retained intron({}) supported by read({})", retIntron, read);
 
         return retIntron;
     }
@@ -240,7 +240,7 @@ public class RetainedIntronFinder
         }
         catch (IOException e)
         {
-            RE_LOGGER.error("failed to create retained intron writer: {}", e.toString());
+            ISF_LOGGER.error("failed to create retained intron writer: {}", e.toString());
             return null;
         }
     }
@@ -276,7 +276,7 @@ public class RetainedIntronFinder
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write retained intron file: {}", e.toString());
+            ISF_LOGGER.error("failed to write retained intron file: {}", e.toString());
         }
     }
 

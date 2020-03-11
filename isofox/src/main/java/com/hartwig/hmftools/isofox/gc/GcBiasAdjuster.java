@@ -5,7 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.roundGcRatio;
 
 import java.io.BufferedReader;
@@ -116,7 +116,7 @@ public class GcBiasAdjuster
 
             if (line == null)
             {
-                RE_LOGGER.error("Empty patient sample IDs file({})", mConfig.GcBiasFile);
+                ISF_LOGGER.error("Empty patient sample IDs file({})", mConfig.GcBiasFile);
             }
 
             String currentChr = "";
@@ -127,7 +127,7 @@ public class GcBiasAdjuster
 
                 if (items.length != 3)
                 {
-                    RE_LOGGER.warn("invalid GC-bias record: {}", line);
+                    ISF_LOGGER.warn("invalid GC-bias record: {}", line);
                     return;
                 }
 
@@ -148,13 +148,13 @@ public class GcBiasAdjuster
         }
         catch (IOException e)
         {
-            RE_LOGGER.warn("failed to load GC-bias file({}): {}", mConfig.GcBiasFile, e.toString());
+            ISF_LOGGER.warn("failed to load GC-bias file({}): {}", mConfig.GcBiasFile, e.toString());
         }
     }
 
     private void generateGcCounts()
     {
-        RE_LOGGER.info("generating GC-bias ratios");
+        ISF_LOGGER.info("generating GC-bias ratios");
 
         try
         {
@@ -170,7 +170,7 @@ public class GcBiasAdjuster
                 final String chromosome = chr.toString();
                 long length = chromsomeLengths.get(chr);
 
-                RE_LOGGER.debug("generating GC-bias ratios for chromosome({})", chromosome);
+                ISF_LOGGER.debug("generating GC-bias ratios for chromosome({})", chromosome);
 
                 List<Double> ratios = Lists.newArrayList();
 
@@ -193,7 +193,7 @@ public class GcBiasAdjuster
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write GC-bias file: {}", e.toString());
+            ISF_LOGGER.error("failed to write GC-bias file: {}", e.toString());
         }
     }
 
@@ -239,11 +239,11 @@ public class GcBiasAdjuster
 
             if (ratios == null || ratios.isEmpty())
             {
-                RE_LOGGER.error("missing chr({}) ratios", chromosome);
+                ISF_LOGGER.error("missing chr({}) ratios", chromosome);
                 return;
             }
 
-            RE_LOGGER.debug("measuring read depth for chromosome({})", chromosome);
+            ISF_LOGGER.debug("measuring read depth for chromosome({})", chromosome);
 
             long currentRegionStart = 0;
             int geneCount = 0;
@@ -288,7 +288,7 @@ public class GcBiasAdjuster
 
                     if((bamSliceCount % 10000) == 0)
                     {
-                        RE_LOGGER.debug("chr({}) gene({}) GC-region({}) BAM slice count({}) readCount()",
+                        ISF_LOGGER.debug("chr({}) gene({}) GC-region({}) BAM slice count({}) readCount()",
                                 chromosome, geneData.GeneName, currentRegionStart, bamSliceCount, mTotalReadCount);
                     }
 
@@ -377,7 +377,7 @@ public class GcBiasAdjuster
             double adjustmentFactor = medianDepthCount / (double)ratioMedianDepth;
             double avgDepth = gcAvgCounts.get(gcRatio);
 
-            RE_LOGGER.info(String.format("GC-Bias ratio(%.2f) depth(median=%d avg=%.2f) adjFactor(%.4f) vs medianDepth(%d)",
+            ISF_LOGGER.info(String.format("GC-Bias ratio(%.2f) depth(median=%d avg=%.2f) adjFactor(%.4f) vs medianDepth(%d)",
                     gcRatio, ratioMedianDepth, avgDepth, adjustmentFactor, medianDepthCount));
 
             mGcBiasAdjustmentFactors.put(gcRatio, adjustmentFactor);
@@ -427,7 +427,7 @@ public class GcBiasAdjuster
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write GC depth frequency data file: {}", e.toString());
+            ISF_LOGGER.error("failed to write GC depth frequency data file: {}", e.toString());
         }
     }
 

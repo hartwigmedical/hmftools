@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
@@ -72,7 +72,7 @@ public class ExpectedTransRates
 
         if(mCurrentExpRatesData == null)
         {
-            RE_LOGGER.warn("gene({}) expected rates data not loaded", geneReadData.name());
+            ISF_LOGGER.warn("gene({}) expected rates data not loaded", geneReadData.name());
         }
     }
 
@@ -90,7 +90,7 @@ public class ExpectedTransRates
 
         if(!validData())
         {
-            RE_LOGGER.debug("gene({}) invalid expected rates or actuals data", geneReadData.name());
+            ISF_LOGGER.debug("gene({}) invalid expected rates or actuals data", geneReadData.name());
             return;
         }
 
@@ -112,7 +112,7 @@ public class ExpectedTransRates
 
         double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
 
-        RE_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
+        ISF_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
                 geneReadData.name(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
 
         geneReadData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
@@ -126,7 +126,7 @@ public class ExpectedTransRates
 
             if(transAllocation > 0)
             {
-                RE_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
+                ISF_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
 
             transAllocations.put(transName, transAllocation);
@@ -160,7 +160,7 @@ public class ExpectedTransRates
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    RE_LOGGER.debug("category({}) short frag skipped with count({})", categoryStr, shortCount);
+                    ISF_LOGGER.debug("category({}) short frag skipped with count({})", categoryStr, shortCount);
                     skippedComboCounts += shortCount;
                 }
                 else
@@ -176,7 +176,7 @@ public class ExpectedTransRates
 
                 if(categoryId < 0)
                 {
-                    RE_LOGGER.debug("category({}) spliced frag skipped with count({})", categoryStr, splicedCount);
+                    ISF_LOGGER.debug("category({}) spliced frag skipped with count({})", categoryStr, splicedCount);
                     skippedComboCounts += splicedCount;
                 }
                 else
@@ -190,7 +190,7 @@ public class ExpectedTransRates
         {
             double totalCounts = sumVector(categoryCounts) + skippedComboCounts;
 
-            RE_LOGGER.debug(String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
+            ISF_LOGGER.debug(String.format("gene(%s) skippedCounts(%d perc=%.3f of total=%.0f)",
                     geneReadData.GeneData.GeneName, skippedComboCounts, skippedComboCounts/totalCounts, totalCounts));
         }
 
@@ -201,7 +201,7 @@ public class ExpectedTransRates
     {
         if (!Files.exists(Paths.get(filename)))
         {
-            RE_LOGGER.warn("invalid gene ID file({})", filename);
+            ISF_LOGGER.warn("invalid gene ID file({})", filename);
             return;
         }
 
@@ -214,7 +214,7 @@ public class ExpectedTransRates
 
             if (line == null)
             {
-                RE_LOGGER.error("Empty patient sample IDs file({})", filename);
+                ISF_LOGGER.error("Empty patient sample IDs file({})", filename);
                 return;
             }
 
@@ -227,7 +227,7 @@ public class ExpectedTransRates
 
                 if (items.length != ER_COL_RATE + 1)
                 {
-                    RE_LOGGER.error("invalid exp rates data: {}", line);
+                    ISF_LOGGER.error("invalid exp rates data: {}", line);
                     return;
                 }
 
@@ -257,11 +257,11 @@ public class ExpectedTransRates
                 geneRatesData.add(items);
             }
 
-            RE_LOGGER.info("loaded {} gene expected trans exp rates from file({})", geneExpDataMap.size(), filename);
+            ISF_LOGGER.info("loaded {} gene expected trans exp rates from file({})", geneExpDataMap.size(), filename);
         }
         catch (IOException e)
         {
-            RE_LOGGER.warn("failed to load expected rates file({}): {}", filename, e.toString());
+            ISF_LOGGER.warn("failed to load expected rates file({}): {}", filename, e.toString());
         }
     }
 

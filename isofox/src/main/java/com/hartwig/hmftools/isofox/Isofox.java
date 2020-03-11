@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 
 import java.util.ArrayList;
@@ -76,7 +76,7 @@ public class Isofox
 
     public void runAnalysis()
     {
-        RE_LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
+        ISF_LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
 
         if(mGcBiasAdjuster.enabled())
         {
@@ -135,7 +135,7 @@ public class Isofox
 
         // final reporting
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
-        RE_LOGGER.info("read {} total BAM records", totalReadsProcessed);
+        ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
         if(mConfig.WriteReadGcRatios)
         {
@@ -220,7 +220,7 @@ public class Isofox
         }
         catch (Exception e)
         {
-            RE_LOGGER.error("task execution error: {}", e.toString());
+            ISF_LOGGER.error("task execution error: {}", e.toString());
             e.printStackTrace();
             return false;
         }
@@ -243,14 +243,14 @@ public class Isofox
 
         if(!config.isValid())
         {
-            RE_LOGGER.error("missing config options, exiting");
+            ISF_LOGGER.error("missing config options, exiting");
             return;
         }
 
         Isofox isofox = new Isofox(config, cmd);
         isofox.runAnalysis();
 
-        RE_LOGGER.info("RNA expression analysis complete");
+        ISF_LOGGER.info("RNA expression analysis complete");
     }
 
     @NotNull

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.exp_rates;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
@@ -536,7 +536,7 @@ public class ExpectedRatesGenerator
 
                         if(categoryId < 0)
                         {
-                            RE_LOGGER.error("invalid category index from transKey({})", transKey);
+                            ISF_LOGGER.error("invalid category index from transKey({})", transKey);
                             return;
                         }
 
@@ -630,7 +630,7 @@ public class ExpectedRatesGenerator
         }
         catch (IOException e)
         {
-            RE_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
+            ISF_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
             return null;
         }
     }
@@ -674,7 +674,7 @@ public class ExpectedRatesGenerator
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
+            ISF_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
         }
     }
 

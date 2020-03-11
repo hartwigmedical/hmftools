@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
@@ -75,7 +75,7 @@ public class ExpectationMaxFit
 
             double[] residuals = calcResiduals(transCounts, fittedCounts, totalCounts);
 
-            RE_LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
+            ISF_LOGGER.trace(String.format("totalCount(%.0f) residuals(%.0f perc=%.3f) iteration(%d)",
                     totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC], iteration));
 
             /*

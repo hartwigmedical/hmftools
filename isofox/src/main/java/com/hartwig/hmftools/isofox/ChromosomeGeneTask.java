@@ -4,7 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_FRAGMENT_BUFFER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.markOverlappingGeneRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
@@ -104,12 +104,12 @@ public class ChromosomeGeneTask implements Callable
         if(mCurrentTaskType == CHR_TASK_TRANSCRIPT_COUNTS)
         {
             assignTranscriptCounts();
-            RE_LOGGER.debug("chromosome({}) transcript counting complete", mChromosome);
+            ISF_LOGGER.debug("chromosome({}) transcript counting complete", mChromosome);
         }
         else if(mCurrentTaskType == CHR_TASK_FRAGMENT_LENGTHS)
         {
             calcFragmentLengths();
-            RE_LOGGER.debug("chromosome({}) frag length measurement complete", mChromosome);
+            ISF_LOGGER.debug("chromosome({}) frag length measurement complete", mChromosome);
         }
 
         return (long)1; // return value not used
@@ -119,7 +119,7 @@ public class ChromosomeGeneTask implements Callable
     {
         if(mGeneDataList.size() > 10)
         {
-            RE_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
+            ISF_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
         boolean generateExpRatesOnly = mConfig.WriteExpectedRates && !mConfig.UseCalculatedFragmentLengths && !mConfig.ApplyExpectedRates;
@@ -145,14 +145,14 @@ public class ChromosomeGeneTask implements Callable
 
                 mPerfCounters[PERF_TOTAL].stop();
 
-                RE_LOGGER.debug("chr({}) gene({}) processed({} of {})",
+                ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
                         mChromosome, geneReadData.name(), mCurrentGeneIndex, mGeneDataList.size());
 
                 ++mGenesProcessed;
 
                 if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
                 {
-                    RE_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
+                    ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
                 }
             }
         }
@@ -205,7 +205,7 @@ public class ChromosomeGeneTask implements Callable
 
             if(transDataList.isEmpty())
             {
-                RE_LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
+                ISF_LOGGER.warn("no transcripts found for gene({}:{})", geneData.GeneId, geneData.GeneName);
                 continue;
             }
 
@@ -243,7 +243,7 @@ public class ChromosomeGeneTask implements Callable
         }
 
         // Time,Chromosome,GeneCount,TranscriptCount,RangeStart,RangeEnd,GeneNames
-        RE_LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{}", // chr({}) genes({}) transcripts({}) range({} -> {}),
+        ISF_LOGGER.info("GENE_OVERLAP: {},{},{},{},{},{}", // chr({}) genes({}) transcripts({}) range({} -> {}),
                 mChromosome, overlappingGenes.size(), transcriptCount, minRange, maxRange, geneNamesStr);
     }
 
@@ -276,7 +276,7 @@ public class ChromosomeGeneTask implements Callable
 
         if(regionStart >= regionEnd)
         {
-            RE_LOGGER.warn("invalid gene({}:{}) region({} -> {})", geneData.GeneId, geneData.GeneName, regionStart, regionEnd);
+            ISF_LOGGER.warn("invalid gene({}:{}) region({} -> {})", geneData.GeneId, geneData.GeneName, regionStart, regionEnd);
             return;
         }
 

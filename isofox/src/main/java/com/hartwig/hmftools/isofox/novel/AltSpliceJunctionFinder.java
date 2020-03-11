@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.novel;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.RE_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -404,7 +404,7 @@ public class AltSpliceJunctionFinder
         }
         catch (IOException e)
         {
-            RE_LOGGER.error("failed to create alt splice junction writer: {}", e.toString());
+            ISF_LOGGER.error("failed to create alt splice junction writer: {}", e.toString());
             return null;
         }
     }
@@ -444,7 +444,7 @@ public class AltSpliceJunctionFinder
         }
         catch(IOException e)
         {
-            RE_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
+            ISF_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
         }
     }
 
