@@ -122,7 +122,6 @@ public class RetainedIntronFinder
                 mRetainedIntrons.add(retIntron);
             }
         }
-
     }
 
     private RetainedIntron evaluateRead(ReadRecord read)
