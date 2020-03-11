@@ -18,6 +18,7 @@ final class TransvarConverter {
     private static final String RANGE_INDICATOR = "_";
     private static final String DELETION = "del";
     private static final String INSERTION = "ins";
+    private static final String DUPLICATION = "dup";
 
     private TransvarConverter() {
     }
@@ -116,18 +117,22 @@ final class TransvarConverter {
     }
 
     private static void populateForDuplication(@NotNull ImmutableTransvarRecord.Builder builder, @NotNull String gdna) {
-        // DUPs simply look like 'start_end' and come with no ref/alt information.
         assert gdna.contains(RANGE_INDICATOR);
 
         String[] gdnaParts = gdna.split(RANGE_INDICATOR);
-        builder.gdnaPosition(Long.parseLong(gdnaParts[0]));
+        long start = Long.parseLong(gdnaParts[0]);
+        builder.gdnaPosition(start);
 
-        if (isLong(gdnaParts[1])) {
-            builder.gdnaRef(Strings.EMPTY);
-            builder.gdnaAlt(Strings.EMPTY);
+        // DUPs simply look like 'start_end' and come with no ref/alt information, but some come with something "dupTTT" appended to it.
+        // In both cases we ignore the "dup" part.
+        builder.gdnaRef(Strings.EMPTY);
+        builder.gdnaAlt(Strings.EMPTY);
 
-            long diff = Long.parseLong(gdnaParts[1]) - Long.parseLong(gdnaParts[0]);
-            builder.indelLength(1 + (int) diff);
+        String dupPart = gdnaParts[1];
+        if (dupPart.contains(DUPLICATION)) {
+            builder.indelLength(1 + (int) (Long.parseLong(dupPart.substring(0, dupPart.indexOf(DUPLICATION))) - start));
+        } else if (isLong(dupPart)) {
+            builder.indelLength(1 + (int) (Long.parseLong(dupPart) - start));
         } else {
             throw new IllegalStateException("Cannot process duplication for gDNA: " + gdna);
         }

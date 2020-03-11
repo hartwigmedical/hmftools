@@ -102,21 +102,39 @@ public class TransvarConverterTest {
 
     @Test
     public void canConvertDuplicationToRecord() {
-        String dupLine = "ERBB2:p.Y772_A775dup\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880985_37880996/"
+        String dupLineNoBases = "ERBB2:p.Y772_A775dup\tENST00000584450 (protein_coding)\tERBB2\t+\tchr17:g.37880985_37880996/"
                 + "c.2314_2325/p.Y772_A775\tinside_[cds_in_exon_20]\tprotein_sequence=YVMA;cDNA_sequence=TAC..GCT;"
                 + "gDNA_sequence=TAC..GCT;aliases=ENSP00000463714;source=Ensembl";
 
-        TransvarRecord duplication = TransvarConverter.toTransvarRecord(dupLine);
+        TransvarRecord duplication1 = TransvarConverter.toTransvarRecord(dupLineNoBases);
 
-        assertNotNull(duplication);
-        assertEquals("ENST00000584450", duplication.transcript());
-        assertEquals("17", duplication.chromosome());
-        assertEquals(37880985, duplication.gdnaPosition());
-        assertEquals("", duplication.gdnaRef());
-        assertEquals("", duplication.gdnaAlt());
-        assertNull(duplication.referenceCodon());
-        assertNull(duplication.candidateCodons());
-        assertEquals(12, (int) duplication.indelLength());
+        assertNotNull(duplication1);
+        assertEquals("ENST00000584450", duplication1.transcript());
+        assertEquals("17", duplication1.chromosome());
+        assertEquals(37880985, duplication1.gdnaPosition());
+        assertEquals("", duplication1.gdnaRef());
+        assertEquals("", duplication1.gdnaAlt());
+        assertNull(duplication1.referenceCodon());
+        assertNull(duplication1.candidateCodons());
+        assertEquals(12, (int) duplication1.indelLength());
+
+        String dupLineWithBases = "BRAF:p.T599_V600insV\tENST00000288602 (protein_coding)\tBRAF\t-\tchr7:g.140453136_140453138dupACT"
+                + "/c.1797_1799dupAGT/p.V600dupV\tinside_[cds_in_exon_15]\tCSQN=InFrameInsertion;left_align_protein=p.T599_V600insV;"
+                + "unalign_protein=p.T599_V600insV;left_align_gDNA=g.140453135_140453136insACT;unalign_gDNA=g.140453137_140453138insTAC;"
+                + "left_align_cDNA=c.1796_1797insAGT;unalign_cDNA=c.1797_1798insGTA;4_CandidatesOmitted;aliases=ENSP00000288602;"
+                + "source=Ensembl";
+
+        TransvarRecord duplication2 = TransvarConverter.toTransvarRecord(dupLineWithBases);
+
+        assertNotNull(duplication2);
+        assertEquals("ENST00000288602", duplication2.transcript());
+        assertEquals("7", duplication2.chromosome());
+        assertEquals(140453136, duplication2.gdnaPosition());
+        assertEquals("", duplication2.gdnaRef());
+        assertEquals("", duplication2.gdnaAlt());
+        assertNull(duplication2.referenceCodon());
+        assertNull(duplication2.candidateCodons());
+        assertEquals(3, (int) duplication2.indelLength());
     }
 
     @Test
