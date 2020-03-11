@@ -48,8 +48,7 @@ Genes that overlap each other(either sense, anti-sense or shared exons) are cons
 
 ### Calculate expected shared and private abundance rates per transcript
 
-
-Counting abundance per unique group of shared transcripts
+### Counting abundance per unique group of shared transcripts
 For counting fragments, we first group transcripts together across all genes which overlap each other at all in either in intronic or exonic regions.   Any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
 We consider that a fragment may belong to a transcript if:
@@ -59,7 +58,9 @@ the distance between the paired reads in that transcript is not > maximum insert
 
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
-Each fragment is assigned to a category 
+Each fragment is assigned to a category . . .
+
+Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters   If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
 
 ### Fit abundance estimate per transcript
 
