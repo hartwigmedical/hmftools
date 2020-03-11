@@ -19,7 +19,7 @@ class TransvarProcess {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarProcess.class);
 
-    private static final int TRANSVAR_TIMEOUT_SEC = 10;
+    private static final int TRANSVAR_TIMEOUT_SEC = 60;
 
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
