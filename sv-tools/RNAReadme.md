@@ -59,7 +59,25 @@ Like many previous tools (RSEM, Salmon, Kallisto, etc), we have chosen to use an
 
 ### Counting and characterisation of novel splice junctions
 
-TO DO
+A novel splice junction is considered to be a splicing event called by the aligner which is not part of any annotated event.  For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
+
+* SKIPPED_EXON - both splice sites are splice sites on a single existing transcript but the interim exon(s) are skipped.
+* MIXED_TRANSCRIPT - both splice sites are splice sites on different existing transcripts but not the same one
+* NOVEL_EXON - One end of the splice junction is cis phased with another novel splice junction to form a novel exon that does not exist on any transcript.
+* NOVEL_3_PRIME_SS - 5' end matches a known splice site, but 3' end does not.  3' end may be intronic or exonic
+* NOVEL_5_PRIME_SS - 3' end matches a known splice site, but 5' end does not.  5' end may be intronic or exonic
+* NOVEL_INTRON -  Neither end matches a known splice site.  Both 5' and 3' ends are wholly contained within a single exon on all transcripts
+* INTRONIC -  Neither end matches a known splice site.  Both 5' and 3' ends are intronic
+* INTRONIC_TO_EXONIC - Neither end matches a known splice site.  One end is intronic and 1 end is exonic
+
+For each novel splice junction, we also record the distance to the nearest splice junction for each novel site, the motif of the splice site and the transcripts compatible with either end of the alternative splicing.
+
+
+### Counting and characterisation of retained introns
+
+We also search explicitly for evidence of retained introns
+
+Retained introns are hard filtered unless they contain at lease
 
 ### Counting and characterisation of chimeric and read through junctions
 
