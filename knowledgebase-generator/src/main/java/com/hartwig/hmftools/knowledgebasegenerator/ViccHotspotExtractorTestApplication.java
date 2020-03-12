@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
@@ -44,16 +45,29 @@ public class ViccHotspotExtractorTestApplication {
         LOGGER.info("Read {} entries", viccEntries.size());
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
-        Map<String, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
+        Map<String, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
-            hotspotsPerFeature.putAll(hotspotExtractor.extractHotspots(viccEntry));
+            mergeIntoExistingMap(allHotspotsPerFeature, hotspotExtractor.extractHotspots(viccEntry));
         }
 
-        LOGGER.info("Done extracting {} hotspots for {} features", valuesCount(hotspotsPerFeature), hotspotsPerFeature.size());
+        LOGGER.info("Done extracting {} hotspots for {} features", valuesCount(allHotspotsPerFeature), allHotspotsPerFeature.size());
 
         LOGGER.info("Printing unresolvable features");
         for (String feature : hotspotExtractor.unresolvableFeatures()) {
             LOGGER.info(feature);
+        }
+    }
+
+    @VisibleForTesting
+    static <T, Y> void mergeIntoExistingMap(@NotNull Map<T, List<Y>> map, @NotNull Map<T, List<Y>> mapToMergeIn) {
+        for (Map.Entry<T, List<Y>> entry : mapToMergeIn.entrySet()) {
+            if (map.containsKey(entry.getKey())) {
+                List<Y> currentEntries = map.get(entry.getKey());
+                currentEntries.addAll(entry.getValue());
+                map.put(entry.getKey(), currentEntries);
+            } else {
+                map.put(entry.getKey(), entry.getValue());
+            }
         }
     }
 
