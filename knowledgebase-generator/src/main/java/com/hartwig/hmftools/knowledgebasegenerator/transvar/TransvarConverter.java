@@ -13,7 +13,7 @@ final class TransvarConverter {
     private static final int MESSAGE_COLUMN = 6;
 
     private static final String MSG_NO_VALID_TRANSCRIPT_FOUND = "no_valid_transcript_found";
-    private static final String MSG_INVALID_MUTATION_STRING = "Error_invalid_mutation_string";
+    private static final String MSG_ERROR_INDICATION_PREFIX = "Error_";
 
     private static final String RANGE_INDICATOR = "_";
     private static final String DELETION = "del";
@@ -28,7 +28,7 @@ final class TransvarConverter {
         String[] fields = transvarLine.split(FIELD_DELIMITER);
 
         String message = fields[MESSAGE_COLUMN];
-        if (message.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || message.contains(MSG_INVALID_MUTATION_STRING)) {
+        if (message.contains(MSG_NO_VALID_TRANSCRIPT_FOUND) || message.trim().startsWith(MSG_ERROR_INDICATION_PREFIX)) {
             return null;
         }
 

@@ -161,4 +161,11 @@ public class TransvarConverterTest {
 
         assertNull(TransvarConverter.toTransvarRecord(line));
     }
+
+    @Test
+    public void noneTypeLeadsToNull() {
+        String line = "BRAF:p.T599insTT\t.\t.\t.\t././.\t.\tError_int() argument must be a string or a number, not 'NoneType'";
+
+        assertNull(TransvarConverter.toTransvarRecord(line));
+    }
 }
