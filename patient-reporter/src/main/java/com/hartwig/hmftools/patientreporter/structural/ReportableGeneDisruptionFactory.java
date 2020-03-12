@@ -91,7 +91,7 @@ final class ReportableGeneDisruptionFactory {
             List<ReportableDisruption> disruptions = entry.getValue();
 
             if (disruptions.size() != 1 && disruptions.size() != 2) {
-                LOGGER.warn("Found unusual number of disruptions on single event: " + disruptions.size());
+                LOGGER.warn("Found unusual number of disruptions on single event: {}", disruptions.size());
                 continue;
             }
 
