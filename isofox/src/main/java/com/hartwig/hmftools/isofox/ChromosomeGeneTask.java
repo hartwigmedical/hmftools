@@ -231,18 +231,15 @@ public class ChromosomeGeneTask implements Callable
         // cache reference bases for comparison with read bases
         if(mConfig.RefFastaSeqFile != null)
         {
-            for(GeneReadData geneReadData : geneCollection.genes())
+            for (RegionReadData region : geneCollection.getExonRegions())
             {
-                for (RegionReadData region : geneReadData.getExonRegions())
-                {
-                    final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
-                            region.Chromosome, region.PosStart, region.PosEnd).getBaseString();
+                final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
+                        region.Chromosome, region.PosStart, region.PosEnd).getBaseString();
 
-                    region.setRefBases(regionRefBases);
-                }
-
-                findUniqueBases(geneReadData.getExonRegions());
+                region.setRefBases(regionRefBases);
             }
+
+            findUniqueBases(geneCollection.getExonRegions());
         }
 
         // use a buffer around the gene to pick up reads which span outside its transcripts

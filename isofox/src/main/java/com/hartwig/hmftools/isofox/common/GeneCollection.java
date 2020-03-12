@@ -4,7 +4,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.generateCommonExonicRegions;
+import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class GeneCollection
@@ -109,6 +112,22 @@ public class GeneCollection
             }
 
             generateExonicRegions(mChromosome, mExonRegions, gene.getTranscripts());
+
+            // cache the relevant set of exon regions back into the gene for convenience
+            for(final TranscriptData transData : gene.getTranscripts())
+            {
+                for (final ExonData exon : transData.exons())
+                {
+                    final RegionReadData exonReadData = findExonRegion(mExonRegions, exon.ExonStart, exon.ExonEnd);
+                    if (exonReadData == null)
+                    {
+                        ISF_LOGGER.error("genes({}) failed to create exonic regions", geneNames());
+                        return;
+                    }
+
+                    gene.addExonRegion(exonReadData);
+                }
+            }
         }
 
         generateCommonExonicRegions(mExonRegions, mCommonExonicRegions);

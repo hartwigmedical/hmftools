@@ -351,7 +351,7 @@ public class ExpectedRatesTest
 
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
 
-        List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
+        List<long[]> commonExonicRegions = genes.getCommonExonicRegions();
         assertEquals(5, commonExonicRegions.size());
         assertEquals(100, commonExonicRegions.get(0)[SE_START]);
         assertEquals(200, commonExonicRegions.get(0)[SE_END]);
@@ -492,7 +492,7 @@ public class ExpectedRatesTest
 
         genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
 
-        List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
+        List<long[]> commonExonicRegions = genes.getCommonExonicRegions();
         assertEquals(1, commonExonicRegions.size());
         assertEquals(100, commonExonicRegions.get(0)[SE_START]);
         assertEquals(400, commonExonicRegions.get(0)[SE_END]);

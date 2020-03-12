@@ -3,7 +3,9 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
+import static com.hartwig.hmftools.isofox.common.RegionReadData.regionExists;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -31,7 +33,6 @@ public class GeneReadData
     private final List<long[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
 
     private final List<TranscriptData> mTranscripts;
-    private final long[] mTranscriptsRange;
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
@@ -54,8 +55,6 @@ public class GeneReadData
         mTranscriptReadCounts = Maps.newHashMap();
         mTranscriptAllocations = Maps.newHashMap();
         mFitResiduals = 0;
-
-        mTranscriptsRange = new long[SE_PAIR];
     }
 
     public String name() { return GeneData.GeneName;}
@@ -65,21 +64,14 @@ public class GeneReadData
 
     public final List<RegionReadData> getExonRegions() { return mExonRegions; }
 
-    public final long[] getTranscriptsRange() { return mTranscriptsRange; }
+    public void addExonRegion(final RegionReadData region)
+    {
+        if(!regionExists(mExonRegions, region.PosStart, region.PosEnd))
+            mExonRegions.add(region);
+    }
 
     public void generateRegions()
     {
-        // FIXME: still required?
-        generateExonicRegions(GeneData.Chromosome, mExonRegions, mTranscripts);
-
-        for(final TranscriptData transData : mTranscripts)
-        {
-            mTranscriptsRange[SE_END] = max(transData.TransEnd, mTranscriptsRange[SE_END]);
-
-            if (mTranscriptsRange[SE_START] == 0 || transData.TransStart < mTranscriptsRange[SE_START])
-                mTranscriptsRange[SE_START] = transData.TransStart;
-        }
-
         generateCommonExonicRegions(mExonRegions, mCommonExonicRegions);
     }
 
@@ -95,26 +87,8 @@ public class GeneReadData
         return counts != null ? counts : new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
     }
 
-    public void addTranscriptReadMatch(int transId, boolean isUnique, FragmentMatchType type)
-    {
-        int[][] counts = mTranscriptReadCounts.get(transId);
-        if(counts == null)
-        {
-            counts = new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
-            mTranscriptReadCounts.put(transId,  counts);
-        }
-
-        if(isUnique)
-        {
-            ++counts[FragmentMatchType.typeAsInt(type)][UNIQUE_TRANS_COUNT];
-        }
-
-        ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
-    }
-
     public Map<String,Double> getTranscriptAllocations() { return mTranscriptAllocations; }
 
-    public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
 
     public double getTranscriptAllocation(final String transName)
@@ -138,8 +112,6 @@ public class GeneReadData
 
         allCommonRegions.addAll(commonRegions);
     }
-
-    public List<long[]> getCommonExonicRegions() { return mCommonExonicRegions; }
 
     public long calcExonicRegionLength()
     {
