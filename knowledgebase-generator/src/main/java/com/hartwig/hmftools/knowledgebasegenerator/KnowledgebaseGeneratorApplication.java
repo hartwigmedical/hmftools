@@ -66,6 +66,8 @@ public class KnowledgebaseGeneratorApplication {
 
         List<ViccEntry> viccEntries = readViccEntries(cmd.getOptionValue(VICC_JSON));
 
+        //TODO: generate HMF KB
+
         // Currently only support hg19.
         String refVersionString = cmd.getOptionValue(REF_GENOME_VERSION);
         assert PERMITTED_REF_GENOME_VERSIONS.contains(refVersionString);
@@ -98,6 +100,7 @@ public class KnowledgebaseGeneratorApplication {
             for (EventType type : eventType) {
                 // Generating known events
                 //TODO: map every genomic event to one object
+                //TODO: if combined event use single event for determine known events
                 listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type));
                 listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type));
                 DetermineEventOfGenomicMutation.checkVariants(viccEntry, type);
