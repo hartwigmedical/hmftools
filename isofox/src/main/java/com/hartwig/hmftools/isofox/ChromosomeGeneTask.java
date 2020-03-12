@@ -44,6 +44,7 @@ public class ChromosomeGeneTask implements Callable
     private final FragmentSizeCalcs mFragmentSizeCalc;
 
     private final List<EnsemblGeneData> mGeneDataList;
+    private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
 
@@ -69,6 +70,7 @@ public class ChromosomeGeneTask implements Callable
         mResultsWriter = resultsWriter;
 
         mGeneDataList = geneDataList;
+        mCollectionId = 0;
 
         mCurrentGeneIndex = 0;
         mCurrentTaskType = -1;
@@ -125,7 +127,7 @@ public class ChromosomeGeneTask implements Callable
             final List<EnsemblGeneData> overlappingGenes = findNextOverlappingGenes();
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
-            GeneCollection geneCollection = new GeneCollection(geneReadDataList);
+            GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
 
             mPerfCounters[PERF_TOTAL].start();
 
@@ -219,9 +221,9 @@ public class ChromosomeGeneTask implements Callable
         return geneReadDataList;
     }
 
-    private void generateExpectedTransRates(final GeneReadData geneReadData)
+    private void generateExpectedTransRates(final GeneCollection genes)
     {
-        mExpRatesGenerator.generateExpectedRates(geneReadData);
+        mExpRatesGenerator.generateExpectedRates(genes);
     }
 
     private void analyseBamReads(final GeneCollection geneCollection)
@@ -270,15 +272,13 @@ public class ChromosomeGeneTask implements Callable
 
             mPerfCounters[PERF_FIT].start();
 
-            /* FIXME
             if(mExpRatesGenerator != null)
             {
-                generateExpectedTransRates(geneReadData);
+                generateExpectedTransRates(geneCollection);
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
             }
 
-            mExpTransRates.runTranscriptEstimation(geneReadData, mBamReader.getTransComboData(), expRatesData);
-            */
+            mExpTransRates.runTranscriptEstimation(geneCollection, mBamReader.getTransComboData(), expRatesData);
 
             mPerfCounters[PERF_FIT].stop();
         }

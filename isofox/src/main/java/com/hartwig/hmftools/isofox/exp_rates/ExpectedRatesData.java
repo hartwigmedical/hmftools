@@ -7,26 +7,25 @@ import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
 public class ExpectedRatesData
 {
-    public final String GeneId;
+    public final String Id;
 
     // equivalent of buckets - 0-N transcripts and the fragment type (eg SHORT, SPLICED etc)
     public final List<String> Categories;
 
-    // equivalent of signature names - all transcript names (ie StableId) and an UNSPLICED definition
+    // equivalent of signature names - all transcript names (ie StableId) and a GeneId for each gene's unspliced region
     public final List<String> TranscriptIds;
 
     private SigMatrix mTranscriptDefinitions;
 
-    public ExpectedRatesData(final String geneId)
+    public ExpectedRatesData(final String id)
     {
-        GeneId = geneId;
+        Id = id;
         Categories = Lists.newArrayList();
         TranscriptIds = Lists.newArrayList();
         mTranscriptDefinitions = null;
     }
 
     public SigMatrix getTranscriptDefinitions() { return mTranscriptDefinitions; }
-
 
     public boolean validData()
     {
@@ -50,12 +49,11 @@ public class ExpectedRatesData
         mTranscriptDefinitions = new SigMatrix(Categories.size(), TranscriptIds.size());
     }
 
-    // GeneId,GeneName,TransId,Category,Rate
-    public static final int ER_COL_GENE_ID = 0;
-    public static final int ER_COL_GENE_NAME = 1;
-    public static final int ER_COL_TRANS_NAME = 2;
-    public static final int ER_COL_CAT = 3;
-    public static final int ER_COL_RATE = 4;
+    // GeneCollectionId,TransId,Category,Rate
+    public static final int ER_COL_GENE_SET_ID = 0;
+    public static final int ER_COL_TRANS_NAME = 1;
+    public static final int ER_COL_CAT = 2;
+    public static final int ER_COL_RATE = 3;
 
     public void buildDefinitionsFromFileData(final List<String[]> geneRatesData)
     {

@@ -100,7 +100,7 @@ public class NovelJunctionsTest
         gene.generateRegions();
 
         AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(new IsofoxConfig(), null);
-        GeneCollection genes = new GeneCollection(Lists.newArrayList(gene));
+        GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         asjFinder.setGeneData(genes);
 
         long[] spliceJunction = new long[SE_PAIR];
@@ -291,7 +291,7 @@ public class NovelJunctionsTest
 
         RetainedIntronFinder riFinder = new RetainedIntronFinder(null);
 
-        GeneCollection genes = new GeneCollection(Lists.newArrayList(gene));
+        GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         riFinder.setGeneData(genes);
 
         // first read doesn't span an exon-intron boundary for every transcript

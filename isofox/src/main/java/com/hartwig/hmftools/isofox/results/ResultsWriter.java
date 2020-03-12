@@ -256,7 +256,7 @@ public class ResultsWriter
     }
 
     public synchronized void writeTransComboCounts(
-            final GeneReadData geneReadData, final List<String> categories, final double[] counts, final double[] fittedCounts)
+            final String genesId, final List<String> categories, final double[] counts, final double[] fittedCounts)
     {
         if(mConfig.OutputDir.isEmpty())
             return;
@@ -268,7 +268,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile("category_counts.csv");
 
                 mTransComboWriter = createBufferedWriter(outputFileName, false);
-                mTransComboWriter.write("GeneId,GeneName,Category,Count,FitCount");
+                mTransComboWriter.write("GenesId,Category,Count,FitCount");
                 mTransComboWriter.newLine();
             }
 
@@ -277,9 +277,8 @@ public class ResultsWriter
                 double count = counts[i];
                 final String category = categories.get(i);
 
-                mTransComboWriter.write(String.format("%s,%s,%s,%.0f,%.1f",
-                        geneReadData.GeneData.GeneId, geneReadData.GeneData.GeneName, category,
-                        count, fittedCounts[i]));
+                mTransComboWriter.write(String.format("%s,%s,%.0f,%.1f",
+                        genesId, category, count, fittedCounts[i]));
 
                 mTransComboWriter.newLine();
             }

@@ -16,6 +16,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,8 +24,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
-import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.TranscriptComboData;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
@@ -35,6 +35,7 @@ public class ExpectedRatesGenerator
     // map of transcript (or unspliced) to all expected category counts covering it (and others)
     private final Map<String, List<TranscriptComboData>> mExpectedTransComboCounts;
 
+    private GeneCollection mGenes;
     private ExpectedRatesData mCurrentExpRatesData;
     private int mCurrentFragSize;
     private int mCurrentFragFrequency;
@@ -57,6 +58,7 @@ public class ExpectedRatesGenerator
 
         mExpectedTransComboCounts = Maps.newHashMap();
         mCurrentExpRatesData = null;
+        mGenes = null;
 
         mExpRateWriter = resultsWriter != null ? resultsWriter.getExpRatesWriter() : null;
     }
@@ -69,22 +71,23 @@ public class ExpectedRatesGenerator
     public Map<String,List<TranscriptComboData>> getTransComboData() { return mExpectedTransComboCounts; }
     public ExpectedRatesData getExpectedRatesData() { return mCurrentExpRatesData; }
 
-    public void generateExpectedRates(final GeneReadData geneReadData)
+    public void generateExpectedRates(final GeneCollection genes)
     {
+        mGenes = genes;
         mExpectedTransComboCounts.clear();
-        mCurrentExpRatesData = new ExpectedRatesData(geneReadData.GeneData.GeneId);
+        mCurrentExpRatesData = new ExpectedRatesData(mGenes.chrId());
 
-        final List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
+        final List<long[]> commonExonicRegions = mGenes.getCommonExonicRegions();
 
         // apply fragment reads across each transcript as though it were fully transcribed
-        final List<TranscriptData> transDataList = geneReadData.getTranscripts();
+        final List<TranscriptData> transDataList = mGenes.getTranscripts();
 
         for(final int[] flData : mConfig.ExpRateFragmentLengths)
         {
             mCurrentFragSize = flData[FL_LENGTH];
             mCurrentFragFrequency = flData[FL_FREQUENCY];
 
-            for (TranscriptData transData : geneReadData.getTranscripts())
+            for (TranscriptData transData : transDataList)
             {
                 boolean endOfTrans = false;
 
@@ -109,8 +112,8 @@ public class ExpectedRatesGenerator
 
             if(commonExonicRegions.size() > 1)
             {
-                long regionStart = geneReadData.getTranscriptsRange()[SE_START];
-                long regionEnd = geneReadData.getTranscriptsRange()[SE_END];
+                long regionStart = mGenes.regionBounds()[SE_START];
+                long regionEnd = mGenes.regionBounds()[SE_END];
 
                 int exonicRegionIndex = 0;
                 long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
@@ -118,17 +121,19 @@ public class ExpectedRatesGenerator
 
                 for (long startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
                 {
+                    final List<String> unsplicedGenes = findUnsplicedGenes(startPos);
+
                     if (startPos <= currentExonicEnd)
                     {
                         // check possible transcript exonic matches
-                        allocateUnsplicedCounts(transDataList, startPos);
+                        allocateUnsplicedCounts(transDataList, startPos, unsplicedGenes);
                     }
                     else
                     {
                         // check for purely intronic fragments
                         if (startPos < nextExonicStart)
                         {
-                            addTransComboData(UNSPLICED_ID, emptyTrans, UNSPLICED);
+                            addTransComboData(UNSPLICED_ID, emptyTrans, unsplicedGenes);
                         }
                         else
                         {
@@ -149,13 +154,24 @@ public class ExpectedRatesGenerator
             }
             else
             {
-                // force an empty entry even though it won't have an category ratios set for it
-                List<TranscriptComboData> emptyList = Lists.newArrayList(new TranscriptComboData(emptyTrans));
+                // force an empty entry even though it won't have any category ratios set for it
+                List<String> allGeneIds = mGenes.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+                List<TranscriptComboData> emptyList = Lists.newArrayList(new TranscriptComboData(emptyTrans, allGeneIds));
                 mExpectedTransComboCounts.put(UNSPLICED_ID, emptyList);
             }
         }
 
-        formTranscriptDefinitions(geneReadData);
+        formTranscriptDefinitions();
+    }
+
+    private List<String> findUnsplicedGenes(long startPos)
+    {
+        if(mGenes.genes().size() == 1)
+            return Lists.newArrayList(mGenes.genes().get(0).GeneData.GeneId);
+
+        return mGenes.genes().stream()
+                .filter(x -> x.GeneData.GeneStart >= startPos && x.GeneData.GeneEnd <= startPos + mCurrentFragSize - 1)
+                .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
     }
 
     private boolean allocateTranscriptCounts(final TranscriptData transData, final List<TranscriptData> transDataList, long startPos)
@@ -176,7 +192,7 @@ public class ExpectedRatesGenerator
         else
             shortTrans.add(transData.TransId);
 
-        // now check whether these regions are supported by each other transcript
+        // now check whether these regions are supported by each other's transcript
         for(TranscriptData otherTransData : transDataList)
         {
             if(transData == otherTransData)
@@ -193,17 +209,18 @@ public class ExpectedRatesGenerator
 
         if(!longAndSplicedTrans.isEmpty())
         {
-            addTransComboData(transData.TransName, longAndSplicedTrans, SPLICED);
+            addTransComboData(transData.TransName, longAndSplicedTrans, Lists.newArrayList());
         }
         else
         {
-            addTransComboData(transData.TransName, shortTrans, SHORT);
+            List<String> unsplicedGenes = findUnsplicedGenes(startPos);
+            addTransComboData(transData.TransName, shortTrans, unsplicedGenes);
         }
 
         return true;
     }
 
-    private void allocateUnsplicedCounts(final List<TranscriptData> transDataList, long startPos)
+    private void allocateUnsplicedCounts(final List<TranscriptData> transDataList, long startPos, final List<String> unsplicedGenes)
     {
         List<long[]> readRegions = Lists.newArrayList();
         List<long[]> noSpliceJunctions = Lists.newArrayList();
@@ -235,29 +252,30 @@ public class ExpectedRatesGenerator
             }
         }
 
-        addTransComboData(UNSPLICED_ID, shortTrans, !shortTrans.isEmpty() ? SHORT : UNSPLICED);
+        addTransComboData(UNSPLICED_ID, shortTrans, unsplicedGenes);
     }
 
-    private void addTransComboData(final String transId, final List<Integer> transcripts, FragmentMatchType transMatchType)
+    private void addTransComboData(
+            final String transName, final List<Integer> transcripts, final List<String> unsplicedGenes)
     {
-        List<TranscriptComboData> transComboDataList = mExpectedTransComboCounts.get(transId);
+        List<TranscriptComboData> transComboDataList = mExpectedTransComboCounts.get(transName);
 
         if(transComboDataList == null)
         {
             transComboDataList = Lists.newArrayList();
-            mExpectedTransComboCounts.put(transId, transComboDataList);
+            mExpectedTransComboCounts.put(transName, transComboDataList);
         }
 
         TranscriptComboData matchingCounts = transComboDataList.stream()
-                .filter(x -> x.matches(transcripts)).findFirst().orElse(null);
+                .filter(x -> x.matches(transcripts, unsplicedGenes)).findFirst().orElse(null);
 
         if(matchingCounts == null)
         {
-            matchingCounts = new TranscriptComboData(transcripts);
+            matchingCounts = new TranscriptComboData(transcripts, unsplicedGenes);
             transComboDataList.add(matchingCounts);
         }
 
-        matchingCounts.addCounts(transMatchType, mCurrentFragFrequency);
+        matchingCounts.addCounts(mCurrentFragFrequency);
     }
 
     public FragmentMatchType generateImpliedFragment(final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
@@ -501,7 +519,7 @@ public class ExpectedRatesGenerator
         }
     }
 
-    private void formTranscriptDefinitions(final GeneReadData geneReadData)
+    private void formTranscriptDefinitions()
     {
         collectCategories();
 
@@ -521,30 +539,20 @@ public class ExpectedRatesGenerator
 
             for(TranscriptComboData tcData : transCounts)
             {
-                final String transKey = !tcData.getTranscriptIds().isEmpty() ? tcData.getTranscriptsKey() : UNSPLICED_ID;
+                final String transKey = tcData.combinedKey();
+                int fragmentCount = tcData.fragmentCount();
 
-                final int[] counts = tcData.getCounts();
-
-                for(int i = 0; i < counts.length; ++i)
+                if(fragmentCount > 0)
                 {
-                    double catCount = counts[i];
+                    int categoryId = mCurrentExpRatesData.getCategoryIndex(transKey);
 
-                    if(catCount > 0)
+                    if(categoryId < 0)
                     {
-                        final String categoryStr = formCategory(transKey, FragmentMatchType.intAsType(i));
-                        int categoryId = mCurrentExpRatesData.getCategoryIndex(categoryStr);
-
-                        if(categoryId < 0)
-                        {
-                            ISF_LOGGER.error("invalid category index from transKey({})", transKey);
-                            return;
-                        }
-
-                        // if(i != TC_SPLICED)
-                        //    catCount *= mConfig.UnsplicedWeight;
-
-                        categoryCounts[categoryId] = catCount;
+                        ISF_LOGGER.error("invalid category index from transKey({})", transKey);
+                        return;
                     }
+
+                    categoryCounts[categoryId] = fragmentCount;
                 }
             }
 
@@ -556,10 +564,9 @@ public class ExpectedRatesGenerator
         mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
 
         if(mConfig.WriteExpectedRates)
-            writeExpectedRates(mExpRateWriter, geneReadData,mCurrentExpRatesData);
+            writeExpectedRates(mExpRateWriter, mCurrentExpRatesData);
     }
 
-    private static final String UNSPLICED_STR = "UNSPLC";
     public static final int UNSPLICED_CAT_INDEX = 0;
 
     private void collectCategories()
@@ -570,30 +577,15 @@ public class ExpectedRatesGenerator
         {
             for(TranscriptComboData tcData : entry.getValue())
             {
-                boolean hasTrans = !tcData.getTranscriptIds().isEmpty();
-                final String transKey = hasTrans ? tcData.getTranscriptsKey() : UNSPLICED_ID;
+                final String transKey = tcData.combinedKey();
+                int fragmentCount = tcData.fragmentCount();
 
-                if(tcData.getShortCount() > 0)
-                {
-                    mCurrentExpRatesData.addCategory(formCategory(transKey, SHORT));
-                }
-
-                if(tcData.getSplicedCount() > 0)
+                if(fragmentCount > 0)
                 {
                     mCurrentExpRatesData.addCategory(transKey);
                 }
             }
         }
-    }
-
-    public static String formCategory(final String transKey, FragmentMatchType countsType)
-    {
-        if(countsType == SHORT)
-            return String.format("%s-%s", transKey, UNSPLICED_STR);
-        else if(countsType == SPLICED)
-            return transKey;
-        else
-            return UNSPLICED_ID;
     }
 
     public void setFragmentLengthData(int length, int frequency)
@@ -624,7 +616,7 @@ public class ExpectedRatesGenerator
             }
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,TransId,Category,Rate");
+            writer.write("GeneSetId,TransId,Category,Rate");
             writer.newLine();
             return writer;
         }
@@ -636,7 +628,7 @@ public class ExpectedRatesGenerator
     }
 
     private synchronized static void writeExpectedRates(
-            final BufferedWriter writer, final GeneReadData geneReadData, final ExpectedRatesData expExpData)
+            final BufferedWriter writer, final ExpectedRatesData expExpData)
     {
         if(writer == null)
             return;
@@ -649,9 +641,6 @@ public class ExpectedRatesGenerator
             final SigMatrix transcriptDefinitions = expExpData.getTranscriptDefinitions();
             final List<String> categories = expExpData.Categories;
             final List<String> transcriptIds = expExpData.TranscriptIds;
-
-            final String geneId = geneReadData.GeneData.GeneId;
-            final String geneName = geneReadData.GeneData.GeneName;
 
             for(int i = 0; i < transcriptDefinitions.Cols; ++i)
             {
@@ -666,8 +655,8 @@ public class ExpectedRatesGenerator
                     if(expRate < 0.0001)
                         continue;
 
-                    writer.write(String.format("%s,%s,%s,%s,%.4f",
-                            geneId, geneName, transcriptId, category, expRate));
+                    writer.write(String.format("%s,%s,%s,%.4f",
+                            expExpData.Id, transcriptId, category, expRate));
                     writer.newLine();
                 }
             }

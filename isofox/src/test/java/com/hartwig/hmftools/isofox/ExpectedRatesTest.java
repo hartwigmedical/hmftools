@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
-import static com.hartwig.hmftools.isofox.common.TranscriptComboData.findMatchingData;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.UNSPLICED_ID;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -20,8 +19,9 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.common.TranscriptComboData;
+import com.hartwig.hmftools.isofox.exp_rates.TranscriptComboData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectationMaxFit;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
@@ -267,7 +267,9 @@ public class ExpectedRatesTest
         geneReadData.setTranscripts(transcripts);
         geneReadData.generateRegions();
 
-        expRatesCalc.generateExpectedRates(geneReadData);
+        GeneCollection genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
+
+        expRatesCalc.generateExpectedRates(genes);
 
         Map<String,List<TranscriptComboData>> transComboData = expRatesCalc.getTransComboData();
         assertEquals(2, transComboData.size());
@@ -275,28 +277,35 @@ public class ExpectedRatesTest
         assertTrue(transComboData.containsKey(UNSPLICED_ID));
 
         List<TranscriptComboData> tcDataList = transComboData.get(transName);
-        assertEquals(1, tcDataList.size());
+        assertEquals(2, tcDataList.size());
 
         List<Integer> tranIds = Lists.newArrayList(transId);
+        List<String> unsplicedGenes = Lists.newArrayList(geneId);
 
-        TranscriptComboData tcData = findMatchingData(tranIds, tcDataList);
+        TranscriptComboData tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(90, tcData.getShortCount());
-        assertEquals(58, tcData.getSplicedCount());
+        assertEquals(90, tcData.fragmentCount());
+
+        tcData = findMatchingData(tranIds, Lists.newArrayList(), tcDataList);
+        assertEquals(58, tcData.fragmentCount());
 
         tcDataList = transComboData.get(UNSPLICED_ID);
         assertEquals(2, tcDataList.size());
 
-        tcData = findMatchingData(tranIds, tcDataList);
+        tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(87, tcData.getShortCount());
-        assertEquals(0, tcData.getSplicedCount());
+        assertEquals(87, tcData.fragmentCount());
 
         tranIds.clear();
-        tcData = findMatchingData(tranIds, tcDataList);
+        tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(196, tcData.getUnsplicedCount());
-        assertEquals(tcData.getUnsplicedCount(), tcData.totalCount());
+        assertEquals(196, tcData.fragmentCount());
+    }
+
+    private static TranscriptComboData findMatchingData(
+            final List<Integer> transcripts, final List<String> unsplicedGenes, final List<TranscriptComboData> dataList)
+    {
+        return dataList.stream().filter(x -> x.matches(transcripts, unsplicedGenes)).findFirst().orElse(null);
     }
 
     @Test
@@ -340,6 +349,8 @@ public class ExpectedRatesTest
         geneReadData.setTranscripts(transcripts);
         geneReadData.generateRegions();
 
+        GeneCollection genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
+
         List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
         assertEquals(5, commonExonicRegions.size());
         assertEquals(100, commonExonicRegions.get(0)[SE_START]);
@@ -353,7 +364,7 @@ public class ExpectedRatesTest
         assertEquals(900, commonExonicRegions.get(4)[SE_START]);
         assertEquals(1000, commonExonicRegions.get(4)[SE_END]);
 
-        expRatesCalc.generateExpectedRates(geneReadData);
+        expRatesCalc.generateExpectedRates(genes);
 
         Map<String,List<TranscriptComboData>> transComboData = expRatesCalc.getTransComboData();
         assertEquals(3, transComboData.size());
@@ -362,46 +373,54 @@ public class ExpectedRatesTest
         assertTrue(transComboData.containsKey(UNSPLICED_ID));
 
         List<TranscriptComboData> tcDataList = transComboData.get(transName1);
-        assertEquals(2, tcDataList.size());
+        assertEquals(4, tcDataList.size());
 
         List<Integer> tranIds = Lists.newArrayList(transId1);
+        List<String> unsplicedGenes = Lists.newArrayList(geneId);
 
-        TranscriptComboData tcData = findMatchingData(tranIds, tcDataList);
+        // short trans 1 or unspliced
+        TranscriptComboData tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getShortCount() > 0);
-        assertTrue(tcData.getSplicedCount() > 0);
-        assertEquals(tcData.getSplicedCount() + tcData.getShortCount(), tcData.totalCount());
+        assertTrue(tcData.fragmentCount() > 0);
 
+        // only spliced trans 1
+        tcData = findMatchingData(tranIds, Lists.newArrayList(), tcDataList);
+        assertTrue(tcData != null);
+        assertTrue(tcData.fragmentCount() > 0);
+
+        // short trans 1 or 2 or unspliced
         tranIds = Lists.newArrayList(transId1, transId2);
-        tcData = findMatchingData(tranIds, tcDataList);
+        tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getShortCount() > 0);
-        assertTrue(tcData.getSplicedCount() > 0);
+        assertTrue(tcData.fragmentCount() > 0);
+
+        // trans 1 or 2 spliced
+        tranIds = Lists.newArrayList(transId1, transId2);
+        tcData = findMatchingData(tranIds, Lists.newArrayList(), tcDataList);
+        assertTrue(tcData != null);
+        assertTrue(tcData.fragmentCount() > 0);
 
         tcDataList = transComboData.get(transName2);
-        assertEquals(2, tcDataList.size());
+        assertEquals(4, tcDataList.size());
 
         tranIds = Lists.newArrayList(transId2);
 
-        tcData = findMatchingData(tranIds, tcDataList);
+        tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getShortCount() > 0);
-        assertTrue(tcData.getSplicedCount() > 0);
+        assertTrue(tcData.fragmentCount() > 0);
 
         tranIds = Lists.newArrayList(transId1, transId2);
-        tcData = findMatchingData(tranIds, tcDataList);
+        tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getShortCount() > 0);
-        assertTrue(tcData.getSplicedCount() > 0);
+        assertTrue(tcData.fragmentCount() > 0);
 
         tcDataList = transComboData.get(UNSPLICED_ID);
         assertEquals(4, tcDataList.size());
 
         tranIds.clear();
-        tcData = findMatchingData(tranIds, tcDataList);
+        tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertTrue(tcData.getUnsplicedCount() > 0);
-        assertEquals(tcData.getUnsplicedCount(), tcData.totalCount());
+        assertTrue(tcData.fragmentCount() > 0);
     }
 
     @Test
@@ -432,7 +451,10 @@ public class ExpectedRatesTest
 
         geneReadData.setTranscripts(transcripts);
         geneReadData.generateRegions();
-        expRatesCalc.generateExpectedRates(geneReadData);
+
+        GeneCollection genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
+
+        expRatesCalc.generateExpectedRates(genes);
 
         Map<String,List<TranscriptComboData>> transComboData = expRatesCalc.getTransComboData();
         assertEquals(2, transComboData.size());
@@ -468,12 +490,14 @@ public class ExpectedRatesTest
         geneReadData.setTranscripts(transcripts);
         geneReadData.generateRegions();
 
+        genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
+
         List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
         assertEquals(1, commonExonicRegions.size());
         assertEquals(100, commonExonicRegions.get(0)[SE_START]);
         assertEquals(400, commonExonicRegions.get(0)[SE_END]);
 
-        expRatesCalc.generateExpectedRates(geneReadData);
+        expRatesCalc.generateExpectedRates(genes);
 
         transComboData = expRatesCalc.getTransComboData();
         assertEquals(3, transComboData.size());

@@ -260,7 +260,7 @@ public class ReadCountsTest
         String geneId = "GENE01";
 
         TranscriptData transData1 = new TranscriptData(transId1, transName1, geneId, true, (byte) 1,
-                100, 300, null, null, "");
+                1000, 5000, null, null, "");
 
         transData1.exons().add(new ExonData(transId1, 1000, 1200, 1, -1, -1));
         transData1.exons().add(new ExonData(transId1, 2000, 2500, 2, -1, -1));
@@ -274,7 +274,7 @@ public class ReadCountsTest
 
         List<ReadRecord> reads = Lists.newArrayList(read1, read2);
 
-        GeneCollection geneSet = new GeneCollection(Lists.newArrayList(geneReadData));
+        GeneCollection geneSet = new GeneCollection(0, Lists.newArrayList(geneReadData));
         bamReader.processReadRecords(geneSet, reads);
 
         int[] geneCounts = geneReadData.getCounts();

@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class GeneCollection
 {
+    private final int mId;
     private final List<GeneReadData> mGenes;
     private final String mChromosome;
     private final long[] mRegionBounds;
@@ -37,14 +38,12 @@ public class GeneCollection
     private final Map<String,Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
     private double mFitResiduals;
 
-    public GeneCollection(final List<GeneReadData> genes)
+    public GeneCollection(int id, final List<GeneReadData> genes)
     {
+        mId = id;
         mGenes = genes;
 
         mRegionBounds = new long[SE_PAIR];
-
-        mRegionBounds[SE_START] = genes.stream().mapToLong(x -> x.GeneData.GeneStart).min().orElse(0);
-        mRegionBounds[SE_END] = genes.stream().mapToLong(x -> x.GeneData.GeneEnd).max().orElse(0);
 
         mChromosome = genes.get(0).GeneData.Chromosome;
 
@@ -61,6 +60,8 @@ public class GeneCollection
         mFitResiduals = 0;
     }
 
+    public int id() { return mId; }
+    public String chrId() { return String.format("%s:%d", mChromosome, mId); }
     public final String chromosome() { return mChromosome; }
     public final List<GeneReadData> genes() { return mGenes; }
     public final long[] regionBounds() { return mRegionBounds; }
@@ -102,6 +103,9 @@ public class GeneCollection
             {
                 mTransIdsGeneMap.put(transData.TransId, gene);
                 mTranscripts.add(transData);
+
+                mRegionBounds[SE_START] = mRegionBounds[SE_START] == 0 ? transData.TransStart : min(mRegionBounds[SE_START], transData.TransStart);
+                mRegionBounds[SE_END] = max(mRegionBounds[SE_END], transData.TransEnd);
             }
 
             generateExonicRegions(mChromosome, mExonRegions, gene.getTranscripts());

@@ -22,7 +22,6 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.validRegionMatchType
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -51,7 +50,7 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
-import com.hartwig.hmftools.isofox.common.TranscriptComboData;
+import com.hartwig.hmftools.isofox.exp_rates.TranscriptComboData;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
@@ -456,7 +455,10 @@ public class GeneBamReader
                 processValidTranscript(transId, read2, processedRegions, isUniqueTrans);
             }
 
-            addTransComboData(validTranscripts, comboTransMatchType);
+            List<String> unsplicedGeneIds = comboTransMatchType == FragmentMatchType.SHORT ?
+                    overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
+
+            addTransComboData(validTranscripts, unsplicedGeneIds);
         }
 
         for(GeneReadData gene : overlapGenes)
@@ -476,18 +478,18 @@ public class GeneBamReader
 
     public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
 
-    private void addTransComboData(final List<Integer> transcripts, FragmentMatchType transMatchType)
+    private void addTransComboData(final List<Integer> transcripts, final List<String> geneIds)
     {
         TranscriptComboData transComboCounts = mTransComboData.stream()
-                .filter(x -> x.matches(transcripts)).findFirst().orElse(null);
+                .filter(x -> x.matches(transcripts, geneIds)).findFirst().orElse(null);
 
         if(transComboCounts == null)
         {
-            transComboCounts = new TranscriptComboData(transcripts);
+            transComboCounts = new TranscriptComboData(transcripts, geneIds);
             mTransComboData.add(transComboCounts);
         }
 
-        transComboCounts.addCounts(transMatchType, 1);
+        transComboCounts.addCounts(1);
     }
 
     private void processValidTranscript(
@@ -546,6 +548,10 @@ public class GeneBamReader
             mAltSpliceJunctionFinder.evaluateFragmentReads(genes, read1, read2, Lists.newArrayList());
             return;
         }
+
+        List<String> unsplicedGeneIds = genes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+
+        addTransComboData(Lists.newArrayList(), unsplicedGeneIds);
 
         genes.forEach(x -> x.addCount(UNSPLICED, 1));
     }
