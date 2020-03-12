@@ -620,6 +620,14 @@ public class ReadRecord
 
     public final Map<RegionReadData,RegionMatchType> getMappedRegions() { return mMappedRegions; }
 
+    public static List<RegionReadData> findOverlappingRegions(final List<RegionReadData> regions, final ReadRecord read)
+    {
+        return regions.stream()
+                .filter(x -> read.overlapsMappedReads(x.PosStart, x.PosEnd))
+                .collect(Collectors.toList());
+    }
+
+
     public final Map<Integer,TransMatchType> getTranscriptClassifications() { return mTranscriptClassification; }
 
     public TransMatchType getTranscriptClassification(int transId)

@@ -16,10 +16,15 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class RegionReadData implements Comparable< RegionReadData>
 {
-    public GenomeRegion Region;
+    public final String Chromosome;
+    public final long PosStart;
+    public final long PosEnd;
 
     private final List<TransExonRef> mTransExonRefs; // identifiers for this region, eg transcript & exon
 
@@ -33,9 +38,16 @@ public class RegionReadData implements Comparable< RegionReadData>
     private List<RegionReadData> mPreRegions; // references to adjacent regions with a lower position
     private List<RegionReadData> mPostRegions;
 
-    public RegionReadData(final GenomeRegion region)
+    public RegionReadData from(final GenomeRegion region)
     {
-        Region = region;
+        return new RegionReadData(region.chromosome(), region.start(), region.end());
+    }
+
+    public RegionReadData(final String chromosome, long posStart, long posEnd)
+    {
+        Chromosome = chromosome;
+        PosStart = posStart;
+        PosEnd = posEnd;
 
         mTransExonRefs = Lists.newArrayList();
 
@@ -48,9 +60,8 @@ public class RegionReadData implements Comparable< RegionReadData>
         mTranscriptJunctionCounts = Maps.newHashMap();
     }
 
-    public String chromosome() { return Region.chromosome(); }
-    public long start() { return Region.start(); }
-    public long end() { return Region.end(); }
+    public long start() { return PosStart; }
+    public long end() { return PosEnd; }
 
     public static final int NO_EXON = -1;
 
@@ -251,7 +262,7 @@ public class RegionReadData implements Comparable< RegionReadData>
         int reads = mTranscriptReadCounts.values().stream().mapToInt(x -> x[TRANS_COUNT]).sum();
 
         return String.format("%s %s:%d -> %d refs(%d) %s",
-                !mTransExonRefs.isEmpty() ? mTransExonRefs.get(0) : "unknown", chromosome(), start(), end(), mTransExonRefs.size(),
+                !mTransExonRefs.isEmpty() ? mTransExonRefs.get(0) : "unknown", Chromosome, PosStart, PosEnd, mTransExonRefs.size(),
                 mRefBases != null ? String.format("reads(%d sj=%d)",reads, sjReads) : "intron");
     }
 
@@ -261,6 +272,50 @@ public class RegionReadData implements Comparable< RegionReadData>
         {
             for (int i = 0; i < mRefBasesMatched.length; ++i)
                 mRefBasesMatched[i] = 0;
+        }
+    }
+
+    public static boolean regionExists(final List<RegionReadData> regions, long posStart, long posEnd)
+    {
+        return regions.stream().anyMatch(x -> x.PosStart == posStart && x.PosEnd == posEnd);
+    }
+
+    public static RegionReadData findExonRegion(final List<RegionReadData> regions, long posStart, long posEnd)
+    {
+        return regions.stream()
+                .filter(x -> x.PosStart == posStart && x.PosEnd == posEnd)
+                .findFirst().orElse(null);
+    }
+
+    public static void generateExonicRegions(final String chromosome, final List<RegionReadData> regions, final List<TranscriptData> transcripts)
+    {
+        // form a genomic region for each unique exon amongst the transcripts
+        for(final TranscriptData transData : transcripts)
+        {
+            RegionReadData prevRegionReadData = null;
+
+            for(int i = 0; i < transData.exons().size(); ++ i)
+            {
+                ExonData exon = transData.exons().get(i);
+
+                RegionReadData exonReadData = findExonRegion(regions, exon.ExonStart, exon.ExonEnd);
+
+                if (exonReadData == null)
+                {
+                    exonReadData = new RegionReadData(chromosome, exon.ExonStart, exon.ExonEnd);
+                    regions.add(exonReadData);
+                }
+
+                exonReadData.addExonRef(transData.TransId, transData.TransName, exon.ExonRank);
+
+                if(prevRegionReadData != null)
+                {
+                    prevRegionReadData.addPostRegion(exonReadData);
+                    exonReadData.addPreRegion(prevRegionReadData);
+                }
+
+                prevRegionReadData = exonReadData;
+            }
         }
     }
 

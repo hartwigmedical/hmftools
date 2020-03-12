@@ -1,16 +1,11 @@
 package com.hartwig.hmftools.isofox;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.GeneReadData.markOverlappingGeneRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.createTranscriptResults;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -132,31 +127,29 @@ public class ChromosomeGeneTask implements Callable
 
             GeneCollection geneCollection = new GeneCollection(geneReadDataList);
 
-            for (GeneReadData geneReadData : geneReadDataList)
+            mPerfCounters[PERF_TOTAL].start();
+
+            // at the moment it is one or the other
+            if(generateExpRatesOnly)
             {
-                mPerfCounters[PERF_TOTAL].start();
+                // FIXME
+                // generateExpectedTransRates(geneReadData);
+            }
+            else
+            {
+                analyseBamReads(geneCollection);
+            }
 
-                // at the moment it is one or the other
-                if(generateExpRatesOnly)
-                {
-                    generateExpectedTransRates(geneReadData);
-                }
-                else
-                {
-                    analyseBamReads(geneReadData);
-                }
+            mPerfCounters[PERF_TOTAL].stop();
 
-                mPerfCounters[PERF_TOTAL].stop();
+            ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
+                    mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
-                ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
-                        mChromosome, geneReadData.name(), mCurrentGeneIndex, mGeneDataList.size());
+            ++mGenesProcessed;
 
-                ++mGenesProcessed;
-
-                if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
-                {
-                    ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
-                }
+            if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
+            {
+                ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
             }
         }
 
@@ -218,12 +211,10 @@ public class ChromosomeGeneTask implements Callable
 
             geneReadData.setTranscripts(transDataList);
 
-            geneReadData.generateExonicRegions();
+            geneReadData.generateRegions();
 
             geneReadDataList.add(geneReadData);
         }
-
-        markOverlappingGeneRegions(geneReadDataList, false);
 
         return geneReadDataList;
     }
@@ -233,38 +224,40 @@ public class ChromosomeGeneTask implements Callable
         mExpRatesGenerator.generateExpectedRates(geneReadData);
     }
 
-    private void analyseBamReads(final GeneReadData geneReadData)
+    private void analyseBamReads(final GeneCollection geneCollection)
     {
         // cache reference bases for comparison with read bases
         if(mConfig.RefFastaSeqFile != null)
         {
-            for (RegionReadData region : geneReadData.getExonRegions())
+            for(GeneReadData geneReadData : geneCollection.genes())
             {
-                final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
-                        region.chromosome(), region.start(), region.end()).getBaseString();
+                for (RegionReadData region : geneReadData.getExonRegions())
+                {
+                    final String regionRefBases = mConfig.RefFastaSeqFile.getSubsequenceAt(
+                            region.Chromosome, region.PosStart, region.PosEnd).getBaseString();
 
-                region.setRefBases(regionRefBases);
+                    region.setRefBases(regionRefBases);
+                }
+
+                findUniqueBases(geneReadData.getExonRegions());
             }
-
-            findUniqueBases(geneReadData.getExonRegions());
         }
 
         // use a buffer around the gene to pick up reads which span outside its transcripts
-        long regionStart = geneReadData.getTranscriptsRange()[SE_START] - GENE_FRAGMENT_BUFFER;
-        long regionEnd = geneReadData.getTranscriptsRange()[SE_END] + GENE_FRAGMENT_BUFFER;
-
-        final EnsemblGeneData geneData = geneReadData.GeneData;
+        long regionStart = geneCollection.regionBounds()[SE_START] - GENE_FRAGMENT_BUFFER;
+        long regionEnd = geneCollection.regionBounds()[SE_END] + GENE_FRAGMENT_BUFFER;
 
         if(regionStart >= regionEnd)
         {
-            ISF_LOGGER.warn("invalid gene({}:{}) region({} -> {})", geneData.GeneId, geneData.GeneName, regionStart, regionEnd);
+            ISF_LOGGER.warn("invalid geneCollection(first={} genes={}) region({} -> {})",
+                    geneCollection.genes().get(0).name(), regionStart, regionEnd);
             return;
         }
 
-        GenomeRegion geneRegion = GenomeRegions.create(geneData.Chromosome, regionStart, regionEnd);
+        GenomeRegion geneRegion = GenomeRegions.create(geneCollection.chromosome(), regionStart, regionEnd);
 
         mPerfCounters[PERF_READS].start();
-        mBamReader.readBamCounts(geneReadData, geneRegion);
+        mBamReader.readBamCounts(geneCollection, geneRegion);
         mPerfCounters[PERF_READS].stop();
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].start();
@@ -277,6 +270,7 @@ public class ChromosomeGeneTask implements Callable
 
             mPerfCounters[PERF_FIT].start();
 
+            /* FIXME
             if(mExpRatesGenerator != null)
             {
                 generateExpectedTransRates(geneReadData);
@@ -284,22 +278,31 @@ public class ChromosomeGeneTask implements Callable
             }
 
             mExpTransRates.runTranscriptEstimation(geneReadData, mBamReader.getTransComboData(), expRatesData);
+            */
 
             mPerfCounters[PERF_FIT].stop();
         }
 
-        cacheResults(geneReadData);
-
-        if (mConfig.WriteExonData)
+        for(GeneReadData geneReadData : geneCollection.genes())
         {
-            geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
+            cacheResults(geneReadData);
+
+            if (mConfig.WriteExonData)
+            {
+                geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
+            }
+
+            if(mFragmentSizeCalc != null && mConfig.FragmentLengthsByGene)
+            {
+                mFragmentSizeCalc.writeFragmentLengths(geneReadData.GeneData);
+            }
+
+            if(mConfig.WriteReadGcRatios)
+            {
+                writeReadGcRatioCounts(
+                        mResultsWriter.getReadGcRatioWriter(), geneReadData.GeneData, mBamReader.getGcRatioCounts().getGeneRatioCounts());
+            }
         }
-
-        if(mFragmentSizeCalc != null && mConfig.FragmentLengthsByGene)
-            mFragmentSizeCalc.writeFragmentLengths(geneData);
-
-        if(mConfig.WriteReadGcRatios)
-            writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), geneData, mBamReader.getGcRatioCounts().getGeneRatioCounts());
     }
 
     private void cacheResults(final GeneReadData geneReadData)

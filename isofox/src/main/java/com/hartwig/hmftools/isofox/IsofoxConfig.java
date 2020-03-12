@@ -296,7 +296,7 @@ public class IsofoxConfig
         UnsplicedWeight = 1;
         ExpRatesFile = null;
 
-        WriteTransData = false;
+        WriteTransData = true;
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;

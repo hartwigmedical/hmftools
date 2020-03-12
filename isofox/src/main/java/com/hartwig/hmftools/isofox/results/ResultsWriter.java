@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -218,7 +219,7 @@ public class ResultsWriter
             {
                 ExonData exon = exons.get(i);
 
-                final RegionReadData exonReadData = geneReadData.findExonRegion(exon.ExonStart, exon.ExonEnd);
+                final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.ExonStart, exon.ExonEnd);
                 if (exonReadData == null)
                     continue;
 

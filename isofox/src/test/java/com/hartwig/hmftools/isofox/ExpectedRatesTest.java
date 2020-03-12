@@ -265,7 +265,7 @@ public class ExpectedRatesTest
         List<TranscriptData> transcripts = Lists.newArrayList(transData);
 
         geneReadData.setTranscripts(transcripts);
-        geneReadData.generateExonicRegions();
+        geneReadData.generateRegions();
 
         expRatesCalc.generateExpectedRates(geneReadData);
 
@@ -338,7 +338,7 @@ public class ExpectedRatesTest
         List<TranscriptData> transcripts = Lists.newArrayList(transData1, transData2);
 
         geneReadData.setTranscripts(transcripts);
-        geneReadData.generateExonicRegions();
+        geneReadData.generateRegions();
 
         List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
         assertEquals(5, commonExonicRegions.size());
@@ -431,7 +431,7 @@ public class ExpectedRatesTest
         List<TranscriptData> transcripts = Lists.newArrayList(transData1);
 
         geneReadData.setTranscripts(transcripts);
-        geneReadData.generateExonicRegions();
+        geneReadData.generateRegions();
         expRatesCalc.generateExpectedRates(geneReadData);
 
         Map<String,List<TranscriptComboData>> transComboData = expRatesCalc.getTransComboData();
@@ -466,7 +466,7 @@ public class ExpectedRatesTest
         transcripts = Lists.newArrayList(transData1, transData2);
 
         geneReadData.setTranscripts(transcripts);
-        geneReadData.generateExonicRegions();
+        geneReadData.generateRegions();
 
         List<long[]> commonExonicRegions = geneReadData.getCommonExonicRegions();
         assertEquals(1, commonExonicRegions.size());

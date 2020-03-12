@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.results;
 
 import static com.hartwig.hmftools.isofox.common.GeneReadData.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.util.List;
@@ -69,7 +70,7 @@ public abstract class TranscriptResult
         {
             ExonData exon = exons.get(i);
 
-            final RegionReadData exonReadData = geneReadData.findExonRegion(exon.ExonStart, exon.ExonEnd);
+            final RegionReadData exonReadData = findExonRegion(geneReadData.getExonRegions(), exon.ExonStart, exon.ExonEnd);
             if(exonReadData == null)
                 continue;
 

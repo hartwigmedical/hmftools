@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -23,7 +24,7 @@ import com.hartwig.hmftools.isofox.common.TransMatchType;
 
 public class RetainedIntronFinder
 {
-    private GeneReadData mGene;
+    private GeneCollection mGenes;
     private final List<RetainedIntron> mRetainedIntrons;
     private final BufferedWriter mWriter;
 
@@ -34,23 +35,23 @@ public class RetainedIntronFinder
     {
         mRetainedIntrons = Lists.newArrayList();
         mWriter = writer;
-        mGene = null;
+        mGenes = null;
     }
 
-    public void setGeneData(final GeneReadData gene)
+    public void setGeneData(final GeneCollection genes)
     {
-        mGene = gene;
+        mGenes = genes;
         mRetainedIntrons.clear();
     }
 
     public final List<RetainedIntron> getRetainedIntrons() { return mRetainedIntrons; }
 
-    public long[] getPositionsRange()
+    public int[] getPositionsRange()
     {
-        long[] positionsRange = new long[SE_PAIR];
+        int[] positionsRange = new int[SE_PAIR];
 
-        positionsRange[SE_START] = mRetainedIntrons.stream().mapToLong(x -> x.position()).min().orElse(mGene.GeneData.GeneStart);
-        positionsRange[SE_END] = mRetainedIntrons.stream().mapToLong(x -> x.position()).max().orElse(mGene.GeneData.GeneEnd);
+        positionsRange[SE_START] = mRetainedIntrons.stream().mapToInt(x -> (int)x.position()).min().orElse(-1);
+        positionsRange[SE_END] = mRetainedIntrons.stream().mapToInt(x -> (int)x.position()).max().orElse(-1);
 
         return positionsRange;
     }
@@ -99,7 +100,7 @@ public class RetainedIntronFinder
              {
                  if(retIntron1.regions().stream().anyMatch(x -> retIntron2.regions().contains(x)))
                  {
-                     ISF_LOGGER.debug("reads({}) support the same exon from exon-intron reads", read1.Id);
+                     ISF_LOGGER.trace("reads({}) support the same exon from exon-intron reads", read1.Id);
                      return;
                  }
              }
@@ -195,9 +196,9 @@ public class RetainedIntronFinder
         if(candidateRegions.isEmpty())
             return null;
 
-        RetainedIntron retIntron = new RetainedIntron(mGene.GeneData, candidateRegions, spannedIsStart);
+        RetainedIntron retIntron = new RetainedIntron(candidateRegions, spannedIsStart);
 
-        ISF_LOGGER.debug("retained intron({}) supported by read({})", retIntron, read);
+        ISF_LOGGER.trace("retained intron({}) supported by read({})", retIntron, read);
 
         return retIntron;
     }
@@ -249,11 +250,12 @@ public class RetainedIntronFinder
     {
         if(mWriter != null)
         {
-            writeRetainedIntrons(mWriter, mRetainedIntrons);
+            writeRetainedIntrons(mWriter, mRetainedIntrons, mGenes.genes());
         }
     }
 
-    private synchronized static void writeRetainedIntrons(final BufferedWriter writer, final List<RetainedIntron> retainedIntrons)
+    private synchronized static void writeRetainedIntrons(
+            final BufferedWriter writer, final List<RetainedIntron> retainedIntrons, final List<GeneReadData> genes)
     {
         try
         {
@@ -262,17 +264,23 @@ public class RetainedIntronFinder
                 if(retIntron.getFragmentCount() < MIN_FRAG_COUNT && retIntron.getSplicedFragmentCount() < MIN_SPLICED_FRAG_COUNT)
                     continue;
 
-                writer.write(String.format("%s,%s,%s,%d",
-                        retIntron.GeneData.GeneId,  retIntron.GeneData.GeneName,
-                        retIntron.GeneData.Chromosome, retIntron.GeneData.Strand));
+                for(final GeneReadData gene : genes)
+                {
+                    // log if the gene can be linked to one of the transcripts
+                    if(!gene.getTranscripts().stream().anyMatch(x -> retIntron.regions().stream().anyMatch(y -> y.hasTransId(x.TransId))))
+                        continue;
 
-                writer.write(String.format(",%d,%s,%d,%d,%d,%s",
-                        retIntron.position(), retIntron.type(), retIntron.getFragmentCount(),
-                        retIntron.getSplicedFragmentCount(), retIntron.getDepth(), retIntron.transcriptInfo()));
+                    writer.write(String.format("%s,%s,%s,%d",
+                            gene.GeneData.GeneId, gene.GeneData.GeneName,
+                            gene.GeneData.Chromosome, gene.GeneData.Strand));
 
-                writer.newLine();
+                    writer.write(String.format(",%d,%s,%d,%d,%d,%s",
+                            retIntron.position(), retIntron.type(gene.GeneData.forwardStrand()), retIntron.getFragmentCount(),
+                            retIntron.getSplicedFragmentCount(), retIntron.getDepth(), retIntron.transcriptInfo()));
+
+                    writer.newLine();
+                }
             }
-
         }
         catch(IOException e)
         {

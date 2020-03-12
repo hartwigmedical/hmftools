@@ -11,8 +11,6 @@ import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class RetainedIntron
 {
-    public final EnsemblGeneData GeneData;
-
     private final List<RegionReadData> mRegions;
     private final boolean mIsStart;
     private final long mPosition;
@@ -23,9 +21,8 @@ public class RetainedIntron
 
     private final String mTranscriptInfo;
 
-    public RetainedIntron(final EnsemblGeneData geneData, final List<RegionReadData> regions, boolean isStart)
+    public RetainedIntron(final List<RegionReadData> regions, boolean isStart)
     {
-        GeneData = geneData;
         mRegions = regions;
         mIsStart = isStart;
 
@@ -52,7 +49,7 @@ public class RetainedIntron
     public boolean isStart() { return mIsStart; }
     public long position() { return mPosition; }
 
-    public String type() { return (GeneData.forwardStrand() == mIsStart) ? "ACCEPTOR" : "DONOR"; }
+    public String type(boolean isForwardStrand) { return (isForwardStrand == mIsStart) ? "ACCEPTOR" : "DONOR"; }
 
     public String transcriptInfo() { return mTranscriptInfo; }
 

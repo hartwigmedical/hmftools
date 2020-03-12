@@ -27,7 +27,10 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneMatchType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -50,7 +53,7 @@ public class ReadCountsTest
         String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST"; // currently unused
 
         // single read and exon
-        RegionReadData region = new RegionReadData(GenomeRegions.create("1", 100, 200));
+        RegionReadData region = new RegionReadData("1", 100, 200);
 
         // read covers part of the exon
         ReadRecord read = createReadRecord(1, "1", 110, 130, REF_BASE_STR_1, createCigar(0, 21, 0));
@@ -89,9 +92,9 @@ public class ReadCountsTest
         assertEquals(180, read.getMappedRegionCoords().get(2)[SE_START]);
         assertEquals(204, read.getMappedRegionCoords().get(2)[SE_END]);
 
-        RegionReadData region1 = new RegionReadData(GenomeRegions.create("1", 100, 120));
-        RegionReadData region2 = new RegionReadData(GenomeRegions.create("1", 140, 160));
-        RegionReadData region3 = new RegionReadData(GenomeRegions.create("1", 180, 200));
+        RegionReadData region1 = new RegionReadData("1", 100, 120);
+        RegionReadData region2 = new RegionReadData("1", 140, 160);
+        RegionReadData region3 = new RegionReadData("1", 180, 200);
 
         assertEquals(EXON_BOUNDARY, read.getRegionMatchType(region1));
         assertEquals(EXON_MATCH, read.getRegionMatchType(region2));
@@ -102,9 +105,9 @@ public class ReadCountsTest
     public void testUnmappedSpliceJunctions()
     {
         // soft-clipping at one end
-        RegionReadData region1 = new RegionReadData(GenomeRegions.create("1", 141, 150));
+        RegionReadData region1 = new RegionReadData("1", 141, 150);
         region1.setRefBases(REF_BASE_STR_1.substring(0, 10));
-        RegionReadData region2 = new RegionReadData(GenomeRegions.create("1", 200, 209));
+        RegionReadData region2 = new RegionReadData("1", 200, 209);
         region2.setRefBases(REF_BASE_STR_1.substring(10, 19));
 
         region1.addPostRegion(region2);
@@ -123,10 +126,10 @@ public class ReadCountsTest
         // test again on the up side, with 2 different regions matching the inferred bases
         read = createReadRecord(1, "1", 141, 155, REF_BASE_STR_1.substring(0, 15), createCigar(0, 15, 0));
 
-        RegionReadData region3 = new RegionReadData(GenomeRegions.create("1", 200, 229));
+        RegionReadData region3 = new RegionReadData("1", 200, 229);
         region3.setRefBases(REF_BASE_STR_1.substring(10, 19) + REF_BASE_STR_1);
 
-        RegionReadData region4 = new RegionReadData(GenomeRegions.create("1", 121, 150));
+        RegionReadData region4 = new RegionReadData("1", 121, 150);
         region4.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
 
         region1.addPostRegion(region3);
@@ -252,21 +255,27 @@ public class ReadCountsTest
         IsofoxConfig config = new IsofoxConfig();
         GeneBamReader bamReader = GeneBamReader.from(config);
 
-        GeneReadData geneReadData = createGeneReadData("GEN01", "1", (byte) 1, 1000, 5000);
+        int transId1 = 1;
+        String transName1 = "TRANS01";
+        String geneId = "GENE01";
 
-        int trans1 = 1;
-        RegionReadData region1 = createRegion(trans1, 1, "1", 1000, 1200);
-        geneReadData.addExonRegion(region1);
-        RegionReadData region2 = createRegion(trans1, 2, "1", 2000, 2500);
-        geneReadData.addExonRegion(region2);
-        RegionReadData region3 = createRegion(trans1, 3, "1", 4500, 5000);
-        geneReadData.addExonRegion(region3);
+        TranscriptData transData1 = new TranscriptData(transId1, transName1, geneId, true, (byte) 1,
+                100, 300, null, null, "");
+
+        transData1.exons().add(new ExonData(transId1, 1000, 1200, 1, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 2000, 2500, 2, -1, -1));
+        transData1.exons().add(new ExonData(transId1, 4500, 5000, 3, -1, -1));
+
+        GeneReadData geneReadData = createGeneReadData(geneId, "1", (byte) 1, 1000, 5000);
+        geneReadData.setTranscripts(Lists.newArrayList(transData1));
 
         ReadRecord read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 10, 0));
         ReadRecord read2 = createReadRecord(1, "1", 1050, 1150, REF_BASE_STR_1, createCigar(0, 20, 0));
 
         List<ReadRecord> reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneReadData, reads);
+
+        GeneCollection geneSet = new GeneCollection(Lists.newArrayList(geneReadData));
+        bamReader.processReadRecords(geneSet, reads);
 
         int[] geneCounts = geneReadData.getCounts();
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
@@ -279,7 +288,7 @@ public class ReadCountsTest
         read2.setFragmentInsertSize(-1100);
 
         reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneReadData, reads);
+        bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(2, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(GeneMatchType.UNSPLICED)]);
@@ -293,7 +302,7 @@ public class ReadCountsTest
         geneReadData.clearCounts();
 
         reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneReadData, reads);
+        bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(GeneMatchType.UNSPLICED)]);
@@ -305,7 +314,7 @@ public class ReadCountsTest
         read2.setFragmentInsertSize(-300);
 
         reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneReadData, reads);
+        bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
 
@@ -318,7 +327,7 @@ public class ReadCountsTest
         read2.setFragmentInsertSize(-500);
 
         reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneReadData, reads);
+        bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
@@ -334,7 +343,7 @@ public class ReadCountsTest
         read2.setFragmentInsertSize(-longInsertSize);
 
         reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneReadData, reads);
+        bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
@@ -355,7 +364,7 @@ public class ReadCountsTest
 
     private RegionReadData createRegion(int trans, int exonRank, final String chromosome, long posStart, long posEnd)
     {
-        RegionReadData region = new RegionReadData(GenomeRegions.create(chromosome, posStart, posEnd));
+        RegionReadData region = new RegionReadData(chromosome, posStart, posEnd);
         region.addExonRef(trans, String.valueOf(trans), exonRank);
         return region;
     }

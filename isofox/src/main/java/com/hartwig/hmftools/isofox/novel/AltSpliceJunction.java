@@ -21,7 +21,6 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class AltSpliceJunction
 {
-    public final GeneReadData Gene;
     public final long[] SpliceJunction;
     public final List<RegionReadData> StartRegions;
     public final List<RegionReadData> EndRegions;
@@ -32,6 +31,8 @@ public class AltSpliceJunction
     private int mFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
     private final List<Integer> mCandidateTransIds;
+
+    private GeneReadData mGene;
 
     // calculated values
     private final String[] mTranscriptNames;
@@ -56,10 +57,8 @@ public class AltSpliceJunction
 
      */
 
-    public AltSpliceJunction(
-            final GeneReadData geneReadData, final long[] spliceJunction, AltSpliceJunctionType type, final String[] regionContexts)
+    public AltSpliceJunction(final long[] spliceJunction, AltSpliceJunctionType type, final String[] regionContexts)
     {
-        Gene = geneReadData;
         SpliceJunction = spliceJunction;
 
         RegionContexts = regionContexts;
@@ -68,6 +67,7 @@ public class AltSpliceJunction
         EndRegions = Lists.newArrayList();
 
         mCandidateTransIds = Lists.newArrayList();
+        mGene = null;
 
         mType = type;
 
@@ -80,9 +80,6 @@ public class AltSpliceJunction
 
     public boolean matches(final AltSpliceJunction other)
     {
-        if(!other.Gene.GeneData.GeneId.equals(Gene.GeneData.GeneId))
-            return false;
-
         return SpliceJunction[SE_START] == other.SpliceJunction[SE_START] && SpliceJunction[SE_END] == other.SpliceJunction[SE_END];
     }
 
@@ -99,6 +96,9 @@ public class AltSpliceJunction
     public String[] getTranscriptNames() { return mTranscriptNames; }
     public String[] getBaseContext() { return mBaseContext; }
     public int[] getNearestExonDistance() { return mNearestExonDistance; }
+
+    public void setGene(final GeneReadData gene) { mGene = gene; }
+    public final GeneReadData getGene() { return mGene; }
 
     public void calcSummaryData(final IndexedFastaSequenceFile RefFastaSeqFile)
     {
@@ -139,14 +139,14 @@ public class AltSpliceJunction
         */
 
         long position = SpliceJunction[seIndex];
-        boolean forwardStrand = Gene.GeneData.Strand == 1;
+        boolean forwardStrand = mGene.GeneData.Strand == 1;
         boolean isFivePrime = (seIndex == SE_START) == forwardStrand;
         boolean isExonic = RegionContexts[seIndex].equals(CONTEXT_EXONIC) || RegionContexts[seIndex].equals(CONTEXT_MIXED);
         boolean searchForwards = (isFivePrime && isExonic) || (!isFivePrime && !isExonic);
 
         int nearestBoundary = 0;
 
-        for(RegionReadData region : Gene.getExonRegions())
+        for(RegionReadData region : mGene.getExonRegions())
         {
             if(isExonic && !positionWithin(position, region.start(), region.end()))
                 continue;
@@ -186,7 +186,7 @@ public class AltSpliceJunction
         int endOffset = startOffset == 1 ? 10: 1;
 
         final String baseStr = refGenome.getSubsequenceAt(
-                Gene.GeneData.Chromosome, position - startOffset, position + endOffset).getBaseString();
+                mGene.GeneData.Chromosome, position - startOffset, position + endOffset).getBaseString();
 
         return baseStr;
     }
@@ -246,7 +246,6 @@ public class AltSpliceJunction
             if(positionWithin(SpliceJunction[SE_START], region.start(), region.end()))
             {
                 // each transcript must be present in the next region to be valid
-
                 validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
                         .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
             }
@@ -268,7 +267,7 @@ public class AltSpliceJunction
     public String toString()
     {
         return String.format("%s sj(%d - %d) context(%s - %s) type(%s) frags(%d)",
-                Gene.GeneData.GeneId, SpliceJunction[SE_START], SpliceJunction[SE_END],
+                mGene != null ? mGene.GeneData.GeneId : "unset", SpliceJunction[SE_START], SpliceJunction[SE_END],
                 RegionContexts[SE_START], RegionContexts[SE_END], mType, mFragmentCount);
     }
 
