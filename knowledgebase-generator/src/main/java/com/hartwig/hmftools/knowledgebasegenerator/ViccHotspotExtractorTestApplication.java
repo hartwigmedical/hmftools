@@ -2,8 +2,9 @@ package com.hartwig.hmftools.knowledgebasegenerator;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -13,6 +14,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.jetbrains.annotations.NotNull;
 
 public class ViccHotspotExtractorTestApplication {
 
@@ -42,11 +44,24 @@ public class ViccHotspotExtractorTestApplication {
         LOGGER.info("Read {} entries", viccEntries.size());
 
         HotspotExtractor hotspotExtractor = HotspotExtractor.withRefGenome(refGenomeVersion, refGenomeFastaFile);
-        List<VariantHotspot> hotspots = Lists.newArrayList();
+        Map<String, List<VariantHotspot>> hotspotsPerFeature = Maps.newHashMap();
         for (ViccEntry viccEntry : viccEntries) {
-            hotspots.addAll(hotspotExtractor.extractHotspots(viccEntry));
+            hotspotsPerFeature.putAll(hotspotExtractor.extractHotspots(viccEntry));
         }
 
-        LOGGER.info("Done extracting {} hotspots.", hotspots.size());
+        LOGGER.info("Done extracting {} hotspots for {} features", valuesCount(hotspotsPerFeature), hotspotsPerFeature.size());
+
+        LOGGER.info("Printing unresolvable features");
+        for (String feature : hotspotExtractor.unresolvableFeatures()) {
+            LOGGER.info(feature);
+        }
+    }
+
+    private static <T, Y> int valuesCount(@NotNull Map<T, List<Y>> map) {
+        int valuesCount = 0;
+        for (Map.Entry<T, List<Y>> entry : map.entrySet()) {
+            valuesCount += entry.getValue().size();
+        }
+        return valuesCount;
     }
 }
