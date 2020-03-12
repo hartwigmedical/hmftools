@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -9,7 +10,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.AltContextFixed;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
@@ -58,8 +59,8 @@ public class FixedEvidence {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
-        final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(),
-                candidates.refContexts().stream().flatMap(x -> x.alts().stream()).collect(Collectors.toList()));
+        final SamRecordSelector<AltContextFixed> consumerSelector = new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(),
+                candidates.refContexts().stream().flatMap(x -> x.fixedAlts().stream()).collect(Collectors.toList()));
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))
@@ -69,8 +70,7 @@ public class FixedEvidence {
                 recordConsumer.accept(samRecord);
 
                 if (samRecord.getMappingQuality() >= minQuality) {
-                    consumerSelector.select(samRecord,
-                            x -> x.primaryReadContext().accept(x.rawDepth() < sageConfig.maxReadDepth(), samRecord, sageConfig));
+                    consumerSelector.select(samRecord, x -> x.primaryReadContext().accept(x.realign(), samRecord, sageConfig));
                 }
 
             });
@@ -78,7 +78,7 @@ public class FixedEvidence {
             throw new CompletionException(e);
         }
 
-        return candidates.refContexts();
+        return new ArrayList<>(candidates.refContexts());
     }
 
 }

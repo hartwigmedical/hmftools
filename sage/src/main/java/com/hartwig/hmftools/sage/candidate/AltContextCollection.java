@@ -12,20 +12,22 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextFixedFactorySupplier;
-import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactoryForSample;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AltContextCandidates {
+public class AltContextCollection {
 
+    private final SageConfig sageConfig;
     private final Set<VariantHotspot> hotspots;
     private final ListMultimap<VariantHotspot, AltContext> map = ArrayListMultimap.create();
     private final Comparator<AltContext> comparator;
 
-    public AltContextCandidates(String primarySample, List<VariantHotspot> hotspots) {
+    public AltContextCollection(@NotNull final SageConfig config, @NotNull final String primarySample, @NotNull final List<VariantHotspot> hotspots) {
+        this.sageConfig = config;
         this.hotspots = Sets.newHashSet(hotspots);
         this.comparator = (o1, o2) -> {
             if (o1.sample().equals(primarySample)) {
@@ -40,13 +42,13 @@ public class AltContextCandidates {
         };
     }
 
-    public void addRefCandidate(@NotNull final Collection<RefContext> refContexts) {
+    public void addRefContexts(@NotNull final Collection<RefContext> refContexts) {
         for (RefContext refContext : refContexts) {
-            addAltCandidate(refContext.alts());
+            addAltContexts(refContext.alts());
         }
     }
 
-    private void addAltCandidate(@NotNull final Collection<AltContext> altContexts) {
+    private void addAltContexts(@NotNull final Collection<AltContext> altContexts) {
         for (final AltContext altContext : altContexts) {
             if (hotspots.contains(altContext)) {
                 map.put(altContext, altContext);
@@ -63,18 +65,20 @@ public class AltContextCandidates {
     }
 
     @NotNull
-    public RefContextFixedFactorySupplier createFactory(@NotNull final Predicate<AltContext> anyPredicate) {
-        return new RefContextFixedFactorySupplier(anyMatch(anyPredicate));
+    public RefContextFixedFactoryForSample createFactory(@NotNull final Predicate<AltContext> anyPredicate) {
+        return new RefContextFixedFactoryForSample(sageConfig, anyMatch(anyPredicate));
     }
 
     @NotNull
-    private Map<VariantHotspot, ReadContext> anyMatch(@NotNull final Predicate<AltContext> predicate) {
-        final Map<VariantHotspot, ReadContext> result = Maps.newHashMap();
+    private Map<VariantHotspot, Candidate> anyMatch(@NotNull final Predicate<AltContext> predicate) {
+        final Map<VariantHotspot, Candidate> result = Maps.newHashMap();
 
         for (final VariantHotspot variant : map.keySet()) {
             final List<AltContext> list = map.get(variant);
             if (list.stream().anyMatch(predicate)) {
-                result.put(variant, list.get(0).primaryReadContext().readContext());
+                Candidate candidate = new Candidate(variant);
+                list.forEach(candidate::update);
+                result.put(candidate.hotspot(), candidate);
             }
 
         }

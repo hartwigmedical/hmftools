@@ -15,15 +15,21 @@ public class AltContextFixed implements AltContext {
     private final String alt;
     private final RefContext refContext;
     private final ReadContextCounter readContextCounter;
+    private final boolean realign;
 
     private int rawSupportAlt;
     private int rawBaseQualityAlt;
 
-    public AltContextFixed(final RefContext refContext, final String ref, final String alt, final ReadContext readContext) {
+    public AltContextFixed(final RefContext refContext, final String ref, final String alt, boolean realign, final ReadContext readContext) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
         this.readContextCounter = new ReadContextCounter(this, readContext);
+        this.realign = realign;
+    }
+
+    public boolean realign() {
+        return realign;
     }
 
     public void incrementAltRead(int baseQuality) {

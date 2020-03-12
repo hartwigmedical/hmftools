@@ -23,7 +23,7 @@ public class RefContextFixed implements RefContext {
     private int rawSupportRef;
     private int rawBaseQualityRef;
 
-    public RefContextFixed(final String sample, final String chromosome, final long position) {
+    RefContextFixed(final String sample, final String chromosome, final long position) {
         this.sample = sample;
         this.chromosome = chromosome;
         this.position = position;
@@ -33,6 +33,11 @@ public class RefContextFixed implements RefContext {
     @NotNull
     public Collection<AltContext> alts() {
         return new ArrayList<>(alts.values());
+    }
+
+    @NotNull
+    public Collection<AltContextFixed> fixedAlts() {
+        return alts.values();
     }
 
     public void refRead(int baseQuality) {
@@ -47,9 +52,9 @@ public class RefContextFixed implements RefContext {
         return alts.get(refAltKey);
     }
 
-    public AltContext altContext(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext readContext) {
+    public AltContext altContext(@NotNull final String ref, @NotNull final String alt, boolean realign, @NotNull final ReadContext readContext) {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContextFixed(this, ref, alt, readContext));
+        return alts.computeIfAbsent(refAltKey, key -> new AltContextFixed(this, ref, alt, realign, readContext));
     }
 
     public void altReadFixed(@NotNull final String ref, @NotNull final String alt, int baseQuality) {

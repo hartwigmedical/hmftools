@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.context;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,10 +22,9 @@ public class RefContextFixedFactory implements RefContextFactory {
         this.refPositionSelector = new PositionSelector<>(refContexts);
     }
 
-    public void create(@NotNull final String chromosome, final long position, final String ref, final String alt,
-            final ReadContext readContext) {
+    public void add(@NotNull final String chromosome, final long position, final String ref, final String alt, final boolean realign, final ReadContext readContext) {
         final RefContextFixed refContext = add(chromosome, position);
-        refContext.altContext(ref, alt, readContext);
+        refContext.altContext(ref, alt, realign, readContext);
     }
 
     @NotNull
@@ -53,7 +51,7 @@ public class RefContextFixedFactory implements RefContextFactory {
     }
 
     @NotNull
-    public List<RefContext> refContexts() {
-        return new ArrayList<>(refContexts);
+    public List<RefContextFixed> refContexts() {
+        return refContexts;
     }
 }

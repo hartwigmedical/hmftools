@@ -11,12 +11,12 @@ import java.util.function.Predicate;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.candidate.AltContextCandidates;
-import com.hartwig.hmftools.sage.candidate.ReadContextCandidates;
+import com.hartwig.hmftools.sage.candidate.AltContextCollection;
+import com.hartwig.hmftools.sage.candidate.ReadContextCollection;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
-import com.hartwig.hmftools.sage.context.RefContextFixedFactorySupplier;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactoryForSample;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.evidence.FixedEvidence;
@@ -64,14 +64,14 @@ public class SomaticPipeline implements SageVariantPipeline {
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
         // Scan tumors for set of initial candidates
-        final CompletableFuture<ReadContextCandidates> doneCandidates = refSequenceFuture.thenCompose(refSequence -> {
+        final CompletableFuture<ReadContextCollection> doneCandidates = refSequenceFuture.thenCompose(refSequence -> {
             if (region.start() == 1) {
                 LOGGER.info("Processing chromosome {}", region.chromosome());
             }
             LOGGER.debug("Processing initial candidates of {}:{}", region.chromosome(), region.start());
 
             final List<CompletableFuture<Void>> candidateFutures = Lists.newArrayList();
-            final ReadContextCandidates readContextCandidates = new ReadContextCandidates();
+            final ReadContextCollection readContextCandidates = new ReadContextCollection(config);
 
             for (int i = 0; i < config.tumor().size(); i++) {
                 final String sample = config.tumor().get(i);
@@ -87,12 +87,12 @@ public class SomaticPipeline implements SageVariantPipeline {
         });
 
         // Scan tumors for evidence
-        final CompletableFuture<AltContextCandidates> doneTumor = doneCandidates.thenCompose(readContextCandidates -> {
+        final CompletableFuture<AltContextCollection> doneTumor = doneCandidates.thenCompose(readContextCandidates -> {
             LOGGER.info("Scanning tumor for evidence in {}:{}", region.chromosome(), region.start());
 
-            final RefContextFixedFactorySupplier candidatesFactory = readContextCandidates.candidateFactory();
+            final RefContextFixedFactoryForSample candidatesFactory = readContextCandidates.supplier();
             final List<CompletableFuture<Void>> tumorFutures = Lists.newArrayList();
-            final AltContextCandidates tumorCandidates = new AltContextCandidates(config.primaryTumor(), candidatesFactory.loci());
+            final AltContextCollection tumorCandidates = new AltContextCollection(config, config.primaryTumor(), candidatesFactory.loci());
 
             for (int i = 0; i < config.tumor().size(); i++) {
                 final String sample = config.tumor().get(i);
@@ -101,7 +101,7 @@ public class SomaticPipeline implements SageVariantPipeline {
 
                 final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
                         .thenApply(x -> normalEvidence.get(refSequenceFuture.join(), region, fixedCandidates, sampleBam))
-                        .thenAccept(tumorCandidates::addRefCandidate);
+                        .thenAccept(tumorCandidates::addRefContexts);
 
                 tumorFutures.add(tumorFuture);
             }
@@ -110,13 +110,14 @@ public class SomaticPipeline implements SageVariantPipeline {
         });
 
         // Scan references for evidence
-        final CompletableFuture<AltContextCandidates> doneNormal = doneTumor.thenCompose(tumorCandidates -> {
+        final CompletableFuture<AltContextCollection> doneNormal = doneTumor.thenCompose(tumorCandidates -> {
             LOGGER.debug("Scanning reference for evidence in {}:{}", region.chromosome(), region.start());
 
             final Predicate<AltContext> hardFilter = hardFilterEvidence(hotspots);
-            final RefContextFixedFactorySupplier candidatesFactory = tumorCandidates.createFactory(hardFilter);
+            final RefContextFixedFactoryForSample candidatesFactory = tumorCandidates.createFactory(hardFilter);
             final List<CompletableFuture<Void>> normalFutures = Lists.newArrayList();
-            final AltContextCandidates normalCandidates = new AltContextCandidates(config.primaryReference(), candidatesFactory.loci());
+            final AltContextCollection normalCandidates =
+                    new AltContextCollection(config, config.primaryReference(), candidatesFactory.loci());
 
             for (int i = 0; i < config.reference().size(); i++) {
                 final String sample = config.reference().get(i);
@@ -125,7 +126,7 @@ public class SomaticPipeline implements SageVariantPipeline {
 
                 final CompletableFuture<Void> normalFuture = CompletableFuture.completedFuture(this)
                         .thenApply(x -> normalEvidence.get(refSequenceFuture.join(), region, fixedCandidates, sampleBam))
-                        .thenAccept(normalCandidates::addRefCandidate);
+                        .thenAccept(normalCandidates::addRefContexts);
 
                 normalFutures.add(normalFuture);
             }
@@ -142,7 +143,7 @@ public class SomaticPipeline implements SageVariantPipeline {
 
                     // Combine normal and tumor together and create variants
                     final List<SageVariant> result = Lists.newArrayList();
-                    final RefContextFixedFactorySupplier sorted = normalCandidates.createFactory(x -> true);
+                    final RefContextFixedFactoryForSample sorted = normalCandidates.createFactory(x -> true);
                     for (VariantHotspot variant : sorted.loci()) {
                         final List<AltContext> normal = normalCandidates.altContexts(variant);
                         final List<AltContext> tumor = tumorCandidates.altContexts(variant);

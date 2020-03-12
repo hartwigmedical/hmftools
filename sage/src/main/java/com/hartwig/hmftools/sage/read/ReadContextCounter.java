@@ -131,6 +131,10 @@ public class ReadContextCounter implements GenomePosition {
 
         try {
 
+            if (coverage >= sageConfig.maxReadDepth() || !readContext.isComplete()) {
+                return;
+            }
+
             int alignmentEnd = record.getAlignmentEnd();
             int alignmentStart = record.getAlignmentStart();
             int leftSoftClipSize = SAMRecords.leftSoftClip(record);
@@ -140,15 +144,7 @@ public class ReadContextCounter implements GenomePosition {
             boolean variantInRightSoftClip = inRightSoftClip(variant.position(), rightSoftClipSize, record);
             boolean variantInAlignment = record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position();
 
-            if (!readContext.isComplete()) {
-                return;
-            }
-
             if (variantInAlignment || variantInLeftSoftClip || variantInRightSoftClip) {
-
-                if (coverage >= sageConfig.maxReadDepth()) {
-                    return;
-                }
 
                 boolean baseDeleted = false;
                 int readIndex;
