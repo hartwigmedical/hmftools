@@ -10,11 +10,10 @@ import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.read.ReadContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AltContext implements VariantHotspot {
+public class AltContextInterim implements VariantHotspot {
 
     private final RefContext refContext;
     private final String ref;
@@ -25,17 +24,10 @@ public class AltContext implements VariantHotspot {
     private int rawSupportAlt;
     private int rawBaseQualityAlt;
 
-    public AltContext(final RefContext refContext, final String ref, final String alt) {
+    public AltContextInterim(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
-    }
-
-    public AltContext(final RefContext refContext, final String ref, final String alt, final ReadContext readContext) {
-        this.refContext = refContext;
-        this.ref = ref;
-        this.alt = alt;
-        this.readContextCounter = new ReadContextCounter(this, readContext);
     }
 
     public void incrementAltRead(int baseQuality) {
@@ -64,25 +56,12 @@ public class AltContext implements VariantHotspot {
         }
     }
 
-    @NotNull
-    public ReadContextCounter setPrimaryReadCounterFromInterim() {
-        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
-        readContextCounter = interimReadContexts.isEmpty()
-                ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
-                : new ReadContextCounter(this, interimReadContexts.get(0).readContext().minimiseFootprint());
-
-        interimReadContexts.clear();
-
-        return primaryReadContext();
-    }
-
-    @NotNull
+    @Nullable
     public ReadContextCounter primaryReadContext() {
-        if (readContextCounter == null) {
-            throw new IllegalStateException();
-        }
-
-        return readContextCounter;
+        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
+        return interimReadContexts.isEmpty()
+                ? null
+                : new ReadContextCounter(this, interimReadContexts.get(0).readContext().minimiseFootprint());
     }
 
     @NotNull
@@ -125,7 +104,7 @@ public class AltContext implements VariantHotspot {
     }
 
     public double rawVaf() {
-        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupportAlt) / rawDepth();
+        return refContext.rawDepth() == 0 ? 0 : ((double) rawSupportAlt) / rawDepth();
     }
 
     public int rawBaseQualityAlt() {

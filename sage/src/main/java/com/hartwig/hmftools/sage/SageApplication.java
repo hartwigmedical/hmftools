@@ -96,15 +96,16 @@ public class SageApplication implements AutoCloseable {
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
             if (HumanChromosome.contains(contig)) {
-                ChromosomePipeline pipeline = createChromosomePipeline(contig);
-                pipeline.addAllRegions();
-                chromosomePipelines.add(pipeline.submit());
+//                ChromosomePipeline pipeline = createChromosomePipeline(contig);
+//                pipeline.addAllRegions();
+//                chromosomePipelines.add(pipeline.submit());
             }
         }
 
-//        ChromosomePipeline custom = createChromosomePipeline("20");
-//        custom.addAllRegions(4_000_000);
-//        chromosomePipelines.add(custom.submit());
+        ChromosomePipeline custom = createChromosomePipeline("17");
+//        custom.addAllRegions();
+        custom.addRegion(6385360, 6385360);
+        chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
         while (chromosomeIterator.hasNext()) {

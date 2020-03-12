@@ -1,37 +1,25 @@
 package com.hartwig.hmftools.sage.context;
 
-import java.util.Comparator;
-import java.util.List;
-
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.read.ReadContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AltContext implements VariantHotspot {
+public class AltContextFixed implements VariantHotspot {
 
-    private final RefContext refContext;
     private final String ref;
     private final String alt;
-    private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
+    private final RefContext refContext;
+    private final ReadContextCounter readContextCounter;
 
-    private ReadContextCounter readContextCounter;
     private int rawSupportAlt;
     private int rawBaseQualityAlt;
 
-    public AltContext(final RefContext refContext, final String ref, final String alt) {
-        this.refContext = refContext;
-        this.ref = ref;
-        this.alt = alt;
-    }
-
-    public AltContext(final RefContext refContext, final String ref, final String alt, final ReadContext readContext) {
+    public AltContextFixed(final RefContext refContext, final String ref, final String alt, final ReadContext readContext) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
@@ -43,45 +31,8 @@ public class AltContext implements VariantHotspot {
         this.rawBaseQualityAlt += baseQuality;
     }
 
-    public void addReadContext(@NotNull final ReadContext newReadContext) {
-        if (readContextCounter != null) {
-            throw new IllegalStateException();
-        }
-
-        if (newReadContext.isComplete()) {
-            boolean readContextMatch = false;
-            for (ReadContextCounter counter : interimReadContexts) {
-                if (counter.incrementCounters(newReadContext)) {
-                    readContextMatch = true;
-                    break;
-                }
-
-            }
-
-            if (!readContextMatch) {
-                interimReadContexts.add(new ReadContextCounter(this, newReadContext));
-            }
-        }
-    }
-
     @NotNull
-    public ReadContextCounter setPrimaryReadCounterFromInterim() {
-        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
-        readContextCounter = interimReadContexts.isEmpty()
-                ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
-                : new ReadContextCounter(this, interimReadContexts.get(0).readContext().minimiseFootprint());
-
-        interimReadContexts.clear();
-
-        return primaryReadContext();
-    }
-
-    @NotNull
-    public ReadContextCounter primaryReadContext() {
-        if (readContextCounter == null) {
-            throw new IllegalStateException();
-        }
-
+    public ReadContextCounter readContext() {
         return readContextCounter;
     }
 
@@ -125,7 +76,7 @@ public class AltContext implements VariantHotspot {
     }
 
     public double rawVaf() {
-        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupportAlt) / rawDepth();
+        return refContext.rawDepth() == 0 ? 0 : ((double) rawSupportAlt) / rawDepth();
     }
 
     public int rawBaseQualityAlt() {
