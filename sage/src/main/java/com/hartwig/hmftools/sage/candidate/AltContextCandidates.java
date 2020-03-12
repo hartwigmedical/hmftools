@@ -13,8 +13,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.FixedRefContextCandidatesFactory;
 import com.hartwig.hmftools.sage.context.RefContext;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactorySupplier;
 import com.hartwig.hmftools.sage.read.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
@@ -63,8 +63,8 @@ public class AltContextCandidates {
     }
 
     @NotNull
-    public FixedRefContextCandidatesFactory createFactory(@NotNull final Predicate<AltContext> anyPredicate) {
-        return new FixedRefContextCandidatesFactory(anyMatch(anyPredicate));
+    public RefContextFixedFactorySupplier createFactory(@NotNull final Predicate<AltContext> anyPredicate) {
+        return new RefContextFixedFactorySupplier(anyMatch(anyPredicate));
     }
 
     @NotNull

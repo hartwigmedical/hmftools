@@ -69,10 +69,10 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private final SageConfig config;
     private final GenomeRegion bounds;
     private final RefSequence refGenome;
-    private final RefContextCandidates candidates;
+    private final RefContextFactory candidates;
 
     public RefContextConsumer(boolean addInterimReadContexts, @NotNull final SageConfig config, @NotNull final GenomeRegion bounds,
-            @NotNull final RefSequence refGenome, @NotNull final RefContextCandidates candidates) {
+            @NotNull final RefSequence refGenome, @NotNull final RefContextFactory candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
         this.minQuality = config.minMapQuality();
@@ -126,9 +126,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
                 int baseQuality = baseQuality(readIndex, record, alt.length());
                 if (addInterimReadContexts) {
-                    refContext.altRead(ref, alt, baseQuality, createInsertContext(alt, refPosition, readIndex, record, refBases));
+                    refContext.altReadCandidate(ref, alt, baseQuality, createInsertContext(alt, refPosition, readIndex, record, refBases));
                 } else {
-                    refContext.altRead(ref, alt, baseQuality);
+                    refContext.altReadFixed(ref, alt, baseQuality);
                 }
             }
         }
@@ -146,9 +146,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
                 int baseQuality = baseQuality(readIndex, record, 2);
                 if (addInterimReadContexts) {
-                    refContext.altRead(ref, alt, baseQuality, createDelContext(ref, refPosition, readIndex, record, refBases));
+                    refContext.altReadCandidate(ref, alt, baseQuality, createDelContext(ref, refPosition, readIndex, record, refBases));
                 } else {
-                    refContext.altRead(ref, alt, baseQuality);
+                    refContext.altReadFixed(ref, alt, baseQuality);
                 }
             }
         }
@@ -179,9 +179,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     if (addInterimReadContexts) {
-                        refContext.altRead(ref, alt, baseQuality, createSNVContext(refPosition, readBaseIndex, record, refBases));
+                        refContext.altReadCandidate(ref, alt, baseQuality, createSNVContext(refPosition, readBaseIndex, record, refBases));
                     } else {
-                        refContext.altRead(ref, alt, baseQuality);
+                        refContext.altReadFixed(ref, alt, baseQuality);
                     }
 
                     int mnvMaxLength = mnvLength(refPosition, refPositionStart + alignmentLength - 1, readBaseIndex, refBaseIndex, record.getReadBases(), refBases.bases());
@@ -194,9 +194,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         // ie CA > TA is not a valid subset of CAC > TAT
                         if (mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1)) {
                             if (addInterimReadContexts) {
-                                refContext.altRead(mnvRef, mnvAlt, baseQuality, createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
+                                refContext.altReadCandidate(mnvRef, mnvAlt, baseQuality, createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
                             } else {
-                                refContext.altRead(mnvRef, mnvAlt, baseQuality);
+                                refContext.altReadFixed(mnvRef, mnvAlt, baseQuality);
                             }
                         }
                     }

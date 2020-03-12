@@ -11,9 +11,9 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.context.RefContextCandidateFactory;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.context.RollingRefContextCandidates;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
@@ -57,14 +57,14 @@ public class GermlineEvidence {
         LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         final HotspotSelector hotspotSelector = new HotspotSelector(hotspots);
-        final RollingRefContextCandidates candidates = new RollingRefContextCandidates(config, hotspotSelector, sample);
+        final RefContextCandidateFactory candidates = new RefContextCandidateFactory(config, hotspotSelector, sample);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
         return get(bamFile, bounds, refContextConsumer, candidates, hotspotSelector);
     }
 
     @NotNull
     private List<AltContext> get(@NotNull final String bamFile, @NotNull final GenomeRegion bounds,
-            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RollingRefContextCandidates candidates, @NotNull final HotspotSelector hotspotSelector) {
+            @NotNull final Consumer<SAMRecord> recordConsumer, @NotNull final RefContextCandidateFactory candidates, @NotNull final HotspotSelector hotspotSelector) {
         final List<AltContext> altContexts = Lists.newArrayList();
         final SamRecordSelector<AltContext> consumerSelector = new SamRecordSelector<>(config.maxSkippedReferenceRegions(), altContexts);
 

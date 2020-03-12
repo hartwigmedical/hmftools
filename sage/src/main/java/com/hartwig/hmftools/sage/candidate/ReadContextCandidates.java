@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.FixedRefContextCandidatesFactory;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactorySupplier;
 import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
@@ -24,8 +24,8 @@ public class ReadContextCandidates {
     }
 
     @NotNull
-    public FixedRefContextCandidatesFactory candidateFactory() {
-        return new FixedRefContextCandidatesFactory(candidateMap());
+    public RefContextFixedFactorySupplier candidateFactory() {
+        return new RefContextFixedFactorySupplier(candidateMap());
     }
 
     @NotNull

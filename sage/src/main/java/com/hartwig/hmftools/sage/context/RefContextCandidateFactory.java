@@ -11,7 +11,7 @@ import com.hartwig.hmftools.sage.select.HotspotSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RollingRefContextCandidates implements RefContextCandidates {
+public class RefContextCandidateFactory implements RefContextFactory {
 
     private final SageConfig config;
     private final HotspotSelector hotspotSelector;
@@ -19,21 +19,16 @@ public class RollingRefContextCandidates implements RefContextCandidates {
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
-    public RollingRefContextCandidates(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector, @NotNull final String sample) {
+    public RefContextCandidateFactory(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector,
+            @NotNull final String sample) {
         this.sample = sample;
         this.config = config;
         this.hotspotSelector = hotspotSelector;
         final Consumer<RefContext> evictionHandler = (refContext) -> {
-            if (!refContext.isAltsEmpty()) {
-                refContext.alts()
-                        .stream()
-                        .filter(this::refPredicate)
-                        .filter(this::rawPredicate)
-                        .forEach(x -> {
-                            x.setPrimaryReadCounterFromInterim();
-                            savedCandidates.add(x);
-                        });
-            }
+            refContext.alts().stream().filter(this::refPredicate).filter(this::rawPredicate).forEach(x -> {
+                x.setPrimaryReadCounterFromInterim();
+                savedCandidates.add(x);
+            });
         };
 
         this.rollingCandidates = new EvictingArray<>(256, evictionHandler);
@@ -41,7 +36,7 @@ public class RollingRefContextCandidates implements RefContextCandidates {
 
     @NotNull
     public RefContext refContext(@NotNull final String chromosome, final long position) {
-        return rollingCandidates.computeIfAbsent(position, aLong -> new RefContext(sample, chromosome, position));
+        return rollingCandidates.computeIfAbsent(position, aLong -> new RefContextCandidate(sample, chromosome, position));
     }
 
     @NotNull

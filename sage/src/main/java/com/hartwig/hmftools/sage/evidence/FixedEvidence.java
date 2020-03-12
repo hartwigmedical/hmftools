@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.FixedRefContextCandidates;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextConsumer;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
@@ -28,16 +28,16 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class StandardEvidence {
+public class FixedEvidence {
 
-    private static final Logger LOGGER = LogManager.getLogger(StandardEvidence.class);
+    private static final Logger LOGGER = LogManager.getLogger(FixedEvidence.class);
 
     private final int minQuality;
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
     private final ReferenceSequenceFile refGenome;
 
-    public StandardEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
+    public FixedEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
             @NotNull final ReferenceSequenceFile refGenome) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
@@ -47,14 +47,14 @@ public class StandardEvidence {
 
     @NotNull
     public List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
-            @NotNull final FixedRefContextCandidates candidates, @NotNull final String bam) {
+            @NotNull final RefContextFixedFactory candidates, @NotNull final String bam) {
         final RefContextConsumer refContextConsumer = new RefContextConsumer(false, sageConfig, bounds, refSequence, candidates);
         return get(bounds, refContextConsumer, candidates, bam);
     }
 
     @NotNull
     private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer,
-            @NotNull final FixedRefContextCandidates candidates, @NotNull final String bam) {
+            @NotNull final RefContextFixedFactory candidates, @NotNull final String bam) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 

@@ -15,11 +15,11 @@ import com.hartwig.hmftools.sage.candidate.AltContextCandidates;
 import com.hartwig.hmftools.sage.candidate.ReadContextCandidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.FixedRefContextCandidates;
 import com.hartwig.hmftools.sage.context.FixedRefContextCandidatesFactory;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
-import com.hartwig.hmftools.sage.evidence.StandardEvidence;
+import com.hartwig.hmftools.sage.evidence.FixedEvidence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -40,7 +40,7 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final List<VariantHotspot> hotspots;
     private final ReferenceSequenceFile refGenome;
     private final List<GenomeRegion> panelRegions;
-    private final StandardEvidence normalEvidence;
+    private final FixedEvidence normalEvidence;
     private final CandidateEvidence candidateEvidence;
     private final List<GenomeRegion> highConfidenceRegions;
 
@@ -54,7 +54,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
         this.candidateEvidence = new CandidateEvidence(config, hotspots, samSlicerFactory, refGenome);
-        this.normalEvidence = new StandardEvidence(config, samSlicerFactory, refGenome);
+        this.normalEvidence = new FixedEvidence(config, samSlicerFactory, refGenome);
         this.refGenome = refGenome;
     }
 
@@ -97,7 +97,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             for (int i = 0; i < config.tumor().size(); i++) {
                 final String sample = config.tumor().get(i);
                 final String sampleBam = config.tumorBam().get(i);
-                final FixedRefContextCandidates fixedCandidates = candidatesFactory.create(sample);
+                final RefContextFixedFactory fixedCandidates = candidatesFactory.create(sample);
 
                 final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
                         .thenApply(x -> normalEvidence.get(refSequenceFuture.join(), region, fixedCandidates, sampleBam))
@@ -121,7 +121,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             for (int i = 0; i < config.reference().size(); i++) {
                 final String sample = config.reference().get(i);
                 final String sampleBam = config.referenceBam().get(i);
-                final FixedRefContextCandidates fixedCandidates = candidatesFactory.create(sample);
+                final RefContextFixedFactory fixedCandidates = candidatesFactory.create(sample);
 
                 final CompletableFuture<Void> normalFuture = CompletableFuture.completedFuture(this)
                         .thenApply(x -> normalEvidence.get(refSequenceFuture.join(), region, fixedCandidates, sampleBam))

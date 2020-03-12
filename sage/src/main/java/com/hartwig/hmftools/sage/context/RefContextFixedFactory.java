@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,38 +11,39 @@ import com.hartwig.hmftools.sage.select.PositionSelector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FixedRefContextCandidates implements RefContextCandidates {
+public class RefContextFixedFactory implements RefContextFactory {
 
     private final String sample;
-    private final List<RefContext> refContexts;
-    private final PositionSelector<RefContext> refPositionSelector;
+    private final List<RefContextFixed> refContexts;
+    private final PositionSelector<RefContextFixed> refPositionSelector;
 
-    public FixedRefContextCandidates(@NotNull final String sample) {
+    RefContextFixedFactory(@NotNull final String sample) {
         this.sample = sample;
         this.refContexts = Lists.newArrayList();
         this.refPositionSelector = new PositionSelector<>(refContexts);
     }
 
+    public void create(@NotNull final String chromosome, final long position, final String ref, final String alt,
+            final ReadContext readContext) {
+        final RefContextFixed refContext = add(chromosome, position);
+        refContext.altContext(ref, alt, readContext);
+    }
+
     @NotNull
-    public RefContext add(@NotNull final String chromosome, final long position) {
+    private RefContextFixed add(@NotNull final String chromosome, final long position) {
         if (!refContexts.isEmpty() && refContexts.get(refContexts.size() - 1).position() > position) {
             throw new IllegalArgumentException("Can only add sorted ref contexts");
         }
 
-        Optional<RefContext> optionalRefContext = refPositionSelector.select(position);
+        Optional<RefContextFixed> optionalRefContext = refPositionSelector.select(position);
         if (optionalRefContext.isPresent()) {
             return optionalRefContext.get();
         }
 
-        RefContext refContext = new RefContext(sample, chromosome, position);
+        RefContextFixed refContext = new RefContextFixed(sample, chromosome, position);
         refContexts.add(refContext);
 
         return refContext;
-    }
-
-    public void create(@NotNull final String chromosome, final long position, final String ref, final String alt, final ReadContext readContext) {
-        final RefContext refContext = add(chromosome, position);
-        refContext.altContext(ref, alt, readContext);
     }
 
     @Nullable
@@ -52,6 +54,6 @@ public class FixedRefContextCandidates implements RefContextCandidates {
 
     @NotNull
     public List<RefContext> refContexts() {
-        return refContexts;
+        return new ArrayList<>(refContexts);
     }
 }
