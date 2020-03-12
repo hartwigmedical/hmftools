@@ -15,6 +15,68 @@ Key features include:
   - Multiple reference support
   - RNA support
 
+# Usage
+
+## Mandatory Arguments
+
+Argument | Description 
+---|---
+reference | Comma separated names of the reference sample
+reference_bam | Comma separated paths to indexed reference BAM file
+tumor | Comma separated names of the tumor sample
+tumor_bam | Comma separated paths to indexed tumor BAM file
+out | Name of the output VCF
+ref_genome | Path to reference genome fasta file
+hotspots | Path to hotspots vcf
+panel_bed | Path to panel bed
+high_confidence_bed | Path to high confidence bed
+
+The cardinality of `reference` must match `reference_bams`. Similarly with `tumor` and `tumor_bams`.
+
+## Example Usage
+
+
+Minimum set of arguments:
+
+```
+java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 8 \
+    -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
+    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
+    -ref_genome /path/to/ref_genome.fasta \
+    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -out /path/to/COLO829v003.sage.vcf.gz
+```
+
+With RNA as an additional reference:
+```
+java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 8 \
+    -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
+    -reference COLO829v003R,COLO829v003RNA -reference_bam /path/to/COLO829v003R.bam,/path/to/COLO829v003RNA.bam \
+    -ref_genome /path/to/ref_genome.fasta \
+    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -out /path/to/COLO829v003.sage.vcf.gz
+```
+
+With multiple tumors:
+```
+java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 8 \
+    -tumor COLO829v003T,COLO829v004T -tumor_bam /path/to/COLO829v003T.bam,/path/to/COLO829v004T.bam \
+    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
+    -ref_genome /path/to/ref_genome.fasta \
+    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -out /path/to/COLO829v003.sage.vcf.gz
+```
+
+
  # Read context 
  
  SAGE defines a core read context around each candidate point mutation position which uniquely identifies the variant from both the reference and other possible variants at that location regardless of local alignment. 
