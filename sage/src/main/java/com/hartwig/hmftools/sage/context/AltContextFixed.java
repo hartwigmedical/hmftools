@@ -9,7 +9,7 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AltContextFixed implements VariantHotspot {
+public class AltContextFixed implements AltContext {
 
     private final String ref;
     private final String alt;
@@ -32,7 +32,7 @@ public class AltContextFixed implements VariantHotspot {
     }
 
     @NotNull
-    public ReadContextCounter readContext() {
+    public ReadContextCounter primaryReadContext() {
         return readContextCounter;
     }
 

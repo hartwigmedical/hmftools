@@ -16,7 +16,7 @@ public class RefContextCandidateFactory implements RefContextFactory {
     private final SageConfig config;
     private final HotspotSelector hotspotSelector;
     private final String sample;
-    private final EvictingArray<RefContext> rollingCandidates;
+    private final EvictingArray<RefContextCandidate> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
     public RefContextCandidateFactory(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector,
@@ -24,18 +24,20 @@ public class RefContextCandidateFactory implements RefContextFactory {
         this.sample = sample;
         this.config = config;
         this.hotspotSelector = hotspotSelector;
-        final Consumer<RefContext> evictionHandler = (refContext) -> {
-            refContext.alts().stream().filter(this::refPredicate).filter(this::rawPredicate).forEach(x -> {
-                x.setPrimaryReadCounterFromInterim();
-                savedCandidates.add(x);
-            });
+        final Consumer<RefContextCandidate> evictionHandler = (refContext) -> {
+            refContext.alts()
+                    .stream()
+                    .filter(this::refPredicate)
+                    .filter(this::rawPredicate)
+                    .filter(x -> x.primaryReadContext().readContext().isComplete())
+                    .forEach(savedCandidates::add);
         };
 
         this.rollingCandidates = new EvictingArray<>(256, evictionHandler);
     }
 
     @NotNull
-    public RefContext refContext(@NotNull final String chromosome, final long position) {
+    public RefContextCandidate refContext(@NotNull final String chromosome, final long position) {
         return rollingCandidates.computeIfAbsent(position, aLong -> new RefContextCandidate(sample, chromosome, position));
     }
 

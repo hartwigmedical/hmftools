@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class RefContextFixed implements RefContext {
     private final String sample;
     private final String chromosome;
     private final long position;
-    private final Map<String, AltContext> alts;
+    private final Map<String, AltContextFixed> alts;
 
     private int rawDepth;
     private int rawSupportRef;
@@ -31,7 +32,7 @@ public class RefContextFixed implements RefContext {
 
     @NotNull
     public Collection<AltContext> alts() {
-        return alts.values();
+        return new ArrayList<>(alts.values());
     }
 
     public void refRead(int baseQuality) {
@@ -40,21 +41,23 @@ public class RefContextFixed implements RefContext {
         this.rawBaseQualityRef += baseQuality;
     }
 
-    @NotNull
-    public AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
+    @Nullable
+    public AltContextFixed altContext(@NotNull final String ref, @NotNull final String alt) {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
+        return alts.get(refAltKey);
     }
 
     public AltContext altContext(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext readContext) {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt, readContext));
+        return alts.computeIfAbsent(refAltKey, key -> new AltContextFixed(this, ref, alt, readContext));
     }
 
     public void altReadFixed(@NotNull final String ref, @NotNull final String alt, int baseQuality) {
         this.rawDepth++;
-        final AltContext altContext = altContext(ref, alt);
-        altContext.incrementAltRead(baseQuality);
+        final AltContextFixed altContext = altContext(ref, alt);
+        if (altContext != null) {
+            altContext.incrementAltRead(baseQuality);
+        }
     }
 
     public void altReadCandidate(@NotNull final String ref, @NotNull final String alt, int baseQuality,

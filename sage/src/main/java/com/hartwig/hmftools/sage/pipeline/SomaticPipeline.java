@@ -15,8 +15,8 @@ import com.hartwig.hmftools.sage.candidate.AltContextCandidates;
 import com.hartwig.hmftools.sage.candidate.ReadContextCandidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.FixedRefContextCandidatesFactory;
 import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
+import com.hartwig.hmftools.sage.context.RefContextFixedFactorySupplier;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.evidence.FixedEvidence;
@@ -90,7 +90,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         final CompletableFuture<AltContextCandidates> doneTumor = doneCandidates.thenCompose(readContextCandidates -> {
             LOGGER.info("Scanning tumor for evidence in {}:{}", region.chromosome(), region.start());
 
-            final FixedRefContextCandidatesFactory candidatesFactory = readContextCandidates.candidateFactory();
+            final RefContextFixedFactorySupplier candidatesFactory = readContextCandidates.candidateFactory();
             final List<CompletableFuture<Void>> tumorFutures = Lists.newArrayList();
             final AltContextCandidates tumorCandidates = new AltContextCandidates(config.primaryTumor(), candidatesFactory.loci());
 
@@ -114,7 +114,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             LOGGER.debug("Scanning reference for evidence in {}:{}", region.chromosome(), region.start());
 
             final Predicate<AltContext> hardFilter = hardFilterEvidence(hotspots);
-            final FixedRefContextCandidatesFactory candidatesFactory = tumorCandidates.createFactory(hardFilter);
+            final RefContextFixedFactorySupplier candidatesFactory = tumorCandidates.createFactory(hardFilter);
             final List<CompletableFuture<Void>> normalFutures = Lists.newArrayList();
             final AltContextCandidates normalCandidates = new AltContextCandidates(config.primaryReference(), candidatesFactory.loci());
 
@@ -142,7 +142,7 @@ public class SomaticPipeline implements SageVariantPipeline {
 
                     // Combine normal and tumor together and create variants
                     final List<SageVariant> result = Lists.newArrayList();
-                    final FixedRefContextCandidatesFactory sorted = normalCandidates.createFactory(x -> true);
+                    final RefContextFixedFactorySupplier sorted = normalCandidates.createFactory(x -> true);
                     for (VariantHotspot variant : sorted.loci()) {
                         final List<AltContext> normal = normalCandidates.altContexts(variant);
                         final List<AltContext> tumor = tumorCandidates.altContexts(variant);

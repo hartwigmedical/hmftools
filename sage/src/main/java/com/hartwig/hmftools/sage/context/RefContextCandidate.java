@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class RefContextCandidate implements RefContext {
     private final String sample;
     private final String chromosome;
     private final long position;
-    private final Map<String, AltContext> alts;
+    private final Map<String, AltContextCandidate> alts;
 
     private int rawDepth;
     private int rawSupportRef;
@@ -31,7 +32,7 @@ public class RefContextCandidate implements RefContext {
 
     @NotNull
     public Collection<AltContext> alts() {
-        return alts.values();
+        return new ArrayList<>(alts.values());
     }
 
     public void refRead(int baseQuality) {
@@ -41,9 +42,9 @@ public class RefContextCandidate implements RefContext {
     }
 
     @NotNull
-    public AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
+    public AltContextCandidate altContext(@NotNull final String ref, @NotNull final String alt) {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
+        return alts.computeIfAbsent(refAltKey, key -> new AltContextCandidate(this, ref, alt));
     }
 
 
@@ -54,7 +55,7 @@ public class RefContextCandidate implements RefContext {
 
     public void altReadCandidate(@NotNull final String ref, @NotNull final String alt, int baseQuality, @NotNull final ReadContext interimReadContext) {
         this.rawDepth++;
-        final AltContext altContext = altContext(ref, alt);
+        final AltContextCandidate altContext = altContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
         altContext.addReadContext(interimReadContext);
     }
@@ -74,6 +75,7 @@ public class RefContextCandidate implements RefContext {
         return rawDepth;
     }
 
+    @NotNull
     public String sample() {
         return sample;
     }
