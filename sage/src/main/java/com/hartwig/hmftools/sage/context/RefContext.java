@@ -16,8 +16,6 @@ public interface RefContext extends GenomePosition {
 
     void refRead();
 
-    void altReadFixed(@NotNull final String ref, @NotNull final String alt, int baseQuality);
-
     void altReadCandidate(@NotNull final String ref, @NotNull final String alt, int baseQuality, @NotNull final ReadContext interimReadContext);
 
     @NotNull

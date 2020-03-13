@@ -52,7 +52,7 @@ public class CandidateEvidence {
 
         final HotspotSelector hotspotSelector = new HotspotSelector(hotspots);
         final RefContextCandidateFactory candidates = new RefContextCandidateFactory(config, hotspotSelector, sample);
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(true, config, bounds, refSequence, candidates);
+        final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
         return get(bamFile, bounds, refContextConsumer, candidates);
     }
 

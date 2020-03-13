@@ -42,23 +42,9 @@ public class RefContextFixed implements RefContext {
         this.rawDepth++;
     }
 
-    @Nullable
-    public AltContextFixed altContext(@NotNull final String ref, @NotNull final String alt) {
-        final String refAltKey = ref + "|" + alt;
-        return alts.get(refAltKey);
-    }
-
     public AltContext altContext(@NotNull final String ref, @NotNull final String alt, boolean realign, @NotNull final ReadContext readContext) {
         final String refAltKey = ref + "|" + alt;
         return alts.computeIfAbsent(refAltKey, key -> new AltContextFixed(this, ref, alt, realign, readContext));
-    }
-
-    public void altReadFixed(@NotNull final String ref, @NotNull final String alt, int baseQuality) {
-        this.rawDepth++;
-        final AltContextFixed altContext = altContext(ref, alt);
-        if (altContext != null) {
-            altContext.incrementAltRead(baseQuality);
-        }
     }
 
     public void altReadCandidate(@NotNull final String ref, @NotNull final String alt, int baseQuality,

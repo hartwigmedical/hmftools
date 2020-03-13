@@ -5,16 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContextFixed;
 import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextConsumer;
 import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
-import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
@@ -23,7 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
@@ -47,15 +43,7 @@ public class FixedEvidence {
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final RefSequence refSequence, @NotNull final GenomeRegion bounds,
-            @NotNull final RefContextFixedFactory candidates, @NotNull final String bam) {
-        final RefContextConsumer refContextConsumer = new RefContextConsumer(false, sageConfig, bounds, refSequence, candidates);
-        return get(bounds, refContextConsumer, candidates, bam);
-    }
-
-    @NotNull
-    private List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final Consumer<SAMRecord> recordConsumer,
-            @NotNull final RefContextFixedFactory candidates, @NotNull final String bam) {
+    public List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final RefContextFixedFactory candidates, @NotNull final String bam) {
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 

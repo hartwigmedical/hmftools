@@ -44,11 +44,6 @@ public class RefContextCandidate implements RefContext {
     }
 
 
-    public void altReadFixed(@NotNull final String ref, @NotNull final String alt, int baseQuality) {
-        throw new UnsupportedOperationException();
-    }
-
-
     public void altReadCandidate(@NotNull final String ref, @NotNull final String alt, int baseQuality, @NotNull final ReadContext interimReadContext) {
         this.rawDepth++;
         final AltContextCandidate altContext = altContext(ref, alt);

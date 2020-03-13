@@ -101,7 +101,7 @@ public class SomaticPipeline implements SageVariantPipeline {
                 final RefContextFixedFactory fixedCandidates = candidatesFactory.create(sample);
 
                 final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
-                        .thenApply(x -> normalEvidence.get(refSequenceFuture.join(), region, fixedCandidates, sampleBam))
+                        .thenApply(x -> normalEvidence.get(region, fixedCandidates, sampleBam))
                         .thenAccept(tumorCandidates::addRefContexts);
 
                 tumorFutures.add(tumorFuture);
@@ -126,7 +126,7 @@ public class SomaticPipeline implements SageVariantPipeline {
                 final RefContextFixedFactory fixedCandidates = candidatesFactory.create(sample);
 
                 final CompletableFuture<Void> normalFuture = CompletableFuture.completedFuture(this)
-                        .thenApply(x -> normalEvidence.get(refSequenceFuture.join(), region, fixedCandidates, sampleBam))
+                        .thenApply(x -> normalEvidence.get(region, fixedCandidates, sampleBam))
                         .thenAccept(normalCandidates::addRefContexts);
 
                 normalFutures.add(normalFuture);
