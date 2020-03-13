@@ -94,20 +94,19 @@ public class RawContextCigarHandler implements CigarHandler {
 
     }
 
-
     @Override
     public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPosition) {
         if (result != null) {
             return;
         }
 
-        if (refPosition == variant.position()) {
-            boolean altSupport = isDelete && e.getLength() == variant.ref().length() - 1 && matchesString(record, readIndex, variant.ref().substring(0, 1));
-            result = new RawContext(readIndex, false, altSupport, false, true);
-        }
-
         int refPositionEnd = refPosition + e.getLength();
-        if (refPositionEnd >= variant.position()) {
+        if (refPosition == variant.position()) {
+            boolean altSupport = isDelete && e.getLength() == variant.ref().length() - 1 && matchesString(record,
+                    readIndex,
+                    variant.ref().substring(0, 1));
+            result = new RawContext(readIndex, false, altSupport, false, true);
+        } else if (refPositionEnd >= variant.position()) {
             result = new RawContext(readIndex, true, false, false, false);
         }
 

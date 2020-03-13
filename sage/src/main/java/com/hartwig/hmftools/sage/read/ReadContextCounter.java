@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.read;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.utils.sam.SAMRecords;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -22,6 +21,7 @@ public class ReadContextCounter implements GenomePosition {
 
     private final VariantHotspot variant;
     private final ReadContext readContext;
+    private final RawContextFactory rawFactory;
 
     private int full;
     private int partial;
@@ -47,6 +47,7 @@ public class ReadContextCounter implements GenomePosition {
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
+        this.rawFactory = new RawContextFactory(variant);
     }
 
     @NotNull
@@ -119,14 +120,6 @@ public class ReadContextCounter implements GenomePosition {
         return readContext.toString();
     }
 
-    private static boolean inLeftSoftClip(long position, int softClip, final SAMRecord record) {
-        return position < record.getAlignmentStart() && position >= record.getAlignmentStart() - softClip;
-    }
-
-    private static boolean inRightSoftClip(long position, int softClip, final SAMRecord record) {
-        return position > record.getAlignmentEnd() && position <= record.getAlignmentEnd() + softClip;
-    }
-
     public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig) {
 
         try {
@@ -135,31 +128,11 @@ public class ReadContextCounter implements GenomePosition {
                 return;
             }
 
-            int alignmentEnd = record.getAlignmentEnd();
-            int alignmentStart = record.getAlignmentStart();
-            int leftSoftClipSize = SAMRecords.leftSoftClip(record);
-            int rightSoftClipSize = SAMRecords.rightSoftClip(record);
+            final RawContext rawContext = rawFactory.create(record);
+            final int readIndex = rawContext.readIndex();
+            final boolean baseDeleted = rawContext.isReadIndexInDelete();
 
-            boolean variantInLeftSoftClip = inLeftSoftClip(variant.position(), leftSoftClipSize, record);
-            boolean variantInRightSoftClip = inRightSoftClip(variant.position(), rightSoftClipSize, record);
-            boolean variantInAlignment = record.getAlignmentStart() <= variant.position() && record.getAlignmentEnd() >= variant.position();
-
-            if (variantInAlignment || variantInLeftSoftClip || variantInRightSoftClip) {
-
-                boolean baseDeleted = false;
-                int readIndex;
-                if (variantInAlignment) {
-                    readIndex = record.getReadPositionAtReferencePosition(readContext.position()) - 1;
-                    if (readIndex == -1) {
-                        baseDeleted = true;
-                        readIndex = record.getReadPositionAtReferencePosition(readContext.position(), true) - 1;
-                    }
-                } else if (variantInLeftSoftClip) {
-                    readIndex = record.getReadPositionAtReferencePosition(alignmentStart) - 1 - alignmentStart + (int) variant.position()
-                            - variant.alt().length() + variant.ref().length();
-                } else {
-                    readIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) variant.position();
-                }
+            if (readIndex > -1) {
 
                 boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
                 if (!covered) {
