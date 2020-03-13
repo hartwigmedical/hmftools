@@ -201,7 +201,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         }
                     }
                 } else {
-                    refContext.refRead(baseQuality);
+                    refContext.refRead();
                 }
             }
         }

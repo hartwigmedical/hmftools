@@ -7,15 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 public interface AltContext extends VariantHotspot {
 
-    int rawSupportRef();
-
     int rawSupportAlt();
 
     int rawDepth();
-
-    double rawVaf();
-
-    int rawBaseQualityRef();
 
     int rawBaseQualityAlt();
 

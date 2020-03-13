@@ -14,11 +14,7 @@ public interface RefContext extends GenomePosition {
 
     int rawDepth();
 
-    int rawSupportRef();
-
-    int rawBaseQualityRef();
-
-    void refRead(int baseQuality);
+    void refRead();
 
     void altReadFixed(@NotNull final String ref, @NotNull final String alt, int baseQuality);
 

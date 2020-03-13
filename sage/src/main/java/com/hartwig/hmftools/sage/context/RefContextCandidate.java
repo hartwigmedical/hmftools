@@ -20,8 +20,6 @@ public class RefContextCandidate implements RefContext {
     private final Map<String, AltContextCandidate> alts;
 
     private int rawDepth;
-    private int rawSupportRef;
-    private int rawBaseQualityRef;
 
     public RefContextCandidate(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -35,10 +33,8 @@ public class RefContextCandidate implements RefContext {
         return new ArrayList<>(alts.values());
     }
 
-    public void refRead(int baseQuality) {
-        this.rawSupportRef++;
+    public void refRead() {
         this.rawDepth++;
-        this.rawBaseQualityRef += baseQuality;
     }
 
     @NotNull
@@ -78,14 +74,6 @@ public class RefContextCandidate implements RefContext {
     @NotNull
     public String sample() {
         return sample;
-    }
-
-    public int rawSupportRef() {
-        return rawSupportRef;
-    }
-
-    public int rawBaseQualityRef() {
-        return rawBaseQualityRef;
     }
 
     @Override

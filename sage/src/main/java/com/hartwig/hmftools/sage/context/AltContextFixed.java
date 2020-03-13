@@ -20,7 +20,8 @@ public class AltContextFixed implements AltContext {
     private int rawSupportAlt;
     private int rawBaseQualityAlt;
 
-    public AltContextFixed(final RefContext refContext, final String ref, final String alt, boolean realign, final ReadContext readContext) {
+    public AltContextFixed(final RefContext refContext, final String ref, final String alt, boolean realign,
+            final ReadContext readContext) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
@@ -65,24 +66,12 @@ public class AltContextFixed implements AltContext {
         return refContext.position();
     }
 
-    public int rawSupportRef() {
-        return refContext.rawSupportRef();
-    }
-
-    public int rawBaseQualityRef() {
-        return refContext.rawBaseQualityRef();
-    }
-
     public int rawSupportAlt() {
         return rawSupportAlt;
     }
 
     public int rawDepth() {
         return refContext.rawDepth();
-    }
-
-    public double rawVaf() {
-        return refContext.rawDepth() == 0 ? 0 : ((double) rawSupportAlt) / rawDepth();
     }
 
     public int rawBaseQualityAlt() {

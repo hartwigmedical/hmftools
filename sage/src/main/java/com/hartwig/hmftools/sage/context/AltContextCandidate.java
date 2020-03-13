@@ -105,14 +105,6 @@ public class AltContextCandidate implements AltContext {
         return refContext.position();
     }
 
-    public int rawSupportRef() {
-        return refContext.rawSupportRef();
-    }
-
-    public int rawBaseQualityRef() {
-        return refContext.rawBaseQualityRef();
-    }
-
     public int rawSupportAlt() {
         return rawSupportAlt;
     }
@@ -121,9 +113,6 @@ public class AltContextCandidate implements AltContext {
         return refContext.rawDepth();
     }
 
-    public double rawVaf() {
-        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupportAlt) / rawDepth();
-    }
 
     public int rawBaseQualityAlt() {
         return rawBaseQualityAlt;

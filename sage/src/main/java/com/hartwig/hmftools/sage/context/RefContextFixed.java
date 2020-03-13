@@ -20,8 +20,6 @@ public class RefContextFixed implements RefContext {
     private final Map<String, AltContextFixed> alts;
 
     private int rawDepth;
-    private int rawSupportRef;
-    private int rawBaseQualityRef;
 
     RefContextFixed(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -40,10 +38,8 @@ public class RefContextFixed implements RefContext {
         return alts.values();
     }
 
-    public void refRead(int baseQuality) {
-        this.rawSupportRef++;
+    public void refRead() {
         this.rawDepth++;
-        this.rawBaseQualityRef += baseQuality;
     }
 
     @Nullable
@@ -87,14 +83,6 @@ public class RefContextFixed implements RefContext {
 
     public String sample() {
         return sample;
-    }
-
-    public int rawSupportRef() {
-        return rawSupportRef;
-    }
-
-    public int rawBaseQualityRef() {
-        return rawBaseQualityRef;
     }
 
     @Override
