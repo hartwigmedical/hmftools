@@ -15,8 +15,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.phase.Phase;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
@@ -150,8 +150,8 @@ public class ChromosomePipeline implements AutoCloseable {
             return true;
         }
 
-        final AltContext normal = entry.primaryNormal();
-        if (normal.primaryReadContext().altSupport() > config.filter().hardMaxNormalAltSupport()) {
+        final ReadContextCounter normal = entry.primaryNormal();
+        if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }
 

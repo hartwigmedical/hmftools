@@ -20,6 +20,7 @@ import com.hartwig.hmftools.sage.context.RefContextFixedFactoryForSample;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.evidence.FixedEvidence;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -145,8 +146,8 @@ public class SomaticPipeline implements SageVariantPipeline {
                     final List<SageVariant> result = Lists.newArrayList();
                     final RefContextFixedFactoryForSample sorted = normalCandidates.createFactory(x -> true);
                     for (VariantHotspot variant : sorted.loci()) {
-                        final List<AltContext> normal = normalCandidates.altContexts(variant);
-                        final List<AltContext> tumor = tumorCandidates.altContexts(variant);
+                        final List<ReadContextCounter> normal = normalCandidates.altContexts(variant);
+                        final List<ReadContextCounter> tumor = tumorCandidates.altContexts(variant);
 
                         SageVariant sageVariant = variantFactory.create(normal, tumor);
                         result.add(sageVariant);

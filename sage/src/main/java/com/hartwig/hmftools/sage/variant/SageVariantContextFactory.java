@@ -23,7 +23,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,32 +40,30 @@ public class SageVariantContextFactory {
 
     @NotNull
     public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.primaryNormal();
+        final ReadContextCounter normal = entry.primaryNormal();
 
-        final Genotype normalGenotype = createGenotype(true, normal.primaryReadContext());
+        final Genotype normalGenotype = createGenotype(true, normal);
         final List<Genotype> genotypes = Collections.singletonList(normalGenotype);
-        final ReadContextCounter normalCounter = normal.primaryReadContext();
-        return createContext(entry, createAlleles(normal), genotypes, normalCounter);
+        return createContext(entry, createAlleles(normal), genotypes, normal);
     }
 
     @NotNull
     public static VariantContext pairedTumorNormal(@NotNull final SageVariant entry) {
-        final List<AltContext> tumorContexts = entry.tumorAltContexts();
+        final List<ReadContextCounter> tumorContexts = entry.tumorAltContexts();
 
         assert (tumorContexts.size() >= 1);
 
-        final AltContext firstTumor = tumorContexts.get(0);
+        final ReadContextCounter firstTumor = tumorContexts.get(0);
 
         final List<Genotype> genotypes = Lists.newArrayList();
         for (int i = 0; i < entry.normalAltContexts().size(); i++) {
-            AltContext normalContext = entry.normalAltContexts().get(i);
-            genotypes.add(createGenotype(i == 0, normalContext.primaryReadContext()));
+            ReadContextCounter normalContext = entry.normalAltContexts().get(i);
+            genotypes.add(createGenotype(i == 0, normalContext));
         }
 
-        tumorContexts.stream().map(x -> createGenotype(false, x.primaryReadContext())).forEach(genotypes::add);
+        tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
 
-        final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
-        return createContext(entry, createAlleles(entry.primaryNormal()), genotypes, firstTumorCounter);
+        return createContext(entry, createAlleles(entry.primaryNormal()), genotypes, firstTumor);
     }
 
     @NotNull

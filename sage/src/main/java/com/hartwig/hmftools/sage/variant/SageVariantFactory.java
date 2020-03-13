@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.FilterConfig;
 import com.hartwig.hmftools.sage.config.SoftFilter;
 import com.hartwig.hmftools.sage.config.SoftFilterConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.TierSelector;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -35,7 +34,7 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant create(@NotNull final AltContext normal) {
+    public SageVariant create(@NotNull final ReadContextCounter normal) {
         final SageVariantTier tier = tierSelector.tier(normal);
         final Set<String> filters = germlineOnlyFilters(normal);
 
@@ -43,17 +42,17 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant create(@NotNull final List<AltContext> normal, @NotNull final List<AltContext> tumorAltContexts) {
+    public SageVariant create(@NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumorAltContexts) {
 
-        final AltContext primaryNormal = normal.get(0);
+        final ReadContextCounter primaryNormal = normal.get(0);
 
         final SageVariantTier tier = tierSelector.tier(primaryNormal);
         final SoftFilterConfig softConfig = config.softConfig(tier);
 
         boolean passingTumor = false;
         final Set<String> allFilters = Sets.newHashSet();
-        for (AltContext tumorAltContext : tumorAltContexts) {
-            final Set<String> tumorFilters = pairedFilters(tier, softConfig, primaryNormal.primaryReadContext(), tumorAltContext.primaryReadContext());
+        for (ReadContextCounter tumorAltContext : tumorAltContexts) {
+            final Set<String> tumorFilters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContext);
             if (tumorFilters.isEmpty()) {
                 passingTumor = true;
             }
@@ -64,10 +63,10 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    private Set<String> germlineOnlyFilters(@NotNull final AltContext germline) {
+    private Set<String> germlineOnlyFilters(@NotNull final ReadContextCounter germline) {
         final Set<String> result = Sets.newHashSet();
 
-        if (Doubles.lessThan(germline.primaryReadContext().vaf(), config.minGermlineVaf())) {
+        if (Doubles.lessThan(germline.vaf(), config.minGermlineVaf())) {
             result.add(SageVCF.MIN_GERMLINE_VAF);
         }
 

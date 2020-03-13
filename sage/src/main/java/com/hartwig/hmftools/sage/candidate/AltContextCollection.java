@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.context.RefContext;
 import com.hartwig.hmftools.sage.context.RefContextFixedFactoryForSample;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -57,11 +59,11 @@ public class AltContextCollection {
     }
 
     @NotNull
-    public List<AltContext> altContexts(@NotNull final VariantHotspot hotspot) {
+    public List<ReadContextCounter> altContexts(@NotNull final VariantHotspot hotspot) {
         assert (map.containsKey(hotspot));
         final List<AltContext> result = map.get(hotspot);
         result.sort(comparator);
-        return map.get(hotspot);
+        return result.stream().map(AltContext::primaryReadContext).collect(Collectors.toList());
     }
 
     @NotNull

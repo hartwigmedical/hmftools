@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.sage.context.AltContext;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -13,12 +13,12 @@ public class SageVariant implements GenomePosition {
 
     private final Set<String> filters;
     private final SageVariantTier tier;
-    private final List<AltContext> normalAltContexts;
-    private final List<AltContext> tumorAltContexts;
+    private final List<ReadContextCounter> normalAltContexts;
+    private final List<ReadContextCounter> tumorAltContexts;
 
     private int localPhaseSet;
 
-    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final List<AltContext> normal, final List<AltContext> tumorAltContexts) {
+    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
         this.tier = tier;
         this.normalAltContexts = normal;
@@ -75,22 +75,22 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
-    public AltContext primaryNormal() {
+    public ReadContextCounter primaryNormal() {
         return normalAltContexts.get(0);
     }
 
     @NotNull
-    public List<AltContext> normalAltContexts() {
+    public List<ReadContextCounter> normalAltContexts() {
         return normalAltContexts;
     }
 
     @NotNull
-    public List<AltContext> tumorAltContexts() {
+    public List<ReadContextCounter> tumorAltContexts() {
         return tumorAltContexts;
     }
 
     @NotNull
-    public AltContext primaryTumor() {
+    public ReadContextCounter primaryTumor() {
         return tumorAltContexts.get(0);
     }
 
@@ -106,11 +106,11 @@ public class SageVariant implements GenomePosition {
     }
 
     public int totalQuality() {
-        return tumorAltContexts.stream().mapToInt(x -> x.primaryReadContext().tumorQuality()).sum();
+        return tumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).sum();
     }
 
     public int maxQuality() {
-        return tumorAltContexts.stream().mapToInt(x -> x.primaryReadContext().tumorQuality()).max().orElse(0);
+        return tumorAltContexts.stream().mapToInt(ReadContextCounter::tumorQuality).max().orElse(0);
     }
 
 }

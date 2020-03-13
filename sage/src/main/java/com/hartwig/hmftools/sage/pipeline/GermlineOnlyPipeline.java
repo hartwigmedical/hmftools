@@ -61,7 +61,7 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
                         refSequence,
                         region));
 
-        return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
+        return candidates.thenApply(aVoid -> candidates.join().stream().map(x -> variantFactory.create(x.primaryReadContext())).collect(Collectors.toList()));
     }
 
 }
