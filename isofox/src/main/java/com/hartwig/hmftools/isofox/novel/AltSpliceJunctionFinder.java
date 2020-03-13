@@ -404,6 +404,8 @@ public class AltSpliceJunctionFinder
 
     public void prioritiseGenes()
     {
+        mAltSpliceJunctions.forEach(x -> x.setBaseContext(mConfig.RefFastaSeqFile, mGenes.chromosome()));
+
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {
             final List<Integer> transIds = altSJ.candidateTransIds();
@@ -411,8 +413,13 @@ public class AltSpliceJunctionFinder
             GeneReadData topGene = null;
             int topMatch = 0;
 
+            int spliceStrand = altSJ.getKnownSpliceBaseStrand();
+
             for(final GeneReadData gene : mGenes.genes())
             {
+                if(spliceStrand != 0 && gene.GeneData.Strand != spliceStrand)
+                    continue;
+
                 int transMatched = (int)gene.getTranscripts().stream().filter(x -> transIds.contains(x.TransId)).count();
 
                 if(transMatched > topMatch)
@@ -475,7 +482,8 @@ public class AltSpliceJunctionFinder
 
                 writer.write(String.format(",%d,%d,%d,%d,%d",
                         altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], altSJ.getFragmentCount(),
-                        altSJ.getPositionCount(SE_START), altSJ.getPositionCount(SE_END)));
+                        altSJ.getPositionCount(SE_START),
+                        altSJ.getPositionCount(SE_END)));
 
                 writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s,%s,%s",
                         altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],

@@ -107,7 +107,6 @@ public class AltSpliceJunction
             final List<RegionReadData> regions = (se == SE_START) ? StartRegions : EndRegions;
             mTranscriptNames[se] = regions.isEmpty() ? "NONE" : generateTranscriptNames(regions);
             mNearestExonDistance[se] = calcNearestExonBoundary(se);
-            mBaseContext[se] = getBaseContext(RefFastaSeqFile, se);
         }
     }
 
@@ -179,16 +178,34 @@ public class AltSpliceJunction
         return nearestBoundary;
     }
 
-    public String getBaseContext(final IndexedFastaSequenceFile refGenome, int seIndex)
+    public void setBaseContext(final IndexedFastaSequenceFile refGenome, final String chromosome)
     {
-        long position = SpliceJunction[seIndex];
-        int startOffset = (seIndex == SE_START) ? 1 : 10;
-        int endOffset = startOffset == 1 ? 10: 1;
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            long position = SpliceJunction[se];
+            int startOffset = (se == SE_START) ? 1 : 10;
+            int endOffset = startOffset == 1 ? 10: 1;
 
-        final String baseStr = refGenome.getSubsequenceAt(
-                mGene.GeneData.Chromosome, position - startOffset, position + endOffset).getBaseString();
+            mBaseContext[se] = refGenome.getSubsequenceAt(
+                    chromosome, position - startOffset, position + endOffset).getBaseString();
+        }
+    }
 
-        return baseStr;
+    private static final String SP_SEQ_POS_STRAND_1 = "GT-AG";
+    private static final String SP_SEQ_POS_STRAND_2 = "GC-AG";
+    private static final String SP_SEQ_NEG_STRAND_1 = "CT-AC";
+    private static final String SP_SEQ_NEG_STRAND_2 = "CT-GC";
+
+    public int getKnownSpliceBaseStrand()
+    {
+        String splceBaseSeq = String.format("%s-%s", mBaseContext[SE_START].substring(2,4), mBaseContext[SE_END].substring(8,10));
+
+        if(splceBaseSeq.equals(SP_SEQ_POS_STRAND_1) || splceBaseSeq.equals(SP_SEQ_POS_STRAND_2))
+            return 1;
+        else if(splceBaseSeq.equals(SP_SEQ_NEG_STRAND_1) || splceBaseSeq.equals(SP_SEQ_NEG_STRAND_2))
+            return -1;
+        else
+            return 0;
     }
 
     public void cullNonMatchedTranscripts(final List<Integer> validTransIds)

@@ -596,6 +596,15 @@ public class GeneBamReader
         queryInterval[0] = new QueryInterval(chrSeqIndex, readRange[SE_START], readRange[SE_END]);
 
         slicer.slice(mSamReader, queryInterval, this::setPositionDepthFromRead);
+
+        // finally feed through any unmatched reads (eg if the other read is out of the specified range)
+        for(Object object : mFragmentTracker.getValues())
+        {
+            final List<long[]> readCoords = (List<long[]>)object;
+            mAltSpliceJunctionFinder.setPositionDepthFromRead(readCoords);
+            mRetainedIntronFinder.setPositionDepthFromRead(readCoords);
+        }
+
         mReadDepthPerf.stop();
     }
 

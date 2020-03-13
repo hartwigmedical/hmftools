@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.novel;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
@@ -89,6 +91,9 @@ public class RetainedIntronFinder
 
             retIntrons.add(retIntron);
         }
+
+        if(retIntrons.isEmpty())
+            return;
 
         // skip any fragments where the bounds of an exon are spanned on both sides
         if(retIntrons.size() == 2)
@@ -274,9 +279,11 @@ public class RetainedIntronFinder
                             gene.GeneData.GeneId, gene.GeneData.GeneName,
                             gene.GeneData.Chromosome, gene.GeneData.Strand));
 
+                    int readDepth = max(retIntron.getDepth(), retIntron.getFragmentCount());
+
                     writer.write(String.format(",%d,%s,%d,%d,%d,%s",
                             retIntron.position(), retIntron.type(gene.GeneData.forwardStrand()), retIntron.getFragmentCount(),
-                            retIntron.getSplicedFragmentCount(), retIntron.getDepth(), retIntron.transcriptInfo()));
+                            retIntron.getSplicedFragmentCount(), readDepth, retIntron.transcriptInfo()));
 
                     writer.newLine();
                 }

@@ -135,8 +135,7 @@ public class ChromosomeGeneTask implements Callable
             // at the moment it is one or the other
             if(generateExpRatesOnly)
             {
-                // FIXME
-                // generateExpectedTransRates(geneReadData);
+                generateExpectedTransRates(geneCollection);
             }
             else
             {
