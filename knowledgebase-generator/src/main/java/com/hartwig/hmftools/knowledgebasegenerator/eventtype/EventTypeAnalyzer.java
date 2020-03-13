@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
@@ -25,6 +26,7 @@ public class EventTypeAnalyzer {
         String gene = Strings.EMPTY;
         String eventSource = Strings.EMPTY;
         List<String> event = Lists.newArrayList();
+        Map<String, List<String>> eventMap = Maps.newHashMap();
 
         List<EventType> eventType = Lists.newArrayList();
 
@@ -33,19 +35,6 @@ public class EventTypeAnalyzer {
         for (Feature feature : viccEntry.features()) {
             switch (type) {
                 case ONCOKB: // extract info oncokb
-                    gene = feature.geneSymbol();
-                    eventSource = feature.name();
-                    biomarkerType = feature.biomarkerType();
-                    if (eventSource.contains("+")) {
-                        String[] combinedEventConvertToSingleEvent = eventSource.split(" ", 2);
-                        if (combinedEventConvertToSingleEvent.length == 2) {
-                            combinedEvent = true;
-                            event.add(combinedEventConvertToSingleEvent[0]);
-                            event.add(combinedEventConvertToSingleEvent[1]);
-                        }
-                    } else {
-                        event.add(eventSource);
-                    }
 
                     //    LOGGER.info(event);
 
@@ -90,16 +79,24 @@ public class EventTypeAnalyzer {
                     eventSource = feature.name();
                     biomarkerType = feature.biomarkerType();
                     if (eventSource.contains("+")) {
-                        String[] combinedEventConvertToSingleEvent = eventSource.split(" ", 2);
+                        String[] combinedEventConvertToSingleEvent = eventSource.split("\\+", 2);
                         if (combinedEventConvertToSingleEvent.length == 2) {
                             combinedEvent = true;
-                            event.add(combinedEventConvertToSingleEvent[0]);
-                            event.add(combinedEventConvertToSingleEvent[1]);
+
+                            if (eventMap.size() == 0) {
+                                eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[0]));
+                                if (eventMap.containsKey(gene)) {
+                                    eventMap.put(gene,
+                                            Lists.newArrayList(combinedEventConvertToSingleEvent[0], combinedEventConvertToSingleEvent[1]));
+                                } else {
+                                    eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[0]));
+                                    eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[1]));
+                                }
+                            }
                         }
                     } else {
-                        event.add(eventSource);
+                        eventMap.put(gene, Lists.newArrayList(eventSource));
                     }
-                    LOGGER.info(event);
 
                     //
                     //                    if (feature.provenanceRule() == null) {
@@ -120,19 +117,6 @@ public class EventTypeAnalyzer {
                     //                    }
                     break;
                 case CIVIC: // extract info for civic
-                    gene = feature.geneSymbol();
-                    eventSource = feature.name();
-                    biomarkerType = feature.biomarkerType();
-                    if (eventSource.contains("+")) {
-                        String[] combinedEventConvertToSingleEvent = eventSource.split(" ", 2);
-                        if (combinedEventConvertToSingleEvent.length == 2) {
-                            combinedEvent = true;
-                            event.add(combinedEventConvertToSingleEvent[0]);
-                            event.add(combinedEventConvertToSingleEvent[1]);
-                        }
-                    } else {
-                        event.add(eventSource);
-                    }
                     //                    if (event == null || event.equals("N/A")) {
                     //                        event = feature.name();
                     //                    }
@@ -185,8 +169,9 @@ public class EventTypeAnalyzer {
                     .gene(gene)
                     .combinedEvent(combinedEvent)
                     .event(eventSource)
-                    .interpretEventType(event)
-                    .biomarkerType(biomarkerType).build());
+                    .interpretEventType(Lists.newArrayList())
+                    .biomarkerType(biomarkerType)
+                    .build());
         }
         return eventType;
     }

@@ -28,7 +28,7 @@ public class ViccAmpsDelExtractorTestApplication {
 
 
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
-            LOGGER.info("eventType: " + eventType);
+        //    LOGGER.info("eventType: " + eventType);
 
            // for (EventType type: eventType) {
                 // Generating actionable event and known events
