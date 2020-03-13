@@ -10,6 +10,7 @@ import htsjdk.samtools.SAMRecord;
 public class RawContextFactory {
 
     private final VariantHotspot variant;
+    private static final RawContext DUMMY = RawContext.clipped(-1);
 
     public RawContextFactory(final VariantHotspot variant) {
         this.variant = variant;
@@ -20,8 +21,7 @@ public class RawContextFactory {
         RawContextCigarHandler handler = new RawContextCigarHandler(variant);
         CigarTraversal.traverseCigar(record, handler);
         RawContext result = handler.result();
-        return result == null ? new RawContext(-1, false, false, false, false) : result;
-
+        return result == null ? DUMMY : result;
     }
 
 }

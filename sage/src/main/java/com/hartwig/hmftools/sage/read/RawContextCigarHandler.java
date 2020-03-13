@@ -17,7 +17,7 @@ public class RawContextCigarHandler implements CigarHandler {
 
     private RawContext result;
 
-    public RawContextCigarHandler(final VariantHotspot variant) {
+    RawContextCigarHandler(final VariantHotspot variant) {
         this.variant = variant;
         this.isInsert = variant.ref().length() < variant.alt().length();
         this.isDelete = variant.ref().length() > variant.alt().length();
@@ -35,7 +35,7 @@ public class RawContextCigarHandler implements CigarHandler {
         if (variant.position() < record.getAlignmentStart()) {
             int readIndex = record.getReadPositionAtReferencePosition(record.getAlignmentStart()) - 1 - record.getAlignmentStart()
                     + (int) variant.position() - variant.alt().length() + variant.ref().length();
-            result = new RawContext(readIndex, false, false, false, false);
+            result = RawContext.clipped(readIndex);
         }
     }
 
@@ -54,7 +54,7 @@ public class RawContextCigarHandler implements CigarHandler {
         if (variant.position() >= refPosition && variant.position() <= refPositionEnd) {
             int alignmentEnd = record.getAlignmentEnd();
             int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) variant.position();
-            result = new RawContext(actualIndex, false, false, false, false);
+            result = RawContext.clipped(actualIndex);
         }
 
     }
@@ -71,12 +71,10 @@ public class RawContextCigarHandler implements CigarHandler {
             int readIndexOffset = (int) (variant.position() - refPosition);
             int variantReadIndex = readIndex + readIndexOffset;
 
+            int baseQuality = record.getBaseQualities()[variantReadIndex];
             boolean altSupport = isSNV && refPositionEnd >= variant.end() && matchesString(record, variantReadIndex, variant.alt());
-
-            boolean refSupport =
-                    !altSupport && new String(record.getReadBases(), variantReadIndex, 1).equals(variant.alt().substring(0, 1));
-
-            result = new RawContext(variantReadIndex, false, altSupport, refSupport, true);
+            boolean refSupport = !altSupport && matchesString(record, variantReadIndex, variant.ref().substring(0, 1));
+            result = RawContext.snv(variantReadIndex, altSupport, refSupport, baseQuality);
         }
 
     }
@@ -89,7 +87,8 @@ public class RawContextCigarHandler implements CigarHandler {
 
         if (refPosition == variant.position()) {
             boolean altSupport = isInsert && e.getLength() == variant.alt().length() - 1 && matchesString(record, readIndex, variant.alt());
-            result = new RawContext(readIndex, false, altSupport, false, true);
+            int baseQuality = altSupport ? baseQuality(readIndex, record, variant.alt().length()) : 0;
+            result = RawContext.indel(readIndex, altSupport, baseQuality);
         }
 
     }
@@ -105,9 +104,10 @@ public class RawContextCigarHandler implements CigarHandler {
             boolean altSupport = isDelete && e.getLength() == variant.ref().length() - 1 && matchesString(record,
                     readIndex,
                     variant.ref().substring(0, 1));
-            result = new RawContext(readIndex, false, altSupport, false, true);
+            int baseQuality = altSupport ? baseQuality(readIndex, record, 2) : 0;
+            result = RawContext.indel(readIndex, altSupport, baseQuality);
         } else if (refPositionEnd >= variant.position()) {
-            result = new RawContext(readIndex, true, false, false, false);
+            result = RawContext.inDelete(readIndex);
         }
 
     }
@@ -120,5 +120,14 @@ public class RawContextCigarHandler implements CigarHandler {
 
     private static boolean matchesString(SAMRecord record, int index, String expected) {
         return new String(record.getReadBases(), index, expected.length()).equals(expected);
+    }
+
+    private int baseQuality(int readIndex, SAMRecord record, int length) {
+        int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
+        int quality = Integer.MAX_VALUE;
+        for (int i = readIndex; i <= maxIndex; i++) {
+            quality = Math.min(quality, record.getBaseQualities()[i]);
+        }
+        return quality;
     }
 }

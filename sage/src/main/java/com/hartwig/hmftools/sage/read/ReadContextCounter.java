@@ -43,11 +43,21 @@ public class ReadContextCounter implements GenomePosition {
 
     private int improperPair;
 
+    private int rawDepth;
+    private int rawAltSupport;
+    private int rawRefSupport;
+    private int rawAltBaseQuality;
+    private int rawRefBaseQuality;
+
     public ReadContextCounter(@NotNull final VariantHotspot variant, @NotNull final ReadContext readContext) {
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
         this.rawFactory = new RawContextFactory(variant);
+    }
+
+    public VariantHotspot variant() {
+        return variant;
     }
 
     @NotNull
@@ -110,6 +120,30 @@ public class ReadContextCounter implements GenomePosition {
         return improperPair;
     }
 
+    public int rawDepth() {
+        return rawDepth;
+    }
+
+    public int rawAltSupport() {
+        return rawAltSupport;
+    }
+
+    public int rawRefSupport() {
+        return rawRefSupport;
+    }
+
+    public int rawAltBaseQuality() {
+        return rawAltBaseQuality;
+    }
+
+    public int rawRefBaseQuality() {
+        return rawRefBaseQuality;
+    }
+
+    public double rawVaf() {
+        return rawDepth ==  0 ? 0 : ((double) rawAltSupport) / rawDepth;
+    }
+
     @NotNull
     public ReadContext readContext() {
         return readContext;
@@ -131,6 +165,12 @@ public class ReadContextCounter implements GenomePosition {
             final RawContext rawContext = rawFactory.create(record);
             final int readIndex = rawContext.readIndex();
             final boolean baseDeleted = rawContext.isReadIndexInDelete();
+
+            rawDepth += rawContext.isDepthSupport() ? 1 : 0;
+            rawAltSupport += rawContext.isAltSupport() ? 1 : 0;
+            rawRefSupport += rawContext.isRefSupport() ? 1 : 0;
+            rawAltBaseQuality += rawContext.altQuality();
+            rawRefBaseQuality += rawContext.refQuality();
 
             if (readIndex > -1) {
 

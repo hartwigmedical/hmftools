@@ -67,8 +67,6 @@ public class FixedEvidence {
                 .open(new File(bam))) {
             slicer.slice(tumorReader, samRecord -> {
 
-                recordConsumer.accept(samRecord);
-
                 if (samRecord.getMappingQuality() >= minQuality) {
                     consumerSelector.select(samRecord, x -> x.primaryReadContext().accept(x.realign(), samRecord, sageConfig));
                 }

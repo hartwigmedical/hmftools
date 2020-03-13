@@ -53,7 +53,7 @@ public class SageVariantFactory {
         boolean passingTumor = false;
         final Set<String> allFilters = Sets.newHashSet();
         for (AltContext tumorAltContext : tumorAltContexts) {
-            final Set<String> tumorFilters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContext);
+            final Set<String> tumorFilters = pairedFilters(tier, softConfig, primaryNormal.primaryReadContext(), tumorAltContext.primaryReadContext());
             if (tumorFilters.isEmpty()) {
                 passingTumor = true;
             }
@@ -76,34 +76,33 @@ public class SageVariantFactory {
 
     @NotNull
     private Set<String> pairedFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
-            @NotNull final AltContext normal, @NotNull final AltContext primaryTumor) {
+            @NotNull final ReadContextCounter normal, @NotNull final ReadContextCounter primaryTumor) {
         Set<String> result = Sets.newHashSet();
 
         // TUMOR Tests
         final boolean skipTumorTests = skipMinTumorQualTest(tier, primaryTumor);
-        if (!skipTumorTests && primaryTumor.primaryReadContext().tumorQuality() < config.minTumorQual()) {
+        if (!skipTumorTests && primaryTumor.tumorQuality() < config.minTumorQual()) {
             result.add(SoftFilter.MIN_TUMOR_QUAL.toString());
         }
 
-        if (!skipTumorTests && Doubles.lessThan(primaryTumor.primaryReadContext().vaf(), config.minTumorVaf())) {
+        if (!skipTumorTests && Doubles.lessThan(primaryTumor.vaf(), config.minTumorVaf())) {
             result.add(SoftFilter.MIN_TUMOR_VAF.toString());
         }
 
         // GERMLINE Tests
-        final ReadContextCounter normalCounter = normal.primaryReadContext();
         Chromosome contextChromosome = HumanChromosome.fromString(normal.chromosome());
         int minGermlineCoverage =
                 contextChromosome.isAllosome() ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
-        if (normal.primaryReadContext().coverage() < minGermlineCoverage) {
+        if (normal.coverage() < minGermlineCoverage) {
             result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
 
-        if (Doubles.greaterThan(normalCounter.vaf(), config.maxGermlineVaf())) {
+        if (Doubles.greaterThan(normal.vaf(), config.maxGermlineVaf())) {
             result.add(SoftFilter.MAX_GERMLINE_VAF.toString());
         }
 
-        double tumorQual = primaryTumor.rawBaseQualityAlt();
-        double germlineQual = normal.rawBaseQualityAlt();
+        double tumorQual = primaryTumor.rawAltBaseQuality();
+        double germlineQual = normal.rawAltBaseQuality();
         if (Doubles.positive(tumorQual)) {
             if (Doubles.greaterThan(germlineQual / tumorQual, config.maxGermlineRelativeQual())) {
                 result.add(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.toString());
@@ -111,8 +110,8 @@ public class SageVariantFactory {
         }
 
         // MNV Tests
-        if (tier != SageVariantTier.HOTSPOT && normal.isMNV()) {
-            if (normal.primaryReadContext().altSupport() != 0) {
+        if (tier != SageVariantTier.HOTSPOT && normal.variant().isMNV()) {
+            if (normal.altSupport() != 0) {
                 result.add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
             }
         }
@@ -120,8 +119,8 @@ public class SageVariantFactory {
         return result;
     }
 
-    private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final AltContext primaryTumor) {
-        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawSupportAlt() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
+    private boolean skipMinTumorQualTest(@NotNull final SageVariantTier tier, @NotNull final ReadContextCounter primaryTumor) {
+        return tier.equals(SageVariantTier.HOTSPOT) && primaryTumor.rawAltSupport() >= config.hotspotMinRawTumorAltSupportToSkipQualCheck()
                 && Doubles.greaterOrEqual(primaryTumor.rawVaf(), config.hotspotMinRawTumorVafToSkipQualCheck());
     }
 
