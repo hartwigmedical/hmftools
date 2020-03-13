@@ -75,8 +75,8 @@ public class EventTypeAnalyzer {
 
                     break;
                 case CGI: // extract info for cgi
-                    gene = feature.geneSymbol();
-                    eventSource = feature.name();
+                    gene = feature.geneSymbol(); // TODO: use not geneSymbol but extract gene from name
+                    eventSource = feature.name(); //TODO: extract only event
                     biomarkerType = feature.biomarkerType();
                     if (eventSource.contains("+")) {
                         String[] combinedEventConvertToSingleEvent = eventSource.split("\\+", 2);
