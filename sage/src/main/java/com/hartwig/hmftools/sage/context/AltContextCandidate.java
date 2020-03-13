@@ -52,7 +52,7 @@ public class AltContextCandidate implements AltContext {
             }
 
             if (!readContextMatch) {
-                interimReadContexts.add(new ReadContextCounter(this, newReadContext));
+                interimReadContexts.add(new ReadContextCounter(refContext.sample(), this, newReadContext));
             }
         }
     }
@@ -61,8 +61,8 @@ public class AltContextCandidate implements AltContext {
     public ReadContextCounter setPrimaryReadCounterFromInterim() {
         interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
         readContextCounter = interimReadContexts.isEmpty()
-                ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
-                : new ReadContextCounter(this, interimReadContexts.get(0).readContext().minimiseFootprint());
+                ? new ReadContextCounter(refContext.sample(), this, ReadContextFactory.dummy((int) position(), alt))
+                : new ReadContextCounter(refContext.sample(), this, interimReadContexts.get(0).readContext().minimiseFootprint());
 
         interimReadContexts.clear();
 

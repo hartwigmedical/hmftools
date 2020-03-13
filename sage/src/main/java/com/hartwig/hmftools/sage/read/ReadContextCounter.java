@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.read;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -16,9 +15,10 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounter implements GenomePosition {
+public class ReadContextCounter implements VariantHotspot {
     private static final Logger LOGGER = LogManager.getLogger(ReadContextCounter.class);
 
+    private final String sample;
     private final VariantHotspot variant;
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
@@ -49,11 +49,17 @@ public class ReadContextCounter implements GenomePosition {
     private int rawAltBaseQuality;
     private int rawRefBaseQuality;
 
-    public ReadContextCounter(@NotNull final VariantHotspot variant, @NotNull final ReadContext readContext) {
+    public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext) {
+        this.sample = sample;
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
         this.rawFactory = new RawContextFactory(variant);
+    }
+
+    @NotNull
+    public String sample() {
+        return sample;
     }
 
     public VariantHotspot variant() {
@@ -69,6 +75,18 @@ public class ReadContextCounter implements GenomePosition {
     @Override
     public long position() {
         return variant.position();
+    }
+
+    @NotNull
+    @Override
+    public String ref() {
+        return variant.ref();
+    }
+
+    @NotNull
+    @Override
+    public String alt() {
+        return variant.alt();
     }
 
     public int altSupport() {
@@ -141,7 +159,7 @@ public class ReadContextCounter implements GenomePosition {
     }
 
     public double rawVaf() {
-        return rawDepth ==  0 ? 0 : ((double) rawAltSupport) / rawDepth;
+        return rawDepth == 0 ? 0 : ((double) rawAltSupport) / rawDepth;
     }
 
     @NotNull
