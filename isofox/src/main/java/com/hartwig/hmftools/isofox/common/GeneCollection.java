@@ -4,7 +4,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.generateCommonExonicRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
@@ -38,7 +37,7 @@ public class GeneCollection
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
-    private final Map<String,Double> mTranscriptAllocations; // results from the expected rate vs counts fit routine
+    private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine
     private double mFitResiduals;
 
     public GeneCollection(int id, final List<GeneReadData> genes)
@@ -59,7 +58,7 @@ public class GeneCollection
         buildCache();
 
         mTranscriptReadCounts = Maps.newHashMap();
-        mTranscriptAllocations = Maps.newHashMap();
+        mFitAllocations = Maps.newHashMap();
         mFitResiduals = 0;
     }
 
@@ -150,9 +149,9 @@ public class GeneCollection
     public static final int TRANS_COUNT = 0;
     public static final int UNIQUE_TRANS_COUNT = 1;
 
-    public int[][] getTranscriptReadCount(final String trans)
+    public int[][] getTranscriptReadCount(final int transId)
     {
-        int[][] counts = mTranscriptReadCounts.get(trans);
+        int[][] counts = mTranscriptReadCounts.get(transId);
         return counts != null ? counts : new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
     }
 
@@ -173,17 +172,16 @@ public class GeneCollection
         ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
     }
 
-    public Map<String,Double> getTranscriptAllocations() { return mTranscriptAllocations; }
-
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
 
-    public double getTranscriptAllocation(final String transName)
+    public Map<String,Double> getFitAllocations() { return mFitAllocations; }
+
+    public double getFitAllocation(final String transName)
     {
-        Double allocation = mTranscriptAllocations.get(transName);
+        Double allocation = mFitAllocations.get(transName);
         return allocation != null ? allocation : 0;
     }
-
 
     public void logOverlappingGenes(final List<GeneReadData> overlappingGenes)
     {

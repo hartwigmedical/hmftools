@@ -8,11 +8,11 @@ import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.UNSPLICED_ID;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 
 import org.immutables.value.Value;
@@ -21,6 +21,7 @@ import org.immutables.value.Value;
 public abstract class GeneResult
 {
     public abstract EnsemblGeneData geneData();
+    public abstract String collectionId();
     public abstract int intronicLength();
     public abstract int transCount();
     public abstract int totalFragments();
@@ -35,19 +36,21 @@ public abstract class GeneResult
 
     public abstract List<TranscriptResult> transcriptResults();
 
-    public static GeneResult createGeneResults(GeneReadData geneReadData, final List<TranscriptResult> transResults)
+    public static GeneResult createGeneResults(final GeneCollection geneCollection, final GeneReadData geneReadData, final List<TranscriptResult> transResults)
     {
         final EnsemblGeneData geneData = geneReadData.GeneData;
 
-        long geneLength = geneData.GeneEnd - geneData.GeneStart;
+        long geneLength = geneData.length();
+        long exonicLength = geneReadData.calcExonicRegionLength();
 
         final int[] fragmentCounts = geneReadData.getCounts();
 
-        Double unsplicedAlloc = geneReadData.getTranscriptAllocations().get(UNSPLICED_ID);
+        double unsplicedAlloc = geneCollection.getFitAllocation(geneData.GeneId);
 
         return ImmutableGeneResult.builder()
                 .geneData(geneData)
-                .intronicLength((int)(geneLength - geneReadData.calcExonicRegionLength()))
+                .collectionId(geneCollection.chrId())
+                .intronicLength((int)(geneLength - exonicLength))
                 .transCount(geneReadData.getTranscripts().size())
                 .totalFragments(fragmentCounts[typeAsInt(TOTAL)])
                 .supportingTrans(fragmentCounts[typeAsInt(TRANS_SUPPORTING)])
@@ -56,7 +59,7 @@ public abstract class GeneResult
                 .readThroughFragments(fragmentCounts[typeAsInt(READ_THROUGH)])
                 .chimericFragments(fragmentCounts[typeAsInt(CHIMERIC)])
                 .duplicates(fragmentCounts[typeAsInt(DUPLICATE)])
-                .unsplicedAlloc(unsplicedAlloc != null && !Double.isNaN(unsplicedAlloc) ? unsplicedAlloc : 0.0)
+                .unsplicedAlloc(unsplicedAlloc)
                 .fitResiduals(geneReadData.getFitResiduals())
                 .transcriptResults(transResults)
                 .build();

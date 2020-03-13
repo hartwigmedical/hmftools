@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
-import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData.ER_COL_GENE_SET_ID;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
@@ -25,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
+import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 public class ExpectedTransRates
@@ -71,11 +70,11 @@ public class ExpectedTransRates
     }
 
     public void runTranscriptEstimation(
-            final GeneCollection genes, final List<TranscriptComboData> transCategoryCounts, final ExpectedRatesData expRatesData)
+            final GeneCollection geneCollection, final List<TranscriptComboData> transCategoryCounts, final ExpectedRatesData expRatesData)
     {
         if(expRatesData == null)
         {
-            loadGeneExpectedRatesData(genes);
+            loadGeneExpectedRatesData(geneCollection);
         }
         else
         {
@@ -84,20 +83,16 @@ public class ExpectedTransRates
 
         if(!validData())
         {
-            ISF_LOGGER.debug("gene({}) invalid expected rates or actuals data", genes.geneNames());
+            ISF_LOGGER.debug("gene({}) invalid expected rates or actuals data", geneCollection.geneNames());
             return;
         }
 
-        final double[] transComboCounts = generateReadCounts(genes, transCategoryCounts);
+        final double[] transComboCounts = generateReadCounts(geneCollection, transCategoryCounts);
 
         double totalCounts = sumVector(transComboCounts);
 
         if(totalCounts == 0)
             return;
-
-        // add in counts for the unspliced category
-        // int unsplicedCount = geneReadData.getCounts()[typeAsInt(GeneMatchType.UNSPLICED)];
-        // transComboCounts[UNSPLICED_CAT_INDEX] = unsplicedCount;
 
         final List<String> transcriptNames = mCurrentExpRatesData.TranscriptIds;
 
@@ -107,11 +102,27 @@ public class ExpectedTransRates
         double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
 
         ISF_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
-                genes.geneNames(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
+                geneCollection.geneNames(), totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
 
-        genes.setFitResiduals(residuals[RESIDUAL_TOTAL]);
+        geneCollection.setFitResiduals(residuals[RESIDUAL_TOTAL]);
 
-        Map<String,Double> transAllocations = genes.getTranscriptAllocations();
+        if(geneCollection.genes().size() == 1)
+        {
+            geneCollection.genes().get(0).setFitResiduals(residuals[RESIDUAL_TOTAL]);
+        }
+        else
+        {
+            // divvy up residuals between the genes according to their length
+            long totalGeneLength = geneCollection.genes().stream().mapToLong(x -> x.GeneData.length()).sum();
+
+            for (GeneReadData gene : geneCollection.genes())
+            {
+                double residualsFraction = gene.GeneData.length() / (double) totalGeneLength * residuals[RESIDUAL_TOTAL];
+                gene.setFitResiduals(residualsFraction);
+            }
+        }
+
+        Map<String,Double> transAllocations = geneCollection.getFitAllocations();
 
         for(int transIndex = 0; transIndex < transcriptNames.size(); ++transIndex)
         {
@@ -120,7 +131,7 @@ public class ExpectedTransRates
 
             if(transAllocation > 0)
             {
-                ISF_LOGGER.debug("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
+                ISF_LOGGER.trace("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
 
             transAllocations.put(transName, transAllocation);
@@ -129,7 +140,7 @@ public class ExpectedTransRates
         if(mConfig.WriteTransComboData)
         {
             mResultsWriter.writeTransComboCounts(
-                    genes.chrId(), mCurrentExpRatesData.Categories, transComboCounts, fittedCounts);
+                    geneCollection.chrId(), mCurrentExpRatesData.Categories, transComboCounts, fittedCounts);
         }
     }
 
@@ -151,7 +162,7 @@ public class ExpectedTransRates
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    ISF_LOGGER.debug("category({}) {} fragCount({}) skipped", categoryKey, tcData.impliedType(), fragmentCount);
+                    ISF_LOGGER.trace("category({}) {} fragCount({}) skipped", categoryKey, tcData.impliedType(), fragmentCount);
                     skippedComboCounts += fragmentCount;
                 }
                 else
@@ -189,7 +200,7 @@ public class ExpectedTransRates
 
             if (line == null)
             {
-                ISF_LOGGER.error("Empty patient sample IDs file({})", filename);
+                ISF_LOGGER.error("empty calculated expected rates file({})", filename);
                 return;
             }
 

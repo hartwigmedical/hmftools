@@ -73,7 +73,7 @@ public class ExpectedRatesData
         }
     }
 
-    private int getTranscriptIndex(final String trans)
+    public int getTranscriptIndex(final String trans)
     {
         for(int i = 0; i < TranscriptIds.size(); ++i)
         {

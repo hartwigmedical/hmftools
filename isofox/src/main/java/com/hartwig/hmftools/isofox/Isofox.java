@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 
 import java.util.ArrayList;
@@ -237,6 +238,10 @@ public class Isofox
         if (cmd.hasOption(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
+        }
+        else if(cmd.hasOption(LOG_LEVEL))
+        {
+            Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
         }
 
         IsofoxConfig config = new IsofoxConfig(cmd);

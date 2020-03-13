@@ -97,7 +97,6 @@ public class NovelJunctionsTest
         List<Integer> transIds = Lists.newArrayList(transId1, transId2, transId3, transId4);
 
         gene.setTranscripts(transcripts);
-        gene.generateRegions();
 
         AltSpliceJunctionFinder asjFinder = new AltSpliceJunctionFinder(new IsofoxConfig(), null);
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
@@ -287,7 +286,6 @@ public class NovelJunctionsTest
         List<Integer> transIds = Lists.newArrayList(transId1, transId2, transId3);
 
         gene.setTranscripts(transcripts);
-        gene.generateRegions();
 
         RetainedIntronFinder riFinder = new RetainedIntronFinder(null);
 

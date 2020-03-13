@@ -116,7 +116,7 @@ public class GcBiasAdjuster
 
             if (line == null)
             {
-                ISF_LOGGER.error("Empty patient sample IDs file({})", mConfig.GcBiasFile);
+                ISF_LOGGER.error("empty GC bias file({})", mConfig.GcBiasFile);
             }
 
             String currentChr = "";

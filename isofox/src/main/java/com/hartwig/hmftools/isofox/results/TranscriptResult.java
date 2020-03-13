@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.isofox.common.GeneReadData.TRANS_COUNT;
-import static com.hartwig.hmftools.isofox.common.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -10,6 +10,7 @@ import java.util.List;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
@@ -41,9 +42,11 @@ public abstract class TranscriptResult
     public abstract double fitAllocation();
 
     public static TranscriptResult createTranscriptResults(
-            final GeneReadData geneReadData, final TranscriptData transData,
-            final List<int[]> expRateFragmentLengths, double expRateAllocation)
+            final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
+            final List<int[]> expRateFragmentLengths)
     {
+        double expRateAllocation = geneCollection.getFitAllocation(transData.TransName);
+
         int exonsFound = 0;
 
         int spliceJunctionsSupported = 0;
@@ -111,7 +114,7 @@ public abstract class TranscriptResult
 
         double uniqueBaseAvgDepth = uniqueExonicBases > 0 ? uniqueExonicBaseTotalDepth / (double)uniqueExonicBases : 0;
 
-        int[][] supportingFragments = geneReadData.getTranscriptReadCount(transData.TransName);
+        int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
 
         double effectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
 

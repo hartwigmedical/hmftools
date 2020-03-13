@@ -3,11 +3,11 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.isofox.common.GeneReadData.TRANS_COUNT;
-import static com.hartwig.hmftools.isofox.common.GeneReadData.UNIQUE_TRANS_COUNT;
 
 import java.util.Arrays;
 import java.util.List;

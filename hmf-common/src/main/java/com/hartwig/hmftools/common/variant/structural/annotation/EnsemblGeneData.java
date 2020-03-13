@@ -35,6 +35,8 @@ public class EnsemblGeneData
     public boolean forwardStrand() { return Strand == 1; }
     public boolean reverseStrand() { return Strand == -1; }
 
+    public long length() { return GeneEnd - GeneStart; }
+
     public int getListIndex() { return mListIndex; }
     public void setListIndex(int index) { mListIndex = index; }
 

@@ -26,7 +26,6 @@ public class IsofoxConfig
     // config items
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SAMPLE = "sample";
-    public static final String LOG_DEBUG = "log_debug";
     public static final String DATA_OUTPUT_DIR = "output_dir";
 
     private static final String GENE_ID_FILE = "gene_id_file";
@@ -68,6 +67,8 @@ public class IsofoxConfig
     private static final String READ_COUNT_LIMIT = "read_count_limit";
     private static final String RUN_VALIDATIONS = "validate";
     private static final String THREADS = "threads";
+    public static final String LOG_DEBUG = "log_debug";
+    public static final String LOG_LEVEL = "log_level";
 
     public final String SampleId;
     public final List<String> RestrictedGeneIds; // specific set of genes to process
@@ -326,6 +327,7 @@ public class IsofoxConfig
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
+        options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
         options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");

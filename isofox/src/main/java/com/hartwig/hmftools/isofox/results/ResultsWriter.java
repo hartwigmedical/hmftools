@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.results;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.GeneReadData.TRANS_COUNT;
-import static com.hartwig.hmftools.isofox.common.GeneReadData.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -120,7 +120,7 @@ public class ResultsWriter
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write("GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
-                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc,FitResiduals");
+                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc,FitResiduals,GeneSet");
                 mGeneDataWriter.newLine();
             }
 
@@ -136,8 +136,8 @@ public class ResultsWriter
                     geneResult.totalFragments(), geneResult.supportingTrans(), geneResult.altFragments(), geneResult.unsplicedFragments(),
                     geneResult.readThroughFragments(), geneResult.chimericFragments(), geneResult.duplicates()));
 
-            mGeneDataWriter.write(String.format(",%.1f,%.1f",
-                    geneResult.unsplicedAlloc(), geneResult.fitResiduals()));
+            mGeneDataWriter.write(String.format(",%.1f,%.1f,%s",
+                    geneResult.unsplicedAlloc(), geneResult.fitResiduals(), geneResult.collectionId()));
 
             mGeneDataWriter.newLine();
 

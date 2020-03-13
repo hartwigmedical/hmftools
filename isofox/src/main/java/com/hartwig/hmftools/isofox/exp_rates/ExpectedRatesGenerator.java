@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.UNSPLICED;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
@@ -25,6 +27,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
+import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
 
@@ -35,7 +38,7 @@ public class ExpectedRatesGenerator
     // map of transcript (or unspliced) to all expected category counts covering it (and others)
     private final Map<String, List<TranscriptComboData>> mExpectedTransComboCounts;
 
-    private GeneCollection mGenes;
+    private GeneCollection mGeneCollection;
     private ExpectedRatesData mCurrentExpRatesData;
     private int mCurrentFragSize;
     private int mCurrentFragFrequency;
@@ -43,8 +46,7 @@ public class ExpectedRatesGenerator
 
     private final BufferedWriter mExpRateWriter;
 
-    public static final String UNSPLICED_ID = "UNSPLICED";
-    private static final String EXP_RATES_FILE_ID = "rna_trans_exp_rates";
+    private static final String EXP_RATES_FILE_ID = "exp_rates.csv";
 
     public static final int FL_LENGTH = 0;
     public static final int FL_FREQUENCY = 1;
@@ -58,7 +60,7 @@ public class ExpectedRatesGenerator
 
         mExpectedTransComboCounts = Maps.newHashMap();
         mCurrentExpRatesData = null;
-        mGenes = null;
+        mGeneCollection = null;
 
         mExpRateWriter = resultsWriter != null ? resultsWriter.getExpRatesWriter() : null;
     }
@@ -73,14 +75,14 @@ public class ExpectedRatesGenerator
 
     public void generateExpectedRates(final GeneCollection genes)
     {
-        mGenes = genes;
+        mGeneCollection = genes;
         mExpectedTransComboCounts.clear();
-        mCurrentExpRatesData = new ExpectedRatesData(mGenes.chrId());
+        mCurrentExpRatesData = new ExpectedRatesData(mGeneCollection.chrId());
 
-        final List<long[]> commonExonicRegions = mGenes.getCommonExonicRegions();
+        final List<long[]> commonExonicRegions = mGeneCollection.getCommonExonicRegions();
 
         // apply fragment reads across each transcript as though it were fully transcribed
-        final List<TranscriptData> transDataList = mGenes.getTranscripts();
+        final List<TranscriptData> transDataList = mGeneCollection.getTranscripts();
 
         for(final int[] flData : mConfig.ExpRateFragmentLengths)
         {
@@ -90,11 +92,15 @@ public class ExpectedRatesGenerator
             for (TranscriptData transData : transDataList)
             {
                 boolean endOfTrans = false;
+                List<TranscriptData> candidateTrans = Lists.newArrayList(transDataList);
+                candidateTrans.remove(transData);
 
                 for (ExonData exon : transData.exons())
                 {
                     for (long startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
                     {
+                        cullTranscripts(candidateTrans, startPos);
+
                         if (!allocateTranscriptCounts(transData, transDataList, startPos))
                         {
                             endOfTrans = true;
@@ -112,16 +118,21 @@ public class ExpectedRatesGenerator
 
             if(commonExonicRegions.size() > 1)
             {
-                long regionStart = mGenes.regionBounds()[SE_START];
-                long regionEnd = mGenes.regionBounds()[SE_END];
+                long regionStart = mGeneCollection.regionBounds()[SE_START];
+                long regionEnd = mGeneCollection.regionBounds()[SE_END];
 
                 int exonicRegionIndex = 0;
                 long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
                 long nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
 
+                List<TranscriptData> candidateTrans = Lists.newArrayList(transDataList);
+
                 for (long startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
                 {
                     final List<String> unsplicedGenes = findUnsplicedGenes(startPos);
+
+                    // cull the set of possible transcripts
+                    cullTranscripts(candidateTrans, startPos);
 
                     if (startPos <= currentExonicEnd)
                     {
@@ -133,7 +144,7 @@ public class ExpectedRatesGenerator
                         // check for purely intronic fragments
                         if (startPos < nextExonicStart)
                         {
-                            addTransComboData(UNSPLICED_ID, emptyTrans, unsplicedGenes);
+                            addUnsplicedComboData(emptyTrans, unsplicedGenes);
                         }
                         else
                         {
@@ -155,22 +166,40 @@ public class ExpectedRatesGenerator
             else
             {
                 // force an empty entry even though it won't have any category ratios set for it
-                List<String> allGeneIds = mGenes.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+                List<String> allGeneIds = mGeneCollection.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
                 List<TranscriptComboData> emptyList = Lists.newArrayList(new TranscriptComboData(emptyTrans, allGeneIds));
-                mExpectedTransComboCounts.put(UNSPLICED_ID, emptyList);
+
+                for(GeneReadData gene : mGeneCollection.genes())
+                {
+                    mExpectedTransComboCounts.put(gene.GeneData.GeneId, emptyList);
+                }
             }
         }
 
         formTranscriptDefinitions();
     }
 
-    private List<String> findUnsplicedGenes(long startPos)
+    private void cullTranscripts(final List<TranscriptData> transcripts, long startPos)
     {
-        if(mGenes.genes().size() == 1)
-            return Lists.newArrayList(mGenes.genes().get(0).GeneData.GeneId);
+        int index = 0;
+        while(index < transcripts.size())
+        {
+            if(transcripts.get(index).TransEnd < startPos)
+                transcripts.remove(index);
+            else
+                ++index;
+        }
+    }
 
-        return mGenes.genes().stream()
-                .filter(x -> x.GeneData.GeneStart >= startPos && x.GeneData.GeneEnd <= startPos + mCurrentFragSize - 1)
+    private List<String> findUnsplicedGenes(long fragStart)
+    {
+        if(mGeneCollection.genes().size() == 1)
+            return Lists.newArrayList(mGeneCollection.genes().get(0).GeneData.GeneId);
+
+        long fragEnd = fragStart + mCurrentFragSize - 1;
+
+        return mGeneCollection.genes().stream()
+                .filter(x -> positionsWithin(fragStart,fragEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
                 .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
     }
 
@@ -198,7 +227,7 @@ public class ExpectedRatesGenerator
             if(transData == otherTransData)
                 continue;
 
-            if(readsSupportFragment(otherTransData, readRegions, matchType, spliceJunctions))
+            if(readsSupportTranscript(otherTransData, readRegions, matchType, spliceJunctions))
             {
                 if(matchType == SPLICED || matchType == LONG)
                     longAndSplicedTrans.add(otherTransData.TransId);
@@ -246,13 +275,19 @@ public class ExpectedRatesGenerator
         // check whether these unspliced reads support exonic regions
         for(TranscriptData transData : transDataList)
         {
-            if(readsSupportFragment(transData, readRegions, SHORT, noSpliceJunctions))
+            if(readsSupportTranscript(transData, readRegions, SHORT, noSpliceJunctions))
             {
                 shortTrans.add(transData.TransId);
             }
         }
 
-        addTransComboData(UNSPLICED_ID, shortTrans, unsplicedGenes);
+        addUnsplicedComboData(shortTrans, unsplicedGenes);
+    }
+
+    private void addUnsplicedComboData(
+            final List<Integer> transcripts, final List<String> unsplicedGenes)
+    {
+        unsplicedGenes.forEach(x -> addTransComboData(x, transcripts, unsplicedGenes));
     }
 
     private void addTransComboData(
@@ -278,7 +313,8 @@ public class ExpectedRatesGenerator
         matchingCounts.addCounts(mCurrentFragFrequency);
     }
 
-    public FragmentMatchType generateImpliedFragment(final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
+    public FragmentMatchType generateImpliedFragment(
+            final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
     {
         readRegions.clear();
         spliceJunctions.clear();
@@ -435,11 +471,14 @@ public class ExpectedRatesGenerator
         return matchType;
     }
 
-    public boolean readsSupportFragment(
+    public boolean readsSupportTranscript(
             final TranscriptData transData, List<long[]> readRegions, FragmentMatchType requiredMatchType, List<long[]> spliceJunctions)
     {
         long regionsStart = readRegions.get(0)[SE_START];
         long regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
+
+        if(!positionsOverlap(regionsStart, regionsEnd, transData.TransStart, transData.TransEnd))
+            return false;
 
         if(requiredMatchType == SHORT)
         {
@@ -567,12 +606,8 @@ public class ExpectedRatesGenerator
             writeExpectedRates(mExpRateWriter, mCurrentExpRatesData);
     }
 
-    public static final int UNSPLICED_CAT_INDEX = 0;
-
     private void collectCategories()
     {
-        mCurrentExpRatesData.addCategory(UNSPLICED_ID);
-
         for(Map.Entry<String,List<TranscriptComboData>> entry : mExpectedTransComboCounts.entrySet())
         {
             for(TranscriptComboData tcData : entry.getValue())
@@ -580,7 +615,7 @@ public class ExpectedRatesGenerator
                 final String transKey = tcData.combinedKey();
                 int fragmentCount = tcData.fragmentCount();
 
-                if(fragmentCount > 0)
+                if(fragmentCount > 0 || tcData.transcriptIds().isEmpty()) // force inclusion of unspliced gene categories
                 {
                     mCurrentExpRatesData.addCategory(transKey);
                 }
@@ -607,12 +642,7 @@ public class ExpectedRatesGenerator
             }
             else
             {
-                outputFileName = config.OutputDir + EXP_RATES_FILE_ID;
-
-                if(config.OutputIdentifier != null)
-                    outputFileName += "." + config.OutputIdentifier;
-
-                outputFileName += ".csv";
+                outputFileName = config.formOutputFile(EXP_RATES_FILE_ID);
             }
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);

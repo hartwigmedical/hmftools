@@ -24,6 +24,11 @@ public class RnaUtils
         return (position >= otherPosStart && position <= otherPosEnd);
     }
 
+    public static boolean positionsWithin(long innerStart, long innerEnd, long outerStart, long outerEnd)
+    {
+        return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
+    }
+
     public static List<long[]> deriveCommonRegions(final List<long[]> regions1, final List<long[]> regions2)
     {
         List<long[]> newRegions = Lists.newArrayList();

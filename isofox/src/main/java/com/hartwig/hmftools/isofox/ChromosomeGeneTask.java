@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -213,8 +214,6 @@ public class ChromosomeGeneTask implements Callable
 
             geneReadData.setTranscripts(transDataList);
 
-            geneReadData.generateRegions();
-
             geneReadDataList.add(geneReadData);
         }
 
@@ -282,7 +281,7 @@ public class ChromosomeGeneTask implements Callable
 
         for(GeneReadData geneReadData : geneCollection.genes())
         {
-            cacheResults(geneReadData);
+            cacheResults(geneCollection, geneReadData);
 
             if (mConfig.WriteExonData)
             {
@@ -302,7 +301,7 @@ public class ChromosomeGeneTask implements Callable
         }
     }
 
-    private void cacheResults(final GeneReadData geneReadData)
+    private void cacheResults(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
         final List<TranscriptResult> transResults = Lists.newArrayList();
 
@@ -310,16 +309,14 @@ public class ChromosomeGeneTask implements Callable
         {
             for (final TranscriptData transData : geneReadData.getTranscripts())
             {
-                double expRateAllocation = geneReadData.getTranscriptAllocation(transData.TransName);
-
                 final TranscriptResult results =
-                        createTranscriptResults(geneReadData, transData, mConfig.ExpRateFragmentLengths, expRateAllocation);
+                        createTranscriptResults(geneCollection, geneReadData, transData, mConfig.ExpRateFragmentLengths);
 
                 transResults.add(results);
             }
         }
 
-        GeneResult geneResult = GeneResult.createGeneResults(geneReadData, transResults);
+        GeneResult geneResult = GeneResult.createGeneResults(geneCollection, geneReadData, transResults);
 
         mGeneResults.add(geneResult);
     }
