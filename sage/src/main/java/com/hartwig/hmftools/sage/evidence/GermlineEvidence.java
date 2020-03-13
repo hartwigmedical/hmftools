@@ -83,7 +83,7 @@ public class GermlineEvidence {
             // Second parse
             slicer.slice(tumorReader, samRecord -> {
                 consumerSelector.select(samRecord,
-                        x -> x.primaryReadContext().accept(x.rawDepth() < config.maxReadDepth(), samRecord, config));
+                        x -> x.primaryReadContext().accept(samRecord, config));
             });
 
         } catch (Exception e) {

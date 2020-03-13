@@ -56,7 +56,7 @@ public class FixedEvidence {
             slicer.slice(tumorReader, samRecord -> {
 
                 if (samRecord.getMappingQuality() >= minQuality) {
-                    consumerSelector.select(samRecord, x -> x.primaryReadContext().accept(x.realign(), samRecord, sageConfig));
+                    consumerSelector.select(samRecord, x -> x.primaryReadContext().accept(samRecord, sageConfig));
                 }
 
             });

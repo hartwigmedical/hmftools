@@ -22,6 +22,7 @@ public class ReadContextCounter implements VariantHotspot {
     private final VariantHotspot variant;
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
+    private final boolean realign;
 
     private int full;
     private int partial;
@@ -49,12 +50,13 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawAltBaseQuality;
     private int rawRefBaseQuality;
 
-    public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext) {
+    public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext, boolean realign) {
         this.sample = sample;
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
         this.rawFactory = new RawContextFactory(variant);
+        this.realign = realign;
     }
 
     @NotNull
@@ -172,7 +174,7 @@ public class ReadContextCounter implements VariantHotspot {
         return readContext.toString();
     }
 
-    public void accept(final boolean realign, final SAMRecord record, final SageConfig sageConfig) {
+    public void accept(final SAMRecord record, final SageConfig sageConfig) {
 
         try {
 

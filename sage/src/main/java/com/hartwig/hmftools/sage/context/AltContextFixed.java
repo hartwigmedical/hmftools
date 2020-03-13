@@ -25,7 +25,7 @@ public class AltContextFixed implements AltContext {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
-        this.readContextCounter = new ReadContextCounter(refContext.sample(), this, readContext);
+        this.readContextCounter = new ReadContextCounter(refContext.sample(), this, readContext, realign);
         this.realign = realign;
     }
 
