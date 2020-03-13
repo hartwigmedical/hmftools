@@ -16,7 +16,7 @@ import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
-import com.hartwig.hmftools.sage.evidence.FixedEvidence;
+import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounters;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
@@ -39,7 +39,7 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final List<VariantHotspot> hotspots;
     private final ReferenceSequenceFile refGenome;
     private final List<GenomeRegion> panelRegions;
-    private final FixedEvidence normalEvidence;
+    private final ReadContextEvidence normalEvidence;
     private final CandidateEvidence candidateEvidence;
     private final List<GenomeRegion> highConfidenceRegions;
 
@@ -53,7 +53,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
         this.candidateEvidence = new CandidateEvidence(config, hotspots, samSlicerFactory, refGenome);
-        this.normalEvidence = new FixedEvidence(config, samSlicerFactory, refGenome);
+        this.normalEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome);
         this.refGenome = refGenome;
     }
 

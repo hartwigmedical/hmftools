@@ -23,9 +23,9 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class FixedEvidence {
+public class ReadContextEvidence {
 
-    private static final Logger LOGGER = LogManager.getLogger(FixedEvidence.class);
+    private static final Logger LOGGER = LogManager.getLogger(ReadContextEvidence.class);
 
     private final int minQuality;
     private final SageConfig sageConfig;
@@ -33,7 +33,7 @@ public class FixedEvidence {
     private final ReferenceSequenceFile refGenome;
     private final ReadContextCounterFactory factory;
 
-    public FixedEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
+    public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
             @NotNull final ReferenceSequenceFile refGenome) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
