@@ -50,6 +50,7 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawAltBaseQuality;
     private int rawRefBaseQuality;
 
+
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext, boolean realign) {
         this.sample = sample;
         assert (readContext.isComplete());

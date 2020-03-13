@@ -2,16 +2,14 @@ package com.hartwig.hmftools.sage.evidence;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.AltContextFixed;
-import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefContextFixedFactory;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.read.ReadContextCounterFactory;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.SamRecordSelector;
@@ -33,6 +31,7 @@ public class FixedEvidence {
     private final SageConfig sageConfig;
     private final SamSlicerFactory samSlicerFactory;
     private final ReferenceSequenceFile refGenome;
+    private final ReadContextCounterFactory factory;
 
     public FixedEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
             @NotNull final ReferenceSequenceFile refGenome) {
@@ -40,15 +39,19 @@ public class FixedEvidence {
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
         this.refGenome = refGenome;
+        this.factory = new ReadContextCounterFactory(config);
     }
 
     @NotNull
-    public List<RefContext> get(@NotNull final GenomeRegion bounds, @NotNull final RefContextFixedFactory candidates, @NotNull final String bam) {
+    public List<ReadContextCounter> get(@NotNull final GenomeRegion bounds, @NotNull final List<Candidate> candidates,
+            @NotNull final String sample, @NotNull final String bam) {
+
+        final List<ReadContextCounter> counters = factory.create(sample, candidates);
 
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
-        final SamRecordSelector<AltContextFixed> consumerSelector = new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(),
-                candidates.refContexts().stream().flatMap(x -> x.fixedAlts().stream()).collect(Collectors.toList()));
+        final SamRecordSelector<ReadContextCounter> consumerSelector =
+                new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(), counters);
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))
@@ -56,7 +59,7 @@ public class FixedEvidence {
             slicer.slice(tumorReader, samRecord -> {
 
                 if (samRecord.getMappingQuality() >= minQuality) {
-                    consumerSelector.select(samRecord, x -> x.primaryReadContext().accept(samRecord, sageConfig));
+                    consumerSelector.select(samRecord, x -> x.accept(samRecord, sageConfig));
                 }
 
             });
@@ -64,7 +67,7 @@ public class FixedEvidence {
             throw new CompletionException(e);
         }
 
-        return new ArrayList<>(candidates.refContexts());
+        return counters;
     }
 
 }

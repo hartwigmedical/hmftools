@@ -9,18 +9,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class Candidate {
 
-    private final VariantHotspot hotspot;
+    private final VariantHotspot variant;
 
     private int maxDepth;
     private int readContextSupport;
     private ReadContext readContext;
 
-    public Candidate(final VariantHotspot hotspot) {
-        this.hotspot = hotspot;
+    public Candidate(final VariantHotspot variant) {
+        this.variant = variant;
     }
 
     public Candidate(final AltContext altContext) {
-        this.hotspot = ImmutableVariantHotspotImpl.builder().from(altContext).build();
+        this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
         this.maxDepth = altContext.rawDepth();
         this.readContext = altContext.primaryReadContext().readContext();
         this.readContextSupport = altContext.primaryReadContext().altSupport();
@@ -36,8 +36,8 @@ public class Candidate {
     }
 
     @NotNull
-    public VariantHotspot hotspot() {
-        return hotspot;
+    public VariantHotspot variant() {
+        return variant;
     }
 
     public int maxDepth() {
