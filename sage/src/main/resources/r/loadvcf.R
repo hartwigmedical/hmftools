@@ -17,7 +17,6 @@ info_data_frame <- function(vcf) {
     filter = vcf.fixed$FILTER,
     qual = qual(vcf),
     tier = vcf.info$TIER,
-    af = vcf.info$AF,
     localPhaseSet = vcf.info$LPS,
     microhomology = vcf.info$MH,
     readContext = vcf.info$RC,
@@ -32,12 +31,11 @@ info_data_frame <- function(vcf) {
     
     #preStrelka = vcf.info$PRE_STRELKA,
     #postStrelka = vcf.info$POST_STRELKA,
-    #highConfidence = vcf.info$HC,
     #mappability = vcf.info$MAPPABILITY,
-    #ponCount = vcf.info$PON_COUNT,
+    ponCount = vcf.info$PON_COUNT,
     stringsAsFactors = F) %>%
   mutate(
-    #ponCount = ifelse(is.na(ponCount), 0, ponCount),
+    ponCount = ifelse(is.na(ponCount), 0, ponCount),
     microhomology = ifelse(is.na(microhomology), "", microhomology),
     readContextMicrohomology = ifelse(is.na(readContextMicrohomology), "", readContextMicrohomology),
     readContextRepeatSequence = ifelse(is.na(readContextRepeatSequence), "", readContextRepeatSequence),
@@ -67,6 +65,7 @@ geno_data_frame<- function(vcf, index, sample) {
     ref = as.character(ref(vcf)), 
     alt = as.character(vcf.alt),
 
+    AF = vcf.geno$AF[, index],
     AD = AD,
     Depth = vcf.geno$DP[, index],
     
@@ -91,7 +90,7 @@ geno_data_frame<- function(vcf, index, sample) {
     QualRealigned = qual[, 4],
     QualReference = qual[, 5],
     QualTotal = qual[, 6],
-    QualJitterPenalty = qual[, 3],
+    QualJitterPenalty = JIT[, 3],
 
     ImproperPairCount = IPC,
     
@@ -102,8 +101,7 @@ geno_data_frame<- function(vcf, index, sample) {
   vcf.df = vcf.df %>% 
     separate(AD,c('RefSupport','AltSupport'),sep=',') %>% 
     mutate(
-      Qual = QualFull + QualPartial - QualJitterPenalty,
-      AF = ifelse(RCCTotal == 0 , RCCTotal, (RCCFull + RCCPartial + RCCCore + RCCRealigned) / RCCTotal),
+      Qual = pmax(0, QualFull + QualPartial - QualJitterPenalty),
       RefSupport=as.numeric(RefSupport),
       AltSupport=as.numeric(AltSupport))
   
@@ -112,35 +110,3 @@ geno_data_frame<- function(vcf, index, sample) {
   
   return (vcf.df)
 }
-
-### RNA
-sample = readVcf("/Users/jon/hmf/analysis/x/x.rna.final.vcf.gz")
-sample = readVcf("/Users/jon/hmf/analysis/x/x.var.panel.vcf.gz")
-infoDf = info_data_frame(sample)
-normalDf = geno_data_frame(sample, 1, "normal")
-tumorDf = geno_data_frame(sample, 2, "tumor")
-rnaDf = geno_data_frame(sample, 3, "rna")
-
-rna = left_join(infoDf, normalDf, by = c("chromosome", "pos", "ref", "alt")) %>%
-  left_join(tumorDf, by = c("chromosome", "pos", "ref", "alt")) %>%
-  left_join(rnaDf, by = c("chromosome", "pos", "ref", "alt"))
-
-save(rna, file = "/Users/jon/hmf/analysis/x/rna.RData")
-
-
-
-##### GIAB
-sample = readVcf("/Users/jon/hmf/tmp/GIABvsSELFv004.sage.map.vcf.gz")
-infoDf = info_data_frame(sample)
-normalDf = geno_data_frame(sample, 1, "normal")
-tumorDf = geno_data_frame(sample, 2, "tumor")
-giab = left_join(infoDf, normalDf, by = c("chromosome", "pos", "ref", "alt")) %>% 
-  left_join(tumorDf, by = c("chromosome", "pos", "ref", "alt"))
-
-giab = giab %>% mutate(ponCount = ifelse(is.na(ponCount), 0, ponCount), filter = ifelse(ponCount > 2, "SAGE_PON", filter))
-giab %>% filter(filter == 'PASS') %>% count()
-
-save(giab, file = "/Users/jon/hmf/tmp/GIABvsSELFv004.sage.RData")
-
-
-
