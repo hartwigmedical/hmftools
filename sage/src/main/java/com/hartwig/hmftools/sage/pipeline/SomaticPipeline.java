@@ -14,11 +14,11 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.RefSequence;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounters;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
@@ -39,8 +39,8 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final List<VariantHotspot> hotspots;
     private final ReferenceSequenceFile refGenome;
     private final List<GenomeRegion> panelRegions;
-    private final ReadContextEvidence normalEvidence;
     private final CandidateEvidence candidateEvidence;
+    private final ReadContextEvidence readContextEvidence;
     private final List<GenomeRegion> highConfidenceRegions;
 
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
@@ -53,7 +53,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
         this.candidateEvidence = new CandidateEvidence(config, hotspots, samSlicerFactory, refGenome);
-        this.normalEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome);
+        this.readContextEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome);
         this.refGenome = refGenome;
     }
 
@@ -97,7 +97,7 @@ public class SomaticPipeline implements SageVariantPipeline {
                 final String sampleBam = config.tumorBam().get(i);
 
                 final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
-                        .thenApply(x -> normalEvidence.get(region, initialCandidates, sample, sampleBam))
+                        .thenApply(x -> readContextEvidence.get(region, initialCandidates, sample, sampleBam))
                         .thenAccept(result::addCounters);
 
                 tumorFutures.add(tumorFuture);
@@ -121,7 +121,7 @@ public class SomaticPipeline implements SageVariantPipeline {
                 final String sampleBam = config.referenceBam().get(i);
 
                 final CompletableFuture<Void> normalFuture = CompletableFuture.completedFuture(this)
-                        .thenApply(x -> normalEvidence.get(region, candidates, sample, sampleBam))
+                        .thenApply(x -> readContextEvidence.get(region, candidates, sample, sampleBam))
                         .thenAccept(result::addCounters);
 
                 normalFutures.add(normalFuture);

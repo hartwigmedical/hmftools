@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;
 
@@ -137,7 +138,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+            if (refContext.rawDepth() < config.maxReadDepth()) {
                 int baseQuality = baseQuality(readIndex, record, 2);
                 refContext.altReadCandidate(ref, alt, baseQuality, createDelContext(ref, refPosition, readIndex, record, refBases));
             }
@@ -164,7 +165,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final byte readByte = record.getReadBases()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+            if (refContext.rawDepth() < config.maxReadDepth()) {
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
@@ -241,8 +242,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         RefContext startRefContext = candidates.refContext(bounds.chromosome(), alignmentStart);
         RefContext endRefContext = candidates.refContext(bounds.chromosome(), alignmentEnd);
 
-        return startRefContext != null && endRefContext != null && startRefContext.rawDepth() >= config.maxReadDepth()
-                && endRefContext.rawDepth() >= config.maxReadDepth();
+        return startRefContext.rawDepth() >= config.maxReadDepth() && endRefContext.rawDepth() >= config.maxReadDepth();
     }
 
 }

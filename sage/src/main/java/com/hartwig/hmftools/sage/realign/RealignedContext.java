@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.realign;
 
 import org.jetbrains.annotations.NotNull;
 

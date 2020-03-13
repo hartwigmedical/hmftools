@@ -3,9 +3,9 @@ package com.hartwig.hmftools.sage.read;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.Realigned;
-import com.hartwig.hmftools.sage.context.RealignedContext;
-import com.hartwig.hmftools.sage.context.RealignedType;
+import com.hartwig.hmftools.sage.realign.Realigned;
+import com.hartwig.hmftools.sage.realign.RealignedContext;
+import com.hartwig.hmftools.sage.realign.RealignedType;
 import com.hartwig.hmftools.sage.sam.IndelAtLocation;
 
 import org.apache.logging.log4j.LogManager;

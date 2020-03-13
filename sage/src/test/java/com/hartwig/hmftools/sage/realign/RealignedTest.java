@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.realign;
 
-import static com.hartwig.hmftools.sage.context.Realigned.realigned;
-import static com.hartwig.hmftools.sage.context.RealignedType.EXACT;
-import static com.hartwig.hmftools.sage.context.RealignedType.LENGTHENED;
-import static com.hartwig.hmftools.sage.context.RealignedType.NONE;
-import static com.hartwig.hmftools.sage.context.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.realign.Realigned.realigned;
+import static com.hartwig.hmftools.sage.realign.RealignedType.EXACT;
+import static com.hartwig.hmftools.sage.realign.RealignedType.LENGTHENED;
+import static com.hartwig.hmftools.sage.realign.RealignedType.NONE;
+import static com.hartwig.hmftools.sage.realign.RealignedType.SHORTENED;
 
 import static org.junit.Assert.assertEquals;
 
