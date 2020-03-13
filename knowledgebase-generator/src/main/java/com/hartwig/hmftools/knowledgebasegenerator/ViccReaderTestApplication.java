@@ -20,7 +20,7 @@ public class ViccReaderTestApplication {
         List<ViccEntry> viccEntries = ViccJsonReader.readViccKnowledgebaseJsonFileWithMaxEntries(viccJsonPath, 100);
         LOGGER.info("Read {} entries", viccEntries.size());
 
-        String source = "oncokb";
+        String source = "cgi";
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
         List<ViccEntry> viccEntriesSpecificKnowledgeBase = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info("Read {} entries", viccEntriesSpecificKnowledgeBase.size());

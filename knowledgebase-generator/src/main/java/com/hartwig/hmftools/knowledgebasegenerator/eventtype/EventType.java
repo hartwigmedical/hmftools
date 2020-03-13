@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
+import java.util.List;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,9 +14,13 @@ public abstract class EventType {
     @NotNull
     public abstract String gene();
 
-    @NotNull
-    public abstract String genomicMutation();
+    public abstract boolean combinedEvent();
+
+    public abstract String event();
 
     @NotNull
-    public abstract String eventType();
+    public abstract List<String> interpretEventType();
+
+    @NotNull
+    public abstract String biomarkerType();
 }
