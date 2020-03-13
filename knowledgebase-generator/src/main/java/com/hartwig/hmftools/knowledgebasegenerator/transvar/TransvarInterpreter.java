@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.Strand;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.knowledgebasegenerator.util.AminoAcidLookup;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,23 +48,34 @@ class TransvarInterpreter {
                 hotspots.add(fromCandidateCodon(record, candidateCodon, gdnaCodonIndex, strand));
             }
         } else {
-            // For indels we assume we have to look up the base in front of the del or ins and set the position 1 before the actual ref/alt
+            // For indels we assume we have to look up the base in front of the del/ins/dup and set the position 1 before the actual ref/alt
             long position = record.gdnaPosition() - 1;
             String preMutatedSequence = refGenome.getSubsequenceAt(record.chromosome(), position, position).getBaseString();
 
             ImmutableVariantHotspotImpl.Builder hotspotBuilder =
                     ImmutableVariantHotspotImpl.builder().chromosome(record.chromosome()).position(position);
 
-            Integer dupLength = record.dupLength();
-            if (dupLength == null) {
-                hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence + record.gdnaAlt());
-            } else {
+            if (record.gdnaRef().isEmpty() && record.gdnaAlt().isEmpty()) {
                 // Dups don't have ref and alt information so need to look it up in ref genome.
-                String dupBases = refGenome.getSubsequenceAt(record.chromosome(), position+1, position+dupLength).getBaseString();
+                String dupBases =
+                        refGenome.getSubsequenceAt(record.chromosome(), position + 1, position + record.indelLength()).getBaseString();
                 hotspotBuilder.ref(preMutatedSequence).alt(preMutatedSequence + dupBases);
-            }
+                hotspots.add(hotspotBuilder.build());
+            } else if (record.gdnaRef().isEmpty()) {
+                hotspotBuilder.ref(preMutatedSequence);
 
-            hotspots.add(hotspotBuilder.build());
+                // We assume inserts of length 3 are always amino acid inserts.
+                if (record.gdnaAlt().length() == 3) {
+                    for (String trinucleotide : AminoAcidLookup.allTrinucleotidesForSameAminoAcid(record.gdnaAlt(), strand)) {
+                        hotspots.add(hotspotBuilder.alt(preMutatedSequence + trinucleotide).build());
+                    }
+                } else {
+                    hotspots.add(hotspotBuilder.alt(preMutatedSequence + record.gdnaAlt()).build());
+                }
+            } else {
+                assert record.gdnaAlt().isEmpty();
+                hotspots.add(hotspotBuilder.ref(preMutatedSequence + record.gdnaRef()).alt(preMutatedSequence).build());
+            }
         }
 
         return hotspots;

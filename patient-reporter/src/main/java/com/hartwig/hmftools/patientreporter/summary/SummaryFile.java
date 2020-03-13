@@ -37,7 +37,7 @@ public final class SummaryFile {
                 summaryOfSample = summaryOfSample.replace(LINE_BREAK_STRING, "\n");
                 sampleToSummaryMap.put(sampleId, summaryOfSample);
             } else {
-                LOGGER.warn("Suspicious line detected in sample summary tsv: " + line);
+                LOGGER.warn("Suspicious line detected in sample summary tsv: {}", line);
             }
         }
 

@@ -220,8 +220,8 @@ public class PatientReporterApplication {
     private static boolean validInputForQCFailReport(@NotNull CommandLine cmd) {
         QCFailReason qcFailReason = QCFailReason.fromIdentifier(cmd.getOptionValue(QC_FAIL_REASON));
         if (qcFailReason == QCFailReason.UNDEFINED) {
-            LOGGER.warn(QC_FAIL_REASON + " has to be 'low_dna_yield', 'post_analysis_fail', "
-                    + "'shallow_seq_low_purity' or 'insufficient_tissue_delivered'.");
+            LOGGER.warn("{} has to be 'low_dna_yield', 'post_analysis_fail', 'shallow_seq_low_purity' or 'insufficient_tissue_delivered'",
+                    QC_FAIL_REASON);
         } else {
             return true;
         }
@@ -231,7 +231,7 @@ public class PatientReporterApplication {
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
         String value = cmd.getOptionValue(param);
         if (value == null) {
-            LOGGER.warn(param + " has to be provided");
+            LOGGER.warn("{} has to be provided", param);
             return false;
         }
         return true;
@@ -241,7 +241,7 @@ public class PatientReporterApplication {
         String value = cmd.getOptionValue(param);
 
         if (value == null || !pathExists(value)) {
-            LOGGER.warn(param + " has to be an existing file: " + value);
+            LOGGER.warn("{} has to be an existing file: {}", param, value);
             return false;
         }
 
@@ -252,7 +252,7 @@ public class PatientReporterApplication {
         String value = cmd.getOptionValue(param);
 
         if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
-            LOGGER.warn(param + " has to be an existing directory: " + value);
+            LOGGER.warn("{} has to be an existing directory: {}", param, value);
             return false;
         }
 

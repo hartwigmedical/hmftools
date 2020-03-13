@@ -44,11 +44,11 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
 
-### Calculate expected shared and private abundance rates per transcript
+### Expected shared and private abundance rates per transcript
 
-For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX).    For any gene with that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered for that category.  
+For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a indpendent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length 50, 100, 150, ...,550 bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
@@ -79,7 +79,9 @@ Note that reads which marginally overhang an exon boundary or are soft clipped a
 
 ### Fit abundance estimate per transcript
 
-Like many previous tools (RSEM, Salmon, Kallisto, etc), we have chosen to use an expectations maximisation algorithm to fit
+For each group of transcripts conidered together we aim to fit the relative abundance.   Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximastion algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
+
+<TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments >> observed fragments for private allocations >
 
 ### Bias Estimation and Correction
 
@@ -105,11 +107,15 @@ For each novel splice junction, we also record the distance to the nearest splic
 
 We also search explicitly for evidence of retained introns
 
-Retained introns are hard filtered unless they contain at lease
+Retained introns are hard filtered unless they contain at least . . .
 
 ### Counting and characterisation of chimeric and read through junctions
 
+...
+
 ## Annotation of novel splice features
+
+...
 
 ### Panel of Normals  (TO DO)
 
@@ -130,15 +136,29 @@ Each novel splice junction and retained intron for each sample is annotated with
 
 ### Fragment length distribution
 
+...
+
 ### Gene level data
+
+...
 
 ### Transcriptome level data
 
+...
+
 ### Expected abundance rates per transcript per category
+
+...
 
 ### Observed and fitted counts per category
 
+...
+
 ### Novel splice junctions
 
+...
+
 ### Novel retained introns
+
+...
 

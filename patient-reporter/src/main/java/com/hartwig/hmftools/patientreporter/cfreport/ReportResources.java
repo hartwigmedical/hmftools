@@ -79,7 +79,6 @@ public final class ReportResources {
         return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH));
     }
 
-
     @NotNull
     public static PdfFont fontRegular() {
         // Cannot be created statically as every PDF needs their own private font objects.

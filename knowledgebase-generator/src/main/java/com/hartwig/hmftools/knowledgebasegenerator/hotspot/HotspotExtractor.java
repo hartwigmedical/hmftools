@@ -3,10 +3,12 @@ package com.hartwig.hmftools.knowledgebasegenerator.hotspot;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.knowledgebasegenerator.RefGenomeVersion;
@@ -32,6 +34,8 @@ public class HotspotExtractor {
 
     @NotNull
     private final Transvar transvar;
+    @NotNull
+    private final Set<String> unresolvableFeatures = Sets.newHashSet();
 
     @NotNull
     public static HotspotExtractor withRefGenome(@NotNull RefGenomeVersion refGenomeVersion, @NotNull String refGenomeFastaFile)
@@ -45,19 +49,34 @@ public class HotspotExtractor {
     }
 
     @NotNull
-    public List<VariantHotspot> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
-        List<VariantHotspot> allHotspots = Lists.newArrayList();
+    public Map<String, List<VariantHotspot>> extractHotspots(@NotNull ViccEntry viccEntry) throws IOException, InterruptedException {
+        Map<String, List<VariantHotspot>> allHotspotsPerFeature = Maps.newHashMap();
         if (Source.sourceFromKnowledgebase(viccEntry.source()) == Source.ONCOKB) {
             for (Feature feature : viccEntry.features()) {
+                String featureKey = feature.geneSymbol() + ":p." + feature.name();
                 if (ONCOKB_VALID_BIOMARKER_TYPES.contains(feature.biomarkerType()) || isProteinAnnotation(feature.name())) {
                     List<VariantHotspot> hotspots = transvar.extractHotspotsFromProteinAnnotation(feature.geneSymbol(), feature.name());
-                    LOGGER.info("Converted '{}' on gene '{}' to {} hotspot(s)", feature.name(), feature.geneSymbol(), hotspots.size());
-                    allHotspots.addAll(hotspots);
+                    LOGGER.info("Converted '{}' to {} hotspot(s)", featureKey, hotspots.size());
+                    if (hotspots.isEmpty()) {
+                        unresolvableFeatures.add(featureKey);
+                    }
+
+                    List<VariantHotspot> currentHotspots = allHotspotsPerFeature.get(featureKey);
+                    if (currentHotspots == null) {
+                        currentHotspots = Lists.newArrayList();
+                    }
+                    currentHotspots.addAll(hotspots);
+                    allHotspotsPerFeature.put(featureKey, currentHotspots);
                 }
             }
         }
 
-        return allHotspots;
+        return allHotspotsPerFeature;
+    }
+
+    @NotNull
+    public Set<String> unresolvableFeatures() {
+        return unresolvableFeatures;
     }
 
     @VisibleForTesting

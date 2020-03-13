@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +13,6 @@ import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableKnownAmplificati
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.ImmutableKnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
-import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -25,26 +23,18 @@ import org.jetbrains.annotations.NotNull;
 public class DetermineEventOfGenomicMutation {
     private static final Logger LOGGER = LogManager.getLogger(DetermineEventOfGenomicMutation.class);
 
-    private static final List<String> AMPLIFICATION = Lists.newArrayList("Amplification",
-            "amplification",
-            "amp",
-            "Transcript Amplification",
-            "Gain-of-function Mutations");
-    private static final List<String> DELETION = Lists.newArrayList("Copy Number Loss",
-            "Deletion",
-            "del",
-            "DELETION",
-            "Exon Loss Variant",
-            "Loss Of Function Variant",
-            "Transcript Ablation");
+    private static final List<String> AMPLIFICATION =
+            Lists.newArrayList("amp", "AMPLIFICATION", "Amplification", "amplification", "Transcript Amplification");
+
+    private static final List<String> DELETION = Lists.newArrayList("DELETION", "Deletion", "del", "Transcript Ablation");
+
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE = Sets.newHashSet("Microsatellite Instability-High", "Microsatellite");
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
+    public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         if (AMPLIFICATION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
@@ -54,8 +44,7 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
+    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (DELETION.contains(type.eventType())) {
@@ -66,8 +55,7 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
+    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         if (AMPLIFICATION.contains(type.eventType())) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
@@ -83,12 +71,12 @@ public class DetermineEventOfGenomicMutation {
                 .cancerType("")
                 .level("")
                 .direction("")
-                .sourceLink("").build();
+                .sourceLink("")
+                .build();
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
+    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (DELETION.contains(type.eventType())) {
@@ -104,11 +92,11 @@ public class DetermineEventOfGenomicMutation {
                 .cancerType("")
                 .level("")
                 .direction("")
-                .sourceLink("").build();
+                .sourceLink("")
+                .build();
     }
 
-    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor)
-            throws IOException, InterruptedException {
+    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (VARIANTS.contains(type.eventType())) {
@@ -116,8 +104,7 @@ public class DetermineEventOfGenomicMutation {
         }
     }
 
-    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor)
-            throws IOException, InterruptedException {
+    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (RANGE.contains(type.eventType())) {
@@ -126,8 +113,7 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull HotspotExtractor hotspotExtractor) throws IOException, InterruptedException {
+    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (FUSIONS.contains(type.eventType())) {
@@ -136,8 +122,7 @@ public class DetermineEventOfGenomicMutation {
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
-    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull HotspotExtractor hotspotExtractor)
-            throws IOException, InterruptedException {
+    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (SIGNATURE.contains(type.eventType())) {

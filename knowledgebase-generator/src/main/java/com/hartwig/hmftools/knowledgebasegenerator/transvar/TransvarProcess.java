@@ -19,7 +19,7 @@ class TransvarProcess {
 
     private static final Logger LOGGER = LogManager.getLogger(TransvarProcess.class);
 
-    private static final int TRANSVAR_TIMEOUT_SEC = 10;
+    private static final int TRANSVAR_TIMEOUT_SEC = 90;
 
     @NotNull
     private final RefGenomeVersion refGenomeVersion;
@@ -48,25 +48,27 @@ class TransvarProcess {
         // Below is required on environments where LC_CTYPE is not properly configured (usually on apple).
         processBuilder.environment().put("LC_CTYPE", "UTF-8");
 
-        LOGGER.debug("Running '{}'", command(processBuilder));
+        String command = command(processBuilder);
+
+        LOGGER.debug("Running '{}'", command);
         Process process = processBuilder.start();
         if (!process.waitFor(TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-            throw new RuntimeException(String.format("Timeout. '%s' took more than '%s %s' to execute",
-                    command(processBuilder),
-                    TRANSVAR_TIMEOUT_SEC,
-                    TimeUnit.SECONDS));
+            String warning =
+                    String.format("Timeout. '%s' took more than '%s %s' to execute", command, TRANSVAR_TIMEOUT_SEC, TimeUnit.SECONDS);
+            LOGGER.warn(warning);
+            // We still continue to wait for ever.
+            process.waitFor();
         }
 
         if (process.exitValue() != 0) {
-            throw new RuntimeException(String.format("'%s' failed with non-zero exit code '%s'",
-                    command(processBuilder),
-                    process.exitValue()));
+            throw new RuntimeException(String.format("'%s' failed with non-zero exit code '%s'", command, process.exitValue()));
         }
 
         List<String> stderr = captureStderr(process);
         if (!stderr.isEmpty()) {
-            LOGGER.warn("Non-empty stderr when running '{}'!", command(processBuilder));
+            LOGGER.warn("Non-empty stderr when running '{}'!", command);
             for (String errLine : stderr) {
+                // First line seems to be generally empty, no need to print that line.
                 if (!errLine.trim().isEmpty()) {
                     LOGGER.warn(" {}", errLine);
                 }
