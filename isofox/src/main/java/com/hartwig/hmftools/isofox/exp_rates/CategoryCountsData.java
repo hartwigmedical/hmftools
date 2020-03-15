@@ -9,21 +9,30 @@ import com.google.common.collect.Lists;
 
 // counts of fragments which could support a set of transcripts and/or unspliced genes
 
-public class TranscriptComboData
+public class CategoryCountsData
 {
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
     private int mFragmentCount;
+    private int[] mFragmentCountsByLength;
 
     private final String mCombinedKey;
 
-    public TranscriptComboData(final List<Integer> transcripts, final List<String> unsplicedGenes)
+    public CategoryCountsData(final List<Integer> transcripts, final List<String> unsplicedGenes)
     {
         mTranscripts = transcripts;
         mUnsplicedGenes = unsplicedGenes;
         mFragmentCount = 0;
 
         mCombinedKey = formTranscriptIds();
+
+         mFragmentCountsByLength = null;
+    }
+
+    public void initialiseLengthCounts(int fragLengths)
+    {
+        if(fragLengths > 0)
+            mFragmentCountsByLength = new int[fragLengths];
     }
 
     public final List<Integer> transcriptIds() { return mTranscripts; }
@@ -61,10 +70,17 @@ public class TranscriptComboData
     }
 
     public final int fragmentCount() { return mFragmentCount; }
+    public final int[] fragmentCountsByLength() { return mFragmentCountsByLength; }
 
     public void addCounts(int count)
     {
         mFragmentCount += count;
+    }
+
+    public void addCounts(int count, int lengthIndex)
+    {
+        mFragmentCount += count;
+        mFragmentCountsByLength[lengthIndex] += count;
     }
 
     private String formTranscriptIds()

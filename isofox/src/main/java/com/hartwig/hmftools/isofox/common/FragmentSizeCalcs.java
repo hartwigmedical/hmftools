@@ -116,7 +116,7 @@ public class FragmentSizeCalcs
         BamSlicer bamSlicer = new BamSlicer(GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY, true);
 
         // walk through each chromosome, ignoring any gene which overlaps the previous gene
-        ISF_LOGGER.debug("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
+        ISF_LOGGER.info("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
 
         long lastGeneEnd = 0;
 

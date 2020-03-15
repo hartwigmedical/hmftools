@@ -99,7 +99,7 @@ public class GcRatioCounts
         }
         catch (IOException e)
         {
-            ISF_LOGGER.error("failed to create at splice junction writer: {}", e.toString());
+            ISF_LOGGER.error("failed to create GC ratio writer: {}", e.toString());
             return null;
         }
     }
@@ -120,7 +120,7 @@ public class GcRatioCounts
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to write alt splice junction file: {}", e.toString());
+            ISF_LOGGER.error("failed to write GC ratio file: {}", e.toString());
         }
     }
 

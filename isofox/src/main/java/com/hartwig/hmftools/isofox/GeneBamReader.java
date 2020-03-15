@@ -50,7 +50,7 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
-import com.hartwig.hmftools.isofox.exp_rates.TranscriptComboData;
+import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
@@ -82,7 +82,7 @@ public class GeneBamReader
     private final Map<Long,List<long[]>> mDuplicateCache;
     private final List<String> mDuplicateReadIds;
 
-    private final List<TranscriptComboData> mTransComboData;
+    private final List<CategoryCountsData> mTransComboData;
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
 
@@ -476,16 +476,16 @@ public class GeneBamReader
         }
     }
 
-    public List<TranscriptComboData> getTransComboData() { return mTransComboData; }
+    public List<CategoryCountsData> getTransComboData() { return mTransComboData; }
 
     private void addTransComboData(final List<Integer> transcripts, final List<String> geneIds)
     {
-        TranscriptComboData transComboCounts = mTransComboData.stream()
+        CategoryCountsData transComboCounts = mTransComboData.stream()
                 .filter(x -> x.matches(transcripts, geneIds)).findFirst().orElse(null);
 
         if(transComboCounts == null)
         {
-            transComboCounts = new TranscriptComboData(transcripts, geneIds);
+            transComboCounts = new CategoryCountsData(transcripts, geneIds);
             mTransComboData.add(transComboCounts);
         }
 

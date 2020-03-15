@@ -61,11 +61,13 @@ public class IsofoxConfig
     private static final String ER_CALC_FRAG_LENGTHS = "use_calc_frag_lengths";
     private static final String UNSPLICED_WEIGHT = "unspliced_weight";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
+    private static final String WRITE_EXPECTED_COUNTS = "write_exp_counts";
 
     private static final String SPECIFIC_TRANS_IDS = "specific_trans";
     private static final String SPECIFIC_CHR = "specific_chr";
     private static final String READ_COUNT_LIMIT = "read_count_limit";
     private static final String RUN_VALIDATIONS = "validate";
+    private static final String PERF_CHECKS = "perf_checks";
     private static final String THREADS = "threads";
     public static final String LOG_DEBUG = "log_debug";
     public static final String LOG_LEVEL = "log_level";
@@ -96,6 +98,7 @@ public class IsofoxConfig
     public final List<int[]> ExpRateFragmentLengths;
     public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
+    public final boolean WriteExpectedCounts;
 
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
@@ -110,6 +113,7 @@ public class IsofoxConfig
     public final List<String> SpecificTransIds;
     public final List<String> SpecificChromosomes;
     public final boolean RunValidations;
+    public final boolean RunPerfChecks;
     public final int Threads;
 
     public static final int DEFAULT_MAX_READ_COUNT = 100000;
@@ -130,14 +134,14 @@ public class IsofoxConfig
         {
             final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
             loadGeneIdsFile(inputFile, RestrictedGeneIds);
-            ISF_LOGGER.info("file({}) load {} restricted genes", inputFile, RestrictedGeneIds.size());
+            ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
 
         if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
         {
             final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
             loadGeneIdsFile(inputFile, ExcludedGeneIds);
-            ISF_LOGGER.info("file({}) load {} excluded genes", inputFile, ExcludedGeneIds.size());
+            ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
@@ -191,13 +195,15 @@ public class IsofoxConfig
 
         Threads = Integer.parseInt(cmd.getOptionValue(THREADS, "0"));
         RunValidations = cmd.hasOption(RUN_VALIDATIONS);
+        RunPerfChecks = cmd.hasOption(PERF_CHECKS);
         SpecificChromosomes = cmd.hasOption(SPECIFIC_CHR) ? Arrays.stream(cmd.getOptionValue(SPECIFIC_CHR).split(";")).collect(Collectors.toList())
                 : Lists.newArrayList();
 
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
         ExpRatesFile = cmd.getOptionValue(EXP_RATES_FILE);
 
-        WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
+        WriteExpectedCounts = cmd.hasOption(WRITE_EXPECTED_COUNTS);
+        WriteExpectedRates = !WriteExpectedCounts && cmd.hasOption(WRITE_EXPECTED_RATES);
         UseCalculatedFragmentLengths = cmd.hasOption(ER_CALC_FRAG_LENGTHS);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         ExpRateFragmentLengths = Lists.newArrayList();
@@ -222,6 +228,17 @@ public class IsofoxConfig
         {
             ISF_LOGGER.error("not output directory specified");
             return false;
+        }
+
+        if(WriteExpectedCounts)
+        {
+            if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
+            {
+                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
+                return false;
+            }
+
+            return true;
         }
 
         if(ApplyExpectedRates && ExpRatesFile == null)
@@ -253,6 +270,12 @@ public class IsofoxConfig
             return false;
         }
 
+        if(WriteFragmentLengthsOnly && FragmentLengthMinCount == 0)
+        {
+            ISF_LOGGER.error("min frag count missing for frag length distribution logging");
+            return false;
+        }
+
         if(RestrictedGeneIds.isEmpty() && (WriteExonData || WriteReadData))
         {
             ISF_LOGGER.warn("writing exon and/or read data for all transcripts may be slow and generate large output files");
@@ -264,6 +287,21 @@ public class IsofoxConfig
     public boolean skipChromosome(final String chromosome)
     {
         return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);
+    }
+
+    public boolean generateExpRatesOnly()
+    {
+        return WriteExpectedCounts && !UseCalculatedFragmentLengths && !ApplyExpectedRates;
+    }
+
+    public boolean writeExpectedRateData()
+    {
+        return WriteExpectedCounts || WriteExpectedRates;
+    }
+
+    public boolean requireFragmentLengthCalcs()
+    {
+        return WriteFragmentLengths || UseCalculatedFragmentLengths;
     }
 
     public String formOutputFile(final String fileId)
@@ -303,9 +341,11 @@ public class IsofoxConfig
         WriteFragmentLengths = false;
         WriteFragmentLengthsOnly = false;
         WriteTransComboData = false;
-        WriteFragmentReads = false;WriteReadGcRatios = false;
+        WriteFragmentReads = false;
+        WriteReadGcRatios = false;
 
         WriteExpectedRates = false;
+        WriteExpectedCounts = false;
         UseCalculatedFragmentLengths = false;
         OutputIdentifier = null;
         FragmentLengthsByGene = false;
@@ -313,6 +353,7 @@ public class IsofoxConfig
         SpecificTransIds = Lists.newArrayList();
         SpecificChromosomes = Lists.newArrayList();
         RunValidations = true;
+        RunPerfChecks = false;
         Threads = 0;
     }
 
@@ -357,13 +398,15 @@ public class IsofoxConfig
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");
 
-        options.addOption(WRITE_EXPECTED_RATES, false, "Write expected transcript rates to file");
+        options.addOption(WRITE_EXPECTED_RATES, false, "Write sample expected expression rates to file");
+        options.addOption(WRITE_EXPECTED_COUNTS, false, "Write expected expression counts from common frag lengths to file");
 
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
         options.addOption(SPECIFIC_CHR, true, "Specify a single chromosome to analyse");
         options.addOption(THREADS, true, "Number of threads to use (default=0, single-threaded)");
         options.addOption(RUN_VALIDATIONS, false, "Run auto-validations");
+        options.addOption(PERF_CHECKS, false, "Run performance logging routines");
 
         return options;
     }

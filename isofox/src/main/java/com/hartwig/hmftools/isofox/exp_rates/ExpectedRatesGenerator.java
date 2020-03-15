@@ -36,13 +36,17 @@ public class ExpectedRatesGenerator
     private final IsofoxConfig mConfig;
 
     // map of transcript (or unspliced) to all expected category counts covering it (and others)
-    private final Map<String, List<TranscriptComboData>> mExpectedTransComboCounts;
+    private final Map<String,List<CategoryCountsData>> mExpectedTransComboCounts;
 
     private GeneCollection mGeneCollection;
     private ExpectedRatesData mCurrentExpRatesData;
+
     private int mCurrentFragSize;
+    private int mFragSizeIndex;
     private int mCurrentFragFrequency;
-    private int mCurrentReadLength;
+    private int mReadLength;
+
+    private final List<ExpectedRatesData> mExpectedRatesDataList;
 
     private final BufferedWriter mExpRateWriter;
 
@@ -55,12 +59,14 @@ public class ExpectedRatesGenerator
     {
         mConfig = config;
         mCurrentFragSize = 0;
+        mFragSizeIndex = 0;
         mCurrentFragFrequency = 0;
-        mCurrentReadLength = mConfig.ReadLength;
+        mReadLength = mConfig.ReadLength;
 
         mExpectedTransComboCounts = Maps.newHashMap();
         mCurrentExpRatesData = null;
         mGeneCollection = null;
+        mExpectedRatesDataList = Lists.newArrayList();
 
         mExpRateWriter = resultsWriter != null ? resultsWriter.getExpRatesWriter() : null;
     }
@@ -70,7 +76,7 @@ public class ExpectedRatesGenerator
         return new ExpectedRatesGenerator(config, null);
     }
 
-    public Map<String,List<TranscriptComboData>> getTransComboData() { return mExpectedTransComboCounts; }
+    public Map<String,List<CategoryCountsData>> getTransComboData() { return mExpectedTransComboCounts; }
     public ExpectedRatesData getExpectedRatesData() { return mCurrentExpRatesData; }
 
     public void generateExpectedRates(final GeneCollection genes)
@@ -84,8 +90,9 @@ public class ExpectedRatesGenerator
         // apply fragment reads across each transcript as though it were fully transcribed
         final List<TranscriptData> transDataList = mGeneCollection.getTranscripts();
 
-        for(final int[] flData : mConfig.ExpRateFragmentLengths)
+        for(mFragSizeIndex = 0; mFragSizeIndex < mConfig.ExpRateFragmentLengths.size(); ++mFragSizeIndex)
         {
+            final int[] flData = mConfig.ExpRateFragmentLengths.get(mFragSizeIndex);
             mCurrentFragSize = flData[FL_LENGTH];
             mCurrentFragFrequency = flData[FL_FREQUENCY];
 
@@ -144,7 +151,7 @@ public class ExpectedRatesGenerator
                         // check for purely intronic fragments
                         if (startPos < nextExonicStart)
                         {
-                            addUnsplicedComboData(emptyTrans, unsplicedGenes);
+                            addUnsplicedCountsData(emptyTrans, unsplicedGenes);
                         }
                         else
                         {
@@ -167,7 +174,7 @@ public class ExpectedRatesGenerator
             {
                 // force an empty entry even though it won't have any category ratios set for it
                 List<String> allGeneIds = mGeneCollection.genes().stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
-                List<TranscriptComboData> emptyList = Lists.newArrayList(new TranscriptComboData(emptyTrans, allGeneIds));
+                List<CategoryCountsData> emptyList = Lists.newArrayList(new CategoryCountsData(emptyTrans, allGeneIds));
 
                 for(GeneReadData gene : mGeneCollection.genes())
                 {
@@ -176,7 +183,10 @@ public class ExpectedRatesGenerator
             }
         }
 
-        formTranscriptDefinitions();
+        if(mConfig.WriteExpectedCounts)
+            writeExpectedCounts(mExpRateWriter, genes.chrId(), mExpectedTransComboCounts);
+        else
+            formTranscriptDefinitions();
     }
 
     private void cullTranscripts(final List<TranscriptData> transcripts, long startPos)
@@ -238,12 +248,12 @@ public class ExpectedRatesGenerator
 
         if(!longAndSplicedTrans.isEmpty())
         {
-            addTransComboData(transData.TransName, longAndSplicedTrans, Lists.newArrayList());
+            addCountsData(transData.TransName, longAndSplicedTrans, Lists.newArrayList());
         }
         else
         {
             List<String> unsplicedGenes = findUnsplicedGenes(startPos);
-            addTransComboData(transData.TransName, shortTrans, unsplicedGenes);
+            addCountsData(transData.TransName, shortTrans, unsplicedGenes);
         }
 
         return true;
@@ -255,9 +265,9 @@ public class ExpectedRatesGenerator
         List<long[]> noSpliceJunctions = Lists.newArrayList();
 
         // the unspliced case
-        long firstReadEnd = startPos + mCurrentReadLength - 1;
+        long firstReadEnd = startPos + mReadLength - 1;
         long secondReadEnd = startPos + mCurrentFragSize - 1;
-        long secondReadStart = secondReadEnd - mCurrentReadLength + 1;
+        long secondReadStart = secondReadEnd - mReadLength + 1;
 
         if(firstReadEnd >= secondReadStart - 1)
         {
@@ -281,19 +291,19 @@ public class ExpectedRatesGenerator
             }
         }
 
-        addUnsplicedComboData(shortTrans, unsplicedGenes);
+        addUnsplicedCountsData(shortTrans, unsplicedGenes);
     }
 
-    private void addUnsplicedComboData(
+    private void addUnsplicedCountsData(
             final List<Integer> transcripts, final List<String> unsplicedGenes)
     {
-        unsplicedGenes.forEach(x -> addTransComboData(x, transcripts, unsplicedGenes));
+        unsplicedGenes.forEach(x -> addCountsData(x, transcripts, unsplicedGenes));
     }
 
-    private void addTransComboData(
+    private void addCountsData(
             final String transName, final List<Integer> transcripts, final List<String> unsplicedGenes)
     {
-        List<TranscriptComboData> transComboDataList = mExpectedTransComboCounts.get(transName);
+        List<CategoryCountsData> transComboDataList = mExpectedTransComboCounts.get(transName);
 
         if(transComboDataList == null)
         {
@@ -301,16 +311,23 @@ public class ExpectedRatesGenerator
             mExpectedTransComboCounts.put(transName, transComboDataList);
         }
 
-        TranscriptComboData matchingCounts = transComboDataList.stream()
+        CategoryCountsData matchingCounts = transComboDataList.stream()
                 .filter(x -> x.matches(transcripts, unsplicedGenes)).findFirst().orElse(null);
 
         if(matchingCounts == null)
         {
-            matchingCounts = new TranscriptComboData(transcripts, unsplicedGenes);
+            matchingCounts = new CategoryCountsData(transcripts, unsplicedGenes);
+
+            if(mConfig.WriteExpectedCounts)
+                matchingCounts.initialiseLengthCounts(mConfig.ExpRateFragmentLengths.size());
+
             transComboDataList.add(matchingCounts);
         }
 
-        matchingCounts.addCounts(mCurrentFragFrequency);
+        if(mConfig.WriteExpectedCounts)
+            matchingCounts.addCounts(mCurrentFragFrequency, mFragSizeIndex);
+        else
+            matchingCounts.addCounts(mCurrentFragFrequency);
     }
 
     public FragmentMatchType generateImpliedFragment(
@@ -328,9 +345,9 @@ public class ExpectedRatesGenerator
 
         FragmentMatchType matchType = SHORT;
 
-        int remainingReadBases = mCurrentReadLength;
-        boolean overlappingReads = (mCurrentFragSize - 2 * mCurrentReadLength) < 1;
-        int remainingInterimBases = !overlappingReads ? mCurrentFragSize - 2 * mCurrentReadLength + 1 : 0;
+        int remainingReadBases = mReadLength;
+        boolean overlappingReads = (mCurrentFragSize - 2 * mReadLength) < 1;
+        int remainingInterimBases = !overlappingReads ? mCurrentFragSize - 2 * mReadLength + 1 : 0;
         long nextRegionStart = startPos;
         int readsAdded = 0;
 
@@ -383,14 +400,14 @@ public class ExpectedRatesGenerator
 
                 if(overlappingReads)
                 {
-                    if(mCurrentFragSize <= mCurrentReadLength)
+                    if(mCurrentFragSize <= mReadLength)
                         break;
 
-                    remainingReadBases = mCurrentFragSize - mCurrentReadLength;
+                    remainingReadBases = mCurrentFragSize - mReadLength;
                 }
                 else
                 {
-                    remainingReadBases = mCurrentReadLength;
+                    remainingReadBases = mReadLength;
                 }
             }
 
@@ -574,9 +591,9 @@ public class ExpectedRatesGenerator
 
             double[] categoryCounts = new double[categoryCount];
 
-            final List<TranscriptComboData> transCounts = mExpectedTransComboCounts.get(transId);
+            final List<CategoryCountsData> transCounts = mExpectedTransComboCounts.get(transId);
 
-            for(TranscriptComboData tcData : transCounts)
+            for(CategoryCountsData tcData : transCounts)
             {
                 final String transKey = tcData.combinedKey();
                 int fragmentCount = tcData.fragmentCount();
@@ -600,17 +617,22 @@ public class ExpectedRatesGenerator
             mCurrentExpRatesData.getTranscriptDefinitions().setCol(transIndex, categoryCounts);
         }
 
-        mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
+        if(mConfig.ApplyExpectedRates)
+            mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
 
         if(mConfig.WriteExpectedRates)
+        {
             writeExpectedRates(mExpRateWriter, mCurrentExpRatesData);
+            // cache and write later
+            // mExpectedRatesDataList.add(mCurrentExpRatesData);
+        }
     }
 
     private void collectCategories()
     {
-        for(Map.Entry<String,List<TranscriptComboData>> entry : mExpectedTransComboCounts.entrySet())
+        for(Map.Entry<String,List<CategoryCountsData>> entry : mExpectedTransComboCounts.entrySet())
         {
-            for(TranscriptComboData tcData : entry.getValue())
+            for(CategoryCountsData tcData : entry.getValue())
             {
                 final String transKey = tcData.combinedKey();
                 int fragmentCount = tcData.fragmentCount();
@@ -627,7 +649,7 @@ public class ExpectedRatesGenerator
     {
         mCurrentFragSize = length;
         mCurrentFragFrequency = frequency;
-        mCurrentReadLength = min(mConfig.ReadLength, mCurrentFragSize);
+        mReadLength = min(mConfig.ReadLength, mCurrentFragSize);
     }
 
     public static BufferedWriter createWriter(final IsofoxConfig config)
@@ -640,13 +662,31 @@ public class ExpectedRatesGenerator
             {
                 outputFileName = config.ExpRatesFile;
             }
+            else if(config.WriteExpectedCounts)
+            {
+                outputFileName = String.format("%sread_%d_%s", config.OutputDir, config.ReadLength, EXP_RATES_FILE_ID);
+            }
             else
             {
                 outputFileName = config.formOutputFile(EXP_RATES_FILE_ID);
             }
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneSetId,TransId,Category,Rate");
+
+            if(config.WriteExpectedCounts)
+            {
+                writer.write("GeneSetId,TransId,Category");
+
+                for(int[] fragLength : config.ExpRateFragmentLengths)
+                {
+                    writer.write(String.format(",Length_%d", fragLength[FL_LENGTH]));
+                }
+            }
+            else
+            {
+                writer.write("GeneSetId,TransId,Category,Rate");
+            }
+
             writer.newLine();
             return writer;
         }
@@ -655,6 +695,46 @@ public class ExpectedRatesGenerator
             ISF_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
             return null;
         }
+    }
+
+    public void writeExpectedRatesData()
+    {
+        mExpectedRatesDataList.forEach(x -> writeExpectedRates(mExpRateWriter, x));
+    }
+
+    private synchronized static void writeExpectedCounts(
+            final BufferedWriter writer, final String collectionId, final Map<String,List<CategoryCountsData>> transCountsMap)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            for(Map.Entry<String,List<CategoryCountsData>> entry : transCountsMap.entrySet())
+            {
+                final String transId = entry.getKey();
+                final List<CategoryCountsData> countsList = entry.getValue();
+
+                for(CategoryCountsData tcData : countsList)
+                {
+                    final int[] lengthCounts = tcData.fragmentCountsByLength();
+
+                    writer.write(String.format("%s,%s,%s,%d", collectionId, transId, tcData.combinedKey(), lengthCounts[0]));
+
+                    for (int i = 1; i < lengthCounts.length; ++i)
+                    {
+                        writer.write(String.format(",%d", lengthCounts[i]));
+                    }
+
+                    writer.newLine();
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write transcript expected counts file: {}", e.toString());
+        }
+
     }
 
     private synchronized static void writeExpectedRates(

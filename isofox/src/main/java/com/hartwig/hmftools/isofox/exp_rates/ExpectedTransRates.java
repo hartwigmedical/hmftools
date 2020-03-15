@@ -70,7 +70,7 @@ public class ExpectedTransRates
     }
 
     public void runTranscriptEstimation(
-            final GeneCollection geneCollection, final List<TranscriptComboData> transCategoryCounts, final ExpectedRatesData expRatesData)
+            final GeneCollection geneCollection, final List<CategoryCountsData> transCategoryCounts, final ExpectedRatesData expRatesData)
     {
         if(expRatesData == null)
         {
@@ -144,13 +144,13 @@ public class ExpectedTransRates
         }
     }
 
-    private double[] generateReadCounts(final GeneCollection genes, final List<TranscriptComboData> transComboData)
+    private double[] generateReadCounts(final GeneCollection genes, final List<CategoryCountsData> transComboData)
     {
         double[] categoryCounts = new double[mCurrentExpRatesData.Categories.size()];
 
         int skippedComboCounts = 0;
 
-        for(TranscriptComboData tcData : transComboData)
+        for(CategoryCountsData tcData : transComboData)
         {
             final String categoryKey = tcData.combinedKey();
             int fragmentCount = tcData.fragmentCount();

@@ -25,6 +25,8 @@ public class PerformanceCounter
     private long mPausedTime; // accumulates interval times when timer is paused
     private final List<Double> mTimes;
     private final List<String> mTimeNames;
+    private String mCurrentIntervalName;
+    private boolean mSortTimes;
 
     private static final double NANOS_IN_SECOND = 1000000000;
 
@@ -38,7 +40,11 @@ public class PerformanceCounter
         mMaxTime = 0;
         mTimes = Lists.newArrayList();
         mTimeNames = Lists.newArrayList();
+        mSortTimes = false;
+        mCurrentIntervalName = null;
     }
+
+    public void setSortTimes(boolean toggle) { mSortTimes = toggle; }
 
     public final String getName() {
         return mName;
@@ -46,18 +52,17 @@ public class PerformanceCounter
 
     public void start()
     {
-        mIsRunning = true;
-        mIsPaused = false;
-        mPausedTime = 0;
-        mStartTime = System.nanoTime();
+        start(null);
     }
 
     public void start(final String intervalName)
     {
         mIsRunning = true;
         mIsPaused = false;
+        mPausedTime = 0;
         mStartTime = System.nanoTime();
-        mTimeNames.add(intervalName);
+
+        mCurrentIntervalName = intervalName;
     }
 
     public void pause()
@@ -92,7 +97,32 @@ public class PerformanceCounter
         mMaxTime = max(sampleTimeSeconds, mMaxTime);
         mTotalTime += sampleTimeSeconds;
 
-        mTimes.add(sampleTimeSeconds);
+        if(!mSortTimes)
+        {
+            mTimes.add(sampleTimeSeconds);
+
+        }
+        else
+        {
+            addTimeInOrder(sampleTimeSeconds, mCurrentIntervalName);
+        }
+    }
+
+    private void addTimeInOrder(double time, final String name)
+    {
+        int index = 0;
+        while(index < mTimes.size())
+        {
+            if(time < mTimes.get(index))
+                break;
+            else
+                ++index;
+        }
+
+        mTimes.add(index, time);
+
+        if(name != null)
+            mTimeNames.add(index, name);
     }
 
     public boolean isRunning() {
@@ -106,8 +136,7 @@ public class PerformanceCounter
     public final List<Double> getTimes() {
         return mTimes;
     }
-    public final List<String> getTimeNames() { return mTimeNames;
-    }
+    public final List<String> getTimeNames() { return mTimeNames; }
 
     // time values are in seconds
     public double getTotalTime() {
@@ -124,7 +153,7 @@ public class PerformanceCounter
 
     public double getMedianTime()
     {
-        if(mTimes.isEmpty())
+        if(!mSortTimes || mTimes.isEmpty())
             return 0;
 
         int medianIndex = (int)floor(mTimes.size()/2);
@@ -143,8 +172,13 @@ public class PerformanceCounter
 
         if(mTimes.size() > 1)
         {
-            LOGGER.info(String.format("PerfStats: name(%s) intervals(%d) total(%.3f avg=%.3f med=%.3f max=%.3f)",
-                    mName, getSampleCount(), getTotalTime(), getAvgTime(), getMedianTime(), getMaxTime()));
+            String avgMed =  String.format("avg=%.3f", getAvgTime());
+
+            if(mSortTimes)
+                avgMed += String.format(" med=%.3f", getMedianTime());
+
+            LOGGER.info(String.format("PerfStats: name(%s) intervals(%d) total(%.3f %s max=%.3f)",
+                    mName, getSampleCount(), getTotalTime(), avgMed, getMaxTime()));
         }
         else
         {
@@ -171,7 +205,20 @@ public class PerformanceCounter
 
     public void merge(final PerformanceCounter other)
     {
-        mTimes.addAll(other.getTimes());
+        if(!mSortTimes)
+        {
+            mTimes.addAll(other.getTimes());
+            mTimeNames.addAll(other.getTimeNames());
+        }
+        else
+        {
+            final List<String> otherTimeNames = other.getTimeNames();
+            for(int i = 0; i < other.getTimes().size(); ++i)
+            {
+                addTimeInOrder(other.getTimes().get(i), otherTimeNames.isEmpty() ? null : otherTimeNames.get(i));
+            }
+        }
+
         mTotalTime += other.getTotalTime();
         mMaxTime = max(mMaxTime, other.getMaxTime());
     }

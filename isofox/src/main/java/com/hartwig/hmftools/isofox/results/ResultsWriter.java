@@ -77,11 +77,12 @@ public class ResultsWriter
 
     private void initialiseExternalWriters()
     {
-        if(mConfig.WriteExpectedRates)
+        if(mConfig.writeExpectedRateData())
         {
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
         }
-        else
+
+        if(!mConfig.generateExpRatesOnly())
         {
             if (mConfig.WriteReadData)
                 mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);

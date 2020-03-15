@@ -58,7 +58,8 @@ public class ChromosomeGeneTask implements Callable
     private static final int PERF_TOTAL = 0;
     private static final int PERF_READS = 1;
     private static final int PERF_NOVEL_LOCATIONS = 2;
-    private static final int PERF_FIT = 3;
+    public static final int PERF_FIT = 3;
+    private static final int PERF_WRITE = 4;
     private final PerformanceCounter[] mPerfCounters;
 
     public ChromosomeGeneTask(
@@ -81,16 +82,21 @@ public class ChromosomeGeneTask implements Callable
         mBamReader = new GeneBamReader(mConfig, resultsWriter);
         mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, resultsWriter) : null;
 
-        mExpRatesGenerator = mConfig.WriteExpectedRates || (mConfig.ApplyExpectedRates && mConfig.UseCalculatedFragmentLengths)
+        mExpRatesGenerator = mConfig.writeExpectedRateData() || (mConfig.ApplyExpectedRates && mConfig.UseCalculatedFragmentLengths)
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mGeneResults = Lists.newArrayList();
 
-        mPerfCounters = new PerformanceCounter[PERF_FIT+1];
+        mPerfCounters = new PerformanceCounter[PERF_WRITE+1];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
         mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
         mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
         mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
+
+        if(ISF_LOGGER.isInfoEnabled())
+            mPerfCounters[PERF_FIT].setSortTimes(true);
+
+        mPerfCounters[PERF_WRITE] = new PerformanceCounter("WriteData");
     }
 
     public final GeneBamReader getBamReader() { return mBamReader; }
@@ -121,7 +127,8 @@ public class ChromosomeGeneTask implements Callable
             ISF_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
-        boolean generateExpRatesOnly = mConfig.WriteExpectedRates && !mConfig.UseCalculatedFragmentLengths && !mConfig.ApplyExpectedRates;
+        boolean generateExpRatesOnly = mConfig.generateExpRatesOnly();
+        int nextLogCount = 100;
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
@@ -149,13 +156,16 @@ public class ChromosomeGeneTask implements Callable
 
             ++mGenesProcessed;
 
-            if (mGenesProcessed > 1 && (mGenesProcessed % 100) == 0)
+            if (mGenesProcessed >= nextLogCount)
             {
+                nextLogCount += 100;
                 ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
             }
         }
 
+        mPerfCounters[PERF_WRITE].start();
         writeResults();
+        mPerfCounters[PERF_WRITE].stop();
     }
 
     public void calcFragmentLengths()
@@ -265,7 +275,21 @@ public class ChromosomeGeneTask implements Callable
         {
             ExpectedRatesData expRatesData = null;
 
-            mPerfCounters[PERF_FIT].start();
+            if(!mConfig.RunPerfChecks)
+            {
+                mPerfCounters[PERF_FIT].start();
+            }
+            else
+            {
+                int transCount = geneCollection.genes().stream().mapToInt(x -> x.getTranscripts().size()).sum();
+                int exonCount = geneCollection.genes().stream().mapToInt(x -> x.getTranscripts().stream().mapToInt(y -> y.exons().size()).sum()).sum();
+
+                final String perfId = String.format("%s genes(%s:%s) trans(%s) exons(%s) range(%d)",
+                        geneCollection.chrId(), geneCollection.genes().size(), geneCollection.geneNames(),
+                        transCount, exonCount, regionEnd - regionStart);
+
+                mPerfCounters[PERF_FIT].start(perfId);
+            }
 
             if(mExpRatesGenerator != null)
             {
@@ -328,6 +352,10 @@ public class ChromosomeGeneTask implements Callable
 
             geneResult.transcriptResults().forEach(x -> mResultsWriter.writeTranscriptResults(geneResult.geneData(), x));
         }
+
+        // written on the fly for now
+        // if(mConfig.WriteExpectedRates)
+        //    mExpRatesGenerator.writeExpectedRatesData();
     }
 
     public PerformanceCounter[] getPerfCounters()

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.PERF_FIT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -86,7 +87,7 @@ public class Isofox
             return; // for now
         }
 
-        if((mConfig.FragmentLengthMinCount > 0 && mConfig.WriteFragmentLengths) || mConfig.UseCalculatedFragmentLengths)
+        if(mConfig.requireFragmentLengthCalcs())
         {
             // for now a way of only calculating fragment lengths and nothing more
             calcFragmentLengths();
@@ -147,6 +148,8 @@ public class Isofox
             GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, ratioCounts.getRatioCounts());
         }
 
+        mResultsWriter.close();
+
         final PerformanceCounter[] perfCounters = chrTasks.get(0).getPerfCounters();
 
         for(int i = 1; i < chrTasks.size(); ++i)
@@ -161,7 +164,16 @@ public class Isofox
 
         Arrays.stream(perfCounters).forEach(x -> x.logStats());
 
-        mResultsWriter.close();
+        if(mConfig.RunPerfChecks)
+        {
+            final List<Double> fitTimes = perfCounters[PERF_FIT].getTimes();
+            final List<String> fitGenes = perfCounters[PERF_FIT].getTimeNames();
+
+            for (int i = fitTimes.size() - 1; i >= fitTimes.size() - 10; --i)
+            {
+                ISF_LOGGER.info(String.format("fit times: geneSet(%s) time(%.3f)", fitGenes.get(i), fitTimes.get(i)));
+            }
+        }
     }
 
     private void calcFragmentLengths()
