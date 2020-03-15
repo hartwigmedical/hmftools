@@ -34,7 +34,7 @@ pCircos <- ggdraw() + draw_image(imgCircos)
 bands <- read.table(bandsPath, h = T)
 chromosomeRanges <- read.table(chromosomeRangePath, h = F, sep = "\t", comment = "!", stringsAsFactors = F)
 names(chromosomeRanges) <- c("chromosome", "start", "end", "chrColor")
-chromosomeRanges = chromosomeRanges %>% mutate(label = paste0("CHR ", chromosome))
+chromosomeRanges = chromosomeRanges %>% mutate(chromosome = gsub("chr", "", chromosome), label = paste0("CHR ", chromosome))
 
 add_row_numbers <- function(columnsInFirstRow, chromosomeLengths, minRelativeLength = 0.1) {
   lengthOfFirstRow = sum(chromosomeLengths %>% filter(row_number() <= columnsInFirstRow) %>% pull(length))
