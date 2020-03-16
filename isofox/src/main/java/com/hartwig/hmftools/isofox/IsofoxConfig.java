@@ -318,9 +318,9 @@ public class IsofoxConfig
     public String formOutputFile(final String fileId)
     {
         if(OutputIdentifier != null)
-            return OutputDir + SampleId + "." + OutputIdentifier + "." + fileId;
+            return OutputDir + SampleId + ".isf." + OutputIdentifier + "." + fileId;
         else
-            return OutputDir + SampleId + "." + fileId;
+            return OutputDir + SampleId + ".isf." + fileId;
     }
 
     public IsofoxConfig()
