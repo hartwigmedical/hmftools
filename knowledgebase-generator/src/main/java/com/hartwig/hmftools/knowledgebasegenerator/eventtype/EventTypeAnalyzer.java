@@ -23,6 +23,7 @@ public class EventTypeAnalyzer {
 
         boolean combinedEvent = false;
         String biomarkerType = Strings.EMPTY;
+        String eventInfo = Strings.EMPTY;
         String gene = Strings.EMPTY;
         String eventSource = Strings.EMPTY;
         List<String> event = Lists.newArrayList();
@@ -75,27 +76,43 @@ public class EventTypeAnalyzer {
 
                     break;
                 case CGI: // extract info for cgi
-                    gene = feature.geneSymbol(); // TODO: use not geneSymbol but extract gene from name
                     eventSource = feature.name(); //TODO: extract only event
                     biomarkerType = feature.biomarkerType();
                     if (eventSource.contains("+")) {
-                        String[] combinedEventConvertToSingleEvent = eventSource.split("\\+", 2);
+                        String[] combinedEventConvertToSingleEvent = eventSource.split(" \\+ ", 2);
+                        gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
+                        eventInfo = combinedEventConvertToSingleEvent[0].split(" ", 2)[1];
+
+                        String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
+                        String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
+
                         if (combinedEventConvertToSingleEvent.length == 2) {
                             combinedEvent = true;
 
                             if (eventMap.size() == 0) {
-                                eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[0]));
-                                if (eventMap.containsKey(gene)) {
-                                    eventMap.put(gene,
-                                            Lists.newArrayList(combinedEventConvertToSingleEvent[0], combinedEventConvertToSingleEvent[1]));
+                                eventMap.put(gene, Lists.newArrayList(eventInfo));
+                                if (eventMap.containsKey(geneCombined)) {
+                                    eventMap.put(geneCombined,
+                                            Lists.newArrayList(eventInfo, eventInfoCombined));
                                 } else {
-                                    eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[0]));
-                                    eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[1]));
+                                    eventMap.put(gene, Lists.newArrayList(eventInfo));
+                                    eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
                                 }
                             }
                         }
                     } else {
-                        eventMap.put(gene, Lists.newArrayList(eventSource));
+                        if (eventSource.contains(":")) {
+                            gene = eventSource.split(":", 2)[0];
+                            eventInfo = eventSource.split(":", 2)[1];
+                        } else {
+                            gene = eventSource.split(" ", 2)[0];
+                            if (eventSource.split(" ", 2).length == 1) {
+                                eventInfo = "Fusion";
+                            } else {
+                                eventInfo = eventSource.split(" ", 2)[1];
+                            }
+                        }
+                        eventMap.put(gene, Lists.newArrayList(eventInfo));
                     }
 
                     //
