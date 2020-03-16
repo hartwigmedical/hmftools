@@ -71,13 +71,13 @@ public class SvLinxApplication
             Configurator.setRootLevel(Level.DEBUG);
         }
 
-        LinxConfig config = new LinxConfig(cmd);
-
-        if(!config.hasValidPaths())
+        if(!LinxConfig.validConfig(cmd))
         {
-            LOGGER.warn("invalid config paths");
+            LOGGER.error("exiting on invalid config");
             return;
         }
+
+        LinxConfig config = new LinxConfig(cmd);
 
         final DatabaseAccess dbAccess = cmd.hasOption(DB_URL) ? databaseAccess(cmd) : null;
 
@@ -89,17 +89,16 @@ public class SvLinxApplication
         {
             if((config.hasMultipleSamples() || samplesList.isEmpty()))
             {
-                LOGGER.warn("batch mode requires a DB connection");
+                LOGGER.error("batch mode requires a DB connection");
                 return;
             }
 
             if(!sampleDataFromFile)
             {
-                LOGGER.warn("no DB connection and no purple data directory specified");
+                LOGGER.error("no DB connection and no purple data directory specified");
                 return;
             }
         }
-
 
         if (samplesList.isEmpty())
         {

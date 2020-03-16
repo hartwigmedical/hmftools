@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_PROXIMITY_DISTANCE;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
@@ -211,9 +213,28 @@ public class LinxConfig
         ChainingSvLimit = DEFAULT_CHAINING_SV_LIMIT;
     }
 
-    public boolean hasValidPaths()
+    public static boolean validConfig(final CommandLine cmd)
     {
-        return Files.exists(Paths.get(OutputDataPath));
+        return(configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
+            && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
+            && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE)
+            && configPathValid(cmd, VIRAL_HOSTS_FILE) && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
+            && FusionDisruptionAnalyser.validConfig(cmd));
+    }
+
+    public static boolean configPathValid(final CommandLine cmd, final String configItem)
+    {
+        if(!cmd.hasOption(configItem))
+            return true;
+
+        final String filePath = cmd.getOptionValue(configItem);
+        if(!Files.exists(Paths.get(filePath)))
+        {
+            LOGGER.error("invalid config path: {} = {}", configItem, filePath);
+            return false;
+        }
+
+        return true;
     }
 
     public static void addCmdLineArgs(Options options)

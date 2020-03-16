@@ -6,11 +6,15 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
 import static com.hartwig.hmftools.linx.LinxConfig.CHECK_FUSIONS;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
+import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.couldBeReportable;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.validFusionTranscript;
 import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndFusions;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FUSION_PAIRS_CSV;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
+import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
@@ -152,6 +156,13 @@ public class FusionDisruptionAnalyser
         options.addOption(LOG_REPEAT_GENE_PAIRS, false, "Log sme gene-pair repeatedly if supported by different SVs");
         options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
     }
+
+    public static boolean validConfig(final CommandLine cmd)
+    {
+        return(configPathValid(cmd, SAMPLE_RNA_FILE) && configPathValid(cmd, REF_GENOME_FILE)
+            && configPathValid(cmd, FUSION_PAIRS_CSV) && configPathValid(cmd, PROMISCUOUS_FIVE_CSV) && configPathValid(cmd, PROMISCUOUS_THREE_CSV));
+    }
+
 
     private void initialise(final CommandLine cmdLineArgs)
     {
