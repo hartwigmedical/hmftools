@@ -9,8 +9,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.evidence.PrimaryEvidence;
+import com.hartwig.hmftools.sage.evidence.GermlineEvidence;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
@@ -30,7 +30,7 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
     private final List<VariantHotspot> hotspots;
     private final List<GenomeRegion> panelRegions;
     private final List<GenomeRegion> highConfidenceRegions;
-    private final PrimaryEvidence primaryEvidence;
+    private final GermlineEvidence germlineEvidence;
     private final ReferenceSequenceFile refGenome;
 
     GermlineOnlyPipeline(final SageConfig config, final Executor executor, final ReferenceSequenceFile refGenome,
@@ -41,7 +41,7 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
         this.panelRegions = panelRegions;
 
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
+        this.germlineEvidence = new GermlineEvidence(config, hotspots, samSlicerFactory, refGenome);
         this.highConfidenceRegions = highConfidenceRegions;
         this.refGenome = refGenome;
 
@@ -56,12 +56,12 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
                 CompletableFuture.supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
         final CompletableFuture<List<AltContext>> candidates =
-                refSequenceFuture.thenApply(refSequence -> primaryEvidence.get(config.reference().get(0),
+                refSequenceFuture.thenApply(refSequence -> germlineEvidence.get(config.reference().get(0),
                         config.referenceBam().get(0),
                         refSequence,
                         region));
 
-        return candidates.thenApply(aVoid -> candidates.join().stream().map(variantFactory::create).collect(Collectors.toList()));
+        return candidates.thenApply(aVoid -> candidates.join().stream().map(x -> variantFactory.create(x.primaryReadContext())).collect(Collectors.toList()));
     }
 
 }

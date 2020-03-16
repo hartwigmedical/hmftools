@@ -22,6 +22,11 @@ public class CigarTraversal {
                 case P:
                     break; // ignore pads
                 case S:
+                    if (i == 0) {
+                        handler.handleLeftSoftClip(record, e);
+                    } else if (i == cigar.numCigarElements() - 1) {
+                        handler.handleRightSoftClip(record, e, readIndex, refBase);
+                    }
                     readIndex += e.getLength();
                     break; // soft clip read bases
                 case N:

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +21,6 @@ public class RefContext implements GenomePosition {
     private final Map<String, AltContext> alts;
 
     private int rawDepth;
-    private int rawSupportRef;
-    private int rawBaseQualityRef;
 
     public RefContext(final String sample, final String chromosome, final long position) {
         this.sample = sample;
@@ -30,35 +29,23 @@ public class RefContext implements GenomePosition {
         this.alts = new HashMap<>();
     }
 
-    public boolean isAltsEmpty() {
-        return alts.isEmpty();
-    }
-
     @NotNull
     public Collection<AltContext> alts() {
-        return alts.values();
+        return new ArrayList<>(alts.values());
     }
 
-    public void refRead(int baseQuality) {
-        this.rawSupportRef++;
+    public void refRead() {
         this.rawDepth++;
-        this.rawBaseQualityRef += baseQuality;
     }
 
     @NotNull
     public AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
         final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(RefContext.this, ref, alt));
-    }
-
-    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality) {
-        this.rawDepth++;
-        final AltContext altContext = altContext(ref, alt);
-        altContext.incrementAltRead(baseQuality);
+        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
     }
 
 
-    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality, @NotNull final ReadContext interimReadContext) {
+    public void altReadCandidate(@NotNull final String ref, @NotNull final String alt, int baseQuality, @NotNull final ReadContext interimReadContext) {
         this.rawDepth++;
         final AltContext altContext = altContext(ref, alt);
         altContext.incrementAltRead(baseQuality);
@@ -80,16 +67,9 @@ public class RefContext implements GenomePosition {
         return rawDepth;
     }
 
+    @NotNull
     public String sample() {
         return sample;
-    }
-
-    public int rawSupportRef() {
-        return rawSupportRef;
-    }
-
-    public int rawBaseQualityRef() {
-        return rawBaseQualityRef;
     }
 
     @Override
@@ -111,5 +91,4 @@ public class RefContext implements GenomePosition {
         h += (h << 5) + Longs.hashCode(position());
         return h;
     }
-
 }

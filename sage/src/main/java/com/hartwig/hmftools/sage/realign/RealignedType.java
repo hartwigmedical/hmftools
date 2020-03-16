@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.context;
+package com.hartwig.hmftools.sage.realign;
 
 public enum RealignedType {
     NONE, EXACT, LENGTHENED, SHORTENED;

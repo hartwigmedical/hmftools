@@ -24,14 +24,11 @@ public class ViccAmpsDelExtractorTestApplication {
         List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info("Read {} entries", viccEntries.size());
 
-        int num = 0;
         for (ViccEntry viccEntry : viccEntries) {
-            if (viccEntry.source().equals(source)) {
-                num+=1;
-            }
 
-            //List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry, num);
-            //  LOGGER.info("eventType: " + eventType);
+
+            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
+        //    LOGGER.info("eventType: " + eventType);
 
            // for (EventType type: eventType) {
                 // Generating actionable event and known events

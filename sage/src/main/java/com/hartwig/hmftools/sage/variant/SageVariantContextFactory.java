@@ -23,7 +23,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,32 +40,30 @@ public class SageVariantContextFactory {
 
     @NotNull
     public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
-        final AltContext normal = entry.primaryNormal();
+        final ReadContextCounter normal = entry.primaryNormal();
 
         final Genotype normalGenotype = createGenotype(true, normal);
         final List<Genotype> genotypes = Collections.singletonList(normalGenotype);
-        final ReadContextCounter normalCounter = normal.primaryReadContext();
-        return createContext(entry, createAlleles(normal), genotypes, normalCounter);
+        return createContext(entry, createAlleles(normal), genotypes, normal);
     }
 
     @NotNull
     public static VariantContext pairedTumorNormal(@NotNull final SageVariant entry) {
-        final List<AltContext> tumorContexts = entry.tumorAltContexts();
+        final List<ReadContextCounter> tumorContexts = entry.tumorAltContexts();
 
         assert (tumorContexts.size() >= 1);
 
-        final AltContext firstTumor = tumorContexts.get(0);
+        final ReadContextCounter firstTumor = tumorContexts.get(0);
 
         final List<Genotype> genotypes = Lists.newArrayList();
         for (int i = 0; i < entry.normalAltContexts().size(); i++) {
-            AltContext normalContext = entry.normalAltContexts().get(i);
+            ReadContextCounter normalContext = entry.normalAltContexts().get(i);
             genotypes.add(createGenotype(i == 0, normalContext));
         }
 
         tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
 
-        final ReadContextCounter firstTumorCounter = firstTumor.primaryReadContext();
-        return createContext(entry, createAlleles(entry.primaryNormal()), genotypes, firstTumorCounter);
+        return createContext(entry, createAlleles(entry.primaryNormal()), genotypes, firstTumor);
     }
 
     @NotNull
@@ -77,8 +74,7 @@ public class SageVariantContextFactory {
                 .attribute(READ_CONTEXT, counter.readContext().toString())
                 .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
                 .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
-                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
-                .log10PError(counter.tumorQuality() / -10d)
+                .log10PError(variant.totalQuality() / -10d)
                 .source("SAGE")
                 .computeEndFromAlleles(alleles, (int) variant.position())
                 .attribute(TIER, variant.tier())
@@ -108,19 +104,18 @@ public class SageVariantContextFactory {
     }
 
     @NotNull
-    private static Genotype createGenotype(boolean germline, @NotNull final AltContext evidence) {
-        final ReadContextCounter counter = evidence.primaryReadContext();
-
-        return new GenotypeBuilder(evidence.sample()).DP(counter.depth())
+    private static Genotype createGenotype(boolean germline, @NotNull final ReadContextCounter counter) {
+        return new GenotypeBuilder(counter.sample()).DP(counter.depth())
                 .AD(new int[] { counter.refSupport(), counter.altSupport() })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
                 .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
-                .attribute(RAW_ALLELIC_DEPTH, new int[] { evidence.rawSupportRef(), evidence.rawSupportAlt() })
-                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { evidence.rawBaseQualityRef(), evidence.rawBaseQualityAlt() })
-                .attribute(RAW_DEPTH, evidence.rawDepth())
-                .alleles(createGenotypeAlleles(germline, evidence, counter))
+                .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
+                .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
+                .attribute(RAW_DEPTH, counter.rawDepth())
+                .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
+                .alleles(createGenotypeAlleles(germline, counter))
                 .make();
     }
 
@@ -132,10 +127,9 @@ public class SageVariantContextFactory {
     }
 
     @NotNull
-    private static List<Allele> createGenotypeAlleles(boolean germline, @NotNull final VariantHotspot variant,
-            @NotNull final ReadContextCounter counter) {
-        final Allele ref = Allele.create(variant.ref(), true);
-        final Allele alt = Allele.create(variant.alt(), false);
+    private static List<Allele> createGenotypeAlleles(boolean germline, @NotNull final ReadContextCounter counter) {
+        final Allele ref = Allele.create(counter.ref(), true);
+        final Allele alt = Allele.create(counter.alt(), false);
 
         if (germline && Doubles.lessOrEqual(counter.refAllelicFrequency(), HET_CUTOFF)) {
             return Lists.newArrayList(alt, alt);

@@ -4,14 +4,78 @@
 SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller 
 
 Key features include:
-  - 3 tiered (Hotspot,Panel,Wide) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
+  - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
   - kmer based model which determines a unique [read context](#read-context) for the variant + 25 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
   - modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
   - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatelites while ignoring common sequencing errors
   - no cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
-  - Option to also search for somatic variant support in RNA data
+  - Multiple tumor support
+  - Multiple reference support
+  - RNA support
+
+# Usage
+
+## Mandatory Arguments
+
+Argument | Description 
+---|---
+reference | Comma separated names of the reference sample
+reference_bam | Comma separated paths to indexed reference BAM file
+tumor | Comma separated names of the tumor sample
+tumor_bam | Comma separated paths to indexed tumor BAM file
+out | Name of the output VCF
+ref_genome | Path to reference genome fasta file
+hotspots | Path to hotspots vcf
+panel_bed | Path to panel bed
+high_confidence_bed | Path to high confidence bed
+
+The cardinality of `reference` must match `reference_bams`. Similarly with `tumor` and `tumor_bams`.
+
+## Example Usage
+
+
+Minimum set of arguments:
+
+```
+java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 8 \
+    -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
+    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
+    -ref_genome /path/to/ref_genome.fasta \
+    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -out /path/to/COLO829v003.sage.vcf.gz
+```
+
+With RNA as an additional reference:
+```
+java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 8 \
+    -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
+    -reference COLO829v003R,COLO829v003RNA -reference_bam /path/to/COLO829v003R.bam,/path/to/COLO829v003RNA.bam \
+    -ref_genome /path/to/ref_genome.fasta \
+    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -out /path/to/COLO829v003.sage.vcf.gz
+```
+
+With multiple tumors:
+```
+java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 8 \
+    -tumor COLO829v003T,COLO829v004T -tumor_bam /path/to/COLO829v003T.bam,/path/to/COLO829v004T.bam \
+    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
+    -ref_genome /path/to/ref_genome.fasta \
+    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
+    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
+    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
+    -out /path/to/COLO829v003.sage.vcf.gz
+```
+
 
  # Read context 
  
@@ -64,17 +128,18 @@ There are 7 key steps in the SAGE algorithm described in detail below:
   1. [Candidate Variants And Read Contexts](#1-candidate-variants-and-read-contexts)
   2. [Tumor Counts and Quality](#2-tumor-counts-and-quality)
   3. [Normal Counts and Quality](#3-normal-counts-and-quality)
-  4. [RNA Counts](#4-rna-counts)
-  5. [Soft Filter](#5-soft-filters)
-  6. [Phasing](#6-phasing)
-  7. [MNV Handling](#7-de-duplication)
-  8. [Output](#8-output)
+  4. [Soft Filter](#4-soft-filters)
+  5. [Phasing](#5-phasing)
+  6. [MNV Handling](#6-de-duplication)
+  7. [Output](#7-output)
  
  
 ## 1. Candidate Variants And Read Contexts
 
-In this first parse of the tumor BAM, SAGE uses the `I` and `D` flag in the CIGAR to find INDELs and compares the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome to find SNVs.
-MNVs of 2 ('2X') or 3 bases ('1X1M1X' or '3X') are considered explicitly also at this stage as an independent candidate variant.
+In this first parse of the tumor BAM(s), SAGE looks for candidate variants. 
+INDELS are located using the `I` and `D` flag in the CIGAR.
+SNVs and MNVs are located by comparing the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome.
+MNVs can be of any length but with no more than one matching base between un-matching bases, ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
 
 Note that there are no base quality or mapping quality requirements when looking for candidates.
 
@@ -108,6 +173,9 @@ hard_min_tumor_raw_base_quality |0| `RABQ[1]`
 
 These variants are excluded from this point onwards and have no further processing applied to them.  
 
+### Multiple Tumors
+If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
+
 ## 2. Tumor Counts and Quality
 
 The aim of the stage it to collect evidence of each candidate variant's read context in the tumor. 
@@ -118,10 +186,12 @@ A match can be:
   - `CORE` - Core matches read but neither flank does.
   - `REALIGNED` - Core and both flanks match read exactly but offset from the expected position.
 
-Failing any of the above matches, SAGE searches for matches that would occur if a microsatellite in the complete read context was extended or retracted. 
+Failing any of the above matches, SAGE searches for matches that would occur if a repeat in the complete read context was extended or retracted. 
 Matches of this type we call 'jitter' and are tallied as `LENGTHENED` or `SHORTENED`. 
 
-Lastly, if the base the variant location matches the ref genome, the `REFERENCE` tally is incremented while any read which spans the core read context increments the `TOTAL` tally. 
+If the variant is not found and instead matches the ref genome at that location, the `REFERENCE` tally is incremented.
+
+Any read which spans the core read context increments the `TOTAL` tally. 
 
 ### Modified Tumor Quality Score
 
@@ -181,13 +251,11 @@ These variants are excluded from this point onwards and have no further processi
  
 ## 3. Normal Counts and Quality
 
-For each candidate variant evidence in the normal is collected in same manner as step 2. 
+Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 2. 
 
-## 4. RNA Counts
+RNA bams are valid reference sources.
 
-If the optional `rna_bam` parameter is supplied, gather evidence in the rna in same manner as step 2. 
-
-## 5. Soft Filters
+## 4. Soft Filters
 
 Given evidence of the variants in the tumor and normal we apply somatic filters. 
 The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the normal sample.
@@ -210,7 +278,11 @@ max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[
 
 *** A special filter (max_germline_alt_support) is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 
-## 6. Phasing
+If multiple tumors are supplied, a variant is not filtered if it is unfiltered for any single tumor. 
+
+The germline criteria are only evaluated against the primary reference, ie, the first in the supplied reference list.
+
+## 5. Phasing
 
 Somatic variants can be phased using the complete read context with nearby germline variants or other somatic variants.
 
@@ -237,8 +309,9 @@ T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 
 Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
 
+If multiple tumors are supplied, phasing is evaluated only on the primary tumor, ie, the first in the supplied tumor list.
 
-## 7. De-duplication
+## 6. De-duplication
 
 ### INDEL
 
@@ -251,7 +324,7 @@ Any passing SNVs that are phased with and part of a passing MNVs will be filtere
 This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants. 
 In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
 
-## 8. Output
+## 7. Output
 
 There are two more 'hard' filters that are lazily applied at the end of the process just before writing to file. 
 They only apply to variants that are already filtered. 
@@ -302,6 +375,10 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 72 | 30 | 1660 | 82
 
  ## Version History
+ - Upcoming
+   - Multiple tumor support
+   - Multiple reference (or RNA) support
+   - Removed explicit RNA support (can use additional reference instead)
  - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
    - Reduced memory footprint
    - Add version info to VCF

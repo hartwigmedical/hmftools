@@ -101,14 +101,17 @@ public class KnowledgebaseGeneratorApplication {
                 // Generating known events
                 //TODO: map every genomic event to one object
                 //TODO: if combined event use single event for determine known events
-                listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type));
-                listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type));
-                DetermineEventOfGenomicMutation.checkVariants(viccEntry, type);
-                DetermineEventOfGenomicMutation.checkRange(viccEntry, type);
-                listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type));
-                listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type));
-                listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type));
-                DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type);
+                for (String interpetationEvents: type.interpretEventType()) {
+                    listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type, interpetationEvents));
+                    listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, interpetationEvents));
+                    DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, interpetationEvents);
+                    DetermineEventOfGenomicMutation.checkRange(viccEntry, type, interpetationEvents);
+                    listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, interpetationEvents));
+                    listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, interpetationEvents));
+                    listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, interpetationEvents));
+                    DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, interpetationEvents);
+                }
+
 
                 // Generating actionable event
                 listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry, type));

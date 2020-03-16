@@ -1,19 +1,26 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
-import com.hartwig.hmftools.sage.context.AltContext;
-import com.hartwig.hmftools.sage.context.RefContext;
-import com.hartwig.hmftools.sage.context.RefSequence;
-import com.hartwig.hmftools.sage.evidence.NormalEvidence;
-import com.hartwig.hmftools.sage.evidence.PrimaryEvidence;
+import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
+import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.read.ReadContextCounters;
+import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
+import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantFactory;
 
@@ -30,11 +37,11 @@ public class SomaticPipeline implements SageVariantPipeline {
     private final SageConfig config;
     private final Executor executor;
     private final List<VariantHotspot> hotspots;
-    private final List<GenomeRegion> panelRegions;
-    private final List<GenomeRegion> highConfidenceRegions;
-    private final PrimaryEvidence primaryEvidence;
-    private final NormalEvidence normalEvidence;
     private final ReferenceSequenceFile refGenome;
+    private final List<GenomeRegion> panelRegions;
+    private final CandidateEvidence candidateEvidence;
+    private final ReadContextEvidence readContextEvidence;
+    private final List<GenomeRegion> highConfidenceRegions;
 
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
@@ -45,70 +52,110 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
-        this.primaryEvidence = new PrimaryEvidence(config, hotspots, samSlicerFactory, refGenome);
-        this.normalEvidence = new NormalEvidence(config, samSlicerFactory, refGenome);
+        this.candidateEvidence = new CandidateEvidence(config, hotspots, samSlicerFactory, refGenome);
+        this.readContextEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome);
         this.refGenome = refGenome;
     }
 
     @NotNull
     public CompletableFuture<List<SageVariant>> variants(@NotNull final GenomeRegion region) {
 
-        final SageVariantFactory variantFactory = new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
-        final SomaticPipelineData somaticPipelineData = new SomaticPipelineData(config, variantFactory);
-        List<String> samples = config.tumor();
-        List<String> bams = config.tumorBam();
+        final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
-        final CompletableFuture<RefSequence> refSequenceFuture =
-                CompletableFuture.supplyAsync(() -> new RefSequence(region, refGenome), executor);
-
-        final List<CompletableFuture<List<AltContext>>> tumorFutures = Lists.newArrayList();
-        final CompletableFuture<Void> doneTumor = refSequenceFuture.thenCompose(refSequence -> {
-            for (int i = 0; i < samples.size(); i++) {
-                final String sample = samples.get(i);
-                final String bam = bams.get(i);
-
-                CompletableFuture<List<AltContext>> candidateFuture =
-                        CompletableFuture.supplyAsync(() -> primaryEvidence.get(sample, bam, refSequence, region), executor);
-
-                tumorFutures.add(candidateFuture);
+        // Scan tumors for set of initial candidates
+        final CompletableFuture<List<Candidate>> doneCandidates = refSequenceFuture.thenCompose(refSequence -> {
+            if (region.start() == 1) {
+                LOGGER.info("Processing chromosome {}", region.chromosome());
             }
+            LOGGER.debug("Processing initial candidates of {}:{}", region.chromosome(), region.start());
 
-            return CompletableFuture.allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()]));
+            final Candidates initialCandidates = new Candidates();
+            final List<CompletableFuture<Void>> candidateFutures = Lists.newArrayList();
+
+            for (int i = 0; i < config.tumor().size(); i++) {
+                final String sample = config.tumor().get(i);
+                final String sampleBam = config.tumorBam().get(i);
+
+                final CompletableFuture<Void> candidateFuture =
+                        refSequenceFuture.thenApply(x -> candidateEvidence.get(sample, sampleBam, refSequence, region))
+                                .thenAccept(initialCandidates::add);
+
+                candidateFutures.add(candidateFuture);
+            }
+            return allOf(candidateFutures.toArray(new CompletableFuture[candidateFutures.size()])).thenApply(y -> initialCandidates.candidates());
         });
 
-        final CompletableFuture<Void> doneMergedTumor = doneTumor.thenCompose(aVoid -> {
-            for (int i = 0; i < tumorFutures.size(); i++) {
-                CompletableFuture<List<AltContext>> future = tumorFutures.get(i);
-                somaticPipelineData.addTumor(i, future.join());
+        // Scan tumors for evidence
+        final CompletableFuture<ReadContextCounters> doneTumor = doneCandidates.thenCompose(initialCandidates -> {
+            LOGGER.debug("Scanning tumor for evidence in {}:{}", region.chromosome(), region.start());
+
+            final ReadContextCounters result = new ReadContextCounters(config.primaryTumor(), initialCandidates);
+            final List<CompletableFuture<Void>> tumorFutures = Lists.newArrayList();
+
+            for (int i = 0; i < config.tumor().size(); i++) {
+                final String sample = config.tumor().get(i);
+                final String sampleBam = config.tumorBam().get(i);
+
+                final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
+                        .thenApply(x -> readContextEvidence.get(region, initialCandidates, sample, sampleBam))
+                        .thenAccept(result::addCounters);
+
+                tumorFutures.add(tumorFuture);
             }
-            return CompletableFuture.completedFuture(null);
+
+            return allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()])).thenApply(x -> result);
         });
 
-        final List<CompletableFuture<List<RefContext>>> normalFutures = Lists.newArrayList();
-        final CompletableFuture<Void> doneNormal = doneMergedTumor.thenCompose(aVoid -> {
+        // Scan references for evidence
+        final CompletableFuture<ReadContextCounters> doneNormal = doneTumor.thenCompose(tumorReadContextCounters -> {
+            LOGGER.debug("Scanning reference for evidence in {}:{}", region.chromosome(), region.start());
+
+            final Predicate<ReadContextCounter> hardFilter = hardFilterEvidence(hotspots);
+            final List<Candidate> candidates = tumorReadContextCounters.candidates(hardFilter);
+            final ReadContextCounters result = new ReadContextCounters(config.primaryReference(), candidates);
+
+            final List<CompletableFuture<Void>> normalFutures = Lists.newArrayList();
+
             for (int i = 0; i < config.reference().size(); i++) {
                 final String sample = config.reference().get(i);
                 final String sampleBam = config.referenceBam().get(i);
 
-                CompletableFuture<List<RefContext>> normalFuture =
-                        CompletableFuture.supplyAsync(() -> normalEvidence.get(refSequenceFuture.join(),
-                                region,
-                                somaticPipelineData.normalCandidates(sample),
-                                sampleBam));
+                final CompletableFuture<Void> normalFuture = CompletableFuture.completedFuture(this)
+                        .thenApply(x -> readContextEvidence.get(region, candidates, sample, sampleBam))
+                        .thenAccept(result::addCounters);
 
                 normalFutures.add(normalFuture);
             }
-            return CompletableFuture.allOf(normalFutures.toArray(new CompletableFuture[normalFutures.size()]));
+
+            return allOf(normalFutures.toArray(new CompletableFuture[normalFutures.size()])).thenApply(x -> result);
         });
 
-        final CompletableFuture<Void> doneMergedNormal = doneNormal.thenCompose(aVoid -> {
-            for (int i = 0; i < normalFutures.size(); i++) {
-                CompletableFuture<List<RefContext>> future = normalFutures.get(i);
-                somaticPipelineData.addNormal(i, future.join());
-            }
-            return CompletableFuture.completedFuture(null);
-        });
+        final CompletableFuture<List<SageVariant>> variantFuture =
+                doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) -> {
+                    LOGGER.debug("Collating evidence in {}:{}", region.chromosome(), region.start());
+                    final SageVariantFactory variantFactory =
+                            new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
 
-        return doneMergedNormal.thenApply(aVoid -> somaticPipelineData.results());
+                    final List<Candidate> candidates = normalCandidates.candidates(x -> true);
+
+                    // Combine normal and tumor together and create variants
+                    final List<SageVariant> result = Lists.newArrayList();
+                    for (Candidate candidate : candidates) {
+                        final List<ReadContextCounter> normal = normalCandidates.readContextCounters(candidate.variant());
+                        final List<ReadContextCounter> tumor = tumorCandidates.readContextCounters(candidate.variant());
+                        SageVariant sageVariant = variantFactory.create(normal, tumor);
+                        result.add(sageVariant);
+                    }
+
+                    return result;
+                });
+
+        return variantFuture;
+    }
+
+    @NotNull
+    private Predicate<ReadContextCounter> hardFilterEvidence(@NotNull final List<VariantHotspot> variants) {
+        final HotspotSelector tierSelector = new HotspotSelector(variants);
+        return altContext -> altContext.tumorQuality() >= config.filter().hardMinTumorQual() || tierSelector.isHotspot(altContext);
     }
 }

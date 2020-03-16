@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,15 +25,15 @@ class LocalPhaseSet implements Consumer<SageVariant> {
 
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
-        final AltContext newAltContext = altContext(newEntry);
-        final ReadContext newReadContext = newAltContext.primaryReadContext().readContext();;
+        final ReadContextCounter newAltContext = altContext(newEntry);
+        final ReadContext newReadContext = newAltContext.readContext();
 
         Iterator<SageVariant> iterator = deque.iterator();
         while (iterator.hasNext()) {
             final SageVariant oldEntry = iterator.next();
 
-            final AltContext oldAltContext = altContext(oldEntry);
-            final ReadContext oldReadContext = oldAltContext.primaryReadContext().readContext();
+            final ReadContextCounter oldAltContext = altContext(oldEntry);
+            final ReadContext oldReadContext = oldAltContext.readContext();
             long distance = newAltContext.position() - oldAltContext.position();
             int offset = offset(oldEntry.primaryNormal(), newEntry.primaryNormal());
 
@@ -56,7 +56,7 @@ class LocalPhaseSet implements Consumer<SageVariant> {
         deque.add(newEntry);
     }
 
-    private AltContext altContext(@NotNull final SageVariant newEntry) {
+    private ReadContextCounter altContext(@NotNull final SageVariant newEntry) {
         return germline ? newEntry.primaryNormal() : newEntry.primaryTumor();
     }
 

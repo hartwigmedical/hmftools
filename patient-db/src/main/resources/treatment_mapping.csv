@@ -106,6 +106,7 @@ drug,type,mechanism,synonyms
 "Dutasteride (Avodart)",remove,"",""
 "Eftilagimod alpha or placebo",Randomized trial,"APC-activator","IMP321 or Placebo"
 "Encorafenib",Targeted therapy,"BRAF inhibitor","Encorafinb"
+"Entrectinib",Unknown,"Unknown",""
 "Enzalutamide",Hormonal therapy,"Anti-AR","Enzatulamide,Enzulatimide,enzalitumide"
 "Epacadostat or placebo",Randomized trial,"Anti-IDO1 or placebo","Epacadostat/placebo"
 "Epirubicin",Chemotherapy,"Anthracycline","Epirubicin,epiribucine,Epiburacine,Epi-adriamycine,Epiadriamycine,Epirubicine, Epirubinicin"

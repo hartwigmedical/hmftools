@@ -11,7 +11,7 @@ import com.hartwig.hmftools.sage.select.HotspotSelector;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TumorRefContextCandidates implements RefContextCandidates {
+public class RefContextFactory {
 
     private final SageConfig config;
     private final HotspotSelector hotspotSelector;
@@ -19,21 +19,18 @@ public class TumorRefContextCandidates implements RefContextCandidates {
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
-    public TumorRefContextCandidates(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector, @NotNull final String sample) {
+    public RefContextFactory(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector,
+            @NotNull final String sample) {
         this.sample = sample;
         this.config = config;
         this.hotspotSelector = hotspotSelector;
         final Consumer<RefContext> evictionHandler = (refContext) -> {
-            if (!refContext.isAltsEmpty()) {
-                refContext.alts()
-                        .stream()
-                        .filter(this::refPredicate)
-                        .filter(this::rawPredicate)
-                        .forEach(x -> {
-                            x.setPrimaryReadCounterFromInterim();
-                            savedCandidates.add(x);
-                        });
-            }
+            refContext.alts()
+                    .stream()
+                    .filter(this::refPredicate)
+                    .filter(this::rawPredicate)
+                    .filter(x -> x.primaryReadContext().readContext().isComplete())
+                    .forEach(savedCandidates::add);
         };
 
         this.rollingCandidates = new EvictingArray<>(256, evictionHandler);

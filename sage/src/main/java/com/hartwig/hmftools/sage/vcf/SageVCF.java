@@ -116,7 +116,7 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_KEY)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.GENOTYPE_ALLELE_DEPTHS)));
         header.addMetaDataLine(VCFStandardHeaderLines.getFormatLine((VCFConstants.DEPTH_KEY)));
-        header.addMetaDataLine(new VCFInfoHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY,
+        header.addMetaDataLine(new VCFFormatHeaderLine(VCFConstants.ALLELE_FREQUENCY_KEY,
                 1,
                 VCFHeaderLineType.Float,
                 READ_CONTEXT_AF_DESCRIPTION));

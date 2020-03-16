@@ -102,8 +102,13 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-//        ChromosomePipeline custom = createChromosomePipeline("20");
-//        custom.addAllRegions(4_000_000);
+//        ChromosomePipeline custom = createChromosomePipeline("17");
+//        custom.addAllRegions();
+//        custom.addAllRegions(1_000_000);
+//        custom.addRegion(6385360, 6385360);
+//        custom.addRegion(25268011, 25268011);
+//        custom.addRegion(79223325, 79223325);
+//        custom.addRegion(67141, 67141);
 //        chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();

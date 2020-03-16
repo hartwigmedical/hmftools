@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
@@ -143,24 +144,13 @@ public class SvVisualiser implements AutoCloseable
             return;
         }
 
-        String chromosomesStr = "";
-
-        if(chromosomes.size() >= 23)
-        {
-            chromosomesStr = "All";
-        }
-        else
-        {
-            for (String chromosome : chromosomes)
-            {
-                chromosomesStr = appendStr(chromosomesStr, chromosome, '-');
-            }
-        }
+        final String chromosomesStr = chromosomes.size() >= 23
+                ? "All"
+                : chromosomes.stream().map(SvUtilities::stripChromosome).collect(Collectors.joining("-"));
 
         final Predicate<Link> linePredicate = x -> !x.isLineElement() || config.includeLineElements();
         final Predicate<Link> chromosomePredicate = x -> chromosomes.contains(x.startChromosome()) || chromosomes.contains(x.endChromosome());
         final Predicate<Link> combinedPredicate = chromosomePredicate.and(linePredicate);
-
 
         final String sample = config.sample() + ".chr" + chromosomesStr + (config.debug() ? ".debug" : "");
 

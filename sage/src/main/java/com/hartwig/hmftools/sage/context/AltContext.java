@@ -25,18 +25,11 @@ public class AltContext implements VariantHotspot {
     private int rawSupportAlt;
     private int rawBaseQualityAlt;
 
-    public AltContext(final String sample, final VariantHotspot hotspot) {
-        refContext = new RefContext(sample, hotspot.chromosome(), hotspot.position());
-        this.alt = hotspot.alt();
-        this.ref = hotspot.ref();
-    }
-
     public AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
     }
-
 
     public void incrementAltRead(int baseQuality) {
         this.rawSupportAlt++;
@@ -59,7 +52,7 @@ public class AltContext implements VariantHotspot {
             }
 
             if (!readContextMatch) {
-                interimReadContexts.add(new ReadContextCounter(this, newReadContext));
+                interimReadContexts.add(new ReadContextCounter(refContext.sample(), this, newReadContext, false));
             }
         }
     }
@@ -68,8 +61,8 @@ public class AltContext implements VariantHotspot {
     public ReadContextCounter setPrimaryReadCounterFromInterim() {
         interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
         readContextCounter = interimReadContexts.isEmpty()
-                ? new ReadContextCounter(this, ReadContextFactory.dummy((int) position(), alt))
-                : new ReadContextCounter(this, interimReadContexts.get(0).readContext().minimiseFootprint());
+                ? new ReadContextCounter(refContext.sample(), this, ReadContextFactory.dummy((int) position(), alt), false)
+                : new ReadContextCounter(refContext.sample(), this, interimReadContexts.get(0).readContext().minimiseFootprint(), false);
 
         interimReadContexts.clear();
 
@@ -79,14 +72,10 @@ public class AltContext implements VariantHotspot {
     @NotNull
     public ReadContextCounter primaryReadContext() {
         if (readContextCounter == null) {
-            throw new IllegalStateException();
+            setPrimaryReadCounterFromInterim();
         }
 
         return readContextCounter;
-    }
-
-    public void setPrimaryReadContext(@NotNull final ReadContextCounter readContext) {
-        readContextCounter = readContext;
     }
 
     @NotNull
@@ -112,14 +101,6 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
-    public int rawSupportRef() {
-        return refContext.rawSupportRef();
-    }
-
-    public int rawBaseQualityRef() {
-        return refContext.rawBaseQualityRef();
-    }
-
     public int rawSupportAlt() {
         return rawSupportAlt;
     }
@@ -128,9 +109,6 @@ public class AltContext implements VariantHotspot {
         return refContext.rawDepth();
     }
 
-    public double rawVaf() {
-        return refContext.rawDepth() ==  0 ? 0 : ((double) rawSupportAlt) / rawDepth();
-    }
 
     public int rawBaseQualityAlt() {
         return rawBaseQualityAlt;
