@@ -114,24 +114,14 @@ public class EventTypeAnalyzer {
                         }
                         eventMap.put(gene, Lists.newArrayList(eventInfo));
                     }
+                    if (eventInfo.isEmpty()){
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}'",
+                                feature.name(),
+                                gene,
+                                biomarkerType);
+                    }
 
-                    //
-                    //                    if (feature.provenanceRule() == null) {
-                    //                        LOGGER.info("No provencence rule known");
-                    //                    } else if (feature.provenanceRule().equals("gene_only")) {
-                    //                        event = "gene_level";
-                    //                    }
-                    //
-                    //                    if (event.isEmpty()) {
-                    //                        LOGGER.warn(
-                    //                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                                feature.name(),
-                    //                                feature.geneSymbol(),
-                    //                                feature.biomarkerType(),
-                    //                                feature.description(),
-                    //                                type,
-                    //                                event);
-                    //                    }
                     break;
                 case CIVIC: // extract info for civic
                     //                    if (event == null || event.equals("N/A")) {
