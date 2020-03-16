@@ -125,8 +125,5 @@ public class ViccAmpsDelExtractorTestApplication {
             }
         }
 
-        LOGGER.info("amps: " + sortedUniqueAmps);
-        LOGGER.info("dels: " + sortedUniqueDels);
-
     }
 }

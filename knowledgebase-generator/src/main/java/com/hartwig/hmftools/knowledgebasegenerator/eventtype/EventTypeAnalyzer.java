@@ -72,6 +72,7 @@ public class EventTypeAnalyzer {
                         String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
                         String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
 
+                        //I assume, an combined event for actionability has 2 events. If more events, this will not be interpretated
                         if (combinedEventConvertToSingleEvent.length == 2) {
                             combinedEvent = true;
 
@@ -85,6 +86,8 @@ public class EventTypeAnalyzer {
                                     eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
                                 }
                             }
+                        } else if (combinedEventConvertToSingleEvent.length >= 2) {
+                            LOGGER.warn("This event has more events, which is not interpretated!");
                         }
                     } else {
                         if (name.contains(":")) {
