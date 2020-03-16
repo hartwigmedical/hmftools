@@ -42,7 +42,7 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
 
-### Expected shared and private abundance rates per transcript
+### 3. Expected shared and private abundance rates per transcript
 
 For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a indpendent transcript that could be expressed.  
 
@@ -63,7 +63,7 @@ TOTAL|1.0|1.0|1.0
 
 In this example, 50% of all fragments from transcript A are expected to be uniquely mapped to the A transcript, 30% may be mapped to A,B or UNSPLICED (likely fragments matching a long exon), 10% are expected to be mapped to either A or B but with splicing and the final 10% are expected to be mapped to a region which is either exonic in A or unspliced.     These rates are compared to the observed abundance of each category in subsequent steps to estimate the actual abundance of each transcript.
 
-### Counting abundance per unique group of shared transcripts
+### 4. Counting abundance per unique group of shared transcripts
 
 Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts.   We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
@@ -78,17 +78,17 @@ Note that reads which marginally overhang an exon boundary or are soft clipped a
 
 We currently ignore marked duplicates in our counting.  This may lead to understimation of abundance for high coverage genes and transcripts which may reach saturation of all read pair positions (particularly for genes where the per base coverage exceeds ~3000). We will address this problem in a later release <TO DO>.
 
-### Fit abundance estimate per transcript
+### 5. Fit abundance estimate per transcript
 
 For each group of transcripts conidered together we aim to fit the relative abundance.   Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximastion algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
 
 <TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments >> observed fragments for private allocations >
 
-### Bias Estimation and Correction
+### 6. Bias Estimation and Correction
 
 <TO DO: GC Bias, Fragment Length Bias, Sequence Start Speicfic Bias, 5' CAP bias>
 
-### Counting and characterisation of novel splice junctions
+### 7. Counting and characterisation of novel splice junctions
 
 A novel splice junction is considered to be a splicing event called by the aligner which is not part of any annotated event.  For each novel splice junction we count the number of fragments supporting the event as well as the total coverage at each end of the splicing junction.    Each novel splice junction is classified as one of the following types of events
 
@@ -104,21 +104,21 @@ A novel splice junction is considered to be a splicing event called by the align
 For each novel splice junction, we also record the distance to the nearest splice junction for each novel site, the motif of the splice site and the transcripts compatible with either end of the alternative splicing.
 
 
-### Counting and characterisation of retained introns
+### 8. Counting and characterisation of retained introns
 
 We also search explicitly for evidence of retained introns, ie where reads overlap exon boundaries.   We may find many such reads as any unspliced transcripts can have such fragments.    To reduce false positives, we only consider exon boundaries which do not have exons on other transcripts overlapping them, and we hard filter any evidence where we don't see at least 3 reads overlapping the exon boundary or at least 1 read from a fragment that contains another splice junction.
 
 <TO DO - Add filtering that the read count must signiificantly exceed the unspliced coverage of all gene overlapping that base>
 
-### Counting and characterisation of chimeric and read through junctions
+### 9. Counting and characterisation of chimeric and read through junctions
 
 <TO DO>
 
-## Annotation of novel splice features
+## 10. Annotation of novel splice features
 
 <TO DO - Combine intron retention and novel splice site information>
 
-### Panel of Normals  <TO DO>
+### 11. Panel of Normals  <TO DO>
 
 We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
 
