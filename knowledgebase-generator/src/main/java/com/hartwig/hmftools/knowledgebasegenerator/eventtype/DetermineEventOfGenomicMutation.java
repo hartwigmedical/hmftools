@@ -23,8 +23,7 @@ import org.jetbrains.annotations.NotNull;
 public class DetermineEventOfGenomicMutation {
     private static final Logger LOGGER = LogManager.getLogger(DetermineEventOfGenomicMutation.class);
 
-    private static final List<String> AMPLIFICATION =
-            Lists.newArrayList("Amplification", "AMPLIFICATION", "amplification");
+    private static final List<String> AMPLIFICATION = Lists.newArrayList("Amplification", "AMPLIFICATION", "amplification");
 
     private static final List<String> DELETION = Lists.newArrayList("Deletion", "DELETION", "deletion");
 
@@ -57,8 +56,8 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
-            @NotNull String event) {
+    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+            @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
@@ -79,8 +78,8 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
-            @NotNull String event) {
+    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+            @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (DELETION.contains(event)) {
