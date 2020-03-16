@@ -19,7 +19,7 @@ public class ViccAmpsDelExtractorTestApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
-        String source = "civic";
+        String source = "oncokb";
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
         List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info("Read {} entries", viccEntries.size());

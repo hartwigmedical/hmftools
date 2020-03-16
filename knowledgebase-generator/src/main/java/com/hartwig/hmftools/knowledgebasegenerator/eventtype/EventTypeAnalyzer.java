@@ -36,43 +36,27 @@ public class EventTypeAnalyzer {
         for (Feature feature : viccEntry.features()) {
             switch (type) {
                 case ONCOKB: // extract info oncokb
+                    eventSource = feature.name();
+                    gene = feature.geneSymbol();
+                    biomarkerType = feature.biomarkerType();
 
-                    //    LOGGER.info(event);
+                    if (eventSource.contains("Fusion")) {
 
-                    //                    if (event.equals("NA")) {
-                    //                        String[] eventArray = feature.name().split(" ", 2);
-                    //                        if (eventArray.length == 1) {
-                    //                            event = eventArray[0];
-                    //                        } else if (eventArray.length == 2) {
-                    //                            if (eventArray[1].equals("Fusion")) {
-                    //                                event = eventArray[1];
-                    //                            } else {
-                    //                                event = feature.name();
-                    //                            }
-                    //                        }
-                    //                        if (event.contains("Exon")) {
-                    //                            event = feature.name();
-                    //                        } else if (Pattern.compile("[0-9]").matcher(event).find()) {
-                    //                            event = "manual curated mutation";
-                    //                        }
-                    //                    }
-                    //
-                    //                    if (feature.provenanceRule() == null) {
-                    //                        LOGGER.info("No provencence rule known");
-                    //                    } else if (feature.provenanceRule().equals("gene_only")) {
-                    //                        event = "gene_level";
-                    //                    }
-                    //
-                    //                    if (event.isEmpty()) {
-                    //                        LOGGER.warn(
-                    //                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                                feature.name(),
-                    //                                feature.geneSymbol(),
-                    //                                feature.biomarkerType(),
-                    //                                feature.description(),
-                    //                                type,
-                    //                                event);
-                    //                    }
+                        if (eventSource.split(" ").length == 2) {
+                            gene = eventSource.split(" ")[0];
+                            eventSource = eventSource.split(" ")[1];
+                        }
+                    }
+
+                    eventMap.put(gene, Lists.newArrayList(eventSource));
+
+                    if (eventSource.isEmpty()){
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
+                                feature.name(),
+                                gene,
+                                biomarkerType, type);
+                    }
 
                     break;
                 case CGI: // extract info for cgi
@@ -116,10 +100,10 @@ public class EventTypeAnalyzer {
                     }
                     if (eventInfo.isEmpty()){
                         LOGGER.warn(
-                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}'",
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
-                                biomarkerType);
+                                biomarkerType, type);
                     }
 
                     break;
@@ -129,12 +113,12 @@ public class EventTypeAnalyzer {
                     gene = feature.geneSymbol();
                     eventMap.put(gene, Lists.newArrayList(eventSource));
 
-                    if (eventInfo.isEmpty()){
+                    if (eventSource.isEmpty()){
                         LOGGER.warn(
-                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}'",
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
-                                biomarkerType);
+                                biomarkerType, type);
                     }
 
                     break;
