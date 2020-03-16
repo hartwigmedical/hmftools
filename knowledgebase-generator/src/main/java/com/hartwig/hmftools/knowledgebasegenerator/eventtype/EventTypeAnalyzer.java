@@ -72,7 +72,7 @@ public class EventTypeAnalyzer {
                         String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
                         String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
 
-                        //I assume, an combined event for actionability has 2 events. If more events, this will not be interpretated
+                        //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
                         if (combinedEventConvertToSingleEvent.length == 2) {
                             combinedEvent = true;
 
