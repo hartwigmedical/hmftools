@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 
 import java.util.Arrays;
@@ -26,7 +27,18 @@ public class CategoryCountsData
 
         mCombinedKey = formTranscriptIds();
 
-         mFragmentCountsByLength = null;
+        mFragmentCountsByLength = null;
+    }
+
+    public CategoryCountsData(final String categoryStr, int fragLengths)
+    {
+        mCombinedKey = categoryStr;
+        mTranscripts = Lists.newArrayList();
+        mUnsplicedGenes = Lists.newArrayList();
+        mFragmentCount = 0;
+        mFragmentCountsByLength = new int[fragLengths];
+
+        parseCombinedKey();
     }
 
     public void initialiseLengthCounts(int fragLengths)
@@ -83,6 +95,16 @@ public class CategoryCountsData
         mFragmentCountsByLength[lengthIndex] += count;
     }
 
+    public void applyFrequencies(final List<int[]> lengthFrequencies)
+    {
+        for(int i = 0; i < mFragmentCountsByLength.length; ++i)
+        {
+            mFragmentCountsByLength[i] *= lengthFrequencies.get(i)[FL_FREQUENCY];
+        }
+    }
+
+    private static final char DELIM = '-';
+
     private String formTranscriptIds()
     {
         // convert into an order list of ints
@@ -105,15 +127,34 @@ public class CategoryCountsData
         String combinedKey = "";
         for (Integer transId : transIds)
         {
-            combinedKey = appendStr(combinedKey, String.valueOf(transId), '-');
+            combinedKey = appendStr(combinedKey, String.valueOf(transId), DELIM);
         }
 
         for(String geneId : mUnsplicedGenes)
         {
-            combinedKey = appendStr(combinedKey, geneId, '-');
+            combinedKey = appendStr(combinedKey, geneId, DELIM);
         }
 
         return combinedKey;
+    }
+
+    private static final String GENE_INDENTIFIER = "ENSG";
+
+    private void parseCombinedKey()
+    {
+        String[] items = mCombinedKey.split(String.valueOf(DELIM));
+
+        for(int i = 0; i < items.length; ++i)
+        {
+            if(items[i].contains(GENE_INDENTIFIER))
+            {
+                mUnsplicedGenes.add(items[i]);
+            }
+            else
+            {
+                mTranscripts.add(Integer.parseInt(items[i]));
+            }
+        }
     }
 
     public String toString()

@@ -54,7 +54,7 @@ public class IsofoxConfig
     private static final String GC_RATIO_BUCKET_SIZE = "gc_ratio_bucket";
 
     // expected expression config
-    private static final String EXP_RATES_FILE = "exp_rates_file";
+    private static final String EXP_COUNTS_FILE = "exp_counts_file";
     private static final String APPLY_EXP_RATES = "apply_exp_rates";
     private static final String READ_LENGTH = "read_length";
     private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
@@ -91,11 +91,11 @@ public class IsofoxConfig
     public final boolean WriteReadData;
     public final boolean WriteTransComboData;
 
-    public final String ExpRatesFile;
+    public final String ExpCountsFile;
     public final boolean ApplyExpectedRates;
     public final boolean UseCalculatedFragmentLengths;
     public int ReadLength;
-    public final List<int[]> ExpRateFragmentLengths;
+    public final List<int[]> FragmentLengthData;
     public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
     public final boolean WriteExpectedCounts;
@@ -200,13 +200,13 @@ public class IsofoxConfig
                 : Lists.newArrayList();
 
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
-        ExpRatesFile = cmd.getOptionValue(EXP_RATES_FILE);
+        ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
 
         WriteExpectedCounts = cmd.hasOption(WRITE_EXPECTED_COUNTS);
         WriteExpectedRates = !WriteExpectedCounts && cmd.hasOption(WRITE_EXPECTED_RATES);
         UseCalculatedFragmentLengths = cmd.hasOption(ER_CALC_FRAG_LENGTHS);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
-        ExpRateFragmentLengths = Lists.newArrayList();
+        FragmentLengthData = Lists.newArrayList();
         UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
 
         if(cmd.hasOption(ER_FRAGMENT_LENGTHS))
@@ -217,7 +217,7 @@ public class IsofoxConfig
                 String[] flItem = fragLengths[i].split("-");
                 int fragLength = Integer.parseInt(flItem[ExpectedRatesGenerator.FL_LENGTH]);
                 int fragFrequency = Integer.parseInt(flItem[ExpectedRatesGenerator.FL_FREQUENCY]);
-                ExpRateFragmentLengths.add(new int[]{ fragLength, fragFrequency });
+                FragmentLengthData.add(new int[]{ fragLength, fragFrequency });
             }
         }
     }
@@ -232,7 +232,7 @@ public class IsofoxConfig
 
         if(WriteExpectedCounts)
         {
-            if(ReadLength == 0 || ExpRateFragmentLengths.isEmpty())
+            if(ReadLength == 0 || FragmentLengthData.isEmpty())
             {
                 ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
                 return false;
@@ -241,9 +241,9 @@ public class IsofoxConfig
             return true;
         }
 
-        if(ApplyExpectedRates && ExpRatesFile == null)
+        if(ApplyExpectedRates && ExpCountsFile == null)
         {
-            if(!UseCalculatedFragmentLengths && (ReadLength == 0 || ExpRateFragmentLengths.isEmpty()))
+            if(!UseCalculatedFragmentLengths && (ReadLength == 0 || FragmentLengthData.isEmpty()))
             {
                 ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
                 return false;
@@ -331,9 +331,9 @@ public class IsofoxConfig
 
         ApplyExpectedRates = false;
         ReadLength = 0;
-        ExpRateFragmentLengths = Lists.newArrayList();
+        FragmentLengthData = Lists.newArrayList();
         UnsplicedWeight = 1;
-        ExpRatesFile = null;
+        ExpCountsFile = null;
 
         WriteTransData = true;
         WriteExonData = false;
@@ -390,7 +390,7 @@ public class IsofoxConfig
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
-        options.addOption(EXP_RATES_FILE, true, "File with generated expected expression rates for transcripts");
+        options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
         options.addOption(ER_CALC_FRAG_LENGTHS, false, "Use sample fragment length distribution in expected rate calcs");

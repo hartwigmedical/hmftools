@@ -1,23 +1,18 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData.ER_COL_GENE_SET_ID;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData.ER_COL_CAT;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData.ER_COL_RATE;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData.ER_COL_TRANS_NAME;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,28 +25,22 @@ public class ExpectedTransRates
 {
     private final IsofoxConfig mConfig;
     private final ResultsWriter mResultsWriter;
-
-    private final Map<String, ExpectedRatesData> mGeneExpDataMap;
+    private final ExpectedCountsCache mCache;
 
     private ExpectedRatesData mCurrentExpRatesData;
 
-    public ExpectedTransRates(final IsofoxConfig config, final ResultsWriter resultsWriter)
+    public ExpectedTransRates(final IsofoxConfig config, final ExpectedCountsCache cache, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
 
-        mGeneExpDataMap = Maps.newHashMap();
+        mCache = cache;
         mCurrentExpRatesData = null;
-
-        if(mConfig.ExpRatesFile != null && Files.exists(Paths.get(mConfig.ExpRatesFile)))
-        {
-            loadExpRatesFile(mConfig.ExpRatesFile, mGeneExpDataMap);
-        }
     }
 
     public static ExpectedTransRates from(final IsofoxConfig config)
     {
-        return new ExpectedTransRates(config, null);
+        return new ExpectedTransRates(config, null,null);
     }
 
     public boolean validData()
@@ -61,11 +50,34 @@ public class ExpectedTransRates
 
     public void loadGeneExpectedRatesData(final GeneCollection genes)
     {
-        mCurrentExpRatesData = mGeneExpDataMap.get(genes.chrId());
+        mCurrentExpRatesData = null;
 
-        if(mCurrentExpRatesData == null)
+        Map<String,List<CategoryCountsData>> geneSetCountsData = mCache.getGeneExpectedRatesData(genes);
+
+        if(geneSetCountsData == null)
         {
-            ISF_LOGGER.warn("gene({}) expected rates data not loaded", genes.geneNames());
+            ISF_LOGGER.warn("genes({}: {}) expected counts data not loaded", genes.chrId(), genes.geneNames());
+            return;
+        }
+
+        mCurrentExpRatesData = new ExpectedRatesData(genes.chrId());
+
+        // apply observed fragment length distribution to the generated counts
+        if(mConfig.UseCalculatedFragmentLengths)
+        {
+            applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
+        }
+
+        formTranscriptDefinitions(geneSetCountsData, mCurrentExpRatesData);
+    }
+
+    private void applyFragmentLengthDistributionToExpectedCounts(final Map<String,List<CategoryCountsData>> geneSetCountsData)
+    {
+        final List<int[]> fragmentLengthData = mConfig.FragmentLengthData;
+
+        for(List<CategoryCountsData> categoryCountsData : geneSetCountsData.values())
+        {
+            categoryCountsData.forEach(x -> x.applyFrequencies(fragmentLengthData));
         }
     }
 
@@ -182,74 +194,5 @@ public class ExpectedTransRates
 
         return categoryCounts;
     }
-
-    public static void loadExpRatesFile(final String filename, final Map<String, ExpectedRatesData> geneExpDataMap)
-    {
-        if (!Files.exists(Paths.get(filename)))
-        {
-            ISF_LOGGER.warn("invalid gene ID file({})", filename);
-            return;
-        }
-
-        try
-        {
-            BufferedReader fileReader = new BufferedReader(new FileReader(filename));
-
-            // skip field names
-            String line = fileReader.readLine();
-
-            if (line == null)
-            {
-                ISF_LOGGER.error("empty calculated expected rates file({})", filename);
-                return;
-            }
-
-            List<String[]> geneRatesData = Lists.newArrayList();
-            ExpectedRatesData expExpData = null;
-
-            while ((line = fileReader.readLine()) != null)
-            {
-                String[] items = line.split(",");
-
-                if (items.length != ER_COL_RATE + 1)
-                {
-                    ISF_LOGGER.error("invalid exp rates data: {}", line);
-                    return;
-                }
-
-                String geneCollectionId = items[ER_COL_GENE_SET_ID];
-                String transName = items[ER_COL_TRANS_NAME];
-                String categoryStr = items[ER_COL_CAT];
-
-                if(expExpData == null)
-                {
-                    expExpData = new ExpectedRatesData(geneCollectionId);
-                }
-                else if(!expExpData.Id.equals(geneCollectionId))
-                {
-                    expExpData.buildDefinitionsFromFileData(geneRatesData);
-                    geneExpDataMap.put(expExpData.Id, expExpData);
-
-                    // start the new one
-                    geneRatesData.clear();
-                    expExpData = new ExpectedRatesData(geneCollectionId);
-                }
-
-                expExpData.addCategory(categoryStr);
-
-                if(!expExpData.TranscriptIds.contains(transName))
-                    expExpData.TranscriptIds.add(transName);
-
-                geneRatesData.add(items);
-            }
-
-            ISF_LOGGER.info("loaded {} gene expected trans exp rates from file({})", geneExpDataMap.size(), filename);
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.warn("failed to load expected rates file({}): {}", filename, e.toString());
-        }
-    }
-
 
 }

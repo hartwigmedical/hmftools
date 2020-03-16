@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -24,6 +23,7 @@ import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
@@ -43,6 +43,7 @@ public class ChromosomeGeneTask implements Callable
     private final ExpectedTransRates mExpTransRates;
     private final ExpectedRatesGenerator mExpRatesGenerator;
     private final FragmentSizeCalcs mFragmentSizeCalc;
+    private final ExpectedCountsCache mExpectedCountsCache;
 
     private final List<EnsemblGeneData> mGeneDataList;
     private int mCollectionId;
@@ -64,7 +65,8 @@ public class ChromosomeGeneTask implements Callable
 
     public ChromosomeGeneTask(
             final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
-            final SvGeneTranscriptCollection geneTransCache, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc)
+            final SvGeneTranscriptCollection geneTransCache, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc,
+            final ExpectedCountsCache expectedCountsCache)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -78,11 +80,12 @@ public class ChromosomeGeneTask implements Callable
         mCurrentTaskType = -1;
 
         mFragmentSizeCalc = fragmentSizeCalc;
+        mExpectedCountsCache = expectedCountsCache;
 
         mBamReader = new GeneBamReader(mConfig, resultsWriter);
-        mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, resultsWriter) : null;
+        mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, mExpectedCountsCache, resultsWriter) : null;
 
-        mExpRatesGenerator = mConfig.writeExpectedRateData() || (mConfig.ApplyExpectedRates && mConfig.UseCalculatedFragmentLengths)
+        mExpRatesGenerator = mConfig.writeExpectedRateData() || (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null)
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mGeneResults = Lists.newArrayList();
@@ -93,7 +96,7 @@ public class ChromosomeGeneTask implements Callable
         mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
         mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
 
-        if(ISF_LOGGER.isInfoEnabled())
+        if(mConfig.RunPerfChecks)
             mPerfCounters[PERF_FIT].setSortTimes(true);
 
         mPerfCounters[PERF_WRITE] = new PerformanceCounter("WriteData");
@@ -109,12 +112,10 @@ public class ChromosomeGeneTask implements Callable
         if(mCurrentTaskType == CHR_TASK_TRANSCRIPT_COUNTS)
         {
             assignTranscriptCounts();
-            ISF_LOGGER.debug("chromosome({}) transcript counting complete", mChromosome);
         }
         else if(mCurrentTaskType == CHR_TASK_FRAGMENT_LENGTHS)
         {
             calcFragmentLengths();
-            ISF_LOGGER.debug("chromosome({}) frag length measurement complete", mChromosome);
         }
 
         return (long)1; // return value not used
@@ -162,6 +163,9 @@ public class ChromosomeGeneTask implements Callable
                 ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
             }
         }
+
+        if(nextLogCount > 100)
+            ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
 
         mPerfCounters[PERF_WRITE].start();
         writeResults();
@@ -333,7 +337,7 @@ public class ChromosomeGeneTask implements Callable
             for (final TranscriptData transData : geneReadData.getTranscripts())
             {
                 final TranscriptResult results =
-                        createTranscriptResults(geneCollection, geneReadData, transData, mConfig.ExpRateFragmentLengths);
+                        createTranscriptResults(geneCollection, geneReadData, transData, mConfig.FragmentLengthData);
 
                 transResults.add(results);
             }

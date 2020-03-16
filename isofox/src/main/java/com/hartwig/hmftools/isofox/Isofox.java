@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.gc.GcBiasAdjuster;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -42,6 +43,7 @@ public class Isofox
     private final SvGeneTranscriptCollection mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final FragmentSizeCalcs mFragmentSizeCalcs;
+    private final ExpectedCountsCache mExpectedCountsCache;
     private final ExecutorService mExecutorService;
 
     public Isofox(final IsofoxConfig config, final CommandLine cmd)
@@ -74,6 +76,8 @@ public class Isofox
         {
             mExecutorService = null;
         }
+
+        mExpectedCountsCache = mConfig.ExpCountsFile != null ? new ExpectedCountsCache(mConfig) : null;
     }
 
     public void runAnalysis()
@@ -112,7 +116,7 @@ public class Isofox
                 continue;
 
             ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
-                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mFragmentSizeCalcs);
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mFragmentSizeCalcs, mExpectedCountsCache);
 
             chrGeneTask.setTaskType(ChromosomeGeneTask.CHR_TASK_TRANSCRIPT_COUNTS);
             chrTasks.add(chrGeneTask);
@@ -136,8 +140,11 @@ public class Isofox
             return;
 
         // final reporting
-        int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
-        ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
+        if(!mConfig.generateExpRatesOnly())
+        {
+            int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
+            ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
+        }
 
         if(mConfig.WriteReadGcRatios)
         {
@@ -166,8 +173,11 @@ public class Isofox
 
         if(mConfig.RunPerfChecks)
         {
+            // log 10 slowest times and their interval names
             final List<Double> fitTimes = perfCounters[PERF_FIT].getTimes();
             final List<String> fitGenes = perfCounters[PERF_FIT].getTimeNames();
+
+            if(fitTimes.size() >= 10 && fitGenes.size() == fitTimes.size())
 
             for (int i = fitTimes.size() - 1; i >= fitTimes.size() - 10; --i)
             {
@@ -188,7 +198,7 @@ public class Isofox
                 continue;
 
             ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
-                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mFragmentSizeCalcs);
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mFragmentSizeCalcs, mExpectedCountsCache);
 
             chrGeneTask.calcFragmentLengths();
 

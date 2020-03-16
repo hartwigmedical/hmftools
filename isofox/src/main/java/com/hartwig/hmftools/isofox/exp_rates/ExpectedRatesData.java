@@ -49,30 +49,6 @@ public class ExpectedRatesData
         mTranscriptDefinitions = new SigMatrix(Categories.size(), TranscriptIds.size());
     }
 
-    // GeneCollectionId,TransId,Category,Rate
-    public static final int ER_COL_GENE_SET_ID = 0;
-    public static final int ER_COL_TRANS_NAME = 1;
-    public static final int ER_COL_CAT = 2;
-    public static final int ER_COL_RATE = 3;
-
-    public void buildDefinitionsFromFileData(final List<String[]> geneRatesData)
-    {
-        initialiseTranscriptDefinitions();
-
-        double[][] matrixData = mTranscriptDefinitions.getData();
-
-        for(String[] data : geneRatesData)
-        {
-            String transName = data[ER_COL_TRANS_NAME];
-            String categoryStr = data[ER_COL_CAT];
-
-            int transIndex = getTranscriptIndex(transName);
-            int catIndex = getCategoryIndex(categoryStr);
-            double rate = Double.parseDouble(data[ER_COL_RATE]);
-            matrixData[catIndex][transIndex] = rate;
-        }
-    }
-
     public int getTranscriptIndex(final String trans)
     {
         for(int i = 0; i < TranscriptIds.size(); ++i)

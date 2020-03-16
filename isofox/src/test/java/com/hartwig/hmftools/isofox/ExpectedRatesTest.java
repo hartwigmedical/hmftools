@@ -241,7 +241,7 @@ public class ExpectedRatesTest
     {
         IsofoxConfig config = new IsofoxConfig();
         config.ReadLength = 10;
-        config.ExpRateFragmentLengths.add(new int[] {30, 1});
+        config.FragmentLengthData.add(new int[] {30, 1});
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
 
@@ -310,7 +310,7 @@ public class ExpectedRatesTest
     public void testMultipleTranscriptCounts()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.ExpRateFragmentLengths.add(new int[] {30, 1});
+        config.FragmentLengthData.add(new int[] {30, 1});
         config.ReadLength = 10;
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
@@ -424,7 +424,7 @@ public class ExpectedRatesTest
     public void testSingleExonicRegions()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.ExpRateFragmentLengths.add(new int[] {30, 1});
+        config.FragmentLengthData.add(new int[] {30, 1});
         config.ReadLength = 10;
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
@@ -512,7 +512,7 @@ public class ExpectedRatesTest
     public void testOverlappingGeneCounts()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.ExpRateFragmentLengths.add(new int[] { 30, 1 });
+        config.FragmentLengthData.add(new int[] { 30, 1 });
         config.ReadLength = 10;
 
         ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);

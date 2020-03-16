@@ -275,7 +275,7 @@ public class FragmentSizeCalcs
             ISF_LOGGER.warn("max read length not determined from fragment length calcs");
         }
 
-        final List<int[]> lengthFrequencies = mConfig.ExpRateFragmentLengths;
+        final List<int[]> lengthFrequencies = mConfig.FragmentLengthData;
 
         int currentRangeMin = 0;
         int currentRangeMax = 0;

@@ -45,7 +45,7 @@ public class NovelJunctionsTest
     public void testAltSpliceJunctionTypes()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.ExpRateFragmentLengths.add(new int[] { 30, 1 });
+        config.FragmentLengthData.add(new int[] { 30, 1 });
         config.ReadLength = 10;
 
         String chromosome = "1";
@@ -241,7 +241,7 @@ public class NovelJunctionsTest
     public void testRetainedIntrons()
     {
         IsofoxConfig config = new IsofoxConfig();
-        config.ExpRateFragmentLengths.add(new int[] { 30, 1 });
+        config.FragmentLengthData.add(new int[] { 30, 1 });
         config.ReadLength = 10;
 
         String chromosome = "1";
