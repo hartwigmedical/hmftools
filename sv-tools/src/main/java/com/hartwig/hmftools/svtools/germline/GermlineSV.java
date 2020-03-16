@@ -4,10 +4,10 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
 
 import java.io.File;
 import java.io.IOException;

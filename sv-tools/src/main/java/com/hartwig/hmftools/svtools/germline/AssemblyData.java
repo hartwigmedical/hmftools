@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.svtools.germline;
 
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
-import static com.hartwig.hmftools.linx.types.SvVarData.isStart;
-import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
 
 import java.util.Arrays;
 import java.util.List;
