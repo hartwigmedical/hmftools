@@ -32,15 +32,13 @@ TO DO | |
  
 ## Algorithm
 
-### Modelling and grouping of spliced and unspliced transcripts
+### 1. Modelling and grouping of spliced and unspliced transcripts
 
 For determining transcript abundance, we consider all transcripts in Ensembl, grouped by gene.    Each gene may have 1 to N transcripts.   Since we use ribosomal depletion to collect RNA we need to  explicitly consider that each gene will have unspliced reads.   Hence, we consider an additional ‘unspliced transcript’ per gene which includes all exonic and intronic segments.   Any fragment that overlaps a region which is intronic on all transcripts is assumed to be unspliced.
 
-Genes that overlap each other on the same chromosome (either sense, anti-sense or shared exons) are considered together as a group so that each fragment is only counted once.     
+Genes that overlap each other on the same chromosome (either sense, anti-sense or shared exons) are considered together as a group so that each fragment which could potentially relate to one of multiple genes is only counted once.     
 
-<TO DO: NOTE on handling of duplicates>
-
-### Modelling sample specific fragment distribution
+### 2. Modelling sample specific fragment distribution
 
 The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
 
@@ -66,6 +64,7 @@ TOTAL|1.0|1.0|1.0
 In this example, 50% of all fragments from transcript A are expected to be uniquely mapped to the A transcript, 30% may be mapped to A,B or UNSPLICED (likely fragments matching a long exon), 10% are expected to be mapped to either A or B but with splicing and the final 10% are expected to be mapped to a region which is either exonic in A or unspliced.     These rates are compared to the observed abundance of each category in subsequent steps to estimate the actual abundance of each transcript.
 
 ### Counting abundance per unique group of shared transcripts
+
 Similarly to the estimated rate calculation above we also use the same grouping of transcripts together across all genes which overlap each other to determine actual counts.   We assume that any fragment that overlaps this region must belong either to one of these transcripts or to an unspliced version of one of the genes.
 
 Each fragment is assigned to a 'category' based on the set of transcripts that it may belong to.   We allow a fragment may belong to a transcript if:
@@ -76,6 +75,8 @@ Each fragment is assigned to a 'category' based on the set of transcripts that i
 Any fragment which does not contain a splice junction, is wholly contained within the bounds of a gene, and with fragment size <= maximum insert size distribution is also allowed to map to an ‘UNSPLICED’ transcript of that gene.
 
 Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters   If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
+
+We currently ignore marked duplicates in our counting.  This may lead to understimation of abundance for high coverage genes and transcripts which may reach saturation of all read pair positions (particularly for genes where the per base coverage exceeds ~3000). We will address this problem in a later release <TO DO>.
 
 ### Fit abundance estimate per transcript
 
@@ -105,19 +106,19 @@ For each novel splice junction, we also record the distance to the nearest splic
 
 ### Counting and characterisation of retained introns
 
-We also search explicitly for evidence of retained introns
+We also search explicitly for evidence of retained introns, ie where reads overlap exon boundaries.   We may find many such reads as any unspliced transcripts can have such fragments.    To reduce false positives, we only consider exon boundaries which do not have exons on other transcripts overlapping them, and we hard filter any evidence where we don't see at least 3 reads overlapping the exon boundary or at least 1 read from a fragment that contains another splice junction.
 
-Retained introns are hard filtered unless they contain at least . . .
+<TO DO - Add filtering that the read count must signiificantly exceed the unspliced coverage of all gene overlapping that base>
 
 ### Counting and characterisation of chimeric and read through junctions
 
-...
+<TO DO>
 
 ## Annotation of novel splice features
 
-...
+<TO DO - Combine intron retention and novel splice site information>
 
-### Panel of Normals  (TO DO)
+### Panel of Normals  <TO DO>
 
 We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
 
@@ -136,29 +137,101 @@ Each novel splice junction and retained intron for each sample is annotated with
 
 ### Fragment length distribution
 
-...
+Field | Description 
+---|---
+FragmentLength | 
+Count |
 
 ### Gene level data
 
-...
+Field | Description 
+---|---
+Chromosome | 
+GeneLength | 
+IntronicLength | 
+TransCount | 
+TotalFragments | 
+SupportingTrans | 
+Alt | 
+Unspliced | 
+ReadThrough | 
+Chimeric | 
+Duplicates | 
+UnsplicedAlloc | 
+FitResiduals | 
+GeneSet | 
 
 ### Transcriptome level data
 
-...
+
+Field | Description 
+---|---
+ExonCount | 
+EffectiveLength | 
+ExonsMatched | 
+ExonicBases | 
+ExonicCoverage | 
+FitAllocation | 
+UniqueBases | 
+UniqueBaseCoverage | 
+UniqueBaseAvgDepth | 
+SpliceJuncSupported | 
+UniqueSpliceJunc | 
+UniqueSpliceJuncSupported | 
+ShortFragments | 
+ShortUniqueFragments | 
+LongFragments | 
+LongUniqueFragments | 
+SpliceJuncFragments | 
+UniqueSpliceJuncFragments | 
 
 ### Expected abundance rates per transcript per category
 
-...
+Field | Description 
+---|---
+Transcript |
+Category |
+Rate |
 
 ### Observed and fitted counts per category
 
-...
+Field | Description 
+---|---
+Category |
+Count |
+FittedCount |
 
 ### Novel splice junctions
 
-...
+Field | Description 
+---|---
+Chromosome | 
+Strand | 
+SjStart | 
+SjEnd | 
+FragCount | 
+StartDepth | 
+EndDepth | 
+Type | 
+StartContext | 
+EndContext | 
+NearestStartExon | 
+NearestEndExon | 
+StartBases | 
+EndBases | 
+StartTrans | 
+EndTrans | 
+
 
 ### Novel retained introns
 
-...
-
+Field | Description 
+---|---
+Chromosome|
+Strand|
+Position|
+Type|
+FragCount|
+SplicedFragCount|
+TotalDepth|
+TranscriptInfo|
