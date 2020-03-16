@@ -3,10 +3,8 @@ package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 
-import org.apache.logging.log4j.util.Strings;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
