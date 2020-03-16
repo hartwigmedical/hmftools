@@ -5,10 +5,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.UNKNOWN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.hasAnyPhaseMatch;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.haveOverlap;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseRegion.mapExonPhase;
@@ -38,6 +39,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,12 +113,12 @@ public class CohortExpFusions
             if(!restrictedChromosomes.isEmpty() && !restrictedChromosomes.contains(chromosome))
                 continue;
 
-            long armLength = getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
+            long armLength = getChromosomalArmLength(chromosome, P_ARM);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += pow(armLength - maxBucketLength, 2);
 
-            armLength = getChromosomalArmLength(chromosome, CHROMOSOME_ARM_Q);
+            armLength = getChromosomalArmLength(chromosome, Q_ARM);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += armLength * (armLength - maxBucketLength);
@@ -170,7 +172,7 @@ public class CohortExpFusions
             List<GeneRangeData> armGeneList = Lists.newArrayList();
             List<GeneRangeData> armGeneEndFirstList = Lists.newArrayList();
 
-            String currentArm = "";
+            ChromosomeArm currentArm = UNKNOWN;
 
             for(final EnsemblGeneData geneData : chrGenes)
             {
@@ -179,11 +181,11 @@ public class CohortExpFusions
 
                 GeneRangeData geneRangeData = new GeneRangeData(geneData);
 
-                if(currentArm == "")
+                if(currentArm == UNKNOWN)
                 {
                     currentArm = geneRangeData.Arm;
                 }
-                else if(!currentArm.equals(geneRangeData.Arm))
+                else if(currentArm != geneRangeData.Arm)
                 {
                     processArmGenes(chromosome, currentArm, armGeneList, armGeneEndFirstList);
                     armGeneList.clear();
@@ -241,7 +243,7 @@ public class CohortExpFusions
         generateRemoteCounts();
     }
 
-    private void processArmGenes(final String chromosome, final String arm,
+    private void processArmGenes(final String chromosome, final ChromosomeArm arm,
             List<GeneRangeData> armGeneList, List<GeneRangeData> armGeneEndFirstList)
     {
         LOGGER.info("chr({}) arm({}) processing {} genes", chromosome, arm, armGeneList.size());

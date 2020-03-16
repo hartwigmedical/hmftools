@@ -10,11 +10,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
 public class GeneRangeData
 {
     public final EnsemblGeneData GeneData;
-    public final String Arm;
+    public final ChromosomeArm Arm;
     public final String ChromosomeArm;
 
     // a set of merged and extended regions with matching phase and pre-gene combinations

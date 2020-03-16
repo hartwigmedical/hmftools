@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -330,7 +331,7 @@ public class LikelihoodCalc
             {
                 int strand = (s == 0) ? 1 : -1;
 
-                String currentArm = geneRangeList.get(0).Arm;
+                ChromosomeArm currentArm = geneRangeList.get(0).Arm;
                 long totalGenicRegion = 0;
 
                 for(int i = 0; i < geneRangeList.size(); ++i)
@@ -343,7 +344,7 @@ public class LikelihoodCalc
                     if(gene.GeneData.Strand != strand)
                         continue;
 
-                    if(!currentArm.equals(gene.Arm))
+                    if(currentArm != gene.Arm)
                     {
                         // logArmStats(chromosome, currentArm, strand, overlapBuckets, totalGenicRegion, blockSize);
 

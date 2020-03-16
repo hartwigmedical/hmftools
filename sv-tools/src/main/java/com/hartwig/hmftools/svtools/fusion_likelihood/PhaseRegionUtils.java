@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.svtools.fusion_likelihood.GenePhaseType.intAs
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -232,7 +233,7 @@ public class PhaseRegionUtils
         }
     }
 
-    public static void divideOverlappingRegions(final String chromosome, final String arm, List<GeneRangeData> geneRangeList)
+    public static void divideOverlappingRegions(final String chromosome, final ChromosomeArm arm, List<GeneRangeData> geneRangeList)
     {
         int phaseRegions = geneRangeList.stream().mapToInt(x -> x.getPhaseRegions().size()).sum();
         int regionsRemoved = 0;
