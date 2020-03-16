@@ -19,12 +19,12 @@ import static com.hartwig.hmftools.linx.LinxConfig.SAMPLE;
 import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 import static com.hartwig.hmftools.linx.LinxConfig.sampleListFromConfigStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArmLength;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomeLength;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -398,8 +398,8 @@ public class CopyNumberAnalyser
     private CnArmStats[] calcArmStats(final String chromosome, final List<SvCNData> cnDataList, final List<LohEvent> lohEvents)
     {
         CnArmStats[] armStats = new CnArmStats[Q_ARM_INDEX+1];
-        armStats[P_ARM_INDEX] = new CnArmStats(chromosome, CHROMOSOME_ARM_P);
-        armStats[Q_ARM_INDEX] = new CnArmStats(chromosome, CHROMOSOME_ARM_Q);
+        armStats[P_ARM_INDEX] = new CnArmStats(chromosome, P_ARM);
+        armStats[Q_ARM_INDEX] = new CnArmStats(chromosome, Q_ARM);
 
         int armIndex = P_ARM_INDEX;
 
@@ -460,8 +460,8 @@ public class CopyNumberAnalyser
             }
         }
 
-        armStats[P_ARM_INDEX].HasLOH = lohEvents.stream().anyMatch(x -> x.Chromosome.equals(chromosome) && x.armLoss(CHROMOSOME_ARM_P));
-        armStats[Q_ARM_INDEX].HasLOH = lohEvents.stream().anyMatch(x -> x.Chromosome.equals(chromosome) && x.armLoss(CHROMOSOME_ARM_Q));
+        armStats[P_ARM_INDEX].HasLOH = lohEvents.stream().anyMatch(x -> x.Chromosome.equals(chromosome) && x.armLoss(P_ARM));
+        armStats[Q_ARM_INDEX].HasLOH = lohEvents.stream().anyMatch(x -> x.Chromosome.equals(chromosome) && x.armLoss(Q_ARM));
 
         return armStats;
     }

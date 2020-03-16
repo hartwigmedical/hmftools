@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROME
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
@@ -76,7 +76,7 @@ public class CnSegmentBuilder
 
             double currentCopyNumber = mOtherAllelePloidy + mUndisruptedAllelePloidy + netSvPloidy;
 
-            long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, CHROMOSOME_ARM_P);
+            long centromerePosition = SvUtilities.getChromosomalArmLength(chromosome, P_ARM);
             long chromosomeLength = SvUtilities.getChromosomeLength(chromosome);
 
             for (int i = 0; i < breakendList.size(); ++i)
@@ -111,7 +111,7 @@ public class CnSegmentBuilder
                     double actualBaf = calcActualBaf(currentCopyNumber);
 
                     // add telomere segment at start, and centromere as soon as the breakend crosses the centromere
-                    if(breakend.arm() == CHROMOSOME_ARM_Q)
+                    if(breakend.arm() == Q_ARM)
                     {
                         SvCNData extraCnData = new SvCNData(cnId++, chromosome, 0, centromerePosition,
                                 currentCopyNumber, TELOMERE.toString(), CENTROMERE.toString(),
@@ -153,7 +153,7 @@ public class CnSegmentBuilder
                 {
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
 
-                    if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
+                    if(breakend.arm() == P_ARM && nextBreakend.arm() == Q_ARM)
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition-1,
                                 currentCopyNumber, var.type().toString(), CENTROMERE.toString(),
@@ -184,7 +184,7 @@ public class CnSegmentBuilder
                 else
                 {
                     // last breakend runs out to the telomere
-                    if(breakend.arm() == CHROMOSOME_ARM_P)
+                    if(breakend.arm() == P_ARM)
                     {
                         cnData = new SvCNData(cnId++, chromosome, breakend.position(), centromerePosition - 1,
                                 currentCopyNumber,

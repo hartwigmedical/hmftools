@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.linx.cn;
 
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
+
 public class CnArmStats
 {
     public final String Chromosome;
-    public final String Arm;
+    public final ChromosomeArm Arm;
 
     public int SegmentCount;
     public double AverageCopyNumber;
@@ -14,7 +16,7 @@ public class CnArmStats
     public double TelomereCopyNumber;
     public double CentromereCopyNumber;
 
-    public CnArmStats(final String chromosome, final String arm)
+    public CnArmStats(final String chromosome, final ChromosomeArm arm)
     {
         Chromosome = chromosome;
         Arm = arm;
@@ -27,7 +29,5 @@ public class CnArmStats
         HasLOH = false;
         TelomereCopyNumber = 0;
         CentromereCopyNumber = 0;
-
     }
-
 }

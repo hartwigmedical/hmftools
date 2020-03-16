@@ -10,10 +10,10 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.cn.LohEvent.CN_DATA_NO_SV;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_NEIGHBOUR;
 import static com.hartwig.hmftools.linx.types.SvVarData.RELATION_TYPE_OVERLAP;
 import static com.hartwig.hmftools.linx.types.SvConstants.MAX_SIMPLE_DUP_DEL_CUTOFF;
@@ -83,10 +83,10 @@ public class ClusteringPrep
                 if(var.type() != INV)
                     continue;
 
-                if(!pArmHasInversions && (var.arm(true) == CHROMOSOME_ARM_P || var.arm(false) == CHROMOSOME_ARM_P))
+                if(!pArmHasInversions && (var.arm(true) == P_ARM || var.arm(false) == P_ARM))
                     pArmHasInversions = true;
 
-                if(!qArmHasInversions && (var.arm(true) == CHROMOSOME_ARM_Q || var.arm(false) == CHROMOSOME_ARM_Q))
+                if(!qArmHasInversions && (var.arm(true) == Q_ARM || var.arm(false) == Q_ARM))
                     qArmHasInversions = true;
 
                 if(pArmHasInversions && qArmHasInversions)
@@ -112,13 +112,13 @@ public class ClusteringPrep
 
                 if(pArmHasInversions)
                 {
-                    if (var.arm(true) == CHROMOSOME_ARM_P || var.arm(false) == CHROMOSOME_ARM_P)
+                    if (var.arm(true) == P_ARM || var.arm(false) == P_ARM)
                         continue;
                 }
 
                 if(qArmHasInversions)
                 {
-                    if (var.arm(true) == CHROMOSOME_ARM_Q || var.arm(false) == CHROMOSOME_ARM_Q)
+                    if (var.arm(true) == Q_ARM || var.arm(false) == Q_ARM)
                         continue;
                 }
 

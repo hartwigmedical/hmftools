@@ -3,8 +3,9 @@ package com.hartwig.hmftools.linx.visualiser.file;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.CHROMOSOME_ARM_P;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_CENTROMERE;
 import static com.hartwig.hmftools.linx.types.SvBreakend.DIRECTION_TELOMERE;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
@@ -355,15 +356,15 @@ public class VisualiserWriter
     {
         long position = breakend.position();
 
-        if(breakend.orientation() == 1 && breakend.arm().equals(CHROMOSOME_ARM_P))
+        if(breakend.orientation() == 1 && breakend.arm() == P_ARM)
         {
             return isChainEnd ? DIRECTION_TELOMERE : Long.toString(position);
         }
-        else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_P))
+        else if(breakend.orientation() == -1 && breakend.arm() == P_ARM)
         {
             return isChainEnd ? Long.toString(position) : DIRECTION_CENTROMERE;
         }
-        else if(breakend.orientation() == -1 && breakend.arm().equals(CHROMOSOME_ARM_Q))
+        else if(breakend.orientation() == -1 && breakend.arm() == Q_ARM)
         {
             return isChainEnd ? Long.toString(position) : DIRECTION_TELOMERE;
         }

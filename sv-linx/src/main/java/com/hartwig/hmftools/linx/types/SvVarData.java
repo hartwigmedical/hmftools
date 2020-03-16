@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -32,7 +33,7 @@ public class SvVarData
     // full set of DB fields
     private final StructuralVariantData mSVData;
     private String[] mChr; // stripped of 'chr' for logging
-    private String[] mArm;
+    private ChromosomeArm[] mArm;
     private SvBreakend[] mBreakend;
     private boolean[] mFragileSite;
     private String[] mLineElement;
@@ -98,7 +99,7 @@ public class SvVarData
 
     private void init()
     {
-        mArm = new String[SE_PAIR];
+        mArm = new ChromosomeArm[SE_PAIR];
         mChr = new String[] { stripChromosome(chromosome(true)), stripChromosome(chromosome(false)) };
 
         mFragileSite = new boolean[SE_PAIR];
@@ -183,10 +184,10 @@ public class SvVarData
                 id(), useStart ? "start" :"end", mChr[seIndex(useStart)], orientation(useStart), position(useStart));
     }
 
-    public final String arm(boolean isStart) { return mArm[seIndex(isStart)]; }
+    public final ChromosomeArm arm(boolean isStart) { return mArm[seIndex(isStart)]; }
     public final String chrShort(boolean isStart) { return mChr[seIndex(isStart)]; }
 
-    public void setChromosomalArms(final String start, final String end)
+    public void setChromosomalArms(final ChromosomeArm start, final ChromosomeArm end)
     {
         mArm[SE_START] = start;
         mArm[SE_END] = end;

@@ -6,7 +6,12 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG38;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.UNKNOWN;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
+import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.util.List;
@@ -16,16 +21,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 // common utility methods for SVs
 
 public class SvUtilities {
-
-    public final static String CHROMOSOME_ARM_P = "P"; // short arm, and lower position
-    public final static String CHROMOSOME_ARM_Q = "Q";
-    public final static String CHROMOSOME_ARM_CENTROMERE = "C";
 
     public final static int NO_LENGTH = -1;
 
@@ -57,17 +59,17 @@ public class SvUtilities {
         return chrLength != null ? chrLength : 0;
     }
 
-    public static final String getChromosomalArm(final String chromosome, final long position)
+    public static final ChromosomeArm getChromosomalArm(final String chromosome, final long position)
     {
         final Long centromerePos = refGenomeLengths().centromeres().get(HumanChromosome.fromString(chromosome));
 
         if(centromerePos == null)
-            return "INVALID";
+            return UNKNOWN;
 
-        return position < centromerePos ? CHROMOSOME_ARM_P : CHROMOSOME_ARM_Q;
+        return position < centromerePos ? P_ARM : Q_ARM;
     }
 
-    public static long getChromosomalArmLength(final String chromosome, final String armType)
+    public static long getChromosomalArmLength(final String chromosome, final ChromosomeArm armType)
     {
         final RefGenome refGenome = refGenomeLengths();
         final HumanChromosome chr = HumanChromosome.fromString(chromosome);
@@ -77,7 +79,7 @@ public class SvUtilities {
         if(centromerePos == null)
             return 0;
 
-        if(armType.equals(CHROMOSOME_ARM_P))
+        if(armType == P_ARM)
         {
             return centromerePos;
         }
@@ -136,19 +138,19 @@ public class SvUtilities {
         }
     }
 
-    public static int findCentromereBreakendIndex(final List<SvBreakend> breakendList, final String arm)
+    public static int findCentromereBreakendIndex(final List<SvBreakend> breakendList, final ChromosomeArm arm)
     {
         if(breakendList == null || breakendList.isEmpty())
             return -1;
 
         // return the last breakend list index prior to the centromere from either arm direction,
         // returning an index out of bounds if all breakends are on the other arm
-        if(arm == CHROMOSOME_ARM_P)
+        if(arm == P_ARM)
         {
             int i = 0;
             for(; i < breakendList.size(); ++i)
             {
-                if(breakendList.get(i).arm() == CHROMOSOME_ARM_Q)
+                if(breakendList.get(i).arm() == Q_ARM)
                     break;
             }
 
@@ -159,7 +161,7 @@ public class SvUtilities {
             int i = breakendList.size() - 1;
             for(; i >= 0; --i)
             {
-                if(breakendList.get(i).arm() == CHROMOSOME_ARM_P)
+                if(breakendList.get(i).arm() == P_ARM)
                     break;
             }
 
@@ -290,7 +292,7 @@ public class SvUtilities {
 
     public static int calcConsistency(final SvBreakend breakend)
     {
-        return (breakend.arm() == CHROMOSOME_ARM_P ? 1 : -1) * breakend.orientation();
+        return (breakend.arm() == P_ARM ? 1 : -1) * breakend.orientation();
     }
 
     public static double MAX_COPY_NUM_DIFF = 0.5;
@@ -328,5 +330,6 @@ public class SvUtilities {
     }
 
     public static final String makeChrArmStr(final String chr, final String arm) { return chr + "_" + arm; }
+    public static final String makeChrArmStr(final String chr, final ChromosomeArm arm) { return makeChrArmStr(chr, asStr(arm)); }
 
 }

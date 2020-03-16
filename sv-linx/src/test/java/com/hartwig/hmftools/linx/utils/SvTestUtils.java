@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
 import com.hartwig.hmftools.common.variant.structural.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 public class SvTestUtils
@@ -169,13 +170,13 @@ public class SvTestUtils
 
     public static void initialiseSV(SvVarData var)
     {
-        String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
+        ChromosomeArm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
-        String endArm;
+        ChromosomeArm endArm;
         if(!var.isSglBreakend())
             endArm = getChromosomalArm(var.chromosome(false), var.position(false));
         else
-            endArm = CHROMOSOME_ARM_P;
+            endArm = P_ARM;
 
         var.setChromosomalArms(startArm, endArm);
 

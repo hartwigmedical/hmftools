@@ -23,7 +23,7 @@ public class SvArmCluster
     final SvCluster mCluster;
 
     private final String mChromosome;
-    private final String mArm;
+    private final ChromosomeArm mArm;
     private long mStartPos;
     private long mEndPos;
 
@@ -32,7 +32,7 @@ public class SvArmCluster
 
     private static final Logger LOGGER = LogManager.getLogger(SvArmCluster.class);
 
-    public SvArmCluster(int id, final SvCluster cluster, final String chr, final String arm)
+    public SvArmCluster(int id, final SvCluster cluster, final String chr, final ChromosomeArm arm)
     {
         mId = id;
         mCluster = cluster;
@@ -56,7 +56,7 @@ public class SvArmCluster
     }
 
     public final String chromosome() { return mChromosome; }
-    public final String arm() { return mArm; }
+    public final ChromosomeArm arm() { return mArm; }
     public long posStart() { return mStartPos; }
     public long posEnd() { return mEndPos; }
 

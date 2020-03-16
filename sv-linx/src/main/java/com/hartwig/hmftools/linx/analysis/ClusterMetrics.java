@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_DB_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
 
@@ -143,7 +143,7 @@ public class ClusterMetrics
                     ImpliedTICount += impliedTICount;
                 }
 
-                if(breakend.arm() == CHROMOSOME_ARM_P && nextBreakend.arm() == CHROMOSOME_ARM_Q)
+                if(breakend.arm() == P_ARM && nextBreakend.arm() == Q_ARM)
                 {
                     // if neither breakend points across the centromere then subtract it from the total range
                     // and also check for a reliable TI across this region as well

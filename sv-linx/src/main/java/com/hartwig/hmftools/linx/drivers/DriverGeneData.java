@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
 public class DriverGeneData
 {
@@ -18,7 +19,7 @@ public class DriverGeneData
     public final EnsemblGeneData GeneData;
     public final TranscriptData TransData;
     public final GeneCopyNumber GeneCN;
-    public final String Arm;
+    public final ChromosomeArm Arm;
 
     private final List<DriverGeneEvent> mEvents;
 

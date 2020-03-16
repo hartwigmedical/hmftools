@@ -10,13 +10,12 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.typeAsInt;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getSvTypesStr;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ResolvedType.DOUBLE_MINUTE;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_BFB;
 import static com.hartwig.hmftools.linx.types.SvCluster.CLUSTER_ANNOT_DM;
@@ -356,8 +355,8 @@ public class DoubleMinuteFinder
 
             if(tcData != null)
             {
-                double centromereCopyNumber = armGroup.arm() == CHROMOSOME_ARM_P ? tcData.CentromerePArm : tcData.CentromereQArm;
-                double telomereCopyNumber = armGroup.arm() == CHROMOSOME_ARM_P ? tcData.TelomerePArm : tcData.TelomereQArm;
+                double centromereCopyNumber = armGroup.arm() == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
+                double telomereCopyNumber = armGroup.arm() == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
                 maxCopyNumber = max(max(telomereCopyNumber, centromereCopyNumber), maxCopyNumber);
             }
         }
@@ -539,7 +538,7 @@ public class DoubleMinuteFinder
 
             if (tcData != null)
             {
-                if (armGroup.arm() == CHROMOSOME_ARM_P)
+                if (armGroup.arm() == P_ARM)
                 {
                     maxCentroTeloCopyNumber = max(maxCentroTeloCopyNumber, max(tcData.TelomerePArm, tcData.CentromerePArm));
                 }

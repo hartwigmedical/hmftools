@@ -11,12 +11,12 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.getSuperType;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_OTHER;
@@ -72,6 +72,7 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.PloidyCalcData;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.SvArmCluster;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -406,13 +407,13 @@ public class SvSampleAnalyser {
             var.setLineElement(mLineElementAnnotator.isLineElement(var, true), true);
             var.setLineElement(mLineElementAnnotator.isLineElement(var, false), false);
 
-            String startArm = getChromosomalArm(var.chromosome(true), var.position(true));
+            ChromosomeArm startArm = getChromosomalArm(var.chromosome(true), var.position(true));
 
-            String endArm;
+            ChromosomeArm endArm;
             if(!var.isSglBreakend())
                 endArm = getChromosomalArm(var.chromosome(false), var.position(false));
             else
-                endArm = CHROMOSOME_ARM_P;
+                endArm = ChromosomeArm.P_ARM;
 
             var.setChromosomalArms(startArm, endArm);
 
@@ -538,8 +539,8 @@ public class SvSampleAnalyser {
                             mSampleId, var.id(), var.typeStr(), cluster.id(), cluster.getSvCount()));
 
                     mSvFileWriter.write(String.format(",%s,%d,%d,%s,%s,%d,%d,%s",
-                            var.chromosome(true), var.position(true), var.orientation(true), var.arm(true),
-                            var.chromosome(false), var.position(false), var.orientation(false), var.arm(false)));
+                            var.chromosome(true), var.position(true), var.orientation(true), asStr(var.arm(true)),
+                            var.chromosome(false), var.position(false), var.orientation(false), asStr(var.arm(false))));
 
                     mSvFileWriter.write(String.format(",%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
                             dbData.adjustedStartCopyNumber(), dbData.adjustedStartCopyNumberChange(),
@@ -927,7 +928,7 @@ public class SvSampleAnalyser {
 
                         if(linksData != null)
                         {
-                            final String linkArm = beStart.arm() == beEnd.arm() ? beStart.arm() : beStart.arm() + "_" + beEnd.arm();
+                            final String linkArm = beStart.arm() == beEnd.arm() ? asStr(beStart.arm()) : asStr(beStart.arm()) + "_" + asStr(beEnd.arm());
 
                             linksData.add(ImmutableLinxLink.builder()
                                     .clusterId(cluster.id())

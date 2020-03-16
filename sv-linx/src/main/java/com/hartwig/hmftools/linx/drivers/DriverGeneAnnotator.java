@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.UNKNOWN;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.MAX_COPY_NUM_DIFF_PERC;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
@@ -29,6 +28,7 @@ import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_SV_CENTRO;
 import static com.hartwig.hmftools.linx.drivers.DriverEventType.LOH_SV_TELO;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_ARM_SV;
 import static com.hartwig.hmftools.linx.drivers.DriverGeneEvent.SV_DRIVER_TYPE_DEL;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 import static com.hartwig.hmftools.linx.visualiser.file.VisualiserWriter.GENE_TYPE_DRIVER;
@@ -505,7 +505,7 @@ public class DriverGeneAnnotator
             }
         }
 
-        double centromereCNChange = dgData.Arm == CHROMOSOME_ARM_P ?
+        double centromereCNChange = dgData.Arm == P_ARM ?
                 min(tcData.CentromerePArm, tcData.TelomerePArm) - tcData.CentromereQArm
                 : min(tcData.CentromereQArm, tcData.TelomereQArm) - tcData.CentromerePArm;
 
@@ -1053,8 +1053,8 @@ public class DriverGeneAnnotator
 
             final TelomereCentromereCnData tcData = mCopyNumberData.getChrTeleCentroData().get(dgData.GeneData.Chromosome);
 
-            double centromereCopyNumber = dgData.Arm == CHROMOSOME_ARM_P ? tcData.CentromerePArm : tcData.CentromereQArm;
-            double telomereCopyNumber = dgData.Arm == CHROMOSOME_ARM_P ? tcData.TelomerePArm : tcData.TelomereQArm;
+            double centromereCopyNumber = dgData.Arm == P_ARM ? tcData.CentromerePArm : tcData.CentromereQArm;
+            double telomereCopyNumber = dgData.Arm == P_ARM ? tcData.TelomerePArm : tcData.TelomereQArm;
 
             for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {

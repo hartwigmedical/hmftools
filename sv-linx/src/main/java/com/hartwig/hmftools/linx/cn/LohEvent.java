@@ -2,13 +2,14 @@ package com.hartwig.hmftools.linx.cn;
 
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.CENTROMERE;
 import static com.hartwig.hmftools.common.purple.segment.SegmentSupport.TELOMERE;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_P;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.CHROMOSOME_ARM_Q;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
+import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
+import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 
 public class LohEvent
@@ -106,15 +107,15 @@ public class LohEvent
 
     public boolean armLoss()
     {
-        return armLoss(CHROMOSOME_ARM_P) || armLoss(CHROMOSOME_ARM_Q);
+        return armLoss(P_ARM) || armLoss(Q_ARM);
     }
 
-    public boolean armLoss(final String arm)
+    public boolean armLoss(final ChromosomeArm arm)
     {
-        if(arm == CHROMOSOME_ARM_P && SegStart.equals(TELOMERE.toString()) && SegEnd.equals(CENTROMERE.toString()))
+        if(arm == P_ARM && SegStart.equals(TELOMERE.toString()) && SegEnd.equals(CENTROMERE.toString()))
             return true;
 
-        if(arm == CHROMOSOME_ARM_Q && SegStart.equals(CENTROMERE.toString()) && SegEnd.equals(TELOMERE.toString()))
+        if(arm == Q_ARM && SegStart.equals(CENTROMERE.toString()) && SegEnd.equals(TELOMERE.toString()))
             return true;
 
         return false;

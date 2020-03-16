@@ -26,13 +26,13 @@ public class SvArmGroup
     private final SvCluster mCluster;
 
     private final String mChromosome;
-    private final String mArm;
+    private final ChromosomeArm mArm;
 
     // width of SVs on the arm taking into account any excluded SVs
     private long mStartPos;
     private long mEndPos;
 
-    public SvArmGroup(final SvCluster cluster, final String chr, final String arm)
+    public SvArmGroup(final SvCluster cluster, final String chr, final ChromosomeArm arm)
     {
         mId = makeChrArmStr(chr, arm);
         mCluster = cluster;
@@ -49,7 +49,7 @@ public class SvArmGroup
     public final String id() { return mId; }
 
     public final String chromosome() { return mChromosome; }
-    public final String arm() { return mArm; }
+    public final ChromosomeArm arm() { return mArm; }
     public long posStart() { return mStartPos; }
     public long posEnd() { return mEndPos; }
 
