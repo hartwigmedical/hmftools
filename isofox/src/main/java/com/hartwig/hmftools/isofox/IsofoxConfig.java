@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import java.io.File;
@@ -215,7 +217,7 @@ public class IsofoxConfig
             for(int i = 0; i < fragLengths.length; ++i)
             {
                 String[] flItem = fragLengths[i].split("-");
-                int fragLength = Integer.parseInt(flItem[ExpectedRatesGenerator.FL_LENGTH]);
+                int fragLength = Integer.parseInt(flItem[FL_LENGTH]);
                 int fragFrequency = Integer.parseInt(flItem[ExpectedRatesGenerator.FL_FREQUENCY]);
                 FragmentLengthData.add(new int[]{ fragLength, fragFrequency });
             }
@@ -228,6 +230,15 @@ public class IsofoxConfig
         {
             ISF_LOGGER.error("not output directory specified");
             return false;
+        }
+
+        if(!FragmentLengthData.isEmpty())
+        {
+            if(FragmentLengthData.stream().anyMatch(x -> x[FL_LENGTH] <= 0 || x[FL_FREQUENCY] < 0))
+            {
+                ISF_LOGGER.error("invalid fragment lengths");
+                return false;
+            }
         }
 
         if(WriteExpectedCounts)

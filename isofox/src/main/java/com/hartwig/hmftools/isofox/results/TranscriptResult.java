@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
 
 import java.util.List;
@@ -118,6 +121,12 @@ public abstract class TranscriptResult
 
         double effectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
 
+        if(effectiveLength < 0)
+        {
+            ISF_LOGGER.error("trans({}) exonicBases({}) invalid calculated effective length from dist({})",
+                    transData.TransName, exonicBases, expRateFragmentLengths.toString());
+        }
+
         TranscriptResult results = ImmutableTranscriptResult.builder()
                 .trans(transData)
                 .exonsFound(exonsFound)
@@ -147,13 +156,13 @@ public abstract class TranscriptResult
         if(fragmentLengthData.isEmpty())
             return transLength;
 
-        int flFrequencyTotal = 0;
-        int flBasesTotal = 0;
+        long flFrequencyTotal = 0;
+        long flBasesTotal = 0;
 
         for(final int[] flData : fragmentLengthData)
         {
-            int fragLength = flData[ExpectedRatesGenerator.FL_LENGTH];
-            int fragFrequency = flData[ExpectedRatesGenerator.FL_FREQUENCY];
+            int fragLength = flData[FL_LENGTH];
+            int fragFrequency = flData[FL_FREQUENCY];
 
             if(fragLength >= transLength)
                 continue;
