@@ -12,8 +12,8 @@ import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RAN
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.extractTranscriptExonData;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.getProteinDomainPositions;
 import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.setAlternativeTranscriptPhasings;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

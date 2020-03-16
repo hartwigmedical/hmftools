@@ -1,19 +1,10 @@
 package com.hartwig.hmftools.linx.types;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.makeChrArmStr;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_DB_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvConstants.SHORT_TI_LENGTH;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_END;
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 
 import java.util.List;
 

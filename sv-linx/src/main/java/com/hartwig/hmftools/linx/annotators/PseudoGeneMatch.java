@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.linx.annotators;
 
-import static com.hartwig.hmftools.linx.types.SvVarData.SE_PAIR;
-import static com.hartwig.hmftools.linx.types.SvVarData.seIndex;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
 
 public class PseudoGeneMatch
 {
