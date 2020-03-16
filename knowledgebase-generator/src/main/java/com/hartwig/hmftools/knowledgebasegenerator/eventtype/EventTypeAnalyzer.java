@@ -23,47 +23,49 @@ public class EventTypeAnalyzer {
 
         boolean combinedEvent = false;
         String biomarkerType = Strings.EMPTY;
-        String eventInfo = Strings.EMPTY;
         String gene = Strings.EMPTY;
-        String eventSource = Strings.EMPTY;
-        List<String> event = Lists.newArrayList();
+        String name = Strings.EMPTY;
+        String description = Strings.EMPTY;
+        Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         Map<String, List<String>> eventMap = Maps.newHashMap();
+        String eventInfo = Strings.EMPTY;
 
         List<EventType> eventType = Lists.newArrayList();
 
-        Source type = Source.sourceFromKnowledgebase(viccEntry.source());
-
         for (Feature feature : viccEntry.features()) {
-            switch (type) {
+            switch (source) {
                 case ONCOKB: // extract info oncokb
-                    eventSource = feature.name();
+                    name = feature.name();
                     gene = feature.geneSymbol();
                     biomarkerType = feature.biomarkerType();
+                    description = feature.description();
 
-                    if (eventSource.contains("Fusion")) {
+                    if (name.contains("Fusion")) {
 
-                        if (eventSource.split(" ").length == 2) {
-                            gene = eventSource.split(" ")[0];
-                            eventSource = eventSource.split(" ")[1];
+                        if (name.split(" ").length == 2) {
+                            gene = name.split(" ")[0];
+                            name = name.split(" ")[1];
                         }
                     }
 
-                    eventMap.put(gene, Lists.newArrayList(eventSource));
+                    eventMap.put(gene, Lists.newArrayList(name));
 
-                    if (eventSource.isEmpty()){
+                    if (name.isEmpty()){
                         LOGGER.warn(
                                 "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
                                 feature.name(),
                                 gene,
-                                biomarkerType, type);
+                                biomarkerType, source);
                     }
 
                     break;
                 case CGI: // extract info for cgi
-                    eventSource = feature.name();
+                    name = feature.name();
                     biomarkerType = feature.biomarkerType();
-                    if (eventSource.contains("+")) {
-                        String[] combinedEventConvertToSingleEvent = eventSource.split(" \\+ ", 2);
+                    description = feature.description();
+
+                    if (name.contains("+")) {
+                        String[] combinedEventConvertToSingleEvent = name.split(" \\+ ", 2);
                         gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
                         eventInfo = combinedEventConvertToSingleEvent[0].split(" ", 2)[1];
 
@@ -85,15 +87,15 @@ public class EventTypeAnalyzer {
                             }
                         }
                     } else {
-                        if (eventSource.contains(":")) {
-                            gene = eventSource.split(":", 2)[0];
-                            eventInfo = eventSource.split(":", 2)[1];
+                        if (name.contains(":")) {
+                            gene = name.split(":", 2)[0];
+                            eventInfo = name.split(":", 2)[1];
                         } else {
-                            gene = eventSource.split(" ", 2)[0];
-                            if (eventSource.split(" ", 2).length == 1) {
+                            gene = name.split(" ", 2)[0];
+                            if (name.split(" ", 2).length == 1) {
                                 eventInfo = "Fusion";
                             } else {
-                                eventInfo = eventSource.split(" ", 2)[1];
+                                eventInfo = name.split(" ", 2)[1];
                             }
                         }
                         eventMap.put(gene, Lists.newArrayList(eventInfo));
@@ -103,22 +105,24 @@ public class EventTypeAnalyzer {
                                 "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
-                                biomarkerType, type);
+                                biomarkerType, source);
                     }
 
                     break;
                 case CIVIC: // extract info for civic
-                    eventSource = feature.name();
+                    name = feature.name();
                     biomarkerType = feature.biomarkerType() == null ? "null" : feature.biomarkerType();
                     gene = feature.geneSymbol();
-                    eventMap.put(gene, Lists.newArrayList(eventSource));
+                    description = feature.description();
 
-                    if (eventSource.isEmpty()){
+                    eventMap.put(gene, Lists.newArrayList(name));
+
+                    if (name.isEmpty()){
                         LOGGER.warn(
                                 "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
-                                biomarkerType, type);
+                                biomarkerType, source);
                     }
 
                     break;
@@ -141,12 +145,15 @@ public class EventTypeAnalyzer {
             }
 
             eventType.add(ImmutableEventType.builder()
-                    .gene(gene)
                     .combinedEvent(combinedEvent)
-                    .event(eventSource)
-                    .interpretEventType(Lists.newArrayList())
                     .biomarkerType(biomarkerType)
-                    .build());
+                    .gene(gene)
+                    .name(name)
+                    .description(description)
+                    .source(source)
+                    .eventMap(eventMap)
+                    .event(Strings.EMPTY)
+                    .interpretEventType(Lists.newArrayList()).build());
         }
         return eventType;
     }
