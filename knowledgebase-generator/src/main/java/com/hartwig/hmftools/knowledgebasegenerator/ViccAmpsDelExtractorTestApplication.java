@@ -58,20 +58,28 @@ public class ViccAmpsDelExtractorTestApplication {
                 //TODO: if combined event use single event for determine known events
 
                 for (Map.Entry<String, List<String>> entryDB : type.eventMap().entrySet()) {
-                    for (String event: entryDB.getValue()) {
-                        listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type, entryDB.getKey(), event));
+                    for (String event : entryDB.getValue()) {
+                        listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry,
+                                type,
+                                entryDB.getKey(),
+                                event));
                         listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, entryDB.getKey(), event));
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, type, entryDB.getKey(), event);
                         listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
-                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
-                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
+                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
+                                type,
+                                entryDB.getKey(),
+                                event));
+                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
+                                type,
+                                entryDB.getKey(),
+                                event));
                         DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event);
                     }
                 }
             }
         }
-
 
         List<KnownAmplificationDeletion> listAmpsFilter = Lists.newArrayList();
         List<KnownAmplificationDeletion> listDelsFIlter = Lists.newArrayList();

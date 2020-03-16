@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -46,7 +45,8 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
+    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (DELETION.contains(event)) {
@@ -115,7 +115,8 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
+    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (FUSIONS.contains(event)) {
