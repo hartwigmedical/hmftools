@@ -6,10 +6,12 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
@@ -99,17 +101,20 @@ public class KnowledgebaseGeneratorApplication {
 
             for (EventType type : eventType) {
                 // Generating known events
-                //TODO: map every genomic event to one object
+                //TODO: map every genomic event to one objecxt
                 //TODO: if combined event use single event for determine known events
-                for (String interpetationEvents: type.interpretEventType()) {
-                    listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type, interpetationEvents));
-                    listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, interpetationEvents));
-                    DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, interpetationEvents);
-                    DetermineEventOfGenomicMutation.checkRange(viccEntry, type, interpetationEvents);
-                    listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, interpetationEvents));
-                    listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, interpetationEvents));
-                    listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, interpetationEvents));
-                    DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, interpetationEvents);
+
+                for (Map.Entry<String, List<String>> entryDB : type.eventMap().entrySet()) {
+                    for (String event: entryDB.getValue()) {
+                        listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry, type, entryDB.getKey(), event));
+                        listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, entryDB.getKey(), event));
+                        DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, entryDB.getKey(), event);
+                        DetermineEventOfGenomicMutation.checkRange(viccEntry, type, entryDB.getKey(), event);
+                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
+                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
+                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
+                        DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event);
+                    }
                 }
 
 

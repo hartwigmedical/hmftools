@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -35,22 +36,22 @@ public class DetermineEventOfGenomicMutation {
 
     @NotNull
     public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull String interpetationEvents) {
+            @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        if (AMPLIFICATION.contains(interpetationEvents)) {
+        if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), gene);
         }
         return ImmutableKnownAmplificationDeletion.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (DELETION.contains(interpetationEvents)) {
+        if (DELETION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), gene);
         }
         return ImmutableKnownAmplificationDeletion.builder().gene("").eventType("").source("").sourceLink("").build();
     }
@@ -97,36 +98,36 @@ public class DetermineEventOfGenomicMutation {
                 .build();
     }
 
-    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (VARIANTS.contains(interpetationEvents)) {
+        if (VARIANTS.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
         }
     }
 
-    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (RANGE.contains(interpetationEvents)) {
+        if (RANGE.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Range");
         }
     }
 
     @NotNull
-    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (FUSIONS.contains(interpetationEvents)) {
+        if (FUSIONS.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
         }
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
-    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (SIGNATURE.contains(interpetationEvents)) {
+        if (SIGNATURE.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signature");
         }
     }
