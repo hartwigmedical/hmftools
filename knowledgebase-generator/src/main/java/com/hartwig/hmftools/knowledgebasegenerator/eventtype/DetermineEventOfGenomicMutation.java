@@ -57,11 +57,12 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
+    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        if (AMPLIFICATION.contains(type.event())) {
+        if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene(), viccEntry);
+            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), gene, viccEntry);
 
         }
         return ImmutableActionableAmplificationDeletion.builder()
@@ -78,12 +79,13 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
+    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (DELETION.contains(type.event())) {
+        if (DELETION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene(), viccEntry);
+            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), gene, viccEntry);
         }
         return ImmutableActionableAmplificationDeletion.builder()
                 .gene("")

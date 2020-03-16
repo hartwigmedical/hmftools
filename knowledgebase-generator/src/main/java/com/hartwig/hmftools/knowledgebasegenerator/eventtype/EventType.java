@@ -34,9 +34,4 @@ public abstract class EventType {
     @NotNull
     public abstract Map<String, List<String>> eventMap();
 
-    public abstract String event();
-
-    @NotNull
-    public abstract List<String> interpretEventType();
-
 }

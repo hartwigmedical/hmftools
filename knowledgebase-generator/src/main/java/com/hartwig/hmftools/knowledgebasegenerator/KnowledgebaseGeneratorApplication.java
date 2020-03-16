@@ -122,13 +122,18 @@ public class KnowledgebaseGeneratorApplication {
                                 entryDB.getKey(),
                                 event));
                         DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event);
+
+                        // Generating actionable event
+                        listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry,
+                                type,
+                                entryDB.getKey(),
+                                event));
+                        listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry,
+                                type,
+                                entryDB.getKey(),
+                                event));
                     }
                 }
-
-                // Generating actionable event
-                listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry, type));
-                listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry, type));
-
             }
         }
         AllGenomicEvents allGenomicEvents = genomicEventsBuilder.build();

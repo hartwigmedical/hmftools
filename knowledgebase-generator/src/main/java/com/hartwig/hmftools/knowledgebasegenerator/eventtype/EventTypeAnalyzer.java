@@ -151,9 +151,7 @@ public class EventTypeAnalyzer {
                     .name(name)
                     .description(description)
                     .source(source)
-                    .eventMap(eventMap)
-                    .event(Strings.EMPTY)
-                    .interpretEventType(Lists.newArrayList()).build());
+                    .eventMap(eventMap).build());
         }
         return eventType;
     }
