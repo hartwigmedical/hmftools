@@ -76,7 +76,7 @@ public class EventTypeAnalyzer {
 
                     break;
                 case CGI: // extract info for cgi
-                    eventSource = feature.name(); //TODO: extract only event
+                    eventSource = feature.name();
                     biomarkerType = feature.biomarkerType();
                     if (eventSource.contains("+")) {
                         String[] combinedEventConvertToSingleEvent = eventSource.split(" \\+ ", 2);
@@ -124,34 +124,18 @@ public class EventTypeAnalyzer {
 
                     break;
                 case CIVIC: // extract info for civic
-                    //                    if (event == null || event.equals("N/A")) {
-                    //                        event = feature.name();
-                    //                    }
-                    //
-                    //                    if (feature.provenanceRule() == null) {
-                    //                        LOGGER.info("No provencence rule known");
-                    //                    } else if (feature.provenanceRule().equals("gene_only")) {
-                    //                        event = "gene_level";
-                    //                    }
-                    //
-                    //                    if (event.contains("Prime") || event.contains("Exon") || event.contains("EXON") || event.contains("Frameshift") || event
-                    //                            .contains("EXPRESSION") || event.equals("RS34743033") || event.contains("SPLICE VARIANT") || event.contains(
-                    //                            "PHOSPHORYLATION")) {
-                    //                        event = event;
-                    //                    } else if (Pattern.compile("[0-9]").matcher(event).find()) {
-                    //                        event = "manual curated mutation";
-                    //                    }
-                    //
-                    //                    if (event.isEmpty()) {
-                    //                        LOGGER.warn(
-                    //                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                                feature.name(),
-                    //                                feature.geneSymbol(),
-                    //                                feature.biomarkerType(),
-                    //                                feature.description(),
-                    //                                type,
-                    //                                event);
-                    //                    }
+                    eventSource = feature.name();
+                    biomarkerType = feature.biomarkerType() == null ? "null" : feature.biomarkerType();
+                    gene = feature.geneSymbol();
+                    eventMap.put(gene, Lists.newArrayList(eventSource));
+
+                    if (eventInfo.isEmpty()){
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}'",
+                                feature.name(),
+                                gene,
+                                biomarkerType);
+                    }
 
                     break;
                 case BRCA: // extract info for brca
