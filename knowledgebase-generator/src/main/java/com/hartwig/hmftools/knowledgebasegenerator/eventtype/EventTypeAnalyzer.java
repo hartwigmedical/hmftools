@@ -24,127 +24,109 @@ public class EventTypeAnalyzer {
         boolean combinedEvent = false;
         String biomarkerType = Strings.EMPTY;
         String gene = Strings.EMPTY;
-        String eventSource = Strings.EMPTY;
-        List<String> event = Lists.newArrayList();
+        String name = Strings.EMPTY;
+        String description = Strings.EMPTY;
+        Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         Map<String, List<String>> eventMap = Maps.newHashMap();
+        String eventInfo = Strings.EMPTY;
 
         List<EventType> eventType = Lists.newArrayList();
 
-        Source type = Source.sourceFromKnowledgebase(viccEntry.source());
-
         for (Feature feature : viccEntry.features()) {
-            switch (type) {
+            switch (source) {
                 case ONCOKB: // extract info oncokb
+                    name = feature.name();
+                    gene = feature.geneSymbol();
+                    biomarkerType = feature.biomarkerType();
+                    description = feature.description();
 
-                    //    LOGGER.info(event);
+                    if (name.contains("Fusion")) {
 
-                    //                    if (event.equals("NA")) {
-                    //                        String[] eventArray = feature.name().split(" ", 2);
-                    //                        if (eventArray.length == 1) {
-                    //                            event = eventArray[0];
-                    //                        } else if (eventArray.length == 2) {
-                    //                            if (eventArray[1].equals("Fusion")) {
-                    //                                event = eventArray[1];
-                    //                            } else {
-                    //                                event = feature.name();
-                    //                            }
-                    //                        }
-                    //                        if (event.contains("Exon")) {
-                    //                            event = feature.name();
-                    //                        } else if (Pattern.compile("[0-9]").matcher(event).find()) {
-                    //                            event = "manual curated mutation";
-                    //                        }
-                    //                    }
-                    //
-                    //                    if (feature.provenanceRule() == null) {
-                    //                        LOGGER.info("No provencence rule known");
-                    //                    } else if (feature.provenanceRule().equals("gene_only")) {
-                    //                        event = "gene_level";
-                    //                    }
-                    //
-                    //                    if (event.isEmpty()) {
-                    //                        LOGGER.warn(
-                    //                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                                feature.name(),
-                    //                                feature.geneSymbol(),
-                    //                                feature.biomarkerType(),
-                    //                                feature.description(),
-                    //                                type,
-                    //                                event);
-                    //                    }
+                        if (name.split(" ").length == 2) {
+                            gene = name.split(" ")[0];
+                            name = name.split(" ")[1];
+                        }
+                    }
+
+                    eventMap.put(gene, Lists.newArrayList(name));
+
+                    if (name.isEmpty()){
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
+                                feature.name(),
+                                gene,
+                                biomarkerType, source);
+                    }
 
                     break;
                 case CGI: // extract info for cgi
-                    gene = feature.geneSymbol(); // TODO: use not geneSymbol but extract gene from name
-                    eventSource = feature.name(); //TODO: extract only event
+                    name = feature.name();
                     biomarkerType = feature.biomarkerType();
-                    if (eventSource.contains("+")) {
-                        String[] combinedEventConvertToSingleEvent = eventSource.split("\\+", 2);
+                    description = feature.description();
+
+                    if (name.contains("+")) {
+                        String[] combinedEventConvertToSingleEvent = name.split(" \\+ ", 2);
+                        gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
+                        eventInfo = combinedEventConvertToSingleEvent[0].split(" ", 2)[1];
+
+                        String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
+                        String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
+
+                        //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
                         if (combinedEventConvertToSingleEvent.length == 2) {
                             combinedEvent = true;
 
                             if (eventMap.size() == 0) {
-                                eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[0]));
-                                if (eventMap.containsKey(gene)) {
-                                    eventMap.put(gene,
-                                            Lists.newArrayList(combinedEventConvertToSingleEvent[0], combinedEventConvertToSingleEvent[1]));
+                                eventMap.put(gene, Lists.newArrayList(eventInfo));
+                                if (eventMap.containsKey(geneCombined)) {
+                                    eventMap.put(geneCombined,
+                                            Lists.newArrayList(eventInfo, eventInfoCombined));
                                 } else {
-                                    eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[0]));
-                                    eventMap.put(gene, Lists.newArrayList(combinedEventConvertToSingleEvent[1]));
+                                    eventMap.put(gene, Lists.newArrayList(eventInfo));
+                                    eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
                                 }
                             }
+                        } else if (combinedEventConvertToSingleEvent.length >= 2) {
+                            LOGGER.warn("This event has more events, which is not interpretated!");
                         }
                     } else {
-                        eventMap.put(gene, Lists.newArrayList(eventSource));
+                        if (name.contains(":")) {
+                            gene = name.split(":", 2)[0];
+                            eventInfo = name.split(":", 2)[1];
+                        } else {
+                            gene = name.split(" ", 2)[0];
+                            if (name.split(" ", 2).length == 1) {
+                                eventInfo = "Fusion";
+                            } else {
+                                eventInfo = name.split(" ", 2)[1];
+                            }
+                        }
+                        eventMap.put(gene, Lists.newArrayList(eventInfo));
+                    }
+                    if (eventInfo.isEmpty()){
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
+                                feature.name(),
+                                gene,
+                                biomarkerType, source);
                     }
 
-                    //
-                    //                    if (feature.provenanceRule() == null) {
-                    //                        LOGGER.info("No provencence rule known");
-                    //                    } else if (feature.provenanceRule().equals("gene_only")) {
-                    //                        event = "gene_level";
-                    //                    }
-                    //
-                    //                    if (event.isEmpty()) {
-                    //                        LOGGER.warn(
-                    //                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                                feature.name(),
-                    //                                feature.geneSymbol(),
-                    //                                feature.biomarkerType(),
-                    //                                feature.description(),
-                    //                                type,
-                    //                                event);
-                    //                    }
                     break;
                 case CIVIC: // extract info for civic
-                    //                    if (event == null || event.equals("N/A")) {
-                    //                        event = feature.name();
-                    //                    }
-                    //
-                    //                    if (feature.provenanceRule() == null) {
-                    //                        LOGGER.info("No provencence rule known");
-                    //                    } else if (feature.provenanceRule().equals("gene_only")) {
-                    //                        event = "gene_level";
-                    //                    }
-                    //
-                    //                    if (event.contains("Prime") || event.contains("Exon") || event.contains("EXON") || event.contains("Frameshift") || event
-                    //                            .contains("EXPRESSION") || event.equals("RS34743033") || event.contains("SPLICE VARIANT") || event.contains(
-                    //                            "PHOSPHORYLATION")) {
-                    //                        event = event;
-                    //                    } else if (Pattern.compile("[0-9]").matcher(event).find()) {
-                    //                        event = "manual curated mutation";
-                    //                    }
-                    //
-                    //                    if (event.isEmpty()) {
-                    //                        LOGGER.warn(
-                    //                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' and description {} on {} and event is {}",
-                    //                                feature.name(),
-                    //                                feature.geneSymbol(),
-                    //                                feature.biomarkerType(),
-                    //                                feature.description(),
-                    //                                type,
-                    //                                event);
-                    //                    }
+                    name = feature.name();
+                    biomarkerType = feature.biomarkerType() == null ? "null" : feature.biomarkerType();
+                    gene = feature.geneSymbol();
+                    description = feature.description();
+
+                    eventMap.put(gene, Lists.newArrayList(name));
+
+                    if (name.isEmpty()){
+                        LOGGER.warn(
+                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
+                                feature.name(),
+                                gene,
+                                biomarkerType, source);
+                    }
 
                     break;
                 case BRCA: // extract info for brca
@@ -166,12 +148,13 @@ public class EventTypeAnalyzer {
             }
 
             eventType.add(ImmutableEventType.builder()
-                    .gene(gene)
                     .combinedEvent(combinedEvent)
-                    .event(eventSource)
-                    .interpretEventType(Lists.newArrayList())
                     .biomarkerType(biomarkerType)
-                    .build());
+                    .gene(gene)
+                    .name(name)
+                    .description(description)
+                    .source(source)
+                    .eventMap(eventMap).build());
         }
         return eventType;
     }

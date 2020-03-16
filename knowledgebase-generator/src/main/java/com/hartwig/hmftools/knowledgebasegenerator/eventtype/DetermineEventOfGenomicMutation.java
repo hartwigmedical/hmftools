@@ -23,44 +23,45 @@ import org.jetbrains.annotations.NotNull;
 public class DetermineEventOfGenomicMutation {
     private static final Logger LOGGER = LogManager.getLogger(DetermineEventOfGenomicMutation.class);
 
-    private static final List<String> AMPLIFICATION =
-            Lists.newArrayList("amp", "AMPLIFICATION", "Amplification", "amplification", "Transcript Amplification");
+    private static final List<String> AMPLIFICATION = Lists.newArrayList("Amplification", "AMPLIFICATION", "amplification");
 
-    private static final List<String> DELETION = Lists.newArrayList("DELETION", "Deletion", "del", "Transcript Ablation");
+    private static final List<String> DELETION = Lists.newArrayList("Deletion", "DELETION", "deletion");
 
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
     private static final Set<String> RANGE = Sets.newHashSet();
-    private static final Set<String> SIGNATURE = Sets.newHashSet("Microsatellite Instability-High", "Microsatellite");
+    private static final Set<String> SIGNATURE = Sets.newHashSet("Microsatellite Instability-High");
 
     @NotNull
     public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
-            @NotNull String interpetationEvents) {
+            @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        if (AMPLIFICATION.contains(interpetationEvents)) {
+        if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), gene);
         }
         return ImmutableKnownAmplificationDeletion.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (DELETION.contains(interpetationEvents)) {
+        if (DELETION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), type.gene());
+            return CnvExtractor.determineKnownAmplificationDeletion(source, typeEvent.toString(), gene);
         }
         return ImmutableKnownAmplificationDeletion.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
+    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+            @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        if (AMPLIFICATION.contains(type.event())) {
+        if (AMPLIFICATION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Amplification");
-            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene(), viccEntry);
+            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), gene, viccEntry);
 
         }
         return ImmutableActionableAmplificationDeletion.builder()
@@ -77,12 +78,13 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type) {
+    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+            @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (DELETION.contains(type.event())) {
+        if (DELETION.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Deletion");
-            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), type.gene(), viccEntry);
+            return CnvExtractor.determineActionableAmplificationDeletion(source, typeEvent.toString(), gene, viccEntry);
         }
         return ImmutableActionableAmplificationDeletion.builder()
                 .gene("")
@@ -97,36 +99,37 @@ public class DetermineEventOfGenomicMutation {
                 .build();
     }
 
-    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (VARIANTS.contains(interpetationEvents)) {
+        if (VARIANTS.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Variants");
         }
     }
 
-    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (RANGE.contains(interpetationEvents)) {
+        if (RANGE.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Range");
         }
     }
 
     @NotNull
-    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+            @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (FUSIONS.contains(interpetationEvents)) {
+        if (FUSIONS.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
         }
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
-    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String interpetationEvents) {
+    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (SIGNATURE.contains(interpetationEvents)) {
+        if (SIGNATURE.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signature");
         }
     }
