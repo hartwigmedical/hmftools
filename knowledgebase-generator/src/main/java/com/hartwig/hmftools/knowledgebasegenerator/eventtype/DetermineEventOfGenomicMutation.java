@@ -24,9 +24,9 @@ public class DetermineEventOfGenomicMutation {
     private static final Logger LOGGER = LogManager.getLogger(DetermineEventOfGenomicMutation.class);
 
     private static final List<String> AMPLIFICATION =
-            Lists.newArrayList("amp", "AMPLIFICATION", "Amplification", "amplification", "Transcript Amplification");
+            Lists.newArrayList("Amplification", "AMPLIFICATION", "amplification");
 
-    private static final List<String> DELETION = Lists.newArrayList("DELETION", "Deletion", "del", "Transcript Ablation");
+    private static final List<String> DELETION = Lists.newArrayList("Deletion", "DELETION", "deletion");
 
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
