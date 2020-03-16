@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.seIndex;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
@@ -80,11 +84,6 @@ public class SvVarData
 
     public static String RELATION_TYPE_NEIGHBOUR = "NHBR";
     public static String RELATION_TYPE_OVERLAP = "OVRL";
-
-    // iterators for start and end data
-    public static int SE_START = 0;
-    public static int SE_END = 1;
-    public static int SE_PAIR = 2;
 
     private static final Logger LOGGER = LogManager.getLogger(SvVarData.class);
 
@@ -433,11 +432,7 @@ public class SvVarData
         return (type() == DEL || type() == DUP || type() == INS);
     }
 
-    public static boolean isStart(int svIter) { return svIter == SE_START; }
-    public static int seIndex(boolean isStart) { return isStart ? SE_START : SE_END; }
-    public static int switchIndex(int svIter) { return svIter == SE_START ? SE_END : SE_START; }
-
-    public String getAssemblyData(boolean isStart) { return mAssemblyData[seIndex(isStart)]; }
+   public String getAssemblyData(boolean isStart) { return mAssemblyData[seIndex(isStart)]; }
 
     // unit testing only
     public void setAssemblyData(boolean isStart, final String data)

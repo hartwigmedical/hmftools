@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.types;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.chaining.LinkFinder.getMinTemplatedInsertionLength;
@@ -102,7 +103,7 @@ public class SvLinkedPair {
     public boolean firstUnlinkedOnStart() { return !mFirstLinkOnStart; }
     public boolean secondUnlinkedOnStart() { return !mSecondLinkOnStart; }
 
-    public final SvBreakend getBreakend(int se) { return getBreakend(SvVarData.isStart(se)); }
+    public final SvBreakend getBreakend(int se) { return getBreakend(isStart(se)); }
 
     public final SvBreakend getBreakend(boolean isStart)
     {
