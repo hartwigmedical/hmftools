@@ -87,14 +87,14 @@ public class GeneCollection
         if(mGenes.size() == 1)
             return mGenes.get(0).name();
 
-        String geneNames = "";
+        StringBuilder geneNames = new StringBuilder(mGenes.get(0).name());
 
-        for(int i = 0; i < min(mGenes.size(), maxCount); ++i)
+        for(int i = 1; i < min(mGenes.size(), maxCount); ++i)
         {
-            geneNames = appendStr(geneNames, mGenes.get(i).name(), ';');
+            geneNames.append(";" + mGenes.get(i).name());
         }
 
-        return geneNames;
+        return geneNames.toString();
     }
 
     private void buildCache()

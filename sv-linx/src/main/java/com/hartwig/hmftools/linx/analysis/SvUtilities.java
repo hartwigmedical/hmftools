@@ -180,10 +180,7 @@ public class SvUtilities {
             if(typeCounts[i] == 0)
                 continue;
 
-            if(!clusterTypeStr.isEmpty())
-                clusterTypeStr += "_";
-
-            clusterTypeStr += StructuralVariantType.values()[i] + "=" + typeCounts[i];
+            clusterTypeStr = appendStr(clusterTypeStr, StructuralVariantType.values()[i] + "=" + typeCounts[i], '_');
         }
 
         return clusterTypeStr;
@@ -196,13 +193,17 @@ public class SvUtilities {
 
     public static String appendStrList(final List<String> sourceList, char delim)
     {
-        String combinedStr = "";
-        for(String src : sourceList)
+        if(sourceList.isEmpty())
+            return "";
+
+        final StringBuilder combinedStr = new StringBuilder(sourceList.get(0));
+
+        for(int i = 1; i < sourceList.size(); ++i)
         {
-            combinedStr = appendStr(combinedStr, src, ';');
+            combinedStr.append(delim + sourceList.get(i));
         }
 
-        return combinedStr;
+        return combinedStr.toString();
     }
 
     public static boolean isWithin(final SvVarData variant, final String chromosome, final long position)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStr;
+import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 
 import java.util.Arrays;
 import java.util.List;
@@ -124,18 +125,16 @@ public class CategoryCountsData
             transIds.add(index, transId);
         }
 
-        String combinedKey = "";
+        List<String> items = Lists.newArrayList();
+
         for (Integer transId : transIds)
         {
-            combinedKey = appendStr(combinedKey, String.valueOf(transId), DELIM);
+            items.add(String.valueOf(transId));
         }
 
-        for(String geneId : mUnsplicedGenes)
-        {
-            combinedKey = appendStr(combinedKey, geneId, DELIM);
-        }
+        items.addAll(mUnsplicedGenes);
 
-        return combinedKey;
+        return appendStrList(items, DELIM);
     }
 
     private static final String GENE_INDENTIFIER = "ENSG";

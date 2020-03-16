@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -133,5 +135,6 @@ public class MiscTest
         assertEquals(-1, findCentromereBreakendIndex(breakendList, P_ARM));
         assertEquals(0, findCentromereBreakendIndex(breakendList, Q_ARM));
     }
+
 
 }
