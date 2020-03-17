@@ -34,7 +34,6 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
     private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
     private static final Set<String> RANGE = Sets.newHashSet();
-    private static final Set<String> SIGNATURE = Sets.newHashSet("Microsatellite Instability-High");
     private static final Set<String> SIGNATURE_MSI = Sets.newHashSet("Microsatellite Instability-High");
     private static final Set<String> SIGNATURE_HRD = Sets.newHashSet("");
     private static final Set<String> SIGNATURE_MTL = Sets.newHashSet("");
@@ -137,7 +136,6 @@ public class DetermineEventOfGenomicMutation {
     @NotNull
     public static Signatures checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        if (SIGNATURE.contains(event)) {
             if (SIGNATURE_MSI.contains(event)){
                 GenomicEvents typeEvent = GenomicEvents.genomicEvents("MSI");
                 return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
@@ -152,7 +150,6 @@ public class DetermineEventOfGenomicMutation {
                 return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
             }
 
-        }
         return ImmutableSignatures.builder().eventType(Strings.EMPTY).source(Strings.EMPTY).sourceLink(Strings.EMPTY).build();
     }
 }
