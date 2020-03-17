@@ -35,6 +35,10 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE = Sets.newHashSet("Microsatellite Instability-High");
+    private static final Set<String> SIGNATURE_MSI = Sets.newHashSet("Microsatellite Instability-High");
+    private static final Set<String> SIGNATURE_HRD = Sets.newHashSet("");
+    private static final Set<String> SIGNATURE_MTL = Sets.newHashSet("");
+    private static final Set<String> SIGNATURE_MTB = Sets.newHashSet("");
 
     @NotNull
     public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
@@ -134,16 +138,16 @@ public class DetermineEventOfGenomicMutation {
     public static Signatures checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         if (SIGNATURE.contains(event)) {
-            if (event.equals("Microsatellite Instability-High")) {
+            if (SIGNATURE_MSI.contains(event)){
                 GenomicEvents typeEvent = GenomicEvents.genomicEvents("MSI");
                 return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
-            } else if (event.equals("HRD")) {
+            } else if (SIGNATURE_HRD.contains(event)) {
                 GenomicEvents typeEvent = GenomicEvents.genomicEvents("HRD");
                 return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
-            } else if (event.equals("MTL")) {
+            } else if (SIGNATURE_MTL.contains(event)) {
                 GenomicEvents typeEvent = GenomicEvents.genomicEvents("MTL");
                 return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
-            } else if (event.equals("MTB")) {
+            } else if (SIGNATURE_MTB.contains(event)) {
                 GenomicEvents typeEvent = GenomicEvents.genomicEvents("MTB");
                 return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
             }
