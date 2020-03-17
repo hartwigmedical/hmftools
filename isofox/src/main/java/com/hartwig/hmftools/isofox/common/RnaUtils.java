@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 
 public class RnaUtils
 {

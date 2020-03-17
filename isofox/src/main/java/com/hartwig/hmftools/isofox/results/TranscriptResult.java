@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COU
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
@@ -18,7 +17,6 @@ import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 
 import org.immutables.value.Value;
 
@@ -122,15 +120,6 @@ public abstract class TranscriptResult
         int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
 
         double effectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
-
-        if(effectiveLength < 0)
-        {
-            final List<String> fragDataStr = expRateFragmentLengths.stream()
-                    .map(x -> String.format("%d=%d", x[FL_LENGTH], x[FL_FREQUENCY])).collect(Collectors.toList());
-
-            ISF_LOGGER.error("trans({}) exonicBases({}) neg calculated effective length({}) from dist({})",
-                    transData.TransName, exonicBases, effectiveLength, appendStrList(fragDataStr, ';'));
-        }
 
         TranscriptResult results = ImmutableTranscriptResult.builder()
                 .trans(transData)

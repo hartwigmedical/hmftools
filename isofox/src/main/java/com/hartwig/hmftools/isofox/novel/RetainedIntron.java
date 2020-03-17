@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.isofox.novel;
 
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.appendStrList;
+import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 

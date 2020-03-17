@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
-import static com.hartwig.hmftools.linx.LinxConfig.formOutputPath;
 
 import java.io.File;
 import java.io.IOException;
@@ -148,7 +147,10 @@ public class IsofoxConfig
 
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
 
-        OutputDir = formOutputPath(cmd.getOptionValue(DATA_OUTPUT_DIR));
+        String outputdir = cmd.getOptionValue(DATA_OUTPUT_DIR);
+        if(!outputdir.endsWith(File.separator))
+            outputdir += File.separator;
+        OutputDir = outputdir;
         OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
 
         BamFile = cmd.getOptionValue(BAM_FILE);

@@ -28,10 +28,6 @@
         </dependency>
         <dependency>
             <groupId>com.hartwig</groupId>
-            <artifactId>sv-linx</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.hartwig</groupId>
             <artifactId>sig-analyser</artifactId>
         </dependency>
         <dependency>
