@@ -150,9 +150,9 @@ public class EventTypeAnalyzer {
                             }
                         } else if (combinedEventConvertToSingleEvent.length >= 2) {
                             LOGGER.warn("This event has more events, which is not interpretated!");
-                        } else {
-                            eventMap.put(gene, Lists.newArrayList(name));
                         }
+                    } else {
+                        eventMap.put(gene, Lists.newArrayList(name));
                     }
 
 
