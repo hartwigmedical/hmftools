@@ -164,7 +164,7 @@ public class KnowledgebaseGeneratorApplication {
                 listSignaturesFilter.add(signatures);
             }
         }
-        LOGGER.info(listSignaturesFilter);
+
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 
         // If drug info/tumor location is known then variant is an actionable variant

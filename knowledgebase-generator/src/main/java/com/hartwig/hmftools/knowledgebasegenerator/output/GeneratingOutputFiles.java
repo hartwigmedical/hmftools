@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.knowledgebasegenerator.AllGenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,6 +21,7 @@ public class GeneratingOutputFiles {
     private static final String KNOWN_AMPLIFICATION_INFO_TSV = "knownAmplificationInfo.tsv";
     private static final String KNOWN_DELETION_INFO_TSV = "knownDeletionInfo.tsv";
     private static final String ACTIONABLE_CNV_TSV = "actionableCNV.tsv";
+    private static final String SIGNATURES_TSV = "actionableCNV.tsv";
 
     public static void generatingOutputFiles(@NotNull String outputDir, @NotNull AllGenomicEvents genomicEvents) throws IOException {
         generateUniqueKnownAmplification(outputDir + File.separator + UNIQUE_KNOWN_AMPLIFICATION_TSV, genomicEvents);
@@ -27,6 +29,8 @@ public class GeneratingOutputFiles {
         generateInfoKnownAmplification(outputDir + File.separator + KNOWN_AMPLIFICATION_INFO_TSV, genomicEvents);
         generateInfoKnownDeletions(outputDir + File.separator + KNOWN_DELETION_INFO_TSV, genomicEvents);
         generateActionableCNV(outputDir + File.separator + ACTIONABLE_CNV_TSV, genomicEvents);
+        generateSignatures(outputDir + File.separator + SIGNATURES_TSV, genomicEvents);
+
     }
 
     private static void generateUniqueKnownAmplification(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
@@ -80,6 +84,16 @@ public class GeneratingOutputFiles {
         //TODO determine actionable CNVs
         writer.write("");
         writer.close();
+    }
 
+    private static void generateSignatures(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
+        String headerknownCNV = "event" + DELIMITER + "Source" + DELIMITER + "Link" + NEW_LINE;
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+        writer.write(headerknownCNV);
+        for (Signatures signatures : genomicEvents.signatures()) {
+            writer.write(signatures.eventType() + DELIMITER + signatures.source() + DELIMITER + signatures.sourceLink() + NEW_LINE);
+        }
+        writer.close();
     }
 }
