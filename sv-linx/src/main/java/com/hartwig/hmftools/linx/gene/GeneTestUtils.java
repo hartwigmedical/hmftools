@@ -16,6 +16,8 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.ImmutableGeneCopyNumber;
 import com.hartwig.hmftools.common.purple.segment.SegmentSupport;
@@ -39,17 +41,21 @@ public class GeneTestUtils
     }
 
     // Ensembl data types
+    public static EnsemblDataCache createGeneDataCache()
+    {
+        return new EnsemblDataCache("", RefGenomeVersion.HG37);
+    }
     public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, long geneStart, long geneEnd)
     {
         return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd,  "");
     }
 
-    public static void addTransExonData(SvGeneTranscriptCollection geneTransCache, final String geneId, List<TranscriptData> transDataList)
+    public static void addTransExonData(EnsemblDataCache geneTransCache, final String geneId, List<TranscriptData> transDataList)
     {
         geneTransCache.getTranscriptDataMap().put(geneId, transDataList);
     }
 
-    public static void addGeneData(SvGeneTranscriptCollection geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
+    public static void addGeneData(EnsemblDataCache geneTransCache, final String chromosome, List<EnsemblGeneData> geneDataList)
     {
         geneTransCache.getChrGeneDataMap().put(chromosome, geneDataList);
     }

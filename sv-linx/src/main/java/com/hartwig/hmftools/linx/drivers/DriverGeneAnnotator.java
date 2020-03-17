@@ -53,6 +53,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
@@ -87,7 +88,7 @@ import org.apache.logging.log4j.Logger;
 public class DriverGeneAnnotator
 {
     private final DatabaseAccess mDbAccess;
-    private SvGeneTranscriptCollection mGeneTransCache;
+    private final EnsemblDataCache mGeneTransCache;
     private final LinxConfig mConfig;
 
     private List<DriverCatalog> mDriverCatalog;
@@ -113,7 +114,7 @@ public class DriverGeneAnnotator
 
     private static final Logger LOGGER = LogManager.getLogger(DriverGeneAnnotator.class);
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, SvGeneTranscriptCollection geneTranscriptCollection,
+    public DriverGeneAnnotator(DatabaseAccess dbAccess, EnsemblDataCache geneTranscriptCollection,
             final LinxConfig config, CnDataLoader cnDataLoader)
     {
         mDbAccess = dbAccess;

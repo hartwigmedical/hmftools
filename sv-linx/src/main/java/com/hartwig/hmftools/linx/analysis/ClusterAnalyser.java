@@ -36,13 +36,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
 import com.hartwig.hmftools.linx.chaining.ChainFinder;
 import com.hartwig.hmftools.linx.chaining.LinkFinder;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.LohEvent;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -130,9 +130,9 @@ public class ClusterAnalyser {
         mComplexClustering.setCopyNumberAnalyser(cnDataLoader);
     }
 
-    public void setGeneCollection(final SvGeneTranscriptCollection geneTransCache)
+    public void setGeneCollection(final EnsemblDataCache geneDataCache)
     {
-        mDmFinder.setGeneTransCache(geneTransCache);
+        mDmFinder.setGeneTransCache(geneDataCache);
     }
 
     // access for unit testing

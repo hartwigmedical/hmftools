@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.START_CODON;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_CODON_1;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertAminoAcidToDnaCodon;
@@ -19,12 +20,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeData;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.utils.LinxTester;
@@ -52,7 +53,7 @@ public class NeoEpitopeTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         tester.initialiseFusions(geneTransCache);
 
@@ -224,7 +225,7 @@ public class NeoEpitopeTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         tester.initialiseFusions(geneTransCache);
 

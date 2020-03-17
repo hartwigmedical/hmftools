@@ -21,12 +21,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
 public class VisualiserWriter
 {
     // references only
-    SvGeneTranscriptCollection mGeneTranscriptCollection;
+    private EnsemblDataCache mGeneTranscriptCollection;
 
     private final List<VisGeneData> mGeneData;
     private final List<VisFusionFile> mFusions;
@@ -125,9 +125,9 @@ public class VisualiserWriter
         closeBufferedWriter(mFusionFileWriter);
     }
 
-    public void setGeneDataCollection(SvGeneTranscriptCollection geneTranscriptCollection)
+    public void setGeneDataCache(EnsemblDataCache geneDataCache)
     {
-        mGeneTranscriptCollection = geneTranscriptCollection;
+        mGeneTranscriptCollection = geneDataCache;
     }
 
     public void setSampleId(final String sampleId)

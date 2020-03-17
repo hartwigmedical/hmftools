@@ -26,10 +26,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
@@ -38,7 +39,7 @@ import org.apache.logging.log4j.Logger;
 public class GeneImpact
 {
     private final GermlineVcfConfig mConfig;
-    private final SvGeneTranscriptCollection mGeneCollection;
+    private final EnsemblDataCache mGeneDataCache;
 
     private BufferedWriter mWriter;
 
@@ -61,21 +62,20 @@ public class GeneImpact
             final List<String> genePanelIds = cmd.hasOption(GENE_PANEL_FILE) ?
                     loadGenePanel(cmd.getOptionValue(GENE_PANEL_FILE)) : Lists.newArrayList();
 
-            mGeneCollection = new SvGeneTranscriptCollection();
-            mGeneCollection.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
-            mGeneCollection.setRestrictedGeneIdList(genePanelIds);
-            mGeneCollection.loadEnsemblData(true);
+            mGeneDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG37);
+            mGeneDataCache.setRestrictedGeneIdList(genePanelIds);
+            mGeneDataCache.load(true);
 
-            mGeneCollection.setRequiredData(config.CheckDisruptions, false, false, true);
+            mGeneDataCache.setRequiredData(config.CheckDisruptions, false, false, true);
 
             if(config.CheckDisruptions)
             {
-                mGeneCollection.loadEnsemblTranscriptData(genePanelIds);
+                mGeneDataCache.loadTranscriptData(genePanelIds);
             }
         }
         else
         {
-            mGeneCollection = null;
+            mGeneDataCache = null;
         }
 
         mWriter = null;
@@ -124,13 +124,13 @@ public class GeneImpact
     public void populateGeneAnnotations(
             final StructuralVariant sv, int svIndex, List<List<GeneAnnotation>> breakendPairGenes, List<GeneAnnotation> overlapGenes)
     {
-        if(mGeneCollection == null)
+        if(mGeneDataCache == null)
             return;
 
         // find any gene overlapped by a DEL or with a breakend in it
         if(sv.type() == DEL)
         {
-            overlapGenes.addAll(mGeneCollection.findGeneAnnotationsByOverlap(
+            overlapGenes.addAll(mGeneDataCache.findGeneAnnotationsByOverlap(
                     svIndex, sv.chromosome(true), sv.position(true), sv.position(false)));
 
             if(!overlapGenes.isEmpty())
@@ -148,7 +148,7 @@ public class GeneImpact
 
             List<GeneAnnotation> svGenes = breakendPairGenes.get(se);
 
-            svGenes.addAll(mGeneCollection.findGeneAnnotationsBySv(
+            svGenes.addAll(mGeneDataCache.findGeneAnnotationsBySv(
                     svIndex, isStart, sv.chromosome(isStart), sv.position(isStart), sv.orientation(isStart), 0)
                     .stream().filter(x -> x.canonical() != null).collect(Collectors.toList()));
 

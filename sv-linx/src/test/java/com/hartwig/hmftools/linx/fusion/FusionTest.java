@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
+import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
@@ -13,7 +15,6 @@ import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
@@ -32,10 +34,10 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusion
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusionTermination;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
 
@@ -47,7 +49,7 @@ public class FusionTest
         // test the selection and prioritisation logic for reportable fusions
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         tester.initialiseFusions(geneTransCache);
 
@@ -251,7 +253,7 @@ public class FusionTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         tester.initialiseFusions(geneTransCache);
 
@@ -352,7 +354,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, true, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -398,7 +400,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, true, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -439,7 +441,7 @@ public class FusionTest
 
         assertEquals(1, cluster.getChains().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, true, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -505,7 +507,7 @@ public class FusionTest
         assertEquals(1, cluster.getChains().size());
         assertEquals(7, cluster.getChains().get(0).getSvCount());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, true, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.FusionAnalyser.run(tester.SampleId, tester.AllVariants, null,
@@ -527,7 +529,7 @@ public class FusionTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         tester.initialiseFusions(geneTransCache);
 

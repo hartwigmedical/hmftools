@@ -18,6 +18,8 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
@@ -25,7 +27,6 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.gc.GcBiasAdjuster;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -40,7 +41,7 @@ public class Isofox
 {
     private final IsofoxConfig mConfig;
     private final ResultsWriter mResultsWriter;
-    private final SvGeneTranscriptCollection mGeneTransCache;
+    private final EnsemblDataCache mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final FragmentSizeCalcs mFragmentSizeCalcs;
     private final ExpectedCountsCache mExpectedCountsCache;
@@ -54,8 +55,7 @@ public class Isofox
 
         mResultsWriter = new ResultsWriter(mConfig);
 
-        mGeneTransCache = new SvGeneTranscriptCollection();
-        mGeneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+        mGeneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG37);
 
         if(!mConfig.RestrictedGeneIds.isEmpty())
         {
@@ -63,7 +63,7 @@ public class Isofox
         }
 
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
-        mGeneTransCache.loadEnsemblData(false);
+        mGeneTransCache.load(false);
 
         mFragmentSizeCalcs = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
 

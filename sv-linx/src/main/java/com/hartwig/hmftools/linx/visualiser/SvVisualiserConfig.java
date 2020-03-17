@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -279,15 +281,14 @@ public interface SvVisualiserConfig
 
         final String[] geneList = cmd.getOptionValue(GENE).split(",");
 
-        SvGeneTranscriptCollection geneTransCache = null;
+        EnsemblDataCache geneTransCache = null;
         Map<String, HmfTranscriptRegion> geneMap = null;
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
-            geneTransCache = new SvGeneTranscriptCollection();
-            geneTransCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+            geneTransCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG37);
             geneTransCache.setRequiredData(true, false, false, true);
-            geneTransCache.loadEnsemblData(false);
+            geneTransCache.load(false);
         }
         else
         {

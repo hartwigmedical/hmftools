@@ -33,12 +33,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 
 import org.apache.logging.log4j.LogManager;
@@ -140,7 +140,7 @@ public class CohortExpFusions
 
     public void setLogVerbose(boolean toggle) { mLogVerbose = toggle; }
 
-    public void generateExpectedFusions(final SvGeneTranscriptCollection geneTransCache,
+    public void generateExpectedFusions(final EnsemblDataCache geneTransCache,
             final List<String> restrictedChromosomes, final List<String> restrictedGeneIds)
     {
         /* for each chromosome and arm:
@@ -283,7 +283,7 @@ public class CohortExpFusions
     }
 
     public void generatePhaseRegions(
-            GeneRangeData geneRangeData, final List<TranscriptData> transDataList, final SvGeneTranscriptCollection geneTransCache)
+            GeneRangeData geneRangeData, final List<TranscriptData> transDataList, final EnsemblDataCache geneTransCache)
     {
         // convert each transcript's exons into a set of phase regions spanning each intronic section
         List<GenePhaseRegion> phaseRegions = Lists.newArrayList();
@@ -839,7 +839,7 @@ public class CohortExpFusions
         setBucketLengthData(bucketOverlapCounts, bucketIndex, overlapCount);
     }
 
-    public final Map<String,GeneRangeData> generateGeneRangeData(final SvGeneTranscriptCollection geneTransCache, List<String> geneIds)
+    public final Map<String,GeneRangeData> generateGeneRangeData(final EnsemblDataCache geneTransCache, List<String> geneIds)
     {
         final Map<String, GeneRangeData> geneIdRangeDataMap = Maps.newHashMap();
 

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -25,7 +26,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.GeneBamReader;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +41,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class FragmentSizeCalcs
 {
     private final IsofoxConfig mConfig;
-    private final SvGeneTranscriptCollection mGeneTransCache;
+    private final EnsemblDataCache mGeneTransCache;
 
     private final List<int[]> mFragmentLengths;
     private final List<int[]> mFragmentLengthsByGene;
@@ -58,7 +58,7 @@ public class FragmentSizeCalcs
 
     private PerformanceCounter mPerfCounter;
 
-    public FragmentSizeCalcs(final IsofoxConfig config, final SvGeneTranscriptCollection geneTransCache, final BufferedWriter writer)
+    public FragmentSizeCalcs(final IsofoxConfig config, final EnsemblDataCache geneTransCache, final BufferedWriter writer)
     {
         mConfig = config;
         mGeneTransCache = geneTransCache;

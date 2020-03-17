@@ -1,13 +1,16 @@
-package com.hartwig.hmftools.linx.gene;
+package com.hartwig.hmftools.common.ensemblcache;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
-import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_SPLICE_DATA_FILE;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadEnsemblGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptData;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptProteinData;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
+import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -17,25 +20,25 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
-import com.hartwig.hmftools.linx.types.SvVarData;
 
-public class SvGeneTranscriptCollection
+public class EnsemblDataCache
 {
-    /*
-    private String mDataPath;
+    private final String mDataPath;
+    private final RefGenomeVersion mRefGenomeVersion;
 
-    private Map<String, List<TranscriptData>> mTranscriptDataMap;
-    private Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
-    private Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
-    private Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
-    private Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
-    private Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
+    private final Map<String, List<TranscriptData>> mTranscriptDataMap;
+    private final Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
+    private final  Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private final Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
+    private final Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
+    private final Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
 
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireExons;
@@ -45,8 +48,11 @@ public class SvGeneTranscriptCollection
 
     private final List<String> mRestrictedGeneIdList = Lists.newArrayList();
 
-    public SvGeneTranscriptCollection()
+    public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {
+        mDataPath = dataPath.endsWith(File.separator) ? dataPath : dataPath + File.separator;
+        mRefGenomeVersion = refGenomeVersion;
+
         mTranscriptDataMap = Maps.newHashMap();
         mChrGeneDataMap = Maps.newHashMap();
         mEnsemblProteinDataMap = Maps.newHashMap();
@@ -57,14 +63,6 @@ public class SvGeneTranscriptCollection
         mRequireProteinDomains = false;
         mRequireSplicePositions = false;
         mCanonicalTranscriptsOnly = false;
-    }
-
-    public void setDataPath(final String dataPath)
-    {
-        mDataPath = dataPath;
-
-        if(!mDataPath.endsWith(File.separator))
-            mDataPath += File.separator;
     }
 
     public void setRestrictedGeneIdList(final List<String> geneIds)
@@ -174,57 +172,6 @@ public class SvGeneTranscriptCollection
             return Lists.newArrayList();
 
         return findGeneRegions(position, geneRegions, upstreamDistance);
-    }
-
-    public void setSvGeneData(final List<SvVarData> svList, boolean applyPromotorDistance, boolean selectiveLoading)
-    {
-        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
-
-        if (selectiveLoading)
-        {
-            // only load transcript info for the genes covered
-            List<String> restrictedGeneIds = Lists.newArrayList();
-
-            for (final SvVarData var : svList)
-            {
-                for (int be = SE_START; be <= SE_END; ++be)
-                {
-                    if (be == SE_END && var.isSglBreakend())
-                        continue;
-
-                    boolean isStart = isStart(be);
-
-                    populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
-                }
-            }
-
-            loadEnsemblTranscriptData(restrictedGeneIds);
-        }
-
-        // associate breakends with transcripts
-        for (final SvVarData var : svList)
-        {
-            for (int be = SE_START; be <= SE_END; ++be)
-            {
-                if (be == SE_END && var.isSglBreakend())
-                    continue;
-
-                boolean isStart = isStart(be);
-
-                List<GeneAnnotation> genesList = findGeneAnnotationsBySv(
-                        var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
-
-                if (genesList.isEmpty())
-                    continue;
-
-                for (GeneAnnotation gene : genesList)
-                {
-                    gene.setSvData(var.getSvData());
-                }
-
-                var.setGenesList(genesList, isStart);
-            }
-        }
     }
 
     public List<GeneAnnotation> findGeneAnnotationsBySv(int svId, boolean isStart, final String chromosome, long position,
@@ -663,10 +610,10 @@ public class SvGeneTranscriptCollection
         return transcript;
     }
 
-//    public static int EXON_RANK_MIN = 0;
-//    public static int EXON_RANK_MAX = 1;
-//    public static int EXON_PHASE_MIN = 2;
-//    public static int EXON_PHASE_MAX = 3;
+    public static int EXON_RANK_MIN = 0;
+    public static int EXON_RANK_MAX = 1;
+    public static int EXON_PHASE_MIN = 2;
+    public static int EXON_PHASE_MAX = 3;
 
     public int[] getExonRankings(final String geneId, long position)
     {
@@ -828,17 +775,17 @@ public class SvGeneTranscriptCollection
         transcript.setAlternativePhasing(alternativePhasing);
     }
 
-    public boolean loadEnsemblData(boolean delayTranscriptLoading)
+    public boolean load(boolean delayTranscriptLoading)
     {
-        if(!EnsemblDAO.loadEnsemblGeneData(mDataPath, mRestrictedGeneIdList, mChrGeneDataMap))
+        if(!loadEnsemblGeneData(mDataPath, mRestrictedGeneIdList, mChrGeneDataMap, mRefGenomeVersion))
             return false;
 
         if(!delayTranscriptLoading)
         {
-            if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly))
+            if(!EnsemblDataLoader.loadTranscriptData(mDataPath, mTranscriptDataMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly))
                 return false;
 
-            if(mRequireProteinDomains && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
+            if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, Lists.newArrayList()))
                 return false;
 
             if(mRequireSplicePositions)
@@ -847,7 +794,7 @@ public class SvGeneTranscriptCollection
 
                 if (Files.exists(Paths.get(transSpliceFile)))
                 {
-                    if (!EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
+                    if (!loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, Lists.newArrayList()))
                         return false;
                 }
             }
@@ -856,9 +803,9 @@ public class SvGeneTranscriptCollection
         return true;
     }
 
-    public boolean loadEnsemblTranscriptData(final List<String> restrictedGeneIds)
+    public boolean loadTranscriptData(final List<String> restrictedGeneIds)
     {
-        if(!EnsemblDAO.loadTranscriptData(mDataPath, mTranscriptDataMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly))
+        if(!EnsemblDataLoader.loadTranscriptData(mDataPath, mTranscriptDataMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly))
             return false;
 
         List<Integer> uniqueTransIds = Lists.newArrayList();
@@ -872,10 +819,10 @@ public class SvGeneTranscriptCollection
             }
         }
 
-        if(mRequireProteinDomains && !EnsemblDAO.loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
+        if(mRequireProteinDomains && !loadTranscriptProteinData(mDataPath, mEnsemblProteinDataMap, uniqueTransIds))
             return false;
 
-        if(mRequireSplicePositions && !EnsemblDAO.loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds))
+        if(mRequireSplicePositions && !loadTranscriptSpliceAcceptorData(mDataPath, mTransSpliceAcceptorPosDataMap, uniqueTransIds))
             return false;
 
         return true;
@@ -989,7 +936,5 @@ public class SvGeneTranscriptCollection
 
         return domainPositions;
     }
-
-     */
 
 }

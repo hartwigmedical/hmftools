@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.linx.fusion.FusionWriter.convertBreakendsAndF
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FUSION_PAIRS_CSV;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_FIVE_CSV;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.PROMISCUOUS_THREE_CSV;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -32,6 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionAnnotations;
 import com.hartwig.hmftools.common.variant.structural.annotation.FusionChainInfo;
@@ -44,7 +44,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableFusion
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxFusion;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.neoepitope.NeoEpitopeFinder;
 import com.hartwig.hmftools.linx.neoepitope.RefGenomeSource;
 import com.hartwig.hmftools.linx.rna.RnaFusionMapper;
@@ -76,7 +75,7 @@ public class FusionDisruptionAnalyser
 
     private String mSampleId;
     private final String mOutputDir;
-    private final SvGeneTranscriptCollection mGeneTransCollection;
+    private final EnsemblDataCache mGeneDataCache;
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private LinxConfig mConfig;
 
@@ -106,15 +105,18 @@ public class FusionDisruptionAnalyser
     public static final String SKIP_UNPHASED_FUSIONS = "skip_unphased_fusions";
     public static final String NEO_EPITOPES = "neo_epitopes";
 
+    // the maximum distance upstream of a gene for a breakend to be consider a fusion candidate
+    public static int PRE_GENE_PROMOTOR_DISTANCE = 100000;
+
     private static final Logger LOGGER = LogManager.getLogger(FusionDisruptionAnalyser.class);
 
     public FusionDisruptionAnalyser(final CommandLine cmdLineArgs, final LinxConfig config,
-            SvGeneTranscriptCollection ensemblDataCache, VisualiserWriter writer)
+            EnsemblDataCache ensemblDataCache, VisualiserWriter writer)
     {
         mOutputDir = config.OutputDataPath;
 
         mConfig = config;
-        mGeneTransCollection = ensemblDataCache;
+        mGeneDataCache = ensemblDataCache;
         mFusionFinder = new FusionFinder(cmdLineArgs, ensemblDataCache);
         mFusionWriter = new FusionWriter(mOutputDir);
         mDisruptionFinder = new DisruptionFinder(cmdLineArgs, ensemblDataCache, mOutputDir);
@@ -206,7 +208,7 @@ public class FusionDisruptionAnalyser
 
         if (cmdLineArgs.hasOption(SAMPLE_RNA_FILE))
         {
-            mRnaFusionMapper = new RnaFusionMapper(mGeneTransCollection, mFusionFinder, mUniqueFusions, mInvalidFusions);
+            mRnaFusionMapper = new RnaFusionMapper(mGeneDataCache, mFusionFinder, mUniqueFusions, mInvalidFusions);
             mRnaFusionMapper.setOutputDir(mOutputDir);
             mRnaFusionMapper.loadSampleRnaData(cmdLineArgs.getOptionValue(SAMPLE_RNA_FILE));
         }
@@ -220,7 +222,7 @@ public class FusionDisruptionAnalyser
                 IndexedFastaSequenceFile refGenomeFile =
                         new IndexedFastaSequenceFile(new File(cmdLineArgs.getOptionValue(REF_GENOME_FILE)));
                 RefGenomeSource refGenome = new RefGenomeSource(refGenomeFile);
-                mNeoEpitopeFinder = new NeoEpitopeFinder(refGenome, mGeneTransCollection, mOutputDir);
+                mNeoEpitopeFinder = new NeoEpitopeFinder(refGenome, mGeneDataCache, mOutputDir);
             }
             catch(IOException e)
             {

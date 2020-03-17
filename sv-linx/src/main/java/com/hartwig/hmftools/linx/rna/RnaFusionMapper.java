@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.rna;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
@@ -9,11 +10,10 @@ import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusi
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_NONE;
+import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.FIVE_GENE;
 import static com.hartwig.hmftools.linx.fusion.KnownFusionData.THREE_GENE;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_GENES;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_INVALID;
 import static com.hartwig.hmftools.linx.rna.RnaFusionData.DNA_MATCH_TYPE_NONE;
@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -45,7 +46,6 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
 import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.fusion.KnownFusionData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -59,7 +59,7 @@ public class RnaFusionMapper
 
     private FusionFinder mFusionFinder;
     private FusionParameters mFusionParams;
-    private SvGeneTranscriptCollection mGeneTransCollection;
+    private EnsemblDataCache mGeneTransCache;
     private Map<String, List<RnaFusionData>> mSampleRnaData;
 
     private final List<GeneFusion> mDnaFusions;
@@ -69,13 +69,13 @@ public class RnaFusionMapper
 
     private static final Logger LOGGER = LogManager.getLogger(RnaFusionMapper.class);
 
-    public RnaFusionMapper(SvGeneTranscriptCollection geneTransCollection, FusionFinder fusionFinder,
+    public RnaFusionMapper(EnsemblDataCache geneTransCache, FusionFinder fusionFinder,
             final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
     {
         mSampleRnaData = Maps.newHashMap();
         mWriter = null;
         mFusionFinder = fusionFinder;
-        mGeneTransCollection = geneTransCollection;
+        mGeneTransCache = geneTransCache;
         mDnaFusions = dnaFusions;
         mDnaInvalidFusions = dnaInvalidFusions;
 
@@ -379,8 +379,8 @@ public class RnaFusionMapper
                     {
                         // for non-viable breakends, provide the exons skipped count
                         String geneId = closestTrans.gene().StableId;
-                        final int rnaExonData[] = mGeneTransCollection.getExonRankings(geneId, rnaPosition);
-                        final int svPosExonData[] = mGeneTransCollection.getExonRankings(geneId, closestBreakend.position());
+                        final int rnaExonData[] = mGeneTransCache.getExonRankings(geneId, rnaPosition);
+                        final int svPosExonData[] = mGeneTransCache.getExonRankings(geneId, closestBreakend.position());
 
                         exonsSkipped = abs(rnaExonData[EXON_RANK_MIN] - svPosExonData[EXON_RANK_MIN]);
                     }
@@ -444,7 +444,7 @@ public class RnaFusionMapper
 
         // if the RNA boundary is at or before the 2nd exon (which has the first splice acceptor), then the breakend can
         // be upstream as far the previous gene or 100K
-        final TranscriptData transData = mGeneTransCollection.getTranscriptData(trans.gene().StableId, trans.StableId);
+        final TranscriptData transData = mGeneTransCache.getTranscriptData(trans.gene().StableId, trans.StableId);
 
         if (transData == null || transData.exons().isEmpty())
             return false;
@@ -661,7 +661,7 @@ public class RnaFusionMapper
             long rnaPosition = isUpstream ? rnaFusion.PositionUp : rnaFusion.PositionDown;
             Map<String,int[]> transPhases = isUpstream ? transPhasesUp : transPhasesDown;
 
-            EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(geneName);
+            EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(geneName);
 
             if (geneData == null)
             {
@@ -695,7 +695,7 @@ public class RnaFusionMapper
                 }
             }
 
-            List<TranscriptData> transDataList = mGeneTransCollection.getTranscripts(geneData.GeneId);
+            List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
             if(transDataList != null)
             {

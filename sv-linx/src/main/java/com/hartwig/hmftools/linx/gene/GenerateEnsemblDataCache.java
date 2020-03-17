@@ -2,10 +2,8 @@ package com.hartwig.hmftools.linx.gene;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.linx.LinxConfig.DATA_OUTPUT_DIR;
-import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.gene.EnsemblDAO.ENSEMBL_TRANS_SPLICE_DATA_FILE;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
@@ -33,6 +32,9 @@ public class GenerateEnsemblDataCache
 {
     private static final Logger LOGGER = LogManager.getLogger(GenerateEnsemblDataCache.class);
 
+    private static final String LOG_DEBUG = "log_debug";
+    private static final String OUTPUT_DIR = "output_dir";
+
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = createBasicOptions();
@@ -48,26 +50,25 @@ public class GenerateEnsemblDataCache
 
     public static void writeEnsemblDataFiles(final CommandLine cmd)
     {
-        final String outputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
+        final String outputDir = cmd.getOptionValue(OUTPUT_DIR);
 
         LOGGER.info("writing Ensembl data files to {}", outputDir);
 
-        EnsemblDAO ensemblData = new EnsemblDAO(cmd);
+        EnsemblDAO ensemblDAO = new EnsemblDAO(cmd);
 
-        if(!ensemblData.isValid())
+        if(!ensemblDAO.isValid())
         {
             LOGGER.info("invalid Ensembl DAO");
             return;
         }
 
-        ensemblData.writeDataCacheFiles(outputDir);
+        ensemblDAO.writeDataCacheFiles(outputDir);
 
         LOGGER.debug("reloading transcript data to generate splice acceptor positions");
 
         // create the transcript splice acceptor position data
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
-        geneTransCache.setDataPath(outputDir);
-        geneTransCache.loadEnsemblData(false);
+        EnsemblDataCache geneTransCache = new EnsemblDataCache(outputDir, ensemblDAO.refGenomeVersion());
+        geneTransCache.load(false);
 
         createTranscriptPreGenePositionData(
                 geneTransCache.getChrGeneDataMap(), geneTransCache.getTranscriptDataMap(), PRE_GENE_PROMOTOR_DISTANCE, outputDir);
@@ -203,7 +204,7 @@ public class GenerateEnsemblDataCache
     private static Options createBasicOptions()
     {
         final Options options = new Options();
-        options.addOption(DATA_OUTPUT_DIR, true, "Directory to write Ensembl data files");
+        options.addOption(OUTPUT_DIR, true, "Directory to write Ensembl data files");
         options.addOption(LOG_DEBUG, false, "Log in verbose mode");
         EnsemblDAO.addCmdLineArgs(options);
 

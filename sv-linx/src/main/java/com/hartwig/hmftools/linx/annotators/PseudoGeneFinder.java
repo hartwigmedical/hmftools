@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -32,7 +32,7 @@ import org.apache.logging.log4j.Logger;
 public class PseudoGeneFinder
 {
     private final VisualiserWriter mVisWriter;
-    private SvGeneTranscriptCollection mGeneTransCache;
+    private EnsemblDataCache mGeneTransCache;
 
     private static final Logger LOGGER = LogManager.getLogger(PseudoGeneFinder.class);
 
@@ -42,7 +42,7 @@ public class PseudoGeneFinder
         mGeneTransCache = null;
     }
 
-    public void setGeneTransCache(final SvGeneTranscriptCollection geneTransCache)
+    public void setGeneTransCache(final EnsemblDataCache geneTransCache)
     {
         mGeneTransCache = geneTransCache;
     }

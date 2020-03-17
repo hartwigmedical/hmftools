@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.gene.GeneTestUtils;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.junit.Test;
 
@@ -40,7 +40,7 @@ public class FusionLikelihoodTest
     @Test
     public void testGeneRegions()
     {
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = GeneTestUtils.createGeneDataCache();
 
         // 2 genes, each with transcripts with different phasings
         String geneId = "G001";
@@ -605,124 +605,6 @@ public class FusionLikelihoodTest
         assertEquals(1, bucketOverlapCounts.size());
         overlap = bucketOverlapCounts.get(0);
         assertEquals(2525, overlap);
-    }
-
-    /*
-    @Test
-    public void testOverlappingProximateRegions()
-    {
-        List<Long> delDupLengths = Lists.newArrayList((long)10, (long)10000);
-
-        CohortExpFusions likelihoodCalc = new CohortExpFusions();
-        likelihoodCalc.initialise(delDupLengths, 0);
-
-        GeneRangeData lowerGene = new GeneRangeData(createEnsemblGeneData("G1", "G1", "1", 1, 100, 1000));
-        GeneRangeData upperGene = new GeneRangeData(createEnsemblGeneData("G2", "G2", "1", 1, 100, 1000));
-
-        GenePhaseRegion lowerRegion = new GenePhaseRegion("G1", 100, 300, PHASE_0);
-        GenePhaseRegion upperRegion = new GenePhaseRegion("G2", 200, 400, PHASE_0);
-        likelihoodCalc.testOverlappingProximateRegions(lowerGene, upperGene, lowerRegion, upperRegion);
-
-        assertEquals(1, lowerGene.getDelFusionBaseCounts().size());
-        assertEquals(1, upperGene.getDelFusionBaseCounts().size());
-
-        long overlap = (long)(200 * 200);
-
-        assertTrue(approxEqual(overlap,  lowerGene.getDelFusionBaseCounts().get(0), 0.1));
-
-    }
-    */
-
-    /*
-    @Test
-    public void testIntegratedCounts()
-    {
-        // test multiple chromosomes together for the various types of counts
-
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
-
-        int geneIndex = 1;
-        String geneId, geneName;
-
-        int transId = 1;
-
-        List<EnsemblGeneData> geneList = Lists.newArrayList();
-
-        // for 3 chromosomes add 3 genes on one strand, 3 on the other at varying distances
-        // for calculate simplicity make each intron distance 1000 bases
-
-        long[] geneExons1 = {1000, 2000, 3000, 4000, 5000};
-        long[] geneExons2 = {10000, 12000, 13000};
-        long[] geneExons3 = {200000, 202000, 203000};
-
-        for(int i = 1; i <= 3; ++i)
-        {
-            String chromosome = String.valueOf(i);
-
-            for(int j = 0; j <= 1; ++j)
-            {
-                byte strand = (j == 0) ? (byte)1 : (byte)-1;
-
-                geneId = geneName = String.format("ESNG%04d", geneIndex++);
-                TranscriptData transData = createTransExons(geneId, transId++, strand, geneExons1, new int[] {-1, 0, 1, 0, -1}, 100);
-                addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
-                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transData.TransStart, transData.TransEnd));
-
-                geneId = geneName = String.format("ESNG%04d", geneIndex++);
-                transData = createTransExons(geneId, transId++, strand, geneExons2, new int[] {-1, 0, -1}, 100);
-                addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
-                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transData.TransStart, transData.TransEnd));
-
-                // another transcript outside the DEL and DUP bucket length ranges
-                geneId = geneName = String.format("ESNG%04d", geneIndex++);
-                transData = createTransExons(geneId, transId++, strand, geneExons3, new int[] {-1, 0, -1}, 100);
-                addTransExonData(geneTransCache, geneId, Lists.newArrayList(transData));
-                geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transData.TransStart, transData.TransEnd));
-            }
-
-            addGeneData(geneTransCache, chromosome, geneList);
-            geneList = Lists.newArrayList();
-        }
-
-        // DELs can link sae gene and both closer genes, DUPs on the closer genes
-        List<Long> delDupLengths = Lists.newArrayList((long)50, (long)5000, (long)50000);
-        int shortInv = 20000;
-
-
-        CohortExpFusions likelihoodCalc = new CohortExpFusions();
-        likelihoodCalc.initialise(delDupLengths, shortInv);
-        likelihoodCalc.generateExpectedFusions(geneTransCache, Lists.newArrayList(), Lists.newArrayList());
-
-        // expected overlap counts
-        int intronLength = 1000;
-        long shortDelOverlap = intronLength * intronLength;
-        long medDelOverlap = 2 * intronLength * intronLength;
-
-        final Map<String, List<GeneRangeData>> chrGeneDataMap = likelihoodCalc.getChrGeneRangeDataMap();
-        assertEquals(3, chrGeneDataMap.size());
-
-        List<GeneRangeData> geneRangeList = chrGeneDataMap.get("1");
-        assertEquals(6, geneRangeList.size());
-
-        GeneRangeData geneData = geneRangeList.get(0);
-        assertEquals(4, geneData.getPhaseRegions().size());
-        assertEquals(4, geneData.getPhaseRegions().size());
-
-        assertEquals(2, geneData.getDelFusionBaseCounts().size());
-
-        assertTrue(approxEqual(shortDelOverlap, geneData.getDelFusionBaseCounts().get(0), 0.01));
-    }
-    */
-
-    private boolean approxEqual(long bases1, long bases2, double allowPerc)
-    {
-        if((bases1 == 0) != (bases2 == 0))
-            return false;
-
-        double diff1 = (abs(bases1 - bases2) / (double)bases1);
-        double diff2 = (abs(bases1 - bases2) / (double)bases2);
-
-        return diff1 <= allowPerc && diff2 <= allowPerc;
     }
 
 }

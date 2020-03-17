@@ -3,8 +3,6 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG37;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_HG38;
 import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.Q_ARM;
@@ -20,6 +18,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ChromosomeArm;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -33,25 +32,9 @@ public class SvUtilities {
 
     public static final RefGenome refGenomeLengths()
     {
-        return RG_VERSION == REF_GENOME_HG38 ? RefGenome.HG38 : RefGenome.HG19;
+        return RG_VERSION == RefGenomeVersion.HG38 ? RefGenome.HG38 : RefGenome.HG19;
     }
 
-    public static final String CHR_PREFIX = "chr";
-
-    public static String refGenomeChromosome(final String chromosome)
-    {
-        if(RG_VERSION == REF_GENOME_HG38 && !chromosome.contains(CHR_PREFIX))
-            return CHR_PREFIX + chromosome;
-        else if(RG_VERSION == REF_GENOME_HG37)
-            return stripChromosome(chromosome);
-        else
-            return chromosome;
-    }
-
-    public static String stripChromosome(final String chromosome)
-    {
-        return chromosome.startsWith(CHR_PREFIX) ? chromosome.substring(CHR_PREFIX.length()) : chromosome;
-    }
 
     public static long getChromosomeLength(final String chromosome)
     {

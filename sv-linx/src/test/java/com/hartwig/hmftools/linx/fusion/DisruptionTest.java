@@ -3,6 +3,7 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
@@ -18,9 +19,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
+import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.utils.LinxTester;
 
@@ -33,7 +35,7 @@ public class DisruptionTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
         String chromosome = "1";
@@ -77,7 +79,7 @@ public class DisruptionTest
         final DisruptionFinder disruptionFinder = tester.FusionAnalyser.getDisruptionFinder();
         disruptionFinder.addDisruptionGene(geneId);
 
-        geneTransCache.setSvGeneData(tester.AllVariants, true, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, true, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -98,7 +100,7 @@ public class DisruptionTest
         assertEquals(8, disruptionFinder.getDisruptions().size());
     }
 
-    private void addTestGeneData(SvGeneTranscriptCollection geneTransCache, final String chromosome, final String geneId)
+    private void addTestGeneData(EnsemblDataCache geneTransCache, final String chromosome, final String geneId)
     {
         byte strand = 1;
 
@@ -132,7 +134,7 @@ public class DisruptionTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
         String chromosome = "1";
@@ -162,7 +164,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -189,7 +191,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -217,7 +219,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -247,7 +249,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(true).size()));
@@ -270,7 +272,7 @@ public class DisruptionTest
     {
         LinxTester tester = new LinxTester();
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
         String chromosome = "1";
@@ -300,7 +302,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));
@@ -322,7 +324,7 @@ public class DisruptionTest
 
         assertEquals(1, tester.Analyser.getClusters().size());
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, true);
 
         tester.AllVariants.forEach(x -> assertEquals(1, x.getGenesList(false).size()));

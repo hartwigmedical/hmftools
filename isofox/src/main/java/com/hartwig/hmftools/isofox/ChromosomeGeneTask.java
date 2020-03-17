@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -30,13 +31,12 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 public class ChromosomeGeneTask implements Callable
 {
     private final String mChromosome;
     private final IsofoxConfig mConfig;
-    private final SvGeneTranscriptCollection mGeneTransCache;
+    private final EnsemblDataCache mGeneTransCache;
     private final ResultsWriter mResultsWriter;
 
     private final GeneBamReader mBamReader;
@@ -65,7 +65,7 @@ public class ChromosomeGeneTask implements Callable
 
     public ChromosomeGeneTask(
             final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
-            final SvGeneTranscriptCollection geneTransCache, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc,
+            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc,
             final ExpectedCountsCache expectedCountsCache)
     {
         mConfig = config;

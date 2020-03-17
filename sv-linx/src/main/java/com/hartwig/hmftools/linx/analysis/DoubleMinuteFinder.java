@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
@@ -39,7 +40,6 @@ import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.cn.TelomereCentromereCnData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.DoubleMinuteData;
 import com.hartwig.hmftools.linx.types.SvArmGroup;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -53,7 +53,7 @@ import org.apache.logging.log4j.Logger;
 public class DoubleMinuteFinder
 {
     private CnDataLoader mCnAnalyser;
-    private SvGeneTranscriptCollection mGeneTransCache;
+    private EnsemblDataCache mGeneTransCache;
     private final ChainFinder mChainFinder;
 
     private final List<Integer> mProcessedClusters;
@@ -81,7 +81,7 @@ public class DoubleMinuteFinder
         mFileWriter = null;
     }
 
-    public void setGeneTransCache(final SvGeneTranscriptCollection geneTransCache) { mGeneTransCache = geneTransCache; }
+    public void setGeneTransCache(final EnsemblDataCache geneDataCache) { mGeneTransCache = geneDataCache; }
     public void setCopyNumberAnalyser(CnDataLoader cnAnalyser) { mCnAnalyser = cnAnalyser; }
     public void setOutputDir(final String outputDir)
     {

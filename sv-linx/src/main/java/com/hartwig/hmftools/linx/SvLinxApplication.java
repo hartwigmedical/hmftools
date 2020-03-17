@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.linx.LinxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.linx.LinxConfig.LOG_VERBOSE;
 import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_FILE;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.LinxConfig.databaseAccess;
 import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.SvDataLoader.loadSvDataFromGermlineVcf;
@@ -23,16 +24,15 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
 import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
-import com.hartwig.hmftools.linx.annotators.IndelAnnotator;
 import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -125,22 +125,21 @@ public class SvLinxApplication
         boolean applyPromotorDistance = checkFusions;
         boolean purgeInvalidTranscripts = true;
 
-        SvGeneTranscriptCollection ensemblDataCache = null;
+        EnsemblDataCache ensemblDataCache = null;
 
         if(cmd.hasOption(GENE_TRANSCRIPTS_DIR))
         {
-            ensemblDataCache = new SvGeneTranscriptCollection();
-            ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+            ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RG_VERSION);
             ensemblDataCache.setRequiredData(true, checkFusions, checkFusions, !checkFusions);
 
-            if(!ensemblDataCache.loadEnsemblData(selectiveGeneLoading))
+            if(!ensemblDataCache.load(selectiveGeneLoading))
             {
                 LOGGER.error("Ensembl data cache load failed, exiting");
                 return;
             }
 
             sampleAnalyser.setGeneCollection(ensemblDataCache);
-            sampleAnalyser.getVisWriter().setGeneDataCollection(ensemblDataCache);
+            sampleAnalyser.getVisWriter().setGeneDataCache(ensemblDataCache);
 
             // always initialise since is used for transcript evaluation
             fusionAnalyser = new FusionDisruptionAnalyser(cmd, config, ensemblDataCache, sampleAnalyser.getVisWriter());
@@ -207,7 +206,7 @@ public class SvLinxApplication
 
             if(ensemblDataCache != null)
             {
-                ensemblDataCache.setSvGeneData(svDataList, applyPromotorDistance, selectiveGeneLoading);
+                sampleAnalyser.setSvGeneData(svDataList, ensemblDataCache, applyPromotorDistance, selectiveGeneLoading);
             }
 
             sampleAnalyser.analyse();

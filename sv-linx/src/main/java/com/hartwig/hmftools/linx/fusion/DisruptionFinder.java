@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
@@ -32,7 +33,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisru
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvLinkedPair;
@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Logger;
 
 public class DisruptionFinder
 {
-    private final SvGeneTranscriptCollection mGeneTransCollection;
+    private final EnsemblDataCache mGeneTransCache;
     private Set<String> mDisruptionGeneIds;
 
     private final List<Transcript> mDisruptions;
@@ -57,9 +57,9 @@ public class DisruptionFinder
 
     private static final Logger LOGGER = LogManager.getLogger(DisruptionFinder.class);
 
-    public DisruptionFinder(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache, final String outputDir)
+    public DisruptionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache, final String outputDir)
     {
-        mGeneTransCollection = geneTransCache;
+        mGeneTransCache = geneTransCache;
         mDisruptionGeneIds = null;
 
         initialiseTsgDriverGenes();
@@ -77,7 +77,7 @@ public class DisruptionFinder
 
         for (String gene : DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet())
         {
-            final EnsemblGeneData geneData = mGeneTransCollection.getGeneDataByName(gene);
+            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataByName(gene);
 
             if(geneData != null)
             {
@@ -444,7 +444,7 @@ public class DisruptionFinder
         long lowerPos = pair.getBreakend(true).position();
         long upperPos = pair.getBreakend(false).position();
 
-        List<EnsemblGeneData> geneDataList = mGeneTransCollection.getChrGeneDataMap().get(pair.chromosome());
+        List<EnsemblGeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(pair.chromosome());
 
         if(geneDataList == null)
             return false;
@@ -460,7 +460,7 @@ public class DisruptionFinder
             if(fusionDirection == 0 || geneData.Strand == fusionDirection)
             {
                 // check whether a splice acceptor is encountered within this window
-                List<TranscriptData> transDataList = mGeneTransCollection.getTranscripts(geneData.GeneId);
+                List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
                 if(transDataList == null)
                     continue;

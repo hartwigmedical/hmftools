@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.getChromosomalArm;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_ID;
 import static com.hartwig.hmftools.linx.annotators.ViralInsertAnnotator.VH_NAME;
+import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.types.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_FOLDBACK;
 import static com.hartwig.hmftools.linx.types.SvArmCluster.ARM_CL_COMPLEX_LINE;
@@ -40,8 +41,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantData;
+import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableDisruptionFile;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
 import com.hartwig.hmftools.common.variant.structural.linx.ImmutableLinxCluster;
@@ -180,10 +183,10 @@ public class SvSampleAnalyser {
         mAnalyser.setCnDataLoader(cnAnalyser);
     }
 
-    public void setGeneCollection(final SvGeneTranscriptCollection geneCollection)
+    public void setGeneCollection(final EnsemblDataCache geneDataCache)
     {
-        mAnalyser.setGeneCollection(geneCollection);
-        mPseudoGeneFinder.setGeneTransCache(geneCollection);
+        mAnalyser.setGeneCollection(geneDataCache);
+        mPseudoGeneFinder.setGeneTransCache(geneDataCache);
     }
 
     private void clearState()
@@ -266,6 +269,59 @@ public class SvSampleAnalyser {
                 SvCNData cnDataPrev = cnDataList.get(cnDataPost.getIndex() - 1);
 
                 var.setCopyNumberData(isStart, cnDataPrev, cnDataPost);
+            }
+        }
+    }
+
+    public static void setSvGeneData(
+            final List<SvVarData> svList, final EnsemblDataCache ensemblDataCache,
+            boolean applyPromotorDistance, boolean selectiveLoading)
+    {
+        int upstreamDistance = applyPromotorDistance ? PRE_GENE_PROMOTOR_DISTANCE : 0;
+
+        if (selectiveLoading)
+        {
+            // only load transcript info for the genes covered
+            List<String> restrictedGeneIds = Lists.newArrayList();
+
+            for (final SvVarData var : svList)
+            {
+                for (int be = SE_START; be <= SE_END; ++be)
+                {
+                    if (be == SE_END && var.isSglBreakend())
+                        continue;
+
+                    boolean isStart = isStart(be);
+
+                    ensemblDataCache.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
+                }
+            }
+
+            ensemblDataCache.loadTranscriptData(restrictedGeneIds);
+        }
+
+        // associate breakends with transcripts
+        for (final SvVarData var : svList)
+        {
+            for (int be = SE_START; be <= SE_END; ++be)
+            {
+                if (be == SE_END && var.isSglBreakend())
+                    continue;
+
+                boolean isStart = isStart(be);
+
+                List<GeneAnnotation> genesList = ensemblDataCache.findGeneAnnotationsBySv(
+                        var.id(), isStart, var.chromosome(isStart), var.position(isStart), var.orientation(isStart), upstreamDistance);
+
+                if (genesList.isEmpty())
+                    continue;
+
+                for (GeneAnnotation gene : genesList)
+                {
+                    gene.setSvData(var.getSvData());
+                }
+
+                var.setGenesList(genesList, isStart);
             }
         }
     }

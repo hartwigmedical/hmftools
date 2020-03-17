@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.linx.drivers.DriverEventType.HOM_DUP_DISRUPTI
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
@@ -15,8 +16,10 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.linx.analysis.SvSampleAnalyser;
 import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -33,7 +36,7 @@ public class HomDisruptionsTest
 
         tester.setNonClusterAllelePloidies(0.2, 0);
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
         // must be a known TSG driver
@@ -75,7 +78,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
@@ -105,7 +108,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());
@@ -128,7 +131,7 @@ public class HomDisruptionsTest
 
         tester.setNonClusterAllelePloidies(0.2, 0);
 
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
         tester.initialiseFusions(geneTransCache);
 
         // must be a known TSG driver
@@ -166,7 +169,7 @@ public class HomDisruptionsTest
         tester.preClusteringInit();
         tester.Analyser.clusterAndAnalyse();
 
-        geneTransCache.setSvGeneData(tester.AllVariants, false, false);
+        SvSampleAnalyser.setSvGeneData(tester.AllVariants, geneTransCache, false, false);
         tester.FusionAnalyser.annotateTranscripts(tester.AllVariants, false);
 
         driverAnnotator.annotateSVs(tester.SampleId, tester.Analyser.getState().getChrBreakendMap());

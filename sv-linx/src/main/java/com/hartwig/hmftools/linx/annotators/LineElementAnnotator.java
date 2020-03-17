@@ -2,12 +2,13 @@ package com.hartwig.hmftools.linx.annotators;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.linx.LinxConfig.RG_VERSION;
 import static com.hartwig.hmftools.linx.analysis.SvClassification.isFilteredResolvedType;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.refGenomeChromosome;
 import static com.hartwig.hmftools.linx.types.SvConstants.MIN_DEL_LENGTH;
 
 import java.io.BufferedReader;
@@ -81,7 +82,7 @@ public class LineElementAnnotator {
                     continue;
 
                 final GenomeRegion genomeRegion = GenomeRegions.create(
-                        refGenomeChromosome(items[LE_COL_CHR]),
+                        refGenomeChromosome(items[LE_COL_CHR], RG_VERSION),
                         Long.parseLong(items[LE_COL_POS_START]),
                         Long.parseLong(items[LE_COL_POS_END]));
 

@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.linx.gene;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_PHASE_MAX;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_PHASE_MIN;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MAX;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.EXON_RANK_MIN;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.extractTranscriptExonData;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.getProteinDomainPositions;
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.setAlternativeTranscriptPhasings;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.POST_CODING_PHASE;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_3P_UTR;
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.TRANS_CODING_TYPE_CODING;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MAX;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_PHASE_MIN;
+import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MAX;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.EXON_RANK_MIN;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.extractTranscriptExonData;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.getProteinDomainPositions;
-import static com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection.setAlternativeTranscriptPhasings;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -21,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
@@ -34,7 +36,7 @@ public class GeneCollectionTest
     @Test
     public void testExonDataExtraction()
     {
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         String geneName = "GENE1";
         String geneId = "ENSG0001";
@@ -112,7 +114,7 @@ public class GeneCollectionTest
     @Test
     public void testTranscriptBreakends()
     {
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         // first a gene on the forward strand
         String geneName = "GENE1";
@@ -272,7 +274,7 @@ public class GeneCollectionTest
     @Test
     public void testBreakendTranscriptCoding()
     {
-        SvGeneTranscriptCollection geneTransCache = new SvGeneTranscriptCollection();
+        EnsemblDataCache geneTransCache = createGeneDataCache();
 
         // first a gene on the forward strand
         String geneName = "GENE1";

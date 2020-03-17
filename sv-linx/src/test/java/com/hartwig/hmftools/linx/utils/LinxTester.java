@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_PROXIMITY_DIST
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.linx.LinxConfig;
 import com.hartwig.hmftools.linx.analysis.ClusterAnalyser;
 import com.hartwig.hmftools.linx.annotators.LineElementAnnotator;
@@ -15,7 +16,6 @@ import com.hartwig.hmftools.linx.cn.CnDataLoader;
 import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -66,9 +66,9 @@ public class LinxTester
         // Configurator.setRootLevel(Level.DEBUG);
     }
 
-    public void initialiseFusions(SvGeneTranscriptCollection geneTranscriptCollection)
+    public void initialiseFusions(EnsemblDataCache geneTransCache)
     {
-        FusionAnalyser = new FusionDisruptionAnalyser(null, Config, geneTranscriptCollection, null);
+        FusionAnalyser = new FusionDisruptionAnalyser(null, Config, geneTransCache, null);
         FusionAnalyser.setHasValidConfigData(true);
     }
 

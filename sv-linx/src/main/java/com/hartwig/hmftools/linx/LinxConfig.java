@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.linx;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG38;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.linx.SvDataLoader.VCF_FILE;
 import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_CHAINING_SV_LIMIT;
 import static com.hartwig.hmftools.linx.types.SvConstants.DEFAULT_PROXIMITY_DISTANCE;
@@ -16,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
@@ -70,15 +74,12 @@ public class LinxConfig
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String REQUIRED_ANNOTATIONS = "annotations";
 
-    public static final int REF_GENOME_HG38 = 38;
-    public static final int REF_GENOME_HG37 = 37;
-    public static int RG_VERSION = REF_GENOME_HG37;
+    public static RefGenomeVersion RG_VERSION = RefGenomeVersion.HG37;
 
     private static final String INDEL_ANNOTATIONS = "indel_annotation";
 
     // reference files
     public static final String REF_GENOME_FILE = "ref_genome";
-    public static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String KATAEGIS_FILE = "kataegis_file";
     private static final String INDEL_FILE = "indel_input_file";
@@ -123,9 +124,9 @@ public class LinxConfig
 
         if(cmd.hasOption(REF_GENOME_VERSION))
         {
-            int version = Integer.parseInt(cmd.getOptionValue(REF_GENOME_VERSION));
+            RefGenomeVersion version = RefGenomeVersion.valueOf(cmd.getOptionValue(REF_GENOME_VERSION));
 
-            if(version == REF_GENOME_HG37 || version == REF_GENOME_HG38)
+            if(version == HG37 || version == HG38)
             {
                 RG_VERSION = version;
             }
@@ -192,7 +193,7 @@ public class LinxConfig
     public LinxConfig(int proximityDistance)
     {
         ProximityDistance = proximityDistance;
-        RG_VERSION = REF_GENOME_HG37;
+        RG_VERSION = HG37;
         PurpleDataPath = "";
         OutputDataPath = "";
         SvDataPath = "";

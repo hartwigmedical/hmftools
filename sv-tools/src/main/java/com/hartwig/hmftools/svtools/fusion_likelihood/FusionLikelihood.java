@@ -49,8 +49,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -65,7 +66,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FusionLikelihood
 {
-    private SvGeneTranscriptCollection mGeneTransCache;
+    private EnsemblDataCache mGeneTransCache;
 
     private final CohortExpFusions mCohortCalculator;
 
@@ -112,7 +113,7 @@ public class FusionLikelihood
         options.addOption(GENE_PAIR_FILE, true, "List of gene-pairs to calculate likelihood for");
     }
 
-    public void initialise(final CommandLine cmdLineArgs, final SvGeneTranscriptCollection geneTransCache)
+    public void initialise(final CommandLine cmdLineArgs, final EnsemblDataCache geneTransCache)
     {
         mGeneTransCache = geneTransCache;
 
@@ -161,7 +162,7 @@ public class FusionLikelihood
 
         boolean limitedLoading = !mRestrictedGeneIds.isEmpty();
 
-        if(!mGeneTransCache.loadEnsemblData(limitedLoading))
+        if(!mGeneTransCache.load(limitedLoading))
         {
             LOGGER.error("Ensembl data cache load failed, exiting");
             return;
@@ -171,7 +172,7 @@ public class FusionLikelihood
 
         if(limitedLoading)
         {
-            mGeneTransCache.loadEnsemblTranscriptData(mRestrictedGeneIds);
+            mGeneTransCache.loadTranscriptData(mRestrictedGeneIds);
         }
 
         if(mRestrictedGeneIds.size() <= 2)
@@ -198,7 +199,7 @@ public class FusionLikelihood
     // public void setRestrictedGeneIds(final List<String> geneIds) { mRestrictedGeneIds.addAll(geneIds); }
 
     @VisibleForTesting
-    public void initialise(final SvGeneTranscriptCollection geneTransCache, final List<Long> delDepLengths)
+    public void initialise(final EnsemblDataCache geneTransCache, final List<Long> delDepLengths)
     {
         mGeneTransCache = geneTransCache;
         mProximateBucketLengths.addAll(delDepLengths);
@@ -661,8 +662,7 @@ public class FusionLikelihood
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 
-        SvGeneTranscriptCollection ensemblDataCache = new SvGeneTranscriptCollection();
-        ensemblDataCache.setDataPath(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR));
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd.getOptionValue(GENE_TRANSCRIPTS_DIR), RefGenomeVersion.HG37);
 
         fusionLikelihood.initialise(cmd, ensemblDataCache);
 

@@ -19,11 +19,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -36,7 +36,7 @@ public class FusionFinder
     private final KnownFusionData mKnownFusionData;
     private boolean mHasValidConfigData;
 
-    private SvGeneTranscriptCollection mGeneTranscriptCollection;
+    private EnsemblDataCache mGeneTransCache;
     private List<String> mProteinsRequiredKept;
     private List<String> mProteinsRequiredLost;
 
@@ -55,9 +55,9 @@ public class FusionFinder
 
     private static final Logger LOGGER = LogManager.getLogger(FusionFinder.class);
 
-    public FusionFinder(final CommandLine cmd, final SvGeneTranscriptCollection geneTransCache)
+    public FusionFinder(final CommandLine cmd, final EnsemblDataCache geneTransCache)
     {
-        mGeneTranscriptCollection = geneTransCache;
+        mGeneTransCache = geneTransCache;
 
         mKnownFusionData = new KnownFusionData();
         mHasValidConfigData = false;
@@ -462,7 +462,7 @@ public class FusionFinder
         if(downTrans.nonCoding())
             return;
 
-        final List<TranscriptProteinData> transProteinData = mGeneTranscriptCollection.getTranscriptProteinDataMap().get(downTrans.TransId);
+        final List<TranscriptProteinData> transProteinData = mGeneTransCache.getTranscriptProteinDataMap().get(downTrans.TransId);
 
         if(transProteinData == null || transProteinData.isEmpty())
             return;

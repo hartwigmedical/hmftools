@@ -19,19 +19,19 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.linx.gene.SvGeneTranscriptCollection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class NeoEpitopeFinder
 {
-    private final SvGeneTranscriptCollection mGeneTransCache;
+    private final EnsemblDataCache mGeneTransCache;
     private final RefGenomeInterface mRefGenome;
     private final String mOutputDir;
     private BufferedWriter mFileWriter;
@@ -42,7 +42,7 @@ public class NeoEpitopeFinder
 
     private static final Logger LOGGER = LogManager.getLogger(NeoEpitopeFinder.class);
 
-    public NeoEpitopeFinder(final RefGenomeInterface refGenome, final SvGeneTranscriptCollection geneTransCache, final String outputDir)
+    public NeoEpitopeFinder(final RefGenomeInterface refGenome, final EnsemblDataCache geneTransCache, final String outputDir)
     {
         mGeneTransCache = geneTransCache;
         mRefGenome = refGenome;

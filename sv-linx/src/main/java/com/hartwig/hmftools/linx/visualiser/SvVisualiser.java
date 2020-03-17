@@ -23,6 +23,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.linx.analysis.SvUtilities;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
@@ -146,7 +148,7 @@ public class SvVisualiser implements AutoCloseable
 
         final String chromosomesStr = chromosomes.size() >= 23
                 ? "All"
-                : chromosomes.stream().map(SvUtilities::stripChromosome).collect(Collectors.joining("-"));
+                : chromosomes.stream().map(RefGenomeVersion::stripChromosome).collect(Collectors.joining("-"));
 
         final Predicate<Link> linePredicate = x -> !x.isLineElement() || config.includeLineElements();
         final Predicate<Link> chromosomePredicate = x -> chromosomes.contains(x.startChromosome()) || chromosomes.contains(x.endChromosome());
