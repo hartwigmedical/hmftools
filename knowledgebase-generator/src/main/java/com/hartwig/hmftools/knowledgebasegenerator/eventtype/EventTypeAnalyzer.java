@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jooq.tools.StringUtils;
 
 public class EventTypeAnalyzer {
 
@@ -118,7 +119,42 @@ public class EventTypeAnalyzer {
                     gene = feature.geneSymbol();
                     description = feature.description();
 
-                    eventMap.put(gene, Lists.newArrayList(name));
+                    // assume there are no gene with "-" in their name
+                    int count = StringUtils.countMatches(name, "-");
+                    if (count >= 2 && !name.equals("LOSS-OF-FUNCTION") && !name.equals("Gain-of-Function")) {
+                        LOGGER.warn("Fix for gene '{}'", name);
+                    }
+
+                    if (name.contains("-") && name.contains(" ") && !name.contains("DEL")
+                            && !name.contains("Splicing alteration") && !name.contains("EXON")
+                    && !name.contains("c.") && !name.contains("MUT")) {
+                        String[] combinedEventConvertToSingleEvent = name.split(" ", 2);
+
+                        String fusion = combinedEventConvertToSingleEvent[0];
+                        String variant = combinedEventConvertToSingleEvent[1];
+                        String geneVariant = fusion.split("-")[1];
+
+                        //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
+                        if (combinedEventConvertToSingleEvent.length == 2) {
+                            combinedEvent = true;
+
+                            if (eventMap.size() == 0) {
+                                eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                if (eventMap.containsKey(geneVariant)) {
+                                    eventMap.put(geneVariant,
+                                            Lists.newArrayList("Fusion", variant));
+                                } else {
+                                    eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                    eventMap.put(geneVariant, Lists.newArrayList(variant));
+                                }
+                            }
+                        } else if (combinedEventConvertToSingleEvent.length >= 2) {
+                            LOGGER.warn("This event has more events, which is not interpretated!");
+                        } else {
+                            eventMap.put(gene, Lists.newArrayList(name));
+                        }
+                    }
+
 
                     if (name.isEmpty()){
                         LOGGER.warn(
