@@ -11,6 +11,10 @@ public enum GenomicEvents {
     RANGE,
     FUSION,
     SIGNATURE,
+    SIGNATURE_MSI,
+    SIGNATURE_HRD,
+    SIGNATURE_MTL,
+    SIGNATURE_MTB,
     UNKNOWN;
 
     private static final Logger LOGGER = LogManager.getLogger(GenomicEvents.class);
@@ -29,6 +33,14 @@ public enum GenomicEvents {
             return FUSION;
         } else if (typeEvent.equals("Signatures")) {
             return SIGNATURE;
+        } else if (typeEvent.equals("MSI")) {
+            return SIGNATURE_MSI;
+        } else if (typeEvent.equals("HRD")) {
+            return SIGNATURE_HRD;
+        } else if (typeEvent.equals("MTL")) {
+            return SIGNATURE_MTL;
+        } else if (typeEvent.equals("MTB")) {
+            return SIGNATURE_MTB;
         } else {
             LOGGER.warn("Unknown genomic event!");
             return UNKNOWN;

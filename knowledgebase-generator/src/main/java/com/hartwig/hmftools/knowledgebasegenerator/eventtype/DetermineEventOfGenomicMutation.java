@@ -133,14 +133,22 @@ public class DetermineEventOfGenomicMutation {
     @NotNull
     public static Signatures checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        String eventSignature = Strings.EMPTY;
         if (SIGNATURE.contains(event)) {
             if (event.equals("Microsatellite Instability-High")) {
-                eventSignature = "MSI";
+                GenomicEvents typeEvent = GenomicEvents.genomicEvents("MSI");
+                return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
+            } else if (event.equals("HRD")) {
+                GenomicEvents typeEvent = GenomicEvents.genomicEvents("HRD");
+                return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
+            } else if (event.equals("MTL")) {
+                GenomicEvents typeEvent = GenomicEvents.genomicEvents("MTL");
+                return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
+            } else if (event.equals("MTB")) {
+                GenomicEvents typeEvent = GenomicEvents.genomicEvents("MTB");
+                return SignaturesExtractor.determineSignatures(source, typeEvent.toString(), gene);
             }
-         //   GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signatures");
-            return SignaturesExtractor.determineSignatures(source, eventSignature, gene);
+
         }
-        return ImmutableSignatures.builder().eventType(eventSignature).source(Strings.EMPTY).sourceLink(Strings.EMPTY).build();
+        return ImmutableSignatures.builder().eventType(Strings.EMPTY).source(Strings.EMPTY).sourceLink(Strings.EMPTY).build();
     }
 }
