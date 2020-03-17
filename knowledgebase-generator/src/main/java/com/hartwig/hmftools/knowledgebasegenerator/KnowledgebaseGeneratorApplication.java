@@ -119,7 +119,7 @@ public class KnowledgebaseGeneratorApplication {
                         listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
                                 entryDB.getKey(),
                                 event));
-                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, entryDB.getKey(), event));
+                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, event));
 
                         // Generating actionable event
                         listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry,

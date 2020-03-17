@@ -11,8 +11,7 @@ public class SignaturesExtractor {
     private static final Logger LOGGER = LogManager.getLogger(SignaturesExtractor.class);
 
     @NotNull
-    public static Signatures determineSignatures(@NotNull Source source, @NotNull String typeEvent,
-            @NotNull String gene) {
+    public static Signatures determineSignatures(@NotNull Source source, @NotNull String typeEvent) {
         return ImmutableSignatures.builder().eventType(typeEvent).source(source.toString()).sourceLink(source.toString()).build();
 
     }

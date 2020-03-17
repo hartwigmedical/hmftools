@@ -76,7 +76,7 @@ public class ViccAmpsDelExtractorTestApplication {
                         listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
                                 entryDB.getKey(),
                                 event));
-                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, entryDB.getKey(), event));
+                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, event));
                     }
                 }
             }
