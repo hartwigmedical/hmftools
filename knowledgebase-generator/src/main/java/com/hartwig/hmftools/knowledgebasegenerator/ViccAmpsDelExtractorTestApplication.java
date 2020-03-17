@@ -30,7 +30,7 @@ public class ViccAmpsDelExtractorTestApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
-        String source = "oncokb";
+        String source = "civic";
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
         List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info("Read {} entries", viccEntries.size());
@@ -57,28 +57,26 @@ public class ViccAmpsDelExtractorTestApplication {
 
             for (EventType type : eventType) {
                 // Generating known events
-                //TODO: map every genomic event to one objecxt
+                //TODO: map every genomic event to one object
                 //TODO: if combined event use single event for determine known events
 
                 for (Map.Entry<String, List<String>> entryDB : type.eventMap().entrySet()) {
                     for (String event : entryDB.getValue()) {
+
                         listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
-                        listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, entryDB.getKey(), event));
-                        DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, entryDB.getKey(), event);
-                        DetermineEventOfGenomicMutation.checkRange(viccEntry, type, entryDB.getKey(), event);
-                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
+                        listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, entryDB.getKey(), event));
+                        DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
+                        DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
+                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, entryDB.getKey(), event));
                         listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
                         listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
-                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event));
+                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, entryDB.getKey(), event));
                     }
                 }
             }
@@ -113,7 +111,6 @@ public class ViccAmpsDelExtractorTestApplication {
                 listSignaturesFilter.add(signatures);
             }
         }
-        LOGGER.info(listSignaturesFilter);
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 

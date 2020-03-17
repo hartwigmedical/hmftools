@@ -107,30 +107,25 @@ public class KnowledgebaseGeneratorApplication {
                 for (Map.Entry<String, List<String>> entryDB : type.eventMap().entrySet()) {
                     for (String event : entryDB.getValue()) {
                         listKnownAmplification.add(DetermineEventOfGenomicMutation.checkKnownAmplification(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
-                        listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, type, entryDB.getKey(), event));
-                        DetermineEventOfGenomicMutation.checkVariants(viccEntry, type, entryDB.getKey(), event);
-                        DetermineEventOfGenomicMutation.checkRange(viccEntry, type, entryDB.getKey(), event);
-                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, type, entryDB.getKey(), event));
+                        listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, entryDB.getKey(), event));
+                        DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
+                        DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
+                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, entryDB.getKey(), event));
                         listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
                         listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
-                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event));
+                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, entryDB.getKey(), event));
 
                         // Generating actionable event
                         listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
                         listActionableAmplification.add(DetermineEventOfGenomicMutation.checkActionableAmplification(viccEntry,
-                                type,
                                 entryDB.getKey(),
                                 event));
                     }

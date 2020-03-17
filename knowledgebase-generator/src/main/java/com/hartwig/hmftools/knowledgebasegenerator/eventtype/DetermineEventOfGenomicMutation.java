@@ -11,6 +11,7 @@ import com.hartwig.hmftools.knowledgebasegenerator.cnv.CnvExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableKnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.fusion.FusionExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.ImmutableKnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.signatures.ImmutableSignatures;
@@ -32,7 +33,7 @@ public class DetermineEventOfGenomicMutation {
     private static final List<String> DELETION = Lists.newArrayList("Deletion", "DELETION", "deletion");
 
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
-    private static final Set<String> FUSIONS = Sets.newHashSet("Fusion", "Fusions", "FUSIONS", "Gene Fusion", "Transcript Fusion");
+    private static final Set<String> FUSIONS = Sets.newHashSet("FUSIONS", "FUSION", "fusion", "Fusion");
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE_MSI = Sets.newHashSet("Microsatellite Instability-High");
     private static final Set<String> SIGNATURE_HRD = Sets.newHashSet("");
@@ -40,7 +41,7 @@ public class DetermineEventOfGenomicMutation {
     private static final Set<String> SIGNATURE_MTB = Sets.newHashSet("");
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+    public static KnownAmplificationDeletion checkKnownAmplification(@NotNull ViccEntry viccEntry,
             @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         if (AMPLIFICATION.contains(event)) {
@@ -51,7 +52,7 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+    public static KnownAmplificationDeletion checkKnownDeletion(@NotNull ViccEntry viccEntry, @NotNull String gene,
             @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
@@ -63,7 +64,7 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+    public static ActionableAmplificationDeletion checkActionableAmplification(@NotNull ViccEntry viccEntry,
             @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
         if (AMPLIFICATION.contains(event)) {
@@ -85,7 +86,7 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry, @NotNull EventType type,
+    public static ActionableAmplificationDeletion checkActionableDeletion(@NotNull ViccEntry viccEntry,
             @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
@@ -106,7 +107,7 @@ public class DetermineEventOfGenomicMutation {
                 .build();
     }
 
-    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
+    public static void checkVariants(@NotNull ViccEntry viccEntry, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (VARIANTS.contains(event)) {
@@ -114,7 +115,7 @@ public class DetermineEventOfGenomicMutation {
         }
     }
 
-    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
+    public static void checkRange(@NotNull ViccEntry viccEntry, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (RANGE.contains(event)) {
@@ -123,18 +124,19 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
-    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene,
+    public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull String gene,
             @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
         if (FUSIONS.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
+            return FusionExtractor.determineKnownFusions(source, typeEvent.toString(), gene);
         }
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
     @NotNull
-    public static Signatures checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
+    public static Signatures checkSignatures(@NotNull ViccEntry viccEntry, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
             if (SIGNATURE_MSI.contains(event)){
                 GenomicEvents typeEvent = GenomicEvents.genomicEvents("MSI");
