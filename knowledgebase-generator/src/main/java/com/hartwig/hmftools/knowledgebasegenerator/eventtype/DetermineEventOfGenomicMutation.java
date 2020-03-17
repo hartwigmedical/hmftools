@@ -13,11 +13,15 @@ import com.hartwig.hmftools.knowledgebasegenerator.cnv.ImmutableKnownAmplificati
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.ImmutableKnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.ImmutableSignatures;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.SignaturesExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class DetermineEventOfGenomicMutation {
@@ -126,11 +130,17 @@ public class DetermineEventOfGenomicMutation {
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
     }
 
-    public static void checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
+    @NotNull
+    public static Signatures checkSignatures(@NotNull ViccEntry viccEntry, @NotNull EventType type, @NotNull String gene, @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-
+        String eventSignature = Strings.EMPTY;
         if (SIGNATURE.contains(event)) {
-            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signature");
+            if (event.equals("Microsatellite Instability-High")) {
+                eventSignature = "MSI";
+            }
+         //   GenomicEvents typeEvent = GenomicEvents.genomicEvents("Signatures");
+            return SignaturesExtractor.determineSignatures(source, eventSignature, gene);
         }
+        return ImmutableSignatures.builder().eventType(eventSignature).source(Strings.EMPTY).sourceLink(Strings.EMPTY).build();
     }
 }

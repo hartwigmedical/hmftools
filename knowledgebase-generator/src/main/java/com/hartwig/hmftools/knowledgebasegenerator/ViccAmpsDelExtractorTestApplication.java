@@ -17,6 +17,7 @@ import com.hartwig.hmftools.knowledgebasegenerator.eventtype.DetermineEventOfGen
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -29,7 +30,7 @@ public class ViccAmpsDelExtractorTestApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
-        String source = "cgi";
+        String source = "oncokb";
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
         List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info("Read {} entries", viccEntries.size());
@@ -42,7 +43,7 @@ public class ViccAmpsDelExtractorTestApplication {
         List<KnownFusions> listKnownFusionPairs = Lists.newArrayList();
         List<KnownFusions> listKnownFusionPromiscuousFive = Lists.newArrayList();
         List<KnownFusions> listKnownFusionPromiscuousThree = Lists.newArrayList();
-        List<String> listSignatures = Lists.newArrayList();
+        List<Signatures> listSignatures = Lists.newArrayList();
 
         //Lists of actionable genomic events
         List<ActionableAmplificationDeletion> listActionableDeletion = Lists.newArrayList();
@@ -77,7 +78,7 @@ public class ViccAmpsDelExtractorTestApplication {
                                 type,
                                 entryDB.getKey(),
                                 event));
-                        DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event);
+                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event));
                     }
                 }
             }
@@ -105,6 +106,14 @@ public class ViccAmpsDelExtractorTestApplication {
         }
         List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
         Collections.sort(sortedUniqueDels);
+
+        List<Signatures> listSignaturesFilter = Lists.newArrayList();
+        for (Signatures signatures : listSignatures) {
+            if (!signatures.eventType().isEmpty()) {
+                listSignaturesFilter.add(signatures);
+            }
+        }
+        LOGGER.info(listSignaturesFilter);
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -32,4 +33,7 @@ public abstract class AllGenomicEvents {
 
     @NotNull
     public abstract List<ActionableAmplificationDeletion> actionableDeletion();
+
+    @NotNull
+    public abstract List<Signatures> signatures();
 }

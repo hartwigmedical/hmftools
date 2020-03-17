@@ -23,6 +23,7 @@ import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventTypeAnalyzer;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.hotspot.HotspotExtractor;
 import com.hartwig.hmftools.knowledgebasegenerator.output.GeneratingOutputFiles;
+import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
@@ -87,7 +88,7 @@ public class KnowledgebaseGeneratorApplication {
         List<KnownFusions> listKnownFusionPairs = Lists.newArrayList();
         List<KnownFusions> listKnownFusionPromiscuousFive = Lists.newArrayList();
         List<KnownFusions> listKnownFusionPromiscuousThree = Lists.newArrayList();
-        List<String> listSignatures = Lists.newArrayList();
+        List<Signatures> listSignatures = Lists.newArrayList();
 
         //Lists of actionable genomic events
         List<ActionableAmplificationDeletion> listActionableDeletion = Lists.newArrayList();
@@ -121,7 +122,7 @@ public class KnowledgebaseGeneratorApplication {
                                 type,
                                 entryDB.getKey(),
                                 event));
-                        DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event);
+                        listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, type, entryDB.getKey(), event));
 
                         // Generating actionable event
                         listActionableDeletion.add(DetermineEventOfGenomicMutation.checkActionableDeletion(viccEntry,
@@ -161,6 +162,14 @@ public class KnowledgebaseGeneratorApplication {
         List<String> sortedUniqueDels = new ArrayList<String>(uniqueDels);
         Collections.sort(sortedUniqueDels);
 
+
+        List<Signatures> listSignaturesFilter = Lists.newArrayList();
+        for (Signatures signatures : listSignatures) {
+            if (signatures.eventType().isEmpty()) {
+                listSignaturesFilter.add(signatures);
+            }
+        }
+        LOGGER.info(listSignaturesFilter);
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 
         // If drug info/tumor location is known then variant is an actionable variant
@@ -189,6 +198,7 @@ public class KnowledgebaseGeneratorApplication {
                 .uniqueDeletions(sortedUniqueDels)
                 .actionableAmplification(listFilterActionableAmplifications)
                 .actionableDeletion(listFilterActionableDeletion)
+                .signatures(listSignaturesFilter)
                 .build();
 
         // Create all output files from knowledgebase with data
