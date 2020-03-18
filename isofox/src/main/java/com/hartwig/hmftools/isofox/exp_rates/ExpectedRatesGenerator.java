@@ -79,9 +79,9 @@ public class ExpectedRatesGenerator
     public Map<String,List<CategoryCountsData>> getTransComboData() { return mTransCategoryCounts; }
     public ExpectedRatesData getExpectedRatesData() { return mCurrentExpRatesData; }
 
-    public void generateExpectedRates(final GeneCollection genes)
+    public void generateExpectedRates(final GeneCollection geneCollection)
     {
-        mGeneCollection = genes;
+        mGeneCollection = geneCollection;
         mTransCategoryCounts.clear();
         mCurrentExpRatesData = new ExpectedRatesData(mGeneCollection.chrId());
 
@@ -185,9 +185,23 @@ public class ExpectedRatesGenerator
             }
         }
 
+        // add in any genes which ended up without counts, those with a single exon
+        for(GeneReadData gene : geneCollection.genes())
+        {
+            final String geneId = gene.GeneData.GeneId;
+            if(mTransCategoryCounts.containsKey(geneId))
+                continue;
+
+            CategoryCountsData genesWithoutCounts = new CategoryCountsData(Lists.newArrayList(), Lists.newArrayList(geneId));
+            genesWithoutCounts.initialiseLengthCounts(mConfig.FragmentLengthData.size());
+            List<CategoryCountsData> emptyList = Lists.newArrayList(genesWithoutCounts);
+
+            mTransCategoryCounts.put(geneId, emptyList);
+        }
+
         if(mConfig.WriteExpectedCounts)
         {
-            writeExpectedCounts(mExpRateWriter, genes.chrId(), mTransCategoryCounts);
+            writeExpectedCounts(mExpRateWriter, geneCollection.chrId(), mTransCategoryCounts);
         }
         else
         {
