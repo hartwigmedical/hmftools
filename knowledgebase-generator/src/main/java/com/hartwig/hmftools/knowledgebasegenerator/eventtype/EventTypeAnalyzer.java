@@ -124,7 +124,8 @@ public class EventTypeAnalyzer {
                         LOGGER.warn("Fix for gene '{}'", name);
                     }
                     if (!name.contains("DEL") && !name.contains("Splicing alteration") && !name.contains("EXON") && !name.contains("c.")
-                            && !name.contains("MUT") && !name.equals("LOSS-OF-FUNCTION") && !name.equals("Gain-of-Function")) {
+                            && !name.contains("MUT") && !name.equals("LOSS-OF-FUNCTION") && !name.equals("Gain-of-Function")
+                            && !name.contains("C.")) {
 
                         if (name.contains("-") && name.contains(" ")) {
                             String[] combinedEventConvertToSingleEvent = name.split(" ", 2);
@@ -152,8 +153,30 @@ public class EventTypeAnalyzer {
                         } else if (name.contains("-")) {
                             eventMap.put(name, Lists.newArrayList("Fusion"));
                         } else {
-                            eventMap.put(gene, Lists.newArrayList(name));
+                            if (name.contains("+")) {
+                                LOGGER.info("combined: " + name);
+
+                                combinedEvent = true;
+                                String[] combinedEventConvertToSingleEvent = name.replace("+", " ").split(" ", 2);
+
+                                String event1 = combinedEventConvertToSingleEvent[0];
+                                String event2 = combinedEventConvertToSingleEvent[1];
+
+                                if (eventMap.size() == 0) {
+                                    eventMap.put(gene, Lists.newArrayList(event1));
+                                    if (eventMap.containsKey(gene)) {
+                                        eventMap.put(gene, Lists.newArrayList(event1, event2));
+                                    }
+                                } else {
+                                    eventMap.put(gene, Lists.newArrayList(name));
+                                }
+
+                            } else {
+                                eventMap.put(gene, Lists.newArrayList(name));
+                            }
                         }
+                    } else {
+                        eventMap.put(gene, Lists.newArrayList(name));
                     }
 
                     if (name.isEmpty()) {
