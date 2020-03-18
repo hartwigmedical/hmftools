@@ -66,8 +66,6 @@ public class ExpectedCountsCache
         return null;
     }
 
-    public final Map<String,Map<String,List<CategoryCountsData>>> geneSetCategoryDataMap() { return mGeneSetCategoryDataMap; }
-
     // GeneCollectionId,TransId,Category,Counts for each fragment length
     public static final int ER_COL_GENE_SET_ID = 0;
     public static final int ER_COL_TRANS_GENE_NAME = 1;
@@ -98,13 +96,13 @@ public class ExpectedCountsCache
             int expectedColCount = ER_COL_CAT + 1 + fragLengths;
 
             String currentGeneSetId = "";
-            String currentTransGeneId = "";
+            String currentTransGeneName = "";
             Map<String, List<CategoryCountsData>> transGeneCategoryData = null;
             List<CategoryCountsData> categoryDataList = null;
 
             while ((line = fileReader.readLine()) != null)
             {
-                String[] items = line.split(",");
+                String[] items = line.split(",", -1);
 
                 if (items.length != expectedColCount)
                 {
@@ -122,11 +120,12 @@ public class ExpectedCountsCache
                     currentGeneSetId = geneSetId;
                     transGeneCategoryData = Maps.newHashMap();
                     mGeneSetCategoryDataMap.put(geneSetId, transGeneCategoryData);
+                    currentTransGeneName = "";
                 }
 
-                if(!transGeneName.equals(currentTransGeneId))
+                if(!transGeneName.equals(currentTransGeneName))
                 {
-                    currentTransGeneId = transGeneName;
+                    currentTransGeneName = transGeneName;
                     categoryDataList = Lists.newArrayList();
                     transGeneCategoryData.put(transGeneName, categoryDataList);
                 }

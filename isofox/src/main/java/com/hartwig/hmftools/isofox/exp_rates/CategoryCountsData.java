@@ -13,8 +13,8 @@ public class CategoryCountsData
 {
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
-    private int mFragmentCount;
-    private int[] mFragmentCountsByLength;
+    private long mFragmentCount;
+    private long[] mFragmentCountsByLength;
 
     private final String mCombinedKey;
 
@@ -35,7 +35,7 @@ public class CategoryCountsData
         mTranscripts = Lists.newArrayList();
         mUnsplicedGenes = Lists.newArrayList();
         mFragmentCount = 0;
-        mFragmentCountsByLength = new int[fragLengths];
+        mFragmentCountsByLength = new long[fragLengths];
 
         parseCombinedKey();
     }
@@ -43,7 +43,7 @@ public class CategoryCountsData
     public void initialiseLengthCounts(int fragLengths)
     {
         if(fragLengths > 0)
-            mFragmentCountsByLength = new int[fragLengths];
+            mFragmentCountsByLength = new long[fragLengths];
     }
 
     public final List<Integer> transcriptIds() { return mTranscripts; }
@@ -80,8 +80,8 @@ public class CategoryCountsData
         return true;
     }
 
-    public final int fragmentCount() { return mFragmentCount; }
-    public final int[] fragmentCountsByLength() { return mFragmentCountsByLength; }
+    public final long fragmentCount() { return mFragmentCount; }
+    public final long[] fragmentCountsByLength() { return mFragmentCountsByLength; }
 
     public void addCounts(int count)
     {
@@ -96,9 +96,12 @@ public class CategoryCountsData
 
     public void applyFrequencies(final List<int[]> lengthFrequencies)
     {
+        mFragmentCount = 0;
+
         for(int i = 0; i < mFragmentCountsByLength.length; ++i)
         {
             mFragmentCountsByLength[i] *= lengthFrequencies.get(i)[FL_FREQUENCY];
+            mFragmentCount += mFragmentCountsByLength[i];
         }
     }
 

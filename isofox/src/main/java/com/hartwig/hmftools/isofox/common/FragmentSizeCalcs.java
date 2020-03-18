@@ -280,7 +280,6 @@ public class FragmentSizeCalcs
         int currentRangeMin = 0;
         int currentRangeMax = 0;
 
-
         for(int i = 0; i < lengthFrequencies.size(); ++i)
         {
             int[] lengthFrequency = lengthFrequencies.get(i);

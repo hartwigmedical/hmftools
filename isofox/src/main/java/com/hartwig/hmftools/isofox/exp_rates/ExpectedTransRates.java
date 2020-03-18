@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.formTranscriptDefinitions;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.writeExpectedRates;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
 import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
@@ -63,12 +64,14 @@ public class ExpectedTransRates
         mCurrentExpRatesData = new ExpectedRatesData(genes.chrId());
 
         // apply observed fragment length distribution to the generated counts
-        if(mConfig.UseCalculatedFragmentLengths)
-        {
-            applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
-        }
+        applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
 
         formTranscriptDefinitions(geneSetCountsData, mCurrentExpRatesData);
+
+        if(mConfig.WriteExpectedRates)
+        {
+            writeExpectedRates(mResultsWriter.getExpRatesWriter(), mCurrentExpRatesData);
+        }
     }
 
     private void applyFragmentLengthDistributionToExpectedCounts(final Map<String,List<CategoryCountsData>> geneSetCountsData)
@@ -165,7 +168,7 @@ public class ExpectedTransRates
         for(CategoryCountsData tcData : transComboData)
         {
             final String categoryKey = tcData.combinedKey();
-            int fragmentCount = tcData.fragmentCount();
+            long fragmentCount = tcData.fragmentCount();
 
             if(fragmentCount > 0)
             {

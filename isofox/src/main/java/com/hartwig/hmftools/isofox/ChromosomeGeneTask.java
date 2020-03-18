@@ -85,7 +85,7 @@ public class ChromosomeGeneTask implements Callable
         mBamReader = new GeneBamReader(mConfig, resultsWriter);
         mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, mExpectedCountsCache, resultsWriter) : null;
 
-        mExpRatesGenerator = mConfig.writeExpectedRateData() || (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null)
+        mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.WriteExpectedCounts
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mGeneResults = Lists.newArrayList();

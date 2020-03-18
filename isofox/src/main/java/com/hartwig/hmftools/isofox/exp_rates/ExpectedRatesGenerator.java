@@ -50,8 +50,6 @@ public class ExpectedRatesGenerator
 
     private final BufferedWriter mExpRateWriter;
 
-    private static final String EXP_RATES_FILE_ID = "exp_rates.csv";
-
     public static final int FL_LENGTH = 0;
     public static final int FL_FREQUENCY = 1;
 
@@ -626,7 +624,7 @@ public class ExpectedRatesGenerator
             for(CategoryCountsData tcData : transCounts)
             {
                 final String transKey = tcData.combinedKey();
-                int fragmentCount = tcData.fragmentCount();
+                long fragmentCount = tcData.fragmentCount();
 
                 if(fragmentCount > 0)
                 {
@@ -655,7 +653,7 @@ public class ExpectedRatesGenerator
             for(CategoryCountsData tcData : entry.getValue())
             {
                 final String transKey = tcData.combinedKey();
-                int fragmentCount = tcData.fragmentCount();
+                long fragmentCount = tcData.fragmentCount();
 
                 if(fragmentCount > 0 || tcData.transcriptIds().isEmpty()) // force inclusion of unspliced gene categories
                 {
@@ -678,17 +676,13 @@ public class ExpectedRatesGenerator
         {
             String outputFileName;
 
-            if(config.ExpCountsFile != null)
+            if(config.WriteExpectedCounts)
             {
-                outputFileName = config.ExpCountsFile;
-            }
-            else if(config.WriteExpectedCounts)
-            {
-                outputFileName = String.format("%sread_%d_%s", config.OutputDir, config.ReadLength, EXP_RATES_FILE_ID);
+                outputFileName = String.format("%sread_%d_%s", config.OutputDir, config.ReadLength, "exp_counts.csv");
             }
             else
             {
-                outputFileName = config.formOutputFile(EXP_RATES_FILE_ID);
+                outputFileName = config.formOutputFile("exp_rates.csv");
             }
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
@@ -737,7 +731,7 @@ public class ExpectedRatesGenerator
 
                 for(CategoryCountsData tcData : countsList)
                 {
-                    final int[] lengthCounts = tcData.fragmentCountsByLength();
+                    final long[] lengthCounts = tcData.fragmentCountsByLength();
 
                     writer.write(String.format("%s,%s,%s,%d", collectionId, transId, tcData.combinedKey(), lengthCounts[0]));
 
@@ -757,7 +751,7 @@ public class ExpectedRatesGenerator
 
     }
 
-    private synchronized static void writeExpectedRates(
+    public synchronized static void writeExpectedRates(
             final BufferedWriter writer, final ExpectedRatesData expExpData)
     {
         if(writer == null)

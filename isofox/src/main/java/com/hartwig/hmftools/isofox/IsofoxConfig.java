@@ -207,7 +207,7 @@ public class IsofoxConfig
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
 
         WriteExpectedCounts = cmd.hasOption(WRITE_EXPECTED_COUNTS);
-        WriteExpectedRates = !WriteExpectedCounts && cmd.hasOption(WRITE_EXPECTED_RATES);
+        WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
         UseCalculatedFragmentLengths = cmd.hasOption(ER_CALC_FRAG_LENGTHS);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         FragmentLengthData = Lists.newArrayList();
