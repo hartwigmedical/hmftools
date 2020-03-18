@@ -2,7 +2,6 @@ package com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase;
 
 import static org.junit.Assert.*;
 
-
 import org.junit.Test;
 
 public class SourceTest {
@@ -20,5 +19,4 @@ public class SourceTest {
         assertEquals(Source.MOLECULARMATCH, Source.sourceFromKnowledgebase("molecularmatch"));
         assertEquals(Source.MOLECULARMATCH_TRIALS, Source.sourceFromKnowledgebase("molecularmatch_trials"));
     }
-
 }

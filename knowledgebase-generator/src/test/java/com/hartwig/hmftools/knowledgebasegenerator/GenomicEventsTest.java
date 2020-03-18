@@ -18,6 +18,5 @@ public class GenomicEventsTest {
         assertEquals(GenomicEvents.SIGNATURE_HRD, GenomicEvents.genomicEvents("HRD"));
         assertEquals(GenomicEvents.SIGNATURE_MTL, GenomicEvents.genomicEvents("MTL"));
         assertEquals(GenomicEvents.SIGNATURE_MTB, GenomicEvents.genomicEvents("MTB"));
-
     }
 }
