@@ -51,12 +51,12 @@ public class EventTypeAnalyzer {
 
                     eventMap.put(gene, Lists.newArrayList(name));
 
-                    if (name.isEmpty()){
-                        LOGGER.warn(
-                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
+                    if (name.isEmpty()) {
+                        LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
                                 feature.name(),
                                 gene,
-                                biomarkerType, source);
+                                biomarkerType,
+                                source);
                     }
 
                     break;
@@ -80,8 +80,7 @@ public class EventTypeAnalyzer {
                             if (eventMap.size() == 0) {
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
                                 if (eventMap.containsKey(geneCombined)) {
-                                    eventMap.put(geneCombined,
-                                            Lists.newArrayList(eventInfo, eventInfoCombined));
+                                    eventMap.put(geneCombined, Lists.newArrayList(eventInfo, eventInfoCombined));
                                 } else {
                                     eventMap.put(gene, Lists.newArrayList(eventInfo));
                                     eventMap.put(geneCombined, Lists.newArrayList(eventInfoCombined));
@@ -104,12 +103,12 @@ public class EventTypeAnalyzer {
                         }
                         eventMap.put(gene, Lists.newArrayList(eventInfo));
                     }
-                    if (eventInfo.isEmpty()){
-                        LOGGER.warn(
-                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
+                    if (eventInfo.isEmpty()) {
+                        LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
-                                biomarkerType, source);
+                                biomarkerType,
+                                source);
                     }
 
                     break;
@@ -124,44 +123,45 @@ public class EventTypeAnalyzer {
                     if (count >= 2 && !name.equals("LOSS-OF-FUNCTION") && !name.equals("Gain-of-Function")) {
                         LOGGER.warn("Fix for gene '{}'", name);
                     }
+                    if (!name.contains("DEL") && !name.contains("Splicing alteration") && !name.contains("EXON") && !name.contains("c.")
+                            && !name.contains("MUT") && !name.equals("LOSS-OF-FUNCTION") && !name.equals("Gain-of-Function")) {
 
-                    if (name.contains("-") && name.contains(" ") && !name.contains("DEL")
-                            && !name.contains("Splicing alteration") && !name.contains("EXON")
-                    && !name.contains("c.") && !name.contains("MUT")) {
-                        String[] combinedEventConvertToSingleEvent = name.split(" ", 2);
+                        if (name.contains("-") && name.contains(" ")) {
+                            String[] combinedEventConvertToSingleEvent = name.split(" ", 2);
 
-                        String fusion = combinedEventConvertToSingleEvent[0];
-                        String variant = combinedEventConvertToSingleEvent[1];
-                        String geneVariant = fusion.split("-")[1];
+                            String fusion = combinedEventConvertToSingleEvent[0];
+                            String variant = combinedEventConvertToSingleEvent[1];
+                            String geneVariant = fusion.split("-")[1];
 
-                        //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
-                        if (combinedEventConvertToSingleEvent.length == 2) {
-                            combinedEvent = true;
+                            //I assume, a combined event for actionability has 2 events. If more events, this will be not interpretated
+                            if (combinedEventConvertToSingleEvent.length == 2) {
+                                combinedEvent = true;
 
-                            if (eventMap.size() == 0) {
-                                eventMap.put(fusion, Lists.newArrayList("Fusion"));
-                                if (eventMap.containsKey(geneVariant)) {
-                                    eventMap.put(geneVariant,
-                                            Lists.newArrayList("Fusion", variant));
-                                } else {
+                                if (eventMap.size() == 0) {
                                     eventMap.put(fusion, Lists.newArrayList("Fusion"));
-                                    eventMap.put(geneVariant, Lists.newArrayList(variant));
+                                    if (eventMap.containsKey(geneVariant)) {
+                                        eventMap.put(geneVariant, Lists.newArrayList("Fusion", variant));
+                                    } else {
+                                        eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                        eventMap.put(geneVariant, Lists.newArrayList(variant));
+                                    }
                                 }
+                            } else if (combinedEventConvertToSingleEvent.length >= 2) {
+                                LOGGER.warn("This event has more events, which is not interpretated!");
                             }
-                        } else if (combinedEventConvertToSingleEvent.length >= 2) {
-                            LOGGER.warn("This event has more events, which is not interpretated!");
+                        } else if (name.contains("-")) {
+                            eventMap.put(name, Lists.newArrayList("Fusion"));
+                        } else {
+                            eventMap.put(gene, Lists.newArrayList(name));
                         }
-                    } else {
-                        eventMap.put(gene, Lists.newArrayList(name));
                     }
 
-
-                    if (name.isEmpty()){
-                        LOGGER.warn(
-                                "Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
+                    if (name.isEmpty()) {
+                        LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
-                                biomarkerType, source);
+                                biomarkerType,
+                                source);
                     }
 
                     break;
@@ -190,7 +190,8 @@ public class EventTypeAnalyzer {
                     .name(name)
                     .description(description)
                     .source(source)
-                    .eventMap(eventMap).build());
+                    .eventMap(eventMap)
+                    .build());
         }
         return eventType;
     }
