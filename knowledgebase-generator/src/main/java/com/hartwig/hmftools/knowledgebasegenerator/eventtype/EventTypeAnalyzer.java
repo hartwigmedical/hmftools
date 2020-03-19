@@ -113,13 +113,13 @@ public class EventTypeAnalyzer {
                                 LOGGER.info(eventMap);
                             } else {
                                 eventInfo = name.split(" ", 2)[1];
-                                if (eventInfo.contains("fusion") || eventInfo.contains("Fusion") ) {
+                                if (eventInfo.contains("fusion") || eventInfo.contains("Fusion")) {
                                     if (gene.contains("-")) {
                                         eventInfo = FUSION_PAIR;
                                     } else {
                                         eventInfo = FUSION_PROMISCUOUS;
                                     }
-                              }
+                                }
 
                                 if (eventInfo.equals(".")) {
                                     eventInfo = ONCOGENIC_MUTATION;
@@ -178,7 +178,9 @@ public class EventTypeAnalyzer {
                             }
                         } else if (name.contains("-")) {
                             eventMap.put(name, Lists.newArrayList(FUSION_PAIR));
-                        } else if (name.equals("FUSION") || name.contains("FUSIONS") || !name.equals("TRUNCATING FUSION")){
+                        } else if (name.equals("TRUNCATING FUSION")) {
+                            eventMap.put(gene, Lists.newArrayList(name));
+                        } else if (name.contains("FUSION") || name.contains("FUSIONS")) {
                             eventMap.put(gene, Lists.newArrayList(FUSION_PROMISCUOUS));
                         } else {
                             if (name.contains("+")) {
