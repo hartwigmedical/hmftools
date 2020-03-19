@@ -29,17 +29,17 @@ public abstract class SummaryStats
     public abstract double medianGCRatio();
 
     public static SummaryStats createSummaryStats(
-            int totalFragmentCount, int enrichedGeneFragCount, double medianGCRatio, final FragmentSizeCalcs fragSizeCalcs)
+            int totalFragmentCount, int enrichedGeneFragCount, double medianGCRatio, final List<int[]> fragmentLengths, int maxReadLength)
     {
         final VersionInfo version = new VersionInfo("isofox.version");
         double enrichedGenePercent = totalFragmentCount > 0 ? enrichedGeneFragCount / (double)totalFragmentCount : 0;
 
-        final List<Double> fragLengths = fragSizeCalcs.calcPercentileData(Lists.newArrayList(0.05, 0.5, 0.95));
+        final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
         return ImmutableSummaryStats.builder()
                 .version(version.version())
                 .totalFragmentCount(totalFragmentCount)
-                .readLength(fragSizeCalcs.getMaxReadLength())
+                .readLength(maxReadLength)
                 .enrichedGenePercent(enrichedGenePercent)
                 .medianGCRatio(medianGCRatio)
                 .fragmentLength5thPercent(fragLengths.get(0))

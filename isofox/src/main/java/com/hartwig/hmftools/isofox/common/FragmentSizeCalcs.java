@@ -48,7 +48,6 @@ public class FragmentSizeCalcs
     private int mMaxReadLength;
 
     private BufferedWriter mFragLengthWriter;
-    private BufferedWriter mFragReadWriter;
 
     private EnsemblGeneData mCurrentGeneData;
     private List<TranscriptData> mCurrentTransDataList;
@@ -71,7 +70,6 @@ public class FragmentSizeCalcs
         mMaxReadLength = 0;
 
         mFragLengthWriter = writer;
-        mFragReadWriter = null;
 
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
@@ -80,8 +78,6 @@ public class FragmentSizeCalcs
 
     public void close()
     {
-        closeBufferedWriter(mFragReadWriter);
-
         if(ISF_LOGGER.isDebugEnabled())
             mPerfCounter.logStats();
     }
@@ -97,19 +93,12 @@ public class FragmentSizeCalcs
 
     private static int FRAG_LENGTH_CAP = 3000; // to prevent map blowing out in size
 
-    public void calcSampleFragmentSize(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    public void calcSampleFragmentSize(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
     {
         if (geneDataList == null || geneDataList.isEmpty())
             return;
 
-        // measure fragment lengths for non-split reads in purely intronic regions
-        if(mGeneTransCache == null)
-        {
-            ISF_LOGGER.error("fragment length calculator missing gene cache");
-            return;
-        }
-
-        if (mConfig.FragmentLengthMinCount > 0 && mProcessedFragments >= mConfig.FragmentLengthMinCount)
+        if (requiredFragCount == 0)
             return;
 
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
@@ -166,7 +155,7 @@ public class FragmentSizeCalcs
                 mFragmentLengthsByGene.clear();
             }
 
-            if (mConfig.FragmentLengthMinCount > 0 && mProcessedFragments >= mConfig.FragmentLengthMinCount)
+            if (mProcessedFragments >= requiredFragCount)
             {
                 ISF_LOGGER.debug("max fragment length samples reached: {}", mProcessedFragments);
                 break;
@@ -205,9 +194,6 @@ public class FragmentSizeCalcs
 
         if(mConfig.FragmentLengthsByGene)
             addFragmentLength(record, mFragmentLengthsByGene);
-
-        if(mConfig.WriteFragmentReads)
-            writeReadData(mCurrentGeneData, record);
     }
 
     private boolean isCandidateRecord(final SAMRecord record)
@@ -263,19 +249,19 @@ public class FragmentSizeCalcs
         ++mProcessedFragments;
     }
 
-    public void setConfigFragmentLengthData()
+    public static void setConfigFragmentLengthData(final IsofoxConfig config, int maxReadLength, final List<int[]> fragmentLengths)
     {
-        if(mMaxReadLength > 0)
+        if(maxReadLength > 0)
         {
-            mConfig.ReadLength = mMaxReadLength;
-            ISF_LOGGER.info("max read length({}) set", mMaxReadLength);
+            config.ReadLength = maxReadLength;
+            ISF_LOGGER.info("max read length({}) set", maxReadLength);
         }
         else
         {
             ISF_LOGGER.warn("max read length not determined from fragment length calcs");
         }
 
-        final List<int[]> lengthFrequencies = mConfig.FragmentLengthData;
+        final List<int[]> lengthFrequencies = config.FragmentLengthData;
 
         int currentRangeMin = 0;
         int currentRangeMax = 0;
@@ -288,7 +274,7 @@ public class FragmentSizeCalcs
 
             if(i == lengthFrequencies.size() - 1)
             {
-                currentRangeMax = mConfig.MaxFragmentLength - 1;
+                currentRangeMax = config.MaxFragmentLength - 1;
             }
             else
             {
@@ -298,7 +284,7 @@ public class FragmentSizeCalcs
 
             int lengthCount = 0;
 
-            for (final int[] fragLengthCount : mFragmentLengths)
+            for (final int[] fragLengthCount : fragmentLengths)
             {
                 if(fragLengthCount[FL_LENGTH] >= currentRangeMin && fragLengthCount[FL_LENGTH] <= currentRangeMax)
                 {
@@ -311,21 +297,19 @@ public class FragmentSizeCalcs
         }
     }
 
-    public List<Double> calcPercentileData(final List<Double> percentiles)
+    public static List<Double> calcPercentileData(final List<int[]> fragmentLengths, final List<Double> percentiles)
     {
         final List<Double> percentileLengths = Lists.newArrayList();
 
-        double totalFragments = mFragmentLengths.stream().mapToLong(x -> x[FL_FREQUENCY]).sum();
+        double totalFragments = fragmentLengths.stream().mapToLong(x -> x[FL_FREQUENCY]).sum();
 
         for(Double percentile : percentiles)
         {
             long currentTotal = 0;
             int prevLength = 0;
 
-            for (int i = 0; i < mFragmentLengths.size(); ++i)
+            for (final int[] fragLengthCount : fragmentLengths)
             {
-                final int[] fragLengthCount = mFragmentLengths.get(i);
-
                 double nextPercTotal = (currentTotal + fragLengthCount[FL_FREQUENCY]) / totalFragments;
 
                 if(nextPercTotal >= percentile)
@@ -341,6 +325,42 @@ public class FragmentSizeCalcs
         }
 
         return percentileLengths;
+    }
+
+    public static void mergeData(final List<int[]> fragmentLengths, final FragmentSizeCalcs other)
+    {
+        for(final int[] lengthData : other.getFragmentLengths())
+        {
+            int fragmentLength = lengthData[FL_LENGTH];
+            int frequency = lengthData[FL_FREQUENCY];
+
+            int index = 0;
+            boolean exists = false;
+            while (index < fragmentLengths.size())
+            {
+                final int[] fragLengthCount = fragmentLengths.get(index);
+
+                if (fragLengthCount[FL_LENGTH] < fragmentLength)
+                {
+                    ++index;
+                    continue;
+                }
+
+                if (fragLengthCount[FL_LENGTH] == fragmentLength)
+                {
+                    fragLengthCount[FL_FREQUENCY] += frequency;
+                    exists = true;
+                }
+
+                break;
+            }
+
+            if (!exists)
+            {
+                int[] newFragLengthCount = { fragmentLength, frequency };
+                fragmentLengths.add(index, newFragLengthCount);
+            }
+        }
     }
 
     public static BufferedWriter createFragmentLengthWriter(final IsofoxConfig config)
@@ -368,13 +388,8 @@ public class FragmentSizeCalcs
         }
     }
 
-    public void writeFragmentLengths()
-    {
-        writeFragmentLengths(mFragLengthWriter, mFragmentLengths, null);
-    }
-
-    private synchronized static void writeFragmentLengths(
-            final BufferedWriter writer, @Nullable final List<int[]> fragmentLengths, final EnsemblGeneData geneData)
+    public synchronized static void writeFragmentLengths(
+            final BufferedWriter writer, final List<int[]> fragmentLengths, final EnsemblGeneData geneData)
     {
         if(writer == null)
             return;
@@ -401,53 +416,6 @@ public class FragmentSizeCalcs
             ISF_LOGGER.error("failed to write fragment length file: {}", e.toString());
         }
 
-    }
-
-    private void writeReadData(final EnsemblGeneData geneData, final SAMRecord read)
-    {
-        if(mConfig.Threads > 1) // not currently synchronised
-            return;
-
-        try
-        {
-            if(mFragReadWriter == null)
-            {
-                final String outputFileName = mConfig.formOutputFile("frag_length_reads.csv");
-
-                mFragReadWriter = createBufferedWriter(outputFileName, false);
-                mFragReadWriter.write("GeneId,GeneName,Chromosome,ReadId,PosStart,PosEnd,Cigar");
-                mFragReadWriter.write(",InsertSize,ReadLength,OtherReadStart,HasReadOverlap,ReadBases");
-                mFragReadWriter.newLine();
-            }
-
-            mFragReadWriter.write(String.format("%s,%s,%s",
-                    geneData.GeneId, geneData.GeneName, geneData.Chromosome));
-
-            long otherReadStart = read.getMateAlignmentStart();
-            int readLength = read.getReadLength();
-
-            boolean hasReadOverlap;
-            if(otherReadStart < read.getStart())
-            {
-                hasReadOverlap = otherReadStart + readLength - 1 >= read.getStart();
-            }
-            else
-            {
-                hasReadOverlap = read.getEnd() >= otherReadStart;
-            }
-
-            mFragReadWriter.write(String.format(",%s,%d,%d,%s",
-                    read.getReadName(), read.getStart(), read.getEnd(), read.getCigar().toString()));
-
-            mFragReadWriter.write(String.format(",%d,%d,%d,%s,%s",
-                    read.getInferredInsertSize(), readLength, otherReadStart, hasReadOverlap, read.getReadString()));
-
-            mFragReadWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write fragment length read data file: {}", e.toString());
-        }
     }
 
 }

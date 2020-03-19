@@ -57,22 +57,20 @@ public class ChromosomeGeneTask implements Callable
     private int mTotalFragmentCount;
     private final GcRatioCounts mNonEnrichedGcRatioCounts;
 
-    private int mCurrentTaskType;
-    public static final int CHR_TASK_FRAGMENT_LENGTHS = 0;
-    public static final int CHR_TASK_TRANSCRIPT_COUNTS = 1;
+    private TaskType mCurrentTaskType;
 
     private static final int PERF_TOTAL = 0;
     private static final int PERF_READS = 1;
     private static final int PERF_NOVEL_LOCATIONS = 2;
     public static final int PERF_FIT = 3;
-    private static final int PERF_MAX = PERF_FIT+1;
+    public static final int PERF_FRAG_LENGTH = 4;
+    private static final int PERF_MAX = PERF_FRAG_LENGTH+1;
 
     private final PerformanceCounter[] mPerfCounters;
 
     public ChromosomeGeneTask(
             final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
-            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final FragmentSizeCalcs fragmentSizeCalc,
-            final ExpectedCountsCache expectedCountsCache)
+            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final ExpectedCountsCache expectedCountsCache)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -83,9 +81,9 @@ public class ChromosomeGeneTask implements Callable
         mCollectionId = 0;
 
         mCurrentGeneIndex = 0;
-        mCurrentTaskType = -1;
+        mCurrentTaskType = null;
 
-        mFragmentSizeCalc = fragmentSizeCalc;
+        mFragmentSizeCalc = new FragmentSizeCalcs(mConfig, mGeneTransCache, mResultsWriter.getFragmentLengthWriter());
         mExpectedCountsCache = expectedCountsCache;
 
         mBamReader = new GeneBamReader(mConfig, resultsWriter);
@@ -104,25 +102,38 @@ public class ChromosomeGeneTask implements Callable
         mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
         mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
         mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
+        mPerfCounters[PERF_FRAG_LENGTH] = new PerformanceCounter("FragLengths");
 
         if(mConfig.RunPerfChecks)
             mPerfCounters[PERF_FIT].setSortTimes(true);
     }
 
     public final GeneBamReader getBamReader() { return mBamReader; }
+    public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
 
-    public void setTaskType(int taskType) { mCurrentTaskType = taskType; }
+    public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
 
     @Override
     public Long call()
     {
-        if(mCurrentTaskType == CHR_TASK_TRANSCRIPT_COUNTS)
+        if(mCurrentTaskType == null)
         {
-            assignTranscriptCounts();
+            ISF_LOGGER.error(" no chromosome-gene task set for execution");
+            return (long)0;
         }
-        else if(mCurrentTaskType == CHR_TASK_FRAGMENT_LENGTHS)
+
+        switch(mCurrentTaskType)
         {
-            calcFragmentLengths();
+            case TRANSCRIPT_COUNTS:
+                assignTranscriptCounts();
+                break;
+
+            case FRAGMENT_LENGTHS:
+                calcFragmentLengths();
+                break;
+
+            default:
+                break;
         }
 
         return (long)1; // return value not used
@@ -179,7 +190,12 @@ public class ChromosomeGeneTask implements Callable
 
     public void calcFragmentLengths()
     {
-        mFragmentSizeCalc.calcSampleFragmentSize(mChromosome, mGeneDataList);
+        mPerfCounters[PERF_FRAG_LENGTH].start();
+
+        int requiredFragCount = mConfig.FragmentLengthMinCount / 20; // split evenly amongst chromosomes
+        mFragmentSizeCalc.calcSampleFragmentSize(mChromosome, mGeneDataList, requiredFragCount);
+
+        mPerfCounters[PERF_FRAG_LENGTH].stop();
     }
 
     private List<EnsemblGeneData> findNextOverlappingGenes()
