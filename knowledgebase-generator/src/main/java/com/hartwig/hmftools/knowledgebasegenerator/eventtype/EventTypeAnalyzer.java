@@ -55,7 +55,7 @@ public class EventTypeAnalyzer {
                     eventMap.put(gene, Lists.newArrayList(name));
                     LOGGER.info(eventMap);
 
-                    if (name.isEmpty()) {
+                    if (eventMap.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
                                 feature.name(),
                                 gene,
@@ -129,7 +129,7 @@ public class EventTypeAnalyzer {
                             }
                         }
                     }
-                    if (eventInfo.isEmpty()) {
+                    if (eventMap.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
@@ -205,7 +205,7 @@ public class EventTypeAnalyzer {
                         eventMap.put(gene, Lists.newArrayList(name));
                     }
 
-                    if (name.isEmpty()) {
+                    if (eventMap.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
                                 feature.name(),
                                 gene,
