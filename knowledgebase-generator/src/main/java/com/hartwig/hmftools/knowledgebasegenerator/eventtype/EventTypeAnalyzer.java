@@ -19,6 +19,8 @@ public class EventTypeAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
     private static final String ONCOGENIC_MUTATION = "oncogenic mutation";
+    private static final String FUSION_PAIR = "fusion pair";
+    private static final String FUSION_PROMISCUOUS = "fusion promiscuous";
 
     @NotNull
     public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry) {
@@ -104,15 +106,26 @@ public class EventTypeAnalyzer {
                             eventMap.put(gene, Lists.newArrayList(eventInfo));
                         } else {
                             gene = name.split(" ", 2)[0];
-                            if (name.split(" ", 2).length == 1) {
-                                eventInfo = "Fusion";
+
+                            if (name.split(" ", 2).length == 1 && gene.contains("-")) {
+                                eventInfo = FUSION_PAIR;
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
+                                LOGGER.info(eventMap);
                             } else {
                                 eventInfo = name.split(" ", 2)[1];
+                                if (eventInfo.contains("fusion") || eventInfo.contains("Fusion") ) {
+                                    if (gene.contains("-")) {
+                                        eventInfo = FUSION_PAIR;
+                                    } else {
+                                        eventInfo = FUSION_PROMISCUOUS;
+                                    }
+                              }
+
                                 if (eventInfo.equals(".")) {
                                     eventInfo = ONCOGENIC_MUTATION;
                                 }
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
+
                             }
                         }
                     }

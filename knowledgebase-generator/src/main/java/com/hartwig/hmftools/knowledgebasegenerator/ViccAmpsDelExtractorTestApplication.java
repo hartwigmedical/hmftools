@@ -28,7 +28,7 @@ public class ViccAmpsDelExtractorTestApplication {
     public static void main(String[] args) throws IOException, InterruptedException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
 
-        String source = "civic";
+        String source = "cgi";
         LOGGER.info("Reading VICC json from {} with source '{}'", viccJsonPath, source);
         List<ViccEntry> viccEntries = ViccJsonReader.readSingleKnowledgebase(viccJsonPath, source);
         LOGGER.info("Read {} entries", viccEntries.size());
@@ -52,7 +52,7 @@ public class ViccAmpsDelExtractorTestApplication {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type : eventType) {
-                LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
+              //  LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
                 // Generating known events
                 //TODO: map every genomic event to one object
                 //TODO: if combined event use single event for determine known events
