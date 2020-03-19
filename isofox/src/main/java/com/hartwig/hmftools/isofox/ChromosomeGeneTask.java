@@ -60,7 +60,8 @@ public class ChromosomeGeneTask implements Callable
     private static final int PERF_READS = 1;
     private static final int PERF_NOVEL_LOCATIONS = 2;
     public static final int PERF_FIT = 3;
-    private static final int PERF_WRITE = 4;
+    private static final int PERF_MAX = PERF_FIT+1;
+
     private final PerformanceCounter[] mPerfCounters;
 
     public ChromosomeGeneTask(
@@ -90,7 +91,7 @@ public class ChromosomeGeneTask implements Callable
 
         mGeneResults = Lists.newArrayList();
 
-        mPerfCounters = new PerformanceCounter[PERF_WRITE+1];
+        mPerfCounters = new PerformanceCounter[PERF_MAX];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
         mPerfCounters[PERF_READS] = new PerformanceCounter("ReadCounts");
         mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
@@ -98,8 +99,6 @@ public class ChromosomeGeneTask implements Callable
 
         if(mConfig.RunPerfChecks)
             mPerfCounters[PERF_FIT].setSortTimes(true);
-
-        mPerfCounters[PERF_WRITE] = new PerformanceCounter("WriteData");
     }
 
     public final GeneBamReader getBamReader() { return mBamReader; }
@@ -167,9 +166,7 @@ public class ChromosomeGeneTask implements Callable
         if(nextLogCount > 100)
             ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
 
-        mPerfCounters[PERF_WRITE].start();
         writeResults();
-        mPerfCounters[PERF_WRITE].stop();
     }
 
     public void calcFragmentLengths()

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.CONTEXT_INTRONIC;
-import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.CONTEXT_SJ;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.INTRONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.MIXED_TRANS;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_3_PRIME;
@@ -33,6 +32,7 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
+import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntron;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
@@ -129,14 +129,13 @@ public class NovelJunctionsTest
         assertEquals(NOVEL_3_PRIME, altSJ.type());
         assertEquals(300, altSJ.SpliceJunction[SE_START]);
         assertEquals(360, altSJ.SpliceJunction[SE_END]);
-        assertEquals(CONTEXT_SJ, altSJ.RegionContexts[SE_START]);
-        assertEquals(CONTEXT_INTRONIC, altSJ.RegionContexts[SE_END]);
-        assertTrue(altSJ.StartRegions.stream().anyMatch(x -> x.hasTransId(transId1)));
-        assertTrue(altSJ.EndRegions.isEmpty());
+        assertEquals(SPLICE_JUNC, altSJ.RegionContexts[SE_START]);
+        assertEquals(AltSpliceJunctionContext.INTRONIC, altSJ.RegionContexts[SE_END]);
+        assertTrue(altSJ.SjStartRegions.stream().anyMatch(x -> x.hasTransId(transId1)));
+        assertTrue(altSJ.SjEndRegions.isEmpty());
 
         List<Integer> validTransIds = altSJ.candidateTransIds();
         assertTrue(validTransIds.contains(transId1));
-        assertFalse(validTransIds.contains(transId3));
         assertFalse(validTransIds.contains(transId4));
 
         // known 5' to novel intronic 3'
@@ -229,8 +228,8 @@ public class NovelJunctionsTest
         assertEquals(MIXED_TRANS, altSJ.type());
         assertEquals(300, altSJ.SpliceJunction[SE_START]);
         assertEquals(600, altSJ.SpliceJunction[SE_END]);
-        assertEquals(CONTEXT_SJ, altSJ.RegionContexts[SE_START]);
-        assertEquals(CONTEXT_SJ, altSJ.RegionContexts[SE_END]);
+        assertEquals(SPLICE_JUNC, altSJ.RegionContexts[SE_START]);
+        assertEquals(SPLICE_JUNC, altSJ.RegionContexts[SE_END]);
 
         validTransIds = altSJ.candidateTransIds();
         assertTrue(validTransIds.contains(transId1));

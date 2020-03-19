@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,27 +24,22 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class AltSpliceJunction
 {
     public final long[] SpliceJunction;
-    public final List<RegionReadData> StartRegions;
-    public final List<RegionReadData> EndRegions;
+    public final List<RegionReadData> SjStartRegions; // regions which match this alt-SJ at the start
+    public final List<RegionReadData> SjEndRegions;
 
-    public final String[] RegionContexts;
+    public final AltSpliceJunctionContext[] RegionContexts;
 
     private AltSpliceJunctionType mType;
     private int mFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
     private final List<Integer> mCandidateTransIds;
 
-    private GeneReadData mGene;
+    private GeneReadData mGene; // associated gene if known or prioritised from amongst a set of candidates
 
     // calculated values
     private final String[] mTranscriptNames;
     private final String[] mBaseContext;
     private final int[] mNearestExonDistance;
-
-    public static final String CONTEXT_SJ = "SPLICE_JUNC";
-    public static final String CONTEXT_EXONIC = "EXONIC";
-    public static final String CONTEXT_INTRONIC = "INTRONIC";
-    public static final String CONTEXT_MIXED = "MIXED";
 
     /*
     Record each novel splice junction per Gene + following fields:
@@ -57,14 +54,15 @@ public class AltSpliceJunction
 
      */
 
-    public AltSpliceJunction(final long[] spliceJunction, AltSpliceJunctionType type, final String[] regionContexts)
+    public AltSpliceJunction(
+            final long[] spliceJunction, AltSpliceJunctionType type, final AltSpliceJunctionContext[] regionContexts,
+            final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions)
     {
         SpliceJunction = spliceJunction;
-
         RegionContexts = regionContexts;
 
-        StartRegions = Lists.newArrayList();
-        EndRegions = Lists.newArrayList();
+        SjStartRegions = sjStartRegions;
+        SjEndRegions = sjEndRegions;
 
         mCandidateTransIds = Lists.newArrayList();
         mGene = null;
@@ -104,7 +102,7 @@ public class AltSpliceJunction
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            final List<RegionReadData> regions = (se == SE_START) ? StartRegions : EndRegions;
+            final List<RegionReadData> regions = (se == SE_START) ? SjStartRegions : SjEndRegions;
             mTranscriptNames[se] = regions.isEmpty() ? "NONE" : generateTranscriptNames(regions);
             mNearestExonDistance[se] = calcNearestExonBoundary(se);
         }
@@ -127,7 +125,7 @@ public class AltSpliceJunction
 
     public int calcNearestExonBoundary(int seIndex)
     {
-        if((seIndex == SE_START && !StartRegions.isEmpty()) || (seIndex == SE_END && !EndRegions.isEmpty()))
+        if((seIndex == SE_START && !SjStartRegions.isEmpty()) || (seIndex == SE_END && !SjEndRegions.isEmpty()))
             return 0;
 
         /* find distance to nearest splice acceptor or donor as follows:
@@ -140,7 +138,7 @@ public class AltSpliceJunction
         long position = SpliceJunction[seIndex];
         boolean forwardStrand = mGene.GeneData.Strand == 1;
         boolean isFivePrime = (seIndex == SE_START) == forwardStrand;
-        boolean isExonic = RegionContexts[seIndex].equals(CONTEXT_EXONIC) || RegionContexts[seIndex].equals(CONTEXT_MIXED);
+        boolean isExonic = RegionContexts[seIndex].equals(EXONIC) || RegionContexts[seIndex].equals(MIXED);
         boolean searchForwards = (isFivePrime && isExonic) || (!isFivePrime && !isExonic);
 
         int nearestBoundary = 0;
@@ -212,7 +210,7 @@ public class AltSpliceJunction
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            List<RegionReadData> regions = se == SE_START ? StartRegions : EndRegions;
+            List<RegionReadData> regions = se == SE_START ? SjStartRegions : SjEndRegions;
 
             int index = 0;
             while(index < regions.size())
@@ -248,29 +246,44 @@ public class AltSpliceJunction
 
     public void setCandidateTranscripts(final List<RegionReadData> candidateRegions)
     {
-        mCandidateTransIds.clear();
-
         final List<Integer> validTransIds = Lists.newArrayList();
 
-        for(RegionReadData region : candidateRegions)
+        // if any splice junctions have been matched, restrict the set of transcripts (and by implication genes) to these only
+        if(!SjStartRegions.isEmpty() || !SjEndRegions.isEmpty())
         {
-            if(positionWithin(SpliceJunction[SE_START], region.start(), region.end()) && positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
+            for (int se = SE_START; se <= SE_END; ++se)
             {
-                validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList()));
-                continue;
-            }
+                List<RegionReadData> sjRegions = se == SE_START ? SjStartRegions : SjEndRegions;
 
-            if(positionWithin(SpliceJunction[SE_START], region.start(), region.end()))
-            {
-                // each transcript must be present in the next region to be valid
-                validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
-                        .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
+                for (RegionReadData region : sjRegions)
+                {
+                    region.getTransExonRefs().stream().forEach(x -> validTransIds.add(x.TransId));
+                }
             }
-
-            if(positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
+        }
+        else
+        {
+            for (RegionReadData region : candidateRegions)
             {
-                validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
-                        .filter(x -> region.getPreRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
+                if (positionWithin(SpliceJunction[SE_START], region.start(), region.end())
+                        && positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
+                {
+                    validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId).collect(Collectors.toList()));
+                    continue;
+                }
+
+                if (positionWithin(SpliceJunction[SE_START], region.start(), region.end()))
+                {
+                    // each transcript must be present in the next region to be valid
+                    validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
+                            .filter(x -> region.getPostRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
+                }
+
+                if (positionWithin(SpliceJunction[SE_END], region.start(), region.end()))
+                {
+                    validTransIds.addAll(region.getTransExonRefs().stream().map(x -> x.TransId)
+                            .filter(x -> region.getPreRegions().stream().anyMatch(y -> y.hasTransId(x))).collect(Collectors.toList()));
+                }
             }
         }
 
