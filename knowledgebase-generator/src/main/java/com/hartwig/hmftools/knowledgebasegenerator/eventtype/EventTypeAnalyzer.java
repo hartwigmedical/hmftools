@@ -28,12 +28,13 @@ public class EventTypeAnalyzer {
         String name = Strings.EMPTY;
         String description = Strings.EMPTY;
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        Map<String, List<String>> eventMap = Maps.newHashMap();
         String eventInfo = Strings.EMPTY;
 
         List<EventType> eventType = Lists.newArrayList();
 
         for (Feature feature : viccEntry.features()) {
+            Map<String, List<String>> eventMap = Maps.newHashMap();
+
             switch (source) {
                 case ONCOKB: // extract info oncokb
                     name = feature.name();
@@ -64,8 +65,8 @@ public class EventTypeAnalyzer {
                     name = feature.name();
                     biomarkerType = feature.biomarkerType();
                     description = feature.description();
-
                     if (name.contains("+")) {
+
                         String[] combinedEventConvertToSingleEvent = name.split(" \\+ ", 2);
                         gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
                         eventInfo = combinedEventConvertToSingleEvent[0].split(" ", 2)[1];
@@ -93,15 +94,17 @@ public class EventTypeAnalyzer {
                         if (name.contains(":")) {
                             gene = name.split(":", 2)[0];
                             eventInfo = name.split(":", 2)[1];
+                            eventMap.put(gene, Lists.newArrayList(eventInfo));
                         } else {
                             gene = name.split(" ", 2)[0];
                             if (name.split(" ", 2).length == 1) {
                                 eventInfo = "Fusion";
+                                eventMap.put(gene, Lists.newArrayList(eventInfo));
                             } else {
                                 eventInfo = name.split(" ", 2)[1];
+                                eventMap.put(gene, Lists.newArrayList(eventInfo));
                             }
                         }
-                        eventMap.put(gene, Lists.newArrayList(eventInfo));
                     }
                     if (eventInfo.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}'",
