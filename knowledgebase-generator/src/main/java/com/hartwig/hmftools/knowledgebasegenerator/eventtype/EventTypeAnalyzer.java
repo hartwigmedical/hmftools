@@ -18,6 +18,7 @@ import org.jooq.tools.StringUtils;
 public class EventTypeAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(EventTypeAnalyzer.class);
+    private static final String ONCOGENIC_MUTATION = "oncogenic mutation";
 
     @NotNull
     public static List<EventType> determineEventType(@NotNull ViccEntry viccEntry) {
@@ -70,6 +71,9 @@ public class EventTypeAnalyzer {
                         String[] combinedEventConvertToSingleEvent = name.split(" \\+ ", 2);
                         gene = combinedEventConvertToSingleEvent[0].split(" ", 2)[0];
                         eventInfo = combinedEventConvertToSingleEvent[0].split(" ", 2)[1];
+                        if (eventInfo.equals(".")) {
+                            eventInfo = ONCOGENIC_MUTATION;
+                        }
 
                         String geneCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[0];
                         String eventInfoCombined = combinedEventConvertToSingleEvent[1].split(" ", 2)[1];
@@ -94,6 +98,9 @@ public class EventTypeAnalyzer {
                         if (name.contains(":")) {
                             gene = name.split(":", 2)[0];
                             eventInfo = name.split(":", 2)[1];
+                            if (eventInfo.equals(".")) {
+                                eventInfo = ONCOGENIC_MUTATION;
+                            }
                             eventMap.put(gene, Lists.newArrayList(eventInfo));
                         } else {
                             gene = name.split(" ", 2)[0];
@@ -102,6 +109,9 @@ public class EventTypeAnalyzer {
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
                             } else {
                                 eventInfo = name.split(" ", 2)[1];
+                                if (eventInfo.equals(".")) {
+                                    eventInfo = ONCOGENIC_MUTATION;
+                                }
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
                             }
                         }
