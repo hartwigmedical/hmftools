@@ -165,11 +165,11 @@ public class EventTypeAnalyzer {
                                 combinedEvent = true;
 
                                 if (eventMap.size() == 0) {
-                                    eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                    eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
                                     if (eventMap.containsKey(geneVariant)) {
-                                        eventMap.put(geneVariant, Lists.newArrayList("Fusion", variant));
+                                        eventMap.put(geneVariant, Lists.newArrayList(FUSION_PAIR, variant));
                                     } else {
-                                        eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                        eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
                                         eventMap.put(geneVariant, Lists.newArrayList(variant));
                                     }
                                 }
@@ -177,10 +177,9 @@ public class EventTypeAnalyzer {
                                 LOGGER.warn("This event has more events, which is not interpretated!");
                             }
                         } else if (name.contains("-")) {
-                            eventMap.put(name, Lists.newArrayList("Fusion"));
+                            eventMap.put(name, Lists.newArrayList(FUSION_PAIR));
                         } else {
                             if (name.contains("+")) {
-                                LOGGER.info("combined: " + name);
 
                                 combinedEvent = true;
                                 String[] combinedEventConvertToSingleEvent = name.replace("+", " ").split(" ", 2);
@@ -201,6 +200,14 @@ public class EventTypeAnalyzer {
                                 eventMap.put(gene, Lists.newArrayList(name));
                             }
                         }
+                    } else if (name.contains("+") && !name.contains("c.") && !name.contains("C.")) {
+                        combinedEvent = true;
+                        String[] combinedEventConvertToSingleEvent = name.split("\\+", 2);
+                        String event1 = combinedEventConvertToSingleEvent[0];
+                        String event2 = combinedEventConvertToSingleEvent[1];
+
+                        eventMap.put(gene, Lists.newArrayList(event1, event2));
+
                     } else {
                         eventMap.put(gene, Lists.newArrayList(name));
                     }
