@@ -178,6 +178,8 @@ public class EventTypeAnalyzer {
                             }
                         } else if (name.contains("-")) {
                             eventMap.put(name, Lists.newArrayList(FUSION_PAIR));
+                        } else if (name.equals("FUSION") || name.contains("FUSIONS") || !name.equals("TRUNCATING FUSION")){
+                            eventMap.put(gene, Lists.newArrayList(FUSION_PROMISCUOUS));
                         } else {
                             if (name.contains("+")) {
 

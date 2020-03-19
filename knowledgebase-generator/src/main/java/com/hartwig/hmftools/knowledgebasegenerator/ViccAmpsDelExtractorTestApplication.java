@@ -52,7 +52,7 @@ public class ViccAmpsDelExtractorTestApplication {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type : eventType) {
-              //  LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
+                LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
                 // Generating known events
                 //TODO: map every genomic event to one object
                 //TODO: if combined event use single event for determine known events
