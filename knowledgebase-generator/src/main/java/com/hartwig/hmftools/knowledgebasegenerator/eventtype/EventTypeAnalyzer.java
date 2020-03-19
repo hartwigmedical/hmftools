@@ -53,7 +53,6 @@ public class EventTypeAnalyzer {
                     }
 
                     eventMap.put(gene, Lists.newArrayList(name));
-                    LOGGER.info(eventMap);
 
                     if (eventMap.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
@@ -110,7 +109,6 @@ public class EventTypeAnalyzer {
                             if (name.split(" ", 2).length == 1 && gene.contains("-")) {
                                 eventInfo = FUSION_PAIR;
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
-                                LOGGER.info(eventMap);
                             } else {
                                 eventInfo = name.split(" ", 2)[1];
                                 if (eventInfo.contains("fusion") || eventInfo.contains("Fusion")) {
