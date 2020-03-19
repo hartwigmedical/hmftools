@@ -31,6 +31,7 @@ public class IsofoxConfig
 
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
+    private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
     private static final String CANONICAL_ONLY = "canonical_only";
     private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_EXON_DATA = "write_exon_data";
@@ -111,6 +112,8 @@ public class IsofoxConfig
     public final String GcBiasFile;
     public static double GC_RATIO_BUCKET = GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
 
+    public final List<String> EnrichedGeneIds;
+
     public final List<String> SpecificTransIds;
     public final List<String> SpecificChromosomes;
     public final boolean RunValidations;
@@ -130,6 +133,9 @@ public class IsofoxConfig
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
+
+        EnrichedGeneIds = cmd.hasOption(ENRICHED_GENE_IDS) ?
+                Arrays.stream(cmd.getOptionValue(ENRICHED_GENE_IDS).split(";")).collect(Collectors.toList()) : Lists.newArrayList();
 
         if(cmd.hasOption(GENE_ID_FILE))
         {
@@ -331,6 +337,7 @@ public class IsofoxConfig
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
+        EnrichedGeneIds = Lists.newArrayList();
         OutputDir = "";
         BamFile = null;
         RefGenomeFile = null;
@@ -379,6 +386,7 @@ public class IsofoxConfig
         options.addOption(CANONICAL_ONLY, false, "Check all transcripts, not just canonical");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
+        options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");

@@ -5,11 +5,15 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
@@ -84,6 +88,49 @@ public class GcRatioCounts
     public void mergeRatioCounts(final Map<Double,Integer> otherCounts)
     {
         otherCounts.entrySet().forEach(x -> addGcRatioCount(mRatioCounts, x.getKey(), x.getValue()));
+    }
+
+    public double getPercentileRatio(double percentile)
+    {
+        double totalCounts = mRatioCounts.values().stream().mapToLong(x -> x.longValue()).sum();
+
+        final List<Double> sortedRatios = Lists.newArrayList();
+
+        for(Double gcRatio : mRatioCounts.keySet())
+        {
+            int index = 0;
+            while(index < sortedRatios.size())
+            {
+                if(gcRatio < sortedRatios.get(index))
+                    break;
+
+                ++index;
+            }
+
+            sortedRatios.add(index, gcRatio);
+        }
+
+        long currentTotal = 0;
+        double prevRatio = 0;
+
+        for(Double gcRatio : sortedRatios)
+        {
+            int frequency = mRatioCounts.get(gcRatio);
+
+            double nextPercTotal = (currentTotal + frequency) / totalCounts;
+
+            if(nextPercTotal >= percentile)
+            {
+                double medianRatio = prevRatio > 0 ? (prevRatio + gcRatio) * 0.5 : gcRatio;
+                return medianRatio;
+            }
+
+            currentTotal += frequency;
+            prevRatio = gcRatio;
+
+        }
+
+        return 0;
     }
 
     public static BufferedWriter createReadGcRatioWriter(final IsofoxConfig config)

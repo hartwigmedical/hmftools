@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,12 +22,14 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.gc.GcBiasAdjuster;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
+import com.hartwig.hmftools.isofox.results.SummaryStats;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -144,12 +147,22 @@ public class Isofox
         {
             int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
             ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
+
+            int totalFragCount = chrTasks.stream().mapToInt(x -> x.getTotalFragmentCount()).sum();
+            int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
+
+            GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
+            chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getRatioCounts()));
+            double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
+
+            final SummaryStats summaryStats = createSummaryStats(totalFragCount, enrichedGeneFragCount, medianGCRatio, mFragmentSizeCalcs);
+
+            mResultsWriter.writeSummaryStats(summaryStats);
         }
 
         if(mConfig.WriteReadGcRatios)
         {
             GcRatioCounts ratioCounts = new GcRatioCounts();
-
             chrTasks.forEach(x -> ratioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getRatioCounts()));
 
             GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, ratioCounts.getRatioCounts());
@@ -226,7 +239,7 @@ public class Isofox
 
         if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
         {
-            mFragmentSizeCalcs.writeFragmentLengths(null);
+            mFragmentSizeCalcs.writeFragmentLengths();
         }
 
         mFragmentSizeCalcs.close();
@@ -254,6 +267,9 @@ public class Isofox
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        final VersionInfo version = new VersionInfo("isofox.version");
+        ISF_LOGGER.info("Isofox version: {}", version.version());
+
         final Options options = createCmdLineOptions();
         final CommandLine cmd = createCommandLine(args, options);
 

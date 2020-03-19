@@ -108,6 +108,37 @@ public class ResultsWriter
     public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
 
+    public void writeSummaryStats(final SummaryStats summaryStats)
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
+
+        try
+        {
+            final String outputFileName = mConfig.formOutputFile("summary.csv");
+            final BufferedWriter writer = createBufferedWriter(outputFileName, false);
+
+            writer.write("SampleId,Version,TotalFragments,ReadLength");
+            writer.write(",FragLength5th,FragLength50th,FragLength95th");
+            writer.write(",EnrichedGenePercent,MedianGCRatio");
+            writer.newLine();
+
+            writer.write(String.format("%s,%s,%d,%d",
+                    mConfig.SampleId, summaryStats.version(), summaryStats.totalFragmentCount(), summaryStats.readLength()));
+
+            writer.write(String.format(",%.0f,%.0f,%.0f,%.3f,%.3f",
+                    summaryStats.fragmentLength5thPercent(), summaryStats.fragmentLength50thPercent(), summaryStats.fragmentLength95thPercent(),
+                    summaryStats.enrichedGenePercent(), summaryStats.medianGCRatio()));
+
+            writer.newLine();
+            closeBufferedWriter(writer);
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write summary data file: {}", e.toString());
+        }
+    }
+
     public synchronized void writeGeneResult(final GeneResult geneResult)
     {
         if(mConfig.OutputDir.isEmpty())

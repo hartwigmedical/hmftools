@@ -28,6 +28,7 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
+import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -50,7 +51,11 @@ public class ChromosomeGeneTask implements Callable
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
 
+    // cache of results
     private final List<GeneResult> mGeneResults;
+    private int mEnrichedGenesFragmentCount;
+    private int mTotalFragmentCount;
+    private final GcRatioCounts mNonEnrichedGcRatioCounts;
 
     private int mCurrentTaskType;
     public static final int CHR_TASK_FRAGMENT_LENGTHS = 0;
@@ -90,6 +95,9 @@ public class ChromosomeGeneTask implements Callable
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mGeneResults = Lists.newArrayList();
+        mEnrichedGenesFragmentCount = 0;
+        mTotalFragmentCount = 0;
+        mNonEnrichedGcRatioCounts = new GcRatioCounts();
 
         mPerfCounters = new PerformanceCounter[PERF_MAX];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
@@ -312,11 +320,6 @@ public class ChromosomeGeneTask implements Callable
                 geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
             }
 
-            if(mFragmentSizeCalc != null && mConfig.FragmentLengthsByGene)
-            {
-                mFragmentSizeCalc.writeFragmentLengths(geneReadData.GeneData);
-            }
-
             if(mConfig.WriteReadGcRatios)
             {
                 writeReadGcRatioCounts(
@@ -343,7 +346,25 @@ public class ChromosomeGeneTask implements Callable
         GeneResult geneResult = GeneResult.createGeneResults(geneCollection, geneReadData, transResults);
 
         mGeneResults.add(geneResult);
+
+        mTotalFragmentCount += geneResult.totalFragments();
+
+        if(!mConfig.EnrichedGeneIds.isEmpty())
+        {
+            if (mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+            {
+                mEnrichedGenesFragmentCount += geneResult.totalFragments();
+            }
+            else
+            {
+                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getRatioCounts());
+            }
+        }
     }
+
+    public int getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }
+    public int getTotalFragmentCount() { return mTotalFragmentCount; }
+    public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 
     private void writeResults()
     {

@@ -311,6 +311,38 @@ public class FragmentSizeCalcs
         }
     }
 
+    public List<Double> calcPercentileData(final List<Double> percentiles)
+    {
+        final List<Double> percentileLengths = Lists.newArrayList();
+
+        double totalFragments = mFragmentLengths.stream().mapToLong(x -> x[FL_FREQUENCY]).sum();
+
+        for(Double percentile : percentiles)
+        {
+            long currentTotal = 0;
+            int prevLength = 0;
+
+            for (int i = 0; i < mFragmentLengths.size(); ++i)
+            {
+                final int[] fragLengthCount = mFragmentLengths.get(i);
+
+                double nextPercTotal = (currentTotal + fragLengthCount[FL_FREQUENCY]) / totalFragments;
+
+                if(nextPercTotal >= percentile)
+                {
+                    double percLength = prevLength > 0 ? (prevLength + fragLengthCount[FL_LENGTH]) * 0.5 : fragLengthCount[FL_LENGTH];
+                    percentileLengths.add(percLength);
+                    break;
+                }
+
+                currentTotal += fragLengthCount[FL_FREQUENCY];
+                prevLength = fragLengthCount[FL_LENGTH];
+            }
+        }
+
+        return percentileLengths;
+    }
+
     public static BufferedWriter createFragmentLengthWriter(final IsofoxConfig config)
     {
         try
@@ -336,7 +368,7 @@ public class FragmentSizeCalcs
         }
     }
 
-    public void writeFragmentLengths(final EnsemblGeneData geneData)
+    public void writeFragmentLengths()
     {
         writeFragmentLengths(mFragLengthWriter, mFragmentLengths, null);
     }
