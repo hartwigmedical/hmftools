@@ -45,15 +45,15 @@ public class EventTypeAnalyzer {
                     biomarkerType = feature.biomarkerType();
                     description = feature.description();
 
-                    if (name.contains("Fusion")) {
-
-                        if (name.split(" ").length == 2) {
-                            gene = name.split(" ")[0];
-                            name = name.split(" ")[1];
-                        }
+                    if (name.equals("Fusions")) {
+                        name = FUSION_PROMISCUOUS;
+                    } else if (name.contains("Fusion")) {
+                        gene = name.split(" ")[0];
+                        name = FUSION_PAIR;
                     }
 
                     eventMap.put(gene, Lists.newArrayList(name));
+                    LOGGER.info(eventMap);
 
                     if (name.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
