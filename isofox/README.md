@@ -101,6 +101,11 @@ A novel splice junction is considered to be a splicing event called by the align
 * INTRONIC -  Neither end matches a known splice site.  Both 5' and 3' ends are intronic
 * INTRONIC_TO_EXONIC - Neither end matches a known splice site.  One end is intronic and 1 end is exonic
 
+In the case of overlapping genes, we assign the novel splice junction to one of the genes using the following priority rules in order
+* Genes with matching splice site at a least one end
+* Genes on strand such that splice motif matches canonical splice motif (GT-AG)
+* Gene with most transcripts
+
 For each novel splice junction, we also record the distance to the nearest splice junction for each novel site, the motif of the splice site and the transcripts compatible with either end of the alternative splicing.
 
 
