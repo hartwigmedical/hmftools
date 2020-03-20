@@ -33,7 +33,8 @@ public class DetermineEventOfGenomicMutation {
     private static final List<String> DELETION = Lists.newArrayList("Deletion", "DELETION", "deletion");
 
     private static final Set<String> VARIANTS = Sets.newHashSet("missense_variant", "inframe_deletion", "inframe_insertion");
-    private static final Set<String> FUSIONS = Sets.newHashSet("FUSIONS", "FUSION", "fusion", "Fusion");
+    private static final Set<String> FUSIONS_PAIRS = Sets.newHashSet("fusion pair");
+    private static final Set<String> FUSIONS_PROMISCUOUS = Sets.newHashSet("fusion promiscuous");
     private static final Set<String> RANGE = Sets.newHashSet();
     private static final Set<String> SIGNATURE_MSI = Sets.newHashSet("Microsatellite Instability-High");
     private static final Set<String> SIGNATURE_HRD = Sets.newHashSet("");
@@ -124,12 +125,24 @@ public class DetermineEventOfGenomicMutation {
     }
 
     @NotNull
+    public static KnownFusions checkFusionsPairs(@NotNull ViccEntry viccEntry, @NotNull String gene,
+            @NotNull String event) {
+        Source source = Source.sourceFromKnowledgebase(viccEntry.source());
+
+        if (FUSIONS_PAIRS.contains(event)) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("fusion pair");
+            return FusionExtractor.determineKnownFusionsPairs(source, typeEvent.toString(), gene);
+        }
+        return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
+    }
+
+    @NotNull
     public static KnownFusions checkFusions(@NotNull ViccEntry viccEntry, @NotNull String gene,
             @NotNull String event) {
         Source source = Source.sourceFromKnowledgebase(viccEntry.source());
 
-        if (FUSIONS.contains(event)) {
-            GenomicEvents typeEvent = GenomicEvents.genomicEvents("Fusions");
+        if (FUSIONS_PROMISCUOUS.contains(event)) {
+            GenomicEvents typeEvent = GenomicEvents.genomicEvents("fusion promiscuous");
             return FusionExtractor.determineKnownFusions(source, typeEvent.toString(), gene);
         }
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();

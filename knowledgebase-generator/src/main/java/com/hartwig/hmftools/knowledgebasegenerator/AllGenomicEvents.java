@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 
 import org.immutables.value.Value;
@@ -36,4 +37,7 @@ public abstract class AllGenomicEvents {
 
     @NotNull
     public abstract List<Signatures> signatures();
+
+    @NotNull
+    public abstract List<KnownFusions> knownFusionPairs();
 }
