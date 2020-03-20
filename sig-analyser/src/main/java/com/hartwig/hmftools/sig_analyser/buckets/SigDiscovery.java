@@ -7,18 +7,18 @@ import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_DISCOVERY_S
 import static com.hartwig.hmftools.sig_analyser.buckets.BaConfig.MIN_GROUP_ALLOC_PERCENT;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.calcSharedCSS;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketAnalyser.minAllocPercent;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getDiffList;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getMatchingList;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getDiffList;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getMatchingList;
+import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

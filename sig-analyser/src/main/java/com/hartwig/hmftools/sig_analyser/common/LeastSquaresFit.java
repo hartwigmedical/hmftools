@@ -4,9 +4,9 @@ package com.hartwig.hmftools.sig_analyser.common;
 // Package: edu.rit.numeric
 // Unit:    Class edu.rit.numeric.NonNegativeLeastSquares
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyMatrix;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyMatrix;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.initVector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

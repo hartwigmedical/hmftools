@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_PERC;
+import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_TOTAL;
+import static com.hartwig.hmftools.common.sigs.DataUtils.calcResiduals;
+import static com.hartwig.hmftools.common.sigs.DataUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 public class ExpectationMaxFit
 {

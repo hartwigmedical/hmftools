@@ -10,12 +10,14 @@ import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcLogLikelihood;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.vectorMultiply;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sigs.DataUtils;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;

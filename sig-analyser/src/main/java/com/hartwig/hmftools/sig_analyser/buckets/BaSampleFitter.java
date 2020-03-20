@@ -3,13 +3,13 @@ package com.hartwig.hmftools.sig_analyser.buckets;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

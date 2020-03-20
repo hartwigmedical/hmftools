@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
+import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;

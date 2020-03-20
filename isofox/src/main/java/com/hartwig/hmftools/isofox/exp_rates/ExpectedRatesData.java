@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.exp_rates;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 public class ExpectedRatesData
 {

@@ -24,7 +24,7 @@ import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectationMaxFit;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;

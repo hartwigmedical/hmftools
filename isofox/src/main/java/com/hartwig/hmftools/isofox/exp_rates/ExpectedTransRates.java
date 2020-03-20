@@ -3,20 +3,15 @@ package com.hartwig.hmftools.isofox.exp_rates;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.writeExpectedRates;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_PERC;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calcResiduals;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.calculateFittedCounts;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_PERC;
+import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_TOTAL;
+import static com.hartwig.hmftools.common.sigs.DataUtils.calcResiduals;
+import static com.hartwig.hmftools.common.sigs.DataUtils.calculateFittedCounts;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;

@@ -5,10 +5,10 @@ import static com.hartwig.hmftools.sig_analyser.SigAnalyser.GENERIC_INPUT_FILE;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.LOG_DEBUG;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.writeMatrixData;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
+import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_EXIT_LEVEL;
 import static com.hartwig.hmftools.sig_analyser.nmf.NmfConfig.NMF_MAX_ITERATIONS;
 
@@ -19,9 +19,9 @@ import java.util.List;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.sig_analyser.buckets.BaSampleFitter;
-import com.hartwig.hmftools.sig_analyser.common.DataUtils;
+import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.sig_analyser.common.LeastSquaresFit;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfConfig;
 import com.hartwig.hmftools.sig_analyser.nmf.NmfSampleFitter;
 

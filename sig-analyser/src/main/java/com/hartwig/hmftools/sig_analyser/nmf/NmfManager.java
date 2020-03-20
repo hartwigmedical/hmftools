@@ -4,21 +4,20 @@ import static java.lang.Integer.max;
 
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
-import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.extractNonZeros;
-import static com.hartwig.hmftools.sig_analyser.common.SigMatrix.writeMatrixData;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
+import static com.hartwig.hmftools.common.sigs.SigMatrix.extractNonZeros;
+import static com.hartwig.hmftools.common.sigs.SigMatrix.writeMatrixData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.common.DataUtils;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.DataUtils;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;

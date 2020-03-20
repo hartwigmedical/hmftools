@@ -2,8 +2,7 @@ package com.hartwig.hmftools.sig_analyser;
 
 import static org.junit.Assert.assertTrue;
 
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
-import com.hartwig.hmftools.sig_analyser.nmf.NmfRun;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.junit.Test;
 

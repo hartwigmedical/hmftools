@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.sig_analyser.common;
+package com.hartwig.hmftools.common.sigs;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

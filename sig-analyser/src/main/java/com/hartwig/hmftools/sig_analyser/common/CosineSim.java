@@ -6,15 +6,18 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.equalVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.equalVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sigs.DataUtils;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -448,7 +451,7 @@ public class CosineSim {
 
         try
         {
-            BufferedWriter writer = DataUtils.getNewFile(mOutputDir, "css_values,csv");
+            BufferedWriter writer = getNewFile(mOutputDir, "css_values,csv");
             writer.write("Sample1,Sample2,CSS\n");
 
             double[][] dataArray = DataUtils.convertArray(dataSets, true);

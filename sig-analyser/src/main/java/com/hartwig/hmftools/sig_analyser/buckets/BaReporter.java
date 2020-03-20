@@ -14,13 +14,13 @@ import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_I2;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.CSSR_VAL;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.getTopCssPairs;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getMatchingList;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVectors;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getMatchingList;
+import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
+import static com.hartwig.hmftools.common.sigs.DataUtils.vectorMultiply;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_MAJOR;
 import static com.hartwig.hmftools.sig_analyser.buckets.BucketGroup.BG_TYPE_MINOR;
 
@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
-import com.hartwig.hmftools.sig_analyser.common.DataUtils;
+import com.hartwig.hmftools.common.sigs.DataUtils;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -6,22 +6,22 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.convertToPercentages;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doubleToStr;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.doublesEqual;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.greaterThan;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.initVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sizeToStr;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
+import static com.hartwig.hmftools.common.sigs.DataUtils.doublesEqual;
+import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
+import static com.hartwig.hmftools.common.sigs.DataUtils.greaterThan;
+import static com.hartwig.hmftools.common.sigs.DataUtils.initVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

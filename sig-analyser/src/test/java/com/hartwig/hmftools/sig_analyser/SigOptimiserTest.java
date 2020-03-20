@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sig_analyser;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.vectorMultiply;
+import static com.hartwig.hmftools.common.sigs.DataUtils.vectorMultiply;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

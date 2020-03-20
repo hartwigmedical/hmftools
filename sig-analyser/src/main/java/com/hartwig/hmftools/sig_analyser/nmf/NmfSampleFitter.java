@@ -2,11 +2,11 @@ package com.hartwig.hmftools.sig_analyser.nmf;
 
 
 import static com.hartwig.hmftools.sig_analyser.common.CosineSim.calcCSS;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.copyVector;
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
 import com.hartwig.hmftools.sig_analyser.common.SigReporter;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

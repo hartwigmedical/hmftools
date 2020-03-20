@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sig_analyser.loaders;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.sig_analyser.common.DataUtils.getNewFile;
+import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
 import static com.hartwig.hmftools.sig_analyser.loaders.SigSnvLoader.getBucketNameByIndex;
 
 import java.io.BufferedWriter;
@@ -15,7 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.sig_analyser.common.SigMatrix;
+import com.hartwig.hmftools.common.sigs.SigMatrix;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
