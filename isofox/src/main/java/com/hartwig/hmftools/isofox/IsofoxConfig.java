@@ -28,6 +28,7 @@ public class IsofoxConfig
     public static final String GENE_TRANSCRIPTS_DIR = "gene_transcripts_dir";
     public static final String SAMPLE = "sample";
     public static final String DATA_OUTPUT_DIR = "output_dir";
+    public static final String OUTPUT_ID = "output_id";
 
     private static final String GENE_ID_FILE = "gene_id_file";
     private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
@@ -37,7 +38,6 @@ public class IsofoxConfig
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
-    private static final String OUTPUT_ID = "output_id";
 
     public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";

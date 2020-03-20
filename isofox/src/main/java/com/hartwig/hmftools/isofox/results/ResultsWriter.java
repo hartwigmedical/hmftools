@@ -28,6 +28,10 @@ import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 
 public class ResultsWriter
 {
+    public static final String GENE_RESULTS_FILE = "gene_data.csv";
+    public static final String TRANSCRIPT_RESULTS_FILE = "transcript_data.csv";
+    public static final String SUMMARY_FILE = "summary.csv";
+
     private final IsofoxConfig mConfig;
 
     private BufferedWriter mGeneDataWriter;
@@ -42,6 +46,8 @@ public class ResultsWriter
     private BufferedWriter mFragLengthWriter;
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
+
+    public static final String DELIMITER = ",";
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -115,21 +121,13 @@ public class ResultsWriter
 
         try
         {
-            final String outputFileName = mConfig.formOutputFile("summary.csv");
+            final String outputFileName = mConfig.formOutputFile(SUMMARY_FILE);
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("SampleId,Version,TotalFragments,ReadLength");
-            writer.write(",FragLength5th,FragLength50th,FragLength95th");
-            writer.write(",EnrichedGenePercent,MedianGCRatio");
+            writer.write(SummaryStats.csvHeader());
             writer.newLine();
 
-            writer.write(String.format("%s,%s,%d,%d",
-                    mConfig.SampleId, summaryStats.version(), summaryStats.totalFragmentCount(), summaryStats.readLength()));
-
-            writer.write(String.format(",%.0f,%.0f,%.0f,%.3f,%.3f",
-                    summaryStats.fragmentLength5thPercent(), summaryStats.fragmentLength50thPercent(), summaryStats.fragmentLength95thPercent(),
-                    summaryStats.enrichedGenePercent(), summaryStats.medianGCRatio()));
-
+            writer.write(summaryStats.toCsv(mConfig.SampleId));
             writer.newLine();
             closeBufferedWriter(writer);
         }
@@ -148,7 +146,7 @@ public class ResultsWriter
         {
             if(mGeneDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile("gene_data.csv");
+                final String outputFileName = mConfig.formOutputFile(GENE_RESULTS_FILE);
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
                 mGeneDataWriter.write("GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
@@ -189,7 +187,7 @@ public class ResultsWriter
         {
             if(mTransDataWriter == null)
             {
-                final String outputFileName = mConfig.formOutputFile("transcript_data.csv");
+                final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_RESULTS_FILE);
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
                 mTransDataWriter.write("GeneId,GeneName,TransId,TransName,Canonical,ExonCount,EffectiveLength");

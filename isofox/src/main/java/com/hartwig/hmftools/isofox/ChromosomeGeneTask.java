@@ -373,8 +373,13 @@ public class ChromosomeGeneTask implements Callable
             }
             else
             {
-                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getRatioCounts());
+                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
             }
+        }
+        else
+        {
+            // take them all
+            mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
         }
     }
 
