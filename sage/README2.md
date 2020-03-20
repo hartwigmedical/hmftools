@@ -365,20 +365,19 @@ Peak memory is measure in gigabytes.
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
-1 | 597 | 601 | 44
-8 | 87 | 653 | 83
-16 | 50 | 722 | 83 
-24 | 38 | 773 | 82 
-32 | 32 | 830 | 84
-48 | 30 | 1150 | 82
-64 | 29 | 1478 | 82
-72 | 30 | 1660 | 82
+1 | 529 | 539 | 55
+8 | 77 | 594 | 68
+16 | 46 | 675 | 68 
+24 | 32 | 671 | 67 
+32 | 28 | 748 | 67
+48 | 27 | 1047 | 66
 
  ## Version History
  - Upcoming
    - Multiple tumor support
    - Multiple reference (or RNA) support
    - Removed explicit RNA support (can use additional reference instead)
+   - Performance and memory improvements
  - [2.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v2.1)
    - Reduced memory footprint
    - Add version info to VCF
