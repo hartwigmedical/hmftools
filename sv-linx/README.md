@@ -620,44 +620,10 @@ Shown below is an example of a SS18-SSX1 fusion:
 
 ## Version History
 
-- 1.0
-    - initial version with clustering, chaining and fusion detection
-- 1.1
-    - refinement and extension of clustering and chaining rules
-- 1.2
-    - improved visualisations for fusions
-- 1.3
-    - added driver annotations
-- 1.4
-    - Disruptive definition is changed for sv breakends. Small chained templated insertions (<5k bases) into or from intronic sections are no longer considered disruptive and will not be reported in the SV section of the report
-    - The number of undisrupted copies is calculated for each disruptive breakend
-    - Homozygous disruptions are now reported as drivers by LINX and are in the driver catalog
-    - Each amplification, deletion or LOH driver in the driver catalog is now linked to the SVs that caused it in the svDriver table
-    - Breakends in the 3’UTR region of the upstream gene are permitted to form fusions via exon skipping
-- 1.5
-    - Fusion likelihood calcs - implemented gene-pairs, skip non-coding same-gene fusions
-    - known fusions don't require upstream transcript to be disruptive but will still fail on chain termination
-    - TIs limited by min of achor distances now less sum of breakend homologies
-    - BFB_AMP does not require max ploidy x8
-    - dominant foldback must exceed ploidy 4
-    - DMs can have a single SV and need to be 5x sample ploidy or 2.3x telomere/centromere
-    - dissolve simple groups unless all SVs in LOH or all assembled
-    - set intronic transcripts from LINE clusters to be non-disruptive
-    - bug: only reconfigure chains for RECIP_INV_DUPs if can form positive TI
-    - bug: determination of unique non-reported fusions was skipping first element
-- 1.6
-    - log filename and item count for all input reference files at INFO
-    - log and write version file
-    - exonic-exonic fusion were incorrectly calculating exact base phase
-    - skip fusions which duplicate the first exon since has no splice acceptor
- - 1.7
-     - new fusion prioritisation: 1. inframe, 2. chain not terminated for known fusions, 3. 3’ partner biotype is protein_coding then 4. No exons skipped
-     - require 5' gene to have specific biotypes: protein_coding,retained_intron,processed_transcript,nonsense_mediated_decay,lincRNA
-     - RNA fusion matching use homology length to adjust position instead of interval offset
-     - RNA matching with DNA - fixed match type bug if only a GENE match found
-     - germline SV parsing and filtering from GRIDSS VCF - annotate assembly and gene overlaps or disruptions
-     - write fusion priority value to verbose output file
-     - optionally write all possible fusion combinations to verbose output, including for single-sample run
+- 1.9
+    - check validity of all input files and paths
+    - removed 'chr' from chromosome name for HG38 support
+
 - 1.8
     - Visualiser - when specifying a gene to display, this can now be referenced in the Ensembl data cache rather than the more limited internal gene panel by providing a path to the data cache with config: 'gene_transcripts_dir'
     - cluster 3 or more overlapping DELs and DUPs with matching copy number and forming potential links
@@ -670,6 +636,44 @@ Shown below is an example of a SS18-SSX1 fusion:
         - allow closed DM loops to amplify centromere
         - check all arms in cluster for telo/centro CN vs DM ploidy or require 50x sample ploidy 
     - fail if fusion reference files aren't found, DEV-1121
+
+ - 1.7
+     - new fusion prioritisation: 1. inframe, 2. chain not terminated for known fusions, 3. 3’ partner biotype is protein_coding then 4. No exons skipped
+     - require 5' gene to have specific biotypes: protein_coding,retained_intron,processed_transcript,nonsense_mediated_decay,lincRNA
+     - RNA fusion matching use homology length to adjust position instead of interval offset
+     - RNA matching with DNA - fixed match type bug if only a GENE match found
+     - germline SV parsing and filtering from GRIDSS VCF - annotate assembly and gene overlaps or disruptions
+     - write fusion priority value to verbose output file
+     - optionally write all possible fusion combinations to verbose output, including for single-sample run
+
+- 1.6
+    - log filename and item count for all input reference files at INFO
+    - log and write version file
+    - exonic-exonic fusion were incorrectly calculating exact base phase
+    - skip fusions which duplicate the first exon since has no splice acceptor
+
+- 1.5
+    - Fusion likelihood calcs - implemented gene-pairs, skip non-coding same-gene fusions
+    - known fusions don't require upstream transcript to be disruptive but will still fail on chain termination
+    - TIs limited by min of achor distances now less sum of breakend homologies
+    - BFB_AMP does not require max ploidy x8
+    - dominant foldback must exceed ploidy 4
+    - DMs can have a single SV and need to be 5x sample ploidy or 2.3x telomere/centromere
+    - dissolve simple groups unless all SVs in LOH or all assembled
+    - set intronic transcripts from LINE clusters to be non-disruptive
+    - bug: only reconfigure chains for RECIP_INV_DUPs if can form positive TI
+    - bug: determination of unique non-reported fusions was skipping first element
+
+- 1.0 -> 1.4
+    - initial version with clustering, chaining and fusion detection
+    - refinement and extension of clustering and chaining rules
+    - improved visualisations for fusions
+    - added driver annotations
+    - Disruptive definition is changed for sv breakends. Small chained templated insertions (<5k bases) into or from intronic sections are no longer considered disruptive and will not be reported in the SV section of the report
+    - The number of undisrupted copies is calculated for each disruptive breakend
+    - Homozygous disruptions are now reported as drivers by LINX and are in the driver catalog
+    - Each amplification, deletion or LOH driver in the driver catalog is now linked to the SVs that caused it in the svDriver table
+    - Breakends in the 3’UTR region of the upstream gene are permitted to form fusions via exon skipping
    
     
     
