@@ -228,7 +228,6 @@ drug,type,mechanism,synonyms
 "Paclitaxel",Chemotherapy,"Taxane","paclicatel, Taxol"
 "Palbociclib",Targeted therapy,"CDK4/6 inhibitor","palbocciclib"
 "Palbociclib, Fulvestrant",Other,"Other","Palbociclib / faslodex"
-"Pamidronic acid",remove,"",""
 "Panitumumab",Targeted therapy,"Anti-EGFR",""
 "Pazopanib",Targeted therapy,"Multikinase inhibitor",""
 "PD-L1 antibody",Immunotherapy,"Anti-PD-L1",""
