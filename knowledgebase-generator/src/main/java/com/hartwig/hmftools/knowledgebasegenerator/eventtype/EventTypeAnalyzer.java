@@ -53,7 +53,6 @@ public class EventTypeAnalyzer {
                     }
 
                     eventMap.put(gene, Lists.newArrayList(name));
-                    LOGGER.info(eventMap);
 
                     if (eventMap.isEmpty()) {
                         LOGGER.warn("Skipping feature interpretation of '{}' on gene '{}' with biomarker type '{}' on source '{}' ",
@@ -110,16 +109,15 @@ public class EventTypeAnalyzer {
                             if (name.split(" ", 2).length == 1 && gene.contains("-")) {
                                 eventInfo = FUSION_PAIR;
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
-                                LOGGER.info(eventMap);
                             } else {
                                 eventInfo = name.split(" ", 2)[1];
-                                if (eventInfo.contains("fusion") || eventInfo.contains("Fusion") ) {
+                                if (eventInfo.contains("fusion") || eventInfo.contains("Fusion")) {
                                     if (gene.contains("-")) {
                                         eventInfo = FUSION_PAIR;
                                     } else {
                                         eventInfo = FUSION_PROMISCUOUS;
                                     }
-                              }
+                                }
 
                                 if (eventInfo.equals(".")) {
                                     eventInfo = ONCOGENIC_MUTATION;
@@ -165,11 +163,11 @@ public class EventTypeAnalyzer {
                                 combinedEvent = true;
 
                                 if (eventMap.size() == 0) {
-                                    eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                    eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
                                     if (eventMap.containsKey(geneVariant)) {
-                                        eventMap.put(geneVariant, Lists.newArrayList("Fusion", variant));
+                                        eventMap.put(geneVariant, Lists.newArrayList(FUSION_PAIR, variant));
                                     } else {
-                                        eventMap.put(fusion, Lists.newArrayList("Fusion"));
+                                        eventMap.put(fusion, Lists.newArrayList(FUSION_PAIR));
                                         eventMap.put(geneVariant, Lists.newArrayList(variant));
                                     }
                                 }
@@ -177,10 +175,13 @@ public class EventTypeAnalyzer {
                                 LOGGER.warn("This event has more events, which is not interpretated!");
                             }
                         } else if (name.contains("-")) {
-                            eventMap.put(name, Lists.newArrayList("Fusion"));
+                            eventMap.put(name, Lists.newArrayList(FUSION_PAIR));
+                        } else if (name.equals("TRUNCATING FUSION")) {
+                            eventMap.put(gene, Lists.newArrayList(name));
+                        } else if (name.contains("FUSION") || name.contains("FUSIONS")) {
+                            eventMap.put(gene, Lists.newArrayList(FUSION_PROMISCUOUS));
                         } else {
                             if (name.contains("+")) {
-                                LOGGER.info("combined: " + name);
 
                                 combinedEvent = true;
                                 String[] combinedEventConvertToSingleEvent = name.replace("+", " ").split(" ", 2);
@@ -201,6 +202,14 @@ public class EventTypeAnalyzer {
                                 eventMap.put(gene, Lists.newArrayList(name));
                             }
                         }
+                    } else if (name.contains("+") && !name.contains("c.") && !name.contains("C.")) {
+                        combinedEvent = true;
+                        String[] combinedEventConvertToSingleEvent = name.split("\\+", 2);
+                        String event1 = combinedEventConvertToSingleEvent[0];
+                        String event2 = combinedEventConvertToSingleEvent[1];
+
+                        eventMap.put(gene, Lists.newArrayList(event1, event2));
+
                     } else {
                         eventMap.put(gene, Lists.newArrayList(name));
                     }
