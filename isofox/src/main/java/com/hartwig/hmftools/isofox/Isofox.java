@@ -58,9 +58,10 @@ public class Isofox
     private final EnsemblDataCache mGeneTransCache;
     private final GcBiasAdjuster mGcBiasAdjuster;
     private final ExpectedCountsCache mExpectedCountsCache;
-    private final ExecutorService mExecutorService;
 
     private final List<int[]> mFragmentLengthDistribution;
+
+    private boolean mIsValid;
 
     public Isofox(final IsofoxConfig config, final CommandLine cmd)
     {
@@ -80,22 +81,13 @@ public class Isofox
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.load(false);
 
-        if(mConfig.Threads > 1)
-        {
-            final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("RnaExp-%d").build();
-            mExecutorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-        }
-        else
-        {
-            mExecutorService = null;
-        }
-
         mExpectedCountsCache = mConfig.ExpCountsFile != null ? new ExpectedCountsCache(mConfig) : null;
 
         mFragmentLengthDistribution = Lists.newArrayList();
+        mIsValid = true;
     }
 
-    public void runAnalysis()
+    public boolean runAnalysis()
     {
         ISF_LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
 
@@ -103,7 +95,7 @@ public class Isofox
         {
             mGcBiasAdjuster.loadData();
             mGcBiasAdjuster.generateDepthCounts(mGeneTransCache.getChrGeneDataMap());
-            return; // for now
+            return true; // for now
         }
 
         // allocate work at the chromosome level
@@ -131,14 +123,14 @@ public class Isofox
             if(mConfig.WriteFragmentLengthsOnly)
             {
                 mResultsWriter.close();
-                return;
+                return true;
             }
         }
 
         boolean validExecution = executeChromosomeTask(chrTasks, TRANSCRIPT_COUNTS);
 
         if(!validExecution)
-            return;
+            return false;
 
         // final reporting
         if(!mConfig.generateExpRatesOnly())
@@ -196,29 +188,41 @@ public class Isofox
                 ISF_LOGGER.info(String.format("fit times: geneSet(%s) time(%.3f)", fitGenes.get(i), fitTimes.get(i)));
             }
         }
+
+        return true;
     }
 
     private boolean executeChromosomeTask(final List<ChromosomeGeneTask> chrTasks, TaskType taskType)
     {
         chrTasks.forEach(x -> x.setTaskType(taskType));
 
-        if(mConfig.Threads <= 1 || mExecutorService == null)
+        if(mConfig.Threads <= 1)
         {
             chrTasks.forEach(x -> x.call());
             return true;
         }
 
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Isofox-%d").build();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
         List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
 
         for(ChromosomeGeneTask chrGeneTask : chrTasks)
         {
-                FutureTask futureTask = new FutureTask(chrGeneTask);
+            FutureTask futureTask = new FutureTask(chrGeneTask);
 
-                threadTaskList.add(futureTask);
-                mExecutorService.execute(futureTask);
+            threadTaskList.add(futureTask);
+            executorService.execute(futureTask);
         }
 
-        return checkThreadCompletion(threadTaskList);
+        if(!checkThreadCompletion(threadTaskList))
+        {
+            mIsValid = false;
+            return false;
+        }
+
+        executorService.shutdown();
+        return true;
     }
 
     private void calcFragmentLengths(final List<ChromosomeGeneTask> chrTasks)
@@ -227,7 +231,10 @@ public class Isofox
         boolean validExecution = executeChromosomeTask(chrTasks, FRAGMENT_LENGTHS);
 
         if(!validExecution)
+        {
+            mIsValid = false;
             return;
+        }
 
         // merge results from all chromosomes
         int maxReadLength = 0;
@@ -275,7 +282,6 @@ public class Isofox
             return false;
         }
 
-        mExecutorService.shutdown();
         return true;
     }
 
@@ -305,9 +311,13 @@ public class Isofox
         }
 
         Isofox isofox = new Isofox(config, cmd);
-        isofox.runAnalysis();
+        if(!isofox.runAnalysis())
+        {
+            ISF_LOGGER.info("Isofox RNA analysis failed");
+            return;
+        }
 
-        ISF_LOGGER.info("RNA expression analysis complete");
+        ISF_LOGGER.info("Isofox RNA analysis complete");
     }
 
     @NotNull

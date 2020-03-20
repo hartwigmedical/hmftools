@@ -140,7 +140,7 @@ public class ExpectedCountsCache
                 }
             }
 
-            ISF_LOGGER.info("loaded {} geneSet expected trans exp counts from file({})",
+            ISF_LOGGER.info("loaded {} gene expected counts from file({})",
                     mGeneSetCategoryDataMap.size(), mConfig.ExpCountsFile);
         }
         catch (IOException e)
