@@ -118,7 +118,7 @@ public class LinxConfig
             dataOutputDir = cmd.getOptionValue(DATA_OUTPUT_DIR);
 
         OutputDataPath = formOutputPath(dataOutputDir);
-        Output = new LinxOutput(cmd);
+        Output = new LinxOutput(cmd, isSingleSample());
 
         SvDataPath = cmd.hasOption(SV_DATA_DIR) ? cmd.getOptionValue(SV_DATA_DIR) : OutputDataPath;
 
@@ -148,7 +148,6 @@ public class LinxConfig
         IndelFile = cmd.getOptionValue(INDEL_FILE, "");
         RequiredAnnotations = cmd.getOptionValue(REQUIRED_ANNOTATIONS, "");
         MaxSamples = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLES, "0"));
-
 
         LogVerbose = cmd.hasOption(LOG_VERBOSE);
 

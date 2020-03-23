@@ -87,7 +87,7 @@ public class SvDataLoader
             loadLinxData(dbAccess, sampleId, svDataPath);
         }
 
-        LOGGER.info("Complete");
+        LOGGER.info("sample({}) data loading complete", sampleId);
     }
 
     private static void loadLinxData(final DatabaseAccess dbAccess, final String sampleId, final String svDataOutputDir)

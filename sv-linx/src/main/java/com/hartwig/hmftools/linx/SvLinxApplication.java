@@ -110,6 +110,15 @@ public class SvLinxApplication
             config.setSampleIds(samplesList);
         }
 
+        if (samplesList.isEmpty())
+        {
+            LOGGER.info("not samples loaded, exiting");
+            return;
+        }
+
+        LOGGER.info("running SV analysis for {}",
+                config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
+
         SvSampleAnalyser sampleAnalyser = new SvSampleAnalyser(config, dbAccess);
 
         CnDataLoader cnDataLoader = new CnDataLoader(config.PurpleDataPath, dbAccess);
@@ -264,7 +273,8 @@ public class SvLinxApplication
             try { version.write(config.OutputDataPath); } catch(IOException e) {}
         }
 
-        LOGGER.info("SV analysis complete");
+        LOGGER.info("SV analysis complete for {}",
+                config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
     }
 
     private static List<StructuralVariantData> loadSampleSvDataFromFile(

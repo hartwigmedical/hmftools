@@ -23,7 +23,7 @@ public class LinxOutput
     private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
 
-    public LinxOutput(final CommandLine cmd)
+    public LinxOutput(final CommandLine cmd, boolean defaultWrite)
     {
         WriteAll = cmd.hasOption(WRITE_ALL);
 
@@ -37,11 +37,11 @@ public class LinxOutput
         }
         else
         {
-            WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA);
-            WriteSvData = cmd.hasOption(WRITE_SV_DATA);
-            WriteClusterHistory = cmd.hasOption(WRITE_CLUSTER_HISTORY);
-            WriteSingleSVClusters = cmd.hasOption(WRITE_SINGLE_SV_CLUSTERS);
-            WriteLinks = cmd.hasOption(WRITE_LINKS);
+            WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA) || defaultWrite;
+            WriteSvData = cmd.hasOption(WRITE_SV_DATA) || defaultWrite;
+            WriteClusterHistory = cmd.hasOption(WRITE_CLUSTER_HISTORY) || defaultWrite;
+            WriteSingleSVClusters = cmd.hasOption(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
+            WriteLinks = cmd.hasOption(WRITE_LINKS) || defaultWrite;
         }
 
         LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
