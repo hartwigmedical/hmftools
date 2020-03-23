@@ -67,6 +67,7 @@ public final class LoadClinicalData {
     private static final String WIDE_RESPONSE_DATA = "wide_response_data";
 
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
+    private static final String PROCESS_WIDE_CLINICAL_DATA = "process_wide_clinical_data";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
@@ -220,7 +221,7 @@ public final class LoadClinicalData {
         return false;
     }
 
-    private static void loadWideModel(@NotNull CommandLine cmd) throws IOException{
+    private static void loadWideModel(@NotNull CommandLine cmd) throws IOException {
         LOGGER.info("Loading WIDE from {}", "");
         String wideTreatmentData = cmd.getOptionValue(WIDE_TREATMENT_DATA);
         WideDataReader.buildTreatmentData(wideTreatmentData);
@@ -232,6 +233,7 @@ public final class LoadClinicalData {
         LOGGER.info(" Finished loading WIDE. Read {} patients", 1);
 
     }
+
     @NotNull
     private static EcrfModels loadEcrfModels(@NotNull CommandLine cmd) throws IOException, XMLStreamException {
         String cpctEcrfFilePath = cmd.getOptionValue(CPCT_ECRF_FILE);
@@ -455,7 +457,11 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY));
+                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
+                cmd.getOptionValue(WIDE_TREATMENT_DATA),
+                cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA),
+                cmd.getOptionValue(WIDE_BIOPT_DATA),
+                cmd.getOptionValue(WIDE_RESPONSE_DATA));
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
@@ -485,6 +491,9 @@ public final class LoadClinicalData {
         options.addOption(WIDE_BIOPT_DATA, true, "Path towards the wide biopt data.");
         options.addOption(WIDE_RESPONSE_DATA, true, "Path towards the wide response data.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
+        options.addOption(PROCESS_WIDE_CLINICAL_DATA,
+                false,
+                "if set, creates clinical timeline for WIDE patients and persists to database");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
         options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
