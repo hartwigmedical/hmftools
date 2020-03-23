@@ -45,10 +45,10 @@ public class WideDataReader {
     }
 
     @NotNull
-    public static Map<String, WideTreatmentData> buildTreatmentData(@NotNull final String pathToCsv) throws IOException {
+    public static Map<Integer, WideTreatmentData> buildTreatmentData(@NotNull final String pathToCsv) throws IOException {
 
-        final Map<String, WideTreatmentData> treatmentDataPerEntry = Maps.newHashMap();
-
+        final Map<Integer, WideTreatmentData> treatmentDataPerEntry = Maps.newHashMap();
+        int count = 1;
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines.subList(1, lines.size())) {
             final String[] parts = line.split(FIELD_SEPARATOR, TREATMENT_DATA_COUNT);
@@ -59,19 +59,21 @@ public class WideDataReader {
                         parts[TREATMENT_DATA_START_DATE],
                         parts[TREATMENT_DATA_END_DATE]);
 
-                treatmentDataPerEntry.put(parts[TREATMENT_DATA_ID], wideTreatmentData);
+                treatmentDataPerEntry.put(count, wideTreatmentData);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE treatment csv: " + line);
             }
+            count +=1;
         }
         LOGGER.info(treatmentDataPerEntry);
         return treatmentDataPerEntry;
     }
 
     @NotNull
-    public static Map<String, WidePreTreatmentData> buildPreTreatmentData(@NotNull final String pathToCsv) throws IOException {
+    public static Map<Integer, WidePreTreatmentData> buildPreTreatmentData(@NotNull final String pathToCsv) throws IOException {
 
-        final Map<String, WidePreTreatmentData> preTreatmentDataPerEntry = Maps.newHashMap();
+        final Map<Integer, WidePreTreatmentData> preTreatmentDataPerEntry = Maps.newHashMap();
+        int count = 1;
 
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines.subList(1, lines.size())) {
@@ -85,19 +87,21 @@ public class WideDataReader {
                         parts[PRE_TREATMENT_DATA_DRUG4],
                         parts[PRE_TREATMENT_DATA_DATE_LAST_SYSTEMIC_THERAPY]);
 
-                preTreatmentDataPerEntry.put(parts[TREATMENT_DATA_ID], widePreTreatmentData);
+                preTreatmentDataPerEntry.put(count, widePreTreatmentData);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE pre treatment data csv: " + line);
             }
+            count +=1;
         }
         LOGGER.info(preTreatmentDataPerEntry);
         return preTreatmentDataPerEntry;
     }
 
     @NotNull
-    public static Map<String, WideBiopsyData> buildBiopsyData(@NotNull final String pathToCsv) throws IOException {
+    public static Map<Integer, WideBiopsyData> buildBiopsyData(@NotNull final String pathToCsv) throws IOException {
 
-        final Map<String, WideBiopsyData> biopsyDataPerEntry = Maps.newHashMap();
+        final Map<Integer, WideBiopsyData> biopsyDataPerEntry = Maps.newHashMap();
+        int count = 1;
 
         final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (final String line : lines.subList(1, lines.size())) {
@@ -110,10 +114,11 @@ public class WideDataReader {
                         parts[BIOPSY_DATA_DATE],
                         parts[BIOPSY_DATA_WGS_SUCCESFUL]);
 
-                biopsyDataPerEntry.put(parts[TREATMENT_DATA_ID], wideBiopsyData);
+                biopsyDataPerEntry.put(count, wideBiopsyData);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: " + line);
             }
+            count +=1;
         }
         LOGGER.info(biopsyDataPerEntry);
         return biopsyDataPerEntry;
