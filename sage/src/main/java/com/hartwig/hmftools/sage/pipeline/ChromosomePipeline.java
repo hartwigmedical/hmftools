@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -149,7 +150,7 @@ public class ChromosomePipeline implements AutoCloseable {
         }
 
         final ReadContextCounter normal = entry.primaryNormal();
-        if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+        if (!MitochondrialChromosome.contains(entry.chromosome()) && normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
             return false;
         }
 
