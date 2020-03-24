@@ -139,6 +139,10 @@ public interface SageConfig {
         return 50;
     }
 
+    default int readContextFlankSize() {
+        return 25;
+    }
+
     @NotNull
     static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
 

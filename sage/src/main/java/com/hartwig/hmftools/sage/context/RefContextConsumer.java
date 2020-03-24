@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.sage.context;
 
-import static com.hartwig.hmftools.sage.read.ReadContextFactory.createDelContext;
-import static com.hartwig.hmftools.sage.read.ReadContextFactory.createInsertContext;
-import static com.hartwig.hmftools.sage.read.ReadContextFactory.createMNVContext;
-import static com.hartwig.hmftools.sage.read.ReadContextFactory.createSNVContext;
-
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
+import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;
@@ -70,6 +66,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     private final GenomeRegion bounds;
     private final RefSequence refGenome;
     private final RefContextFactory candidates;
+    private final ReadContextFactory readContextFactory;
 
     public RefContextConsumer(@NotNull final SageConfig config, @NotNull final GenomeRegion bounds, @NotNull final RefSequence refGenome,
             @NotNull final RefContextFactory candidates) {
@@ -77,6 +74,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         this.refGenome = refGenome;
         this.minQuality = config.minMapQuality();
         this.candidates = candidates;
+        this.readContextFactory = new ReadContextFactory(config.readContextFlankSize());
 
         this.config = config;
     }
@@ -122,9 +120,9 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext != null && refContext.rawDepth() < config.maxReadDepth()) {
+            if (refContext.rawDepth() < config.maxReadDepth()) {
                 int baseQuality = baseQuality(readIndex, record, alt.length());
-                refContext.altReadCandidate(ref, alt, baseQuality, createInsertContext(alt, refPosition, readIndex, record, refBases));
+                refContext.altReadCandidate(ref, alt, baseQuality, readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases));
             }
         }
     }
@@ -140,7 +138,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext.rawDepth() < config.maxReadDepth()) {
                 int baseQuality = baseQuality(readIndex, record, 2);
-                refContext.altReadCandidate(ref, alt, baseQuality, createDelContext(ref, refPosition, readIndex, record, refBases));
+                refContext.altReadCandidate(ref, alt, baseQuality, readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases));
             }
         }
     }
@@ -169,7 +167,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
-                    refContext.altReadCandidate(ref, alt, baseQuality, createSNVContext(refPosition, readBaseIndex, record, refBases));
+                    refContext.altReadCandidate(ref, alt, baseQuality, readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases));
 
                     int mnvMaxLength = mnvLength(refPosition,
                             refPositionStart + alignmentLength - 1,
@@ -188,7 +186,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                             refContext.altReadCandidate(mnvRef,
                                     mnvAlt,
                                     baseQuality,
-                                    createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
+                                    readContextFactory.createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
                         }
                     }
                 } else {

@@ -40,7 +40,7 @@ public class Candidate {
         return variant;
     }
 
-    public int maxDepth() {
+    public int readDepth() {
         return maxDepth;
     }
 
