@@ -121,7 +121,8 @@ public final class LoadClinicalData {
                 sampleDataPerPatient,
                 ecrfModels,
                 cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)));
+                Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
+                cmd.hasOption(PROCESS_WIDE_CLINICAL_DATA));
     }
 
     @NotNull
@@ -268,13 +269,18 @@ public final class LoadClinicalData {
 
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims, @NotNull Set<String> sequencedPatientIds,
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull EcrfModels ecrfModels,
-            @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink) throws IOException {
+            @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink, boolean processWideClinicalData)
+            throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
-        Map<String, Patient> patients =
-                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
+        Map<String, Patient> patients = loadAndInterpretPatients(sampleDataPerPatient,
+                ecrfModels,
+                tumorLocationCurator,
+                treatmentCurator,
+                biopsySiteCurator,
+                processWideClinicalData);
 
         DumpTumorLocationData.writeCuratedTumorLocationsToCSV(tumorLocationOutputDir, tumorLocationSymlink, patients.values());
 
@@ -314,7 +320,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator) {
+            @NotNull BiopsySiteCurator biopsySiteCurator, boolean processWideClinicalData) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
@@ -333,12 +339,22 @@ public final class LoadClinicalData {
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data based off LIMS (WIDE and CORE)");
-        Map<String, Patient> patientsFromLims = readLimsPatients(sampleDataPerPatient, tumorLocationCurator);
-        LOGGER.info(" Finished curation of {} patients based off LIMS", patientsFromLims.keySet().size());
+        Map<String, Patient> patientsFromLims = Maps.newHashMap();
+        Map<String, Patient> widePatients = Maps.newHashMap();
+
+        if (processWideClinicalData) {
+            //TODO use WIDE clinical data
+            widePatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), sampleDataPerPatient);
+            LOGGER.info(" Finished curation of {} patients based off LIMS", patientsFromLims.keySet().size());
+        } else {
+            patientsFromLims = readLimsPatients(sampleDataPerPatient, tumorLocationCurator);
+            LOGGER.info(" Finished curation of {} patients based off LIMS", patientsFromLims.keySet().size());
+        }
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(cpctPatients);
         mergedPatients.putAll(drupPatients);
+        mergedPatients.putAll(widePatients);
         mergedPatients.putAll(patientsFromLims);
         mergedPatients.putAll(readColoPatients());
         return mergedPatients;
