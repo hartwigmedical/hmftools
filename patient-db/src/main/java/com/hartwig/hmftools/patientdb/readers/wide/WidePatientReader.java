@@ -1,0 +1,52 @@
+package com.hartwig.hmftools.patientdb.readers.wide;
+
+import java.util.List;
+
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
+import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
+import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
+import com.hartwig.hmftools.patientdb.data.BaselineData;
+import com.hartwig.hmftools.patientdb.data.BiopsyData;
+import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
+import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
+import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
+import com.hartwig.hmftools.patientdb.matchers.MatchResult;
+
+
+import org.jetbrains.annotations.NotNull;
+
+public class WidePatientReader {
+
+    @NotNull
+    private final BaselineReader baselineReader;
+    @NotNull
+    private final BiopsyReader biopsyReader;
+
+    public WidePatientReader(@NotNull TumorLocationCurator tumorLocationCurator, @NotNull BiopsySiteCurator biopsySiteCurator) {
+        this.baselineReader = new BaselineReader(tumorLocationCurator);
+        this.biopsyReader = new BiopsyReader(biopsySiteCurator);
+    }
+
+    @NotNull
+    public Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples) {
+        final BaselineData baselineData = baselineReader.read();
+        final PreTreatmentData noPreTreatmentData = ImmutablePreTreatmentData.builder().formStatus(FormStatus.undefined()).build();
+        final List<BiopsyData> clinicalBiopsies = biopsyReader.read();
+
+        final MatchResult<BiopsyData> matchedBiopsies =
+                BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedSamples, clinicalBiopsies);
+
+        return new Patient(ecrfPatient.patientId(),
+                baselineData,
+                noPreTreatmentData, sequencedSamples,
+                matchedBiopsies.values(),
+                Lists.newArrayList(),
+                Lists.newArrayList(),
+                Lists.newArrayList(), Lists.newArrayList(),
+                matchedBiopsies.findings());
+    }
+}

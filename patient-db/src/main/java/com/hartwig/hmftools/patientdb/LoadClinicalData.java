@@ -36,8 +36,6 @@ import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
-import com.hartwig.hmftools.patientdb.readers.wide.WideDataReader;
-import com.hartwig.hmftools.patientdb.readers.wide.WideTreatmentData;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -110,7 +108,7 @@ public final class LoadClinicalData {
                 countValues(sampleDataPerPatient));
 
         EcrfModels ecrfModels = loadEcrfModels(cmd);
-        loadWideModel(cmd);
+
         if (cmd.hasOption(DO_LOAD_RAW_ECRF)) {
             writeRawEcrf(dbWriter, sequencedPatientIds, ecrfModels);
         }
@@ -220,19 +218,6 @@ public final class LoadClinicalData {
         }
 
         return false;
-    }
-
-    private static void loadWideModel(@NotNull CommandLine cmd) throws IOException {
-        LOGGER.info("Loading WIDE from {}", "");
-        String wideTreatmentData = cmd.getOptionValue(WIDE_TREATMENT_DATA);
-        WideDataReader.buildTreatmentData(wideTreatmentData);
-        String widePreviousTreatmentData = cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA);
-        WideDataReader.buildPreTreatmentData(widePreviousTreatmentData);
-        String wideBioptData = cmd.getOptionValue(WIDE_BIOPT_DATA);
-        WideDataReader.buildBiopsyData(wideBioptData);
-        String wideResponseData = cmd.getOptionValue(WIDE_RESPONSE_DATA);
-        LOGGER.info(" Finished loading WIDE. Read {} patients", 1);
-
     }
 
     @NotNull
