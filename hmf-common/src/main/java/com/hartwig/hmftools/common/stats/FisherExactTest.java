@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.stat_calcs;
+package com.hartwig.hmftools.common.stats;
 
 public class FisherExactTest
 {
@@ -101,37 +101,6 @@ public class FisherExactTest
         {
             return getLeftTailedP(a, b, c, d);
         }
-
-        /*
-        if (a + b + c + d > mCountMax)
-            return Double.NaN;
-
-        double p = 0;
-        p += getP(a, b, c, d);
-
-        int min = 0;
-
-        if ((a * d) >= (b * c))
-        {
-            min = (c < b) ? c : b;
-
-            for (int i = 0; i < min; i++)
-            {
-                p += getP(++a, --b, --c, ++d);
-            }
-        }
-
-        if ((a * d) < (b * c))
-        {
-            min = (a < d) ? a : d;
-            for (int i = 0; i < min; i++)
-            {
-                double pTemp = getP(--a, ++b, ++c, --d);
-                p += pTemp;
-            }
-        }
-        return p;
-        */
     }
 
 }

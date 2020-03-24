@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.stats.FisherExactTest;
 import com.hartwig.hmftools.common.utils.io.FileWriterUtils;
 
 import org.apache.commons.cli.CommandLine;

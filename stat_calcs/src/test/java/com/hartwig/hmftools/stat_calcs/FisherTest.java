@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.stat_calcs;
 
+import com.hartwig.hmftools.common.stats.FisherExactTest;
+
 import org.junit.Test;
 
 public class FisherTest

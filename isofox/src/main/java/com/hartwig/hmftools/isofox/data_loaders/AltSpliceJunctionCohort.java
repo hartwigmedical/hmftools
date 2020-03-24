@@ -17,6 +17,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.stats.FisherExactTest;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class AltSpliceJunctionCohort
@@ -26,10 +27,13 @@ public class AltSpliceJunctionCohort
     // map of chromosomes to a map of genes to a list of alternate splice junctions
     private final Map<String, Map<String,List<AltSpliceJunction>>> mAltSpliceJunctions;
 
+    private final FisherExactTest mFisherET;
+
     public AltSpliceJunctionCohort(final DataLoaderConfig config)
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
+        mFisherET = new FisherExactTest();
     }
 
     public void processAltSpliceJunctions()
@@ -103,10 +107,14 @@ public class AltSpliceJunctionCohort
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write("GeneId,Chromosome,Type,SjStart,SjEnd");
-            writer.write(",SampleCount,WithMutationCount,NoMutationCount");
-            writer.write(",StartContext,EndContext,AvgFragCount,MaxFragCount,AvgStartDepth,AvgEndDepth");
+            writer.write(",StartContext,EndContext,BaseMotif,AvgFragCount,MaxFragCount,AvgStartDepth,AvgEndDepth");
+            writer.write(",SampleCount,FetProb,ExpVal,AltSJAndMutation,AltSJNoMutation");
+            writer.write(",WithMutation,NoAltSJWithMutation,NoAltSJNoMutation");
             writer.write(",SampleIds");
             writer.newLine();
+
+            int totalSampleCount = mConfig.SampleData.SampleIds.size();
+            mFisherET.initialise(totalSampleCount);
 
             for(Map.Entry<String,Map<String,List<AltSpliceJunction>>> chrEntry : mAltSpliceJunctions.entrySet())
             {
@@ -119,23 +127,33 @@ public class AltSpliceJunctionCohort
 
                     for (AltSpliceJunction altSJ : geneEntry.getValue())
                     {
-                        int sampleCount = altSJ.getSampleIds().size();
+                        int scWithAltSJ = altSJ.getSampleIds().size();
 
-                        if(sampleCount < mConfig.AltSJMinSampleThreshold)
+                        if(scWithAltSJ < mConfig.AltSJMinSampleThreshold)
                             continue;
 
-                        int samplesWithMutation = mConfig.SampleData.sampleCountWithMutation(altSJ.getSampleIds());
-                        int samplesWithoutMutation = sampleCount - samplesWithMutation;
+                        writer.write(String.format("%s,%s,%s,%d,%d",
+                                geneId, chromosome, altSJ.type(),
+                                altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END]));
 
-                        writer.write(String.format("%s,%s,%s,%d,%d,%d,%d,%d",
-                                geneId, chromosome, altSJ.type(), altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END],
-                                sampleCount, samplesWithMutation, samplesWithoutMutation));
+                        writer.write(String.format(",%s,%s,%s,%.0f,%d,%.0f,%.0f",
+                                altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END], altSJ.getDonorAcceptorBases(),
+                                altSJ.getFragmentCount()/(double)scWithAltSJ, altSJ.getMaxFragmentCount(),
+                                altSJ.getPositionCount(SE_START)/(double)scWithAltSJ,
+                                altSJ.getPositionCount(SE_END)/(double)scWithAltSJ));
 
-                        writer.write(String.format(",%s,%s,%.0f,%d,%.0f,%.0f",
-                                altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
-                                altSJ.getFragmentCount()/(double)sampleCount, altSJ.getMaxFragmentCount(),
-                                altSJ.getPositionCount(SE_START)/(double)sampleCount,
-                                altSJ.getPositionCount(SE_END)/(double)sampleCount));
+                        int scWithAltSJWithMutation = mConfig.SampleData.sampleCountWithMutation(altSJ.getSampleIds());
+                        int scWithAltSJNoMutation = scWithAltSJ - scWithAltSJWithMutation;
+                        int scWithMutation = mConfig.SampleData.SampleMutationType.size();
+                        int scNoAltSJWithMutation = scWithMutation - scWithAltSJWithMutation;
+                        int scNoAltSJNoMutation = totalSampleCount - scWithAltSJWithMutation - scWithAltSJNoMutation - scNoAltSJWithMutation;
+
+                        double expectedVal  = scWithMutation * scWithAltSJ / (double)totalSampleCount;
+                        double fisherProb = mFisherET.calc(scWithAltSJWithMutation, scNoAltSJWithMutation, scWithAltSJNoMutation, scNoAltSJNoMutation, expectedVal);
+
+                        writer.write(String.format(",%d,%4.3e,%.1f,%d,%d,%d,%d,%d",
+                                scWithAltSJ, fisherProb, expectedVal,
+                                scWithAltSJWithMutation, scWithAltSJNoMutation, scWithMutation, scNoAltSJWithMutation, scNoAltSJNoMutation));
 
                         writer.write(String.format(",%s", appendStrList(altSJ.getSampleIds(), ';')));
 

@@ -49,23 +49,11 @@ public class AltSpliceJunction
     // calculated values
     private final String[] mTranscriptNames;
     private final String[] mBaseContext;
+    private String mDonorAcceptorBases;
     private final int[] mNearestExonDistance;
 
     // cohort data
     private final List<String> mSampleIds;
-
-    /*
-    Record each novel splice junction per Gene + following fields:
-        distance to nearest known splice boundary at start
-        distance to nearest known splice boundary at end
-        Start count per (transcript combination) category
-        End count per (transcript combination) category
-        Annotate skipped exons, cassette exons, cryptic splice sites
-        Use to analyse AHR and APC novel splice junctions in relevant samples.
-        Generate PON
-        Look for retained introns
-
-     */
 
     public AltSpliceJunction(
             final String chromosome, final long[] spliceJunction, AltSpliceJunctionType type,
@@ -89,6 +77,7 @@ public class AltSpliceJunction
         mTranscriptNames = new String[SE_PAIR];
         mBaseContext = new String[SE_PAIR];
         mNearestExonDistance = new int[SE_PAIR];
+        mDonorAcceptorBases = "";
 
         mSampleIds = Lists.newArrayList();
     }
@@ -226,13 +215,18 @@ public class AltSpliceJunction
     private static final String SP_SEQ_NEG_STRAND_1 = "CT-AC";
     private static final String SP_SEQ_NEG_STRAND_2 = "CT-GC";
 
+    public void setDonorAcceptorBases(final String[] baseContext)
+    {
+        mDonorAcceptorBases = String.format("%s-%s", baseContext[SE_START].substring(2,4), baseContext[SE_END].substring(8,10));
+    }
+
+    public String getDonorAcceptorBases() { return mDonorAcceptorBases; }
+
     public int getKnownSpliceBaseStrand()
     {
-        String splceBaseSeq = String.format("%s-%s", mBaseContext[SE_START].substring(2,4), mBaseContext[SE_END].substring(8,10));
-
-        if(splceBaseSeq.equals(SP_SEQ_POS_STRAND_1) || splceBaseSeq.equals(SP_SEQ_POS_STRAND_2))
+        if(mDonorAcceptorBases.equals(SP_SEQ_POS_STRAND_1) || mDonorAcceptorBases.equals(SP_SEQ_POS_STRAND_2))
             return 1;
-        else if(splceBaseSeq.equals(SP_SEQ_NEG_STRAND_1) || splceBaseSeq.equals(SP_SEQ_NEG_STRAND_2))
+        else if(mDonorAcceptorBases.equals(SP_SEQ_NEG_STRAND_1) || mDonorAcceptorBases.equals(SP_SEQ_NEG_STRAND_2))
             return -1;
         else
             return 0;
@@ -374,6 +368,8 @@ public class AltSpliceJunction
     private static int COL_TYPE = 9;
     private static int COL_CONTEXT_START = 10;
     private static int COL_CONTEXT_END = 11;
+    private static int COL_BASE_CONTEXT_START = 14;
+    private static int COL_BASE_CONTEXT_END = 15;
 
     public static AltSpliceJunction fromCsv(final String data)
     {
@@ -395,6 +391,9 @@ public class AltSpliceJunction
         altSJ.addFragmentCount(Integer.parseInt(items[COL_FRAG_COUNT]));
         altSJ.addPositionCount(SE_START, Integer.parseInt(items[COL_POS_START_DEPTH]));
         altSJ.addPositionCount(SE_END, Integer.parseInt(items[COL_POS_END_DEPTH]));
+
+        final String[] baseContext = { items[COL_BASE_CONTEXT_START], items[COL_BASE_CONTEXT_END] };
+        altSJ.setDonorAcceptorBases(baseContext);
 
         return altSJ;
     }
