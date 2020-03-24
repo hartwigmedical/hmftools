@@ -23,7 +23,8 @@ public class GeneratingOutputFiles {
     private static final String KNOWN_DELETION_INFO_TSV = "knownDeletionInfo.tsv";
     private static final String ACTIONABLE_CNV_TSV = "actionableCNV.tsv";
     private static final String SIGNATURES_TSV = "signatures.tsv";
-    private static final String KNOWN_FUSION_PAIRS_TSV = "knownFusionPairs.tsv";
+    private static final String KNOWN_FUSION_PAIRS_INFO_TSV = "knownFusionPairsInfo.tsv";
+    private static final String UNIQUE_KNOWN_FUSION_PAIRS_TSV = "uniqueKnownFusionPairs.tsv";
 
     public static void generatingOutputFiles(@NotNull String outputDir, @NotNull AllGenomicEvents genomicEvents) throws IOException {
         generateUniqueKnownAmplification(outputDir + File.separator + UNIQUE_KNOWN_AMPLIFICATION_TSV, genomicEvents);
@@ -32,7 +33,9 @@ public class GeneratingOutputFiles {
         generateInfoKnownDeletions(outputDir + File.separator + KNOWN_DELETION_INFO_TSV, genomicEvents);
         generateActionableCNV(outputDir + File.separator + ACTIONABLE_CNV_TSV, genomicEvents);
         generateSignatures(outputDir + File.separator + SIGNATURES_TSV, genomicEvents);
-        generateKnownFusionPairs(outputDir + File.separator + KNOWN_FUSION_PAIRS_TSV, genomicEvents);
+        generateInfoKnownFusionPairs(outputDir + File.separator + KNOWN_FUSION_PAIRS_INFO_TSV, genomicEvents);
+        genertateUniqueKnownFusionPairs(outputDir + File.separator + UNIQUE_KNOWN_FUSION_PAIRS_TSV, genomicEvents);
+
 
     }
 
@@ -103,7 +106,7 @@ public class GeneratingOutputFiles {
         writer.close();
     }
 
-    private static void generateKnownFusionPairs(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
+    private static void generateInfoKnownFusionPairs(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
         String headerknownCNV = "gene" + DELIMITER + "eventType" + DELIMITER + "Source" + DELIMITER + "Link" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
@@ -111,6 +114,17 @@ public class GeneratingOutputFiles {
         for (KnownFusions knownFusionsPairs : genomicEvents.knownFusionPairs()) {
             writer.write(knownFusionsPairs.gene() + DELIMITER + knownFusionsPairs.eventType() + DELIMITER + knownFusionsPairs.source()
                     + DELIMITER + knownFusionsPairs.sourceLink() + NEW_LINE);
+        }
+        writer.close();
+    }
+
+    private static void genertateUniqueKnownFusionPairs(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents)
+            throws IOException {
+        String headerknownFusionPairs = "Gene" + NEW_LINE;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+        writer.write(headerknownFusionPairs);
+        for (String knownFusions : genomicEvents.uniqueKnownFusionPairs()) {
+            writer.write(knownFusions + NEW_LINE);
         }
         writer.close();
     }

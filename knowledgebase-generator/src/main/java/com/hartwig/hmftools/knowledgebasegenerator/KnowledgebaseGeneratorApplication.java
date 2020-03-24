@@ -165,12 +165,17 @@ public class KnowledgebaseGeneratorApplication {
             }
         }
 
+        Set<String> uniqueKnownFusionPairs = Sets.newHashSet();
         List<KnownFusions> listKnownFusionsPairsFilter = Lists.newArrayList();
         for (KnownFusions knownPairFusions : listKnownFusionPairs) {
             if (!knownPairFusions.eventType().isEmpty()) {
                 listKnownFusionsPairsFilter.add(knownPairFusions);
+                uniqueKnownFusionPairs.add(knownPairFusions.gene());
             }
         }
+
+        List<String> sortedUniqueKnownFusionPairs = new ArrayList<String>(uniqueKnownFusionPairs);
+        Collections.sort(sortedUniqueKnownFusionPairs);
 
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
@@ -203,6 +208,7 @@ public class KnowledgebaseGeneratorApplication {
                 .actionableDeletion(listFilterActionableDeletion)
                 .signatures(listSignaturesFilter)
                 .knownFusionPairs(listKnownFusionsPairsFilter)
+                .uniqueKnownFusionPairs(sortedUniqueKnownFusionPairs)
                 .build();
 
         // Create all output files from knowledgebase with data
