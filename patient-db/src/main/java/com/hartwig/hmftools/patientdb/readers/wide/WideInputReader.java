@@ -39,7 +39,17 @@ public class WideInputReader {
     private static final int BIOPSY_DATA_DATA_AVAILABLE = 2;
     private static final int BIOPSY_DATA_TISSUE_ID = 3;
     private static final int BIOPSY_DATA_DATE = 4;
-    private static final int BIOPSY_DATA_WGS_SUCCESFUL = 4;
+    private static final int BIOPSY_DATA_WGS_SUCCESFUL = 5;
+
+    private static final int RESPONSE_DATA_COUNT = 8;
+    private static final int RESPONSE_DATA_PATIENT_ID = 0;
+    private static final int RESPONSE_DATA_TIME_POINT = 1;
+    private static final int RESPONSE_DATA_DATE = 2;
+    private static final int RESPONSE_DATA_RECIST_NOT_DONE = 3;
+    private static final int RESPONSE_DATA_RESPONSE_ACCORDING_RECIST = 4;
+    private static final int RESPONSE_DATA_CLINICAL_DECISION = 5;
+    private static final int RESPONSE_DATA_REASON_STOP_TREATMENT = 6;
+    private static final int RESPONSE_DATA_REASON_STOP_TREATMENT_OTHER = 7;
 
     private WideInputReader() {
     }
@@ -63,7 +73,7 @@ public class WideInputReader {
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE treatment csv: " + line);
             }
-            count +=1;
+            count += 1;
         }
         LOGGER.info(treatmentDataPerEntry);
         return treatmentDataPerEntry;
@@ -79,19 +89,20 @@ public class WideInputReader {
         for (final String line : lines.subList(1, lines.size())) {
             final String[] parts = line.split(FIELD_SEPARATOR, PRE_TREATMENT_DATA_COUNT);
             if (parts.length == PRE_TREATMENT_DATA_COUNT) {
-                WidePreTreatmentData widePreTreatmentData = ImmutableWidePreTreatmentData.of(parts[PRE_TREATMENT_DATA_PATIENT_ID].replace("-", ""),
-                        parts[PRE_TREATMENT_DATA_PREVIOUS_THERAPY],
-                        parts[PRE_TREATMENT_DATA_DRUG1],
-                        parts[PRE_TREATMENT_DATA_DRUG2],
-                        parts[PRE_TREATMENT_DATA_DRUG3],
-                        parts[PRE_TREATMENT_DATA_DRUG4],
-                        parts[PRE_TREATMENT_DATA_DATE_LAST_SYSTEMIC_THERAPY]);
+                WidePreTreatmentData widePreTreatmentData =
+                        ImmutableWidePreTreatmentData.of(parts[PRE_TREATMENT_DATA_PATIENT_ID].replace("-", ""),
+                                parts[PRE_TREATMENT_DATA_PREVIOUS_THERAPY],
+                                parts[PRE_TREATMENT_DATA_DRUG1],
+                                parts[PRE_TREATMENT_DATA_DRUG2],
+                                parts[PRE_TREATMENT_DATA_DRUG3],
+                                parts[PRE_TREATMENT_DATA_DRUG4],
+                                parts[PRE_TREATMENT_DATA_DATE_LAST_SYSTEMIC_THERAPY]);
 
                 preTreatmentDataPerEntry.put(count, widePreTreatmentData);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE pre treatment data csv: " + line);
             }
-            count +=1;
+            count += 1;
         }
         LOGGER.info(preTreatmentDataPerEntry);
         return preTreatmentDataPerEntry;
@@ -118,9 +129,38 @@ public class WideInputReader {
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: " + line);
             }
-            count +=1;
+            count += 1;
         }
         LOGGER.info(biopsyDataPerEntry);
         return biopsyDataPerEntry;
+    }
+
+    @NotNull
+    public static Map<Integer, WideResponseData> buildResponseData(@NotNull final String pathToCsv) throws IOException {
+
+        final Map<Integer, WideResponseData> responseDataPerEntry = Maps.newHashMap();
+        int count = 1;
+
+        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (final String line : lines.subList(1, lines.size())) {
+            final String[] parts = line.split(FIELD_SEPARATOR, RESPONSE_DATA_COUNT);
+            if (parts.length == RESPONSE_DATA_COUNT) {
+                WideResponseData wideResponseData = ImmutableWideResponseData.of(parts[RESPONSE_DATA_PATIENT_ID].replace("-", ""),
+                        parts[RESPONSE_DATA_TIME_POINT],
+                        parts[RESPONSE_DATA_DATE],
+                        parts[RESPONSE_DATA_RECIST_NOT_DONE],
+                        parts[RESPONSE_DATA_RESPONSE_ACCORDING_RECIST],
+                        parts[RESPONSE_DATA_CLINICAL_DECISION],
+                        parts[RESPONSE_DATA_REASON_STOP_TREATMENT],
+                        parts[RESPONSE_DATA_REASON_STOP_TREATMENT_OTHER]);
+
+                responseDataPerEntry.put(count, wideResponseData);
+            } else if (parts.length > 0) {
+                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: " + line);
+            }
+            count += 1;
+        }
+        LOGGER.info(responseDataPerEntry);
+        return responseDataPerEntry;
     }
 }

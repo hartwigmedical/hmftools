@@ -235,7 +235,7 @@ public final class LoadClinicalData {
         EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(drupEcrfFilePath);
         LOGGER.info(" Finished loading DRUP eCRF. Read {} patients", drupEcrfModel.patientCount());
 
-        LOGGER.info("Loading WIDE from {}", "");
+        LOGGER.info("Loading WIDE clinical data");
         String wideTreatmentData = cmd.getOptionValue(WIDE_TREATMENT_DATA);
         WideInputReader.buildTreatmentData(wideTreatmentData);
         String widePreviousTreatmentData = cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA);
@@ -243,7 +243,8 @@ public final class LoadClinicalData {
         String wideBioptData = cmd.getOptionValue(WIDE_BIOPT_DATA);
         WideInputReader.buildBiopsyData(wideBioptData);
         String wideResponseData = cmd.getOptionValue(WIDE_RESPONSE_DATA);
-        LOGGER.info(" Finished loading WIDE. Read {} patients", 1);
+        WideInputReader.buildResponseData(wideResponseData);
+        LOGGER.info(" Finished loading WIDE clinical data");
 
         return ImmutableEcrfModels.of(cpctEcrfModel, drupEcrfModel);
     }
