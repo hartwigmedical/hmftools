@@ -51,7 +51,7 @@ public class AltContext implements VariantHotspot {
     }
 
     @NotNull
-    public ReadContextCounter setPrimaryReadCounterFromInterim() {
+    private ReadContextCounter setPrimaryReadCounterFromInterim() {
         interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
         readContextCounter = interimReadContexts.isEmpty()
                 ? new ReadContextCounter(refContext.sample(), this, ReadContextFactory.dummy((int) position(), alt), false)

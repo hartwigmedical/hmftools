@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.context;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,24 +30,19 @@ public class RefContext implements GenomePosition {
 
     @NotNull
     public Collection<AltContext> alts() {
-        return new ArrayList<>(alts.values());
+        return alts.values();
     }
 
     public void refRead() {
         this.rawDepth++;
     }
 
-    @NotNull
-    public AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
-        final String refAltKey = ref + "|" + alt;
-        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
-    }
-
-
-    public void altReadCandidate(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext interimReadContext) {
-        this.rawDepth++;
-        final AltContext altContext = altContext(ref, alt);
-        altContext.addReadContext(interimReadContext);
+    public void altRead(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext readContext) {
+        if (readContext.isComplete()) {
+            this.rawDepth++;
+            final AltContext altContext = altContext(ref, alt);
+            altContext.addReadContext(readContext);
+        }
     }
 
     @NotNull
@@ -90,4 +84,11 @@ public class RefContext implements GenomePosition {
         h += (h << 5) + Longs.hashCode(position());
         return h;
     }
+
+    @NotNull
+    private AltContext altContext(@NotNull final String ref, @NotNull final String alt) {
+        final String refAltKey = ref + "|" + alt;
+        return alts.computeIfAbsent(refAltKey, key -> new AltContext(this, ref, alt));
+    }
+
 }

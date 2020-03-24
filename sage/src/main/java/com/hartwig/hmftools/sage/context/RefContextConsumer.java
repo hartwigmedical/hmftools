@@ -128,7 +128,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
-                refContext.altReadCandidate(ref, alt, readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases));
+                refContext.altRead(ref, alt, readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases));
             }
         }
     }
@@ -143,7 +143,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
-                refContext.altReadCandidate(ref, alt, readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases));
+                refContext.altRead(ref, alt, readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases));
             }
         }
     }
@@ -175,7 +175,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
-                    refContext.altReadCandidate(ref, alt, readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases));
+                    refContext.altRead(ref, alt, readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases));
 
                     int mnvMaxLength = mnvLength(refPosition,
                             refPositionStart + alignmentLength - 1,
@@ -191,7 +191,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         // Only check last base because some subsets may not be valid,
                         // ie CA > TA is not a valid subset of CAC > TAT
                         if (mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1)) {
-                            refContext.altReadCandidate(mnvRef,
+                            refContext.altRead(mnvRef,
                                     mnvAlt, readContextFactory.createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
                         }
                     }
