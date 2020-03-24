@@ -22,18 +22,11 @@ public class AltContext implements VariantHotspot {
     private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
 
     private ReadContextCounter readContextCounter;
-    private int rawSupportAlt;
-    private int rawBaseQualityAlt;
 
     public AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
         this.ref = ref;
         this.alt = alt;
-    }
-
-    public void incrementAltRead(int baseQuality) {
-        this.rawSupportAlt++;
-        this.rawBaseQualityAlt += baseQuality;
     }
 
     public void addReadContext(@NotNull final ReadContext newReadContext) {
@@ -101,17 +94,8 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
-    public int rawSupportAlt() {
-        return rawSupportAlt;
-    }
-
     public int rawDepth() {
         return refContext.rawDepth();
-    }
-
-
-    public int rawBaseQualityAlt() {
-        return rawBaseQualityAlt;
     }
 
     @NotNull

@@ -5,30 +5,22 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.count.EvictingArray;
-import com.hartwig.hmftools.sage.select.HotspotSelector;
 
 import org.jetbrains.annotations.NotNull;
 
 public class RefContextFactory {
 
-    private final SageConfig config;
-    private final HotspotSelector hotspotSelector;
     private final String sample;
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
-    public RefContextFactory(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector,
-            @NotNull final String sample) {
+    public RefContextFactory(@NotNull final String sample) {
         this.sample = sample;
-        this.config = config;
-        this.hotspotSelector = hotspotSelector;
         final Consumer<RefContext> evictionHandler = (refContext) -> {
             refContext.alts()
                     .stream()
                     .filter(this::refPredicate)
-                    .filter(this::rawPredicate)
                     .filter(x -> x.primaryReadContext().readContext().isComplete())
                     .forEach(savedCandidates::add);
         };
@@ -57,11 +49,6 @@ public class RefContextFactory {
         }
 
         return true;
-    }
-
-    private boolean rawPredicate(@NotNull final AltContext altContext) {
-        return hotspotSelector.isHotspot(altContext) || altContext.rawSupportAlt() >= config.filter().hardMinTumorRawAltSupport()
-                && altContext.rawBaseQualityAlt() >= config.filter().hardMinTumorRawBaseQuality();
     }
 
 }

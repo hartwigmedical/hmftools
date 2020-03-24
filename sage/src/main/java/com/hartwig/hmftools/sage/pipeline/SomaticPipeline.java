@@ -155,7 +155,6 @@ public class SomaticPipeline implements SageVariantPipeline {
 
     @NotNull
     private Predicate<ReadContextCounter> hardFilterEvidence(@NotNull final List<VariantHotspot> variants) {
-        final HotspotSelector tierSelector = new HotspotSelector(variants);
-        return altContext -> altContext.tumorQuality() >= config.filter().hardMinTumorQual() || tierSelector.isHotspot(altContext);
+        return config.filter().hardFilter(new HotspotSelector(variants));
     }
 }

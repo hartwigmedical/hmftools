@@ -2,6 +2,10 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.util.function.Predicate;
+
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.commons.cli.CommandLine;
@@ -91,11 +95,9 @@ public interface FilterConfig {
         return 5;
     }
 
-
     default double minGermlineVaf() {
         return 0;
     }
-
 
     @NotNull
     SoftFilterConfig softHotspotFilter();
@@ -153,6 +155,18 @@ public interface FilterConfig {
             default:
                 return softLowConfidenceFilter();
         }
+    }
+
+    @NotNull
+    default Predicate<ReadContextCounter> hardFilter(@NotNull final HotspotSelector hotspotSelector) {
+        return readContextCounter -> {
+            if (hotspotSelector.isHotspot(readContextCounter)) {
+                return true;
+            }
+            return readContextCounter.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
+                    && readContextCounter.rawAltSupport() >= hardMinTumorRawAltSupport()
+                    && readContextCounter.tumorQuality() >= hardMinTumorQual();
+        };
     }
 
 }
