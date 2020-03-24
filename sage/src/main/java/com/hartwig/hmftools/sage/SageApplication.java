@@ -17,6 +17,7 @@ import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -95,7 +96,7 @@ public class SageApplication implements AutoCloseable {
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig)) {
+            if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
                 ChromosomePipeline pipeline = createChromosomePipeline(contig);
                 pipeline.addAllRegions();
                 chromosomePipelines.add(pipeline.submit());
@@ -133,7 +134,8 @@ public class SageApplication implements AutoCloseable {
     }
 
     private ChromosomePipeline createChromosomePipeline(@NotNull final String contig) throws IOException {
-        final Chromosome chromosome = HumanChromosome.fromString(contig);
+        final Chromosome chromosome =
+                HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
         return new ChromosomePipeline(contig,
                 config,
                 executorService,

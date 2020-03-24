@@ -118,11 +118,9 @@ public class ChromosomePipeline implements AutoCloseable {
         }
 
         return done.thenApply(aVoid -> {
-            LOGGER.info("Phasing chromosome {}", chromosome);
-
             phase.flush();
             sageVCF.close();
-            LOGGER.info("Finished processing chromosome {}", chromosome);
+            LOGGER.info("Processing chromosome {} complete", chromosome);
             return ChromosomePipeline.this;
         });
 

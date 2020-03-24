@@ -7,7 +7,6 @@ import java.util.Set;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -89,9 +88,10 @@ public class SageVariantFactory {
         }
 
         // GERMLINE Tests
-        Chromosome contextChromosome = HumanChromosome.fromString(normal.chromosome());
+        final boolean chromosomeIsAllosome =
+                HumanChromosome.contains(normal.chromosome()) && HumanChromosome.fromString(normal.chromosome()).isAllosome();
         int minGermlineCoverage =
-                contextChromosome.isAllosome() ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
+                chromosomeIsAllosome ? config.minGermlineReadContextCoverageAllosome() : config.minGermlineReadContextCoverage();
         if (normal.coverage() < minGermlineCoverage) {
             result.add(SoftFilter.MIN_GERMLINE_DEPTH.toString());
         }
