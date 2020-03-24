@@ -36,6 +36,7 @@ import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
+import com.hartwig.hmftools.patientdb.readers.wide.WideInputReader;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -233,6 +234,16 @@ public final class LoadClinicalData {
         LOGGER.info("Loading DRUP eCRF from {}", drupEcrfFilePath);
         EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(drupEcrfFilePath);
         LOGGER.info(" Finished loading DRUP eCRF. Read {} patients", drupEcrfModel.patientCount());
+
+        LOGGER.info("Loading WIDE from {}", "");
+        String wideTreatmentData = cmd.getOptionValue(WIDE_TREATMENT_DATA);
+        WideInputReader.buildTreatmentData(wideTreatmentData);
+        String widePreviousTreatmentData = cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA);
+        WideInputReader.buildPreTreatmentData(widePreviousTreatmentData);
+        String wideBioptData = cmd.getOptionValue(WIDE_BIOPT_DATA);
+        WideInputReader.buildBiopsyData(wideBioptData);
+        String wideResponseData = cmd.getOptionValue(WIDE_RESPONSE_DATA);
+        LOGGER.info(" Finished loading WIDE. Read {} patients", 1);
 
         return ImmutableEcrfModels.of(cpctEcrfModel, drupEcrfModel);
     }
