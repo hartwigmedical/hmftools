@@ -120,7 +120,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext.rawDepth() < config.maxReadDepth()) {
+            if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
                 int baseQuality = baseQuality(readIndex, record, alt.length());
                 refContext.altReadCandidate(ref, alt, baseQuality, readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases));
             }
@@ -136,7 +136,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final String alt = new String(record.getReadBases(), readIndex, 1);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext.rawDepth() < config.maxReadDepth()) {
+            if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
                 int baseQuality = baseQuality(readIndex, record, 2);
                 refContext.altReadCandidate(ref, alt, baseQuality, readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases));
             }
@@ -163,7 +163,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             final byte readByte = record.getReadBases()[readBaseIndex];
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext.rawDepth() < config.maxReadDepth()) {
+            if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
@@ -240,7 +240,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         RefContext startRefContext = candidates.refContext(bounds.chromosome(), alignmentStart);
         RefContext endRefContext = candidates.refContext(bounds.chromosome(), alignmentEnd);
 
-        return startRefContext.rawDepth() >= config.maxReadDepth() && endRefContext.rawDepth() >= config.maxReadDepth();
+        return startRefContext.rawDepth() >= config.maxReadDepthCandidate() && endRefContext.rawDepth() >= config.maxReadDepthCandidate();
     }
 
 }

@@ -373,7 +373,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 48 | 27 | 1047 | 66
 
  ## Version History
+ - TODO
+   - Add tumor only support
  - Upcoming
+   - Improved sensitivity in high depth regions
+   - Mitochondria support
    - Multiple tumor support
    - Multiple reference (or RNA) support
    - Removed explicit RNA support (can use additional reference instead)

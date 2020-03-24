@@ -179,7 +179,7 @@ public class ReadContextCounter implements VariantHotspot {
 
         try {
 
-            if (coverage >= sageConfig.maxReadDepth() || !readContext.isComplete()) {
+            if (coverage >= sageConfig.maxReadDepthEvidence() || !readContext.isComplete()) {
                 return;
             }
 
