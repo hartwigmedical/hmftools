@@ -29,7 +29,7 @@
         <module>sig-analyser</module>
         <module>sv-tools</module>
         <module>isofox</module>
-        <module>stat_calcs</module>
+        <module>stat-calcs</module>
         <module>knowledgebase-importer</module>
         <module>vicc-knowledgebase-importer</module>
         <module>iclusion-importer</module>

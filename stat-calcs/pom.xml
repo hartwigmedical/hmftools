@@ -8,7 +8,7 @@
         <version>local-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stat_calcs</artifactId>
+    <artifactId>stat-calcs</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
     <name>HMF Tools - Statistical Calcs</name>
