@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.genome.region;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public interface GenomeRegion extends Comparable<GenomeRegion> {
             return 1;
         }
 
-        return HumanChromosome.fromString(chromosome()).compareTo(HumanChromosome.fromString(other.chromosome()));
+        return ContigComparator.INSTANCE.compare(chromosome(), other.chromosome());
     }
 
     default boolean contains(@NotNull final GenomePosition position) {
