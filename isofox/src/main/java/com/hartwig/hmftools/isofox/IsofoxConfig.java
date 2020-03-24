@@ -30,8 +30,8 @@ public class IsofoxConfig
     public static final String DATA_OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_ID = "output_id";
 
-    private static final String GENE_ID_FILE = "gene_id_file";
-    private static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
+    public static final String GENE_ID_FILE = "gene_id_file";
+    public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
     private static final String CANONICAL_ONLY = "canonical_only";
     private static final String WRITE_TRANS_DATA = "write_trans_data";
@@ -429,7 +429,7 @@ public class IsofoxConfig
 
     private static final int COL_GENE_ID = 0;
 
-    private static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
+    public static void loadGeneIdsFile(final String filename, final List<String> geneIdList)
     {
         if (!Files.exists(Paths.get(filename)))
         {

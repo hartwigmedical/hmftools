@@ -109,7 +109,7 @@ public abstract class SummaryStats
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load summary data file({}): {}", filename.toString(), e.toString());
             return null;
         }
     }

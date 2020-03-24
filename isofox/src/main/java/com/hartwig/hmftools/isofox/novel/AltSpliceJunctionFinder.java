@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_5_PR
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.SKIPPED_EXONS;
-
+import static com.hartwig.hmftools.isofox.results.SummaryStats.csvHeader;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -160,7 +160,8 @@ public class AltSpliceJunctionFinder
 
         AltSpliceJunctionType sjType = classifySpliceJunction(relatedTransIds, sjStartRegions, sjEndRegions, regionContexts);
 
-        AltSpliceJunction altSplicJunction = new AltSpliceJunction(spliceJunction, sjType, regionContexts, sjStartRegions, sjEndRegions);
+        AltSpliceJunction altSplicJunction = new AltSpliceJunction(
+                mGenes.chromosome(), spliceJunction, sjType, regionContexts, sjStartRegions, sjEndRegions);
 
         altSplicJunction.setCandidateTranscripts(read.getMappedRegions().keySet().stream().collect(Collectors.toList()));
 
@@ -308,11 +309,11 @@ public class AltSpliceJunctionFinder
             return;
         }
 
-        final List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.SjStartRegions);
-        regions1.addAll(firstAltSJ.SjEndRegions);
+        final List<RegionReadData> regions1 = Lists.newArrayList(firstAltSJ.getSjStartRegions());
+        regions1.addAll(firstAltSJ.getSjEndRegions());
 
-        final List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.SjStartRegions);
-        regions2.addAll(secondAltSJ.SjEndRegions);
+        final List<RegionReadData> regions2 = Lists.newArrayList(secondAltSJ.getSjStartRegions());
+        regions2.addAll(secondAltSJ.getSjEndRegions());
 
         List<Integer> commonTranscripts = Lists.newArrayList();
 
@@ -435,7 +436,7 @@ public class AltSpliceJunctionFinder
 
             for(final GeneReadData gene : mGenes.genes())
             {
-                if(gene.getExonRegions().stream().anyMatch(x -> altSJ.SjStartRegions.contains(x) || altSJ.SjEndRegions.contains(x)))
+                if(gene.getExonRegions().stream().anyMatch(x -> altSJ.getSjStartRegions().contains(x) || altSJ.getSjEndRegions().contains(x)))
                 {
                     candidateGenes.add(gene);
                 }
@@ -460,25 +461,25 @@ public class AltSpliceJunctionFinder
 
             if(topGene != null)
             {
-                altSJ.setGene(topGene);
+                altSJ.setGeneId(topGene.GeneData.GeneId);
             }
             else
             {
-                altSJ.setGene(mGenes.genes().get(0));
+                altSJ.setGeneId(mGenes.genes().get(0).GeneData.GeneId);
             }
         }
     }
+
+    public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
 
     public static BufferedWriter createWriter(final IsofoxConfig config)
     {
         try
         {
-            final String outputFileName = config.formOutputFile("alt_splice_junc.csv");
+            final String outputFileName = config.formOutputFile(ALT_SJ_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,StartDepth,EndDepth");
-            writer.write(",Type,StartContext,EndContext,NearestStartExon,NearestEndExon");
-            writer.write(",StartBases,EndBases,StartTrans,EndTrans,PosStrandGenes,NegStrandGenes");
+            writer.write(AltSpliceJunction.csvHeader());
             writer.newLine();
             return writer;
         }
@@ -493,7 +494,12 @@ public class AltSpliceJunctionFinder
     {
         if(mWriter != null)
         {
-            mAltSpliceJunctions.forEach(x -> x.calcSummaryData(mConfig.RefFastaSeqFile));
+            for(final AltSpliceJunction altSJ : mAltSpliceJunctions)
+            {
+                final GeneReadData gene = mGenes.genes().stream().filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
+                altSJ.calcSummaryData(mConfig.RefFastaSeqFile, gene);
+            }
+
             final int[] strandGeneCounts = {0, 0};
 
             for(final GeneReadData gene : mGenes.genes())
@@ -504,35 +510,23 @@ public class AltSpliceJunctionFinder
                     ++strandGeneCounts[1];
             }
 
-            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, strandGeneCounts);
+            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mGenes, strandGeneCounts);
         }
     }
 
     private synchronized static void writeAltSpliceJunctions(
-            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions, final int[] strandGeneCounts)
+            final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions,
+            final GeneCollection geneCollection, final int[] strandGeneCounts)
     {
         try
         {
             for(final AltSpliceJunction altSJ : altSpliceJunctions)
             {
-                writer.write(String.format("%s,%s,%s,%d",
-                        altSJ.getGene().GeneData.GeneId, altSJ.getGene().GeneData.GeneName,
-                        altSJ.getGene().GeneData.Chromosome, altSJ.getGene().GeneData.Strand));
+                final GeneReadData gene = geneCollection.genes().stream()
+                        .filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
 
-                writer.write(String.format(",%d,%d,%d,%d,%d",
-                        altSJ.SpliceJunction[SE_START], altSJ.SpliceJunction[SE_END], altSJ.getFragmentCount(),
-                        altSJ.getPositionCount(SE_START),
-                        altSJ.getPositionCount(SE_END)));
-
-                writer.write(String.format(",%s,%s,%s,%d,%d,%s,%s",
-                        altSJ.type(), altSJ.RegionContexts[SE_START], altSJ.RegionContexts[SE_END],
-                        altSJ.getNearestExonDistance()[SE_START], altSJ.getNearestExonDistance()[SE_END],
-                        altSJ.getBaseContext()[SE_START], altSJ.getBaseContext()[SE_END]));
-
-                writer.write(String.format(",%s,%s,%d,%d",
-                        altSJ.getTranscriptNames()[SE_START], altSJ.getTranscriptNames()[SE_END],
-                        strandGeneCounts[0], strandGeneCounts[1]));
-
+                writer.write(altSJ.toCsv(gene.GeneData));
+                writer.write(String.format(",%d,%d", strandGeneCounts[0], strandGeneCounts[1]));
                 writer.newLine();
             }
 

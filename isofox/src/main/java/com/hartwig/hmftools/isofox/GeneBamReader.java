@@ -748,6 +748,8 @@ public class GeneBamReader
     public void processReadRecords(final GeneCollection geneCollection, final List<ReadRecord> readRecords)
     {
         mCurrentGenes = geneCollection;
+        mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
+        mRetainedIntronFinder.setGeneData(mCurrentGenes);
         readRecords.forEach(x -> processRead(x));
     }
 

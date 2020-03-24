@@ -4,8 +4,11 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
+import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.SUMMARY;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.getFileId;
+import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.isValid;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.loadFile;
 
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
 import org.apache.commons.cli.CommandLine;
@@ -34,9 +38,12 @@ public class DataLoader
 {
     private final DataLoaderConfig mConfig;
 
+    private AltSpliceJunctionCohort mAltSpliceJunctionProcessor;
+
     public DataLoader(final DataLoaderConfig config)
     {
         mConfig = config;
+        mAltSpliceJunctionProcessor = new AltSpliceJunctionCohort(mConfig);
     }
 
     public boolean load()
@@ -47,6 +54,9 @@ public class DataLoader
             {
                 case SUMMARY:
                     loadSummaryData();
+                    break;
+                case ALT_SPLICE_JUNCTIONS:
+                    mAltSpliceJunctionProcessor.processAltSpliceJunctions();
                     break;
 
                 default:
@@ -61,7 +71,7 @@ public class DataLoader
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(SUMMARY, filenames))
+        if(!formSampleFilenames(mConfig, SUMMARY, filenames))
             return;
 
         try
@@ -71,7 +81,7 @@ public class DataLoader
                     .filter(x -> x != null)
                     .collect(Collectors.toList());
 
-            if(summaryStats.size() != mConfig.SampleIds.size())
+            if(summaryStats.size() != mConfig.SampleData.SampleIds.size())
                 return;
 
             final String outputFileName = mConfig.formCohortFilename(SUMMARY_FILE);
@@ -83,7 +93,7 @@ public class DataLoader
             for(int i = 0; i < summaryStats.size(); ++i)
             {
                 final SummaryStats stats = summaryStats.get(i);
-                writer.write(stats.toCsv(mConfig.SampleIds.get(i)));
+                writer.write(stats.toCsv(mConfig.SampleData.SampleIds.get(i)));
                 writer.newLine();
             }
 
@@ -95,43 +105,18 @@ public class DataLoader
         }
     }
 
-    public boolean formSampleFilenames(final DataLoadType dataType, final List<Path> filenames)
-    {
-        String rootDir = mConfig.RootDataDir;
-
-        if(!rootDir.endsWith(File.separator))
-            rootDir += File.separator;
-
-        for(final String sampleId : mConfig.SampleIds)
-        {
-            String filename = rootDir;
-
-            if(mConfig.UseSampleDirectories)
-                filename += File.separator + sampleId + File.separator;
-
-            filename += sampleId + ".isf.";
-            filename += getFileId(dataType);
-
-            final Path path = Paths.get(filename);
-
-            if (!Files.exists(path))
-            {
-                ISF_LOGGER.error("sampleId({}) no file({}) found", sampleId, filename);
-                filenames.clear();
-                return false;
-            }
-
-            filenames.add(path);
-        }
-
-        return true;
-    }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
         final Options options = DataLoaderConfig.createCmdLineOptions();
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd = parser.parse(options, args);
+
+        if(!isValid(cmd))
+        {
+            ISF_LOGGER.error("missing or invalid config options");
+            return;
+        }
 
         if (cmd.hasOption(LOG_DEBUG))
         {
