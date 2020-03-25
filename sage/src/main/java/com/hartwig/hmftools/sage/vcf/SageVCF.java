@@ -35,7 +35,6 @@ public class SageVCF implements AutoCloseable {
     public final static String READ_CONTEXT = "RC";
     public final static String PASS = "PASS";
     public final static String DEDUP_FILTER = "dedup";
-    public final static String MIN_GERMLINE_VAF = "min_germline_vaf";
 
     private final static String READ_CONTEXT_DESCRIPTION = "Read context";
     public final static String READ_CONTEXT_JITTER = "RC_JIT";
@@ -161,7 +160,6 @@ public class SageVCF implements AutoCloseable {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(MIN_GERMLINE_VAF, "Insufficient germline VAF"));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));

@@ -90,10 +90,6 @@ public interface FilterConfig {
         return 5;
     }
 
-    default double minGermlineVaf() {
-        return 0;
-    }
-
     @NotNull
     SoftFilterConfig softHotspotFilter();
 
