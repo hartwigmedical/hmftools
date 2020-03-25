@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
@@ -38,7 +37,6 @@ public class ChromosomePipeline implements AutoCloseable {
     private final String chromosome;
     private final SageConfig config;
     private final SageChromosomeVCF sageVCF;
-    private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
     private final IndexedFastaSequenceFile refGenome;
     private final SageVariantPipeline sageVariantPipeline;
@@ -48,8 +46,6 @@ public class ChromosomePipeline implements AutoCloseable {
             @NotNull final List<GenomeRegion> highConfidenceRegions) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
-        this.variantContextFactory =
-                config.germlineOnly() ? SageVariantContextFactory::germlineOnly : SageVariantContextFactory::pairedTumorNormal;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
         this.sageVariantPipeline = config.germlineOnly()
@@ -96,7 +92,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
         final Consumer<SageVariant> phasedConsumer = variant -> {
             if (include(variant)) {
-                final VariantContext context = variantContextFactory.apply(variant);
+                final VariantContext context = SageVariantContextFactory.create(variant);
                 sageVCF.write(context);
             }
         };

@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.TIER;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -40,21 +39,7 @@ public class SageVariantContextFactory {
     private static final double HET_CUTOFF = 0.1;
 
     @NotNull
-    public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
-        assert (!entry.isNormalEmpty());
-
-        final ReadContextCounter normal = entry.normalAltContexts().get(0);
-
-        final Genotype normalGenotype = createGenotype(true, normal);
-        final List<Genotype> genotypes = Collections.singletonList(normalGenotype);
-        return createContext(entry, createAlleles(normal), genotypes, entry.readContext());
-    }
-
-    @NotNull
-    public static VariantContext pairedTumorNormal(@NotNull final SageVariant entry) {
-        final List<ReadContextCounter> tumorContexts = entry.tumorAltContexts();
-        assert (tumorContexts.size() >= 1);
-
+    public static VariantContext create(@NotNull final SageVariant entry) {
 
         final List<Genotype> genotypes = Lists.newArrayList();
         for (int i = 0; i < entry.normalAltContexts().size(); i++) {
@@ -62,8 +47,7 @@ public class SageVariantContextFactory {
             genotypes.add(createGenotype(i == 0, normalContext));
         }
 
-        tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
-
+        entry.tumorAltContexts().stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
         return createContext(entry, createAlleles(entry.variant()), genotypes, entry.readContext());
     }
 
