@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
 import java.util.function.Predicate;
 
+import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
@@ -126,8 +127,8 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
-                .disableSoftFilter(cmd.hasOption(DISABLE_SOFT_FILTER))
-                .hardFilter(cmd.hasOption(HARD_FILTER))
+                .disableSoftFilter(Configs.containsFlag(cmd, DISABLE_SOFT_FILTER))
+                .hardFilter(Configs.containsFlag(cmd, HARD_FILTER))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
                 .hardMinTumorRawBaseQuality(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY))

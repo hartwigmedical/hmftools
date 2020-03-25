@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -38,7 +39,6 @@ public interface SageConfig {
     String PANEL_ONLY = "panel_only";
     String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
-    String DISABLE_MNV = "disable_mnv";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
@@ -47,7 +47,6 @@ public interface SageConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
-        options.addOption(DISABLE_MNV, false, "Disables merging phased SNVs into MNVs");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -99,8 +98,6 @@ public interface SageConfig {
     String panelBed();
 
     boolean panelOnly();
-
-    boolean mnvDetection();
 
     @NotNull
     String hotspots();
@@ -192,7 +189,6 @@ public interface SageConfig {
                 .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
-                .mnvDetection(!cmd.hasOption(DISABLE_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
@@ -201,7 +197,7 @@ public interface SageConfig {
                 .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
-                .panelOnly(cmd.hasOption(PANEL_ONLY))
+                .panelOnly(Configs.containsFlag(cmd, PANEL_ONLY))
                 .build();
     }
 }

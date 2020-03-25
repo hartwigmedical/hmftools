@@ -58,4 +58,13 @@ public final class Configs {
 
         return defaultValue;
     }
+
+    public static boolean containsFlag(@NotNull final CommandLine cmd, @NotNull final String opt) {
+        if (cmd.hasOption(opt)) {
+            LOGGER.info("Using non default {} flag", opt);
+            return true;
+        }
+        return false;
+    }
+
 }

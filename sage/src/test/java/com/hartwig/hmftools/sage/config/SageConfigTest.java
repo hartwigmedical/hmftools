@@ -28,7 +28,6 @@ public class SageConfigTest {
     public static SageConfig testConfig() {
         return ImmutableSageConfig.builder()
                 .panelOnly(false)
-                .mnvDetection(false)
                 .version("2.1")
                 .outputFile("output file")
                 .reference(Lists.newArrayList("reference"))
