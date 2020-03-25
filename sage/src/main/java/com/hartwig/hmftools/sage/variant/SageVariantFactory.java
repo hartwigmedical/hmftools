@@ -48,25 +48,27 @@ public class SageVariantFactory {
         final SageVariantTier tier = tierSelector.tier(variant);
         final SoftFilterConfig softConfig = config.softConfig(tier);
 
-        if (!isTumorEmpty) {
-            boolean passingTumor = false;
-            for (ReadContextCounter tumorReadContextCounter : tumor) {
-                final Set<String> tumorFilters = Sets.newHashSet();
+        if (!config.disableSoftFilter()) {
+            if (!isTumorEmpty) {
+                boolean passingTumor = false;
+                for (ReadContextCounter tumorReadContextCounter : tumor) {
+                    final Set<String> tumorFilters = Sets.newHashSet();
 
-                tumorFilters.addAll(tumorFilters(tier, softConfig, tumorReadContextCounter));
-                if (!isNormalEmpty) {
-                    tumorFilters.addAll(somaticFilters(tier, softConfig, normal.get(0), tumorReadContextCounter));
+                    tumorFilters.addAll(tumorFilters(tier, softConfig, tumorReadContextCounter));
+                    if (!isNormalEmpty) {
+                        tumorFilters.addAll(somaticFilters(tier, softConfig, normal.get(0), tumorReadContextCounter));
+                    }
+
+                    if (tumorFilters.isEmpty()) {
+                        passingTumor = true;
+                    }
+
+                    filters.addAll(tumorFilters);
                 }
 
-                if (tumorFilters.isEmpty()) {
-                    passingTumor = true;
+                if (passingTumor) {
+                    filters.clear();
                 }
-
-                filters.addAll(tumorFilters);
-            }
-
-            if (passingTumor) {
-                filters.clear();
             }
         }
 

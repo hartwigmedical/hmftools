@@ -93,11 +93,6 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
-    public ReadContextCounter primaryNormal() {
-        return normalAltContexts.get(0);
-    }
-
-    @NotNull
     public ReadContext readContext() {
         return tumorAltContexts.isEmpty() ? normalAltContexts.get(0).readContext() : tumorAltContexts.get(0).readContext();
     }

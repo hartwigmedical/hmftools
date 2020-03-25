@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FilterConfig {
 
+    String DISABLE_SOFT_FILTER = "disable_soft_filter";
     String HARD_FILTER = "hard_filter";
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
@@ -90,6 +91,8 @@ public interface FilterConfig {
         return 5;
     }
 
+    boolean disableSoftFilter();
+
     @NotNull
     SoftFilterConfig softHotspotFilter();
 
@@ -106,6 +109,7 @@ public interface FilterConfig {
     static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(DISABLE_SOFT_FILTER, false, "Disable soft filters");
         options.addOption(HARD_FILTER, false, "Soft filters become hard");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
@@ -122,6 +126,7 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
+                .disableSoftFilter(cmd.hasOption(DISABLE_SOFT_FILTER))
                 .hardFilter(cmd.hasOption(HARD_FILTER))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))

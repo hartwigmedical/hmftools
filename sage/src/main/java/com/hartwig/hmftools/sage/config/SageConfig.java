@@ -87,11 +87,6 @@ public interface SageConfig {
     String highConfidenceBed();
 
     @NotNull
-    default String primaryTumor() {
-        return tumor().get(0);
-    }
-
-    @NotNull
     List<String> tumor();
 
     @NotNull
