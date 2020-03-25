@@ -92,11 +92,6 @@ public interface SageConfig {
     }
 
     @NotNull
-    default String primaryReference() {
-        return reference().get(0);
-    }
-
-    @NotNull
     List<String> tumor();
 
     @NotNull
@@ -153,13 +148,14 @@ public interface SageConfig {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
 
         final List<String> referenceList = Lists.newArrayList();
-        referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
-        if (referenceList.isEmpty()) {
-            throw new ParseException("At least one reference sample required");
+        if (cmd.hasOption(REFERENCE)) {
+            referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
         }
 
         final List<String> referenceBamList = Lists.newArrayList();
-        referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
+        if (cmd.hasOption(REFERENCE_BAM)) {
+            referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
+        }
 
         if (referenceList.size() != referenceBamList.size()) {
             throw new ParseException("Each reference sample must have matching bam");
@@ -189,6 +185,10 @@ public interface SageConfig {
             if (!new File(tumorBam).exists()) {
                 throw new ParseException("Unable to locate tumor bam " + tumorBam);
             }
+        }
+
+        if (tumorList.isEmpty() && referenceList.isEmpty()) {
+            throw new ParseException("No tumors or references supplied");
         }
 
         return ImmutableSageConfig.builder()

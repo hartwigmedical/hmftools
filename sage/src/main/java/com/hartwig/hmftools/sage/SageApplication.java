@@ -127,7 +127,8 @@ public class SageApplication implements AutoCloseable {
     }
 
     private SAMSequenceDictionary dictionary() throws IOException {
-        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(config.referenceBam().get(0)));
+        final String bam = config.referenceBam().isEmpty() ? config.tumorBam().get(0) : config.referenceBam().get(0);
+        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bam));
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
         tumorReader.close();
         return dictionary;

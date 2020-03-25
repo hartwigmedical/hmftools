@@ -34,8 +34,6 @@ public class ReadContextCounters {
         };
     }
 
-
-
     @NotNull
     public List<ReadContextCounter> readContextCounters(@NotNull final VariantHotspot variant) {
         assert (map.containsKey(variant));
@@ -48,6 +46,10 @@ public class ReadContextCounters {
         for (ReadContextCounter counter : counters) {
             map.put(counter.variant(), counter);
         }
+    }
+
+    public List<Candidate> allCandidates() {
+        return candidates;
     }
 
     @NotNull

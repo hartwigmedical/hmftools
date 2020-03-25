@@ -109,10 +109,11 @@ public class SomaticPipeline implements SageVariantPipeline {
         // Scan references for evidence
         final CompletableFuture<ReadContextCounters> doneNormal = doneTumor.thenCompose(tumorReadContextCounters -> {
             LOGGER.debug("Scanning reference for evidence in {}:{}", region.chromosome(), region.start());
+            final String primaryReference = config.reference().isEmpty() ? "PRIMARY" : config.reference().get(0);
 
             final Predicate<ReadContextCounter> hardFilter = hardFilterEvidence(hotspots);
             final List<Candidate> candidates = tumorReadContextCounters.candidates(hardFilter);
-            final ReadContextCounters result = new ReadContextCounters(config.primaryReference(), candidates);
+            final ReadContextCounters result = new ReadContextCounters(primaryReference, candidates);
 
             final List<CompletableFuture<Void>> normalFutures = Lists.newArrayList();
 
@@ -136,7 +137,8 @@ public class SomaticPipeline implements SageVariantPipeline {
                     final SageVariantFactory variantFactory =
                             new SageVariantFactory(config.filter(), hotspots, panelRegions, highConfidenceRegions);
 
-                    final List<Candidate> candidates = normalCandidates.candidates(x -> true);
+                    final List<Candidate> candidates =
+                            normalCandidates.allCandidates().isEmpty() ? tumorCandidates.allCandidates() : normalCandidates.allCandidates();
 
                     // Combine normal and tumor together and create variants
                     final List<SageVariant> result = Lists.newArrayList();
