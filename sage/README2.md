@@ -14,6 +14,7 @@ Key features include:
   - Multiple tumor support
   - Multiple reference support
   - RNA support
+  - Tumor only support
 
 # Usage
 
@@ -31,10 +32,9 @@ hotspots | Path to hotspots vcf
 panel_bed | Path to panel bed
 high_confidence_bed | Path to high confidence bed
 
-The cardinality of `reference` must match `reference_bams`. Similarly with `tumor` and `tumor_bams`.
+The cardinality of `reference` must match `reference_bams`. Similarly with `tumor` and `tumor_bams`. At least one tumor must be supplied.
 
 ## Example Usage
-
 
 Minimum set of arguments:
 
@@ -217,18 +217,19 @@ The final quality score also takes into account jitter and is calculated as:
 
 The outputs of this stage are found in the VCF as:
 
-Field | Formula
+Field | Description
 ---|---
 RC_CNT\[0,1,2,3,4,5\] | Read Context Count \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`, `REFERENCE`, `TOTAL`\]
+RC_QUAL\[0,1,2,3,4,5\] | Read Context Quality \[`FULL`, `PARTIAL`, `CORE`, `REALIGNED`, `REFERENCE`, `TOTAL`\]
 RC_JIT\[0,1,2\] | Read Context Jitter \[`SHORTENED`, `LENGTHENED`, `JITTER_PENALTY`\]
-AD\[0,1\] | Allelic Depth \[`REFERENCE`, `FULL` + `PARTIAL` + `CORE` + `REALIGNED`\]
-DP | Allelic Depth (=RC_CNT\[5\])
-AF | Allelic Frequency AD\[1\] / DP
-QUAL | Variant Quality
+AD\[0,1\] | Allelic Depth  (=\[RC_CNT\[4\], RC_CNT\[0\] + RC_CNT\[1\] + RC_CNT\[2\] + RC_CNT\[3\]\] )
+DP | Read Depth (=RC_CNT\[5\])
+AF | Allelic Frequency (=AD\[1\] / DP)
+QUAL | Variant Quality (=RC_QUAL\[0\] + RC_QUAL\[1\] - RC_JIT\[2\])
 
 ### Hard Filters
 
-To reduce processing time an additional hard filter is applied at this stage. 
+To reduce processing the following hard filters are applied: 
 
 Filter | Default Value | Field
 ---|---|---
@@ -269,9 +270,16 @@ max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[
 
 *** A special filter (max_germline_alt_support) is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 
-If multiple tumors are supplied, a variant is not filtered if it is unfiltered for any single tumor. 
+If multiple tumors are supplied, a variant remains unfiltered if it is unfiltered for any single tumor. 
 
 The germline criteria are only evaluated against the primary reference, ie, the first in the supplied reference list.
+If no reference bams supplied, the germline criteria are not evaluated.
+
+Soft filters can be disabled using the `disable_soft_filter` parameter.
+
+Soft filters become hard filters when the `hard_filter` flag is included. 
+
+To set the parameters at the command line append the tier to the filter eg `hotspot_min_tumor_qual` and `high_confidence_min_tumor_qual` set the value of the min_tumor_qual for the `HOTSPOT` and `HIGH_CONFIDENCE` tiers respectively.
 
 ## 5. Phasing
 
@@ -317,16 +325,12 @@ In this case the functional impact of the variant is as an MNV but the mechanism
 
 ## 7. Output
 
-There are two more 'hard' filters that are lazily applied at the end of the process just before writing to file. 
-They only apply to variants that are already filtered. 
+There is one final 'hard' filter that is lazily applied at the end of the process just before writing to file that only apply to variants that are already filtered. 
 They do not save any processing time but do reduce the output file size. 
 
 Filter | Default Value | Field
 ---|---|---
-hard_min_tumor_qual_vcf | 30 | `QUAL`
 hard_max_normal_alt_support |2| Normal `AD[1]`
-
-Including the `hard_filter` flag will turn all the [soft filters](#4-soft-filters) described above into (lazily applied) hard filters. Again, hotspots are excluded from these filters.
 
 
 # Variant Pipeline
@@ -364,10 +368,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 48 | 27 | 1047 | 66
 
  ## Version History
- - TODO
-   - Add tumor only support
  - Upcoming
    - Improved sensitivity in high depth regions
+   - Tumor only support
    - Mitochondria support
    - Multiple tumor support
    - Multiple reference (or RNA) support
