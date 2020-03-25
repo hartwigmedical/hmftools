@@ -19,6 +19,8 @@ public class FusionExtractor {
     @NotNull
     public static KnownFusions determineKnownFusionsPairs(@NotNull Source source, @NotNull String typeEvent,
             @NotNull String gene) {
+        //TODO: convert gene names
+        // MLL --> to KMT2A
         return ImmutableKnownFusions.builder().gene(gene).eventType(typeEvent).source(source.toString()).sourceLink(source.toString()).build();
 
     }
