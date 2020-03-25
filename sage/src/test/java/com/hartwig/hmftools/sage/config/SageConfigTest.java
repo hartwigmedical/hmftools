@@ -28,7 +28,6 @@ public class SageConfigTest {
     public static SageConfig testConfig() {
         return ImmutableSageConfig.builder()
                 .panelOnly(false)
-                .germlineOnly(false)
                 .mnvDetection(false)
                 .version("2.1")
                 .outputFile("output file")
@@ -64,6 +63,7 @@ public class SageConfigTest {
     public static FilterConfig defaultFilterConfig() {
         return ImmutableFilterConfig.builder()
                 .hardFilter(false)
+                .disableSoftFilter(false)
                 .hardMinTumorQual(DEFAULT_HARD_MIN_TUMOR_QUAL)
                 .hardMinTumorRawAltSupport(DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT)
                 .hardMinTumorRawBaseQuality(DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY)

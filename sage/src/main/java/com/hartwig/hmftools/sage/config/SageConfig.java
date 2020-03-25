@@ -100,8 +100,6 @@ public interface SageConfig {
 
     boolean panelOnly();
 
-    boolean germlineOnly();
-
     boolean mnvDetection();
 
     @NotNull
@@ -182,8 +180,8 @@ public interface SageConfig {
             }
         }
 
-        if (tumorList.isEmpty() && referenceList.isEmpty()) {
-            throw new ParseException("No tumors or references supplied");
+        if (tumorList.isEmpty()) {
+            throw new ParseException("At least one tumor must be supplied");
         }
 
         return ImmutableSageConfig.builder()
@@ -204,7 +202,6 @@ public interface SageConfig {
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
                 .panelOnly(cmd.hasOption(PANEL_ONLY))
-                .germlineOnly(cmd.hasOption(GERMLINE_ONLY))
                 .build();
     }
 }

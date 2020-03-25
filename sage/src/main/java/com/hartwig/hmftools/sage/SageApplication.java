@@ -96,21 +96,21 @@ public class SageApplication implements AutoCloseable {
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-//            if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
-//                ChromosomePipeline pipeline = createChromosomePipeline(contig);
-//                pipeline.addAllRegions();
-//                chromosomePipelines.add(pipeline.submit());
-//            }
+            if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
+                ChromosomePipeline pipeline = createChromosomePipeline(contig);
+                pipeline.addAllRegions();
+                chromosomePipelines.add(pipeline.submit());
+            }
         }
 
-        ChromosomePipeline custom = createChromosomePipeline("17");
+//        ChromosomePipeline custom = createChromosomePipeline("17");
 //        custom.addAllRegions();
-        custom.addAllRegions(1_000_000);
+//        custom.addAllRegions(1_000_000);
 //        custom.addRegion(6385360, 6385360);
 //        custom.addRegion(25268011, 25268011);
 //        custom.addRegion(79223325, 79223325);
-//        custom.addRegion(67141, 67141);
-        chromosomePipelines.add(custom.submit());
+//        custom.addRegion(997610, 997610);
+//        chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
         while (chromosomeIterator.hasNext()) {

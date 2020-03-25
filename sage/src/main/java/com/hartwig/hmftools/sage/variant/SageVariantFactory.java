@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.sage.variant;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -33,51 +31,45 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant createGermline(@NotNull final ReadContextCounter normal) {
-        return create(Collections.singletonList(normal), Lists.newArrayList());
-    }
-
-    @NotNull
     public SageVariant create(@NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumor) {
-        assert(!normal.isEmpty() || !tumor.isEmpty());
+        assert (!tumor.isEmpty());
         final Set<String> filters = Sets.newHashSet();
-        final boolean isTumorEmpty = tumor.isEmpty();
         final boolean isNormalEmpty = normal.isEmpty();
 
         final VariantHotspot variant = normal.isEmpty() ? tumor.get(0) : normal.get(0);
         final SageVariantTier tier = tierSelector.tier(variant);
         final SoftFilterConfig softConfig = config.softConfig(tier);
 
-        if (!config.disableSoftFilter()) {
-            if (!isTumorEmpty) {
-                boolean passingTumor = false;
-                for (ReadContextCounter tumorReadContextCounter : tumor) {
-                    final Set<String> tumorFilters = Sets.newHashSet();
+        if (config.disableSoftFilter()) {
+            return new SageVariant(tier, variant, filters, normal, tumor);
+        }
 
-                    tumorFilters.addAll(tumorFilters(tier, softConfig, tumorReadContextCounter));
-                    if (!isNormalEmpty) {
-                        tumorFilters.addAll(somaticFilters(tier, softConfig, normal.get(0), tumorReadContextCounter));
-                    }
+        boolean passingTumor = false;
+        for (ReadContextCounter tumorReadContextCounter : tumor) {
+            final Set<String> tumorFilters = Sets.newHashSet();
 
-                    if (tumorFilters.isEmpty()) {
-                        passingTumor = true;
-                    }
-
-                    filters.addAll(tumorFilters);
-                }
-
-                if (passingTumor) {
-                    filters.clear();
-                }
+            tumorFilters.addAll(tumorFilters(tier, softConfig, tumorReadContextCounter));
+            if (!isNormalEmpty) {
+                tumorFilters.addAll(somaticFilters(tier, softConfig, normal.get(0), tumorReadContextCounter));
             }
+
+            if (tumorFilters.isEmpty()) {
+                passingTumor = true;
+            }
+
+            filters.addAll(tumorFilters);
+        }
+
+        if (passingTumor) {
+            filters.clear();
         }
 
         return new SageVariant(tier, variant, filters, normal, tumor);
     }
 
-
     @NotNull
-    private Set<String> tumorFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config, @NotNull final ReadContextCounter primaryTumor) {
+    private Set<String> tumorFilters(@NotNull final SageVariantTier tier, @NotNull final SoftFilterConfig config,
+            @NotNull final ReadContextCounter primaryTumor) {
         final Set<String> result = Sets.newHashSet();
 
         // TUMOR Tests

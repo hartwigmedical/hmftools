@@ -100,10 +100,9 @@ public class SageVCF implements AutoCloseable {
 
     @NotNull
     static VCFHeader header(@NotNull final SageConfig config) {
-        final List<String> samples = Lists.newArrayList(config.reference());
-        if (!config.germlineOnly()) {
-            samples.addAll(config.tumor());
-        }
+        final List<String> samples = Lists.newArrayList();
+        samples.addAll(config.reference());
+        samples.addAll(config.tumor());
         return header(config.version(), samples);
     }
 
