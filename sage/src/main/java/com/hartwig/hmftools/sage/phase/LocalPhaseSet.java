@@ -6,7 +6,6 @@ import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
@@ -14,30 +13,28 @@ import org.jetbrains.annotations.NotNull;
 class LocalPhaseSet implements Consumer<SageVariant> {
 
     private int phase;
-    private final boolean germline;
+    private final int maxDistance;
     private final Consumer<SageVariant> consumer;
     private final ArrayDeque<SageVariant> deque = new ArrayDeque<>();
 
-    LocalPhaseSet(boolean germline, @NotNull final Consumer<SageVariant> consumer) {
-        this.germline = germline;
+    LocalPhaseSet(int flankSize, @NotNull final Consumer<SageVariant> consumer) {
+        this.maxDistance = flankSize + 5;
         this.consumer = consumer;
     }
 
     @Override
     public void accept(@NotNull final SageVariant newEntry) {
-        final ReadContextCounter newAltContext = altContext(newEntry);
-        final ReadContext newReadContext = newAltContext.readContext();
+        final ReadContext newReadContext = newEntry.readContext();
 
         Iterator<SageVariant> iterator = deque.iterator();
         while (iterator.hasNext()) {
             final SageVariant oldEntry = iterator.next();
 
-            final ReadContextCounter oldAltContext = altContext(oldEntry);
-            final ReadContext oldReadContext = oldAltContext.readContext();
-            long distance = newAltContext.position() - oldAltContext.position();
-            int offset = offset(oldEntry.primaryNormal(), newEntry.primaryNormal());
+            final ReadContext oldReadContext = oldEntry.readContext();
+            long distance = newEntry.position() - oldEntry.position();
+            int offset = offset(oldEntry.variant(), newEntry.variant());
 
-            if (distance > 30 || distance < 0) {
+            if (distance > maxDistance || distance < 0) {
                 iterator.remove();
                 consumer.accept(oldEntry);
             } else if (oldReadContext.phased(offset, newReadContext)) {
@@ -54,10 +51,6 @@ class LocalPhaseSet implements Consumer<SageVariant> {
         }
 
         deque.add(newEntry);
-    }
-
-    private ReadContextCounter altContext(@NotNull final SageVariant newEntry) {
-        return germline ? newEntry.primaryNormal() : newEntry.primaryTumor();
     }
 
     public void flush() {

@@ -145,12 +145,15 @@ public class ChromosomePipeline implements AutoCloseable {
             return true;
         }
 
-        if (config.germlineOnly()) {
-            return true;
+        if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())) {
+            final ReadContextCounter normal = entry.normalAltContexts().get(0);
+            if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+                return false;
+            }
         }
 
-        final ReadContextCounter normal = entry.primaryNormal();
-        return MitochondrialChromosome.contains(entry.chromosome()) || normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
+        return true;
+
     }
 
     @Override

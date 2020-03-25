@@ -143,7 +143,7 @@ public class SomaticPipeline implements SageVariantPipeline {
                     for (Candidate candidate : candidates) {
                         final List<ReadContextCounter> normal = normalCandidates.readContextCounters(candidate.variant());
                         final List<ReadContextCounter> tumor = tumorCandidates.readContextCounters(candidate.variant());
-                        SageVariant sageVariant = variantFactory.create(normal, tumor);
+                        SageVariant sageVariant = variantFactory.createPairedTumorNormal(normal, tumor);
                         result.add(sageVariant);
                     }
 

@@ -33,15 +33,16 @@ public class SageVariantFactory {
     }
 
     @NotNull
-    public SageVariant create(@NotNull final ReadContextCounter normal) {
+    public SageVariant createGermline(@NotNull final ReadContextCounter normal) {
         final SageVariantTier tier = tierSelector.tier(normal);
         final Set<String> filters = germlineOnlyFilters(normal);
 
-        return new SageVariant(tier, filters, Collections.singletonList(normal), Collections.emptyList());
+        return new SageVariant(tier, normal, filters, Collections.singletonList(normal), Collections.emptyList());
     }
 
     @NotNull
-    public SageVariant create(@NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumorAltContexts) {
+    public SageVariant createPairedTumorNormal(@NotNull final List<ReadContextCounter> normal, @NotNull final List<ReadContextCounter> tumor) {
+        assert(!normal.isEmpty() && !tumor.isEmpty());
 
         final ReadContextCounter primaryNormal = normal.get(0);
 
@@ -50,7 +51,7 @@ public class SageVariantFactory {
 
         boolean passingTumor = false;
         final Set<String> allFilters = Sets.newHashSet();
-        for (ReadContextCounter tumorAltContext : tumorAltContexts) {
+        for (ReadContextCounter tumorAltContext : tumor) {
             final Set<String> tumorFilters = pairedFilters(tier, softConfig, primaryNormal, tumorAltContext);
             if (tumorFilters.isEmpty()) {
                 passingTumor = true;
@@ -58,7 +59,7 @@ public class SageVariantFactory {
             allFilters.addAll(tumorFilters);
         }
 
-        return new SageVariant(tier, passingTumor ? Sets.newHashSet() : allFilters, normal, tumorAltContexts);
+        return new SageVariant(tier, primaryNormal, passingTumor ? Sets.newHashSet() : allFilters, normal, tumor);
     }
 
     @NotNull

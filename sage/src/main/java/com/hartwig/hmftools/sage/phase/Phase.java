@@ -15,7 +15,7 @@ public class Phase implements Consumer<SageVariant> {
     public Phase(@NotNull final SageConfig config, @NotNull final Consumer<SageVariant> consumer) {
         dedupIndel = new DedupIndel(consumer);
         mnvMerge = new DedupMnv(dedupIndel);
-        localPhaseSet = new LocalPhaseSet(config.germlineOnly(), mnvMerge);
+        localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), mnvMerge);
 
     }
 

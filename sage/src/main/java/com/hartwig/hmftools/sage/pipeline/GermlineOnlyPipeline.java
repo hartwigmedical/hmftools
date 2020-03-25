@@ -69,7 +69,7 @@ class GermlineOnlyPipeline implements SageVariantPipeline {
                 .stream()
                 .map(AltContext::primaryReadContext)
                 .filter(hardFilter)
-                .map(variantFactory::create)
+                .map(variantFactory::createGermline)
                 .collect(Collectors.toList()));
     }
 
