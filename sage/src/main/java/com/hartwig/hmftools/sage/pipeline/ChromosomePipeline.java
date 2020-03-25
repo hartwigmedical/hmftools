@@ -150,11 +150,7 @@ public class ChromosomePipeline implements AutoCloseable {
         }
 
         final ReadContextCounter normal = entry.primaryNormal();
-        if (!MitochondrialChromosome.contains(entry.chromosome()) && normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
-            return false;
-        }
-
-        return entry.maxQuality() >= config.filter().hardMinTumorQualFiltered();
+        return MitochondrialChromosome.contains(entry.chromosome()) || normal.altSupport() <= config.filter().hardMaxNormalAltSupport();
     }
 
     @Override
