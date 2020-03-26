@@ -19,14 +19,15 @@ public class FormStatusReaderTest {
 
     @Test
     public void canLoadFromCsv() throws IOException {
-        final FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(TEST_FILE);
+        FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(TEST_FILE);
 
-        final Map<FormStatusKey, FormStatus> formStatuses = formStatusModel.formStatuses();
+        Map<FormStatusKey, FormStatus> formStatuses = formStatusModel.formStatuses();
         assertEquals(3, formStatuses.size());
-        final FormStatusKey key1 = new ImmutableFormStatusKey("CPCT02000001", "Anti Coagulants", "0", "Anti Coagulants", "0");
-        final FormStatusKey key2 =
+
+        FormStatusKey key1 = new ImmutableFormStatusKey("CPCT02000001", "Anti Coagulants", "0", "Anti Coagulants", "0");
+        FormStatusKey key2 =
                 new ImmutableFormStatusKey("CPCT02000002", "Death Page", "0", "Neoadjuvant treatment, recurrence and survival", "0");
-        final FormStatusKey key3 = new ImmutableFormStatusKey("CPCT02000004", "Eligibility Screening", "0", "BASELINE", "0");
+        FormStatusKey key3 = new ImmutableFormStatusKey("CPCT02000004", "Eligibility Screening", "0", "BASELINE", "0");
 
         assertTrue(formStatuses.containsKey(key1));
         assertTrue(formStatuses.containsKey(key2));

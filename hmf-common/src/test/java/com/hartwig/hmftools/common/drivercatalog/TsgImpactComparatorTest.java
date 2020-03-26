@@ -52,7 +52,7 @@ public class TsgImpactComparatorTest {
 
     @Test
     public void testSorting() {
-        final List<SomaticVariant> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
+        List<SomaticVariant> list = Lists.newArrayList(missense, nonsense, spliceIndel, spliceSNP, inframe, frameshift);
         Collections.shuffle(list);
 
         list.sort(new TsgImpactComparator());
@@ -65,7 +65,7 @@ public class TsgImpactComparatorTest {
     }
 
     @NotNull
-    private static SomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect) {
+    private static SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect) {
         return SomaticVariantTestBuilderFactory.create().type(type).canonicalCodingEffect(codingEffect).build();
     }
 }

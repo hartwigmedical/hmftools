@@ -18,23 +18,25 @@ public final class XMLEcrfDatamodelToEcrfFields {
 
     @NotNull
     public static List<EcrfDatamodelField> convert(@NotNull final XMLEcrfDatamodel datamodel) {
-        final List<EcrfDatamodelField> fields = Lists.newArrayList();
-        for (final StudyEvent studyEvent : datamodel.studyEvents().values()) {
-            for (final String formOID : studyEvent.formOIDs()) {
-                final Form form = findByOID(datamodel.forms().values(), formOID);
-                for (final String itemGroupOID : form.itemGroupOIDs()) {
-                    final ItemGroup itemGroup = findByOID(datamodel.itemGroups().values(), itemGroupOID);
-                    for (final String itemOID : itemGroup.itemOIDs()) {
-                        final Item item = findByOID(datamodel.items().values(), itemOID);
+        List<EcrfDatamodelField> fields = Lists.newArrayList();
+        for (StudyEvent studyEvent : datamodel.studyEvents().values()) {
+            for (String formOID : studyEvent.formOIDs()) {
+                Form form = findByOID(datamodel.forms().values(), formOID);
+                for (String itemGroupOID : form.itemGroupOIDs()) {
+                    ItemGroup itemGroup = findByOID(datamodel.itemGroups().values(), itemGroupOID);
+                    for (String itemOID : itemGroup.itemOIDs()) {
+                        Item item = findByOID(datamodel.items().values(), itemOID);
                         Map<Integer, String> codeList = Maps.newHashMap();
                         String codeListOID = item.codeListOID();
                         if (codeListOID != null) {
-                            final CodeList codeListObj = findByOID(datamodel.codeLists().values(), codeListOID);
-                            codeList = codeListObj.values();
+                            codeList = findByOID(datamodel.codeLists().values(), codeListOID).values();
                         }
-                        final EcrfDatamodelField field =
-                                new ImmutableEcrfDatamodelField(studyEvent.oid(), form.oid(), itemGroup.oid(), item.oid(), item.name(),
-                                        codeList);
+                        EcrfDatamodelField field = new ImmutableEcrfDatamodelField(studyEvent.oid(),
+                                form.oid(),
+                                itemGroup.oid(),
+                                item.oid(),
+                                item.name(),
+                                codeList);
                         fields.add(field);
                     }
                 }
@@ -44,8 +46,8 @@ public final class XMLEcrfDatamodelToEcrfFields {
     }
 
     @NotNull
-    private static <X extends OIDObject> X findByOID(@NotNull final Collection<X> objects, @NotNull final String OID) {
-        for (final X object : objects) {
+    private static <X extends OIDObject> X findByOID(@NotNull Collection<X> objects, @NotNull String OID) {
+        for (X object : objects) {
             if (object.oid().equals(OID)) {
                 return object;
             }

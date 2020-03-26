@@ -17,7 +17,7 @@ public class CNADriversTest {
 
     @Test
     public void testDeletionsInGermlineAsStillReportable() {
-        final GeneCopyNumber del = createTestCopyNumberBuilder("APC").germlineHet2HomRegions(1).germlineHomRegions(1).build();
+        GeneCopyNumber del = createTestCopyNumberBuilder("APC").germlineHet2HomRegions(1).germlineHomRegions(1).build();
         List<DriverCatalog> drivers = new CNADrivers().deletions(Lists.newArrayList(del));
         assertEquals(1, drivers.size());
         assertEquals("APC", drivers.get(0).gene());
@@ -35,7 +35,7 @@ public class CNADriversTest {
     }
 
     @NotNull
-    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull final String gene) {
+    private static ImmutableGeneCopyNumber.Builder createTestCopyNumberBuilder(@NotNull String gene) {
         return ImmutableGeneCopyNumber.builder()
                 .start(1)
                 .end(2)

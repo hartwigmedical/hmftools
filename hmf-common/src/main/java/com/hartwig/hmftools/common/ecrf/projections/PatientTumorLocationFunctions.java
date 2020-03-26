@@ -20,9 +20,9 @@ public final class PatientTumorLocationFunctions {
     @Nullable
     public static PatientTumorLocation findPatientTumorLocationForSample(@NotNull List<PatientTumorLocation> patientTumorLocations,
             @NotNull String sample) {
-        final String patientIdentifier = toPatientIdentifier(sample);
+         String patientIdentifier = toPatientIdentifier(sample);
 
-        final List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
+         List<PatientTumorLocation> matchingIdTumorLocations = patientTumorLocations.stream()
                 .filter(patientTumorLocation -> patientTumorLocation.patientIdentifier().equals(patientIdentifier))
                 .collect(Collectors.toList());
 
@@ -32,13 +32,13 @@ public final class PatientTumorLocationFunctions {
         if (matchingIdTumorLocations.size() == 1) {
             return matchingIdTumorLocations.get(0);
         } else {
-            LOGGER.warn("Could not find patient " + patientIdentifier + " in clinical data!");
+            LOGGER.warn("Could not find patient '{}' in clinical data!", patientIdentifier);
             return null;
         }
     }
 
     @NotNull
-    private static String toPatientIdentifier(@NotNull final String sample) {
+    private static String toPatientIdentifier(@NotNull String sample) {
         LimsSampleType type = LimsSampleType.fromSampleId(sample);
         if (sample.length() >= 12 && (type == LimsSampleType.CPCT || type == LimsSampleType.DRUP || type == LimsSampleType.WIDE
                 || type == LimsSampleType.CORE)) {

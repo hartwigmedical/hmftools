@@ -46,36 +46,37 @@ public final class FormStatusReader {
 
     @NotNull
     public static FormStatusModel buildModelFromCsv(@NotNull final String pathToCsv) throws IOException {
-        final Map<FormStatusKey, FormStatus> formStatuses = Maps.newHashMap();
-        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        Map<FormStatusKey, FormStatus> formStatuses = Maps.newHashMap();
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         // No need to read the header line
         lines.remove(0);
-        for (final String line : lines) {
-            final String[] parts = splitCsvLine(line, FIELD_SEPARATOR, FIELD_COUNT);
+        for (String line : lines) {
+            String[] parts = splitCsvLine(line, FIELD_SEPARATOR, FIELD_COUNT);
             if (parts.length == FIELD_COUNT) {
-                final FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
-                        removeParentheses(removeQuotes(parts[FORM_NAME_COLUMN])), removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
-                        removeParentheses(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])), removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
-                final FormStatus formStatus = new ImmutableFormStatus(interpretState(removeQuotes(parts[DATA_STATUS_COLUMN])),
+                FormStatusKey formKey = new ImmutableFormStatusKey(removeQuotes(parts[PATIENT_ID_COLUMN].replaceAll("-", "")),
+                        removeParentheses(removeQuotes(parts[FORM_NAME_COLUMN])),
+                        removeQuotes(parts[FORM_SEQ_NUM_COLUMN]),
+                        removeParentheses(removeQuotes(parts[STUDY_EVENT_NAME_COLUMN])),
+                        removeQuotes(parts[STUDY_EVENT_SEQ_NUM_COLUMN]));
+                FormStatus formStatus = new ImmutableFormStatus(interpretState(removeQuotes(parts[DATA_STATUS_COLUMN])),
                         interpretLocked(removeQuotes(parts[LOCKED_COLUMN])));
                 formStatuses.put(formKey, formStatus);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in form status csv: " + line);
+                LOGGER.warn("Could not properly parse line in form status csv: {}", line);
             }
         }
         return new ImmutableFormStatusModel(formStatuses);
     }
 
-    // Split a line in a csv/tsv file by the separator, ignoring occurrences of separator in quoted groups
-    @SuppressWarnings("SameParameterValue")
     @NotNull
-    private static String[] splitCsvLine(@NotNull final String line, @NotNull final String separator, final int limit) {
+    private static String[] splitCsvLine(@NotNull String line, @NotNull String separator, int limit) {
+        // Split a line in a csv/tsv file by the separator, ignoring occurrences of separator in quoted groups
         return line.split(separator + "(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", limit);
     }
 
     @NotNull
-    private static String removeQuotes(@NotNull final String text) {
-        final String trimmedText = text.trim();
+    private static String removeQuotes(@NotNull String text) {
+        String trimmedText = text.trim();
         if (trimmedText.length() > 0 && trimmedText.charAt(0) == QUOTE && trimmedText.charAt(trimmedText.length() - 1) == QUOTE) {
             return trimmedText.substring(1, trimmedText.length() - 1);
         }
@@ -83,7 +84,7 @@ public final class FormStatusReader {
     }
 
     @NotNull
-    private static String removeParentheses(@NotNull final String text) {
+    private static String removeParentheses(@NotNull String text) {
         final Pattern pattern = Pattern.compile(".*(?=(?:\\([0-9]+\\))$)");
         final Matcher matcher = pattern.matcher(text);
         if (matcher.find()) {
@@ -93,16 +94,16 @@ public final class FormStatusReader {
         }
     }
 
-    private static boolean interpretLocked(@NotNull final String locked) {
+    private static boolean interpretLocked(@NotNull String locked) {
         if (!locked.equalsIgnoreCase("true") && !locked.equalsIgnoreCase("false")) {
-            LOGGER.warn("Undefined locked status - cannot convert to boolean: " + locked);
+            LOGGER.warn("Undefined locked status - cannot convert to boolean: {}", locked);
         }
 
         return locked.equalsIgnoreCase("true");
     }
 
     @NotNull
-    private static FormStatusState interpretState(@NotNull final String state) {
+    private static FormStatusState interpretState(@NotNull String state) {
         switch (state) {
             case "0":
                 return FormStatusState.SAVED;
@@ -115,7 +116,7 @@ public final class FormStatusReader {
             case "4":
                 return FormStatusState.VERIFIED;
             default: {
-                LOGGER.warn("Could not interpret data status: " + state);
+                LOGGER.warn("Could not interpret data status: {}", state);
                 return FormStatusState.UNDEFINED;
             }
         }

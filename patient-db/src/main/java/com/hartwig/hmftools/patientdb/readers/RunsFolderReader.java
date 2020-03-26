@@ -9,32 +9,24 @@ import com.hartwig.hmftools.common.utils.io.FolderChecker;
 import com.hartwig.hmftools.patientdb.context.ProductionRunContextFactory;
 import com.hartwig.hmftools.patientdb.context.RunContext;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public final class RunsFolderReader {
-
-    private static final Logger LOGGER = LogManager.getLogger(RunsFolderReader.class);
-
+    
     private RunsFolderReader() {
     }
 
     @NotNull
     public static List<RunContext> extractRunContexts(@NotNull File dir) throws IOException {
-        final List<RunContext> runContexts = Lists.newArrayList();
-        final File[] folders = dir.listFiles(File::isDirectory);
+        List<RunContext> runContexts = Lists.newArrayList();
+        File[] folders = dir.listFiles(File::isDirectory);
         if (folders == null) {
             throw new IOException("List files in " + dir.getName() + " returned null.");
         }
-        for (final File folder : folders) {
-            try {
-                final String runDirectory = FolderChecker.build().checkFolder(folder.getPath());
-                final RunContext runContext = ProductionRunContextFactory.fromRunDirectory(runDirectory);
-                runContexts.add(runContext);
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage());
-            }
+
+        for (File folder : folders) {
+            String runDirectory = FolderChecker.build().checkFolder(folder.getPath());
+            runContexts.add(ProductionRunContextFactory.fromRunDirectory(runDirectory));
         }
         return runContexts;
     }

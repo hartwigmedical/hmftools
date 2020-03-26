@@ -11,5 +11,5 @@ import org.jetbrains.annotations.NotNull;
 public interface EcrfPatientReader {
 
     @NotNull
-    Patient read(@NotNull final EcrfPatient ecrfPatient, @NotNull final List<SampleData> sequencedSamples);
+    Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples);
 }

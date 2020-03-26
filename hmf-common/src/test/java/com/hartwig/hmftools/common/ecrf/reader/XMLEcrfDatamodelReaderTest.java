@@ -22,9 +22,9 @@ public class XMLEcrfDatamodelReaderTest {
 
     @Test
     public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException {
-        final XMLInputFactory factory = XMLInputFactory.newInstance();
-        final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(DATAMODEL_TEST));
-        final XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
+         XMLInputFactory factory = XMLInputFactory.newInstance();
+         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(DATAMODEL_TEST));
+         XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
 
         assertEquals(1, datamodel.studyEvents().size());
         assertEquals(1, datamodel.forms().size());
