@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class FusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
@@ -22,7 +23,8 @@ public class FusionExtractor {
     }
 
     @NotNull
-    public static KnownFusions determineKnownFusionsPairs(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
+    public static KnownFusions determineKnownFusionsPairs(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene,
+            @NotNull String function) {
         if (gene.equals("ZNF198-FGFR1")) {
             gene = "ZMYM2-FGFR1";
         } else if (gene.equals("NPM-ALK")) {
@@ -74,19 +76,17 @@ public class FusionExtractor {
         } else if (gene.equals("BCR-ABL")) {
             gene = "BCR-ABL1";
         } else if (gene.contains("IGH") || gene.contains("IGK") || gene.contains("TRB") || gene.contains("Delta")
-                || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170") || gene.equals("BRAF-CUL1")) {
+                || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170") || gene.equals("BRAF-CUL1")
+                || function.equals("Loss-of-function")) {
             gene = Strings.EMPTY;
             typeEvent = Strings.EMPTY;
             source = Source.UNKNOWN;
         }
-
         return ImmutableKnownFusions.builder()
                 .gene(gene)
                 .eventType(typeEvent)
                 .source(source.toString())
                 .sourceLink(source.toString())
                 .build();
-
     }
-
 }

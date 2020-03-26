@@ -48,8 +48,13 @@ public class EventTypeAnalyzer {
                     if (name.equals("Fusions")) {
                         name = FUSION_PROMISCUOUS;
                     } else if (name.contains("Fusion")) {
-                        gene = name.split(" ")[0];
-                        name = FUSION_PAIR;
+                        if (name.contains(" - ")) {
+                            gene = name.split(" Fusion")[0];
+                            name = FUSION_PAIR;
+                        } else {
+                            gene = name.split(" ")[0];
+                            name = FUSION_PAIR;
+                        }
                     }
 
                     eventMap.put(gene, Lists.newArrayList(name));
@@ -106,7 +111,7 @@ public class EventTypeAnalyzer {
                         } else {
                             gene = name.split(" ", 2)[0];
 
-                            if (name.split(" ", 2).length == 1 && gene.contains("-")) {
+                            if (name.split(" ", 2).length == 1 && gene.contains("-") && !biomarkerType.equals("mutant")) {
                                 eventInfo = FUSION_PAIR;
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
                             } else {
@@ -174,7 +179,7 @@ public class EventTypeAnalyzer {
                             } else if (combinedEventConvertToSingleEvent.length >= 2) {
                                 LOGGER.warn("This event has more events, which is not interpretated!");
                             }
-                        } else if (name.contains("-")) {
+                        } else if (name.contains("-") && !biomarkerType.equals("Missense Variant")) {
                             eventMap.put(name, Lists.newArrayList(FUSION_PAIR));
                         } else if (name.equals("TRUNCATING FUSION")) {
                             eventMap.put(gene, Lists.newArrayList(name));
