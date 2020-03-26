@@ -17,7 +17,9 @@ import javax.xml.stream.XMLStreamReader;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDataField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableEcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
@@ -77,9 +79,9 @@ public class XMLPatientReaderTest {
         assertEquals(3, patients.size());
         assertEquals(4, patients.get(0).fields().size());
         assertEquals(PATIENT_1, patients.get(0).patientId());
-        verifyFirstFieldValue("one", patients.get(0).fieldValuesByEcrfField(field1));
-        verifyFirstFieldValue("hi", patients.get(0).fieldValuesByEcrfField(field2));
-        verifyFirstFieldValue("2016-01-01", patients.get(0).fieldValuesByEcrfField(birthDateField));
+        verifyFirstFieldValue("one", fieldValues(patients.get(0), field1));
+        verifyFirstFieldValue("hi", fieldValues(patients.get(0), field2));
+        verifyFirstFieldValue("2016-01-01", fieldValues(patients.get(0), birthDateField));
         verifyFirstFieldValue("one", patients.get(0).studyEventsPerOID(studyOID).get(0).formsPerOID().get(formOID).get(0).itemGroupsPerOID()
                 .get(itemGroupOID).get(0).itemsPerOID().get(item1OID));
         verifyFirstFieldValue("hi", patients.get(0).studyEventsPerOID(studyOID).get(0).formsPerOID().get(formOID).get(0).itemGroupsPerOID()
@@ -151,6 +153,16 @@ public class XMLPatientReaderTest {
         // @formatter:on
     }
 
+    @NotNull
+    private static List<String> fieldValues(@NotNull EcrfPatient patient, @NotNull EcrfField field) {
+        List<String> fieldValues = Lists.newArrayList();
+        for (EcrfDataField dataField : patient.fields()) {
+            if (dataField.name().equals(field.name())) {
+                fieldValues.add(dataField.itemValue());
+            }
+        }
+        return fieldValues;
+    }
     private static void verifyFirstFieldValue(@NotNull String expected, @Nullable List<String> values) {
         assert values != null && values.size() == 1;
         assertEquals(expected, values.get(0));

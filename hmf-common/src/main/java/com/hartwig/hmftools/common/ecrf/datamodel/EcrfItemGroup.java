@@ -22,7 +22,7 @@ public class EcrfItemGroup {
     public EcrfItemGroup() {
     }
 
-    public void addItem(@NotNull final String itemOid, @NotNull final String itemValue) {
+    public void addItem(@NotNull String itemOid, @NotNull String itemValue) {
         if (!itemsPerOID.containsKey(itemOid)) {
             itemsPerOID.put(itemOid, Lists.newArrayList());
         }
@@ -35,7 +35,7 @@ public class EcrfItemGroup {
     }
 
     @NotNull
-    private List<String> itemsPerOID(@NotNull final String itemOID) {
+    private List<String> itemsPerOID(@NotNull String itemOID) {
         if (itemsPerOID().get(itemOID) == null) {
             return Lists.newArrayList();
         }
@@ -44,11 +44,12 @@ public class EcrfItemGroup {
 
     public boolean isEmpty() {
         return itemsPerOID.values()
-                .stream().noneMatch(listOfValues -> listOfValues.stream().anyMatch(value -> value != null && !value.trim().isEmpty()));
+                .stream()
+                .noneMatch(listOfValues -> listOfValues.stream().anyMatch(value -> value != null && !value.trim().isEmpty()));
     }
 
     @Nullable
-    public LocalDate readItemDate(@NotNull final String itemOID) {
+    public LocalDate readItemDate(@NotNull String itemOID) {
         String ecrfValue = readItemString(itemOID);
 
         if (ecrfValue == null) {
@@ -63,10 +64,10 @@ public class EcrfItemGroup {
     }
 
     @Nullable
-    public String readItemString(@NotNull final String itemOID) {
+    public String readItemString(@NotNull String itemOID) {
         // In theory we could have multiple values for one itemOID in one item group but in practice there is always a 1:1 relation.
         if (!itemsPerOID(itemOID).isEmpty()) {
-            final String ecrfValue = itemsPerOID(itemOID).get(0);
+            String ecrfValue = itemsPerOID(itemOID).get(0);
             if (ecrfValue != null) {
                 if (ecrfValue.replaceAll("\\s", "").length() == 0) {
                     return null;

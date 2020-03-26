@@ -3,14 +3,12 @@ package com.hartwig.hmftools.common.ecrf.datamodel;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class EcrfPatient {
 
@@ -38,27 +36,13 @@ public class EcrfPatient {
         return fields.values();
     }
 
-    @Nullable
-    public List<String> fieldValuesByEcrfField(@NotNull final EcrfField field) {
-        return fieldValuesByName(field.name());
-    }
-
-    @Nullable
-    public List<String> fieldValuesByName(@NotNull final String fieldName) {
-        final Collection<EcrfDataField> results = fields.get(fieldName);
-        if (results != null && !results.isEmpty()) {
-            return results.stream().map(EcrfDataField::itemValue).collect(Collectors.toList());
-        }
-        return null;
-    }
-
     @NotNull
     public Map<String, List<EcrfStudyEvent>> studyEventsPerOID() {
         return studyEventsPerOID;
     }
 
     @NotNull
-    public List<EcrfStudyEvent> studyEventsPerOID(@NotNull final String studyEventOID) {
+    public List<EcrfStudyEvent> studyEventsPerOID(@NotNull String studyEventOID) {
         if (studyEventsPerOID().get(studyEventOID) == null) {
             return Lists.newArrayList();
         }
@@ -66,8 +50,8 @@ public class EcrfPatient {
     }
 
     @NotNull
-    private static Multimap<String, EcrfDataField> createDataFields(@NotNull final List<EcrfDataField> ecrfDataFields) {
-        final Multimap<String, EcrfDataField> dataFieldMultimap = ArrayListMultimap.create();
+    private static Multimap<String, EcrfDataField> createDataFields(@NotNull List<EcrfDataField> ecrfDataFields) {
+        Multimap<String, EcrfDataField> dataFieldMultimap = ArrayListMultimap.create();
         ecrfDataFields.forEach(field -> dataFieldMultimap.put(field.name(), field));
         return dataFieldMultimap;
     }

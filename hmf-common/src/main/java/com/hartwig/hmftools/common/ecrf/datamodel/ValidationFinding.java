@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class ValidationFinding {
+
     @NotNull
     public abstract String level();
 
