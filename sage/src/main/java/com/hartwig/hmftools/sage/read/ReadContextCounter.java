@@ -257,7 +257,7 @@ public class ReadContextCounter implements VariantHotspot {
                         break;
                 }
 
-                byte refBase = this.variant.ref().getBytes()[0];
+                byte refBase = (byte) this.variant.ref().charAt(0);
                 byte readBase = record.getReadBases()[readIndex];
 
                 if (refBase == readBase && !rawContext.isReadIndexInDelete() && !rawContext.isIndelAtPosition()) {
