@@ -33,8 +33,9 @@ public class ReadContextCounterFactory {
     }
 
     private int maxCoverage(@NotNull final Candidate candidate) {
-        return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome()) ?
-                config.maxEvidenceReadDepth() * 1000 : config.maxEvidenceReadDepth();
+        return HIGH_COVERAGE.contains(candidate.tier()) || MitochondrialChromosome.contains(candidate.chromosome())
+                ? config.maxEvidenceDeepReadDepth()
+                : config.maxEvidenceReadDepth();
 
     }
 

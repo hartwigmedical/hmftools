@@ -39,10 +39,14 @@ public interface SageConfig {
     String PANEL_ONLY = "panel_only";
     String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
+    String MAX_READ_DEPTH_EVIDENCE = "max_read_depth_evidence";
+    String MAX_READ_DEPTH_REALIGNMENT = "max_read_depth_realignment";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
     int DEFAULT_MIN_BASE_QUALITY = 13;
+    int DEFAULT_MAX_READ_DEPTH_EVIDENCE = 1000;
+    int DEFAULT_MAX_READ_DEPTH_REALIGNMENT = 1000;
 
     @NotNull
     static Options createOptions() {
@@ -57,6 +61,8 @@ public interface SageConfig {
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
 
+        options.addOption(MAX_READ_DEPTH_EVIDENCE, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_EVIDENCE + "]");
+        options.addOption(MAX_READ_DEPTH_REALIGNMENT, true, "Max depth to check for realignment [" + DEFAULT_MAX_READ_DEPTH_REALIGNMENT + "]");
         options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
         options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
@@ -120,12 +126,12 @@ public interface SageConfig {
 
     int minBaseQuality();
 
-    default int maxRealignmentReadDepth() {
-        return 1000;
-    }
+    int maxRealignmentReadDepth();
 
-    default int maxEvidenceReadDepth() {
-        return 1000;
+    int maxEvidenceReadDepth();
+
+    default int maxEvidenceDeepReadDepth() {
+        return 100_000;
     }
 
     default int maxSkippedReferenceRegions() {
@@ -196,6 +202,8 @@ public interface SageConfig {
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
+                .maxRealignmentReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH_REALIGNMENT, DEFAULT_MAX_READ_DEPTH_REALIGNMENT))
+                .maxEvidenceReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH_EVIDENCE, DEFAULT_MAX_READ_DEPTH_EVIDENCE))
                 .filter(FilterConfig.createConfig(cmd))
                 .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
                 .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
