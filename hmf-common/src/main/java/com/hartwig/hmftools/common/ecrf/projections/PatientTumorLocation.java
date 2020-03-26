@@ -42,17 +42,17 @@ public abstract class PatientTumorLocation {
         return Lists.newArrayList(patientIdentifier(), primaryTumorLocation(), cancerSubtype());
     }
 
-    public static void writeRecords(@NotNull final String outputPath, @NotNull final List<PatientTumorLocation> patientTumorLocations)
+    public static void writeRecords(@NotNull String outputPath, @NotNull List<PatientTumorLocation> patientTumorLocations)
             throws IOException {
-        final CSVFormat format = CSVFormat.DEFAULT.withNullString(Strings.EMPTY).withHeader(Header.class);
-        final CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
+        CSVFormat format = CSVFormat.DEFAULT.withNullString(Strings.EMPTY).withHeader(Header.class);
+        CSVPrinter printer = new CSVPrinter(new FileWriter(outputPath), format);
         printer.printRecords(patientTumorLocations.stream().map(PatientTumorLocation::csvRecord).collect(Collectors.toList()));
         printer.close();
     }
 
     @NotNull
-    public static List<PatientTumorLocation> readRecords(@NotNull final String filePath) throws IOException {
-        final CSVParser parser = CSVParser.parse(new File(filePath),
+    public static List<PatientTumorLocation> readRecords(@NotNull String filePath) throws IOException {
+        CSVParser parser = CSVParser.parse(new File(filePath),
                 Charset.defaultCharset(),
                 CSVFormat.DEFAULT.withHeader(Header.class).withSkipHeaderRecord());
         return StreamSupport.stream(parser.spliterator(), false)

@@ -30,12 +30,12 @@ public class EcrfModel {
     private final Iterable<EcrfPatient> patients;
 
     @NotNull
-    public static EcrfModel loadFromXMLNoFormStates(@NotNull  String ecrfXmlPath) throws XMLStreamException, FileNotFoundException {
+    public static EcrfModel loadFromXMLNoFormStates(@NotNull String ecrfXmlPath) throws XMLStreamException, FileNotFoundException {
         return loadFromXMLWithFormStates(ecrfXmlPath, new ImmutableFormStatusModel(Maps.newHashMap()));
     }
 
     @NotNull
-    public static EcrfModel loadFromXMLWithFormStates(@NotNull  String ecrfXmlPath, @NotNull  FormStatusModel formStatusModel)
+    public static EcrfModel loadFromXMLWithFormStates(@NotNull String ecrfXmlPath, @NotNull FormStatusModel formStatusModel)
             throws XMLStreamException, FileNotFoundException {
         final XMLInputFactory factory = XMLInputFactory.newInstance();
         final XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(ecrfXmlPath));
