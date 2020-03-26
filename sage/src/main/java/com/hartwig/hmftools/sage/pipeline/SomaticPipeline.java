@@ -103,7 +103,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             @NotNull final List<String> sampleBams, @NotNull final CompletableFuture<List<Candidate>> candidates) {
         // Scan tumors for evidence
         return candidates.thenCompose(initialCandidates -> {
-            LOGGER.info("Scanning for evidence in {}:{}", region.chromosome(), region.start());
+            LOGGER.debug("Scanning for evidence in {}:{}", region.chromosome(), region.start());
             final String primarySample = samples.isEmpty() ? "PRIMARY" : samples.get(0);
 
             final ReadContextCounters result = new ReadContextCounters(primarySample, initialCandidates);
