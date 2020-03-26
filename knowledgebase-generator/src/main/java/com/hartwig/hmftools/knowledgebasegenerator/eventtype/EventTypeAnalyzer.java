@@ -123,7 +123,7 @@ public class EventTypeAnalyzer {
                                         eventInfo = FUSION_PROMISCUOUS;
                                     }
                                 }
-                                if (name.split(" ", 2).length == 1) {
+                                if (name.split(" ", 2).length == 2) {
                                     if (name.split(" ", 2)[1].equals(".")) {
                                         eventInfo = ONCOGENIC_MUTATION;
 
