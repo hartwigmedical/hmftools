@@ -115,18 +115,21 @@ public class EventTypeAnalyzer {
                                 eventInfo = FUSION_PAIR;
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
                             } else {
-                                eventInfo = name.split(" ", 2)[1];
-                                if (eventInfo.contains("fusion") || eventInfo.contains("Fusion")) {
+                                LOGGER.info(name);
+                                if (name.contains("fusion") || name.contains("Fusion")) {
                                     if (gene.contains("-")) {
                                         eventInfo = FUSION_PAIR;
                                     } else {
                                         eventInfo = FUSION_PROMISCUOUS;
                                     }
                                 }
+                                if (name.split(" ", 2).length == 1) {
+                                    if (name.split(" ", 2)[1].equals(".")) {
+                                        eventInfo = ONCOGENIC_MUTATION;
 
-                                if (eventInfo.equals(".")) {
-                                    eventInfo = ONCOGENIC_MUTATION;
+                                    }
                                 }
+                                eventInfo = name;
                                 eventMap.put(gene, Lists.newArrayList(eventInfo));
 
                             }
