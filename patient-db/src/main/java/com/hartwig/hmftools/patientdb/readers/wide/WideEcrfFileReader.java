@@ -54,29 +54,6 @@ public class WideEcrfFileReader {
     }
 
     @NotNull
-    public static List<WideTreatmentData> readTreatmentData(@NotNull String pathToCsv) throws IOException {
-        List<WideTreatmentData> wideTreatments = Lists.newArrayList();
-
-        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, TREATMENT_DATA_COUNT);
-            if (parts.length == TREATMENT_DATA_COUNT) {
-                WideTreatmentData wideTreatment = ImmutableWideTreatmentData.of(parts[TREATMENT_DATA_ID].replace("-", ""),
-                        parts[TREATMENT_DATA_CODE],
-                        parts[TREATMENT_DATA_DRUG],
-                        parts[TREATMENT_DATA_START_DATE],
-                        parts[TREATMENT_DATA_END_DATE]);
-
-                wideTreatments.add(wideTreatment);
-            } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE treatment csv: {}", line);
-            }
-        }
-        LOGGER.info(wideTreatments);
-        return wideTreatments;
-    }
-
-    @NotNull
     public static List<WidePreTreatmentData> readPreTreatmentData(@NotNull String pathToCsv) throws IOException {
         List<WidePreTreatmentData> widePreTreatments = Lists.newArrayList();
 
@@ -84,18 +61,17 @@ public class WideEcrfFileReader {
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, PRE_TREATMENT_DATA_COUNT);
             if (parts.length == PRE_TREATMENT_DATA_COUNT) {
-                WidePreTreatmentData widePreTreatmentData =
-                        ImmutableWidePreTreatmentData.of(parts[PRE_TREATMENT_DATA_PATIENT_ID].replace("-", ""),
-                                parts[PRE_TREATMENT_DATA_PREVIOUS_THERAPY],
-                                parts[PRE_TREATMENT_DATA_DRUG1],
-                                parts[PRE_TREATMENT_DATA_DRUG2],
-                                parts[PRE_TREATMENT_DATA_DRUG3],
-                                parts[PRE_TREATMENT_DATA_DRUG4],
-                                parts[PRE_TREATMENT_DATA_DATE_LAST_SYSTEMIC_THERAPY]);
+                WidePreTreatmentData widePreTreatmentData = ImmutableWidePreTreatmentData.of(toWideID(parts[PRE_TREATMENT_DATA_PATIENT_ID]),
+                        parts[PRE_TREATMENT_DATA_PREVIOUS_THERAPY],
+                        parts[PRE_TREATMENT_DATA_DRUG1],
+                        parts[PRE_TREATMENT_DATA_DRUG2],
+                        parts[PRE_TREATMENT_DATA_DRUG3],
+                        parts[PRE_TREATMENT_DATA_DRUG4],
+                        parts[PRE_TREATMENT_DATA_DATE_LAST_SYSTEMIC_THERAPY]);
 
                 widePreTreatments.add(widePreTreatmentData);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE pre treatment data csv: {}", line);
+                LOGGER.warn("Could not properly parse line in WIDE pre treatment csv: {}", line);
             }
         }
         LOGGER.info(widePreTreatments);
@@ -111,7 +87,7 @@ public class WideEcrfFileReader {
             String[] parts = line.split(FIELD_SEPARATOR, BIOPSY_DATA_COUNT);
             if (parts.length == BIOPSY_DATA_COUNT) {
                 WideBiopsyData wideBiopsyData = ImmutableWideBiopsyData.of(parts[BIOPSY_DATA_PATIENT_ID],
-                        parts[BIOPSY_DATA_WIDE_ID].replace("-", ""),
+                        toWideID(parts[BIOPSY_DATA_WIDE_ID]),
                         parts[BIOPSY_DATA_DATA_AVAILABLE],
                         parts[BIOPSY_DATA_TISSUE_ID],
                         parts[BIOPSY_DATA_DATE],
@@ -119,11 +95,34 @@ public class WideEcrfFileReader {
 
                 wideBiopsies.add(wideBiopsyData);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: {}", line);
+                LOGGER.warn("Could not properly parse line in WIDE biopsy csv: {}", line);
             }
         }
         LOGGER.info(wideBiopsies);
         return wideBiopsies;
+    }
+
+    @NotNull
+    public static List<WideTreatmentData> readTreatmentData(@NotNull String pathToCsv) throws IOException {
+        List<WideTreatmentData> wideTreatments = Lists.newArrayList();
+
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_SEPARATOR, TREATMENT_DATA_COUNT);
+            if (parts.length == TREATMENT_DATA_COUNT) {
+                WideTreatmentData wideTreatment = ImmutableWideTreatmentData.of(toWideID(parts[TREATMENT_DATA_ID]),
+                        parts[TREATMENT_DATA_CODE],
+                        parts[TREATMENT_DATA_DRUG],
+                        parts[TREATMENT_DATA_START_DATE],
+                        parts[TREATMENT_DATA_END_DATE]);
+
+                wideTreatments.add(wideTreatment);
+            } else if (parts.length > 0) {
+                LOGGER.warn("Could not properly parse line in WIDE treatment csv: {}", line);
+            }
+        }
+        LOGGER.info(wideTreatments);
+        return wideTreatments;
     }
 
     @NotNull
@@ -134,7 +133,7 @@ public class WideEcrfFileReader {
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, RESPONSE_DATA_COUNT);
             if (parts.length == RESPONSE_DATA_COUNT) {
-                WideResponseData wideResponseData = ImmutableWideResponseData.of(parts[RESPONSE_DATA_PATIENT_ID].replace("-", ""),
+                WideResponseData wideResponseData = ImmutableWideResponseData.of(toWideID(parts[RESPONSE_DATA_PATIENT_ID]),
                         parts[RESPONSE_DATA_TIME_POINT],
                         parts[RESPONSE_DATA_DATE],
                         parts[RESPONSE_DATA_RECIST_NOT_DONE],
@@ -145,10 +144,15 @@ public class WideEcrfFileReader {
 
                 wideResponses.add(wideResponseData);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: {}", line);
+                LOGGER.warn("Could not properly parse line in WIDE response csv: {}", line);
             }
         }
         LOGGER.info(wideResponses);
         return wideResponses;
+    }
+
+    @NotNull
+    private static String toWideID(@NotNull String wideIdentifier) {
+        return wideIdentifier.replace("-", "");
     }
 }
