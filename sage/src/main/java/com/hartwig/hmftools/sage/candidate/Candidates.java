@@ -36,9 +36,7 @@ public class Candidates {
 
         final TierSelector tierSelector = new TierSelector(hotspots, panel, highConfidence);
         for (final AltContext altContext : altContexts) {
-            if (altContext.primaryReadContext().readContext().isComplete()) {
-                candidateMap.computeIfAbsent(altContext, x -> new Candidate(tierSelector.tier(altContext), altContext)).update(altContext);
-            }
+            candidateMap.computeIfAbsent(altContext, x -> new Candidate(tierSelector.tier(altContext), altContext)).update(altContext);
         }
     }
 

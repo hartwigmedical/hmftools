@@ -14,8 +14,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class RefContextFactory {
 
-    private final SageConfig config;
-    private final HotspotSelector hotspotSelector;
     private final String sample;
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
@@ -23,13 +21,11 @@ public class RefContextFactory {
     public RefContextFactory(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector,
             @NotNull final String sample) {
         this.sample = sample;
-        this.config = config;
-        this.hotspotSelector = hotspotSelector;
         final Predicate<AltContext> altContextPredicate = config.filter().altContextFilter(hotspotSelector);
         final Consumer<RefContext> evictionHandler = (refContext) -> {
             refContext.alts()
                     .stream()
-                    .filter(x -> x.primaryReadContext().readContext().isComplete())
+                    .filter(AltContext::finaliseAndValidate)
                     .filter(this::refPredicate)
                     .filter(altContextPredicate)
                     .forEach(savedCandidates::add);

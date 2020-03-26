@@ -315,15 +315,6 @@ public class ReadContextCounter implements VariantHotspot {
         return (int) jitterPenalty;
     }
 
-    public boolean incrementCounters(@NotNull final ReadContext other) {
-        if (readContext.isFullMatch(other)) {
-            full++;
-            return true;
-        }
-
-        return false;
-    }
-
     private void incrementQualityFlags(@NotNull final SAMRecord record) {
         if (!record.getProperPairFlag()) {
             improperPair++;
