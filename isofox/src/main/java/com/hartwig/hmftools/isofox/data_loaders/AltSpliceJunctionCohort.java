@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
 
 import java.io.BufferedWriter;
@@ -40,7 +40,7 @@ public class AltSpliceJunctionCohort
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, ALT_SPLICE_JUNCTIONS, filenames))
+        if(!formSampleFilenames(mConfig, ALT_SPLICE_JUNCTION, filenames))
             return;
 
         int totalProcessed = 0;

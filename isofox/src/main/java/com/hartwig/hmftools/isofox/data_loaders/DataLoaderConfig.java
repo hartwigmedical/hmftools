@@ -32,6 +32,7 @@ public class DataLoaderConfig
     public static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
     public static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
+    public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
 
     public final String RootDataDir;
     public final String OutputDir;
@@ -47,6 +48,8 @@ public class DataLoaderConfig
     public final int AltSJMinSampleThreshold;
     public final int AltSJMinFragsUnrequiredGenes;
     public final double AltSJProbabilityThreshold;
+
+    public final double TpmLogThreshold;
 
     public DataLoaderConfig(final CommandLine cmd)
     {
@@ -75,6 +78,8 @@ public class DataLoaderConfig
         AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
         AltSJMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
         AltSJProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
+
+        TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
@@ -157,6 +162,8 @@ public class DataLoaderConfig
         options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
         options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
+
+        options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
 

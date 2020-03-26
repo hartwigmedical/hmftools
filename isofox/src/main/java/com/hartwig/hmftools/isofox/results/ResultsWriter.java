@@ -190,16 +190,13 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile(TRANSCRIPT_RESULTS_FILE);
 
                 mTransDataWriter = createBufferedWriter(outputFileName, false);
-                mTransDataWriter.write("GeneId,GeneName,TransId,TransName,Canonical,ExonCount,EffectiveLength");
-                mTransDataWriter.write(",ExonsMatched,ExonicBases,ExonicCoverage,FitAllocation");
-                mTransDataWriter.write(",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth");
-                mTransDataWriter.write(",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported");
-                mTransDataWriter.write(",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments");
+                mTransDataWriter.write(TranscriptResult.csvHeader());
                 mTransDataWriter.newLine();
             }
 
-            final TranscriptData transData = transResults.trans();
+            mTransDataWriter.write(transResults.toCsv(geneData));
 
+            /*
             mTransDataWriter.write(String.format("%s,%s,%d,%s,%s,%d,%.0f",
                     geneData.GeneId, geneData.GeneName,
                     transData.TransId, transData.TransName, transData.IsCanonical, transData.exons().size(), transResults.effectiveLength()));
@@ -215,6 +212,7 @@ public class ResultsWriter
                     transResults.shortSupportingFragments(), transResults.shortUniqueFragments(),
                     transResults.longSupportingFragments(), transResults.longUniqueFragments(),
                     transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
+            */
 
             mTransDataWriter.newLine();
 

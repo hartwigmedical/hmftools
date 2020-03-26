@@ -50,9 +50,9 @@ public abstract class SummaryStats
                 .readLength(maxReadLength)
                 .enrichedGenePercent(enrichedGenePercent)
                 .medianGCRatio(medianGCRatio)
-                .fragmentLength5thPercent(fragLengths.get(0))
-                .fragmentLength50thPercent(fragLengths.get(1))
-                .fragmentLength95thPercent(fragLengths.get(2))
+                .fragmentLength5thPercent(!fragLengths.isEmpty() ? fragLengths.get(0) : 0)
+                .fragmentLength50thPercent(!fragLengths.isEmpty() ? fragLengths.get(1) : 0)
+                .fragmentLength95thPercent(!fragLengths.isEmpty() ? fragLengths.get(2) : 0)
                 .build();
     }
 

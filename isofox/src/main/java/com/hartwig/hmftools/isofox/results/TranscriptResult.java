@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
@@ -7,10 +8,13 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -187,5 +191,43 @@ public abstract class TranscriptResult
         }
 
         return true;
+    }
+
+    public static String csvHeader()
+    {
+        return "GeneId,GeneName,TransId,TransName,Canonical,ExonCount,EffectiveLength"
+                + ",ExonsMatched,ExonicBases,ExonicCoverage,FitAllocation"
+                + ",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth"
+                + ",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported"
+                + ",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments";
+    }
+
+    public String toCsv(final EnsemblGeneData geneData)
+    {
+        return new StringJoiner(DELIMITER)
+                .add(geneData.GeneId)
+                .add(geneData.GeneName)
+                .add(String.valueOf(trans().TransId))
+                .add(trans().TransName)
+                .add(String.valueOf(trans().IsCanonical))
+                .add(String.valueOf(trans().exons().size()))
+                .add(String.valueOf(effectiveLength()))
+                .add(String.valueOf(exonsFound()))
+                .add(String.valueOf(exonicBases()))
+                .add(String.valueOf(exonicBaseCoverage()))
+                .add(String.valueOf(fitAllocation()))
+                .add(String.valueOf(uniqueBases()))
+                .add(String.valueOf(uniqueBaseCoverage()))
+                .add(String.valueOf(uniqueBaseAvgDepth()))
+                .add(String.valueOf(spliceJunctionsSupported()))
+                .add(String.valueOf(uniqueSpliceJunctions()))
+                .add(String.valueOf(uniqueSpliceJunctionsSupported()))
+                .add(String.valueOf(shortSupportingFragments()))
+                .add(String.valueOf(shortUniqueFragments()))
+                .add(String.valueOf(longSupportingFragments()))
+                .add(String.valueOf(longUniqueFragments()))
+                .add(String.valueOf(spliceJunctionFragments()))
+                .add(String.valueOf(spliceJunctionUniqueFragments()))
+                .toString();
     }
 }

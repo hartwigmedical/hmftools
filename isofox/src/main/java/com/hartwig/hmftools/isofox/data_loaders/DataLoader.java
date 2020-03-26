@@ -4,25 +4,21 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBuffered
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.SUMMARY;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.getFileId;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.isValid;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.loadFile;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
 import org.apache.commons.cli.CommandLine;
@@ -38,12 +34,14 @@ public class DataLoader
 {
     private final DataLoaderConfig mConfig;
 
-    private AltSpliceJunctionCohort mAltSpliceJunctionProcessor;
+    private final AltSpliceJunctionCohort mAltSpliceJunctionProcessor;
+    private final TransExpressionCohort mTransExpressionCohort;
 
     public DataLoader(final DataLoaderConfig config)
     {
         mConfig = config;
         mAltSpliceJunctionProcessor = new AltSpliceJunctionCohort(mConfig);
+        mTransExpressionCohort = new TransExpressionCohort(mConfig);
     }
 
     public boolean load()
@@ -55,8 +53,12 @@ public class DataLoader
                 case SUMMARY:
                     loadSummaryData();
                     break;
-                case ALT_SPLICE_JUNCTIONS:
+
+                case ALT_SPLICE_JUNCTION:
                     mAltSpliceJunctionProcessor.processAltSpliceJunctions();
+                    break;
+                case TRANSCRIPT:
+                    mTransExpressionCohort.processTranscripts();
                     break;
 
                 default:
@@ -105,6 +107,18 @@ public class DataLoader
         }
     }
 
+    public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
+    {
+        final String[] items = fieldsHeader.split(delimiter,-1);
+        final Map<String,Integer> fieldsIndexMap = Maps.newHashMap();
+
+        for(int i = 0; i < items.length; ++i)
+        {
+            fieldsIndexMap.put(items[i], i);
+        }
+
+        return fieldsIndexMap;
+    }
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
