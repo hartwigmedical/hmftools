@@ -7,7 +7,6 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
-import com.hartwig.hmftools.sage.sam.IndelAtLocation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -261,7 +260,7 @@ public class ReadContextCounter implements VariantHotspot {
                 byte refBase = this.variant.ref().getBytes()[0];
                 byte readBase = record.getReadBases()[readIndex];
 
-                if (!baseDeleted && refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
+                if (refBase == readBase && !rawContext.isReadIndexInDelete() && !rawContext.isIndelAtPosition()) {
                     reference++;
                     referenceQuality += quality;
                 }
