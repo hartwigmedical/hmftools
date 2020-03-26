@@ -51,7 +51,7 @@ public class ReadContextEvidence {
         final SamSlicer slicer = samSlicerFactory.create(bounds);
 
         final SamRecordSelector<ReadContextCounter> consumerSelector =
-                new SamRecordSelector<>(sageConfig.maxSkippedReferenceRegions(), counters);
+                new SamRecordSelector<>(counters);
 
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))

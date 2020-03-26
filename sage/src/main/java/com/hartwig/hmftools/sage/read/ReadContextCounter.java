@@ -186,6 +186,10 @@ public class ReadContextCounter implements VariantHotspot {
             }
 
             final RawContext rawContext = rawFactory.create(record);
+            if (rawContext.isReadIndexInSkipped()) {
+                return;
+            }
+
             final int readIndex = rawContext.readIndex();
             final boolean baseDeleted = rawContext.isReadIndexInDelete();
 
