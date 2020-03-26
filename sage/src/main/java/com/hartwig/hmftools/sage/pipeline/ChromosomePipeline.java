@@ -67,8 +67,10 @@ public class ChromosomePipeline implements AutoCloseable {
     }
 
     public void addAllRegions(int maxPosition) {
-        int regionSliceSize = config.regionSliceSize();
+        // This is for the benefit of MT
+        int dynamicSliceSize = maxPosition / Math.min(config.threads(), 4) + 1;
 
+        final int regionSliceSize = Math.min(dynamicSliceSize, config.regionSliceSize());
         for (int i = 0; ; i++) {
             int start = 1 + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize - 1, maxPosition);
