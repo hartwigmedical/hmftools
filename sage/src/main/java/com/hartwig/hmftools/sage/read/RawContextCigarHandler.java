@@ -118,8 +118,14 @@ public class RawContextCigarHandler implements CigarHandler {
         handleDelete(record, element, readIndex, refPosition);
     }
 
-    private static boolean matchesString(SAMRecord record, int index, String expected) {
-        return new String(record.getReadBases(), index, expected.length()).equals(expected);
+    private static boolean matchesString(@NotNull final SAMRecord record, int index, @NotNull final String expected) {
+        for (int i = 0; i < expected.length(); i++) {
+            if ((byte) expected.charAt(i) != record.getReadBases()[index + i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private int baseQuality(int readIndex, SAMRecord record, int length) {
