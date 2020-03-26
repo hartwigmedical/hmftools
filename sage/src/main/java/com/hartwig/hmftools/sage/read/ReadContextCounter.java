@@ -185,7 +185,7 @@ public class ReadContextCounter implements VariantHotspot {
                 return;
             }
 
-            final RawContext rawContext = rawFactory.create(record);
+            final RawContext rawContext = rawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
             if (rawContext.isReadIndexInSkipped()) {
                 return;
             }

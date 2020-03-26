@@ -10,20 +10,21 @@ import htsjdk.samtools.SAMRecord;
 
 public class RawContextCigarHandler implements CigarHandler {
 
-    private static final int MAX_SKIPPED_REFERENCE_SIZE = 50;
 
     private final VariantHotspot variant;
+    private final int maxSkippedReferenceRegions;
     private final boolean isInsert;
     private final boolean isDelete;
     private final boolean isSNV;
 
     private RawContext result;
 
-    RawContextCigarHandler(final VariantHotspot variant) {
+    RawContextCigarHandler(final int maxSkippedReferenceRegions, final VariantHotspot variant) {
         this.variant = variant;
         this.isInsert = variant.ref().length() < variant.alt().length();
         this.isDelete = variant.ref().length() > variant.alt().length();
         this.isSNV = variant.ref().length() == variant.alt().length();
+        this.maxSkippedReferenceRegions = maxSkippedReferenceRegions;
 
     }
 
@@ -121,7 +122,7 @@ public class RawContextCigarHandler implements CigarHandler {
             return;
         }
 
-        if (e.getLength() > MAX_SKIPPED_REFERENCE_SIZE) {
+        if (e.getLength() > maxSkippedReferenceRegions) {
             int refPositionEnd = refPosition + e.getLength();
             if (refPositionEnd >= variant.position()) {
                 result = RawContext.inSkipped(readIndex);
