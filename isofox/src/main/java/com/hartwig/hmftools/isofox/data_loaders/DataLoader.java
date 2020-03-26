@@ -125,15 +125,6 @@ public class DataLoader
 
         DataLoaderConfig config = new DataLoaderConfig(cmd);
 
-        /*
-        if(!config.isValid())
-        {
-            ISF_LOGGER.error("missing config options, exiting");
-            return;
-        }
-
-         */
-
         DataLoader dataLoader = new DataLoader(config);
 
         if(!dataLoader.load())

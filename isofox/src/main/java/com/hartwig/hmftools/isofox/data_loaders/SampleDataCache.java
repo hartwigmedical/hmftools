@@ -13,20 +13,23 @@ import com.google.common.collect.Maps;
 
 public class SampleDataCache
 {
-    public final Map<String, List<String>> CancerTypeSamples;
-    public final Map<String, String> SampleCancerType;
-    public final Map<String, String> SampleMutationType;
+    public final Map<String, List<String>> CancerTypeSamples; // cancer type to list of samples
+    public final Map<String, String> SampleCancerType; // sample to cancer type
+    public final Map<String, String> SampleCohort; // sample to cohort name
     public final List<String> SampleIds;
-    public final List<String> MutationTypes;
+    public final List<String> CohortNames;
     private boolean mIsValid;
+
+    public final static String COHORT_A = "CohortA"; // 'cohort A' being evaluated, may be arbitrary
+    public final static String COHORT_B = "CohortB"; // 'cohort A' being evaluated, may be arbitrary
 
     public SampleDataCache(final String inputFile)
     {
         SampleIds = Lists.newArrayList();
         CancerTypeSamples = Maps.newHashMap();
         SampleCancerType = Maps.newHashMap();
-        SampleMutationType = Maps.newHashMap();
-        MutationTypes = Lists.newArrayList();
+        SampleCohort = Maps.newHashMap();
+        CohortNames = Lists.newArrayList();
 
         mIsValid = loadData(inputFile);
     }
@@ -35,12 +38,16 @@ public class SampleDataCache
 
     private static final int COL_SAMPLE_ID = 0;
     private static final int COL_CANCER_TYPE = 1;
-    private static final int COL_MUTATION_TYPE = 2;
-    private static final String NO_MUTATION_TYPE = "NONE";
+    private static final int COL_COHORT_NAME = 2;
 
-    public int sampleCountWithMutation(final List<String> sampleIds)
+    public int sampleCountInCohort(final List<String> sampleIds, final String cohortName)
     {
-        return (int)sampleIds.stream().filter(x -> SampleMutationType.containsKey(x)).count();
+        return (int)sampleIds.stream().map(x -> SampleCohort.get(x)).filter(y -> y.equals(cohortName)).count();
+    }
+
+    public boolean sampleInCohort(final String sampleId, final String cohortName)
+    {
+        return cohortName.equals(SampleCohort.get(sampleId));
     }
 
     private boolean loadData(final String inputFile)
@@ -64,17 +71,14 @@ public class SampleDataCache
                 SampleIds.add(sampleId);
                 SampleCancerType.put(sampleId, cancerType);
 
-                if(item.length() > COL_MUTATION_TYPE)
+                if(item.length() > COL_COHORT_NAME)
                 {
-                    final String mutationType = data[COL_MUTATION_TYPE];
+                    final String cohortName = data[COL_COHORT_NAME];
 
-                    if(!mutationType.equals(NO_MUTATION_TYPE))
-                    {
-                        SampleMutationType.put(sampleId, mutationType);
+                    SampleCohort.put(sampleId, cohortName);
 
-                        if(!MutationTypes.contains(mutationType))
-                            MutationTypes.add(mutationType);
-                    }
+                    if(!CohortNames.contains(cohortName))
+                        CohortNames.add(cohortName);
                 }
 
                 List<String> sampleIds = CancerTypeSamples.get(cancerType);

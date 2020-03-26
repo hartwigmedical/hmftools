@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.loadGeneIdsFile;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.getFileId;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,25 +27,32 @@ public class DataLoaderConfig
     public static final String ROOT_DATA_DIRECTORY = "root_data_dir";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
     public static final String USE_SAMPLE_DIRS = "use_sample_dir";
+    public static final String ALL_AVAILABLE_FILES = "all_available_files";
     public static final String LOAD_TYPES = "load_types";
     public static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
+    public static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
+    public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
 
     public final String RootDataDir;
     public final String OutputDir;
     public final String OutputIdentifier;
     public final SampleDataCache SampleData;
     public final boolean UseSampleDirectories;
-
-    public final int AltSJMinSampleThreshold;
+    public final boolean AllAvailableFiles;
     public final List<String> RestrictedGeneIds;
     public final List<String> ExcludedGeneIds;
 
     public final List<DataLoadType> LoadTypes;
 
+    public final int AltSJMinSampleThreshold;
+    public final int AltSJMinFragsUnrequiredGenes;
+    public final double AltSJProbabilityThreshold;
+
     public DataLoaderConfig(final CommandLine cmd)
     {
         RootDataDir = cmd.getOptionValue(ROOT_DATA_DIRECTORY);
         UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
+        AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);
 
         String outputdir = cmd.getOptionValue(DATA_OUTPUT_DIR);
         if(!outputdir.endsWith(File.separator))
@@ -66,7 +72,9 @@ public class DataLoaderConfig
         LoadTypes = Arrays.stream(cmd.getOptionValue(LOAD_TYPES).split(";"))
                 .map(x -> DataLoadType.valueOf(x)).collect(Collectors.toList());
 
-        AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES));
+        AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
+        AltSJMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
+        AltSJProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
@@ -140,10 +148,16 @@ public class DataLoaderConfig
         options.addOption(SAMPLE_DATA_FILE, true, "File with list of samples and cancer types to load data for");
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(USE_SAMPLE_DIRS, false, "File with list of samples to load data for");
+        options.addOption(ALL_AVAILABLE_FILES, false, "Load all files in root directory matching expeted Isofox file names");
         options.addOption(LOAD_TYPES, true, "List of data types to load & process");
-        options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min numbner of samples to report an alt SJ");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
+        options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
+
+        options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
+        options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
+        options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
+
         options.addOption(LOG_DEBUG, false, "Log verbose");
 
         return options;

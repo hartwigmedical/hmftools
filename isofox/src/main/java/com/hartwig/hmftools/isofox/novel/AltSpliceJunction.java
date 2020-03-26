@@ -40,7 +40,6 @@ public class AltSpliceJunction
 
     private AltSpliceJunctionType mType;
     private int mFragmentCount;
-    private int mMaxFragmentCount;
     private final int[] mPositionCounts; // counts at the start and end
     private final List<Integer> mCandidateTransIds;
 
@@ -51,9 +50,6 @@ public class AltSpliceJunction
     private final String[] mBaseContext;
     private String mDonorAcceptorBases;
     private final int[] mNearestExonDistance;
-
-    // cohort data
-    private final List<String> mSampleIds;
 
     public AltSpliceJunction(
             final String chromosome, final long[] spliceJunction, AltSpliceJunctionType type,
@@ -72,14 +68,11 @@ public class AltSpliceJunction
         mType = type;
 
         mFragmentCount = 0;
-        mMaxFragmentCount = 0;
         mPositionCounts = new int[SE_PAIR];
         mTranscriptNames = new String[SE_PAIR];
         mBaseContext = new String[SE_PAIR];
         mNearestExonDistance = new int[SE_PAIR];
         mDonorAcceptorBases = "";
-
-        mSampleIds = Lists.newArrayList();
     }
 
     public boolean matches(final AltSpliceJunction other)
@@ -101,10 +94,7 @@ public class AltSpliceJunction
     public void addFragmentCount(int count)
     {
         mFragmentCount += count;
-        mMaxFragmentCount = max(mMaxFragmentCount, count);
     }
-
-    public int getMaxFragmentCount() { return mMaxFragmentCount;}
 
     public int getPositionCount(int seIndex) { return mPositionCounts[seIndex]; }
     public void addPositionCount(int seIndex) { ++mPositionCounts[seIndex]; }
@@ -116,8 +106,6 @@ public class AltSpliceJunction
 
     public void setGeneId(final String geneId) { mGeneId = geneId; }
     public final String getGeneId() { return mGeneId; }
-
-    public final List<String> getSampleIds() { return mSampleIds; }
 
     public void calcSummaryData(final IndexedFastaSequenceFile RefFastaSeqFile, final GeneReadData gene)
     {
