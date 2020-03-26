@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
 import com.hartwig.hmftools.common.ecrf.EcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -16,4 +17,7 @@ public abstract class EcrfModels {
 
     @NotNull
     public abstract EcrfModel drupModel();
+
+    @NotNull
+    public abstract WideEcrfModel wideModel();
 }

@@ -3,26 +3,18 @@ package com.hartwig.hmftools.patientdb.readers.wide;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class WideInputReader {
+public class WideEcrfFileReader {
 
-    private static final Logger LOGGER = LogManager.getLogger(WideInputReader.class);
+    private static final Logger LOGGER = LogManager.getLogger(WideEcrfFileReader.class);
     private static final String FIELD_SEPARATOR = ";";
-
-    private static final int TREATMENT_DATA_COUNT = 5;
-    private static final int TREATMENT_DATA_ID = 0;
-    private static final int TREATMENT_DATA_CODE = 1;
-    private static final int TREATMENT_DATA_DRUG = 2;
-    private static final int TREATMENT_DATA_START_DATE = 3;
-    private static final int TREATMENT_DATA_END_DATE = 4;
 
     private static final int PRE_TREATMENT_DATA_COUNT = 7;
     private static final int PRE_TREATMENT_DATA_PATIENT_ID = 0;
@@ -39,7 +31,14 @@ public class WideInputReader {
     private static final int BIOPSY_DATA_DATA_AVAILABLE = 2;
     private static final int BIOPSY_DATA_TISSUE_ID = 3;
     private static final int BIOPSY_DATA_DATE = 4;
-    private static final int BIOPSY_DATA_WGS_SUCCESFUL = 5;
+    private static final int BIOPSY_DATA_WGS_SUCCESSFUL = 5;
+
+    private static final int TREATMENT_DATA_COUNT = 5;
+    private static final int TREATMENT_DATA_ID = 0;
+    private static final int TREATMENT_DATA_CODE = 1;
+    private static final int TREATMENT_DATA_DRUG = 2;
+    private static final int TREATMENT_DATA_START_DATE = 3;
+    private static final int TREATMENT_DATA_END_DATE = 4;
 
     private static final int RESPONSE_DATA_COUNT = 8;
     private static final int RESPONSE_DATA_PATIENT_ID = 0;
@@ -51,43 +50,39 @@ public class WideInputReader {
     private static final int RESPONSE_DATA_REASON_STOP_TREATMENT = 6;
     private static final int RESPONSE_DATA_REASON_STOP_TREATMENT_OTHER = 7;
 
-    private WideInputReader() {
+    private WideEcrfFileReader() {
     }
 
     @NotNull
-    public static Map<Integer, WideTreatmentData> buildTreatmentData(@NotNull final String pathToCsv) throws IOException {
+    public static List<WideTreatmentData> readTreatmentData(@NotNull String pathToCsv) throws IOException {
+        List<WideTreatmentData> wideTreatments = Lists.newArrayList();
 
-        final Map<Integer, WideTreatmentData> treatmentDataPerEntry = Maps.newHashMap();
-        int count = 1;
-        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (final String line : lines.subList(1, lines.size())) {
-            final String[] parts = line.split(FIELD_SEPARATOR, TREATMENT_DATA_COUNT);
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_SEPARATOR, TREATMENT_DATA_COUNT);
             if (parts.length == TREATMENT_DATA_COUNT) {
-                WideTreatmentData wideTreatmentData = ImmutableWideTreatmentData.of(parts[TREATMENT_DATA_ID].replace("-", ""),
+                WideTreatmentData wideTreatment = ImmutableWideTreatmentData.of(parts[TREATMENT_DATA_ID].replace("-", ""),
                         parts[TREATMENT_DATA_CODE],
                         parts[TREATMENT_DATA_DRUG],
                         parts[TREATMENT_DATA_START_DATE],
                         parts[TREATMENT_DATA_END_DATE]);
 
-                treatmentDataPerEntry.put(count, wideTreatmentData);
+                wideTreatments.add(wideTreatment);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE treatment csv: " + line);
+                LOGGER.warn("Could not properly parse line in WIDE treatment csv: {}", line);
             }
-            count += 1;
         }
-        LOGGER.info(treatmentDataPerEntry);
-        return treatmentDataPerEntry;
+        LOGGER.info(wideTreatments);
+        return wideTreatments;
     }
 
     @NotNull
-    public static Map<Integer, WidePreTreatmentData> buildPreTreatmentData(@NotNull final String pathToCsv) throws IOException {
+    public static List<WidePreTreatmentData> readPreTreatmentData(@NotNull String pathToCsv) throws IOException {
+        List<WidePreTreatmentData> widePreTreatments = Lists.newArrayList();
 
-        final Map<Integer, WidePreTreatmentData> preTreatmentDataPerEntry = Maps.newHashMap();
-        int count = 1;
-
-        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (final String line : lines.subList(1, lines.size())) {
-            final String[] parts = line.split(FIELD_SEPARATOR, PRE_TREATMENT_DATA_COUNT);
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_SEPARATOR, PRE_TREATMENT_DATA_COUNT);
             if (parts.length == PRE_TREATMENT_DATA_COUNT) {
                 WidePreTreatmentData widePreTreatmentData =
                         ImmutableWidePreTreatmentData.of(parts[PRE_TREATMENT_DATA_PATIENT_ID].replace("-", ""),
@@ -98,52 +93,46 @@ public class WideInputReader {
                                 parts[PRE_TREATMENT_DATA_DRUG4],
                                 parts[PRE_TREATMENT_DATA_DATE_LAST_SYSTEMIC_THERAPY]);
 
-                preTreatmentDataPerEntry.put(count, widePreTreatmentData);
+                widePreTreatments.add(widePreTreatmentData);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE pre treatment data csv: " + line);
+                LOGGER.warn("Could not properly parse line in WIDE pre treatment data csv: {}", line);
             }
-            count += 1;
         }
-        LOGGER.info(preTreatmentDataPerEntry);
-        return preTreatmentDataPerEntry;
+        LOGGER.info(widePreTreatments);
+        return widePreTreatments;
     }
 
     @NotNull
-    public static Map<Integer, WideBiopsyData> buildBiopsyData(@NotNull final String pathToCsv) throws IOException {
+    public static List<WideBiopsyData> readBiopsyData(@NotNull String pathToCsv) throws IOException {
+        List<WideBiopsyData> wideBiopsies = Lists.newArrayList();
 
-        final Map<Integer, WideBiopsyData> biopsyDataPerEntry = Maps.newHashMap();
-        int count = 1;
-
-        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (final String line : lines.subList(1, lines.size())) {
-            final String[] parts = line.split(FIELD_SEPARATOR, BIOPSY_DATA_COUNT);
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_SEPARATOR, BIOPSY_DATA_COUNT);
             if (parts.length == BIOPSY_DATA_COUNT) {
                 WideBiopsyData wideBiopsyData = ImmutableWideBiopsyData.of(parts[BIOPSY_DATA_PATIENT_ID],
                         parts[BIOPSY_DATA_WIDE_ID].replace("-", ""),
                         parts[BIOPSY_DATA_DATA_AVAILABLE],
                         parts[BIOPSY_DATA_TISSUE_ID],
                         parts[BIOPSY_DATA_DATE],
-                        parts[BIOPSY_DATA_WGS_SUCCESFUL]);
+                        parts[BIOPSY_DATA_WGS_SUCCESSFUL]);
 
-                biopsyDataPerEntry.put(count, wideBiopsyData);
+                wideBiopsies.add(wideBiopsyData);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: " + line);
+                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: {}", line);
             }
-            count += 1;
         }
-        LOGGER.info(biopsyDataPerEntry);
-        return biopsyDataPerEntry;
+        LOGGER.info(wideBiopsies);
+        return wideBiopsies;
     }
 
     @NotNull
-    public static Map<Integer, WideResponseData> buildResponseData(@NotNull final String pathToCsv) throws IOException {
+    public static List<WideResponseData> readResponseData(@NotNull String pathToCsv) throws IOException {
+        List<WideResponseData> wideResponses = Lists.newArrayList();
 
-        final Map<Integer, WideResponseData> responseDataPerEntry = Maps.newHashMap();
-        int count = 1;
-
-        final List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
-        for (final String line : lines.subList(1, lines.size())) {
-            final String[] parts = line.split(FIELD_SEPARATOR, RESPONSE_DATA_COUNT);
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_SEPARATOR, RESPONSE_DATA_COUNT);
             if (parts.length == RESPONSE_DATA_COUNT) {
                 WideResponseData wideResponseData = ImmutableWideResponseData.of(parts[RESPONSE_DATA_PATIENT_ID].replace("-", ""),
                         parts[RESPONSE_DATA_TIME_POINT],
@@ -154,13 +143,12 @@ public class WideInputReader {
                         parts[RESPONSE_DATA_REASON_STOP_TREATMENT],
                         parts[RESPONSE_DATA_REASON_STOP_TREATMENT_OTHER]);
 
-                responseDataPerEntry.put(count, wideResponseData);
+                wideResponses.add(wideResponseData);
             } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: " + line);
+                LOGGER.warn("Could not properly parse line in WIDE biopsy date csv: {}", line);
             }
-            count += 1;
         }
-        LOGGER.info(responseDataPerEntry);
-        return responseDataPerEntry;
+        LOGGER.info(wideResponses);
+        return wideResponses;
     }
 }

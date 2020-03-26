@@ -16,12 +16,12 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class LimsPatientReader {
+public class CorePatientReader {
 
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
 
-    public LimsPatientReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
+    public CorePatientReader(@NotNull final TumorLocationCurator tumorLocationCurator) {
         this.tumorLocationCurator = tumorLocationCurator;
     }
 
