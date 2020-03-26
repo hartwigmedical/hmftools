@@ -3,31 +3,40 @@ package com.hartwig.hmftools.sage.context;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.count.EvictingArray;
+import com.hartwig.hmftools.sage.select.HotspotSelector;
 
 import org.jetbrains.annotations.NotNull;
 
 public class RefContextFactory {
 
+    private final SageConfig config;
+    private final HotspotSelector hotspotSelector;
     private final String sample;
     private final EvictingArray<RefContext> rollingCandidates;
     private final List<AltContext> savedCandidates = Lists.newArrayList();
 
-    public RefContextFactory(@NotNull final String sample) {
+    public RefContextFactory(@NotNull final SageConfig config, @NotNull final HotspotSelector hotspotSelector,
+            @NotNull final String sample) {
         this.sample = sample;
+        this.config = config;
+        this.hotspotSelector = hotspotSelector;
+        final Predicate<AltContext> altContextPredicate = config.filter().altContextFilter(hotspotSelector);
         final Consumer<RefContext> evictionHandler = (refContext) -> {
             refContext.alts()
                     .stream()
-                    .filter(this::refPredicate)
                     .filter(x -> x.primaryReadContext().readContext().isComplete())
+                    .filter(this::refPredicate)
+                    .filter(altContextPredicate)
                     .forEach(savedCandidates::add);
         };
 
         this.rollingCandidates = new EvictingArray<>(256, evictionHandler);
     }
-
     @NotNull
     public RefContext refContext(@NotNull final String chromosome, final long position) {
         return rollingCandidates.computeIfAbsent(position, aLong -> new RefContext(sample, chromosome, position));
@@ -50,5 +59,4 @@ public class RefContextFactory {
 
         return true;
     }
-
 }

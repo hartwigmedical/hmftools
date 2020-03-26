@@ -159,6 +159,6 @@ public class SomaticPipeline implements SageVariantPipeline {
 
     @NotNull
     private Predicate<ReadContextCounter> hardFilterEvidence(@NotNull final List<VariantHotspot> variants) {
-        return config.filter().hardFilter(new HotspotSelector(variants));
+        return config.filter().readContextFilter(new HotspotSelector(variants));
     }
 }

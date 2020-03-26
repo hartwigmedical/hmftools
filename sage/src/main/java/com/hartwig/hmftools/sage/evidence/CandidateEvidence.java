@@ -51,7 +51,7 @@ public class CandidateEvidence {
         LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
 
         final HotspotSelector hotspotSelector = new HotspotSelector(hotspots);
-        final RefContextFactory candidates = new RefContextFactory(sample);
+        final RefContextFactory candidates = new RefContextFactory(config, hotspotSelector, sample);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
         return get(bamFile, bounds, refContextConsumer, candidates);
     }

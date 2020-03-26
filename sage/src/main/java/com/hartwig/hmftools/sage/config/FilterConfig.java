@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.cli.Configs;
+import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
@@ -155,7 +156,18 @@ public interface FilterConfig {
     }
 
     @NotNull
-    default Predicate<ReadContextCounter> hardFilter(@NotNull final HotspotSelector hotspotSelector) {
+    default Predicate<AltContext> altContextFilter(@NotNull final HotspotSelector hotspotSelector) {
+        return altContext -> {
+            if (hotspotSelector.isHotspot(altContext)) {
+                return true;
+            }
+            return altContext.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
+                    && altContext.rawAltSupport() >= hardMinTumorRawAltSupport();
+        };
+    }
+
+    @NotNull
+    default Predicate<ReadContextCounter> readContextFilter(@NotNull final HotspotSelector hotspotSelector) {
         return readContextCounter -> {
             if (hotspotSelector.isHotspot(readContextCounter)) {
                 return true;
