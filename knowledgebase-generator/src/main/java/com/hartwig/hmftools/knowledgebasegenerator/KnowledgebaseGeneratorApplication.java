@@ -112,7 +112,7 @@ public class KnowledgebaseGeneratorApplication {
                         listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, entryDB.getKey(), event));
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
-                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, entryDB.getKey(), event));
+                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusionsPairs(viccEntry, entryDB.getKey(), event));
                         listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
                                 entryDB.getKey(),
                                 event));
@@ -160,10 +160,23 @@ public class KnowledgebaseGeneratorApplication {
 
         List<Signatures> listSignaturesFilter = Lists.newArrayList();
         for (Signatures signatures : listSignatures) {
-            if (signatures.eventType().isEmpty()) {
+            if (!signatures.eventType().isEmpty()) {
                 listSignaturesFilter.add(signatures);
             }
         }
+
+        Set<String> uniqueKnownFusionPairs = Sets.newHashSet();
+        List<KnownFusions> listKnownFusionsPairsFilter = Lists.newArrayList();
+        for (KnownFusions knownPairFusions : listKnownFusionPairs) {
+            if (!knownPairFusions.eventType().isEmpty()) {
+                listKnownFusionsPairsFilter.add(knownPairFusions);
+                uniqueKnownFusionPairs.add(knownPairFusions.gene());
+            }
+        }
+
+        List<String> sortedUniqueKnownFusionPairs = new ArrayList<String>(uniqueKnownFusionPairs);
+        Collections.sort(sortedUniqueKnownFusionPairs);
+
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 
@@ -194,6 +207,8 @@ public class KnowledgebaseGeneratorApplication {
                 .actionableAmplification(listFilterActionableAmplifications)
                 .actionableDeletion(listFilterActionableDeletion)
                 .signatures(listSignaturesFilter)
+                .knownFusionPairs(listKnownFusionsPairsFilter)
+                .uniqueKnownFusionPairs(sortedUniqueKnownFusionPairs)
                 .build();
 
         // Create all output files from knowledgebase with data

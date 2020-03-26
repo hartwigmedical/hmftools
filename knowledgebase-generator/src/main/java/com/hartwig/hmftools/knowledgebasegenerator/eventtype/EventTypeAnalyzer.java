@@ -149,7 +149,7 @@ public class EventTypeAnalyzer {
                     }
                     if (!name.contains("DEL") && !name.contains("Splicing alteration") && !name.contains("EXON") && !name.contains("c.")
                             && !name.contains("MUT") && !name.equals("LOSS-OF-FUNCTION") && !name.equals("Gain-of-Function")
-                            && !name.contains("C.")) {
+                            && !name.contains("C.") && !name.equals("N-TERMINAL FRAME SHIFT") && !name.equals("COPY-NEUTRAL LOSS OF HETEROZYGOSITY")) {
 
                         if (name.contains("-") && name.contains(" ")) {
                             String[] combinedEventConvertToSingleEvent = name.split(" ", 2);

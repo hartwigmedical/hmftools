@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,27 +15,30 @@ public class SageVariant implements GenomePosition {
 
     private final Set<String> filters;
     private final SageVariantTier tier;
+    private final VariantHotspot variant;
     private final List<ReadContextCounter> normalAltContexts;
     private final List<ReadContextCounter> tumorAltContexts;
 
     private int localPhaseSet;
 
-    public SageVariant(final SageVariantTier tier, @NotNull final Set<String> filters, final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
+    public SageVariant(@NotNull final SageVariantTier tier, @NotNull final VariantHotspot variant, @NotNull final Set<String> filters,
+            final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
         assert (!tumorAltContexts.isEmpty());
         this.tier = tier;
         this.normalAltContexts = normal;
         this.tumorAltContexts = tumorAltContexts;
         this.filters = filters;
+        this.variant = variant;
     }
 
     @NotNull
     public String ref() {
-        return primaryNormal().alt();
+        return variant.alt();
     }
 
     @NotNull
     public String alt() {
-        return primaryNormal().alt();
+        return variant.alt();
     }
 
     public long end() {
@@ -41,15 +46,15 @@ public class SageVariant implements GenomePosition {
     }
 
     public boolean isIndel() {
-        return primaryNormal().ref().length() != primaryNormal().alt().length();
+        return variant.ref().length() != variant.alt().length();
     }
 
     public boolean isInsert() {
-        return primaryNormal().ref().length() < primaryNormal().alt().length();
+        return variant.ref().length() < variant.alt().length();
     }
 
     public boolean isDelete() {
-        return primaryNormal().ref().length() > primaryNormal().alt().length();
+        return variant.ref().length() > variant.alt().length();
     }
 
     public int localPhaseSet() {
@@ -64,6 +69,19 @@ public class SageVariant implements GenomePosition {
         return filters.isEmpty();
     }
 
+    public boolean isTumorEmpty() {
+        return tumorAltContexts.isEmpty();
+    }
+
+    public boolean isNormalEmpty() {
+        return normalAltContexts.isEmpty();
+    }
+
+    @NotNull
+    public VariantHotspot variant() {
+        return variant;
+    }
+
     @NotNull
     public SageVariantTier tier() {
         return tier;
@@ -75,8 +93,8 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
-    public ReadContextCounter primaryNormal() {
-        return normalAltContexts.get(0);
+    public ReadContext readContext() {
+        return tumorAltContexts.isEmpty() ? normalAltContexts.get(0).readContext() : tumorAltContexts.get(0).readContext();
     }
 
     @NotNull
@@ -90,19 +108,14 @@ public class SageVariant implements GenomePosition {
     }
 
     @NotNull
-    public ReadContextCounter primaryTumor() {
-        return tumorAltContexts.get(0);
-    }
-
-    @NotNull
     @Override
     public String chromosome() {
-        return primaryNormal().chromosome();
+        return variant().chromosome();
     }
 
     @Override
     public long position() {
-        return primaryNormal().position();
+        return variant().position();
     }
 
     public int totalQuality() {

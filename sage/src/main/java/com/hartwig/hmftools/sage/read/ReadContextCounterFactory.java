@@ -18,7 +18,7 @@ public class ReadContextCounterFactory {
 
     public List<ReadContextCounter> create(@NotNull final String sample, @NotNull final List<Candidate> candidates) {
         return candidates.stream()
-                .map(x -> new ReadContextCounter(sample, x.variant(), x.readContext(), x.maxDepth() < config.maxReadDepth()))
+                .map(x -> new ReadContextCounter(sample, x.variant(), x.readContext(), x.readDepth() < config.maxReadDepthCandidate()))
                 .collect(Collectors.toList());
     }
 

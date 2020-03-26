@@ -9,7 +9,8 @@ public enum GenomicEvents {
     DELETION,
     VARIANT,
     RANGE,
-    FUSION,
+    FUSION_PAIR,
+    FUSION_PROMISCUOUS,
     SIGNATURE,
     SIGNATURE_MSI,
     SIGNATURE_HRD,
@@ -29,9 +30,11 @@ public enum GenomicEvents {
             return VARIANT;
         } else if (typeEvent.equals("Range")) {
             return RANGE;
-        } else if (typeEvent.equals("Fusions")) {
-            return FUSION;
-        } else if (typeEvent.equals("Signatures")) {
+        } else if (typeEvent.equals("fusion pair")) {
+            return FUSION_PAIR;
+        } else if (typeEvent.equals("fusion promiscuous")) {
+            return FUSION_PROMISCUOUS;
+        }else if (typeEvent.equals("Signatures")) {
             return SIGNATURE;
         } else if (typeEvent.equals("MSI")) {
             return SIGNATURE_MSI;

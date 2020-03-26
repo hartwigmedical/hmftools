@@ -17,11 +17,16 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextFactory {
 
-    private static final int DEFAULT_BUFFER = 25;
     private static final int MIN_CORE_DISTANCE = 2;
 
+    private final int flankSize;
+
+    public ReadContextFactory(final int flankSize) {
+        this.flankSize = flankSize;
+    }
+
     @NotNull
-    public static ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
+    public ReadContext createDelContext(@NotNull final String ref, int refPosition, int readIndex, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
         int refIndex = refBases.index(refPosition);
 
@@ -55,13 +60,13 @@ public class ReadContextFactory {
                 readIndex,
                 Math.max(startIndex, 0),
                 Math.min(endIndex, record.getReadBases().length - 1),
-                DEFAULT_BUFFER,
+                flankSize,
                 refBases,
                 record);
     }
 
     @NotNull
-    public static ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
+    public ReadContext createInsertContext(@NotNull final String alt, int refPosition, int readIndex,
             @NotNull final SAMRecord record, final IndexedBases refBases) {
         int refIndex = refBases.index(refPosition);
 
@@ -95,19 +100,19 @@ public class ReadContextFactory {
                 readIndex,
                 Math.max(startIndex, 0),
                 Math.min(endIndex, record.getReadBases().length - 1),
-                DEFAULT_BUFFER,
+                flankSize,
                 refBases,
                 record);
     }
 
     @NotNull
-    public static ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record,
+    public ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
         return createMNVContext(refPosition, readIndex, 1, record, refBases);
     }
 
     @NotNull
-    public static ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
+    public ReadContext createMNVContext(int refPosition, int readIndex, int length, @NotNull final SAMRecord record,
             final IndexedBases refBases) {
 
         int refIndex = refBases.index(refPosition);
@@ -146,14 +151,14 @@ public class ReadContextFactory {
                 readIndex,
                 Math.max(startIndex, 0),
                 Math.min(endIndex, record.getReadBases().length - 1),
-                DEFAULT_BUFFER,
+                flankSize,
                 refBases,
                 record);
     }
 
     @NotNull
     public static ReadContext dummy(int refPosition, @NotNull final String alt) {
-        return new ReadContext(Strings.EMPTY, refPosition, 0, 0, 0, DEFAULT_BUFFER, alt.getBytes());
+        return new ReadContext(Strings.EMPTY, refPosition, 0, 0, 0, 1, alt.getBytes());
     }
 
 }

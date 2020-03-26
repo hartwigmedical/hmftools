@@ -17,6 +17,7 @@ import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -95,7 +96,7 @@ public class SageApplication implements AutoCloseable {
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig)) {
+            if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
                 ChromosomePipeline pipeline = createChromosomePipeline(contig);
                 pipeline.addAllRegions();
                 chromosomePipelines.add(pipeline.submit());
@@ -108,7 +109,7 @@ public class SageApplication implements AutoCloseable {
 //        custom.addRegion(6385360, 6385360);
 //        custom.addRegion(25268011, 25268011);
 //        custom.addRegion(79223325, 79223325);
-//        custom.addRegion(67141, 67141);
+//        custom.addRegion(997610, 997610);
 //        chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
@@ -126,14 +127,16 @@ public class SageApplication implements AutoCloseable {
     }
 
     private SAMSequenceDictionary dictionary() throws IOException {
-        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(config.referenceBam().get(0)));
+        final String bam = config.referenceBam().isEmpty() ? config.tumorBam().get(0) : config.referenceBam().get(0);
+        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bam));
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
         tumorReader.close();
         return dictionary;
     }
 
     private ChromosomePipeline createChromosomePipeline(@NotNull final String contig) throws IOException {
-        final Chromosome chromosome = HumanChromosome.fromString(contig);
+        final Chromosome chromosome =
+                HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
         return new ChromosomePipeline(contig,
                 config,
                 executorService,

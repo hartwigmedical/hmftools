@@ -17,12 +17,12 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.TIER;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,21 +39,7 @@ public class SageVariantContextFactory {
     private static final double HET_CUTOFF = 0.1;
 
     @NotNull
-    public static VariantContext germlineOnly(@NotNull final SageVariant entry) {
-        final ReadContextCounter normal = entry.primaryNormal();
-
-        final Genotype normalGenotype = createGenotype(true, normal);
-        final List<Genotype> genotypes = Collections.singletonList(normalGenotype);
-        return createContext(entry, createAlleles(normal), genotypes, normal);
-    }
-
-    @NotNull
-    public static VariantContext pairedTumorNormal(@NotNull final SageVariant entry) {
-        final List<ReadContextCounter> tumorContexts = entry.tumorAltContexts();
-
-        assert (tumorContexts.size() >= 1);
-
-        final ReadContextCounter firstTumor = tumorContexts.get(0);
+    public static VariantContext create(@NotNull final SageVariant entry) {
 
         final List<Genotype> genotypes = Lists.newArrayList();
         for (int i = 0; i < entry.normalAltContexts().size(); i++) {
@@ -61,19 +47,18 @@ public class SageVariantContextFactory {
             genotypes.add(createGenotype(i == 0, normalContext));
         }
 
-        tumorContexts.stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
-
-        return createContext(entry, createAlleles(entry.primaryNormal()), genotypes, firstTumor);
+        entry.tumorAltContexts().stream().map(x -> createGenotype(false, x)).forEach(genotypes::add);
+        return createContext(entry, createAlleles(entry.variant()), genotypes, entry.readContext());
     }
 
     @NotNull
     private static VariantContext createContext(@NotNull final SageVariant variant, @NotNull final List<Allele> alleles,
-            @NotNull final List<Genotype> genotypes, @NotNull final ReadContextCounter counter) {
+            @NotNull final List<Genotype> genotypes, @NotNull final ReadContext counter) {
         final VariantContextBuilder builder = new VariantContextBuilder().chr(variant.chromosome())
                 .start(variant.position())
-                .attribute(READ_CONTEXT, counter.readContext().toString())
-                .attribute(READ_CONTEXT_DIFFERENCE, counter.readContext().distanceCigar())
-                .attribute(READ_CONTEXT_DISTANCE, counter.readContext().distance())
+                .attribute(READ_CONTEXT, counter.toString())
+                .attribute(READ_CONTEXT_DIFFERENCE, counter.distanceCigar())
+                .attribute(READ_CONTEXT_DISTANCE, counter.distance())
                 .log10PError(variant.totalQuality() / -10d)
                 .source("SAGE")
                 .computeEndFromAlleles(alleles, (int) variant.position())
@@ -82,13 +67,13 @@ public class SageVariantContextFactory {
                 .alleles(alleles)
                 .filters(variant.filters());
 
-        if (!counter.readContext().microhomology().isEmpty()) {
-            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, counter.readContext().microhomology());
+        if (!counter.microhomology().isEmpty()) {
+            builder.attribute(READ_CONTEXT_MICRO_HOMOLOGY, counter.microhomology());
         }
 
-        if (counter.readContext().repeatCount() > 0) {
-            builder.attribute(READ_CONTEXT_REPEAT_COUNT, counter.readContext().repeatCount())
-                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, counter.readContext().repeat());
+        if (counter.repeatCount() > 0) {
+            builder.attribute(READ_CONTEXT_REPEAT_COUNT, counter.repeatCount())
+                    .attribute(READ_CONTEXT_REPEAT_SEQUENCE, counter.repeat());
         }
 
         if (variant.localPhaseSet() > 0) {

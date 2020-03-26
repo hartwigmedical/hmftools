@@ -162,17 +162,6 @@ RABQ\[0,1\] | Raw Allelic Base Quality \[Ref,Alt\]
 
 Note that these raw depth values do NOT contribute to the AD, DP, QUAL or AF fields. These are calculated in the second pass. 
 
-### Hard Filters
-
-To reduce processing time two hard filters are applied at this stage. 
-
-Filter | Default Value | Field
----|---|---
-hard_min_tumor_raw_alt_support |2| `RAD[1]`
-hard_min_tumor_raw_base_quality |0| `RABQ[1]`
-
-These variants are excluded from this point onwards and have no further processing applied to them.  
-
 ### Multiple Tumors
 If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
 
@@ -243,7 +232,9 @@ To reduce processing time an additional hard filter is applied at this stage.
 
 Filter | Default Value | Field
 ---|---|---
-hard_min_tumor_qual |1**| `QUAL`
+hard_min_tumor_qual |30**| `QUAL`
+hard_min_tumor_raw_alt_support |2| `RAD[1]`
+hard_min_tumor_raw_base_quality |0| `RABQ[1]`
 
 ** Hotspots are kept regardless of tumor quality
 
@@ -373,7 +364,11 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 48 | 27 | 1047 | 66
 
  ## Version History
+ - TODO
+   - Add tumor only support
  - Upcoming
+   - Improved sensitivity in high depth regions
+   - Mitochondria support
    - Multiple tumor support
    - Multiple reference (or RNA) support
    - Removed explicit RNA support (can use additional reference instead)

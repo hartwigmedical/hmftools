@@ -2,6 +2,10 @@ package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
+import java.util.function.Predicate;
+
+import com.hartwig.hmftools.sage.read.ReadContextCounter;
+import com.hartwig.hmftools.sage.select.HotspotSelector;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.commons.cli.CommandLine;
@@ -15,14 +19,14 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface FilterConfig {
 
+    String DISABLE_SOFT_FILTER = "disable_soft_filter";
     String HARD_FILTER = "hard_filter";
     String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     String HARD_MIN_TUMOR_RAW_ALT_SUPPORT = "hard_min_tumor_raw_alt_support";
     String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
 
-    int DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED = 30;
     int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
-    int DEFAULT_HARD_MIN_TUMOR_QUAL = 1;
+    int DEFAULT_HARD_MIN_TUMOR_QUAL = 30;
     int DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT = 2;
     int DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT = 3;
 
@@ -74,10 +78,6 @@ public interface FilterConfig {
 
     int hardMinTumorRawBaseQuality();
 
-    default int hardMinTumorQualFiltered() {
-        return DEFAULT_HARD_MIN_TUMOR_QUAL_FILTERED;
-    }
-
     //TODO: Rename this... it isn't a hard filter
     default int hardMaxNormalAltSupport() {
         return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
@@ -91,11 +91,7 @@ public interface FilterConfig {
         return 5;
     }
 
-
-    default double minGermlineVaf() {
-        return 0;
-    }
-
+    boolean disableSoftFilter();
 
     @NotNull
     SoftFilterConfig softHotspotFilter();
@@ -113,6 +109,7 @@ public interface FilterConfig {
     static Options createOptions() {
         final Options options = new Options();
 
+        options.addOption(DISABLE_SOFT_FILTER, false, "Disable soft filters");
         options.addOption(HARD_FILTER, false, "Soft filters become hard");
         options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
         options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true, "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
@@ -129,6 +126,7 @@ public interface FilterConfig {
     @NotNull
     static FilterConfig createConfig(@NotNull final CommandLine cmd) throws ParseException {
         return ImmutableFilterConfig.builder()
+                .disableSoftFilter(cmd.hasOption(DISABLE_SOFT_FILTER))
                 .hardFilter(cmd.hasOption(HARD_FILTER))
                 .hardMinTumorQual(defaultIntValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL))
                 .hardMinTumorRawAltSupport(defaultIntValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT))
@@ -153,6 +151,18 @@ public interface FilterConfig {
             default:
                 return softLowConfidenceFilter();
         }
+    }
+
+    @NotNull
+    default Predicate<ReadContextCounter> hardFilter(@NotNull final HotspotSelector hotspotSelector) {
+        return readContextCounter -> {
+            if (hotspotSelector.isHotspot(readContextCounter)) {
+                return true;
+            }
+            return readContextCounter.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
+                    && readContextCounter.rawAltSupport() >= hardMinTumorRawAltSupport()
+                    && readContextCounter.tumorQuality() >= hardMinTumorQual();
+        };
     }
 
 }

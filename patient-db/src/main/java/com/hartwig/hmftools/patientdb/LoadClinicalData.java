@@ -36,6 +36,7 @@ import com.hartwig.hmftools.patientdb.readers.RunsFolderReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
+import com.hartwig.hmftools.patientdb.readers.wide.WideInputReader;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -59,7 +60,13 @@ public final class LoadClinicalData {
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
+    private static final String WIDE_TREATMENT_DATA = "wide_treatment_data";
+    private static final String WIDE_PRE_TREATMENT_DATA = "wide_pre_treatment_data";
+    private static final String WIDE_BIOPT_DATA = "wide_biopt_data";
+    private static final String WIDE_RESPONSE_DATA = "wide_response_data";
+
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
+    private static final String PROCESS_WIDE_CLINICAL_DATA = "process_wide_clinical_data";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
@@ -113,7 +120,8 @@ public final class LoadClinicalData {
                 sampleDataPerPatient,
                 ecrfModels,
                 cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)));
+                Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
+                cmd.hasOption(PROCESS_WIDE_CLINICAL_DATA));
     }
 
     @NotNull
@@ -227,6 +235,17 @@ public final class LoadClinicalData {
         EcrfModel drupEcrfModel = EcrfModel.loadFromXMLNoFormStates(drupEcrfFilePath);
         LOGGER.info(" Finished loading DRUP eCRF. Read {} patients", drupEcrfModel.patientCount());
 
+        LOGGER.info("Loading WIDE clinical data");
+        String wideTreatmentData = cmd.getOptionValue(WIDE_TREATMENT_DATA);
+        WideInputReader.buildTreatmentData(wideTreatmentData);
+        String widePreviousTreatmentData = cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA);
+        WideInputReader.buildPreTreatmentData(widePreviousTreatmentData);
+        String wideBioptData = cmd.getOptionValue(WIDE_BIOPT_DATA);
+        WideInputReader.buildBiopsyData(wideBioptData);
+        String wideResponseData = cmd.getOptionValue(WIDE_RESPONSE_DATA);
+        WideInputReader.buildResponseData(wideResponseData);
+        LOGGER.info(" Finished loading WIDE clinical data");
+
         return ImmutableEcrfModels.of(cpctEcrfModel, drupEcrfModel);
     }
 
@@ -247,13 +266,18 @@ public final class LoadClinicalData {
 
     private static void writeClinicalData(@NotNull DatabaseAccess dbAccess, @NotNull Lims lims, @NotNull Set<String> sequencedPatientIds,
             @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull EcrfModels ecrfModels,
-            @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink) throws IOException {
+            @NotNull String tumorLocationOutputDir, @NotNull Optional<String> tumorLocationSymlink, boolean processWideClinicalData)
+            throws IOException {
         TumorLocationCurator tumorLocationCurator = TumorLocationCurator.fromProductionResource();
         BiopsySiteCurator biopsySiteCurator = BiopsySiteCurator.fromProductionResource();
         TreatmentCurator treatmentCurator = TreatmentCurator.fromProductionResource();
 
-        Map<String, Patient> patients =
-                loadAndInterpretPatients(sampleDataPerPatient, ecrfModels, tumorLocationCurator, treatmentCurator, biopsySiteCurator);
+        Map<String, Patient> patients = loadAndInterpretPatients(sampleDataPerPatient,
+                ecrfModels,
+                tumorLocationCurator,
+                treatmentCurator,
+                biopsySiteCurator,
+                processWideClinicalData);
 
         DumpTumorLocationData.writeCuratedTumorLocationsToCSV(tumorLocationOutputDir, tumorLocationSymlink, patients.values());
 
@@ -293,7 +317,7 @@ public final class LoadClinicalData {
     @NotNull
     private static Map<String, Patient> loadAndInterpretPatients(@NotNull Map<String, List<SampleData>> sampleDataPerPatient,
             @NotNull EcrfModels ecrfModels, @NotNull TumorLocationCurator tumorLocationCurator, @NotNull TreatmentCurator treatmentCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator) {
+            @NotNull BiopsySiteCurator biopsySiteCurator, boolean processWideClinicalData) {
         EcrfModel cpctEcrfModel = ecrfModels.cpctModel();
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
         EcrfPatientReader cpctPatientReader = new CpctPatientReader(tumorLocationCurator,
@@ -312,12 +336,22 @@ public final class LoadClinicalData {
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data based off LIMS (WIDE and CORE)");
-        Map<String, Patient> patientsFromLims = readLimsPatients(sampleDataPerPatient, tumorLocationCurator);
-        LOGGER.info(" Finished curation of {} patients based off LIMS", patientsFromLims.keySet().size());
+        Map<String, Patient> patientsFromLims = Maps.newHashMap();
+        Map<String, Patient> widePatients = Maps.newHashMap();
+
+        if (processWideClinicalData) {
+            //TODO use WIDE clinical data
+            widePatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), sampleDataPerPatient);
+            LOGGER.info(" Finished curation of {} patients based off LIMS", patientsFromLims.keySet().size());
+        } else {
+            patientsFromLims = readLimsPatients(sampleDataPerPatient, tumorLocationCurator);
+            LOGGER.info(" Finished curation of {} patients based off LIMS", patientsFromLims.keySet().size());
+        }
 
         Map<String, Patient> mergedPatients = Maps.newHashMap();
         mergedPatients.putAll(cpctPatients);
         mergedPatients.putAll(drupPatients);
+        mergedPatients.putAll(widePatients);
         mergedPatients.putAll(patientsFromLims);
         mergedPatients.putAll(readColoPatients());
         return mergedPatients;
@@ -436,7 +470,11 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(CPCT_FORM_STATUS_CSV),
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
-                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY));
+                cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
+                cmd.getOptionValue(WIDE_TREATMENT_DATA),
+                cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA),
+                cmd.getOptionValue(WIDE_BIOPT_DATA),
+                cmd.getOptionValue(WIDE_RESPONSE_DATA));
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
@@ -461,7 +499,14 @@ public final class LoadClinicalData {
         options.addOption(CPCT_ECRF_FILE, true, "Path towards the cpct ecrf file.");
         options.addOption(CPCT_FORM_STATUS_CSV, true, "Path towards the cpct form status csv file.");
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
+        options.addOption(WIDE_TREATMENT_DATA, true, "Path towards the wide treatment data");
+        options.addOption(WIDE_PRE_TREATMENT_DATA, true, "Path towards the wide pre treatment data.");
+        options.addOption(WIDE_BIOPT_DATA, true, "Path towards the wide biopt data.");
+        options.addOption(WIDE_RESPONSE_DATA, true, "Path towards the wide response data.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
+        options.addOption(PROCESS_WIDE_CLINICAL_DATA,
+                false,
+                "if set, creates clinical timeline for WIDE patients and persists to database");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
         options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");

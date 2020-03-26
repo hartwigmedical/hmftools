@@ -15,10 +15,6 @@ public class Candidate {
     private int readContextSupport;
     private ReadContext readContext;
 
-    public Candidate(final VariantHotspot variant) {
-        this.variant = variant;
-    }
-
     public Candidate(final AltContext altContext) {
         this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
         this.maxDepth = altContext.rawDepth();
@@ -40,7 +36,7 @@ public class Candidate {
         return variant;
     }
 
-    public int maxDepth() {
+    public int readDepth() {
         return maxDepth;
     }
 

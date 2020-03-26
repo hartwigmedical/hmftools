@@ -42,7 +42,9 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
 
-### 3. Expected shared and private abundance rates per transcript
+### 3. Expected rates per 'category' and expected GC distibution per transcript
+
+#### A. Expected rates per catageory
 
 For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a indpendent transcript that could be expressed.  
 
@@ -62,6 +64,12 @@ UNSPLICED|0|0|0.8
 TOTAL|1.0|1.0|1.0
 
 In this example, 50% of all fragments from transcript A are expected to be uniquely mapped to the A transcript, 30% may be mapped to A,B or UNSPLICED (likely fragments matching a long exon), 10% are expected to be mapped to either A or B but with splicing and the final 10% are expected to be mapped to a region which is either exonic in A or unspliced.     These rates are compared to the observed abundance of each category in subsequent steps to estimate the actual abundance of each transcript.
+
+#### B. Expected GC distribution
+
+For each of the sampled fragments in each transcript (including unspliced transcripts), the GC content is also measured.  For each transcript the unbiased proportion of expected fragments with each GC count between 0 and 2x the read length is calculated.   This is used subsequently to estimate GC bias.
+
+*TODO* - Problem with fragments < 2 x read length.
 
 ### 4. Counting abundance per unique group of shared transcripts
 
@@ -86,7 +94,28 @@ For each group of transcripts conidered together we aim to fit the relative abun
 
 ### 6. Bias Estimation and Correction
 
-<TO DO: GC Bias, Fragment Length Bias, Sequence Start Speicfic Bias, 5' CAP bias>
+#### A. GC Bias estimate
+
+Expected GC distribution for sample is estimated to be the sum of the distribution for each transcript (calcluated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology used in Salmon).  To avoid overfitting highly expressed genes or transcripts, genes with more than X% of fragments are ignored in this calculation
+
+The GC bias for each integer GC content level between 1 & 2 x read length is the ratio of the estimated to the actual distribution ignoring the highly expressed genes. 
+
+##### B. Fragment Length Bias
+
+TO DO
+
+#### C. Sequence Start Speicfic Bias
+
+TO DO 
+
+#### D. 5' CAP bias
+
+TO DO
+
+#### E. Adjust expected rates for biases and restimate abundances per transcript
+
+TO DO - Apply adjustments to the expected rates.   Then repeat step 5.
+
 
 ### 7. Counting and characterisation of novel splice junctions
 

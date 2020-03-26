@@ -52,7 +52,7 @@ public class ViccAmpsDelExtractorTestApplication {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type : eventType) {
-                LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
+              //  LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
                 // Generating known events
                 //TODO: map every genomic event to one object
                 //TODO: if combined event use single event for determine known events
@@ -66,7 +66,7 @@ public class ViccAmpsDelExtractorTestApplication {
                         listKnownDeletion.add(DetermineEventOfGenomicMutation.checkKnownDeletion(viccEntry, entryDB.getKey(), event));
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
-                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry, entryDB.getKey(), event));
+                        listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusionsPairs(viccEntry, entryDB.getKey(), event));
                         listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
                                 entryDB.getKey(),
                                 event));
@@ -108,6 +108,15 @@ public class ViccAmpsDelExtractorTestApplication {
                 listSignaturesFilter.add(signatures);
             }
         }
+
+        List<KnownFusions> listKnownFusionsPairsFilter = Lists.newArrayList();
+        for (KnownFusions knownPairFusions : listKnownFusionPairs) {
+            if (!knownPairFusions.eventType().isEmpty()) {
+                listKnownFusionsPairsFilter.add(knownPairFusions);
+            }
+        }
+
+        LOGGER.info(listKnownFusionsPairsFilter);
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 

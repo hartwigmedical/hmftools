@@ -87,16 +87,6 @@ public interface SageConfig {
     String highConfidenceBed();
 
     @NotNull
-    default String primaryTumor() {
-        return tumor().get(0);
-    }
-
-    @NotNull
-    default String primaryReference() {
-        return reference().get(0);
-    }
-
-    @NotNull
     List<String> tumor();
 
     @NotNull
@@ -109,8 +99,6 @@ public interface SageConfig {
     String panelBed();
 
     boolean panelOnly();
-
-    boolean germlineOnly();
 
     boolean mnvDetection();
 
@@ -131,12 +119,20 @@ public interface SageConfig {
 
     int minBaseQuality();
 
-    default int maxReadDepth() {
+    default int maxReadDepthCandidate() {
+        return 1000;
+    }
+
+    default int maxReadDepthEvidence() {
         return 1000;
     }
 
     default int maxSkippedReferenceRegions() {
         return 50;
+    }
+
+    default int readContextFlankSize() {
+        return 25;
     }
 
     @NotNull
@@ -145,13 +141,14 @@ public interface SageConfig {
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
 
         final List<String> referenceList = Lists.newArrayList();
-        referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
-        if (referenceList.isEmpty()) {
-            throw new ParseException("At least one reference sample required");
+        if (cmd.hasOption(REFERENCE)) {
+            referenceList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
         }
 
         final List<String> referenceBamList = Lists.newArrayList();
-        referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
+        if (cmd.hasOption(REFERENCE_BAM)) {
+            referenceBamList.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(",")));
+        }
 
         if (referenceList.size() != referenceBamList.size()) {
             throw new ParseException("Each reference sample must have matching bam");
@@ -183,6 +180,10 @@ public interface SageConfig {
             }
         }
 
+        if (tumorList.isEmpty()) {
+            throw new ParseException("At least one tumor must be supplied");
+        }
+
         return ImmutableSageConfig.builder()
                 .version(version)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
@@ -201,7 +202,6 @@ public interface SageConfig {
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
                 .panelOnly(cmd.hasOption(PANEL_ONLY))
-                .germlineOnly(cmd.hasOption(GERMLINE_ONLY))
                 .build();
     }
 }

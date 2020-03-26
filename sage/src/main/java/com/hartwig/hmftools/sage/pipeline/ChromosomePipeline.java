@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -37,7 +37,6 @@ public class ChromosomePipeline implements AutoCloseable {
     private final String chromosome;
     private final SageConfig config;
     private final SageChromosomeVCF sageVCF;
-    private final Function<SageVariant, VariantContext> variantContextFactory;
     private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
     private final IndexedFastaSequenceFile refGenome;
     private final SageVariantPipeline sageVariantPipeline;
@@ -47,13 +46,9 @@ public class ChromosomePipeline implements AutoCloseable {
             @NotNull final List<GenomeRegion> highConfidenceRegions) throws IOException {
         this.chromosome = chromosome;
         this.config = config;
-        this.variantContextFactory =
-                config.germlineOnly() ? SageVariantContextFactory::germlineOnly : SageVariantContextFactory::pairedTumorNormal;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        this.sageVariantPipeline = config.germlineOnly()
-                ? new GermlineOnlyPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions)
-                : new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions);
+        this.sageVariantPipeline = new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions);
     }
 
     @NotNull
@@ -95,7 +90,7 @@ public class ChromosomePipeline implements AutoCloseable {
 
         final Consumer<SageVariant> phasedConsumer = variant -> {
             if (include(variant)) {
-                final VariantContext context = variantContextFactory.apply(variant);
+                final VariantContext context = SageVariantContextFactory.create(variant);
                 sageVCF.write(context);
             }
         };
@@ -118,11 +113,9 @@ public class ChromosomePipeline implements AutoCloseable {
         }
 
         return done.thenApply(aVoid -> {
-            LOGGER.info("Phasing chromosome {}", chromosome);
-
             phase.flush();
             sageVCF.close();
-            LOGGER.info("Finished processing chromosome {}", chromosome);
+            LOGGER.info("Processing chromosome {} complete", chromosome);
             return ChromosomePipeline.this;
         });
 
@@ -146,16 +139,15 @@ public class ChromosomePipeline implements AutoCloseable {
             return true;
         }
 
-        if (config.germlineOnly()) {
-            return true;
+        if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())) {
+            final ReadContextCounter normal = entry.normalAltContexts().get(0);
+            if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
+                return false;
+            }
         }
 
-        final ReadContextCounter normal = entry.primaryNormal();
-        if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {
-            return false;
-        }
+        return true;
 
-        return entry.maxQuality() >= config.filter().hardMinTumorQualFiltered();
     }
 
     @Override
