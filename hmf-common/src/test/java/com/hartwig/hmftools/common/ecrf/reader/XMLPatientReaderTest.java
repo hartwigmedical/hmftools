@@ -163,6 +163,7 @@ public class XMLPatientReaderTest {
         }
         return fieldValues;
     }
+
     private static void verifyFirstFieldValue(@NotNull String expected, @Nullable List<String> values) {
         assert values != null && values.size() == 1;
         assertEquals(expected, values.get(0));

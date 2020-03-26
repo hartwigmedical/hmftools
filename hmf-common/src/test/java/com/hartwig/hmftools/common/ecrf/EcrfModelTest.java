@@ -26,7 +26,7 @@ public class EcrfModelTest {
 
     @Test
     public void loadDataFromRealXML() throws IOException, XMLStreamException {
-        final EcrfModel model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+        EcrfModel model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
 
         assertTrue(hasField(model, "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC"));
         assertFalse(hasField(model, "Does Not Exist"));

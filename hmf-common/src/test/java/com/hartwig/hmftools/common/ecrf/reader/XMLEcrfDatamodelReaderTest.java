@@ -17,14 +17,13 @@ import org.junit.Test;
 public class XMLEcrfDatamodelReaderTest {
 
     private static final String BASE_RESOURCE_DIR = Resources.getResource("ecrf").getPath();
-    private static final String DATAMODEL_TEST =
-            BASE_RESOURCE_DIR + File.separator + "tests" + File.separator + "datamodel.xml";
+    private static final String DATAMODEL_TEST = BASE_RESOURCE_DIR + File.separator + "tests" + File.separator + "datamodel.xml";
 
     @Test
     public void canExtractDatamodelFromEcrf() throws FileNotFoundException, XMLStreamException {
-         XMLInputFactory factory = XMLInputFactory.newInstance();
-         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(DATAMODEL_TEST));
-         XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(DATAMODEL_TEST));
+        XMLEcrfDatamodel datamodel = XMLEcrfDatamodelReader.readXMLDatamodel(reader);
 
         assertEquals(1, datamodel.studyEvents().size());
         assertEquals(1, datamodel.forms().size());
