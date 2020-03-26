@@ -23,7 +23,6 @@ public class FusionExtractor {
 
     @NotNull
     public static KnownFusions determineKnownFusionsPairs(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
-        //TODO: convert gene names
         if (gene.equals("ZNF198-FGFR1")) {
             gene = "ZMYM2-FGFR1";
         } else if (gene.equals("NPM-ALK")) {
@@ -72,6 +71,8 @@ public class FusionExtractor {
             gene = "BRD4-NUTM1";
         } else if (gene.equals("MLL-MLLT3")) {
             gene = "KMT2A-MLLT3";
+        } else if (gene.equals("BCR-ABL")) {
+            gene = "BCR-ABL1";
         } else if (gene.contains("IGH") || gene.contains("IGK") || gene.contains("TRB") || gene.contains("Delta")
                 || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170") || gene.equals("BRAF-CUL1")) {
             gene = Strings.EMPTY;
