@@ -6,6 +6,7 @@ import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +22,7 @@ public class ReadContextCounter implements VariantHotspot {
     private final VariantHotspot variant;
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
+    private final SageVariantTier tier;
     private final boolean realign;
     private final int maxCoverage;
 
@@ -51,8 +53,9 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            final int maxCoverage, boolean realign) {
+            final SageVariantTier tier, final int maxCoverage, boolean realign) {
         this.sample = sample;
+        this.tier = tier;
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
@@ -74,6 +77,11 @@ public class ReadContextCounter implements VariantHotspot {
     @Override
     public String chromosome() {
         return variant.chromosome();
+    }
+
+    @NotNull
+    public SageVariantTier tier() {
+        return tier;
     }
 
     @Override

@@ -26,6 +26,7 @@ public class ReadContextCounterFactory {
                 .map(x -> new ReadContextCounter(sample,
                         x.variant(),
                         x.readContext(),
+                        x.tier(),
                         maxCoverage(x),
                         x.maxReadDepth() < config.maxRealignmentReadDepth()))
                 .collect(Collectors.toList());

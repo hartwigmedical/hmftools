@@ -167,9 +167,9 @@ public interface FilterConfig {
     }
 
     @NotNull
-    default Predicate<ReadContextCounter> readContextFilter(@NotNull final HotspotSelector hotspotSelector) {
+    default Predicate<ReadContextCounter> readContextFilter() {
         return readContextCounter -> {
-            if (hotspotSelector.isHotspot(readContextCounter)) {
+            if (readContextCounter.tier().equals(SageVariantTier.HOTSPOT)) {
                 return true;
             }
             return readContextCounter.rawAltBaseQuality() >= hardMinTumorRawBaseQuality()
