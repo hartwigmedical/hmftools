@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
@@ -7,7 +8,7 @@ import com.hartwig.hmftools.sage.read.ReadContext;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Candidate {
+public class Candidate implements GenomePosition {
 
     private final VariantHotspot variant;
 
@@ -43,5 +44,16 @@ public class Candidate {
     @NotNull
     public ReadContext readContext() {
         return readContext;
+    }
+
+    @NotNull
+    @Override
+    public String chromosome() {
+        return variant.chromosome();
+    }
+
+    @Override
+    public long position() {
+        return variant.position();
     }
 }
