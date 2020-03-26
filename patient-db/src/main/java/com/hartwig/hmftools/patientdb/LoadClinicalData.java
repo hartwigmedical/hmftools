@@ -60,13 +60,14 @@ public final class LoadClinicalData {
     private static final String CPCT_ECRF_FILE = "cpct_ecrf";
     private static final String CPCT_FORM_STATUS_CSV = "cpct_form_status_csv";
     private static final String DRUP_ECRF_FILE = "drup_ecrf";
-    private static final String WIDE_TREATMENT_DATA = "wide_treatment_data";
+
+    private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
     private static final String WIDE_PRE_TREATMENT_DATA = "wide_pre_treatment_data";
-    private static final String WIDE_BIOPT_DATA = "wide_biopt_data";
+    private static final String WIDE_BIOPSY_DATA = "wide_biopsy_data";
+    private static final String WIDE_TREATMENT_DATA = "wide_treatment_data";
     private static final String WIDE_RESPONSE_DATA = "wide_response_data";
 
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
-    private static final String PROCESS_WIDE_CLINICAL_DATA = "process_wide_clinical_data";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
@@ -76,13 +77,13 @@ public final class LoadClinicalData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
+    public static void main(@NotNull String[] args) throws ParseException, IOException, XMLStreamException, SQLException {
         LOGGER.info("Running patient-db v{}", VERSION);
         Options options = createOptions();
         CommandLine cmd = createCommandLine(args, options);
 
         if (!checkInputs(cmd)) {
-            final HelpFormatter formatter = new HelpFormatter();
+            HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db", options);
             System.exit(1);
         }
@@ -121,7 +122,7 @@ public final class LoadClinicalData {
                 ecrfModels,
                 cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
                 Optional.ofNullable(cmd.getOptionValue(TUMOR_LOCATION_SYMLINK)),
-                cmd.hasOption(PROCESS_WIDE_CLINICAL_DATA));
+                cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA));
     }
 
     @NotNull
@@ -240,7 +241,7 @@ public final class LoadClinicalData {
         WideInputReader.buildTreatmentData(wideTreatmentData);
         String widePreviousTreatmentData = cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA);
         WideInputReader.buildPreTreatmentData(widePreviousTreatmentData);
-        String wideBioptData = cmd.getOptionValue(WIDE_BIOPT_DATA);
+        String wideBioptData = cmd.getOptionValue(WIDE_BIOPSY_DATA);
         WideInputReader.buildBiopsyData(wideBioptData);
         String wideResponseData = cmd.getOptionValue(WIDE_RESPONSE_DATA);
         WideInputReader.buildResponseData(wideResponseData);
@@ -473,12 +474,12 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
                 cmd.getOptionValue(WIDE_TREATMENT_DATA),
                 cmd.getOptionValue(WIDE_PRE_TREATMENT_DATA),
-                cmd.getOptionValue(WIDE_BIOPT_DATA),
+                cmd.getOptionValue(WIDE_BIOPSY_DATA),
                 cmd.getOptionValue(WIDE_RESPONSE_DATA));
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
-            final File runDirectoryDb = new File(runsDirectory);
+            File runDirectoryDb = new File(runsDirectory);
 
             if (!runDirectoryDb.exists() || !runDirectoryDb.isDirectory()) {
                 validRunDirectories = false;
@@ -501,10 +502,10 @@ public final class LoadClinicalData {
         options.addOption(DRUP_ECRF_FILE, true, "Path towards the drup ecrf file.");
         options.addOption(WIDE_TREATMENT_DATA, true, "Path towards the wide treatment data");
         options.addOption(WIDE_PRE_TREATMENT_DATA, true, "Path towards the wide pre treatment data.");
-        options.addOption(WIDE_BIOPT_DATA, true, "Path towards the wide biopt data.");
+        options.addOption(WIDE_BIOPSY_DATA, true, "Path towards the wide biopt data.");
         options.addOption(WIDE_RESPONSE_DATA, true, "Path towards the wide response data.");
         options.addOption(DO_LOAD_RAW_ECRF, false, "Also write raw ecrf data to database?");
-        options.addOption(PROCESS_WIDE_CLINICAL_DATA,
+        options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
                 "if set, creates clinical timeline for WIDE patients and persists to database");
 
@@ -519,7 +520,7 @@ public final class LoadClinicalData {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
         return new DefaultParser().parse(options, args);
     }
 }
