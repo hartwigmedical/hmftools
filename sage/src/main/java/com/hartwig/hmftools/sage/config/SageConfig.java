@@ -108,6 +108,10 @@ public interface SageConfig {
     @NotNull
     QualityConfig qualityConfig();
 
+    default int typicalReadLength() {
+        return 151;
+    }
+
     default int regionSliceSize() {
         return 500_000;
     }

@@ -114,7 +114,7 @@ public class SomaticPipeline implements SageVariantPipeline {
                 final String sampleBam = sampleBams.get(i);
 
                 final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
-                        .thenApply(x -> readContextEvidence.get(region, initialCandidates, sample, sampleBam))
+                        .thenApply(x -> readContextEvidence.get(initialCandidates, sample, sampleBam))
                         .thenAccept(result::addCounters);
 
                 tumorFutures.add(tumorFuture);
