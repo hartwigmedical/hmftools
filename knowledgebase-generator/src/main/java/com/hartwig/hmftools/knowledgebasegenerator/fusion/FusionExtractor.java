@@ -73,7 +73,7 @@ public class FusionExtractor {
         } else if (gene.equals("MLL-MLLT3")) {
             gene = "KMT2A-MLLT3";
         } else if (gene.contains("IGH") || gene.contains("IGK") || gene.contains("TRB") || gene.contains("Delta")
-                || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170")) {
+                || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170") || gene.equals("BRAF-CUL1")) {
             gene = Strings.EMPTY;
             typeEvent = Strings.EMPTY;
             source = Source.UNKNOWN;
