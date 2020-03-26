@@ -178,7 +178,7 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     public void accept(final SAMRecord record, final SageConfig sageConfig) {
-        int maxCoverage = mitochondrial ? 1000 * sageConfig.maxReadDepthEvidence() : sageConfig.maxReadDepthEvidence();
+        int maxCoverage = mitochondrial ? 1000 * sageConfig.maxEvidenceReadDepth() : sageConfig.maxEvidenceReadDepth();
         try {
             if (coverage >= maxCoverage || !readContext.isComplete()) {
                 return;

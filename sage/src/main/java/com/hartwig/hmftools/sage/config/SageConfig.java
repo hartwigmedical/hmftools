@@ -120,11 +120,11 @@ public interface SageConfig {
 
     int minBaseQuality();
 
-    default int maxReadDepthCandidate() {
+    default int maxAlignmentReadDepth() {
         return 1000;
     }
 
-    default int maxReadDepthEvidence() {
+    default int maxEvidenceReadDepth() {
         return 1000;
     }
 
