@@ -120,7 +120,7 @@ public interface SageConfig {
 
     int minBaseQuality();
 
-    default int maxAlignmentReadDepth() {
+    default int maxRealignmentReadDepth() {
         return 1000;
     }
 

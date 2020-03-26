@@ -81,7 +81,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             }
             LOGGER.debug("Processing candidates of {}:{}", region.chromosome(), region.start());
 
-            final Candidates initialCandidates = new Candidates();
+            final Candidates initialCandidates = new Candidates(hotspots, panelRegions, highConfidenceRegions);
             final List<CompletableFuture<Void>> candidateFutures = Lists.newArrayList();
 
             for (int i = 0; i < config.tumor().size(); i++) {

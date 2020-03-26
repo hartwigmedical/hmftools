@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.read;
 
-import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
@@ -23,7 +22,7 @@ public class ReadContextCounter implements VariantHotspot {
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
     private final boolean realign;
-    private final boolean mitochondrial;
+    private final int maxCoverage;
 
     private int full;
     private int partial;
@@ -52,14 +51,14 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            boolean realign) {
+            final int maxCoverage, boolean realign) {
         this.sample = sample;
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
         this.rawFactory = new RawContextFactory(variant);
         this.realign = realign;
-        this.mitochondrial = MitochondrialChromosome.contains(variant.chromosome());
+        this.maxCoverage = maxCoverage;
     }
 
     @NotNull
@@ -178,7 +177,6 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     public void accept(final SAMRecord record, final SageConfig sageConfig) {
-        int maxCoverage = mitochondrial ? 1000 * sageConfig.maxEvidenceReadDepth() : sageConfig.maxEvidenceReadDepth();
         try {
             if (coverage >= maxCoverage || !readContext.isComplete()) {
                 return;

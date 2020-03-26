@@ -16,6 +16,7 @@ import htsjdk.samtools.SAMRecord;
 public class ReadContextCounterTest {
 
     private final static String SAMPLE = "sample";
+    private final static int MAX_COVERAGE =  1000;
     private final SageConfig config = SageConfigTest.testConfig();
 
     @Test
@@ -23,7 +24,7 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(554, 1, "TGTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
         victim.accept(record, config);
@@ -37,7 +38,7 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(554, 1, "TGTTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
         victim.accept(record, config);
@@ -51,7 +52,7 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
         victim.accept(record, config);
@@ -65,7 +66,7 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(553, 0, "TGTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
         victim.accept(record, config);
@@ -79,7 +80,7 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(553, 0, "TGTTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
         victim.accept(record, config);
@@ -93,7 +94,7 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
         victim.accept(record, config);
