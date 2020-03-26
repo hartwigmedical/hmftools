@@ -18,7 +18,6 @@ public class HumanChromosomeTest {
         assertEquals(HumanChromosome._1, HumanChromosome.fromString("CHR1"));
         assertEquals(HumanChromosome._1, HumanChromosome.fromString("ChR1"));
 
-
         assertEquals(HumanChromosome._2, HumanChromosome.fromString("2"));
         assertEquals(HumanChromosome._2, HumanChromosome.fromString("chr2"));
 
