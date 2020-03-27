@@ -427,7 +427,7 @@ public final class LoadClinicalData {
                 if (sampleType == LimsSampleType.WIDE) {
                     String patientId = entry.getKey();
                     Patient widePatient =
-                            widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
+                            widePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples), wideEcrfModel);
                     patientMap.put(patientId, widePatient);
                 }
             }
