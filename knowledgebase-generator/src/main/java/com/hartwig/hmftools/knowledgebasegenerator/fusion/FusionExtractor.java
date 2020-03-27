@@ -19,7 +19,6 @@ public class FusionExtractor {
                 .source(source.toString())
                 .sourceLink(source.toString())
                 .build();
-
     }
 
     @NotNull
