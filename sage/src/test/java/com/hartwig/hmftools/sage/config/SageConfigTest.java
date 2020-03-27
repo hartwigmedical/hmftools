@@ -14,8 +14,9 @@ import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_DI
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_FIXED_PENALTY;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
 import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_READ_EDGE_FIXED_PENALTY;
-import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_EVIDENCE;
-import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_REALIGNMENT;
+import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH;
+import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_PANEL;
+import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_REALIGNMENT_DEPTH;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_THREADS;
@@ -30,7 +31,7 @@ public class SageConfigTest {
     public static SageConfig testConfig() {
         return ImmutableSageConfig.builder()
                 .panelOnly(false)
-                .version("2.1")
+                .version("2.2")
                 .outputFile("output file")
                 .reference(Lists.newArrayList("reference"))
                 .referenceBam(Lists.newArrayList("referenceBam"))
@@ -43,8 +44,9 @@ public class SageConfigTest {
                 .threads(DEFAULT_THREADS)
                 .minMapQuality(DEFAULT_MIN_MAP_QUALITY)
                 .minBaseQuality(DEFAULT_MIN_BASE_QUALITY)
-                .maxRealignmentReadDepth(DEFAULT_MAX_READ_DEPTH_REALIGNMENT)
-                .maxEvidenceReadDepth(DEFAULT_MAX_READ_DEPTH_EVIDENCE)
+                .maxRealignmentDepth(DEFAULT_MAX_REALIGNMENT_DEPTH)
+                .maxReadDepth(DEFAULT_MAX_READ_DEPTH)
+                .maxReadDepthPanel(DEFAULT_MAX_READ_DEPTH_PANEL)
                 .qualityConfig(defaultQualityConfig())
                 .filter(defaultFilterConfig())
                 .build();

@@ -50,7 +50,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.hotspots = hotspots;
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
-        this.candidateEvidence = new CandidateEvidence(config, hotspots, samSlicerFactory, refGenome);
+        this.candidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome);
         this.readContextEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome);
         this.refGenome = refGenome;
     }
@@ -79,7 +79,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             if (region.start() == 1) {
                 LOGGER.info("Processing chromosome {}", region.chromosome());
             }
-            LOGGER.debug("Processing candidates of {}:{}", region.chromosome(), region.start());
+            LOGGER.debug("Processing candidates in {}:{}", region.chromosome(), region.start());
 
             final Candidates initialCandidates = new Candidates(hotspots, panelRegions, highConfidenceRegions);
             final List<CompletableFuture<Void>> candidateFutures = Lists.newArrayList();
