@@ -35,22 +35,22 @@ public abstract class XMLEcrfDatamodel {
     public abstract Map<String, CodeList> codeLists();
 
     @NotNull
-    public static XMLEcrfDatamodel of(@NotNull final List<StudyEvent> studyEvents, @NotNull final List<Form> forms,
-            @NotNull final List<ItemGroup> itemGroups, @NotNull final List<Item> items, @NotNull final List<CodeList> codeLists) {
-        final Map<String, StudyEvent> studyEventMap = studyEvents.stream().collect(toMap(OIDObject::oid, Function.identity()));
-        final Map<String, Form> formMap = forms.stream().collect(toMap(OIDObject::oid, Function.identity()));
-        final Map<String, ItemGroup> itemGroupMap = itemGroups.stream().collect(toMap(OIDObject::oid, Function.identity()));
-        final Map<String, Item> itemMap = items.stream().collect(toMap(OIDObject::oid, Function.identity()));
-        final Map<String, CodeList> codeListMap = codeLists.stream().collect(toMap(OIDObject::oid, Function.identity()));
+    public static XMLEcrfDatamodel of(@NotNull List<StudyEvent> studyEvents, @NotNull List<Form> forms, @NotNull List<ItemGroup> itemGroups,
+            @NotNull List<Item> items, @NotNull List<CodeList> codeLists) {
+        Map<String, StudyEvent> studyEventMap = studyEvents.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        Map<String, Form> formMap = forms.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        Map<String, ItemGroup> itemGroupMap = itemGroups.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        Map<String, Item> itemMap = items.stream().collect(toMap(OIDObject::oid, Function.identity()));
+        Map<String, CodeList> codeListMap = codeLists.stream().collect(toMap(OIDObject::oid, Function.identity()));
         return ImmutableXMLEcrfDatamodel.of(studyEventMap, formMap, itemGroupMap, itemMap, codeListMap);
     }
 
     @NotNull
-    String resolveValue(@NotNull final String itemOID, @NotNull final String ecrfValue) throws EcrfResolveException {
+    String resolveValue(@NotNull String itemOID, @NotNull String ecrfValue) throws EcrfResolveException {
         String value;
         if (items().get(itemOID) != null && items().get(itemOID).codeListOID() != null) {
-            final String codeListOID = items().get(itemOID).codeListOID();
-            final CodeList codeList = codeLists().get(codeListOID);
+            String codeListOID = items().get(itemOID).codeListOID();
+            CodeList codeList = codeLists().get(codeListOID);
             if (codeList != null && codeList.values().size() > 0 && ecrfValue.length() > 0) {
                 if (isInteger(ecrfValue)) {
                     value = codeList.values().get(Integer.valueOf(ecrfValue));

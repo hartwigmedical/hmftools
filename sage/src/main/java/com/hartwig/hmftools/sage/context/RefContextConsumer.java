@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.read.IndexedBases;
+import com.hartwig.hmftools.sage.read.ReadContext;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
@@ -61,7 +62,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     */
 
-    private final int minQuality;
     private final SageConfig config;
     private final GenomeRegion bounds;
     private final RefSequence refGenome;
@@ -72,7 +72,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             @NotNull final RefContextFactory candidates) {
         this.bounds = bounds;
         this.refGenome = refGenome;
-        this.minQuality = config.minMapQuality();
         this.candidates = candidates;
         this.readContextFactory = new ReadContextFactory(config.readContextFlankSize());
 
@@ -82,39 +81,30 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
     @Override
     public void accept(@NotNull final SAMRecord record) {
 
-        if (inBounds(record)) {
+        if (inBounds(record) && !reachedDepthLimit(record)) {
 
-            if (record.getMappingQuality() >= minQuality && !reachedDepthLimit(record)) {
-                final IndexedBases refBases = refGenome.alignment();
+            final IndexedBases refBases = refGenome.alignment();
 
-                final CigarHandler handler = new CigarHandler() {
-                    @Override
-                    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-                            final int refPosition) {
-                        int readIndexEnd = readIndex + element.getLength() - 1;
-                        if (readIndexEnd >= config.readContextFlankSize() && readIndex < record.getReadLength() - config.readContextFlankSize()) {
-                            processAlignment(record, readIndex, refPosition, element.getLength(), refBases);
-                        }
-                    }
+            final CigarHandler handler = new CigarHandler() {
+                @Override
+                public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                        final int refPosition) {
+                    processAlignment(record, readIndex, refPosition, element.getLength(), refBases);
+                }
 
-                    @Override
-                    public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-                            final int refPosition) {
-                        if (readIndex >= config.readContextFlankSize() && readIndex < record.getReadLength() - config.readContextFlankSize()) {
-                            processInsert(element, record, readIndex, refPosition, refBases);
-                        }
-                    }
+                @Override
+                public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                        final int refPosition) {
+                    processInsert(element, record, readIndex, refPosition, refBases);
+                }
 
-                    @Override
-                    public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-                            final int refPosition) {
-                        if (readIndex >= config.readContextFlankSize() && readIndex < record.getReadLength() - config.readContextFlankSize()) {
-                            processDel(element, record, readIndex, refPosition, refBases);
-                        }
-                    }
-                };
-                CigarTraversal.traverseCigar(record, handler);
-            }
+                @Override
+                public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+                        final int refPosition) {
+                    processDel(element, record, readIndex, refPosition, refBases);
+                }
+            };
+            CigarTraversal.traverseCigar(record, handler);
         }
     }
 
@@ -125,10 +115,14 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases.bases(), refIndex, 1);
             final String alt = new String(record.getReadBases(), readIndex, e.getLength() + 1);
+            boolean findReadContext = findReadContext(readIndex, record);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
-                refContext.altRead(ref, alt, readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases));
+            if (!refContext.reachedLimit()) {
+                final int baseQuality = baseQuality(readIndex, record, alt.length());
+                final ReadContext readContext =
+                        findReadContext ? readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
+                refContext.altRead(ref, alt, baseQuality, readContext);
             }
         }
     }
@@ -140,10 +134,14 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         if (refPosition <= bounds.end() && refPosition >= bounds.start()) {
             final String ref = new String(refBases.bases(), refIndex, e.getLength() + 1);
             final String alt = new String(record.getReadBases(), readIndex, 1);
+            boolean findReadContext = findReadContext(readIndex, record);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
-                refContext.altRead(ref, alt, readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases));
+            if (!refContext.reachedLimit()) {
+                final int baseQuality = baseQuality(readIndex, record, 2);
+                final ReadContext readContext =
+                        findReadContext ? readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases) : null;
+                refContext.altRead(ref, alt, baseQuality, readContext);
             }
         }
     }
@@ -159,23 +157,24 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
             int readBaseIndex = readBasesStartIndex + i;
             int refBaseIndex = refIndex + i;
 
-            if (!inBounds(refPosition) || readBaseIndex < config.readContextFlankSize()) {
+            if (!inBounds(refPosition)) {
                 continue;
-            }
-
-            if (readBaseIndex > record.getReadLength() - config.readContextFlankSize()) {
-                return;
             }
 
             final byte refByte = refBases.bases()[refBaseIndex];
             final String ref = String.valueOf((char) refByte);
             final byte readByte = record.getReadBases()[readBaseIndex];
+            boolean findReadContext = findReadContext(readBaseIndex, record);
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
-            if (refContext.rawDepth() < config.maxReadDepthCandidate()) {
+            if (!refContext.reachedLimit()) {
+
+                int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
-                    refContext.altRead(ref, alt, readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases));
+                    final ReadContext readContext =
+                            findReadContext ? readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
+                    refContext.altRead(ref, alt, baseQuality, readContext);
 
                     int mnvMaxLength = mnvLength(refPosition,
                             refPositionStart + alignmentLength - 1,
@@ -191,8 +190,13 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                         // Only check last base because some subsets may not be valid,
                         // ie CA > TA is not a valid subset of CAC > TAT
                         if (mnvRef.charAt(mnvLength - 1) != mnvAlt.charAt(mnvLength - 1)) {
-                            refContext.altRead(mnvRef,
-                                    mnvAlt, readContextFactory.createMNVContext(refPosition, readBaseIndex, mnvLength, record, refBases));
+                            final ReadContext mnvReadContext = findReadContext ? readContextFactory.createMNVContext(refPosition,
+                                    readBaseIndex,
+                                    mnvLength,
+                                    record,
+                                    refBases) : null;
+
+                            refContext.altRead(mnvRef, mnvAlt, baseQuality, mnvReadContext);
                         }
                     }
                 } else {
@@ -202,8 +206,11 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         }
     }
 
-    private int mnvLength(int alignment, int alignmentEnd, int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
+    private boolean findReadContext(int readIndex, @NotNull final SAMRecord record) {
+        return readIndex >= config.readContextFlankSize() && readIndex < record.getReadLength() - config.readContextFlankSize();
+    }
 
+    private int mnvLength(int alignment, int alignmentEnd, int readIndex, int refIndex, byte[] readBases, byte[] refBases) {
         int gap = 0;
         for (int i = 1; alignment + i < alignmentEnd; i++) {
             byte refByte = refBases[refIndex + i];
@@ -222,6 +229,15 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         return alignmentEnd - alignment + 1;
     }
 
+    private int baseQuality(int readIndex, SAMRecord record, int length) {
+        int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
+        int quality = Integer.MAX_VALUE;
+        for (int i = readIndex; i <= maxIndex; i++) {
+            quality = Math.min(quality, record.getBaseQualities()[i]);
+        }
+        return quality;
+    }
+
     private boolean inBounds(final SAMRecord record) {
         return record.getEnd() >= bounds.start() && record.getStart() <= bounds.end();
     }
@@ -237,7 +253,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
         RefContext startRefContext = candidates.refContext(bounds.chromosome(), alignmentStart);
         RefContext endRefContext = candidates.refContext(bounds.chromosome(), alignmentEnd);
 
-        return startRefContext.rawDepth() >= config.maxReadDepthCandidate() && endRefContext.rawDepth() >= config.maxReadDepthCandidate();
+        return startRefContext.reachedLimit() && endRefContext.reachedLimit();
     }
 
 }

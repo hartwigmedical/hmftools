@@ -48,11 +48,11 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
 
     @NotNull
     public static XMLEcrfDatamodel readXMLDatamodel(@NotNull final XMLStreamReader reader) throws XMLStreamException {
-        final List<StudyEvent> studyEvents = Lists.newArrayList();
-        final List<Form> forms = Lists.newArrayList();
-        final List<ItemGroup> itemGroups = Lists.newArrayList();
-        final List<Item> items = Lists.newArrayList();
-        final List<CodeList> codeLists = Lists.newArrayList();
+        List<StudyEvent> studyEvents = Lists.newArrayList();
+        List<Form> forms = Lists.newArrayList();
+        List<ItemGroup> itemGroups = Lists.newArrayList();
+        List<Item> items = Lists.newArrayList();
+        List<CodeList> codeLists = Lists.newArrayList();
         while (reader.hasNext() && !isClinicalDataStart(reader)) {
             if (isStudyEventStart(reader)) {
                 studyEvents.add(extractStudyEvent(reader));
@@ -73,9 +73,9 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
 
     @NotNull
     private static StudyEvent extractStudyEvent(@NotNull final XMLStreamReader reader) throws XMLStreamException {
-        final String OID = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
-        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
-        final List<String> subOIDs = Lists.newArrayList();
+        String OID = reader.getAttributeValue("", STUDY_EVENT_OID_ATTRIBUTE);
+        String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
+        List<String> subOIDs = Lists.newArrayList();
         while (!isStudyEventEnd(reader)) {
             next(reader);
             if (isFormRefStart(reader)) {
@@ -88,9 +88,9 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
 
     @NotNull
     private static Form extractForm(@NotNull final XMLStreamReader reader) throws XMLStreamException {
-        final String OID = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
-        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
-        final List<String> subOIDs = Lists.newArrayList();
+        String OID = reader.getAttributeValue("", FORM_OID_ATTRIBUTE);
+        String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
+        List<String> subOIDs = Lists.newArrayList();
         while (!isFormEnd(reader)) {
             next(reader);
             if (isItemGroupRefStart(reader)) {
@@ -106,9 +106,9 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
 
     @NotNull
     private static ItemGroup extractItemGroup(@NotNull final XMLStreamReader reader) throws XMLStreamException {
-        final String OID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
-        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
-        final List<String> subOIDs = Lists.newArrayList();
+        String OID = reader.getAttributeValue("", ITEM_GROUP_OID_ATTRIBUTE);
+        String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
+        List<String> subOIDs = Lists.newArrayList();
         while (!isItemGroupEnd(reader)) {
             next(reader);
             if (isItemRefStart(reader)) {
@@ -121,8 +121,8 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
 
     @NotNull
     private static Item extractItem(@NotNull final XMLStreamReader reader) throws XMLStreamException {
-        final String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
-        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
+        String OID = reader.getAttributeValue("", ITEM_OID_ATTRIBUTE);
+        String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
         String codeListOID = null;
         while (!isItemEnd(reader)) {
             next(reader);
@@ -136,9 +136,9 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
 
     @NotNull
     private static CodeList extractCodeList(@NotNull final XMLStreamReader reader) throws XMLStreamException {
-        final String OID = reader.getAttributeValue("", CODE_LIST_OID_ATTRIBUTE);
-        final String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
-        final Map<Integer, String> codeListItems = Maps.newHashMap();
+        String OID = reader.getAttributeValue("", CODE_LIST_OID_ATTRIBUTE);
+        String name = reader.getAttributeValue("", ITEM_NAME_ATTRIBUTE);
+        Map<Integer, String> codeListItems = Maps.newHashMap();
         while (!isCodeListEnd(reader)) {
             next(reader);
             if (isCodeListItem(reader)) {
@@ -154,67 +154,67 @@ public final class XMLEcrfDatamodelReader extends EcrfReader {
         return new ImmutableCodeList(OID, name, codeListItems);
     }
 
-    private static boolean isStudyEventStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isStudyEventStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, STUDY_EVENT_TAG);
     }
 
-    private static boolean isFormRefStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isFormRefStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, STUDY_EVENT_FORM_REF);
     }
 
-    private static boolean isStudyEventEnd(@NotNull final XMLStreamReader reader) {
+    private static boolean isStudyEventEnd(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, STUDY_EVENT_TAG);
     }
 
-    private static boolean isFormStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isFormStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, FORM_TAG);
     }
 
-    private static boolean isItemGroupRefStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemGroupRefStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, FORM_ITEM_GROUP_REF);
     }
 
-    private static boolean isFormEnd(@NotNull final XMLStreamReader reader) {
+    private static boolean isFormEnd(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, FORM_TAG);
     }
 
-    private static boolean isItemGroupStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemGroupStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_GROUP_TAG);
     }
 
-    private static boolean isItemRefStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemRefStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_GROUP_ITEM_REF);
     }
 
-    private static boolean isItemGroupEnd(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemGroupEnd(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, ITEM_GROUP_TAG);
     }
 
-    private static boolean isItemStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_TAG);
     }
 
-    private static boolean isCodeListRefStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isCodeListRefStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_CODE_LIST_REF);
     }
 
-    private static boolean isItemEnd(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemEnd(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, ITEM_TAG);
     }
 
-    private static boolean isCodeListStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isCodeListStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_TAG);
     }
 
-    private static boolean isCodeListEnd(@NotNull final XMLStreamReader reader) {
+    private static boolean isCodeListEnd(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, CODE_LIST_TAG);
     }
 
-    private static boolean isCodeListItem(@NotNull final XMLStreamReader reader) {
+    private static boolean isCodeListItem(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM_TAG);
     }
 
-    private static boolean isCodeListItemContent(@NotNull final XMLStreamReader reader) {
+    private static boolean isCodeListItemContent(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, CODE_LIST_ITEM_CONTENT);
     }
 }

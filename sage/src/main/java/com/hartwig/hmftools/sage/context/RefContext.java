@@ -16,15 +16,17 @@ public class RefContext implements GenomePosition {
 
     private final String sample;
     private final String chromosome;
+    private final int maxDepth;
     private final long position;
     private final Map<String, AltContext> alts;
 
     private int rawDepth;
 
-    public RefContext(final String sample, final String chromosome, final long position) {
+    public RefContext(final String sample, final String chromosome, final long position, final int maxDepth) {
         this.sample = sample;
         this.chromosome = chromosome;
         this.position = position;
+        this.maxDepth = maxDepth;
         this.alts = new HashMap<>();
     }
 
@@ -33,14 +35,20 @@ public class RefContext implements GenomePosition {
         return alts.values();
     }
 
+    public boolean reachedLimit() {
+        return rawDepth >= maxDepth;
+    }
+
     public void refRead() {
         this.rawDepth++;
     }
 
-    public void altRead(@NotNull final String ref, @NotNull final String alt, @NotNull final ReadContext readContext) {
-        if (readContext.isComplete()) {
-            this.rawDepth++;
-            final AltContext altContext = altContext(ref, alt);
+    public void altRead(@NotNull final String ref, @NotNull final String alt, int baseQuality, @Nullable final ReadContext readContext) {
+        final AltContext altContext = altContext(ref, alt);
+        altContext.incrementAltRead(baseQuality);
+        this.rawDepth++;
+
+        if (readContext != null && readContext.isComplete()) {
             altContext.addReadContext(readContext);
         }
     }

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cli.Configs;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -38,16 +39,20 @@ public interface SageConfig {
     String PANEL_ONLY = "panel_only";
     String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
-    String DISABLE_MNV = "disable_mnv";
+    String MAX_READ_DEPTH = "max_read_depth";
+    String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
+    String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
     int DEFAULT_MIN_BASE_QUALITY = 13;
+    int DEFAULT_MAX_READ_DEPTH = 1000;
+    int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
+    int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
 
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
-        options.addOption(DISABLE_MNV, false, "Disables merging phased SNVs into MNVs");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -58,6 +63,9 @@ public interface SageConfig {
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
 
+        options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
+        options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
+        options.addOption(MAX_REALIGNMENT_DEPTH, true, "Max depth to check for realignment [" + DEFAULT_MAX_REALIGNMENT_DEPTH + "]");
         options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
         options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
@@ -100,8 +108,6 @@ public interface SageConfig {
 
     boolean panelOnly();
 
-    boolean mnvDetection();
-
     @NotNull
     String hotspots();
 
@@ -111,6 +117,10 @@ public interface SageConfig {
     @NotNull
     QualityConfig qualityConfig();
 
+    default int typicalReadLength() {
+        return 151;
+    }
+
     default int regionSliceSize() {
         return 500_000;
     }
@@ -119,13 +129,11 @@ public interface SageConfig {
 
     int minBaseQuality();
 
-    default int maxReadDepthCandidate() {
-        return 1000;
-    }
+    int maxRealignmentDepth();
 
-    default int maxReadDepthEvidence() {
-        return 1000;
-    }
+    int maxReadDepth();
+
+    int maxReadDepthPanel();
 
     default int maxSkippedReferenceRegions() {
         return 50;
@@ -192,16 +200,18 @@ public interface SageConfig {
                 .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
-                .mnvDetection(!cmd.hasOption(DISABLE_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
+                .maxReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
+                .maxReadDepthPanel(defaultIntValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
+                .maxRealignmentDepth(defaultIntValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))
                 .filter(FilterConfig.createConfig(cmd))
                 .panelBed(cmd.getOptionValue(PANEL_BED, Strings.EMPTY))
                 .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
-                .panelOnly(cmd.hasOption(PANEL_ONLY))
+                .panelOnly(Configs.containsFlag(cmd, PANEL_ONLY))
                 .build();
     }
 }

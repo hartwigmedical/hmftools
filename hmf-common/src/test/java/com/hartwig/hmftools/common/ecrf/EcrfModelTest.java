@@ -7,13 +7,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.ecrf.datamodel.EcrfDatamodelField;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.formstatus.ImmutableFormStatusModel;
 
@@ -27,7 +26,7 @@ public class EcrfModelTest {
 
     @Test
     public void loadDataFromRealXML() throws IOException, XMLStreamException {
-        final EcrfModel model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
+        EcrfModel model = EcrfModel.loadFromXMLWithFormStates(TEST_ECRF, new ImmutableFormStatusModel(Maps.newHashMap()));
 
         assertTrue(hasField(model, "BASELINE.CARCINOMA.CARCINOMA.PTUMLOC"));
         assertFalse(hasField(model, "Does Not Exist"));
@@ -44,12 +43,23 @@ public class EcrfModelTest {
         assertFalse(hasPatient(model, "Does Not Exist"));
     }
 
-    private static boolean hasField(@NotNull final EcrfModel model, @NotNull final String fieldId) {
-        return Lists.newArrayList(model.findFieldsById(Lists.newArrayList(fieldId))).size() > 0;
+    private static boolean hasField(@NotNull EcrfModel model, @NotNull String fieldId) {
+        for (EcrfDatamodelField field : model.fields()) {
+            if (field.name().equals(fieldId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private static boolean hasPatient(@NotNull final EcrfModel model, @NotNull final String patientId) {
-        final List<EcrfPatient> patients = Lists.newArrayList(model.findPatientsById(Lists.newArrayList(patientId)));
-        return !patients.get(0).fields().isEmpty();
+    private static boolean hasPatient(@NotNull EcrfModel model, @NotNull String patientId) {
+        for (EcrfPatient patient : model.patients()) {
+            if (patient.patientId().equals(patientId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

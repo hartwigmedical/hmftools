@@ -9,19 +9,19 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
-import com.hartwig.hmftools.sage.read.ReadContextCounter;
-import com.hartwig.hmftools.sage.read.ReadContextFactory;
 
 import org.jetbrains.annotations.NotNull;
 
 public class AltContext implements VariantHotspot {
 
-    private final RefContext refContext;
     private final String ref;
     private final String alt;
-    private final List<ReadContextCounter> interimReadContexts = Lists.newArrayList();
+    private final RefContext refContext;
+    private final List<ReadContextCandidate> interimReadContexts = Lists.newArrayList();
 
-    private ReadContextCounter readContextCounter;
+    private int rawSupportAlt;
+    private int rawBaseQualityAlt;
+    private ReadContextCandidate candidate;
 
     public AltContext(final RefContext refContext, final String ref, final String alt) {
         this.refContext = refContext;
@@ -29,46 +29,46 @@ public class AltContext implements VariantHotspot {
         this.alt = alt;
     }
 
+    public void incrementAltRead(int baseQuality) {
+        this.rawSupportAlt++;
+        this.rawBaseQualityAlt += baseQuality;
+    }
+
     public void addReadContext(@NotNull final ReadContext newReadContext) {
-        if (readContextCounter != null) {
+        if (candidate != null) {
             throw new IllegalStateException();
         }
 
         if (newReadContext.isComplete()) {
             boolean readContextMatch = false;
-            for (ReadContextCounter counter : interimReadContexts) {
+            for (ReadContextCandidate counter : interimReadContexts) {
                 if (counter.incrementCounters(newReadContext)) {
                     readContextMatch = true;
                     break;
                 }
-
             }
 
             if (!readContextMatch) {
-                interimReadContexts.add(new ReadContextCounter(refContext.sample(), this, newReadContext, false));
+                interimReadContexts.add(new ReadContextCandidate(newReadContext));
             }
         }
     }
 
-    @NotNull
-    private ReadContextCounter setPrimaryReadCounterFromInterim() {
-        interimReadContexts.sort(Comparator.comparingInt(ReadContextCounter::altSupport).reversed());
-        readContextCounter = interimReadContexts.isEmpty()
-                ? new ReadContextCounter(refContext.sample(), this, ReadContextFactory.dummy((int) position(), alt), false)
-                : new ReadContextCounter(refContext.sample(), this, interimReadContexts.get(0).readContext().minimiseFootprint(), false);
-
-        interimReadContexts.clear();
-
-        return primaryReadContext();
+    public int readContextSupport() {
+        return candidate.count();
     }
 
-    @NotNull
-    public ReadContextCounter primaryReadContext() {
-        if (readContextCounter == null) {
-            setPrimaryReadCounterFromInterim();
+    public boolean finaliseAndValidate() {
+        interimReadContexts.sort(Comparator.comparingInt(ReadContextCandidate::count).reversed());
+        if (!interimReadContexts.isEmpty()) {
+            candidate = interimReadContexts.get(0);
         }
+        interimReadContexts.clear();
+        return candidate != null && candidate.readContext().isComplete();
+    }
 
-        return readContextCounter;
+    public ReadContext readContext() {
+        return candidate.readContext();
     }
 
     @NotNull
@@ -94,8 +94,16 @@ public class AltContext implements VariantHotspot {
         return refContext.position();
     }
 
+    public int rawAltSupport() {
+        return rawSupportAlt;
+    }
+
     public int rawDepth() {
         return refContext.rawDepth();
+    }
+
+    public int rawAltBaseQuality() {
+        return rawBaseQualityAlt;
     }
 
     @NotNull
@@ -125,4 +133,34 @@ public class AltContext implements VariantHotspot {
         h += (h << 5) + Longs.hashCode(position());
         return h;
     }
+
+    static class ReadContextCandidate {
+
+        private final ReadContext readContext;
+        private int count;
+
+        ReadContextCandidate(@NotNull final ReadContext readContext) {
+            assert (readContext.isComplete());
+            this.readContext = readContext;
+        }
+
+        public boolean incrementCounters(@NotNull final ReadContext other) {
+            if (readContext.isFullMatch(other)) {
+                count++;
+                return true;
+            }
+
+            return false;
+        }
+
+        public int count() {
+            return count;
+        }
+
+        @NotNull
+        public ReadContext readContext() {
+            return readContext;
+        }
+    }
+
 }

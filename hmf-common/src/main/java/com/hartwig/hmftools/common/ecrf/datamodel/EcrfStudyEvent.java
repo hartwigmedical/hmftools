@@ -16,7 +16,7 @@ public class EcrfStudyEvent {
     public EcrfStudyEvent() {
     }
 
-    public void addForm(@NotNull final String formOid, @NotNull final EcrfForm form) {
+    public void addForm(@NotNull String formOid, @NotNull EcrfForm form) {
         if (!formsPerOID.containsKey(formOid)) {
             formsPerOID.put(formOid, Lists.newArrayList());
         }
@@ -29,7 +29,7 @@ public class EcrfStudyEvent {
     }
 
     @NotNull
-    public List<EcrfForm> nonEmptyFormsPerOID(@NotNull final String formOID) {
+    public List<EcrfForm> nonEmptyFormsPerOID(@NotNull String formOID) {
         final List<EcrfForm> nonEmptyForms = Lists.newArrayList();
         if (formsPerOID.get(formOID) == null) {
             return Lists.newArrayList();

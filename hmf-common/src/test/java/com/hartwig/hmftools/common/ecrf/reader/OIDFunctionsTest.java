@@ -8,16 +8,16 @@ public class OIDFunctionsTest {
 
     @Test
     public void canConvertBetweenFieldNameAndOID() {
-        final String ecrfFieldName = "cat.fldName";
-        final String OID = OIDFunctions.toOID(ecrfFieldName);
+        String ecrfFieldName = "cat.fldName";
+        String OID = OIDFunctions.toOID(ecrfFieldName);
 
         assertEquals(ecrfFieldName, OIDFunctions.toEcrfFieldName(OID));
     }
 
     @Test
     public void canExtractNoCategory() {
-        final String name = OIDFunctions.NO_CATEGORY + OIDFunctions.OID_SEPARATOR + "fldName";
-        final String OID = OIDFunctions.toOID(name);
+        String name = OIDFunctions.NO_CATEGORY + OIDFunctions.OID_SEPARATOR + "fldName";
+        String OID = OIDFunctions.toOID(name);
 
         assertEquals(name, OIDFunctions.toEcrfFieldName(OID));
     }

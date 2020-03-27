@@ -8,10 +8,10 @@ public class EcrfFieldFunctionsTest {
 
     @Test
     public void canConvertToName() {
-        final String studyEventOID = "SE.Study";
-        final String formOID = "FRM.Form";
-        final String itemGroupOID = "GRP.ItemGroup";
-        final String itemOID = "GRP.ItemGroup.Item";
+        String studyEventOID = "SE.Study";
+        String formOID = "FRM.Form";
+        String itemGroupOID = "GRP.ItemGroup";
+        String itemOID = "GRP.ItemGroup.Item";
 
         assertEquals("STUDY.FORM.ITEMGROUP.ITEM", EcrfFieldFunctions.name(studyEventOID, formOID, itemGroupOID, itemOID));
     }

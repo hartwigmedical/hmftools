@@ -24,5 +24,4 @@ public class MitochondrialChromosomeTest {
         assertFalse(MitochondrialChromosome.contains("X"));
         assertFalse(MitochondrialChromosome.contains("chrX"));
     }
-
 }

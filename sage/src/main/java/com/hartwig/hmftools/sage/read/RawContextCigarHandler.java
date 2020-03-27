@@ -10,18 +10,21 @@ import htsjdk.samtools.SAMRecord;
 
 public class RawContextCigarHandler implements CigarHandler {
 
+
     private final VariantHotspot variant;
+    private final int maxSkippedReferenceRegions;
     private final boolean isInsert;
     private final boolean isDelete;
     private final boolean isSNV;
 
     private RawContext result;
 
-    RawContextCigarHandler(final VariantHotspot variant) {
+    RawContextCigarHandler(final int maxSkippedReferenceRegions, final VariantHotspot variant) {
         this.variant = variant;
         this.isInsert = variant.ref().length() < variant.alt().length();
         this.isDelete = variant.ref().length() > variant.alt().length();
         this.isSNV = variant.ref().length() == variant.alt().length();
+        this.maxSkippedReferenceRegions = maxSkippedReferenceRegions;
 
     }
 
@@ -60,23 +63,21 @@ public class RawContextCigarHandler implements CigarHandler {
     }
 
     @Override
-    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
-            final int refPosition) {
+    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPosition) {
         if (result != null) {
             return;
         }
 
-        long refPositionEnd = refPosition + element.getLength() - 1;
+        long refPositionEnd = refPosition + e.getLength() - 1;
         if (refPosition <= variant.position() && variant.position() <= refPositionEnd) {
             int readIndexOffset = (int) (variant.position() - refPosition);
             int variantReadIndex = readIndex + readIndexOffset;
 
             int baseQuality = record.getBaseQualities()[variantReadIndex];
             boolean altSupport = isSNV && refPositionEnd >= variant.end() && matchesString(record, variantReadIndex, variant.alt());
-            boolean refSupport = !altSupport && matchesString(record, variantReadIndex, variant.ref().substring(0, 1));
+            boolean refSupport = !altSupport && matchesFirstBase(record, variantReadIndex, variant.ref());
             result = RawContext.snv(variantReadIndex, altSupport, refSupport, baseQuality);
         }
-
     }
 
     @Override
@@ -101,9 +102,9 @@ public class RawContextCigarHandler implements CigarHandler {
 
         int refPositionEnd = refPosition + e.getLength();
         if (refPosition == variant.position()) {
-            boolean altSupport = isDelete && e.getLength() == variant.ref().length() - 1 && matchesString(record,
+            boolean altSupport = isDelete && e.getLength() == variant.ref().length() - 1 && matchesFirstBase(record,
                     readIndex,
-                    variant.ref().substring(0, 1));
+                    variant.ref());
             int baseQuality = altSupport ? baseQuality(readIndex, record, 2) : 0;
             result = RawContext.indel(readIndex, altSupport, baseQuality);
         } else if (refPositionEnd >= variant.position()) {
@@ -113,13 +114,33 @@ public class RawContextCigarHandler implements CigarHandler {
     }
 
     @Override
-    public void handleSkippedReference(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
+    public void handleSkippedReference(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex,
             final int refPosition) {
-        handleDelete(record, element, readIndex, refPosition);
+        if (result != null) {
+            return;
+        }
+
+        if (e.getLength() > maxSkippedReferenceRegions) {
+            int refPositionEnd = refPosition + e.getLength();
+            if (refPositionEnd >= variant.position()) {
+                result = RawContext.inSkipped(readIndex);
+            }
+        }
+
+        handleDelete(record, e, readIndex, refPosition);
     }
 
-    private static boolean matchesString(SAMRecord record, int index, String expected) {
-        return new String(record.getReadBases(), index, expected.length()).equals(expected);
+    private static boolean matchesFirstBase(@NotNull final SAMRecord record, int index, @NotNull final String expected) {
+        return expected.charAt(0) == record.getReadBases()[index];
+    }
+
+    private static boolean matchesString(@NotNull final SAMRecord record, int index, @NotNull final String expected) {
+        for (int i = 0; i < expected.length(); i++) {
+            if ((byte) expected.charAt(i) != record.getReadBases()[index + i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private int baseQuality(int readIndex, SAMRecord record, int length) {

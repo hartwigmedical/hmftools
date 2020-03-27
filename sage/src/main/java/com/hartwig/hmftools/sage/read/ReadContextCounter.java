@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.sage.read;
 
-import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
-import com.hartwig.hmftools.sage.sam.IndelAtLocation;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,8 +22,9 @@ public class ReadContextCounter implements VariantHotspot {
     private final VariantHotspot variant;
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
+    private final SageVariantTier tier;
     private final boolean realign;
-    private final boolean mitochondrial;
+    private final int maxCoverage;
 
     private int full;
     private int partial;
@@ -53,14 +53,15 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            boolean realign) {
+            final SageVariantTier tier, final int maxCoverage, boolean realign) {
         this.sample = sample;
+        this.tier = tier;
         assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
         this.rawFactory = new RawContextFactory(variant);
         this.realign = realign;
-        this.mitochondrial = MitochondrialChromosome.contains(variant.chromosome());
+        this.maxCoverage = maxCoverage;
     }
 
     @NotNull
@@ -76,6 +77,11 @@ public class ReadContextCounter implements VariantHotspot {
     @Override
     public String chromosome() {
         return variant.chromosome();
+    }
+
+    @NotNull
+    public SageVariantTier tier() {
+        return tier;
     }
 
     @Override
@@ -179,13 +185,16 @@ public class ReadContextCounter implements VariantHotspot {
     }
 
     public void accept(final SAMRecord record, final SageConfig sageConfig) {
-        int maxCoverage = mitochondrial ? 1000 * sageConfig.maxReadDepthEvidence() : sageConfig.maxReadDepthEvidence();
         try {
             if (coverage >= maxCoverage || !readContext.isComplete()) {
                 return;
             }
 
-            final RawContext rawContext = rawFactory.create(record);
+            final RawContext rawContext = rawFactory.create(sageConfig.maxSkippedReferenceRegions(), record);
+            if (rawContext.isReadIndexInSkipped()) {
+                return;
+            }
+
             final int readIndex = rawContext.readIndex();
             final boolean baseDeleted = rawContext.isReadIndexInDelete();
 
@@ -254,10 +263,10 @@ public class ReadContextCounter implements VariantHotspot {
                         break;
                 }
 
-                byte refBase = this.variant.ref().getBytes()[0];
+                byte refBase = (byte) this.variant.ref().charAt(0);
                 byte readBase = record.getReadBases()[readIndex];
 
-                if (!baseDeleted && refBase == readBase && !IndelAtLocation.indelAtPosition((int) variant.position(), record)) {
+                if (refBase == readBase && !rawContext.isReadIndexInDelete() && !rawContext.isIndelAtPosition()) {
                     reference++;
                     referenceQuality += quality;
                 }
@@ -312,15 +321,6 @@ public class ReadContextCounter implements VariantHotspot {
 
     private int qualityJitterPenalty() {
         return (int) jitterPenalty;
-    }
-
-    public boolean incrementCounters(@NotNull final ReadContext other) {
-        if (readContext.isFullMatch(other)) {
-            full++;
-            return true;
-        }
-
-        return false;
     }
 
     private void incrementQualityFlags(@NotNull final SAMRecord record) {

@@ -1,34 +1,43 @@
 package com.hartwig.hmftools.sage.candidate;
 
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.context.AltContext;
 import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Candidate {
+public class Candidate implements GenomePosition {
 
+    private final SageVariantTier tier;
     private final VariantHotspot variant;
 
     private int maxDepth;
     private int readContextSupport;
     private ReadContext readContext;
 
-    public Candidate(final AltContext altContext) {
+    public Candidate(final SageVariantTier tier, final AltContext altContext) {
+        this.tier = tier;
         this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
         this.maxDepth = altContext.rawDepth();
-        this.readContext = altContext.primaryReadContext().readContext();
-        this.readContextSupport = altContext.primaryReadContext().altSupport();
+        this.readContext = altContext.readContext();
+        this.readContextSupport = altContext.readContextSupport();
     }
 
     public void update(final AltContext altContext) {
-        int altContextSupport = altContext.primaryReadContext().altSupport();
+        int altContextSupport = altContext.readContextSupport();
         if (altContextSupport > readContextSupport) {
             readContextSupport = altContextSupport;
-            readContext = altContext.primaryReadContext().readContext();
+            readContext = altContext.readContext();
         }
         maxDepth = Math.max(maxDepth, altContext.rawDepth());
+    }
+
+    @NotNull
+    public SageVariantTier tier() {
+        return tier;
     }
 
     @NotNull
@@ -36,12 +45,23 @@ public class Candidate {
         return variant;
     }
 
-    public int readDepth() {
+    public int maxReadDepth() {
         return maxDepth;
     }
 
     @NotNull
     public ReadContext readContext() {
         return readContext;
+    }
+
+    @NotNull
+    @Override
+    public String chromosome() {
+        return variant.chromosome();
+    }
+
+    @Override
+    public long position() {
+        return variant.position();
     }
 }

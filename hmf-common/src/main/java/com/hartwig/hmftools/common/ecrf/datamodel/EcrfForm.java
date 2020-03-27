@@ -21,7 +21,7 @@ public class EcrfForm {
         this.itemGroupsPerOID = Maps.newHashMap();
     }
 
-    public void addItemGroup(@NotNull final String itemGroupOid, @NotNull final EcrfItemGroup itemGroup) {
+    public void addItemGroup(@NotNull String itemGroupOid, @NotNull EcrfItemGroup itemGroup) {
         if (!itemGroupsPerOID.containsKey(itemGroupOid)) {
             itemGroupsPerOID.put(itemGroupOid, Lists.newArrayList());
         }
@@ -38,12 +38,12 @@ public class EcrfForm {
     }
 
     @NotNull
-    public List<EcrfItemGroup> nonEmptyItemGroupsPerOID(@NotNull final String itemGroupOID) {
-        final List<EcrfItemGroup> nonEmptyItemGroups = Lists.newArrayList();
+    public List<EcrfItemGroup> nonEmptyItemGroupsPerOID(@NotNull String itemGroupOID) {
+        List<EcrfItemGroup> nonEmptyItemGroups = Lists.newArrayList();
         if (itemGroupsPerOID.get(itemGroupOID) == null) {
             return Lists.newArrayList();
         } else {
-            for (final EcrfItemGroup itemGroup : itemGroupsPerOID.get(itemGroupOID)) {
+            for (EcrfItemGroup itemGroup : itemGroupsPerOID.get(itemGroupOID)) {
                 if (!itemGroup.isEmpty()) {
                     nonEmptyItemGroups.add(itemGroup);
                 }

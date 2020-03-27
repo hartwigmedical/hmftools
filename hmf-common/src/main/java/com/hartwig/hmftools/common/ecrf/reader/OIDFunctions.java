@@ -18,8 +18,8 @@ final class OIDFunctions {
 
     @NotNull
     static String toEcrfFieldName(@NotNull final String OID) {
-        final String[] fields = OID.split("\\" + OID_SEPARATOR);
-        final String name = fields[fields.length - 1];
+        String[] fields = OID.split("\\" + OID_SEPARATOR);
+        String name = fields[fields.length - 1];
         if (fields.length == 2) {
             return NO_CATEGORY + OID_SEPARATOR + name;
         } else {
@@ -29,13 +29,14 @@ final class OIDFunctions {
     }
 
     @NotNull
-    static String toOID(@NotNull final String ecrfFieldName) {
-        final String[] fields = ecrfFieldName.split("\\" + OID_SEPARATOR);
-        final String category = fields[0];
-        final String name = fields[1];
+    static String toOID(@NotNull String ecrfFieldName) {
+        String[] fields = ecrfFieldName.split("\\" + OID_SEPARATOR);
+        String category = fields[0];
+        String name = fields[1];
         if (category.equals(NO_CATEGORY)) {
             return OID_PREFIX + OID_SEPARATOR + name;
         }
+
         return OID_PREFIX + OID_SEPARATOR + category + OID_SEPARATOR + name;
     }
 }

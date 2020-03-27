@@ -15,7 +15,6 @@ import com.hartwig.hmftools.sage.context.RefContextFactory;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 import com.hartwig.hmftools.sage.sam.SamSlicerFactory;
-import com.hartwig.hmftools.sage.select.HotspotSelector;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,12 +32,14 @@ public class CandidateEvidence {
 
     private final SageConfig config;
     private final List<VariantHotspot> hotspots;
+    private final List<GenomeRegion> panel;
     private final ReferenceSequenceFile refGenome;
     private final SamSlicerFactory samSlicerFactory;
 
-    public CandidateEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots,
+    public CandidateEvidence(@NotNull final SageConfig config, @NotNull final List<VariantHotspot> hotspots, final List<GenomeRegion> panel,
             @NotNull final SamSlicerFactory samSlicerFactory, @NotNull final ReferenceSequenceFile refGenome) {
         this.config = config;
+        this.panel = panel;
         this.samSlicerFactory = samSlicerFactory;
         this.hotspots = hotspots;
         this.refGenome = refGenome;
@@ -49,9 +50,7 @@ public class CandidateEvidence {
             @NotNull final GenomeRegion bounds) {
 
         LOGGER.debug("Variant candidates {} position {}:{}", sample, bounds.chromosome(), bounds.start());
-
-        final HotspotSelector hotspotSelector = new HotspotSelector(hotspots);
-        final RefContextFactory candidates = new RefContextFactory(sample);
+        final RefContextFactory candidates = new RefContextFactory(config, sample, hotspots, panel);
         final RefContextConsumer refContextConsumer = new RefContextConsumer(config, bounds, refSequence, candidates);
         return get(bamFile, bounds, refContextConsumer, candidates);
     }

@@ -23,7 +23,7 @@ public class DndsDriverGeneLikelihoodSupplierTest {
 
     @Test
     public void testReadOncoGenes() {
-        final DndsDriverImpactLikelihood missense = onco.get("AKT1");
+        DndsDriverImpactLikelihood missense = onco.get("AKT1");
 
         assertEquals(0.327, missense.dndsLikelihood(), 0.001);
         assertEquals(0.002, missense.pDriver(), 0.001);
@@ -32,8 +32,8 @@ public class DndsDriverGeneLikelihoodSupplierTest {
 
     @Test
     public void testReadTSGGenes() {
-        final DndsDriverGeneLikelihood gene = tsg.get("ACVR1B");
-        final DndsDriverImpactLikelihood missense = gene.missense();
+        DndsDriverGeneLikelihood gene = tsg.get("ACVR1B");
+        DndsDriverImpactLikelihood missense = gene.missense();
 
         assertEquals("ACVR1B", gene.gene());
         assertEquals(0.408, missense.dndsLikelihood(), 0.001);
@@ -43,13 +43,13 @@ public class DndsDriverGeneLikelihoodSupplierTest {
 
     @Test
     public void testBiallelic() {
-        final DndsDriverGeneLikelihood apc = tsg.get("APC");
+        DndsDriverGeneLikelihood apc = tsg.get("APC");
         assertTrue(apc.useBiallelic());
         assertNotEquals(apc.missense(), apc.missenseBiallelic());
         assertNotEquals(apc.missense(), apc.missenseNonBiallelic());
         assertNotEquals(apc.missenseBiallelic(), apc.missenseNonBiallelic());
 
-        final DndsDriverGeneLikelihood sox9 = tsg.get("SOX9");
+        DndsDriverGeneLikelihood sox9 = tsg.get("SOX9");
         assertFalse(sox9.useBiallelic());
         assertEquals(sox9.missense(), sox9.missenseBiallelic());
         assertEquals(sox9.missense(), sox9.missenseNonBiallelic());

@@ -17,8 +17,8 @@ public class RawContextFactory {
     }
 
     @NotNull
-    public RawContext create(@NotNull final SAMRecord record) {
-        RawContextCigarHandler handler = new RawContextCigarHandler(variant);
+    public RawContext create(final int maxSkippedReferenceRegions, @NotNull final SAMRecord record) {
+        RawContextCigarHandler handler = new RawContextCigarHandler(maxSkippedReferenceRegions, variant);
         CigarTraversal.traverseCigar(record, handler);
         RawContext result = handler.result();
         return result == null ? DUMMY : result;

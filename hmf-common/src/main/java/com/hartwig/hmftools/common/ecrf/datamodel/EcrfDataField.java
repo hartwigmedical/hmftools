@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class EcrfDataField implements EcrfField {
+
     @NotNull
     public abstract String patientId();
 
@@ -42,14 +43,23 @@ public abstract class EcrfDataField implements EcrfField {
     @NotNull
     public abstract String locked();
 
-    public static EcrfDataField of(@NotNull final String patientId, @NotNull final String studyOID, @NotNull final String studyRepeatKey,
-            @NotNull final String formOID, @NotNull final String formRepeatKey, @NotNull final String itemGroupOID,
-            @NotNull final String itemGroupRepeatKey, @NotNull final String itemOID, @NotNull final String itemValue,
-            @NotNull final String formStatus, @NotNull final String locked) {
-        final int studyKey = Integer.parseInt(studyRepeatKey);
-        final int formKey = Integer.parseInt(formRepeatKey);
-        final int itemGroupKey = Integer.parseInt(itemGroupRepeatKey);
-        return ImmutableEcrfDataField.of(patientId, studyOID, studyKey, formOID, formKey, itemGroupOID, itemGroupKey, itemOID, itemValue,
-                formStatus, locked);
+    public static EcrfDataField of(@NotNull String patientId, @NotNull String studyOID, @NotNull String studyRepeatKey,
+            @NotNull String formOID, @NotNull String formRepeatKey, @NotNull String itemGroupOID, @NotNull String itemGroupRepeatKey,
+            @NotNull String itemOID, @NotNull String itemValue, @NotNull String formStatus, @NotNull String locked) {
+        int studyKey = Integer.parseInt(studyRepeatKey);
+        int formKey = Integer.parseInt(formRepeatKey);
+        int itemGroupKey = Integer.parseInt(itemGroupRepeatKey);
+
+        return ImmutableEcrfDataField.of(patientId,
+                studyOID,
+                studyKey,
+                formOID,
+                formKey,
+                itemGroupOID,
+                itemGroupKey,
+                itemOID,
+                itemValue,
+                formStatus,
+                locked);
     }
 }

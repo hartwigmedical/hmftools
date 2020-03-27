@@ -55,7 +55,7 @@ public final class XMLPatientReader extends EcrfReader {
     @NotNull
     public static List<EcrfPatient> readPatients(@NotNull XMLStreamReader reader, @NotNull final XMLEcrfDatamodel datamodel,
             @NotNull final FormStatusModel formStatusModel) throws XMLStreamException {
-        final List<EcrfPatient> patients = Lists.newArrayList();
+        List<EcrfPatient> patients = Lists.newArrayList();
 
         while (reader.hasNext() && !isClinicalDataEnd(reader)) {
             if (isPatientStart(reader)) {
@@ -70,9 +70,9 @@ public final class XMLPatientReader extends EcrfReader {
     @NotNull
     private static EcrfPatient readPatient(@NotNull final XMLStreamReader reader, @NotNull final XMLEcrfDatamodel datamodel,
             @NotNull final FormStatusModel formStatusModel) throws XMLStreamException {
-        final String patientId = reformatPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
-        final Map<String, List<EcrfStudyEvent>> studyEventsPerOID = Maps.newHashMap();
-        final List<EcrfDataField> fields = Lists.newArrayList();
+        String patientId = reformatPatientId(reader.getAttributeValue("", PATIENT_ID_ATTRIBUTE));
+        Map<String, List<EcrfStudyEvent>> studyEventsPerOID = Maps.newHashMap();
+        List<EcrfDataField> fields = Lists.newArrayList();
 
         String currentStudyEventOID = Strings.EMPTY;
         String currentStudyEventIdx = Strings.EMPTY;
@@ -118,11 +118,16 @@ public final class XMLPatientReader extends EcrfReader {
                     }
                 }
                 currentItemGroup.addItem(OID, value);
-                fields.add(EcrfDataField.of(patientId, currentStudyEventOID, currentStudyEventIdx, currentFormOID, currentFormIdx,
+                fields.add(EcrfDataField.of(patientId,
+                        currentStudyEventOID,
+                        currentStudyEventIdx,
+                        currentFormOID,
+                        currentFormIdx,
                         currentItemGroupOID,
                         currentItemGroupIdx,
                         OID,
-                        value, currentForm.status().stateString(),
+                        value,
+                        currentForm.status().stateString(),
                         Boolean.toString(currentForm.locked())));
             }
             reader.next();
@@ -131,31 +136,31 @@ public final class XMLPatientReader extends EcrfReader {
     }
 
     @NotNull
-    private static String reformatPatientId(@NotNull final String ecrfPatientId) {
+    private static String reformatPatientId(@NotNull String ecrfPatientId) {
         return ecrfPatientId.replaceAll("-", "");
     }
 
-    private static boolean isPatientStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isPatientStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, PATIENT_TAG);
     }
 
-    private static boolean isPatientEnd(@NotNull final XMLStreamReader reader) {
+    private static boolean isPatientEnd(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.END_ELEMENT, PATIENT_TAG);
     }
 
-    private static boolean isFieldStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isFieldStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_TAG);
     }
 
-    private static boolean isStudyEventStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isStudyEventStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, STUDY_EVENT_TAG);
     }
 
-    private static boolean isFormStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isFormStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, FORM_TAG);
     }
 
-    private static boolean isItemGroupStart(@NotNull final XMLStreamReader reader) {
+    private static boolean isItemGroupStart(@NotNull XMLStreamReader reader) {
         return isOfTypeWithName(reader, XMLEvent.START_ELEMENT, ITEM_GROUP_TAG);
     }
 }

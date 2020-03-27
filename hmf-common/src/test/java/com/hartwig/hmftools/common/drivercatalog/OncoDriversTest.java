@@ -43,7 +43,7 @@ public class OncoDriversTest {
 
     @Test
     public void favourHotspot() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000,
+        DriverCatalog victim = OncoDrivers.geneDriver(10000,
                 "Gene",
                 likelihood,
                 Lists.newArrayList(frameshiftHotspot, frameshiftNearHotspot, inframe, missense),
@@ -55,7 +55,7 @@ public class OncoDriversTest {
 
     @Test
     public void doNotFavourNearHotspot() {
-        final DriverCatalog victim =
+        DriverCatalog victim =
                 OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(frameshiftNearHotspot, inframe, missense), null);
         assertEquals(LikelihoodMethod.INFRAME, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
@@ -64,7 +64,7 @@ public class OncoDriversTest {
 
     @Test
     public void favourValidInframe() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(inframe, missense), null);
+        DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(inframe, missense), null);
         assertEquals(LikelihoodMethod.INFRAME, victim.likelihoodMethod());
         assertEquals(1, victim.driverLikelihood(), 0.01);
         assertEquals(UNADJUSTED_LIKELIHOOD, victim.dndsLikelihood(), 0.01);
@@ -72,8 +72,7 @@ public class OncoDriversTest {
 
     @Test
     public void ignoreFrameshiftAndInvalidInframe() {
-        final DriverCatalog victim =
-                OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(invalidInframe, frameshift), null);
+        DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(invalidInframe, frameshift), null);
         assertEquals(LikelihoodMethod.NONE, victim.likelihoodMethod());
         assertEquals(0, victim.driverLikelihood(), 0.01);
         assertEquals(0, victim.dndsLikelihood(), 0.01);
@@ -81,7 +80,7 @@ public class OncoDriversTest {
 
     @Test
     public void singleMissense() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense), null);
+        DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense), null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.68, victim.driverLikelihood(), 0.01);
         assertEquals(0.5, victim.dndsLikelihood(), 0.01);
@@ -89,7 +88,7 @@ public class OncoDriversTest {
 
     @Test
     public void multiMissense() {
-        final DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense, missense), null);
+        DriverCatalog victim = OncoDrivers.geneDriver(10000, "Gene", likelihood, Lists.newArrayList(missense, missense), null);
         assertEquals(LikelihoodMethod.DNDS, victim.likelihoodMethod());
         assertEquals(0.68, victim.driverLikelihood(), 0.01);
         assertEquals(0.5, victim.dndsLikelihood(), 0.01);
@@ -105,7 +104,7 @@ public class OncoDriversTest {
     }
 
     @NotNull
-    private static SomaticVariant create(@NotNull final VariantType type, @NotNull final CodingEffect codingEffect, int repeatCount,
+    private static SomaticVariant create(@NotNull VariantType type, @NotNull CodingEffect codingEffect, int repeatCount,
             @NotNull Hotspot hotspot) {
         return SomaticVariantTestBuilderFactory.create()
                 .type(type)
