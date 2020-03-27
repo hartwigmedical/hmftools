@@ -336,11 +336,13 @@ public class ChromosomeGeneTask implements Callable
                 geneReadData.getTranscripts().forEach(x -> mResultsWriter.writeExonData(geneReadData, x));
             }
 
+            /* no longer write per-gene GC ratio counts, may make configurable later on
             if(mConfig.WriteReadGcRatios)
             {
                 writeReadGcRatioCounts(
                         mResultsWriter.getReadGcRatioWriter(), geneReadData.GeneData, mBamReader.getGcRatioCounts().getGeneRatioCounts());
             }
+            */
         }
     }
 

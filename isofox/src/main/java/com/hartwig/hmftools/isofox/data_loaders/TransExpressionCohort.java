@@ -22,7 +22,6 @@ import com.google.common.collect.Maps;
 public class TransExpressionCohort
 {
     private final DataLoaderConfig mConfig;
-
     private final Map<String,Integer> mFieldsMap;
 
     private BufferedWriter mTranscriptWriter;

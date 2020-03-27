@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -346,61 +347,28 @@ public class AltSpliceJunction
                 .toString();
     }
 
-    private static int COL_GENE_ID = 0;
-    private static int COL_CHR = 2;
-    private static int COL_SJ_START = 4;
-    private static int COL_SJ_END = 5;
-    private static int COL_FRAG_COUNT = 6;
-    private static int COL_POS_START_DEPTH = 7;
-    private static int COL_POS_END_DEPTH = 8;
-    private static int COL_TYPE = 9;
-    private static int COL_CONTEXT_START = 10;
-    private static int COL_CONTEXT_END = 11;
-    private static int COL_BASE_CONTEXT_START = 14;
-    private static int COL_BASE_CONTEXT_END = 15;
-
-    public static AltSpliceJunction fromCsv(final String data)
+    public static AltSpliceJunction fromCsv(final String data, final Map<String,Integer> fieldIndexMap)
     {
         final String[] items = data.split(DELIMITER);
 
-        if(items.length < COL_CONTEXT_END+1)
-            return null;
-
-        final long[] spliceJunction = { Long.parseLong(items[COL_SJ_START]), Long.parseLong(items[COL_SJ_END]) };
+        final long[] spliceJunction = { Long.parseLong(items[fieldIndexMap.get("SjStart")]), Long.parseLong(items[fieldIndexMap.get("SjEnd")]) };
 
         final AltSpliceJunctionContext[] contexts =
-                { AltSpliceJunctionContext.valueOf(items[COL_CONTEXT_START]), AltSpliceJunctionContext.valueOf(items[COL_CONTEXT_END]) };
+                { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("StartContext")]),
+                AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("EndContext")]) };
 
         AltSpliceJunction altSJ = new AltSpliceJunction(
-                items[COL_CHR], spliceJunction, AltSpliceJunctionType.valueOf(items[COL_TYPE]),
+                items[fieldIndexMap.get("Chromosome")], spliceJunction, AltSpliceJunctionType.valueOf(items[fieldIndexMap.get("Type")]),
                 contexts, Lists.newArrayList(), Lists.newArrayList());
 
-        altSJ.setGeneId(items[COL_GENE_ID]);
-        altSJ.addFragmentCount(Integer.parseInt(items[COL_FRAG_COUNT]));
-        altSJ.addPositionCount(SE_START, Integer.parseInt(items[COL_POS_START_DEPTH]));
-        altSJ.addPositionCount(SE_END, Integer.parseInt(items[COL_POS_END_DEPTH]));
+        altSJ.setGeneId(items[fieldIndexMap.get("GeneId")]);
+        altSJ.addFragmentCount(Integer.parseInt(items[fieldIndexMap.get("FragCount")]));
+        altSJ.addPositionCount(SE_START, Integer.parseInt(items[fieldIndexMap.get("StartDepth")]));
+        altSJ.addPositionCount(SE_END, Integer.parseInt(items[fieldIndexMap.get("EndDepth")]));
 
-        final String[] baseContext = { items[COL_BASE_CONTEXT_START], items[COL_BASE_CONTEXT_END] };
+        final String[] baseContext = { items[fieldIndexMap.get("StartBases")], items[fieldIndexMap.get("EndBases")] };
         altSJ.setDonorAcceptorBases(baseContext);
 
         return altSJ;
-    }
-
-    public static List<AltSpliceJunction> loadFile(final Path filename)
-    {
-        try
-        {
-            final List<String> lines = Files.readAllLines(filename);
-
-            return lines.stream()
-                    .filter(x -> !x.contains("Chromosome"))
-                    .map(x -> fromCsv(x))
-                    .collect(Collectors.toList());
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to alt splice junction load file({}): {}", filename.toString(), e.toString());
-            return null;
-        }
     }
 }

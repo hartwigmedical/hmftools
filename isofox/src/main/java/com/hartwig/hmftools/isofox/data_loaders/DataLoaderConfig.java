@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.data_loaders;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.DATA_OUTPUT_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.EXCLUDED_GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.OUTPUT_ID;
@@ -22,6 +23,8 @@ import com.google.common.collect.Lists;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import jdk.nashorn.internal.ir.EmptyNode;
+
 public class DataLoaderConfig
 {
     public static final String ROOT_DATA_DIRECTORY = "root_data_dir";
@@ -32,6 +35,7 @@ public class DataLoaderConfig
     public static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
     public static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
+    public static final String SPLICE_VARIANT_FILE = "splice_variant_file";
     public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
 
     public final String RootDataDir;
@@ -48,6 +52,8 @@ public class DataLoaderConfig
     public final int AltSJMinSampleThreshold;
     public final int AltSJMinFragsUnrequiredGenes;
     public final double AltSJProbabilityThreshold;
+    public final String SpliceVariantFile;
+    public final String EnsemblDataCache;
 
     public final double TpmLogThreshold;
 
@@ -78,6 +84,8 @@ public class DataLoaderConfig
         AltSJMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
         AltSJMinFragsUnrequiredGenes = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS_REQ_GENES, "0"));
         AltSJProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
+        SpliceVariantFile = cmd.getOptionValue(SPLICE_VARIANT_FILE);
+        EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
 
         TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
 
@@ -155,6 +163,7 @@ public class DataLoaderConfig
         options.addOption(USE_SAMPLE_DIRS, false, "File with list of samples to load data for");
         options.addOption(ALL_AVAILABLE_FILES, false, "Load all files in root directory matching expeted Isofox file names");
         options.addOption(LOAD_TYPES, true, "List of data types to load & process");
+        options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
@@ -162,6 +171,7 @@ public class DataLoaderConfig
         options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
         options.addOption(ALT_SJ_MIN_FRAGS_REQ_GENES, true, "Min frag count supporting alt-SJs outside gene panel");
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
+        options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
 
         options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
 

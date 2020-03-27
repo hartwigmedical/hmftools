@@ -153,10 +153,10 @@ public class Isofox
 
         if(mConfig.WriteReadGcRatios)
         {
-            GcRatioCounts ratioCounts = new GcRatioCounts();
-            chrTasks.forEach(x -> ratioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getRatioCounts()));
+            GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
+            chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getRatioCounts()));
 
-            GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, ratioCounts.getRatioCounts());
+            GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, combinedGcRatioCounts.getRatioCounts());
         }
 
         mResultsWriter.close();

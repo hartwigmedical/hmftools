@@ -7,13 +7,18 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTION;
+import static com.hartwig.hmftools.isofox.data_loaders.DataLoader.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.fromCsv;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -24,8 +29,12 @@ public class AltSpliceJunctionCohort
 {
     private final DataLoaderConfig mConfig;
 
+    private final Map<String,Integer> mFieldsMap;
+
     // map of chromosomes to a map of genes to a list of alternate splice junctions
     private final Map<String, Map<String,List<AltSjCohortData>>> mAltSpliceJunctions;
+
+    private final SpliceVariantMatching mSpliceVariantMatching;
 
     private final FisherExactTest mFisherET;
 
@@ -34,6 +43,9 @@ public class AltSpliceJunctionCohort
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
         mFisherET = new FisherExactTest();
+        mFieldsMap = Maps.newHashMap();
+
+        mSpliceVariantMatching = mConfig.SpliceVariantFile != null ? new SpliceVariantMatching(mConfig) : null;
     }
 
     public void processAltSpliceJunctions()
@@ -51,18 +63,43 @@ public class AltSpliceJunctionCohort
             final String sampleId = mConfig.SampleData.SampleIds.get(i);
             final Path altSJFile = filenames.get(i);
 
-            final List<AltSpliceJunction> altSJs = AltSpliceJunction.loadFile(altSJFile);
+            final List<AltSpliceJunction> altSJs = loadFile(altSJFile);
 
             ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", i, sampleId, altSJs.size());
             totalProcessed += altSJs.size();
 
             altSJs.forEach(x -> addAltSpliceJunction(x, sampleId));
+
+            if(mSpliceVariantMatching != null)
+                mSpliceVariantMatching.evaluateSpliceVariants(sampleId, altSJs);
         }
 
         ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
 
         // write a report for any re-occurring alt SJ
         writeReoccurringAltSpliceJunctions();
+    }
+
+    private List<AltSpliceJunction> loadFile(final Path filename)
+    {
+        try
+        {
+            final List<String> lines = Files.readAllLines(filename);
+
+            if(mFieldsMap.isEmpty())
+                mFieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+
+            lines.remove(0);
+
+            return lines.stream()
+                    .map(x -> fromCsv(x, mFieldsMap))
+                    .collect(Collectors.toList());
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to alt splice junction load file({}): {}", filename.toString(), e.toString());
+            return null;
+        }
     }
 
     private void addAltSpliceJunction(final AltSpliceJunction altSJ, final String sampleId)

@@ -104,7 +104,7 @@ The GC bias for each integer GC content level between 1 & 2 x read length is the
 
 TO DO
 
-#### C. Sequence Start Speicfic Bias
+#### C. Sequence Start Specific Bias
 
 TO DO 
 

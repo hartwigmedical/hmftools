@@ -70,4 +70,6 @@ public class AltSjCohortData
     public int getPositionCount(int seIndex) { return mPositionCounts[seIndex]; }
     public void addPositionCount(int seIndex, int count) { mPositionCounts[seIndex] += count; }
 
+
+
 }
