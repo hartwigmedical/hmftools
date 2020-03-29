@@ -43,4 +43,10 @@ public class EnsemblGeneData
     public int getReverseListIndex() { return mReverseListIndex; }
     public void setReverseListIndex(int index) { mReverseListIndex = index; }
 
+    public String toString()
+    {
+        return String.format("%s:%s chr(%s) pos(%d-%d) strand(%d)",
+                GeneId, GeneName, Chromosome, GeneStart, GeneEnd, Strand);
+    }
+
 }

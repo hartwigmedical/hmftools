@@ -43,5 +43,4 @@ public class TranscriptData
         return String.format("%d:%s pos(%d-%d) exons(%d) %s",
             TransId, TransName, TransStart, TransEnd, mExons.size(), IsCanonical ? "canonical" : "");
     }
-
 }
