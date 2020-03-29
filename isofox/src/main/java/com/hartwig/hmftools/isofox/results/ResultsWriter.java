@@ -13,9 +13,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.GeneBamReader;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
@@ -83,6 +83,9 @@ public class ResultsWriter
 
     private void initialiseExternalWriters()
     {
+        if(mConfig.OutputDir == null)
+            return;
+
         if(mConfig.writeExpectedRateData())
         {
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);

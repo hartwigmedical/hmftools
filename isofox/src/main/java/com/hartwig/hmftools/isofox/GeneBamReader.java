@@ -116,11 +116,6 @@ public class GeneBamReader
         mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter.getRetainedIntronWriter());
     }
 
-    public static GeneBamReader from(final IsofoxConfig config)
-    {
-        return new GeneBamReader(config, null);
-    }
-
     public int totalBamCount() { return mTotalBamReadCount; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
 

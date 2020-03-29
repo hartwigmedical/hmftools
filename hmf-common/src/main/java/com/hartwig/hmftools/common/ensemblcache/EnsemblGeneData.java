@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural.annotation;
+package com.hartwig.hmftools.common.ensemblcache;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,9 +14,6 @@ public class EnsemblGeneData
     public final long GeneEnd;
     public final String KaryotypeBand;
 
-    private int mListIndex; // in the set per chromosome
-    private int mReverseListIndex;
-
     public EnsemblGeneData(
             String geneId, String geneName, String chromosome, byte strand, long geneStart, long geneEnd, String karyotypeBand)
     {
@@ -27,21 +24,12 @@ public class EnsemblGeneData
         GeneStart = geneStart;
         GeneEnd = geneEnd;
         KaryotypeBand = karyotypeBand;
-
-        mListIndex= -1;
-        mReverseListIndex = -1;
     }
 
     public boolean forwardStrand() { return Strand == 1; }
     public boolean reverseStrand() { return Strand == -1; }
 
     public long length() { return GeneEnd - GeneStart; }
-
-    public int getListIndex() { return mListIndex; }
-    public void setListIndex(int index) { mListIndex = index; }
-
-    public int getReverseListIndex() { return mReverseListIndex; }
-    public void setReverseListIndex(int index) { mReverseListIndex = index; }
 
     public String toString()
     {

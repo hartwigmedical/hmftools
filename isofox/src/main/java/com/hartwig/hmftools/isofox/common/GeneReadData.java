@@ -7,13 +7,11 @@ import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

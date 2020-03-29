@@ -23,11 +23,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 
 import org.junit.Test;
 

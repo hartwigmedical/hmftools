@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_5_PR
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.NOVEL_INTRON;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.isofox.results.SummaryStats.csvHeader;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,7 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;

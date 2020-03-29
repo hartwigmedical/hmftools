@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 

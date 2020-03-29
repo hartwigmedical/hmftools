@@ -25,16 +25,16 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneMatchType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.junit.Test;
 
@@ -253,7 +253,7 @@ public class ReadCountsTest
     {
         // one read outside the gene
         IsofoxConfig config = new IsofoxConfig();
-        GeneBamReader bamReader = GeneBamReader.from(config);
+        GeneBamReader bamReader = new GeneBamReader(config, new ResultsWriter(config));
 
         int transId1 = 1;
         String transName1 = "TRANS01";

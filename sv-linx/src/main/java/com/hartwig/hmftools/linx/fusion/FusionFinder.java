@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

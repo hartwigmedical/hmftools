@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_SPLICE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadEnsemblGeneData;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptProteinData;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -21,12 +20,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 
 public class EnsemblDataCache
 {

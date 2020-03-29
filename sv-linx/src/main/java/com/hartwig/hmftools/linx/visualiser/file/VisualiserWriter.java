@@ -22,9 +22,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.types.SvBreakend;

@@ -20,11 +20,11 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

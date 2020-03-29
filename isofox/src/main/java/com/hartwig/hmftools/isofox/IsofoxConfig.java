@@ -335,7 +335,7 @@ public class IsofoxConfig
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
         EnrichedGeneIds = Lists.newArrayList();
-        OutputDir = "";
+        OutputDir = null;
         BamFile = null;
         RefGenomeFile = null;
         RefFastaSeqFile = null;

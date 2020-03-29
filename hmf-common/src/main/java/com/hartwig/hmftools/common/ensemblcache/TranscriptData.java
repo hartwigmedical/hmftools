@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.variant.structural.annotation;
+package com.hartwig.hmftools.common.ensemblcache;
 
 import java.util.List;
 
@@ -37,6 +37,8 @@ public class TranscriptData
 
     public void setExons(final List<ExonData> exons) { mExons = exons; }
     public List<ExonData> exons() { return mExons; }
+
+    public long length() { return TransEnd - TransStart; }
 
     public String toString()
     {

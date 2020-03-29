@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.ensemblcache;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.HG37;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.refGenomeChromosome;
 
 import java.io.BufferedReader;
@@ -14,13 +12,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.variant.structural.annotation.EnsemblGeneData;
-import com.hartwig.hmftools.common.variant.structural.annotation.ExonData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptData;
-import com.hartwig.hmftools.common.variant.structural.annotation.TranscriptProteinData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,8 +94,6 @@ public class EnsemblDataLoader
                     }
                 }
 
-                // genes are already sorted by GeneStart
-                geneData.setListIndex(geneList.size());
                 geneList.add(geneData);
                 ++geneCount;
 
