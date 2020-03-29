@@ -17,11 +17,20 @@ public enum DataLoadType
     {
         switch(type)
         {
-            case GENE: return GENE_RESULTS_FILE;
-            case TRANSCRIPT: return TRANSCRIPT_RESULTS_FILE;
-            case SUMMARY: return SUMMARY_FILE;
-            case ALT_SPLICE_JUNCTION: return ALT_SJ_FILE_ID;
-            default: return "";
+            case GENE:
+                return GENE_RESULTS_FILE;
+
+            case TRANSCRIPT:
+                return TRANSCRIPT_RESULTS_FILE;
+
+            case SUMMARY:
+                return SUMMARY_FILE;
+
+            case ALT_SPLICE_JUNCTION:
+                return ALT_SJ_FILE_ID;
+
+            default:
+                return "";
         }
     }
 }

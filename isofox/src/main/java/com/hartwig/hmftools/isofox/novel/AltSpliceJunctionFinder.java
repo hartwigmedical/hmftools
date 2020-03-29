@@ -497,7 +497,7 @@ public class AltSpliceJunctionFinder
             for(final AltSpliceJunction altSJ : mAltSpliceJunctions)
             {
                 final GeneReadData gene = mGenes.genes().stream().filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
-                altSJ.calcSummaryData(mConfig.RefFastaSeqFile, gene);
+                altSJ.calcSummaryData(gene);
             }
 
             final int[] strandGeneCounts = {0, 0};

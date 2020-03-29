@@ -40,7 +40,7 @@ public class TransExpressionCohort
         if(!formSampleFilenames(mConfig, TRANSCRIPT, filenames))
             return;
 
-        initialiseWrite();
+        initialiseWriter();
 
         int totalProcessed = 0;
 
@@ -65,7 +65,7 @@ public class TransExpressionCohort
         closeBufferedWriter(mTranscriptWriter);
     }
 
-    private void initialiseWrite()
+    private void initialiseWriter()
     {
         try
         {

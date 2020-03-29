@@ -127,7 +127,6 @@ public class GcRatioCounts
 
             currentTotal += frequency;
             prevRatio = gcRatio;
-
         }
 
         return 0;

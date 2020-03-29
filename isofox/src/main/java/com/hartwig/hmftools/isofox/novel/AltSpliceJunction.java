@@ -13,9 +13,6 @@ import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -108,12 +105,14 @@ public class AltSpliceJunction
     public void setGeneId(final String geneId) { mGeneId = geneId; }
     public final String getGeneId() { return mGeneId; }
 
-    public void calcSummaryData(final IndexedFastaSequenceFile RefFastaSeqFile, final GeneReadData gene)
+    public static final String ASJ_TRANS_NONE = "NONE";
+
+    public void calcSummaryData(final GeneReadData gene)
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final List<RegionReadData> regions = (se == SE_START) ? mSjStartRegions : mSjEndRegions;
-            mTranscriptNames[se] = regions.isEmpty() ? "NONE" : generateTranscriptNames(regions);
+            mTranscriptNames[se] = regions.isEmpty() ? ASJ_TRANS_NONE : generateTranscriptNames(regions);
             mNearestExonDistance[se] = calcNearestExonBoundary(se, gene);
         }
     }
@@ -351,11 +350,12 @@ public class AltSpliceJunction
     {
         final String[] items = data.split(DELIMITER);
 
-        final long[] spliceJunction = { Long.parseLong(items[fieldIndexMap.get("SjStart")]), Long.parseLong(items[fieldIndexMap.get("SjEnd")]) };
+        final long[] spliceJunction =
+                { Long.parseLong(items[fieldIndexMap.get("SjStart")]), Long.parseLong(items[fieldIndexMap.get("SjEnd")]) };
 
         final AltSpliceJunctionContext[] contexts =
                 { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("StartContext")]),
-                AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("EndContext")]) };
+                        AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("EndContext")]) };
 
         AltSpliceJunction altSJ = new AltSpliceJunction(
                 items[fieldIndexMap.get("Chromosome")], spliceJunction, AltSpliceJunctionType.valueOf(items[fieldIndexMap.get("Type")]),
@@ -368,6 +368,9 @@ public class AltSpliceJunction
 
         final String[] baseContext = { items[fieldIndexMap.get("StartBases")], items[fieldIndexMap.get("EndBases")] };
         altSJ.setDonorAcceptorBases(baseContext);
+
+        altSJ.mTranscriptNames[SE_START] = items[fieldIndexMap.get("StartTrans")];
+        altSJ.mTranscriptNames[SE_END] = items[fieldIndexMap.get("EndTrans")];
 
         return altSJ;
     }

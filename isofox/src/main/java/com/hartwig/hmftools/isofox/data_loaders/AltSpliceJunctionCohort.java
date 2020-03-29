@@ -76,8 +76,14 @@ public class AltSpliceJunctionCohort
 
         ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
 
-        // write a report for any re-occurring alt SJ
-        writeReoccurringAltSpliceJunctions();
+        if(mConfig.AltSJMinSampleThreshold > 1)
+        {
+            // write a report for any re-occurring alt SJ
+            writeReoccurringAltSpliceJunctions();
+        }
+
+        if(mSpliceVariantMatching != null)
+            mSpliceVariantMatching.close();
     }
 
     private List<AltSpliceJunction> loadFile(final Path filename)
