@@ -19,7 +19,6 @@ public class FusionExtractor {
                 .source(source.toString())
                 .sourceLink(source.toString())
                 .build();
-
     }
 
     @NotNull
@@ -75,6 +74,14 @@ public class FusionExtractor {
             gene = "KMT2A-MLLT3";
         } else if (gene.equals("BCR-ABL")) {
             gene = "BCR-ABL1";
+        } else if (gene.equals("ERLIN2?FGFR1")) {
+            gene = "ERLIN2-FGFR1";
+        } else if (gene.equals("FGFR2?PPHLN1")) {
+            gene = "FGFR2-PPHLN1";
+        } else if (gene.equals("FGFR3 - BAIAP2L1")) {
+            gene = "FGFR3-BAIAP2L1";
+        } else if (gene.equals("PAX8-PPAR?")) {
+            gene = "PAX8-PPARA";
         } else if (gene.contains("IGH") || gene.contains("IGK") || gene.contains("TRB") || gene.contains("Delta")
                 || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170") || gene.equals("BRAF-CUL1")
                 || function.equals("Loss-of-function")) {

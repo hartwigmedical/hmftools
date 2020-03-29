@@ -382,7 +382,8 @@ public final class LoadClinicalData {
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
         LOGGER.info("Interpreting and curating data for WIDE patients");
-        Map<String, Patient> widePatients = readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, tumorLocationCurator);
+        Map<String, Patient> widePatients =
+                readWidePatients(ecrfModels.wideModel(), sampleDataPerPatient, tumorLocationCurator, biopsySiteCurator);
         LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
 
         LOGGER.info("Interpreting and curating data for CORE patients");
@@ -412,10 +413,11 @@ public final class LoadClinicalData {
 
     @NotNull
     private static Map<String, Patient> readWidePatients(@NotNull WideEcrfModel wideEcrfModel,
-            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull TumorLocationCurator tumorLocationCurator) {
+            @NotNull Map<String, List<SampleData>> sampleDataPerPatient, @NotNull TumorLocationCurator tumorLocationCurator,
+            @NotNull BiopsySiteCurator biopsySiteCurator) {
         Map<String, Patient> patientMap = Maps.newHashMap();
 
-        WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, tumorLocationCurator);
+        WidePatientReader widePatientReader = new WidePatientReader(wideEcrfModel, tumorLocationCurator, biopsySiteCurator);
         for (Map.Entry<String, List<SampleData>> entry : sampleDataPerPatient.entrySet()) {
             List<SampleData> samples = entry.getValue();
 
