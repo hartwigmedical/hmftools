@@ -109,13 +109,11 @@ public class GeneBamReader
         mDuplicateCache = Maps.newHashMap();
         mDuplicateReadIds = Lists.newArrayList();
 
-        mReadDataWriter = resultsWriter != null ? resultsWriter.getReadDataWriter() : null;
+        mReadDataWriter = resultsWriter.getReadDataWriter();
         mGcRatioCounts = mConfig.WriteReadGcRatios ? new GcRatioCounts() : null;
 
-        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(
-                mConfig, resultsWriter != null ? resultsWriter.getAltSpliceJunctionWriter() : null);
-
-        mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter != null ? resultsWriter.getRetainedIntronWriter() : null);
+        mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
+        mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter.getRetainedIntronWriter());
     }
 
     public static GeneBamReader from(final IsofoxConfig config)

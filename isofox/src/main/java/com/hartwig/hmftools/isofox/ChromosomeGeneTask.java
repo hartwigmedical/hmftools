@@ -375,13 +375,15 @@ public class ChromosomeGeneTask implements Callable
             }
             else
             {
-                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
+                if(mBamReader.getGcRatioCounts() != null)
+                    mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
             }
         }
         else
         {
             // take them all
-            mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
+            if(mBamReader.getGcRatioCounts() != null)
+                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
         }
     }
 
