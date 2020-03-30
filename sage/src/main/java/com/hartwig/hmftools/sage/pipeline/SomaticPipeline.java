@@ -60,16 +60,13 @@ public class SomaticPipeline implements SageVariantPipeline {
 
         final CompletableFuture<RefSequence> refSequenceFuture = supplyAsync(() -> new RefSequence(region, refGenome), executor);
 
-        // Scan tumors for set of initial candidates
-        final CompletableFuture<List<Candidate>> tumorCandidates = bamCandidates(region, refSequenceFuture);
-        final CompletableFuture<ReadContextCounters> tumorEvidence =
-                bamEvidence(region, config.tumor(), config.tumorBam(), tumorCandidates);
+        final CompletableFuture<List<Candidate>> initialCandidates = bamCandidates(region, refSequenceFuture);
+        final CompletableFuture<ReadContextCounters> tumorEvidence = bamEvidence(region, config.tumor(), config.tumorBam(), initialCandidates);
 
-        final CompletableFuture<List<Candidate>> normalCandidates = filteredCandidates(tumorEvidence);
-        final CompletableFuture<ReadContextCounters> normalEvidence =
-                bamEvidence(region, config.reference(), config.referenceBam(), normalCandidates);
+        final CompletableFuture<List<Candidate>> finalCandidates = filteredCandidates(tumorEvidence);
+        final CompletableFuture<ReadContextCounters> normalEvidence = bamEvidence(region, config.reference(), config.referenceBam(), finalCandidates);
 
-        return combine(region, tumorEvidence, normalEvidence);
+        return combine(region, finalCandidates, tumorEvidence, normalEvidence);
     }
 
     @NotNull
@@ -126,17 +123,16 @@ public class SomaticPipeline implements SageVariantPipeline {
 
     @NotNull
     private CompletableFuture<List<SageVariant>> combine(@NotNull final GenomeRegion region,
-            final CompletableFuture<ReadContextCounters> doneTumor, final CompletableFuture<ReadContextCounters> doneNormal) {
+            final CompletableFuture<List<Candidate>> candidates,
+            final CompletableFuture<ReadContextCounters> doneTumor,
+            final CompletableFuture<ReadContextCounters> doneNormal) {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) -> {
             LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
-            final SageVariantFactory variantFactory =  new SageVariantFactory(config.filter());
-
-            final List<Candidate> candidates =
-                    normalCandidates.allCandidates().isEmpty() ? tumorCandidates.allCandidates() : normalCandidates.allCandidates();
+            final SageVariantFactory variantFactory = new SageVariantFactory(config.filter());
 
             // Combine normal and tumor together and create variants
             final List<SageVariant> result = Lists.newArrayList();
-            for (Candidate candidate : candidates) {
+            for (Candidate candidate : candidates.join()) {
                 final List<ReadContextCounter> normal = normalCandidates.readContextCounters(candidate.variant());
                 final List<ReadContextCounter> tumor = tumorCandidates.readContextCounters(candidate.variant());
                 SageVariant sageVariant = variantFactory.create(normal, tumor);
