@@ -16,6 +16,8 @@ import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
+import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -82,9 +84,11 @@ public class WidePatientReader {
 
     @NotNull
     private static PreTreatmentData preTreatmentData(@NotNull List<WidePreTreatmentData> widePreTreatmentData) {
+
         for (WidePreTreatmentData preTreatmentData : widePreTreatmentData) {
 
         }
+        //ImmutablePreTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status());
         return ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.undefined());
     }
 
@@ -112,6 +116,7 @@ public class WidePatientReader {
     private static List<BiopsyTreatmentData> toBiopsyTreatmentData(@NotNull List<WideTreatmentData> wideTreatmentData) {
         List<BiopsyTreatmentData> biopsyTreatmentDataList = Lists.newArrayList();
         for (WideTreatmentData treatmentData : wideTreatmentData) {
+            biopsyTreatmentDataList.add(ImmutableBiopsyTreatmentData.of(null, null, null, FormStatus.undefined()));
 
         }
         return biopsyTreatmentDataList;
@@ -121,7 +126,12 @@ public class WidePatientReader {
     private static List<BiopsyTreatmentResponseData> toBiopsyTreatmentResponseData(@NotNull List<WideResponseData> wideResponseData) {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
-
+            biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    FormStatus.undefined()));
         }
         return biopsyTreatmentResponseDataList;
     }
