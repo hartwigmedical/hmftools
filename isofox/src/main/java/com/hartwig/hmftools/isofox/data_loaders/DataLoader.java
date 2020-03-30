@@ -14,7 +14,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -105,19 +104,6 @@ public class DataLoader
         {
             ISF_LOGGER.error("failed to write cohort summary data file: {}", e.toString());
         }
-    }
-
-    public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
-    {
-        final String[] items = fieldsHeader.split(delimiter,-1);
-        final Map<String,Integer> fieldsIndexMap = Maps.newHashMap();
-
-        for(int i = 0; i < items.length; ++i)
-        {
-            fieldsIndexMap.put(items[i], i);
-        }
-
-        return fieldsIndexMap;
     }
 
     public static void main(@NotNull final String[] args) throws ParseException

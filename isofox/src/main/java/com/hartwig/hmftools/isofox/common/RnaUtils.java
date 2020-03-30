@@ -7,8 +7,10 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class RnaUtils
 {
@@ -176,4 +178,16 @@ public class RnaUtils
         return matched;
     }
 
+    public static Map<String,Integer> createFieldsIndexMap(final String fieldsHeader, final String delimiter)
+    {
+        final String[] items = fieldsHeader.split(delimiter,-1);
+        final Map<String,Integer> fieldsIndexMap = Maps.newHashMap();
+
+        for(int i = 0; i < items.length; ++i)
+        {
+            fieldsIndexMap.put(items[i], i);
+        }
+
+        return fieldsIndexMap;
+    }
 }

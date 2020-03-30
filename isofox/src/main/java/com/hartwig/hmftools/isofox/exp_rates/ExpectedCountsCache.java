@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -66,11 +68,7 @@ public class ExpectedCountsCache
         return null;
     }
 
-    // GeneCollectionId,TransId,Category,Counts for each fragment length
-    public static final int ER_COL_GENE_SET_ID = 0;
-    public static final int ER_COL_TRANS_GENE_NAME = 1;
-    public static final int ER_COL_CAT = 2;
-
+    // GeneSetId,TransId,Category,Counts for each fragment length
     private boolean loadExpCountsFile()
     {
         if (!Files.exists(Paths.get(mConfig.ExpCountsFile)))
@@ -93,7 +91,12 @@ public class ExpectedCountsCache
             }
 
             int fragLengths = mConfig.FragmentLengthData.size();
-            int expectedColCount = ER_COL_CAT + 1 + fragLengths;
+
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
+            int geneSetIdIndex = fieldsIndexMap.get("GeneSetId");
+            int transNameIndex = fieldsIndexMap.get("TransId");
+            int categoryIndex = fieldsIndexMap.get("Category");
+            int expectedColCount = categoryIndex + 1 + fragLengths;
 
             String currentGeneSetId = "";
             String currentTransGeneName = "";
@@ -102,7 +105,7 @@ public class ExpectedCountsCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                String[] items = line.split(",", -1);
+                String[] items = line.split(DELIMITER, -1);
 
                 if (items.length != expectedColCount)
                 {
@@ -111,9 +114,9 @@ public class ExpectedCountsCache
                     return false;
                 }
 
-                String geneSetId = items[ER_COL_GENE_SET_ID];
-                String transGeneName = items[ER_COL_TRANS_GENE_NAME];
-                String categoryStr = items[ER_COL_CAT];
+                String geneSetId = items[geneSetIdIndex];
+                String transGeneName = items[transNameIndex];
+                String categoryStr = items[categoryIndex];
 
                 if(!geneSetId.equals(currentGeneSetId))
                 {
@@ -135,7 +138,7 @@ public class ExpectedCountsCache
 
                 for(int i = 0; i < fragLengths; ++i)
                 {
-                    int count = Integer.parseInt(items[ER_COL_CAT + i + 1]);
+                    int count = Integer.parseInt(items[categoryIndex + i + 1]);
                     catCounts.addCounts(count, i);
                 }
             }

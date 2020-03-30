@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.ALT_SPLICE_JUNCTION;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoader.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunction.fromCsv;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;

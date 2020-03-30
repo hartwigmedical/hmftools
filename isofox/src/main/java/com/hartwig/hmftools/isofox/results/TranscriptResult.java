@@ -208,7 +208,7 @@ public abstract class TranscriptResult
                 .add(trans().TransName)
                 .add(String.valueOf(trans().IsCanonical))
                 .add(String.valueOf(trans().exons().size()))
-                .add(String.valueOf(effectiveLength()))
+                .add(String.format("%.0f", effectiveLength()))
                 .add(String.valueOf(exonsFound()))
                 .add(String.valueOf(exonicBases()))
                 .add(String.valueOf(exonicBaseCoverage()))

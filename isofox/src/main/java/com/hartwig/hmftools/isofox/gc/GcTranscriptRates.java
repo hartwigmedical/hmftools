@@ -1,33 +1,38 @@
 package com.hartwig.hmftools.isofox.gc;
 
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.common.sigs.SigMatrix;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
+import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 
 public class GcTranscriptRates
 {
     private final IsofoxConfig mConfig;
 
     private final EnsemblDataCache mGeneTransCache;
+
+    private final Map<String,GcRatioCounts> mTranscriptGcRatios;
 
     private final BufferedWriter mWriter;
 
@@ -36,6 +41,68 @@ public class GcTranscriptRates
         mConfig = config;
         mGeneTransCache = geneTransCache;
         mWriter = writer;
+        mTranscriptGcRatios = Maps.newHashMap();
+
+        if(config.ExpGcRatiosFile != null)
+            loadExpectedData();
+    }
+
+    private void loadExpectedData()
+    {
+        if(!Files.exists(Paths.get(mConfig.ExpGcRatiosFile)))
+        {
+            ISF_LOGGER.error("invalid expected GC ratios file");
+            return;
+        }
+
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.ExpGcRatiosFile));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                ISF_LOGGER.error("empty expected GC ratios file({})", mConfig.ExpGcRatiosFile);
+                return;
+            }
+
+            GcRatioCounts gcRatioCounts = new GcRatioCounts();
+            int expectedColCount = 1 + gcRatioCounts.getRatios().size();
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(DELIMITER, -1);
+
+                if (items.length != expectedColCount)
+                {
+                    ISF_LOGGER.error("invalid exp GC ratio data length({}) vs expected({}): {}", items.length, expectedColCount, line);
+                    return;
+                }
+
+                final String transName = items[0];
+                gcRatioCounts = new GcRatioCounts();
+                final List<Double> frequencies = gcRatioCounts.getFrequencies();
+
+                for(int i = 1; i < items.length; ++i)
+                {
+                    double counts = Double.parseDouble(items[i]);
+                    frequencies.set(i - 1, counts);
+                }
+
+                mTranscriptGcRatios.put(transName, gcRatioCounts);
+            }
+
+            ISF_LOGGER.info("loaded {} transcript expected GC ratios from file({})",
+                    mTranscriptGcRatios.size(), mConfig.ExpGcRatiosFile);
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.warn("failed to load expected GC ratios file({}): {}", mConfig.ExpGcRatiosFile, e.toString());
+            return;
+        }
     }
 
     public void generateExpectedRates(final String chromosome, final List<EnsemblGeneData> geneDataList)

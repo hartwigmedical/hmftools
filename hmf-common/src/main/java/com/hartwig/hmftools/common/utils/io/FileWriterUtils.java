@@ -9,13 +9,16 @@ import java.nio.file.StandardOpenOption;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FileWriterUtils {
+public final class FileWriterUtils
+{
 
-    private FileWriterUtils() {
+    private FileWriterUtils()
+    {
     }
 
     @NotNull
-    public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException {
+    public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
+    {
         Path outputPath = Paths.get(outputFile);
 
         if (Files.exists(outputPath))

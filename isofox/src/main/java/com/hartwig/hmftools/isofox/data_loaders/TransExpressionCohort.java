@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.data_loaders;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.TRANSCRIPT;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoader.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 

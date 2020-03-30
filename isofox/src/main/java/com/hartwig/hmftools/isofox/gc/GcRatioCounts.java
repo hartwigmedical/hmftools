@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.gc;
 
 import static java.lang.Math.floor;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -101,7 +103,8 @@ public class GcRatioCounts
 
     private int getRatioIndex(double gcRatio)
     {
-        return (int)round(gcRatio * mRatios.size());
+        double rawIndex = gcRatio * (mRatios.size() - 1);
+        return (int)min(max(0, round(rawIndex)), mRatios.size() - 1);
     }
 
     public void mergeRatioCounts(final List<Double> otherCounts)

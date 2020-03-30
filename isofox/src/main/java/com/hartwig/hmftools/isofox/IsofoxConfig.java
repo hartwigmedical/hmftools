@@ -56,6 +56,7 @@ public class IsofoxConfig
 
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
+    private static final String EXP_GC_RATIOS_FILE = "exp_gc_ratios_file";
     private static final String APPLY_EXP_RATES = "apply_exp_rates";
     private static final String READ_LENGTH = "read_length";
     private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
@@ -95,6 +96,7 @@ public class IsofoxConfig
     public final boolean WriteTransComboData;
 
     public final String ExpCountsFile;
+    public final String ExpGcRatiosFile;
     public final boolean ApplyExpectedRates;
     public final boolean ApplyFragmentLengthAdjust;
     public final boolean ApplyGcBiasAdjust;
@@ -212,6 +214,7 @@ public class IsofoxConfig
 
         ApplyExpectedRates = cmd.hasOption(APPLY_EXP_RATES);
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
+        ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
 
         WriteExpectedCounts = cmd.hasOption(WRITE_EXPECTED_COUNTS);
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
@@ -369,6 +372,7 @@ public class IsofoxConfig
         FragmentLengthData = Lists.newArrayList();
         UnsplicedWeight = 1;
         ExpCountsFile = null;
+        ExpGcRatiosFile = null;
 
         WriteTransData = true;
         WriteExonData = false;
@@ -427,7 +431,8 @@ public class IsofoxConfig
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");
-        options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates for transcripts");
+        options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates per transcript");
+        options.addOption(EXP_GC_RATIOS_FILE, true, "File with generated expected GC ratios per transcript");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
         options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");
