@@ -28,6 +28,7 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.gc.GcTranscriptRates;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -42,6 +43,7 @@ public class ChromosomeGeneTask implements Callable
     private final GeneBamReader mBamReader;
     private final ExpectedTransRates mExpTransRates;
     private final ExpectedRatesGenerator mExpRatesGenerator;
+    private final GcTranscriptRates mExpGcRatioGenerator;
     private final FragmentSizeCalcs mFragmentSizeCalc;
     private final ExpectedCountsCache mExpectedCountsCache;
 
@@ -91,6 +93,9 @@ public class ChromosomeGeneTask implements Callable
         mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.WriteExpectedCounts
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
+        mExpGcRatioGenerator = mConfig.WriteExpectedGcRatios ?
+                new GcTranscriptRates(mConfig, mGeneTransCache, resultsWriter.getExpGcRatiosWriter()) : null;
+
         mGeneResults = Lists.newArrayList();
         mEnrichedGenesFragmentCount = 0;
         mTotalFragmentCount = 0;
@@ -131,6 +136,10 @@ public class ChromosomeGeneTask implements Callable
                 calcFragmentLengths();
                 break;
 
+            case TRANSCRIPT_GC_RATIOS:
+                calcTranscriptGcRatios();
+                break;
+
             default:
                 break;
         }
@@ -145,7 +154,7 @@ public class ChromosomeGeneTask implements Callable
             ISF_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
-        boolean generateExpRatesOnly = mConfig.generateExpRatesOnly();
+        boolean generateExpectedRatesOnly = mConfig.generateExpectedDataOnly();
         int nextLogCount = 100;
 
         while(mCurrentGeneIndex < mGeneDataList.size())
@@ -158,9 +167,9 @@ public class ChromosomeGeneTask implements Callable
             mPerfCounters[PERF_TOTAL].start();
 
             // at the moment it is one or the other
-            if(generateExpRatesOnly)
+            if(generateExpectedRatesOnly)
             {
-                generateExpectedTransRates(geneCollection);
+                generateExpectedRates(geneCollection);
             }
             else
             {
@@ -253,7 +262,7 @@ public class ChromosomeGeneTask implements Callable
         return geneReadDataList;
     }
 
-    private void generateExpectedTransRates(final GeneCollection genes)
+    private void generateExpectedRates(final GeneCollection genes)
     {
         mExpRatesGenerator.generateExpectedRates(genes);
     }
@@ -317,7 +326,7 @@ public class ChromosomeGeneTask implements Callable
 
             if(mExpRatesGenerator != null)
             {
-                generateExpectedTransRates(geneCollection);
+                generateExpectedRates(geneCollection);
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
             }
 
@@ -343,6 +352,14 @@ public class ChromosomeGeneTask implements Callable
             }
             */
         }
+    }
+
+    private void calcTranscriptGcRatios()
+    {
+        if(mExpGcRatioGenerator == null)
+            return;
+
+        mExpGcRatioGenerator.generateExpectedRates(mChromosome, mGeneDataList);
     }
 
     private void cacheResults(final GeneCollection geneCollection, final GeneReadData geneReadData)
@@ -374,15 +391,15 @@ public class ChromosomeGeneTask implements Callable
             }
             else
             {
-                if(mBamReader.getGcRatioCounts() != null)
-                    mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
+                if(mBamReader.getGeneGcRatioCounts() != null)
+                    mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getFrequencies());
             }
         }
         else
         {
             // take them all
-            if(mBamReader.getGcRatioCounts() != null)
-                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGcRatioCounts().getGeneRatioCounts());
+            if(mBamReader.getGeneGcRatioCounts() != null)
+                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getFrequencies());
         }
     }
 

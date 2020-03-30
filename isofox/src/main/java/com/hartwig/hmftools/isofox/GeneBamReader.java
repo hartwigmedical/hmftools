@@ -27,6 +27,7 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -88,6 +89,7 @@ public class GeneBamReader
 
     private final BufferedWriter mReadDataWriter;
     private final GcRatioCounts mGcRatioCounts;
+    private final GcRatioCounts mGeneGcRatioCounts;
 
     public GeneBamReader(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -110,7 +112,8 @@ public class GeneBamReader
         mDuplicateReadIds = Lists.newArrayList();
 
         mReadDataWriter = resultsWriter.getReadDataWriter();
-        mGcRatioCounts = mConfig.WriteReadGcRatios ? new GcRatioCounts() : null;
+        mGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
+        mGeneGcRatioCounts = mConfig.requireGcRatioCalcs() ? new GcRatioCounts() : null;
 
         mAltSpliceJunctionFinder = new AltSpliceJunctionFinder(mConfig, resultsWriter.getAltSpliceJunctionWriter());
         mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter.getRetainedIntronWriter());
@@ -118,6 +121,7 @@ public class GeneBamReader
 
     public int totalBamCount() { return mTotalBamReadCount; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
+    public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
 
     public void readBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
     {
@@ -131,8 +135,8 @@ public class GeneBamReader
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
 
-        if(mGcRatioCounts != null)
-            mGcRatioCounts.clearGeneCounts();
+        if(mGeneGcRatioCounts != null)
+            mGeneGcRatioCounts.clearCounts();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
@@ -169,7 +173,11 @@ public class GeneBamReader
         if(mGcRatioCounts != null)
         {
             if(mConfig.ReadLength == 0 || (mConfig.ReadLength > 0 && record.getReadLength() == mConfig.ReadLength))
-                mGcRatioCounts.processRead(record.getReadString());
+            {
+                double gcRatio = calcGcRatio(record.getReadString());
+                mGcRatioCounts.addGcRatio(gcRatio);
+                mGeneGcRatioCounts.addGcRatio(gcRatio);
+            }
         }
     }
 

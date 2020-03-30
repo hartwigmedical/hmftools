@@ -23,6 +23,7 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.gc.GcTranscriptRates;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 
@@ -41,6 +42,7 @@ public class ResultsWriter
 
     // controlled by other components but instantiated once for output synchronosation
     private BufferedWriter mExpRateWriter;
+    private BufferedWriter mExpGcRatiosWriter;
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
     private BufferedWriter mFragLengthWriter;
@@ -63,6 +65,7 @@ public class ResultsWriter
         mFragLengthWriter = null;
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
+        mExpGcRatiosWriter = null;
 
         initialiseExternalWriters();
     }
@@ -79,6 +82,7 @@ public class ResultsWriter
         closeBufferedWriter(mFragLengthWriter);
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
+        closeBufferedWriter(mExpGcRatiosWriter);
     }
 
     private void initialiseExternalWriters()
@@ -91,7 +95,12 @@ public class ResultsWriter
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
         }
 
-        if(!mConfig.generateExpRatesOnly())
+        if(mConfig.WriteExpectedGcRatios)
+        {
+            mExpGcRatiosWriter = GcTranscriptRates.createWriter(mConfig);
+        }
+
+        if(!mConfig.generateExpectedDataOnly())
         {
             if (mConfig.WriteReadData)
                 mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
@@ -116,6 +125,7 @@ public class ResultsWriter
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
     public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
+    public BufferedWriter getExpGcRatiosWriter() { return mExpGcRatiosWriter; }
 
     public void writeSummaryStats(final SummaryStats summaryStats)
     {

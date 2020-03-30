@@ -59,10 +59,12 @@ public class IsofoxConfig
     private static final String APPLY_EXP_RATES = "apply_exp_rates";
     private static final String READ_LENGTH = "read_length";
     private static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
-    private static final String ER_CALC_FRAG_LENGTHS = "use_calc_frag_lengths";
+    private static final String APPLY_FRAG_LENGTH_ADJUSTMENT = "apply_calc_frag_lengths";
+    private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String UNSPLICED_WEIGHT = "unspliced_weight";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
     private static final String WRITE_EXPECTED_COUNTS = "write_exp_counts";
+    private static final String WRITE_EXPECTED_GC_RATIOS = "write_exp_gc_ratios";
 
     private static final String SPECIFIC_TRANS_IDS = "specific_trans";
     private static final String SPECIFIC_CHR = "specific_chr";
@@ -94,12 +96,14 @@ public class IsofoxConfig
 
     public final String ExpCountsFile;
     public final boolean ApplyExpectedRates;
-    public final boolean UseCalculatedFragmentLengths;
+    public final boolean ApplyFragmentLengthAdjust;
+    public final boolean ApplyGcBiasAdjust;
     public int ReadLength;
     public final List<int[]> FragmentLengthData;
     public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
     public final boolean WriteExpectedCounts;
+    public final boolean WriteExpectedGcRatios;
 
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
@@ -211,7 +215,9 @@ public class IsofoxConfig
 
         WriteExpectedCounts = cmd.hasOption(WRITE_EXPECTED_COUNTS);
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
-        UseCalculatedFragmentLengths = cmd.hasOption(ER_CALC_FRAG_LENGTHS);
+        WriteExpectedGcRatios = cmd.hasOption(WRITE_EXPECTED_GC_RATIOS);
+        ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
+        ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
         FragmentLengthData = Lists.newArrayList();
         UnsplicedWeight = 1; // Double.parseDouble(cmd.getOptionValue(UNSPLICED_WEIGHT, "1.0"));
@@ -257,9 +263,20 @@ public class IsofoxConfig
             return true;
         }
 
+        if(WriteExpectedGcRatios)
+        {
+            if(ReadLength == 0 || RefFastaSeqFile == null)
+            {
+                ISF_LOGGER.error("invalid read length or ref genome for generating expected GC ratio rates");
+                return false;
+            }
+
+            return true;
+        }
+
         if(ApplyExpectedRates && ExpCountsFile == null)
         {
-            if(!UseCalculatedFragmentLengths && (ReadLength == 0 || FragmentLengthData.isEmpty()))
+            if(!ApplyFragmentLengthAdjust && (ReadLength == 0 || FragmentLengthData.isEmpty()))
             {
                 ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
                 return false;
@@ -305,9 +322,9 @@ public class IsofoxConfig
         return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);
     }
 
-    public boolean generateExpRatesOnly()
+    public boolean generateExpectedDataOnly()
     {
-        return WriteExpectedCounts && !UseCalculatedFragmentLengths && !ApplyExpectedRates;
+        return (WriteExpectedCounts && !ApplyFragmentLengthAdjust && !ApplyExpectedRates) || WriteExpectedGcRatios;
     }
 
     public boolean writeExpectedRateData()
@@ -317,8 +334,9 @@ public class IsofoxConfig
 
     public boolean requireFragmentLengthCalcs()
     {
-        return WriteFragmentLengths || UseCalculatedFragmentLengths;
+        return WriteFragmentLengths || ApplyFragmentLengthAdjust;
     }
+    public boolean requireGcRatioCalcs() { return WriteReadGcRatios || ApplyGcBiasAdjust; }
 
     public String formOutputFile(final String fileId)
     {
@@ -362,7 +380,9 @@ public class IsofoxConfig
 
         WriteExpectedRates = false;
         WriteExpectedCounts = false;
-        UseCalculatedFragmentLengths = false;
+        WriteExpectedGcRatios = false;
+        ApplyFragmentLengthAdjust = false;
+        ApplyGcBiasAdjust = false;
         OutputIdentifier = null;
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
@@ -401,7 +421,8 @@ public class IsofoxConfig
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
         options.addOption(WRITE_FRAG_LENGTHS_ONLY, false, "Only write intronic fragment lengths then exit");
 
-        options.addOption(WRITE_READ_GC_RATIOS, false, "Write GC Ratio counts from all genic reads");
+        options.addOption(WRITE_READ_GC_RATIOS, false, "Write GC ratio counts from all genic reads");
+        options.addOption(WRITE_EXPECTED_GC_RATIOS, false, "Write expected GC ratios");
         options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
@@ -409,7 +430,8 @@ public class IsofoxConfig
         options.addOption(EXP_COUNTS_FILE, true, "File with generated expected expression rates for transcripts");
         options.addOption(READ_LENGTH, true, "Sample sequencing read length (eg 76 or 151 bases");
         options.addOption(UNSPLICED_WEIGHT, true, "Weighting for unspliced expected fragments");
-        options.addOption(ER_CALC_FRAG_LENGTHS, false, "Use sample fragment length distribution in expected rate calcs");
+        options.addOption(APPLY_FRAG_LENGTH_ADJUSTMENT, false, "Use sample fragment length distribution in expected rate calcs");
+        options.addOption(APPLY_GC_BIAS_ADJUSTMENT, false, "Use GC Bias adjustments in expected rate calcs");
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");

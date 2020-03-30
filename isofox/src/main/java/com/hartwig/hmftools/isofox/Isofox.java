@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
 import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
+import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_GC_RATIOS;
 import static com.hartwig.hmftools.isofox.common.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
@@ -122,13 +123,19 @@ public class Isofox
             }
         }
 
+        if(mConfig.WriteExpectedGcRatios)
+        {
+            generateGcRatios(chrTasks);
+            return true;
+        }
+
         boolean validExecution = executeChromosomeTask(chrTasks, TRANSCRIPT_COUNTS);
 
         if(!validExecution)
             return false;
 
         // final reporting
-        if(!mConfig.generateExpRatesOnly())
+        if(!mConfig.generateExpectedDataOnly())
         {
             int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
             ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
@@ -137,7 +144,7 @@ public class Isofox
             int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
 
             GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
-            chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getRatioCounts()));
+            chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getFrequencies()));
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
             final SummaryStats summaryStats = createSummaryStats(
@@ -149,9 +156,9 @@ public class Isofox
         if(mConfig.WriteReadGcRatios)
         {
             GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
-            chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getRatioCounts()));
+            chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getFrequencies()));
 
-            GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, combinedGcRatioCounts.getRatioCounts());
+            GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, combinedGcRatioCounts);
         }
 
         mResultsWriter.close();
@@ -240,7 +247,7 @@ public class Isofox
             FragmentSizeCalcs.mergeData(mFragmentLengthDistribution, fragSizeCalcs);
         }
 
-        if(mConfig.UseCalculatedFragmentLengths)
+        if(mConfig.ApplyFragmentLengthAdjust)
             setConfigFragmentLengthData(mConfig, maxReadLength, mFragmentLengthDistribution);
 
         if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
@@ -258,6 +265,18 @@ public class Isofox
             }
 
             perfCounter.logStats();
+        }
+    }
+
+    private void generateGcRatios(final List<ChromosomeGeneTask> chrTasks)
+    {
+        // for now a way of only calculating fragment lengths and nothing more
+        boolean validExecution = executeChromosomeTask(chrTasks, TRANSCRIPT_GC_RATIOS);
+
+        if(!validExecution)
+        {
+            mIsValid = false;
+            return;
         }
     }
 
