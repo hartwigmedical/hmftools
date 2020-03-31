@@ -162,9 +162,9 @@ public class WidePatientReader {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
             biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
+                    createInterpretDate(responseData.date()),
                     null,
-                    null,
-                    null,
+                    responseData.responseAccordingRecist(),
                     null,
                     FormStatus.undefined()));
         }
