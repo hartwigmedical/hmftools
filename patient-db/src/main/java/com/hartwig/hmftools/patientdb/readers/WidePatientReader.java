@@ -52,7 +52,6 @@ public class WidePatientReader {
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
         // TODO: Create the timeline based on the wideEcrfModel
-        // TODO: Create patient object.
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 preTreatmentData(wideEcrfModel.preTreatments()),
@@ -88,7 +87,6 @@ public class WidePatientReader {
         for (WidePreTreatmentData preTreatmentData : widePreTreatmentData) {
 
         }
-        //ImmutablePreTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status());
         return ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.undefined());
     }
 
