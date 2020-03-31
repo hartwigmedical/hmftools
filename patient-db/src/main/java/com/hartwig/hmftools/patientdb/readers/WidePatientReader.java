@@ -119,11 +119,11 @@ public class WidePatientReader {
             }
         }
 
-        return drugs;
+        return Lists.newArrayList();
     }
 
     @NotNull
-    private static LocalDate createInterpretDate(@NotNull String date) {
+    public static LocalDate createInterpretDate(@NotNull String date) {
         DateTimeFormatter inputFormatter =
                 new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH);
         LocalDate localDate = LocalDate.parse(date, inputFormatter);
