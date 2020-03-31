@@ -63,7 +63,7 @@ public class WidePatientReader {
         // TODO: Create the timeline based on the wideEcrfModel
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
-                preTreatmentData(wideEcrfModel.preTreatments()),
+                preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator),
                 sequencedSamples,
                 toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator),
                 toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator),
@@ -91,12 +91,36 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static PreTreatmentData preTreatmentData(@NotNull List<WidePreTreatmentData> widePreTreatmentData) {
+    private static PreTreatmentData preTreatmentData(@NotNull List<WidePreTreatmentData> widePreTreatmentData, @NotNull final TreatmentCurator treatmentCurator) {
 
-        for (WidePreTreatmentData preTreatmentData : widePreTreatmentData) {
+        return ImmutablePreTreatmentData.of(null, null, readDrugsPreTreatment(widePreTreatmentData, treatmentCurator), FormStatus.undefined());
+    }
 
+    @NotNull
+    public static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreTreatmentData> preTreatmentData, @NotNull final TreatmentCurator treatmentCurator) {
+        final List<DrugData> drugs = Lists.newArrayList();
+        for (WidePreTreatmentData preTreatment: preTreatmentData) {
+            Boolean drugExist1 = preTreatment.drug1().isEmpty();
+            Boolean drugExist2 = preTreatment.drug2().isEmpty();
+            Boolean drugExist3 = preTreatment.drug3().isEmpty();
+            Boolean drugExist4 = preTreatment.drug4().isEmpty();
+
+            String drugName1 = preTreatment.drug1();
+            String drugName2 = preTreatment.drug2();
+            String drugName3 = preTreatment.drug3();
+            String drugName4 = preTreatment.drug4();
+
+            String drugName = drugName1;
+
+            LocalDate drugsEndDate = createInterpretDate(preTreatment.dateLastSystemicTherapy());
+
+            if (drugName != null || drugsEndDate != null) {
+                final List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
+                drugs.add(ImmutableDrugData.of(drugName, null, drugsEndDate, null, curatedDrugs));
+            }
         }
-        return ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.undefined());
+
+        return drugs;
     }
 
     @NotNull
@@ -136,7 +160,7 @@ public class WidePatientReader {
         for (WideTreatmentData treatmentData : wideTreatmentData) {
             biopsyTreatmentDataList.add(ImmutableBiopsyTreatmentData.of(null,
                     null,
-                    readDrugs(treatmentData, treatmentCurator),
+                    readDrugsPostTreatment(treatmentData, treatmentCurator),
                     FormStatus.undefined()));
 
         }
@@ -144,7 +168,7 @@ public class WidePatientReader {
     }
 
     @NotNull
-    public static List<DrugData> readDrugs(@NotNull WideTreatmentData treatmentData, @NotNull final TreatmentCurator treatmentCurator) {
+    public static List<DrugData> readDrugsPostTreatment(@NotNull WideTreatmentData treatmentData, @NotNull final TreatmentCurator treatmentCurator) {
         final List<DrugData> drugs = Lists.newArrayList();
         String drugName = treatmentData.drug();
         LocalDate drugsStartDate = createInterpretDate(treatmentData.startDate());
