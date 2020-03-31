@@ -210,6 +210,8 @@ public class Isofox
 
     private void applyGcAdjustments(final List<ChromosomeGeneTask> chrTasks, final GcRatioCounts actualGcCounts)
     {
+        ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
+
         // not thread safe at the moment
         chrTasks.forEach(x -> x.applyGcAdjustment());
 

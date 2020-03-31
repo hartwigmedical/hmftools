@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -45,6 +46,7 @@ public class GcRatioCounts
     public final double[] getRatios() { return mRatios; }
     public final double[] getCounts() { return mCounts; }
     public double getCountsTotal() { return sumVector(mCounts); }
+    public int size() { return mRatios.length; }
 
     public static double roundGcRatio(double ratio)
     {
@@ -60,8 +62,7 @@ public class GcRatioCounts
                 ++gcCount;
         }
 
-        double ratio = gcCount / (double) bases.length();
-        return ratio;
+        return gcCount / (double) bases.length();
     }
 
     public void clearCounts()
@@ -122,13 +123,7 @@ public class GcRatioCounts
 
     public void mergeRatioCounts(final double[] otherCounts)
     {
-        if(otherCounts.length != mCounts.length)
-            return;
-
-        for(int i = 0; i < mCounts.length; ++i)
-        {
-            mCounts[i] += otherCounts[i];
-        }
+        sumVectors(otherCounts, mCounts);
     }
 
     public double getPercentileRatio(double percentile)
@@ -158,7 +153,8 @@ public class GcRatioCounts
         return 0;
     }
 
-    public static double calcGcRatioFromReadRegions(final IndexedFastaSequenceFile refFastaSeqFile, final String chromosome, final List<long[]> readRegions)
+    public static double calcGcRatioFromReadRegions(
+            final IndexedFastaSequenceFile refFastaSeqFile, final String chromosome, final List<long[]> readRegions)
     {
         double gcRatioTotal = 0;
         int basesTotal = 0;

@@ -3,8 +3,11 @@ package com.hartwig.hmftools.isofox.gc;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -40,6 +43,8 @@ public class GcTranscriptCalculator
 
     private final BufferedWriter mWriter;
 
+    private final double[] mTotalExpectedCounts;
+
     public GcTranscriptCalculator(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
     {
         mConfig = config;
@@ -47,12 +52,14 @@ public class GcTranscriptCalculator
         mTranscriptGcRatioCache = Maps.newHashMap();
 
         mTranscriptFitGcCounts = new GcRatioCounts();
-        mGcRatioAdjustments = new double[mTranscriptFitGcCounts.getRatios().length];
+        mGcRatioAdjustments = new double[mTranscriptFitGcCounts.size()];
 
         if(config.ExpGcRatiosFile != null)
             loadExpectedData();
 
         mWriter = mConfig.WriteExpectedGcRatios ? createWriter() : null;
+
+        mTotalExpectedCounts = mConfig.WriteExpectedGcRatios ? new double[mTranscriptFitGcCounts.size()] : null;
     }
 
     public void close() { closeBufferedWriter(mWriter); }
@@ -145,6 +152,8 @@ public class GcTranscriptCalculator
 
             transDataList.forEach(x -> calculateTranscriptGcRatios(chromosome, x));
         }
+
+        writeExpectedGcRatios(mWriter, String.format("CHR_%s", chromosome), mTotalExpectedCounts);
     }
 
     private void calculateTranscriptGcRatios(final String chromosome, final TranscriptData transData)
@@ -175,7 +184,9 @@ public class GcTranscriptCalculator
                 break;
         }
 
-        writeExpectedGcRatios(mWriter, transData.TransName, gcRatioCounts);
+        sumVectors(gcRatioCounts.getCounts(), mTotalExpectedCounts);
+
+        writeExpectedGcRatios(mWriter, transData.TransName, gcRatioCounts.getCounts());
     }
 
     public List<long[]> generateReadRegions(final TranscriptData transData, long startPos, int readLength)
@@ -246,7 +257,7 @@ public class GcTranscriptCalculator
             }
 
             GcRatioCounts gcRatioCounts = new GcRatioCounts();
-            int expectedColCount = 1 + gcRatioCounts.getRatios().length;
+            int expectedColCount = 1 + gcRatioCounts.size();
 
             while ((line = fileReader.readLine()) != null)
             {
@@ -309,7 +320,7 @@ public class GcTranscriptCalculator
     }
 
     private synchronized static void writeExpectedGcRatios(
-            final BufferedWriter writer, final String transName, final GcRatioCounts gcRatioCounts)
+            final BufferedWriter writer, final String transName, final double[] counts)
     {
         if(writer == null)
             return;
@@ -319,11 +330,14 @@ public class GcTranscriptCalculator
             writer.write(String.format("%s", transName));
 
             // convert to percentages before writing
-            double frequencyTotal = gcRatioCounts.getCountsTotal();
+            double frequencyTotal = sumVector(counts);
 
-            for(Double frequency : gcRatioCounts.getCounts())
+            for(Double frequency : counts)
             {
-                writer.write(String.format(",%.4f", frequency/frequencyTotal));
+                if(frequency == 0)
+                    writer.write(",0");
+                else
+                    writer.write(String.format(",%.6f", frequency/frequencyTotal));
             }
 
             writer.newLine();
