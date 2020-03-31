@@ -12,7 +12,7 @@ import org.junit.Test;
 public class WidePatientReaderTest {
 
         @Test
-        public void testit() {
+        public void canInterpretDate() {
 
             DateTimeFormatter inputFormatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH);
             LocalDate localDate = LocalDate.parse("18-apr-2019", inputFormatter);
