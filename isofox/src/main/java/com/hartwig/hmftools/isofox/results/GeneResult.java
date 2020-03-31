@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.isofox.common.GeneMatchType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
 
-import java.util.List;
-
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -31,12 +29,11 @@ public abstract class GeneResult
     public abstract int readThroughFragments();
     public abstract int chimericFragments();
     public abstract int duplicates();
-    public abstract double unsplicedAlloc();
-    public abstract double fitResiduals();
 
-    public abstract List<TranscriptResult> transcriptResults();
+    private double mUnsplicedAlloc;
+    private double mFitResiduals;
 
-    public static GeneResult createGeneResults(final GeneCollection geneCollection, final GeneReadData geneReadData, final List<TranscriptResult> transResults)
+    public static GeneResult createGeneResults(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
         final EnsemblGeneData geneData = geneReadData.GeneData;
 
@@ -45,9 +42,7 @@ public abstract class GeneResult
 
         final int[] fragmentCounts = geneReadData.getCounts();
 
-        double unsplicedAlloc = geneCollection.getFitAllocation(geneData.GeneId);
-
-        return ImmutableGeneResult.builder()
+        GeneResult result = ImmutableGeneResult.builder()
                 .geneData(geneData)
                 .collectionId(geneCollection.chrId())
                 .intronicLength((int)(geneLength - exonicLength))
@@ -59,10 +54,18 @@ public abstract class GeneResult
                 .readThroughFragments(fragmentCounts[typeAsInt(READ_THROUGH)])
                 .chimericFragments(fragmentCounts[typeAsInt(CHIMERIC)])
                 .duplicates(fragmentCounts[typeAsInt(DUPLICATE)])
-                .unsplicedAlloc(unsplicedAlloc)
-                .fitResiduals(geneReadData.getFitResiduals())
-                .transcriptResults(transResults)
                 .build();
+
+        result.setFitResiduals(0);
+        result.setUnsplicedAllocation(0);
+        return result;
     }
+
+    public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
+    public void setUnsplicedAllocation(double unsplicedAlloc) { mUnsplicedAlloc = unsplicedAlloc; }
+
+    public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
+    public double getFitResiduals() { return mFitResiduals; }
+
 
 }

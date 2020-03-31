@@ -15,6 +15,7 @@ public class CategoryCountsData
     private final List<String> mUnsplicedGenes;
     private long mFragmentCount;
     private long[] mFragmentCountsByLength;
+    private double[] mFragmentCountsByGcRatio;
 
     private final String mCombinedKey;
 
@@ -27,6 +28,7 @@ public class CategoryCountsData
         mCombinedKey = formTranscriptIds();
 
         mFragmentCountsByLength = null;
+        mFragmentCountsByGcRatio = null;
     }
 
     public CategoryCountsData(final String categoryStr, int fragLengths)
@@ -44,6 +46,12 @@ public class CategoryCountsData
     {
         if(fragLengths > 0)
             mFragmentCountsByLength = new long[fragLengths];
+    }
+
+    public void initialiseGcRatioCounts(int gcRatioBuckets)
+    {
+        if(gcRatioBuckets > 0)
+            mFragmentCountsByGcRatio = new double[gcRatioBuckets];
     }
 
     public final List<Integer> transcriptIds() { return mTranscripts; }
@@ -82,16 +90,31 @@ public class CategoryCountsData
 
     public final long fragmentCount() { return mFragmentCount; }
     public final long[] fragmentCountsByLength() { return mFragmentCountsByLength; }
+    public final double[] fragmentCountsByGcRatio() { return mFragmentCountsByGcRatio; }
 
     public void addCounts(int count)
     {
         mFragmentCount += count;
     }
 
-    public void addCounts(int count, int lengthIndex)
+    public void addFragLengthCounts(int count, int lengthIndex)
     {
         mFragmentCount += count;
         mFragmentCountsByLength[lengthIndex] += count;
+    }
+
+    public void addGcRatioCounts(int count, final int[] gcRatioIndex, final double[] counts)
+    {
+        mFragmentCount += count;
+
+        if(gcRatioIndex != null && counts != null)
+        {
+            for (int i = 0; i < gcRatioIndex.length; ++i)
+            {
+                if (gcRatioIndex[i] >= 0)
+                    mFragmentCountsByGcRatio[gcRatioIndex[i]] += counts[i];
+            }
+        }
     }
 
     public void applyFrequencies(final List<int[]> lengthFrequencies)

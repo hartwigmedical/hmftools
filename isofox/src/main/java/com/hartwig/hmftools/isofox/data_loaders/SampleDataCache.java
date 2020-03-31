@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.isofox.data_loaders;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +40,7 @@ public class SampleDataCache
 
     private static final int COL_SAMPLE_ID = 0;
     private static final int COL_CANCER_TYPE = 1;
-    private static final int COL_COHORT_NAME = 2;
+    private static final String COL_COHORT_NAME = "CohortName";
 
     public int sampleCountInCohort(final List<String> sampleIds, final String cohortName)
     {
@@ -56,11 +58,16 @@ public class SampleDataCache
         {
             final List<String> items = Files.readAllLines(new File(inputFile).toPath());
 
+            if(items.isEmpty())
+                return false;
+
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(items.get(0), DELIMITER);
+            items.remove(0);
+
+            Integer cohortNameIndex = fieldIndexMap.get(COL_COHORT_NAME);
+
             for(String item : items)
             {
-                if(item.contains("SampleId"))
-                    continue;
-
                 final String[] data = item.split(",");
                 if(data.length < 2)
                     return false;
@@ -71,9 +78,9 @@ public class SampleDataCache
                 SampleIds.add(sampleId);
                 SampleCancerType.put(sampleId, cancerType);
 
-                if(item.length() > COL_COHORT_NAME)
+                if(cohortNameIndex != null)
                 {
-                    final String cohortName = data[COL_COHORT_NAME];
+                    final String cohortName = data[cohortNameIndex];
 
                     SampleCohort.put(sampleId, cohortName);
 

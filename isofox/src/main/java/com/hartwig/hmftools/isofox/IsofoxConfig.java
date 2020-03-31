@@ -189,11 +189,11 @@ public class IsofoxConfig
         KeepDuplicates = cmd.hasOption(KEEP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
         FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
-        FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
         WriteFragmentLengthsOnly = cmd.hasOption(WRITE_FRAG_LENGTHS_ONLY);
+        FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteReadGcRatios = cmd.hasOption(WRITE_READ_GC_RATIOS);

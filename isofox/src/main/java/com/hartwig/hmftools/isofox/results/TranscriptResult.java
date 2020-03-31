@@ -43,14 +43,13 @@ public abstract class TranscriptResult
     public abstract double uniqueBaseAvgDepth();
 
     public abstract double effectiveLength();
-    public abstract double fitAllocation();
+
+    private double mFitAllocation;
 
     public static TranscriptResult createTranscriptResults(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
             final List<int[]> expRateFragmentLengths)
     {
-        double expRateAllocation = geneCollection.getFitAllocation(transData.TransName);
-
         int exonsFound = 0;
 
         int spliceJunctionsSupported = 0;
@@ -140,11 +139,15 @@ public abstract class TranscriptResult
                 .uniqueBaseCoverage(uniqueExonicBaseCoverage)
                 .uniqueBaseAvgDepth(uniqueBaseAvgDepth)
                 .effectiveLength(effectiveLength)
-                .fitAllocation(expRateAllocation)
                 .build();
+
+        results.setFitAllocation(0);
 
         return results;
     }
+
+    public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
+    public double getFitAllocation() { return mFitAllocation; }
 
     public static double calcEffectiveLength(int transLength, final List<int[]> fragmentLengthData)
     {
@@ -212,7 +215,6 @@ public abstract class TranscriptResult
                 .add(String.valueOf(exonsFound()))
                 .add(String.valueOf(exonicBases()))
                 .add(String.valueOf(exonicBaseCoverage()))
-                .add(String.valueOf(fitAllocation()))
                 .add(String.valueOf(uniqueBases()))
                 .add(String.valueOf(uniqueBaseCoverage()))
                 .add(String.valueOf(uniqueBaseAvgDepth()))
@@ -225,6 +227,7 @@ public abstract class TranscriptResult
                 .add(String.valueOf(longUniqueFragments()))
                 .add(String.valueOf(spliceJunctionFragments()))
                 .add(String.valueOf(spliceJunctionUniqueFragments()))
+                .add(String.valueOf(mFitAllocation))
                 .toString();
     }
 }

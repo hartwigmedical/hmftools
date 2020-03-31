@@ -352,7 +352,7 @@ public class ExpectedRatesGenerator
         }
 
         if(mConfig.WriteExpectedCounts)
-            matchingCounts.addCounts(mCurrentFragFrequency, mFragSizeIndex);
+            matchingCounts.addFragLengthCounts(mCurrentFragFrequency, mFragSizeIndex);
         else
             matchingCounts.addCounts(mCurrentFragFrequency);
     }

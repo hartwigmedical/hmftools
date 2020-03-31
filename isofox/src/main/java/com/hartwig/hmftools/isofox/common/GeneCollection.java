@@ -26,6 +26,7 @@ public class GeneCollection
 {
     private final int mId;
     private final List<GeneReadData> mGenes;
+    private final List<String> mGeneIds;
     private final String mChromosome;
     private final long[] mRegionBounds;
 
@@ -37,13 +38,14 @@ public class GeneCollection
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
-    private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine
-    private double mFitResiduals;
 
     public GeneCollection(int id, final List<GeneReadData> genes)
     {
         mId = id;
         mGenes = genes;
+
+        mGeneIds = Lists.newArrayList();
+        mGenes.forEach(x -> mGeneIds.add(x.GeneData.GeneId));
 
         mRegionBounds = new long[SE_PAIR];
 
@@ -58,14 +60,13 @@ public class GeneCollection
         buildCache();
 
         mTranscriptReadCounts = Maps.newHashMap();
-        mFitAllocations = Maps.newHashMap();
-        mFitResiduals = 0;
     }
 
     public int id() { return mId; }
     public String chrId() { return String.format("%s:%d", mChromosome, mId); }
     public final String chromosome() { return mChromosome; }
     public final List<GeneReadData> genes() { return mGenes; }
+    public final List<String> geneIds() { return mGeneIds; }
     public final long[] regionBounds() { return mRegionBounds; }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
@@ -170,17 +171,6 @@ public class GeneCollection
         }
 
         ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
-    }
-
-    public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
-    public double getFitResiduals() { return mFitResiduals; }
-
-    public Map<String,Double> getFitAllocations() { return mFitAllocations; }
-
-    public double getFitAllocation(final String transName)
-    {
-        Double allocation = mFitAllocations.get(transName);
-        return allocation != null ? allocation : 0;
     }
 
     public void logOverlappingGenes(final List<GeneReadData> overlappingGenes)

@@ -39,29 +39,29 @@ public class ExpectedCountsCache
         }
     }
 
-    public Map<String,List<CategoryCountsData>> getGeneExpectedRatesData(final GeneCollection genes)
+    public Map<String,List<CategoryCountsData>> getGeneExpectedRatesData(final String chrId, final List<String> geneIds)
     {
-        Map<String, List<CategoryCountsData>> geneSetCountsData = mGeneSetCategoryDataMap.get(genes.chrId());
+        Map<String, List<CategoryCountsData>> geneSetCountsData = mGeneSetCategoryDataMap.get(chrId);
 
-        if (geneSetCountsData == null || !geneSetCountsDataMatches(genes, geneSetCountsData.keySet()))
+        if (geneSetCountsData == null || !geneSetCountsDataMatches(geneIds, geneSetCountsData.keySet()))
         {
-            geneSetCountsData = findGeneSetCountsData(genes);
+            geneSetCountsData = findGeneSetCountsData(geneIds);
         }
 
         return geneSetCountsData;
     }
 
-    private boolean geneSetCountsDataMatches(final GeneCollection geneCollection, final Set<String> geneTransSet)
+    private boolean geneSetCountsDataMatches(final List<String> geneIds, final Set<String> geneTransSet)
     {
         // confirm that the genes in the collection match
-        return !geneCollection.genes().stream().anyMatch(x -> !geneTransSet.contains(x.GeneData.GeneId));
+        return !geneIds.stream().anyMatch(x -> !geneTransSet.contains(x));
     }
 
-    private final Map<String,List<CategoryCountsData>> findGeneSetCountsData(final GeneCollection geneCollection)
+    private final Map<String,List<CategoryCountsData>> findGeneSetCountsData(final List<String> geneIds)
     {
         for(final Map<String,List<CategoryCountsData>> geneCounts : mGeneSetCategoryDataMap.values())
         {
-            if(geneSetCountsDataMatches(geneCollection, geneCounts.keySet()))
+            if(geneSetCountsDataMatches(geneIds, geneCounts.keySet()))
                 return geneCounts;
         }
 
@@ -139,7 +139,7 @@ public class ExpectedCountsCache
                 for(int i = 0; i < fragLengths; ++i)
                 {
                     int count = Integer.parseInt(items[categoryIndex + i + 1]);
-                    catCounts.addCounts(count, i);
+                    catCounts.addFragLengthCounts(count, i);
                 }
             }
 

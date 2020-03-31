@@ -208,25 +208,6 @@ public class ResultsWriter
             }
 
             mTransDataWriter.write(transResults.toCsv(geneData));
-
-            /*
-            mTransDataWriter.write(String.format("%s,%s,%d,%s,%s,%d,%.0f",
-                    geneData.GeneId, geneData.GeneName,
-                    transData.TransId, transData.TransName, transData.IsCanonical, transData.exons().size(), transResults.effectiveLength()));
-
-            mTransDataWriter.write(String.format(",%d,%d,%d,%.1f,%d,%d,%.0f",
-                    transResults.exonsFound(), transResults.exonicBases(), transResults.exonicBaseCoverage(),
-                    transResults.fitAllocation(), transResults.uniqueBases(), transResults.uniqueBaseCoverage(), transResults.uniqueBaseAvgDepth()));
-
-            mTransDataWriter.write(String.format(",%d,%d,%d",
-                    transResults.spliceJunctionsSupported(), transResults.uniqueSpliceJunctions(), transResults.uniqueSpliceJunctionsSupported()));
-
-            mTransDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d",
-                    transResults.shortSupportingFragments(), transResults.shortUniqueFragments(),
-                    transResults.longSupportingFragments(), transResults.longUniqueFragments(),
-                    transResults.spliceJunctionFragments(), transResults.spliceJunctionUniqueFragments()));
-            */
-
             mTransDataWriter.newLine();
 
         }

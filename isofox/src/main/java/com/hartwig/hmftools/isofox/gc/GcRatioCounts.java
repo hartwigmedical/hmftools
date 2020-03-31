@@ -6,6 +6,8 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 
@@ -19,6 +21,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class GcRatioCounts
 {
@@ -78,11 +82,21 @@ public class GcRatioCounts
 
     public void addGcRatio(double gcRatio)
     {
-        // split proportionally amongst the 2 closest buckets
+        final int[] gcRatioIndex = {-1, -1};
+        final double[] counts = {1, 0};
+
+        determineRatioData(gcRatio, gcRatioIndex, counts);
+
+        addGcRatioCount(gcRatioIndex[0], counts[0]);
+
+        if(gcRatioIndex[1] >= 0)
+            addGcRatioCount(gcRatioIndex[1], counts[1]);
+
+        /*
         double lowerRatio = floor(gcRatio/GC_RATIO_BUCKET) * GC_RATIO_BUCKET;
         double upperRatio = lowerRatio + GC_RATIO_BUCKET;
 
-        if(upperRatio >= 1)
+        if(lowerRatio >= 1)
         {
             addGcRatioCount(gcRatio, 1);
         }
@@ -93,11 +107,35 @@ public class GcRatioCounts
             addGcRatioCount(lowerRatio, lowerFraction);
             addGcRatioCount(upperRatio, upperFraction);
         }
+        */
     }
 
-    private void addGcRatioCount(double gcRatio, double count)
+    public void determineRatioData(double gcRatio, final int[] gcRatioIndex, final double[] counts)
     {
-        int ratioIndex = getRatioIndex(gcRatio);
+        double lowerRatio = floor(gcRatio/GC_RATIO_BUCKET) * GC_RATIO_BUCKET;
+
+        if(lowerRatio >= 1)
+        {
+            gcRatioIndex[0] = getRatioIndex(lowerRatio);
+            gcRatioIndex[1] = -1;
+            counts[0] = 1;
+            return;
+        }
+
+        // split proportionally amongst the 2 closest buckets
+        double upperRatio = lowerRatio + GC_RATIO_BUCKET;
+
+        gcRatioIndex[0] = getRatioIndex(lowerRatio);
+        gcRatioIndex[1] = gcRatioIndex[0] + 1;
+        counts[1] = (gcRatio - lowerRatio) / GC_RATIO_BUCKET;
+        counts[0] = 1 - counts[1];
+    }
+
+    public void addGcRatioCount(int ratioIndex, double count)
+    {
+        if(ratioIndex < 0 || ratioIndex >= mFrequencies.size())
+            return;
+
         mFrequencies.set(ratioIndex, mFrequencies.get(ratioIndex) + count);
     }
 
@@ -143,6 +181,20 @@ public class GcRatioCounts
         }
 
         return 0;
+    }
+
+    public static double calcGcRatioFromReadRegions(final IndexedFastaSequenceFile refFastaSeqFile, final String chromosome, final List<long[]> readRegions)
+    {
+        double gcRatioTotal = 0;
+        int basesTotal = 0;
+        for(final long[] region : readRegions)
+        {
+            final String bases = refFastaSeqFile.getSubsequenceAt(chromosome, region[SE_START], region[SE_END]).getBaseString();
+            basesTotal += bases.length();
+            gcRatioTotal += calcGcRatio(bases) * bases.length();
+        }
+
+        return gcRatioTotal / basesTotal;
     }
 
     public static BufferedWriter createReadGcRatioWriter(final IsofoxConfig config)

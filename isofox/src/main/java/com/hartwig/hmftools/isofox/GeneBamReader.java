@@ -28,6 +28,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -169,16 +170,6 @@ public class GeneBamReader
         ++mGeneReadCount;
 
         processRead(ReadRecord.from(record));
-
-        if(mGcRatioCounts != null)
-        {
-            if(mConfig.ReadLength == 0 || (mConfig.ReadLength > 0 && record.getReadLength() == mConfig.ReadLength))
-            {
-                double gcRatio = calcGcRatio(record.getReadString());
-                mGcRatioCounts.addGcRatio(gcRatio);
-                mGeneGcRatioCounts.addGcRatio(gcRatio);
-            }
-        }
     }
 
     public void processRead(ReadRecord read)
@@ -459,7 +450,34 @@ public class GeneBamReader
             List<String> unsplicedGeneIds = comboTransMatchType == FragmentMatchType.SHORT ?
                     overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
 
-            addTransComboData(validTranscripts, unsplicedGeneIds);
+            CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
+
+            if(mGcRatioCounts != null)
+            {
+                double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), commonMappings);
+
+                int[] gcRatioIndex = { -1, -1 };
+                double[] gcRatioCounts = { 0, 0 };
+                mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndex, gcRatioCounts);
+
+                for(int i = 0; i < gcRatioIndex.length; ++i)
+                {
+                    if (gcRatioIndex[i] >= 0)
+                    {
+                        mGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
+                        mGeneGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
+                    }
+                }
+
+                if(mConfig.ApplyGcBiasAdjust)
+                    catCounts.addGcRatioCounts(1, gcRatioIndex, gcRatioCounts);
+                else
+                    catCounts.addCounts(1);
+            }
+            else
+            {
+                catCounts.addCounts(1);
+            }
         }
 
         for(GeneReadData gene : overlapGenes)
@@ -479,7 +497,7 @@ public class GeneBamReader
 
     public List<CategoryCountsData> getTransComboData() { return mTransComboData; }
 
-    private void addTransComboData(final List<Integer> transcripts, final List<String> geneIds)
+    private CategoryCountsData getCategoryCountsData(final List<Integer> transcripts, final List<String> geneIds)
     {
         CategoryCountsData transComboCounts = mTransComboData.stream()
                 .filter(x -> x.matches(transcripts, geneIds)).findFirst().orElse(null);
@@ -487,10 +505,14 @@ public class GeneBamReader
         if(transComboCounts == null)
         {
             transComboCounts = new CategoryCountsData(transcripts, geneIds);
+
+            if(mGcRatioCounts != null && mConfig.ApplyGcBiasAdjust)
+                transComboCounts.initialiseLengthCounts(mGcRatioCounts.getFrequencies().size());
+
             mTransComboData.add(transComboCounts);
         }
 
-        transComboCounts.addCounts(1);
+        return transComboCounts;
     }
 
     private void processValidTranscript(
@@ -552,7 +574,8 @@ public class GeneBamReader
 
         List<String> unsplicedGeneIds = genes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
-        addTransComboData(Lists.newArrayList(), unsplicedGeneIds);
+        CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
+        catCounts.addCounts(1);
 
         genes.forEach(x -> x.addCount(UNSPLICED, 1));
     }

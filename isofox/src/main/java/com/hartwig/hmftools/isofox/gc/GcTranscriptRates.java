@@ -4,8 +4,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -24,7 +23,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 
 public class GcTranscriptRates
 {
@@ -139,7 +137,7 @@ public class GcTranscriptRates
                     break;
                 }
 
-                double gcRatio = calcGcRatioFromReadRegions(chromosome, readRegions);
+                double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, chromosome, readRegions);
 
                 gcRatioCounts.addGcRatio(gcRatio);
             }
@@ -195,20 +193,6 @@ public class GcTranscriptRates
         }
 
         return readRegions;
-    }
-
-    private double calcGcRatioFromReadRegions(final String chromosome, final List<long[]> readRegions)
-    {
-        double gcRatioTotal = 0;
-        int basesTotal = 0;
-        for(final long[] region : readRegions)
-        {
-            final String bases = mConfig.RefFastaSeqFile.getSubsequenceAt(chromosome, region[SE_START], region[SE_END]).getBaseString();
-            basesTotal += bases.length();
-            gcRatioTotal += calcGcRatio(bases) * bases.length();
-        }
-
-        return gcRatioTotal / basesTotal;
     }
 
     public static BufferedWriter createWriter(final IsofoxConfig config)
