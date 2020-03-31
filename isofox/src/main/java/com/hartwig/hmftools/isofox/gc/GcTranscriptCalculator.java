@@ -67,7 +67,7 @@ public class GcTranscriptCalculator
     public final double[] getGcRatioAdjustments() { return mGcRatioAdjustments; }
     public final GcRatioCounts getTranscriptFitGcCounts() { return mTranscriptFitGcCounts; }
 
-    private static final double MAX_ADJUST_FACTOR = 100;
+    private static final double MAX_ADJUST_FACTOR = 3;
     private static final double MIN_ADJUST_FACTOR = 1 / MAX_ADJUST_FACTOR;
 
     public void calcGcRatioAdjustments(final GcRatioCounts globalGcCounts)
@@ -98,7 +98,7 @@ public class GcTranscriptCalculator
             else
                 mGcRatioAdjustments[i] = MIN_ADJUST_FACTOR;
 
-            ISF_LOGGER.info(String.format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
+            ISF_LOGGER.debug(String.format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
                     globalGcCounts.getRatios()[i], actualPerc, expectedPerc, mGcRatioAdjustments[i]));
         }
     }

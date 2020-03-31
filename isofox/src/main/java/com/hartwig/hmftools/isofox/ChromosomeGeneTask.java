@@ -117,6 +117,7 @@ public class ChromosomeGeneTask implements Callable
 
     public final GeneBamReader getBamReader() { return mBamReader; }
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
+    public final List<GeneCollectionSummaryData> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
 
@@ -199,8 +200,6 @@ public class ChromosomeGeneTask implements Callable
 
         if(nextLogCount > 100)
             ISF_LOGGER.info("chromosome({}) transcript counting complete", mChromosome);
-
-        writeResults();
     }
 
     public void calcFragmentLengths()
@@ -468,7 +467,7 @@ public class ChromosomeGeneTask implements Callable
     public int getTotalFragmentCount() { return mTotalFragmentCount; }
     public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 
-    private void writeResults()
+    public void writeResults()
     {
         for(final GeneCollectionSummaryData geneCollectionResult : mGeneCollectionSummaryData)
         {

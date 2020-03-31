@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.GENERATE_TRANSCRIPT_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentSizeCalcs.setConfigFragmentLengthData;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates.calcTotalTranscriptExpression;
+import static com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
@@ -173,6 +175,15 @@ public class Isofox
                             mGcTranscriptCalcs.getGcRatioAdjustments());
                 }
             }
+
+            // calculate a TPM for all transcripts before results are written
+            double totalFragsPerKb = chrTasks.stream()
+                    .mapToDouble(x -> calcTotalTranscriptExpression(x.getGeneCollectionSummaryData()))
+                    .sum();
+
+            double tpmFactor = totalFragsPerKb / 1e6;
+            chrTasks.forEach(x -> setTranscriptsPerMillion(x.getGeneCollectionSummaryData(), tpmFactor));
+            chrTasks.forEach(x -> x.writeResults());
         }
 
         mResultsWriter.close();

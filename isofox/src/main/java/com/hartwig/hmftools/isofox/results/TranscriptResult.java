@@ -45,6 +45,7 @@ public abstract class TranscriptResult
     public abstract double effectiveLength();
 
     private double mFitAllocation;
+    private double mTPM;
 
     public static TranscriptResult createTranscriptResults(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
@@ -142,11 +143,13 @@ public abstract class TranscriptResult
                 .build();
 
         results.setFitAllocation(0);
+        results.setTPM(0);
 
         return results;
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
+    public void setTPM(double tpm) { mTPM = tpm; }
     public double getFitAllocation() { return mFitAllocation; }
 
     public static double calcEffectiveLength(int transLength, final List<int[]> fragmentLengthData)
@@ -176,6 +179,11 @@ public abstract class TranscriptResult
         return flBasesTotal / (double)flFrequencyTotal;
     }
 
+    public double fragmentsPerKb()
+    {
+        return effectiveLength() > 0 ? mFitAllocation / (effectiveLength() / 1000.0) : 0;
+    }
+
     private static boolean isSpliceJunctionUnique(final String transId, final List<TranscriptData> transDataList, long exonEnd, long exonStart)
     {
         for(TranscriptData transData : transDataList)
@@ -195,8 +203,9 @@ public abstract class TranscriptResult
 
     public static String csvHeader()
     {
-        return "GeneId,GeneName,TransId,TransName,Canonical,ExonCount,EffectiveLength"
-                + ",ExonsMatched,ExonicBases,ExonicCoverage,FitAllocation"
+        return "GeneId,GeneName,TransId,TransName,Canonical,ExonCount"
+                + ",EffectiveLength,FitAllocation,TPM"
+                + ",ExonsMatched,ExonicBases,ExonicCoverage"
                 + ",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth"
                 + ",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported"
                 + ",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments";
@@ -212,6 +221,8 @@ public abstract class TranscriptResult
                 .add(String.valueOf(trans().IsCanonical))
                 .add(String.valueOf(trans().exons().size()))
                 .add(String.format("%.0f", effectiveLength()))
+                .add(String.format("%.1f", mFitAllocation))
+                .add(String.format("%6.3e", mTPM))
                 .add(String.valueOf(exonsFound()))
                 .add(String.valueOf(exonicBases()))
                 .add(String.valueOf(exonicBaseCoverage()))
@@ -227,7 +238,6 @@ public abstract class TranscriptResult
                 .add(String.valueOf(longUniqueFragments()))
                 .add(String.valueOf(spliceJunctionFragments()))
                 .add(String.valueOf(spliceJunctionUniqueFragments()))
-                .add(String.valueOf(mFitAllocation))
                 .toString();
     }
 }

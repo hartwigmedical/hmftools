@@ -114,6 +114,26 @@ public class ExpectedTransRates
         }
     }
 
+    public static double calcTotalTranscriptExpression(final List<GeneCollectionSummaryData> geneSummaryData)
+    {
+        double totalFragsPerKb = 0;
+
+        for(final GeneCollectionSummaryData summaryData : geneSummaryData)
+        {
+            totalFragsPerKb += summaryData.TranscriptResults.stream().mapToDouble(x -> x.fragmentsPerKb()).sum();
+        }
+
+        return totalFragsPerKb;
+    }
+
+    public static void setTranscriptsPerMillion(final List<GeneCollectionSummaryData> geneSummaryData, double tpmFactor)
+    {
+        for(final GeneCollectionSummaryData summaryData : geneSummaryData)
+        {
+            summaryData.TranscriptResults.forEach(x -> x.setTPM(x.fragmentsPerKb()/tpmFactor));
+        }
+    }
+
     private void loadGeneExpectedRatesData(final String chrId, final List<String> geneIds)
     {
         mCurrentExpRatesData = null;
