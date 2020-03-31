@@ -111,7 +111,7 @@ public class WidePatientReader {
 
             String drugName = drugName1;
 
-            LocalDate drugsEndDate = createInterpretDate(preTreatment.dateLastSystemicTherapy());
+            LocalDate drugsEndDate = preTreatment.dateLastSystemicTherapy().isEmpty() ? null : createInterpretDate(preTreatment.dateLastSystemicTherapy());
 
             if (drugName != null || drugsEndDate != null) {
                 final List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
@@ -140,7 +140,7 @@ public class WidePatientReader {
         final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
 
         for (WideBiopsyData biopsyData : wideBiopsyData) {
-            biopsyDataList.add(ImmutableBiopsyData.of(createInterpretDate(biopsyData.bioptDate()),
+            biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.bioptDate().isEmpty() ? null : createInterpretDate(biopsyData.bioptDate()),
                     null,
                     null,
                     curatedBiopsyType,
@@ -170,8 +170,8 @@ public class WidePatientReader {
     public static List<DrugData> readDrugsPostTreatment(@NotNull WideTreatmentData treatmentData, @NotNull final TreatmentCurator treatmentCurator) {
         final List<DrugData> drugs = Lists.newArrayList();
         String drugName = treatmentData.drug();
-        LocalDate drugsStartDate = createInterpretDate(treatmentData.startDate());
-        LocalDate drugsEndDate = createInterpretDate(treatmentData.endDate());
+        LocalDate drugsStartDate = treatmentData.startDate().isEmpty() ? null : createInterpretDate(treatmentData.startDate());
+        LocalDate drugsEndDate = treatmentData.endDate().isEmpty() ? null : createInterpretDate(treatmentData.endDate());
 
         if (drugName != null || drugsStartDate != null || drugsEndDate != null) {
             final List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
@@ -185,7 +185,7 @@ public class WidePatientReader {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
             biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
-                    createInterpretDate(responseData.date()),
+                    createInterpretDate(responseData.date().isEmpty()? null : responseData.date()),
                     null,
                     responseData.responseAccordingRecist(),
                     null,
