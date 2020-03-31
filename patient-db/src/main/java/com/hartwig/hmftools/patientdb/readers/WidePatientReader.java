@@ -2,7 +2,9 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
@@ -45,9 +47,6 @@ public class WidePatientReader {
     private final BiopsySiteCurator biopsySiteCurator;
     @NotNull
     private final TreatmentCurator treatmentCurator;
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
 
     public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel, @NotNull final TumorLocationCurator tumorLocationCurator,
             @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator) {
@@ -100,13 +99,24 @@ public class WidePatientReader {
     }
 
     @NotNull
+    private static LocalDate createInterpretDate(@NotNull String date) {
+        DateTimeFormatter inputFormatter =
+                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH);
+        LocalDate localDate = LocalDate.parse(date, inputFormatter);
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedString = localDate.format(outputFormatter);
+        return LocalDate.parse(formattedString);
+    }
+
+    @NotNull
     private static List<BiopsyData> toBiopsyData(@NotNull List<WideBiopsyData> wideBiopsyData,
             @NotNull BiopsySiteCurator biopsySiteCurator) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
         final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
 
         for (WideBiopsyData biopsyData : wideBiopsyData) {
-            biopsyDataList.add(ImmutableBiopsyData.of(LocalDate.parse(biopsyData.bioptDate().trim(), DATE_FORMATTER),
+            biopsyDataList.add(ImmutableBiopsyData.of(createInterpretDate(biopsyData.bioptDate()),
                     null,
                     null,
                     curatedBiopsyType,
@@ -128,13 +138,13 @@ public class WidePatientReader {
         return biopsyTreatmentDataList;
     }
 
-//    @NotNull
-//    public static List<DrugData> readDrugs(@NotNull WideTreatmentData treatmentData) {
-//        final List<DrugData> drugs = Lists.newArrayList();
-//        drugs.add(ImmutableDrugData.of(drugName, treatmentData.startDate(), treatmentData.endDate(), null, curatedDrugs));
-//
-//
-//    }
+    //    @NotNull
+    //    public static List<DrugData> readDrugs(@NotNull WideTreatmentData treatmentData) {
+    //        final List<DrugData> drugs = Lists.newArrayList();
+    //        drugs.add(ImmutableDrugData.of(drugName, treatmentData.startDate(), treatmentData.endDate(), null, curatedDrugs));
+    //
+    //
+    //    }
 
     @NotNull
     private static List<BiopsyTreatmentResponseData> toBiopsyTreatmentResponseData(@NotNull List<WideResponseData> wideResponseData) {
