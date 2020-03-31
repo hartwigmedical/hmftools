@@ -16,8 +16,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -25,7 +23,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class GcRatioCounts
 {
     private final double[] mRatios; // the ratios
-    private final double[] mFrequencies; // the frequencies of the ratios
+    private final double[] mCounts; // the frequencies of the ratios
 
     public static final double DEFAULT_GC_RATIO_BUCKET = 0.01;
 
@@ -33,7 +31,7 @@ public class GcRatioCounts
     {
         int itemCount = (int)floor(1 / GC_RATIO_BUCKET) + 1;
         mRatios = new double[itemCount];
-        mFrequencies = new double[itemCount];
+        mCounts = new double[itemCount];
 
         double gcRatio = 0;
 
@@ -45,7 +43,8 @@ public class GcRatioCounts
     }
 
     public final double[] getRatios() { return mRatios; }
-    public final double[] getFrequencies() { return mFrequencies; }
+    public final double[] getCounts() { return mCounts; }
+    public double getCountsTotal() { return sumVector(mCounts); }
 
     public static double roundGcRatio(double ratio)
     {
@@ -67,9 +66,9 @@ public class GcRatioCounts
 
     public void clearCounts()
     {
-        for(int i = 0; i < mFrequencies.length; ++i)
+        for(int i = 0; i < mCounts.length; ++i)
         {
-            mFrequencies[i] = 0;
+            mCounts[i] = 0;
         }
     }
 
@@ -109,10 +108,10 @@ public class GcRatioCounts
 
     public void addGcRatioCount(int ratioIndex, double count)
     {
-        if(ratioIndex < 0 || ratioIndex >= mFrequencies.length)
+        if(ratioIndex < 0 || ratioIndex >= mCounts.length)
             return;
 
-        mFrequencies[ratioIndex] += count;
+        mCounts[ratioIndex] += count;
     }
 
     private int getRatioIndex(double gcRatio)
@@ -123,18 +122,18 @@ public class GcRatioCounts
 
     public void mergeRatioCounts(final double[] otherCounts)
     {
-        if(otherCounts.length != mFrequencies.length)
+        if(otherCounts.length != mCounts.length)
             return;
 
-        for(int i = 0; i < mFrequencies.length; ++i)
+        for(int i = 0; i < mCounts.length; ++i)
         {
-            mFrequencies[i] += otherCounts[i];
+            mCounts[i] += otherCounts[i];
         }
     }
 
     public double getPercentileRatio(double percentile)
     {
-        double totalCounts = sumVector(mFrequencies);
+        double totalCounts = sumVector(mCounts);
 
         long currentTotal = 0;
         double prevRatio = 0;
@@ -142,7 +141,7 @@ public class GcRatioCounts
         for(int i = 0; i < mRatios.length; ++i)
         {
             double gcRatio = mRatios[i];
-            double frequency = mFrequencies[i];
+            double frequency = mCounts[i];
 
             double nextPercTotal = (currentTotal + frequency) / totalCounts;
 

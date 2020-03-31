@@ -22,6 +22,7 @@ public abstract class SummaryStats
     public abstract String version();
 
     public abstract int totalFragmentCount();
+    public abstract int duplicateReadCount();
 
     public abstract int readLength();
 
@@ -37,7 +38,8 @@ public abstract class SummaryStats
     public abstract double medianGCRatio();
 
     public static SummaryStats createSummaryStats(
-            int totalFragmentCount, int enrichedGeneFragCount, double medianGCRatio, final List<int[]> fragmentLengths, int maxReadLength)
+            int totalFragmentCount, int enrichedGeneFragCount, int duplicateReadCount,
+            double medianGCRatio, final List<int[]> fragmentLengths, int maxReadLength)
     {
         final VersionInfo version = new VersionInfo("isofox.version");
         double enrichedGenePercent = totalFragmentCount > 0 ? enrichedGeneFragCount / (double)totalFragmentCount : 0;
@@ -47,6 +49,7 @@ public abstract class SummaryStats
         return ImmutableSummaryStats.builder()
                 .version(version.version())
                 .totalFragmentCount(totalFragmentCount)
+                .duplicateReadCount(duplicateReadCount)
                 .readLength(maxReadLength)
                 .enrichedGenePercent(enrichedGenePercent)
                 .medianGCRatio(medianGCRatio)
@@ -59,7 +62,7 @@ public abstract class SummaryStats
     public static String csvHeader()
     {
         return "SampleId,Version,TotalFragments,ReadLength,FragLength5th,FragLength50th,FragLength95th"
-                + ",EnrichedGenePercent,MedianGCRatio";
+                + ",EnrichedGenePercent,MedianGCRatio,DuplicateReads";
     }
 
     public String toCsv(final String sampleId)
@@ -74,12 +77,13 @@ public abstract class SummaryStats
                 .add(String.format("%.0f", fragmentLength95thPercent()))
                 .add(String.format("%.3f", enrichedGenePercent()))
                 .add(String.format("%.3f", medianGCRatio()))
+                .add(String.valueOf(duplicateReadCount()))
                 .toString();
     }
 
     public static SummaryStats fromCsv(final String input)
     {
-        final String items[] = input.split(",");
+        final String items[] = input.split(DELIMITER);
         int index = 1;
 
         return ImmutableSummaryStats.builder()
@@ -91,6 +95,7 @@ public abstract class SummaryStats
                 .fragmentLength95thPercent(Double.parseDouble(items[index++]))
                 .enrichedGenePercent(Double.parseDouble(items[index++]))
                 .medianGCRatio(Double.parseDouble(items[index++]))
+                .duplicateReadCount(index < items.length ? Integer.parseInt(items[index++]) : 0)
                 .build();
     }
 

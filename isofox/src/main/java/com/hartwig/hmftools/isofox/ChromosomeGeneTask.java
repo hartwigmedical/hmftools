@@ -2,6 +2,8 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
+import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.createTranscriptResults;
@@ -23,7 +25,6 @@ import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
-import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
@@ -367,6 +368,30 @@ public class ChromosomeGeneTask implements Callable
             */
         }
 
+        if(!mConfig.EnrichedGeneIds.isEmpty())
+        {
+            int enrichedGeneFragments = geneCollection.genes().stream()
+                    .filter(x -> mConfig.EnrichedGeneIds.contains(x.GeneData.GeneId))
+                    .mapToInt(x -> x.getCounts()[typeAsInt(TOTAL)])
+                    .sum();
+
+            if (enrichedGeneFragments > 0)
+            {
+                mEnrichedGenesFragmentCount += enrichedGeneFragments;
+            }
+            else
+            {
+                if(mBamReader.getGeneGcRatioCounts() != null)
+                    mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getCounts());
+            }
+        }
+        else
+        {
+            // take them all
+            if(mBamReader.getGeneGcRatioCounts() != null)
+                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getCounts());
+        }
+
         geneCollectionSummary.allocateResidualsToGenes();
     }
 
@@ -437,25 +462,6 @@ public class ChromosomeGeneTask implements Callable
         geneCollectionSummary.GeneResults.add(geneResult);
 
         mTotalFragmentCount += geneResult.totalFragments();
-
-        if(!mConfig.EnrichedGeneIds.isEmpty())
-        {
-            if (mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
-            {
-                mEnrichedGenesFragmentCount += geneResult.totalFragments();
-            }
-            else
-            {
-                if(mBamReader.getGeneGcRatioCounts() != null)
-                    mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getFrequencies());
-            }
-        }
-        else
-        {
-            // take them all
-            if(mBamReader.getGeneGcRatioCounts() != null)
-                mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getFrequencies());
-        }
     }
 
     public int getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }

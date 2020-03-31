@@ -27,7 +27,6 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
 
 import java.io.BufferedWriter;
@@ -78,6 +77,7 @@ public class GeneBamReader
 
     private int mGeneReadCount;
     private int mTotalBamReadCount;
+    private int mTotalDuplicateCount;
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
@@ -103,6 +103,7 @@ public class GeneBamReader
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
+        mTotalDuplicateCount = 0;
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
@@ -120,7 +121,8 @@ public class GeneBamReader
         mRetainedIntronFinder = new RetainedIntronFinder(resultsWriter.getRetainedIntronWriter());
     }
 
-    public int totalBamCount() { return mTotalBamReadCount; }
+    public int totalReadCount() { return mTotalBamReadCount; }
+    public int duplicateReadCount() { return mTotalDuplicateCount; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
 
@@ -154,6 +156,8 @@ public class GeneBamReader
     {
         if(checkDuplicates(record))
         {
+            ++mTotalDuplicateCount;
+
             if(record.getFirstOfPairFlag())
             {
                 mCurrentGenes.findGenesCoveringRange(record.getStart(), record.getEnd())
@@ -505,7 +509,7 @@ public class GeneBamReader
             transComboCounts = new CategoryCountsData(transcripts, geneIds);
 
             if(mGcRatioCounts != null && mConfig.ApplyGcBiasAdjust)
-                transComboCounts.initialiseGcRatioCounts(mGcRatioCounts.getFrequencies().length);
+                transComboCounts.initialiseGcRatioCounts(mGcRatioCounts.getCounts().length);
 
             mTransComboData.add(transComboCounts);
         }

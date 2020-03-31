@@ -134,14 +134,15 @@ public class Isofox
         // final reporting
         if(!mConfig.generateExpectedDataOnly())
         {
-            int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalBamCount()).sum();
+            int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalReadCount()).sum();
+            int totalDuplicateReads = chrTasks.stream().mapToInt(x -> x.getBamReader().duplicateReadCount()).sum();
             ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
             int totalFragCount = chrTasks.stream().mapToInt(x -> x.getTotalFragmentCount()).sum();
             int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
 
             GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
-            chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getFrequencies()));
+            chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getCounts()));
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
             if(mConfig.ApplyGcBiasAdjust)
@@ -150,22 +151,23 @@ public class Isofox
             }
 
             final SummaryStats summaryStats = createSummaryStats(
-                    totalFragCount, enrichedGeneFragCount, medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
+                    totalFragCount, enrichedGeneFragCount, totalDuplicateReads,
+                    medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
 
             mResultsWriter.writeSummaryStats(summaryStats);
 
             if(mConfig.WriteGcData)
             {
                 GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
-                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getFrequencies()));
+                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getCounts()));
 
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getFrequencies());
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getFrequencies());
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts());
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts());
 
                 if(mConfig.ApplyGcBiasAdjust)
                 {
                     writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
-                            mGcTranscriptCalcs.getTranscriptFitGcCounts().getFrequencies());
+                            mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts());
 
                     writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ADJUSTMENTS",
                             mGcTranscriptCalcs.getGcRatioAdjustments());

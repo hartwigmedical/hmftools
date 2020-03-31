@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox.gc;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -66,11 +65,11 @@ public class GcTranscriptCalculator
 
     public void calcGcRatioAdjustments(final GcRatioCounts globalGcCounts)
     {
-        final double[] expectedFrequencies = mTranscriptFitGcCounts.getFrequencies();
-        final double[] actualFrequencies = globalGcCounts.getFrequencies();
+        final double[] expectedFrequencies = mTranscriptFitGcCounts.getCounts();
+        final double[] actualFrequencies = globalGcCounts.getCounts();
 
-        double actualFrequencyTotal = sumVector(actualFrequencies);
-        double expectedFrequencyTotal = sumVector(expectedFrequencies);
+        double actualFrequencyTotal = globalGcCounts.getCountsTotal();
+        double expectedFrequencyTotal = mTranscriptFitGcCounts.getCountsTotal();
 
         if(expectedFrequencyTotal == 0 || actualFrequencyTotal == 0)
         {
@@ -100,7 +99,7 @@ public class GcTranscriptCalculator
     public void generateGcCountsFromFit(final List<GeneCollectionSummaryData> geneSummaries)
     {
         // use expected GC ratio counts and 1st-pass transcript fits to derive expected GC counts
-        final double[] frequencies = mTranscriptFitGcCounts.getFrequencies();
+        final double[] frequencies = mTranscriptFitGcCounts.getCounts();
 
         for(final GeneCollectionSummaryData geneSummary : geneSummaries)
         {
@@ -123,7 +122,7 @@ public class GcTranscriptCalculator
                     return;
                 }
 
-                final double[] transFrequencies = transGcCounts.getFrequencies();
+                final double[] transFrequencies = transGcCounts.getCounts();
 
                 for(int i = 0; i < frequencies.length; ++i)
                 {
@@ -261,7 +260,7 @@ public class GcTranscriptCalculator
 
                 final String transName = items[0];
                 gcRatioCounts = new GcRatioCounts();
-                final double[] frequencies = gcRatioCounts.getFrequencies();
+                final double[] frequencies = gcRatioCounts.getCounts();
 
                 for(int i = 1; i < items.length; ++i)
                 {
@@ -320,9 +319,9 @@ public class GcTranscriptCalculator
             writer.write(String.format("%s", transName));
 
             // convert to percentages before writing
-            double frequencyTotal = sumVector(gcRatioCounts.getFrequencies());
+            double frequencyTotal = gcRatioCounts.getCountsTotal();
 
-            for(Double frequency : gcRatioCounts.getFrequencies())
+            for(Double frequency : gcRatioCounts.getCounts())
             {
                 writer.write(String.format(",%.4f", frequency/frequencyTotal));
             }
