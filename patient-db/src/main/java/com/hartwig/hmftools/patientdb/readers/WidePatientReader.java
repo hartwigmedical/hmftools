@@ -7,6 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
@@ -14,10 +15,12 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
+import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
@@ -40,12 +43,18 @@ public class WidePatientReader {
     private final TumorLocationCurator tumorLocationCurator;
     @NotNull
     private final BiopsySiteCurator biopsySiteCurator;
+    @NotNull
+    private final TreatmentCurator treatmentCurator;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
     public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel, @NotNull final TumorLocationCurator tumorLocationCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator) {
+            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator) {
         this.wideEcrfModel = wideEcrfModel;
         this.tumorLocationCurator = tumorLocationCurator;
         this.biopsySiteCurator = biopsySiteCurator;
+        this.treatmentCurator = treatmentCurator;
     }
 
     @NotNull
@@ -94,11 +103,10 @@ public class WidePatientReader {
     private static List<BiopsyData> toBiopsyData(@NotNull List<WideBiopsyData> wideBiopsyData,
             @NotNull BiopsySiteCurator biopsySiteCurator) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-mm-yyyy"); //TODO fix
         final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
 
         for (WideBiopsyData biopsyData : wideBiopsyData) {
-            biopsyDataList.add(ImmutableBiopsyData.of(LocalDate.parse(biopsyData.bioptDate(), formatter),
+            biopsyDataList.add(ImmutableBiopsyData.of(LocalDate.parse(biopsyData.bioptDate().trim(), DATE_FORMATTER),
                     null,
                     null,
                     curatedBiopsyType,
@@ -119,6 +127,14 @@ public class WidePatientReader {
         }
         return biopsyTreatmentDataList;
     }
+
+//    @NotNull
+//    public static List<DrugData> readDrugs(@NotNull WideTreatmentData treatmentData) {
+//        final List<DrugData> drugs = Lists.newArrayList();
+//        drugs.add(ImmutableDrugData.of(drugName, treatmentData.startDate(), treatmentData.endDate(), null, curatedDrugs));
+//
+//
+//    }
 
     @NotNull
     private static List<BiopsyTreatmentResponseData> toBiopsyTreatmentResponseData(@NotNull List<WideResponseData> wideResponseData) {
