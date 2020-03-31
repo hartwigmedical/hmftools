@@ -9,10 +9,12 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_GC_RATIOS;
+import static com.hartwig.hmftools.isofox.TaskType.GENERATE_TRANSCRIPT_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.common.FragmentSizeCalcs.setConfigFragmentLengthData;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
 import java.util.ArrayList;
@@ -33,8 +35,8 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
-import com.hartwig.hmftools.isofox.gc.GcBiasAdjuster;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.gc.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -52,8 +54,8 @@ public class Isofox
     private final IsofoxConfig mConfig;
     private final ResultsWriter mResultsWriter;
     private final EnsemblDataCache mGeneTransCache;
-    private final GcBiasAdjuster mGcBiasAdjuster;
     private final ExpectedCountsCache mExpectedCountsCache;
+    private final GcTranscriptCalculator mGcTranscriptCalcs;
 
     private final List<int[]> mFragmentLengthDistribution;
 
@@ -62,8 +64,6 @@ public class Isofox
     public Isofox(final IsofoxConfig config, final CommandLine cmd)
     {
         mConfig = config;
-
-        mGcBiasAdjuster = new GcBiasAdjuster(mConfig);
 
         mResultsWriter = new ResultsWriter(mConfig);
 
@@ -77,7 +77,10 @@ public class Isofox
         mGeneTransCache.setRequiredData(true, false, false, mConfig.CanonicalTranscriptOnly);
         mGeneTransCache.load(false);
 
-        mExpectedCountsCache = mConfig.ExpCountsFile != null ? new ExpectedCountsCache(mConfig) : null;
+        mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.ApplyGcBiasAdjust ? new ExpectedCountsCache(mConfig) : null;
+
+        mGcTranscriptCalcs = mConfig.WriteExpectedGcRatios || mConfig.ApplyGcBiasAdjust ?
+                new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
         mFragmentLengthDistribution = Lists.newArrayList();
         mIsValid = true;
@@ -86,13 +89,6 @@ public class Isofox
     public boolean runAnalysis()
     {
         ISF_LOGGER.info("sample({}) running RNA expression analysis", mConfig.SampleId);
-
-        if(mGcBiasAdjuster.enabled())
-        {
-            mGcBiasAdjuster.loadData();
-            mGcBiasAdjuster.generateDepthCounts(mGeneTransCache.getChrGeneDataMap());
-            return true; // for now
-        }
 
         // allocate work at the chromosome level
         List<ChromosomeGeneTask> chrTasks = Lists.newArrayList();
@@ -107,7 +103,7 @@ public class Isofox
                 continue;
 
             ChromosomeGeneTask chrGeneTask = new ChromosomeGeneTask(
-                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mExpectedCountsCache);
+                    mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mExpectedCountsCache, mGcTranscriptCalcs);
 
             chrTasks.add(chrGeneTask);
         }
@@ -126,6 +122,7 @@ public class Isofox
         if(mConfig.WriteExpectedGcRatios)
         {
             generateGcRatios(chrTasks);
+            mGcTranscriptCalcs.close();
             return true;
         }
 
@@ -147,18 +144,33 @@ public class Isofox
             chrTasks.forEach(x -> nonEnrichedGcRatioCounts.mergeRatioCounts(x.getNonEnrichedGcRatioCounts().getFrequencies()));
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
+            if(mConfig.ApplyGcBiasAdjust)
+            {
+                applyGcAdjustments(chrTasks, nonEnrichedGcRatioCounts);
+            }
+
             final SummaryStats summaryStats = createSummaryStats(
                     totalFragCount, enrichedGeneFragCount, medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
 
             mResultsWriter.writeSummaryStats(summaryStats);
-        }
 
-        if(mConfig.WriteReadGcRatios)
-        {
-            GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
-            chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getFrequencies()));
+            if(mConfig.WriteGcData)
+            {
+                GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
+                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getFrequencies()));
 
-            GcRatioCounts.writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), null, combinedGcRatioCounts);
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getFrequencies());
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getFrequencies());
+
+                if(mConfig.ApplyGcBiasAdjust)
+                {
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
+                            mGcTranscriptCalcs.getTranscriptFitGcCounts().getFrequencies());
+
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ADJUSTMENTS",
+                            mGcTranscriptCalcs.getGcRatioAdjustments());
+                }
+            }
         }
 
         mResultsWriter.close();
@@ -192,6 +204,21 @@ public class Isofox
         }
 
         return true;
+    }
+
+    private void applyGcAdjustments(final List<ChromosomeGeneTask> chrTasks, final GcRatioCounts actualGcCounts)
+    {
+        // not thread safe at the moment
+        chrTasks.forEach(x -> x.applyGcAdjustment());
+
+        // gather up global expected counts
+        mGcTranscriptCalcs.calcGcRatioAdjustments(actualGcCounts);
+
+        // now re-fit all transcripts
+        boolean validExecution = executeChromosomeTask(chrTasks, APPLY_GC_ADJUSTMENT);
+
+        if(!validExecution)
+            return;
     }
 
     private boolean executeChromosomeTask(final List<ChromosomeGeneTask> chrTasks, TaskType taskType)
@@ -271,7 +298,7 @@ public class Isofox
     private void generateGcRatios(final List<ChromosomeGeneTask> chrTasks)
     {
         // for now a way of only calculating fragment lengths and nothing more
-        boolean validExecution = executeChromosomeTask(chrTasks, TRANSCRIPT_GC_RATIOS);
+        boolean validExecution = executeChromosomeTask(chrTasks, GENERATE_TRANSCRIPT_GC_COUNTS);
 
         if(!validExecution)
         {

@@ -24,8 +24,6 @@ public class GeneReadData
 
     private final List<TranscriptData> mTranscripts;
 
-    private double mFitResiduals;
-
     private final int[] mFragmentCounts;
 
     private static final Logger LOGGER = LogManager.getLogger(GeneReadData.class);
@@ -38,7 +36,6 @@ public class GeneReadData
         mTranscripts = Lists.newArrayList();
 
         mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
-        mFitResiduals = 0;
     }
 
     public String name() { return GeneData.GeneName;}
@@ -59,9 +56,6 @@ public class GeneReadData
 
     public final int[] getCounts() { return mFragmentCounts; }
     public void addCount(GeneMatchType type, int count) { mFragmentCounts[typeAsInt(type)] += count; }
-
-    public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
-    public double getFitResiduals() { return mFitResiduals; }
 
     public static void generateCommonExonicRegions(final List<RegionReadData> regions, final List<long[]> allCommonRegions)
     {

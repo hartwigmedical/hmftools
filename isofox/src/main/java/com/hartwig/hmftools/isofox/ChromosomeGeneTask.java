@@ -23,13 +23,14 @@ import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
 import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummaryData;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
-import com.hartwig.hmftools.isofox.gc.GcTranscriptRates;
+import com.hartwig.hmftools.isofox.gc.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -44,7 +45,7 @@ public class ChromosomeGeneTask implements Callable
     private final GeneBamReader mBamReader;
     private final ExpectedTransRates mExpTransRates;
     private final ExpectedRatesGenerator mExpRatesGenerator;
-    private final GcTranscriptRates mExpGcRatioGenerator;
+    private final GcTranscriptCalculator mTranscriptGcRatios;
     private final FragmentSizeCalcs mFragmentSizeCalc;
     private final ExpectedCountsCache mExpectedCountsCache;
 
@@ -54,7 +55,6 @@ public class ChromosomeGeneTask implements Callable
     private int mGenesProcessed;
 
     // cache of results
-    private final List<GeneResult> mGeneResults;
     private final List<GeneCollectionSummaryData> mGeneCollectionSummaryData;
     private int mEnrichedGenesFragmentCount;
     private int mTotalFragmentCount;
@@ -73,7 +73,8 @@ public class ChromosomeGeneTask implements Callable
 
     public ChromosomeGeneTask(
             final IsofoxConfig config, final String chromosome, final List<EnsemblGeneData> geneDataList,
-            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter, final ExpectedCountsCache expectedCountsCache)
+            final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter,
+            final ExpectedCountsCache expectedCountsCache, final GcTranscriptCalculator transcriptGcCalcs)
     {
         mConfig = config;
         mChromosome = chromosome;
@@ -95,10 +96,8 @@ public class ChromosomeGeneTask implements Callable
         mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.WriteExpectedCounts
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
-        mExpGcRatioGenerator = mConfig.WriteExpectedGcRatios ?
-                new GcTranscriptRates(mConfig, mGeneTransCache, resultsWriter.getExpGcRatiosWriter()) : null;
+        mTranscriptGcRatios = transcriptGcCalcs;
 
-        mGeneResults = Lists.newArrayList();
         mGeneCollectionSummaryData = Lists.newArrayList();
         mEnrichedGenesFragmentCount = 0;
         mTotalFragmentCount = 0;
@@ -139,8 +138,12 @@ public class ChromosomeGeneTask implements Callable
                 calcFragmentLengths();
                 break;
 
-            case TRANSCRIPT_GC_RATIOS:
+            case GENERATE_TRANSCRIPT_GC_COUNTS:
                 calcTranscriptGcRatios();
+                break;
+
+            case APPLY_GC_ADJUSTMENT:
+                applyGcAdjustToTranscriptAllocations();
                 break;
 
             default:
@@ -336,6 +339,9 @@ public class ChromosomeGeneTask implements Callable
             {
                 generateExpectedRates(geneCollection);
                 expRatesData = mExpRatesGenerator.getExpectedRatesData();
+
+                if(mConfig.ApplyGcBiasAdjust)
+                    mExpectedCountsCache.addGeneExpectedRatesData(geneCollection.chrId(), expRatesData);
             }
 
             mExpTransRates.runTranscriptEstimation(geneCollectionSummary, expRatesData);
@@ -361,14 +367,51 @@ public class ChromosomeGeneTask implements Callable
             */
         }
 
+        geneCollectionSummary.allocateResidualsToGenes();
     }
 
     private void calcTranscriptGcRatios()
     {
-        if(mExpGcRatioGenerator == null)
+        if(mTranscriptGcRatios == null)
             return;
 
-        mExpGcRatioGenerator.generateExpectedRates(mChromosome, mGeneDataList);
+        mTranscriptGcRatios.generateExpectedTranscriptCounts(mChromosome, mGeneDataList);
+    }
+
+    public void applyGcAdjustment()
+    {
+        mTranscriptGcRatios.generateGcCountsFromFit(mGeneCollectionSummaryData);
+    }
+
+    private void applyGcAdjustToTranscriptAllocations()
+    {
+        // mExpTransRates.runTranscriptEstimation();
+        for(final GeneCollectionSummaryData geneSummaryData : mGeneCollectionSummaryData)
+        {
+            // mPerfCounters[PERF_FIT].start();
+
+            // adjust all fragment counts by the GC adjustment
+            // final List<CategoryCountsData> categoryCountsData = geneSummaryData.TransCategoryCounts;
+
+            final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
+            geneSummaryData.applyGcAdjustments(gcAdjustments);
+
+            mExpTransRates.runTranscriptEstimation(geneSummaryData, null);
+
+            for (final TranscriptResult transResult : geneSummaryData.TranscriptResults)
+            {
+                transResult.setFitAllocation(geneSummaryData.getFitAllocation(transResult.trans().TransName));
+            }
+
+            for(final GeneResult geneResult : geneSummaryData.GeneResults)
+            {
+                geneResult.setUnsplicedAllocation(geneSummaryData.getFitAllocation(geneResult.geneData().GeneId));
+            }
+
+            geneSummaryData.allocateResidualsToGenes();
+        }
+
+        // mPerfCounters[PERF_FIT].stop();
     }
 
     private void collectResults(
@@ -390,7 +433,6 @@ public class ChromosomeGeneTask implements Callable
         GeneResult geneResult = GeneResult.createGeneResults(geneCollection, geneReadData);
 
         geneResult.setUnsplicedAllocation(geneCollectionSummary.getFitAllocation(geneReadData.GeneData.GeneId));
-        geneResult.setFitResiduals(geneReadData.getFitResiduals());
 
         geneCollectionSummary.GeneResults.add(geneResult);
 

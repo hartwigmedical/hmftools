@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -14,11 +15,8 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 
@@ -26,33 +24,28 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class GcRatioCounts
 {
-    private final List<Double> mRatios; // the ratios
-    private final List<Double> mFrequencies; // the frequencies of the ratios
+    private final double[] mRatios; // the ratios
+    private final double[] mFrequencies; // the frequencies of the ratios
 
     public static final double DEFAULT_GC_RATIO_BUCKET = 0.01;
 
     public GcRatioCounts()
     {
-        mRatios = Lists.newArrayList();
-        mFrequencies = Lists.newArrayList();
+        int itemCount = (int)floor(1 / GC_RATIO_BUCKET) + 1;
+        mRatios = new double[itemCount];
+        mFrequencies = new double[itemCount];
 
-        buildCache();
-    }
-
-    public final List<Double> getRatios() { return mRatios; }
-    public final List<Double> getFrequencies() { return mFrequencies; }
-
-    private void buildCache()
-    {
         double gcRatio = 0;
 
-        while(Doubles.lessOrEqual(gcRatio, 1))
+        for(int index = 0; index < mRatios.length; ++index)
         {
-            mRatios.add(gcRatio);
-            mFrequencies.add(0.0);
+            mRatios[index] = gcRatio;
             gcRatio += GC_RATIO_BUCKET;
         }
     }
+
+    public final double[] getRatios() { return mRatios; }
+    public final double[] getFrequencies() { return mFrequencies; }
 
     public static double roundGcRatio(double ratio)
     {
@@ -74,9 +67,9 @@ public class GcRatioCounts
 
     public void clearCounts()
     {
-        for(int i = 0; i < mFrequencies.size(); ++i)
+        for(int i = 0; i < mFrequencies.length; ++i)
         {
-            mFrequencies.set(i, 0.0);
+            mFrequencies[i] = 0;
         }
     }
 
@@ -91,23 +84,6 @@ public class GcRatioCounts
 
         if(gcRatioIndex[1] >= 0)
             addGcRatioCount(gcRatioIndex[1], counts[1]);
-
-        /*
-        double lowerRatio = floor(gcRatio/GC_RATIO_BUCKET) * GC_RATIO_BUCKET;
-        double upperRatio = lowerRatio + GC_RATIO_BUCKET;
-
-        if(lowerRatio >= 1)
-        {
-            addGcRatioCount(gcRatio, 1);
-        }
-        else
-        {
-            double upperFraction = (gcRatio - lowerRatio) / GC_RATIO_BUCKET;
-            double lowerFraction = 1 - upperFraction;
-            addGcRatioCount(lowerRatio, lowerFraction);
-            addGcRatioCount(upperRatio, upperFraction);
-        }
-        */
     }
 
     public void determineRatioData(double gcRatio, final int[] gcRatioIndex, final double[] counts)
@@ -133,40 +109,40 @@ public class GcRatioCounts
 
     public void addGcRatioCount(int ratioIndex, double count)
     {
-        if(ratioIndex < 0 || ratioIndex >= mFrequencies.size())
+        if(ratioIndex < 0 || ratioIndex >= mFrequencies.length)
             return;
 
-        mFrequencies.set(ratioIndex, mFrequencies.get(ratioIndex) + count);
+        mFrequencies[ratioIndex] += count;
     }
 
     private int getRatioIndex(double gcRatio)
     {
-        double rawIndex = gcRatio * (mRatios.size() - 1);
-        return (int)min(max(0, round(rawIndex)), mRatios.size() - 1);
+        double rawIndex = gcRatio * (mRatios.length - 1);
+        return (int)min(max(0, round(rawIndex)), mRatios.length - 1);
     }
 
-    public void mergeRatioCounts(final List<Double> otherCounts)
+    public void mergeRatioCounts(final double[] otherCounts)
     {
-        if(otherCounts.size() != mFrequencies.size())
+        if(otherCounts.length != mFrequencies.length)
             return;
 
-        for(int i = 0; i < mFrequencies.size(); ++i)
+        for(int i = 0; i < mFrequencies.length; ++i)
         {
-            mFrequencies.set(i, mFrequencies.get(i) + otherCounts.get(i));
+            mFrequencies[i] += otherCounts[i];
         }
     }
 
     public double getPercentileRatio(double percentile)
     {
-        double totalCounts = mFrequencies.stream().mapToDouble(x -> x).sum();
+        double totalCounts = sumVector(mFrequencies);
 
         long currentTotal = 0;
         double prevRatio = 0;
 
-        for(int i = 0; i < mRatios.size(); ++i)
+        for(int i = 0; i < mRatios.length; ++i)
         {
-            double gcRatio = mRatios.get(i);
-            double frequency = mFrequencies.get(i);
+            double gcRatio = mRatios[i];
+            double frequency = mFrequencies[i];
 
             double nextPercTotal = (currentTotal + frequency) / totalCounts;
 
@@ -201,10 +177,18 @@ public class GcRatioCounts
     {
         try
         {
-            final String outputFileName = config.formOutputFile("read_gc_ratios.csv");
+            final String outputFileName = config.formOutputFile("gc_ratio_data.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write("GeneId,GeneName,GcRatio,Count");
+            writer.write("GeneName");
+
+            GcRatioCounts tmp = new GcRatioCounts();
+
+            for(Double gcRatio : tmp.getRatios())
+            {
+                writer.write(String.format(",Gcr_%.2f", gcRatio));
+            }
+
             writer.newLine();
             return writer;
         }
@@ -216,24 +200,18 @@ public class GcRatioCounts
     }
 
     public synchronized static void writeReadGcRatioCounts(
-            final BufferedWriter writer, final EnsemblGeneData geneData, final GcRatioCounts ratioCounts)
+            final BufferedWriter writer, final String name, final double[] data)
     {
         try
         {
-            for(int i = 0; i < ratioCounts.getRatios().size(); ++i)
+            writer.write(name);
+
+            for(int i = 0; i < data.length; ++i)
             {
-                double gcRatio = ratioCounts.getRatios().get(i);
-                double frequency = ratioCounts.getFrequencies().get(i);
-
-                if(frequency == 0)
-                    continue;
-
-                writer.write(String.format("%s,%s,%.4f,%.0f",
-                        geneData != null ? geneData.GeneId : "ALL", geneData != null ? geneData.GeneName : "ALL",
-                        gcRatio, frequency));
-
-                writer.newLine();
+                writer.write(String.format(",%.4f", data[i]));
             }
+
+            writer.newLine();
         }
         catch(IOException e)
         {

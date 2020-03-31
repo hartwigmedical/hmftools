@@ -135,9 +135,7 @@ public class GeneBamReader
         mTransComboData.clear();
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
-
-        if(mGeneGcRatioCounts != null)
-            mGeneGcRatioCounts.clearCounts();
+        mGeneGcRatioCounts.clearCounts();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 
@@ -507,7 +505,7 @@ public class GeneBamReader
             transComboCounts = new CategoryCountsData(transcripts, geneIds);
 
             if(mGcRatioCounts != null && mConfig.ApplyGcBiasAdjust)
-                transComboCounts.initialiseLengthCounts(mGcRatioCounts.getFrequencies().size());
+                transComboCounts.initialiseGcRatioCounts(mGcRatioCounts.getFrequencies().length);
 
             mTransComboData.add(transComboCounts);
         }

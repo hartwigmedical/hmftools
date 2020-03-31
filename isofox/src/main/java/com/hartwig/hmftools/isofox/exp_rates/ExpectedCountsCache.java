@@ -22,21 +22,27 @@ public class ExpectedCountsCache
 {
     private final IsofoxConfig mConfig;
     private final Map<String,Map<String,List<CategoryCountsData>>> mGeneSetCategoryDataMap;
-    private final boolean mValidData;
+    private final Map<String,ExpectedRatesData> mGeneSetExpectedRatesDataMap;
+    private boolean mValidData;
 
     public ExpectedCountsCache(final IsofoxConfig config)
     {
         mConfig = config;
         mGeneSetCategoryDataMap = Maps.newHashMap();
+        mGeneSetExpectedRatesDataMap = Maps.newHashMap();
+        mValidData = true;
 
         if(config.ExpCountsFile != null && Files.exists(Paths.get(mConfig.ExpCountsFile)))
         {
             mValidData = loadExpCountsFile();
         }
-        else
-        {
-            mValidData = false;
-        }
+    }
+
+    public boolean hasExpectedRatesCached() { return !mGeneSetExpectedRatesDataMap.isEmpty(); }
+
+    public ExpectedRatesData getGeneExpectedRatesData(final String chrId)
+    {
+        return mGeneSetExpectedRatesDataMap.get(chrId);
     }
 
     public Map<String,List<CategoryCountsData>> getGeneExpectedRatesData(final String chrId, final List<String> geneIds)
@@ -49,6 +55,11 @@ public class ExpectedCountsCache
         }
 
         return geneSetCountsData;
+    }
+
+    public void addGeneExpectedRatesData(final String chrId, final ExpectedRatesData expectedRatesData)
+    {
+        mGeneSetExpectedRatesDataMap.put(chrId, expectedRatesData);
     }
 
     private boolean geneSetCountsDataMatches(final List<String> geneIds, final Set<String> geneTransSet)

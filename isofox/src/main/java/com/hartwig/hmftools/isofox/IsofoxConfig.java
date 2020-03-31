@@ -51,7 +51,7 @@ public class IsofoxConfig
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
     private static final String GC_BIAS_FILE = "gcbias_file";
-    private static final String WRITE_READ_GC_RATIOS = "write_read_gc_ratios";
+    private static final String WRITE_GC_DATA = "write_gc_data";
     private static final String GC_RATIO_BUCKET_SIZE = "gc_ratio_bucket";
 
     // expected expression config
@@ -112,7 +112,7 @@ public class IsofoxConfig
     public final boolean FragmentLengthsByGene;
     public final boolean WriteFragmentLengthsOnly;
 
-    public final boolean WriteReadGcRatios;
+    public final boolean WriteGcData;
     public final String GcBiasFile;
     public static double GC_RATIO_BUCKET = GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
 
@@ -196,7 +196,7 @@ public class IsofoxConfig
         FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
-        WriteReadGcRatios = cmd.hasOption(WRITE_READ_GC_RATIOS);
+        WriteGcData = cmd.hasOption(WRITE_GC_DATA);
         WriteTransData = Boolean.parseBoolean(cmd.getOptionValue(WRITE_TRANS_DATA, "true"));
 
         GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
@@ -339,7 +339,7 @@ public class IsofoxConfig
     {
         return WriteFragmentLengths || ApplyFragmentLengthAdjust;
     }
-    public boolean requireGcRatioCalcs() { return WriteReadGcRatios || ApplyGcBiasAdjust; }
+    public boolean requireGcRatioCalcs() { return WriteGcData || ApplyGcBiasAdjust; }
 
     public String formOutputFile(final String fileId)
     {
@@ -380,7 +380,7 @@ public class IsofoxConfig
         WriteFragmentLengths = false;
         WriteFragmentLengthsOnly = false;
         WriteTransComboData = false;
-        WriteReadGcRatios = false;
+        WriteGcData = false;
 
         WriteExpectedRates = false;
         WriteExpectedCounts = false;
@@ -425,7 +425,7 @@ public class IsofoxConfig
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
         options.addOption(WRITE_FRAG_LENGTHS_ONLY, false, "Only write intronic fragment lengths then exit");
 
-        options.addOption(WRITE_READ_GC_RATIOS, false, "Write GC ratio counts from all genic reads");
+        options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
         options.addOption(WRITE_EXPECTED_GC_RATIOS, false, "Write expected GC ratios");
         options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");

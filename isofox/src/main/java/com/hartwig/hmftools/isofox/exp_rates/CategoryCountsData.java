@@ -96,11 +96,26 @@ public class CategoryCountsData
     {
         mFragmentCount += count;
     }
+    public void adjustCounts(double factor)
+    {
+        mFragmentCount *= factor;
+    }
 
     public void addFragLengthCounts(int count, int lengthIndex)
     {
         mFragmentCount += count;
         mFragmentCountsByLength[lengthIndex] += count;
+    }
+
+    public void applyFrequencies(final List<int[]> lengthFrequencies)
+    {
+        mFragmentCount = 0;
+
+        for(int i = 0; i < mFragmentCountsByLength.length; ++i)
+        {
+            mFragmentCountsByLength[i] *= lengthFrequencies.get(i)[FL_FREQUENCY];
+            mFragmentCount += mFragmentCountsByLength[i];
+        }
     }
 
     public void addGcRatioCounts(int count, final int[] gcRatioIndex, final double[] counts)
@@ -117,14 +132,14 @@ public class CategoryCountsData
         }
     }
 
-    public void applyFrequencies(final List<int[]> lengthFrequencies)
+    public void applyGcAdjustments(final double[] gcAdjustments)
     {
         mFragmentCount = 0;
 
-        for(int i = 0; i < mFragmentCountsByLength.length; ++i)
+        for(int i = 0; i < mFragmentCountsByGcRatio.length; ++i)
         {
-            mFragmentCountsByLength[i] *= lengthFrequencies.get(i)[FL_FREQUENCY];
-            mFragmentCount += mFragmentCountsByLength[i];
+            mFragmentCountsByGcRatio[i] *= gcAdjustments[i];
+            mFragmentCount += mFragmentCountsByGcRatio[i];
         }
     }
 

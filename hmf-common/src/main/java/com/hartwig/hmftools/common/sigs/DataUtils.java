@@ -19,7 +19,22 @@ public class DataUtils {
 
     private static final Logger LOGGER = LogManager.getLogger(DataUtils.class);
 
-    public static double[][] convertArray(List<List<Double>> dataSet, boolean transpose)
+    public static double[] convertList(final List<Double> dataSet)
+    {
+        if(dataSet.isEmpty())
+            return null;
+
+        double[] dataArray = new double[dataSet.size()];
+
+        for(int i = 0; i < dataSet.size(); ++i)
+        {
+            dataArray[i] = dataSet.get(i);
+        }
+
+        return dataArray;
+    }
+
+    public static double[][] convertArray(final List<List<Double>> dataSet, boolean transpose)
     {
         if(dataSet.isEmpty())
             return null;

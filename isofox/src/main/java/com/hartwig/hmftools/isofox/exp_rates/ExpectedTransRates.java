@@ -46,31 +46,6 @@ public class ExpectedTransRates
         return mCurrentExpRatesData != null && mCurrentExpRatesData.validData();
     }
 
-    public void loadGeneExpectedRatesData(final String chrId, final List<String> geneIds)
-    {
-        mCurrentExpRatesData = null;
-
-        Map<String,List<CategoryCountsData>> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
-
-        if(geneSetCountsData == null)
-        {
-            ISF_LOGGER.warn("genes({}: {}) expected counts data not loaded", chrId, appendStrList(geneIds, ';'));
-            return;
-        }
-
-        mCurrentExpRatesData = new ExpectedRatesData(chrId);
-
-        // apply observed fragment length distribution to the generated counts
-        applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
-
-        formTranscriptDefinitions(geneSetCountsData, mCurrentExpRatesData);
-
-        if(mConfig.WriteExpectedRates)
-        {
-            writeExpectedRates(mResultsWriter.getExpRatesWriter(), mCurrentExpRatesData);
-        }
-    }
-
     private void applyFragmentLengthDistributionToExpectedCounts(final Map<String,List<CategoryCountsData>> geneSetCountsData)
     {
         final List<int[]> fragmentLengthData = mConfig.FragmentLengthData;
@@ -117,22 +92,6 @@ public class ExpectedTransRates
 
         geneSummaryData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
 
-        if(geneSummaryData.GeneResults.size() == 1)
-        {
-            geneSummaryData.GeneResults.get(0).setFitResiduals(residuals[RESIDUAL_TOTAL]);
-        }
-        else
-        {
-            // divvy up residuals between the genes according to their length
-            long totalGeneLength = geneSummaryData.GeneResults.stream().mapToLong(x -> x.geneData().length()).sum();
-
-            for (final GeneResult geneResult : geneSummaryData.GeneResults)
-            {
-                double residualsFraction = geneResult.geneData().length() / (double) totalGeneLength * residuals[RESIDUAL_TOTAL];
-                geneResult.setFitResiduals(residualsFraction);
-            }
-        }
-
         final Map<String,Double> transAllocations = geneSummaryData.getFitAllocations();
 
         for(int transIndex = 0; transIndex < transcriptNames.size(); ++transIndex)
@@ -152,6 +111,38 @@ public class ExpectedTransRates
         {
             mResultsWriter.writeTransComboCounts(
                     geneSummaryData.ChrId, mCurrentExpRatesData.Categories, transComboCounts, fittedCounts);
+        }
+    }
+
+    private void loadGeneExpectedRatesData(final String chrId, final List<String> geneIds)
+    {
+        mCurrentExpRatesData = null;
+
+        if(mCache.hasExpectedRatesCached())
+        {
+            mCurrentExpRatesData = mCache.getGeneExpectedRatesData(chrId);
+            return;
+        }
+
+        final Map<String,List<CategoryCountsData>> geneSetCountsData = mCache.getGeneExpectedRatesData(chrId, geneIds);
+
+        if(geneSetCountsData == null)
+        {
+            ISF_LOGGER.warn("genes({}: {}) expected counts data not loaded", chrId, appendStrList(geneIds, ';'));
+            return;
+        }
+
+        mCurrentExpRatesData = new ExpectedRatesData(chrId);
+
+        // apply observed fragment length distribution to the generated counts
+        if(mConfig.ApplyFragmentLengthAdjust)
+            applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
+
+        formTranscriptDefinitions(geneSetCountsData, mCurrentExpRatesData);
+
+        if(mConfig.WriteExpectedRates)
+        {
+            writeExpectedRates(mResultsWriter.getExpRatesWriter(), mCurrentExpRatesData);
         }
     }
 
