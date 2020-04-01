@@ -85,11 +85,11 @@ public interface FilterConfig {
         return DEFAULT_HARD_MAX_NORMAL_ALT_SUPPORT;
     }
 
-    default double hotspotMinRawTumorVafToSkipQualCheck() {
+    default double hotspotMinTumorVafToSkipQualCheck() {
         return 0.05;
     }
 
-    default int hotspotMinRawTumorAltSupportToSkipQualCheck() {
+    default int hotspotMinTumorAltSupportToSkipQualCheck() {
         return 5;
     }
 
