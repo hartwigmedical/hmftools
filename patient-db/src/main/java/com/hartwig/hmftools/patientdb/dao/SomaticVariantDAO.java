@@ -6,10 +6,12 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATIC
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
+import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
@@ -147,6 +149,10 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.RECOVERED,
                     SOMATICVARIANT.KATAEGIS,
                     SOMATICVARIANT.TIER,
+                    SOMATICVARIANT.REFERENCEALLELEREADCOUNT,
+                    SOMATICVARIANT.REFERENCETOTALREADCOUNT,
+                    SOMATICVARIANT.RNAALLELEREADCOUNT,
+                    SOMATICVARIANT.RNATOTALREADCOUNT,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
@@ -192,6 +198,10 @@ class SomaticVariantDAO {
                 variant.recovered(),
                 variant.kataegis(),
                 variant.tier().toString(),
+                Optional.ofNullable(variant.referenceDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
+                Optional.ofNullable(variant.referenceDepth()).map(AllelicDepth::totalReadCount).orElse(null),
+                Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
+                Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 timestamp);
     }
 

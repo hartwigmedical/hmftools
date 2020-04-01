@@ -111,4 +111,10 @@ public interface SomaticVariant extends Variant {
     default double clonalLikelihood() {
         return 1 - subclonalLikelihood();
     }
+
+    @Nullable
+    AllelicDepth rnaDepth();
+
+    @Nullable
+    AllelicDepth referenceDepth();
 }
