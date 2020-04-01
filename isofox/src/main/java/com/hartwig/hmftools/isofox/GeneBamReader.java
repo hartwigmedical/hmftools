@@ -137,7 +137,9 @@ public class GeneBamReader
         mTransComboData.clear();
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
-        mGeneGcRatioCounts.clearCounts();
+
+        if(mGeneGcRatioCounts != null)
+            mGeneGcRatioCounts.clearCounts();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
 

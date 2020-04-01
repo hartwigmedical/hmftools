@@ -2,6 +2,8 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
 import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.PERF_FIT;
 import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.PERF_FRAG_LENGTH;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
@@ -163,16 +165,26 @@ public class Isofox
                 GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
                 chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getCounts()));
 
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts());
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts());
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts(), false);
+                double[] percentData = new double[combinedGcRatioCounts.size()];
+
+                copyVector(combinedGcRatioCounts.getCounts(), percentData);
+                convertToPercentages(percentData);
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
+
+                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
                 if(mConfig.ApplyGcBiasAdjust)
                 {
                     writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED",
-                            mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts());
+                            mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), false);
+
+                    copyVector(mGcTranscriptCalcs.getTranscriptFitGcCounts().getCounts(), percentData);
+                    convertToPercentages(percentData);
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "TRANS_FIT_EXPECTED_PERC", percentData, true);
 
                     writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ADJUSTMENTS",
-                            mGcTranscriptCalcs.getGcRatioAdjustments());
+                            mGcTranscriptCalcs.getGcRatioAdjustments(), true);
                 }
             }
 

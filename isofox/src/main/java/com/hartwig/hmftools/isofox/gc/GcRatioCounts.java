@@ -195,7 +195,7 @@ public class GcRatioCounts
     }
 
     public synchronized static void writeReadGcRatioCounts(
-            final BufferedWriter writer, final String name, final double[] data)
+            final BufferedWriter writer, final String name, final double[] data, boolean asFractions)
     {
         try
         {
@@ -203,7 +203,10 @@ public class GcRatioCounts
 
             for(int i = 0; i < data.length; ++i)
             {
-                writer.write(String.format(",%.4f", data[i]));
+                if(asFractions)
+                    writer.write(String.format(",%.4f", data[i]));
+                else
+                    writer.write(String.format(",%.0f", data[i]));
             }
 
             writer.newLine();
