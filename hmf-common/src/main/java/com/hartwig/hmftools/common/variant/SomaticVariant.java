@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 public interface SomaticVariant extends Variant {
 
+    double qual();
+
     @NotNull
     VariantType type();
 

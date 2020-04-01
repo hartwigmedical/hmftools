@@ -308,6 +308,7 @@ CREATE TABLE somaticVariant
     referenceTotalReadCount int,
     rnaAlleleReadCount int,
     rnaTotalReadCount int,
+    qual double precision not null,
     PRIMARY KEY (id),
     INDEX(sampleId),
     INDEX(filter),

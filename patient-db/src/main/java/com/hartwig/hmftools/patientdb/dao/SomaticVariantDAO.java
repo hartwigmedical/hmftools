@@ -14,6 +14,7 @@ import com.hartwig.hmftools.common.purple.region.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -53,6 +54,20 @@ class SomaticVariantDAO {
                         .and(SOMATICVARIANT.TYPE.eq(type.toString())).fetch();
 
         for (Record record : result) {
+
+            @Nullable Integer referenceAlleleReadCount = record.getValue(SOMATICVARIANT.REFERENCEALLELEREADCOUNT);
+            @Nullable Integer referenceTotalCount = record.getValue(SOMATICVARIANT.REFERENCETOTALREADCOUNT);
+            final AllelicDepth referenceAllelicDepth = referenceAlleleReadCount != null && referenceTotalCount != null
+                    ? ImmutableAllelicDepthImpl.builder().alleleReadCount(referenceAlleleReadCount).totalReadCount(referenceTotalCount).build()
+                    : null;
+
+
+            @Nullable Integer rnaAlleleReadCount = record.getValue(SOMATICVARIANT.RNAALLELEREADCOUNT);
+            @Nullable Integer rnaTotalCount = record.getValue(SOMATICVARIANT.RNATOTALREADCOUNT);
+            final AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null
+                    ? ImmutableAllelicDepthImpl.builder().alleleReadCount(rnaAlleleReadCount).totalReadCount(rnaTotalCount).build()
+                    : null;
+
             variants.add(ImmutableSomaticVariantImpl.builder()
                     .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
                     .position(record.getValue(SOMATICVARIANT.POSITION))
@@ -94,6 +109,9 @@ class SomaticVariantDAO {
                     .recovered(byteToBoolean(record.getValue(SOMATICVARIANT.RECOVERED)))
                     .kataegis(record.get(SOMATICVARIANT.KATAEGIS))
                     .tier(VariantTier.fromString(record.get(SOMATICVARIANT.TIER)))
+                    .referenceDepth(referenceAllelicDepth)
+                    .rnaDepth(rnaAllelicDepth)
+                    .qual(record.get(SOMATICVARIANT.QUAL))
                     .build());
         }
         return variants;
@@ -153,6 +171,7 @@ class SomaticVariantDAO {
                     SOMATICVARIANT.REFERENCETOTALREADCOUNT,
                     SOMATICVARIANT.RNAALLELEREADCOUNT,
                     SOMATICVARIANT.RNATOTALREADCOUNT,
+                    SOMATICVARIANT.QUAL,
                     SOMATICVARIANT.MODIFIED);
             splitRegions.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
             inserter.execute();
@@ -202,6 +221,7 @@ class SomaticVariantDAO {
                 Optional.ofNullable(variant.referenceDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::alleleReadCount).orElse(null),
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
+                variant.qual(),
                 timestamp);
     }
 

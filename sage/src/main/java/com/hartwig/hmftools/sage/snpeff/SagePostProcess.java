@@ -97,8 +97,8 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
             if (other.isIndel() && other.getAttributeAsInt(SageVCF.PHASE, 0) == phase) {
                 int otherLength = indelLength(other);
                 if ((indelLength + otherLength) % 3 == 0 && other.getStart() >= exon.start() && other.getEnd() <= exon.end()) {
-                    other.getCommonInfo().putAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL, true);
-                    context.getCommonInfo().putAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL, true);
+                    other.getCommonInfo().putAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL, true, true);
+                    context.getCommonInfo().putAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL, true, true);
                 }
             }
         }

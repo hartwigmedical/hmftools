@@ -219,6 +219,7 @@ public class SomaticVariantFactory {
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
+                .qual(context.getPhredScaledQual())
                 .chromosome(context.getContig())
                 .position(context.getStart())
                 .ref(context.getReference().getBaseString())

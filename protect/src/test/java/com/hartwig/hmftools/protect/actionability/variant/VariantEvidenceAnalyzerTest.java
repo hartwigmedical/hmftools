@@ -81,6 +81,7 @@ public class VariantEvidenceAnalyzerTest {
     @NotNull
     public static ImmutableSomaticVariantImpl.Builder createSomaticvariant() {
         return ImmutableSomaticVariantImpl.builder()
+                .qual(100)
                 .chromosome(Strings.EMPTY)
                 .position(0L)
                 .ref(Strings.EMPTY)
