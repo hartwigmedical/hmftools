@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.knowledgebasegenerator.fusion;
 
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class FusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
-    public static KnownFusions determineKnownFusions(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene) {
+    public static KnownFusions determineKnownFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
         return ImmutableKnownFusions.builder()
                 .gene(gene)
                 .eventType(typeEvent)
@@ -22,7 +21,7 @@ public class FusionExtractor {
     }
 
     @NotNull
-    public static KnownFusions determineKnownFusionsPairs(@NotNull Source source, @NotNull String typeEvent, @NotNull String gene,
+    public static KnownFusions determineKnownFusionsPairs(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene,
             @NotNull String function) {
         if (gene.equals("ZNF198-FGFR1")) {
             gene = "ZMYM2-FGFR1";
@@ -87,7 +86,6 @@ public class FusionExtractor {
                 || function.equals("Loss-of-function")) {
             gene = Strings.EMPTY;
             typeEvent = Strings.EMPTY;
-            source = Source.UNKNOWN;
         }
         return ImmutableKnownFusions.builder()
                 .gene(gene)

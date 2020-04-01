@@ -50,6 +50,7 @@ import com.hartwig.hmftools.vicc.datamodel.PhenotypeType;
 import com.hartwig.hmftools.vicc.datamodel.SequenceOntology;
 import com.hartwig.hmftools.vicc.datamodel.Taxonomy;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,7 +112,7 @@ public final class ViccJsonReader {
         ViccDatamodelCheckerFactory.viccEntryChecker().check(viccEntryObject);
 
         ImmutableViccEntry.Builder viccEntryBuilder = ImmutableViccEntry.builder();
-        viccEntryBuilder.source(string(viccEntryObject, "source"));
+        viccEntryBuilder.source(ViccSource.fromViccKnowledgebaseString(string(viccEntryObject, "source")));
         viccEntryBuilder.genes(stringList(viccEntryObject, "genes"));
         viccEntryBuilder.geneIdentifiers(createGeneIdentifiers(viccEntryObject.getAsJsonArray("gene_identifiers")));
         viccEntryBuilder.featureNames(optionalStringList(viccEntryObject, "feature_names"));

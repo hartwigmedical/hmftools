@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.Feature;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
 
@@ -30,15 +29,14 @@ public class EventTypeAnalyzer {
         String gene = Strings.EMPTY;
         String name = Strings.EMPTY;
         String description = Strings.EMPTY;
-        Source source = Source.sourceFromKnowledgebase(viccEntry.source());
-        String eventInfo = Strings.EMPTY;
+        String eventInfo;
 
         List<EventType> eventType = Lists.newArrayList();
 
         for (Feature feature : viccEntry.features()) {
             Map<String, List<String>> eventMap = Maps.newHashMap();
 
-            switch (source) {
+            switch (viccEntry.source()) {
                 case ONCOKB: // extract info oncokb
                     name = feature.name();
                     gene = feature.geneSymbol();
@@ -64,7 +62,7 @@ public class EventTypeAnalyzer {
                                 feature.name(),
                                 gene,
                                 biomarkerType,
-                                source);
+                                viccEntry.source());
                     }
 
                     break;
@@ -140,7 +138,7 @@ public class EventTypeAnalyzer {
                                 feature.name(),
                                 gene,
                                 biomarkerType,
-                                source);
+                                viccEntry.source());
                     }
 
                     break;
@@ -227,7 +225,7 @@ public class EventTypeAnalyzer {
                                 feature.name(),
                                 gene,
                                 biomarkerType,
-                                source);
+                                viccEntry.source());
                     }
 
                     break;
@@ -237,9 +235,9 @@ public class EventTypeAnalyzer {
                     break;
                 case JAX_TRIALS: // extract info for jax trials
                     break;
-                case MOLECULARMATCH: // extract info for molecular match
+                case MOLECULAR_MATCH: // extract info for molecular match
                     break;
-                case MOLECULARMATCH_TRIALS: // extract info for molecular match trials
+                case MOLECULAR_MATCH_TRIALS: // extract info for molecular match trials
                     break;
                 case PMKB: // extract info for pmkb
                     break;
@@ -255,7 +253,7 @@ public class EventTypeAnalyzer {
                     .gene(gene)
                     .name(name)
                     .description(description)
-                    .source(source)
+                    .source(viccEntry.source())
                     .eventMap(eventMap)
                     .build());
         }
