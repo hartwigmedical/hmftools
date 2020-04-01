@@ -31,6 +31,7 @@ import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
+import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
@@ -72,6 +73,12 @@ public class WidePatientReader {
                 withSampleMatchOnly(matchedBiopsies),
                 toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator));
 
+        // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
+        final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
+                patientIdentifier,
+                matchedTreatments.values(),
+                toBiopsyTreatmentResponseData(wideEcrfModel.responses()));
+
         //TODO match pre treatment /treatment /response data
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
@@ -79,8 +86,7 @@ public class WidePatientReader {
                 sequencedSamples,
                 matchedBiopsies.values(),
                 matchedTreatments.values(),
-                Lists.newArrayList(),
-                //toBiopsyTreatmentResponseData(wideEcrfModel.responses()),
+                matchedResponses.values(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList());
