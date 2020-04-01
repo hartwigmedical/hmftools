@@ -79,7 +79,6 @@ public class WidePatientReader {
                 matchedTreatments.values(),
                 toBiopsyTreatmentResponseData(wideEcrfModel.responses()));
 
-        //TODO match pre treatment /treatment /response data
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator),
@@ -135,28 +134,25 @@ public class WidePatientReader {
             @NotNull final TreatmentCurator treatmentCurator) {
         final List<DrugData> drugs = Lists.newArrayList();
         for (WidePreTreatmentData preTreatment : preTreatmentData) {
-            Boolean drugExist1 = preTreatment.drug1().isEmpty();
-            Boolean drugExist2 = preTreatment.drug2().isEmpty();
-            Boolean drugExist3 = preTreatment.drug3().isEmpty();
-            Boolean drugExist4 = preTreatment.drug4().isEmpty();
-
-            String drugName1 = preTreatment.drug1();
-            String drugName2 = preTreatment.drug2();
-            String drugName3 = preTreatment.drug3();
-            String drugName4 = preTreatment.drug4();
-
-            String drugName = drugName1;
 
             LocalDate drugsEndDate =
                     preTreatment.dateLastSystemicTherapy().isEmpty() ? null : createInterpretDate(preTreatment.dateLastSystemicTherapy());
 
-            if (drugName != null || drugsEndDate != null) {
-                final List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
-                drugs.add(ImmutableDrugData.of(drugName, null, drugsEndDate, null, curatedDrugs));
+            if (preTreatment.drug1() != null || drugsEndDate != null) {
+                final List<CuratedDrug> curatedDrugs1 = treatmentCurator.search(preTreatment.drug1());
+                final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
+                final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
+                final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
+
+                drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
+                drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
+                drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
+                drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
+
             }
         }
 
-        return Lists.newArrayList();
+        return drugs;
     }
 
     @NotNull
