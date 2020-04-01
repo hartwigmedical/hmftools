@@ -28,6 +28,8 @@ import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
+import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
@@ -60,13 +62,17 @@ public class WidePatientReader {
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
+
+        final MatchResult<BiopsyData> matchedBiopsies =
+                BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier, sequencedSamples, toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator));
+
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator),
                 sequencedSamples,
-                toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator),
-                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator),
-                toBiopsyTreatmentResponseData(wideEcrfModel.responses()),
+                matchedBiopsies.values(),
+                Lists.newArrayList(), //toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator),
+                Lists.newArrayList(), //toBiopsyTreatmentResponseData(wideEcrfModel.responses()),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList());
