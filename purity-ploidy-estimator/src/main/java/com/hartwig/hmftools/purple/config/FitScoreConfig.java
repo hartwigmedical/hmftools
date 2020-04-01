@@ -13,18 +13,18 @@ import org.jetbrains.annotations.Nullable;
 public interface FitScoreConfig {
 
     String PLOIDY_PENALTY_FACTOR = "ploidy_penalty_factor";
-    String PLOIDY_PENALTY_STANDARD_DEVIATION = "ploidy_penalty_standard_deviation";
-    String PLOIDY_PENALTY_MIN_STANDARD_DEVIATION = "ploidy_penalty_min_standard_deviation_per_ploidy";
     String PLOIDY_PENALTY_SUB_MIN_ADDITIONAL = "ploidy_penalty_sub_min_additional";
     String PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER = "ploidy_penalty_sub_one_major_allele_multiplier";
+    String PLOIDY_PENALTY_STANDARD_DEVIATION = "ploidy_penalty_standard_deviation";
+    String PLOIDY_PENALTY_MIN_STANDARD_DEVIATION = "ploidy_penalty_min_standard_deviation_per_ploidy";
     String PLOIDY_PENALTY_MIN = "ploidy_penalty_min";
 
-    double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.3;
+    double PLOIDY_PENALTY_FACTOR_DEFAULT = 0.4;
     double PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT = 0.05;
-    double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1;
-    double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 2;
+    double PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT = 1.5;
+    double PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT = 1;
     double PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT = 1.5;
-    double PLOIDY_PENALTY_MIN_DEFAULT = 0.2;
+    double PLOIDY_PENALTY_MIN_DEFAULT = 0.1;
 
     static void addOptions(@NotNull Options options) {
         options.addOption(PLOIDY_PENALTY_FACTOR, true, "Penalty factor to apply to the number of copy number events");

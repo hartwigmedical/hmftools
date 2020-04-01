@@ -39,6 +39,13 @@ public class PurityAdjusterTest {
         assertFrequencyMatchesPloidy(victim, 2, 0, 3, 2);
     }
 
+    @Test
+    public void testExpectedFrequencyWithNegativeTumorCopyNumber() {
+        final PurityAdjuster victim = new PurityAdjuster(Gender.FEMALE, 1, 1d);
+        assertEquals(0, victim.expectedFrequency(2, 1, -0.2, -0.1), EPSILON);
+    }
+
+
     private void assertFrequencyMatchesPloidy(final PurityAdjuster victim, final int normalCopyNumber, final int normalPloidy,
             final double tumorCopyNumber, final double tumorPloidy) {
 

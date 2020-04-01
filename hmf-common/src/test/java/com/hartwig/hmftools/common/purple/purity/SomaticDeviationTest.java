@@ -25,6 +25,13 @@ public class SomaticDeviationTest {
         assertEquals(0.65, deviationFromMax, 0.01);
     }
 
+    @Test
+    public void testMaxConcievableReadsIsZeroWithNegativeTumorCopyNumber() {
+        PurityAdjuster purityAdjuster = new PurityAdjuster(Gender.FEMALE, 0.12, 0.98);
+        int maxReads = SomaticDeviation.INSTANCE.maxConceivableReads(purityAdjuster, 2, depth(18, 55),  -0.1, -0.1);
+        assertEquals(0, maxReads);
+    }
+
     @NotNull
     private static AllelicDepth depth(int alleleReadCount, int totalReadCount) {
         return ImmutableAllelicDepthImpl.builder().alleleReadCount(alleleReadCount).totalReadCount(totalReadCount).build();

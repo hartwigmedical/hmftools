@@ -90,6 +90,10 @@ public class PurityAdjuster {
 
     public double expectedFrequency(final int normalCopyNumber, final int normalPloidy, final double tumorCopyNumber,
             final double tumorPloidy) {
+        if (Doubles.lessOrEqual(tumorCopyNumber, 0)) {
+            return 0;
+        }
+
         double totalObservations = purity * tumorCopyNumber + normalCopyNumber * (1 - purity);
         double normalObservations = normalPloidy * (1 - purity);
         double tumorObservations = tumorPloidy * purity;
