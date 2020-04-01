@@ -8,6 +8,7 @@ import java.util.Locale;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
@@ -74,6 +75,11 @@ public class WidePatientReader {
                 matchedTreatments.values(),
                 toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
 
+        final List<ValidationFinding> findings = Lists.newArrayList();
+        findings.addAll(matchedBiopsies.findings());
+        findings.addAll(matchedTreatments.findings());
+        findings.addAll(matchedResponses.findings());
+
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator, patientIdentifier),
@@ -83,7 +89,7 @@ public class WidePatientReader {
                 matchedResponses.values(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
-                Lists.newArrayList());
+                findings);
     }
 
     @NotNull
@@ -138,20 +144,20 @@ public class WidePatientReader {
                     drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
                 }
 
-                if (!preTreatment.drug2().isEmpty() || drugsEndDate != null) {
-                    final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
-                }
-
-                if (!preTreatment.drug3().isEmpty() || drugsEndDate != null) {
-                    final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
-                }
-
-                if (!preTreatment.drug4().isEmpty() || drugsEndDate != null) {
-                    final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
-                }
+//                if (!preTreatment.drug2().isEmpty() || drugsEndDate != null) {
+//                    final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
+//                    drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
+//                }
+//
+//                if (!preTreatment.drug3().isEmpty() || drugsEndDate != null) {
+//                    final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
+//                    drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
+//                }
+//
+//                if (!preTreatment.drug4().isEmpty() || drugsEndDate != null) {
+//                    final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
+//                    drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
+//                }
             }
         }
         return drugs;
