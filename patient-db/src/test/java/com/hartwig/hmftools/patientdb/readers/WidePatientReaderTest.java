@@ -11,6 +11,5 @@ public class WidePatientReaderTest {
 
             assertEquals(WidePatientReader.createInterpretDate("18-apr-2019").toString(), "2019-04-18");
             assertEquals(WidePatientReader.createInterpretDate("17-okt-2018").toString(), "2018-10-17");
-
         }
 }
