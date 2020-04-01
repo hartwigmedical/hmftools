@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import static org.junit.Assert.*;
 
+import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
+
 import org.junit.Test;
 
 public class WidePatientReaderTest {

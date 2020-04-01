@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.wide;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Locale;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
@@ -32,11 +33,6 @@ import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
-import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideTreatmentData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -64,24 +60,23 @@ public class WidePatientReader {
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
-
         final MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
                 sequencedSamples,
-                toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator));
+                toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator, patientIdentifier));
 
         final MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
                 withSampleMatchOnly(matchedBiopsies),
-                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator));
+                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier));
 
         // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 patientIdentifier,
                 matchedTreatments.values(),
-                toBiopsyTreatmentResponseData(wideEcrfModel.responses()));
+                toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
 
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
-                preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator),
+                preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator, patientIdentifier),
                 sequencedSamples,
                 matchedBiopsies.values(),
                 matchedTreatments.values(),
@@ -121,39 +116,44 @@ public class WidePatientReader {
 
     @NotNull
     private static PreTreatmentData preTreatmentData(@NotNull List<WidePreTreatmentData> widePreTreatmentData,
-            @NotNull final TreatmentCurator treatmentCurator) {
-
+            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier) {
         return ImmutablePreTreatmentData.of(null,
                 null,
-                readDrugsPreTreatment(widePreTreatmentData, treatmentCurator),
+                readDrugsPreTreatment(widePreTreatmentData, treatmentCurator, patientIdentifier),
                 FormStatus.undefined());
     }
 
     @NotNull
-    public static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreTreatmentData> preTreatmentData,
-            @NotNull final TreatmentCurator treatmentCurator) {
+    private static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreTreatmentData> preTreatmentData,
+            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier) {
         final List<DrugData> drugs = Lists.newArrayList();
         for (WidePreTreatmentData preTreatment : preTreatmentData) {
+            if (patientIdentifier.equals(preTreatment.patientId())) {
+                LocalDate drugsEndDate =
+                        preTreatment.dateLastSystemicTherapy().isEmpty() ? null : createInterpretDate(preTreatment.dateLastSystemicTherapy());
 
-            LocalDate drugsEndDate =
-                    preTreatment.dateLastSystemicTherapy().isEmpty() ? null : createInterpretDate(preTreatment.dateLastSystemicTherapy());
+                if (preTreatment.drug1() != null || drugsEndDate != null) {
+                    final List<CuratedDrug> curatedDrugs1 =
+                            preTreatment.drug1() == null ? Lists.newArrayList() : treatmentCurator.search(preTreatment.drug1());
+                    final List<CuratedDrug> curatedDrugs2 =
+                            preTreatment.drug2() == null ? Lists.newArrayList() : treatmentCurator.search(preTreatment.drug2());
+                    final List<CuratedDrug> curatedDrugs3 =
+                            preTreatment.drug3() == null ? Lists.newArrayList() : treatmentCurator.search(preTreatment.drug3());
+                    final List<CuratedDrug> curatedDrugs4 =
+                            preTreatment.drug4() == null ? Lists.newArrayList() : treatmentCurator.search(preTreatment.drug4());
 
-            if (preTreatment.drug1() != null || drugsEndDate != null) {
-                final List<CuratedDrug> curatedDrugs1 = treatmentCurator.search(preTreatment.drug1());
-                final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
-                final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
-                final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
-
-                drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
-                drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
-                drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
-                drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
+                    drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
+                    drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
+                    drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
+                    drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
+                }
             }
         }
         return drugs;
     }
 
     @NotNull
+    @VisibleForTesting
     public static LocalDate createInterpretDate(@NotNull String date) {
         DateTimeFormatter inputFormatter =
                 new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(new Locale("nl", "NL"));
@@ -165,19 +165,17 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static List<BiopsyData> toBiopsyData(@NotNull List<WideBiopsyData> wideBiopsyData,
-            @NotNull BiopsySiteCurator biopsySiteCurator) {
+    private static List<BiopsyData> toBiopsyData(@NotNull List<WideBiopsyData> wideBiopsyData, @NotNull BiopsySiteCurator biopsySiteCurator,
+            @NotNull String patientIdentifier) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
         final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
 
         for (WideBiopsyData biopsyData : wideBiopsyData) {
-            biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.bioptDate().isEmpty() ? null : createInterpretDate(biopsyData.bioptDate()),
-                    null,
-                    null,
-                    curatedBiopsyType,
-                    null,
-                    null,
-                    FormStatus.undefined()));
+            if (patientIdentifier.equals(biopsyData.wideId())) {
+                biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.bioptDate().isEmpty()
+                        ? null
+                        : createInterpretDate(biopsyData.bioptDate()), null, null, curatedBiopsyType, null, null, FormStatus.undefined()));
+            }
         }
         return biopsyDataList;
 
@@ -185,20 +183,21 @@ public class WidePatientReader {
 
     @NotNull
     private static List<BiopsyTreatmentData> toBiopsyTreatmentData(@NotNull List<WideTreatmentData> wideTreatmentData,
-            @NotNull final TreatmentCurator treatmentCurator) {
+            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier) {
         List<BiopsyTreatmentData> biopsyTreatmentDataList = Lists.newArrayList();
         for (WideTreatmentData treatmentData : wideTreatmentData) {
-            biopsyTreatmentDataList.add(ImmutableBiopsyTreatmentData.of(null,
-                    null,
-                    readDrugsPostTreatment(treatmentData, treatmentCurator),
-                    FormStatus.undefined()));
-
+            if (patientIdentifier.equals(treatmentData.sampleId())) {
+                biopsyTreatmentDataList.add(ImmutableBiopsyTreatmentData.of(null,
+                        null,
+                        readDrugsPostTreatment(treatmentData, treatmentCurator),
+                        FormStatus.undefined()));
+            }
         }
         return biopsyTreatmentDataList;
     }
 
     @NotNull
-    public static List<DrugData> readDrugsPostTreatment(@NotNull WideTreatmentData treatmentData,
+    private static List<DrugData> readDrugsPostTreatment(@NotNull WideTreatmentData treatmentData,
             @NotNull final TreatmentCurator treatmentCurator) {
         final List<DrugData> drugs = Lists.newArrayList();
         String drugName = treatmentData.drug();
@@ -213,15 +212,18 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static List<BiopsyTreatmentResponseData> toBiopsyTreatmentResponseData(@NotNull List<WideResponseData> wideResponseData) {
+    private static List<BiopsyTreatmentResponseData> toBiopsyTreatmentResponseData(@NotNull List<WideResponseData> wideResponseData,
+            @NotNull String patientIdentifier) {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
-            biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
-                    createInterpretDate(responseData.date().isEmpty() ? null : responseData.date()),
-                    null,
-                    responseData.responseAccordingRecist(),
-                    null,
-                    FormStatus.undefined()));
+            if (patientIdentifier.equals(responseData.patientId())) {
+                biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
+                        createInterpretDate(responseData.date().isEmpty() ? null : responseData.date()),
+                        null,
+                        responseData.responseAccordingRecist(),
+                        null,
+                        FormStatus.undefined()));
+            }
         }
         return biopsyTreatmentResponseDataList;
     }
