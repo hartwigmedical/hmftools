@@ -133,22 +133,22 @@ public class WidePatientReader {
                         ? null
                         : createInterpretDate(preTreatment.dateLastSystemicTherapy());
 
-                if (preTreatment.drug1() != null || drugsEndDate != null) {
+                if (!preTreatment.drug1().isEmpty() || drugsEndDate != null) {
                     final List<CuratedDrug> curatedDrugs1 = treatmentCurator.search(preTreatment.drug1());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
                 }
 
-                if (preTreatment.drug2() != null || drugsEndDate != null) {
+                if (!preTreatment.drug2().isEmpty() || drugsEndDate != null) {
                     final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
                 }
 
-                if (preTreatment.drug3() != null || drugsEndDate != null) {
+                if (!preTreatment.drug3().isEmpty() || drugsEndDate != null) {
                     final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
                 }
 
-                if (preTreatment.drug4() != null || drugsEndDate != null) {
+                if (!preTreatment.drug4().isEmpty() || drugsEndDate != null) {
                     final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
                 }
