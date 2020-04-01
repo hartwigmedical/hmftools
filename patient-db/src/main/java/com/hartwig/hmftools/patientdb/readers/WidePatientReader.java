@@ -66,6 +66,7 @@ public class WidePatientReader {
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier, sequencedSamples, toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator));
 
+        //TODO match pre treatment /treatment /response data
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
                 preTreatmentData(wideEcrfModel.preTreatments(), treatmentCurator),
