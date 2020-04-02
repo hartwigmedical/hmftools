@@ -125,7 +125,6 @@ copynumber_pdf <- function(copyNumberRegions) {
       mutate(
         map = round(minorAllelePloidy),
         map = ifelse(map>=5, "MAP5+", paste0("MAP", map)),
-        map = paste0("MAP", round(minorAllelePloidy)),
         chromosome = factor(chromosome, levels= c(1:22), ordered = T),
         weight = bafCount/totalBafCount )
     
