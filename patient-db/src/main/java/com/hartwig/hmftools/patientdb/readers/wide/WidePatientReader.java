@@ -60,16 +60,16 @@ public class WidePatientReader {
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
-        final MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
+        MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
                 sequencedSamples,
                 toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator, patientIdentifier));
 
-        final MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
+        MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
                 withSampleMatchOnly(matchedBiopsies),
                 toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier));
 
         // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
-        final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
+        MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
                 patientIdentifier,
                 matchedTreatments.values(),
                 toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
