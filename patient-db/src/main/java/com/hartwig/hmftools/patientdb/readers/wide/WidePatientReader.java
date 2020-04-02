@@ -23,7 +23,6 @@ import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -211,7 +210,7 @@ public class WidePatientReader {
         List<BiopsyTreatmentData> biopsyTreatmentDataList = Lists.newArrayList();
         for (WideTreatmentData treatmentData : wideTreatmentData) {
             if (patientIdentifier.equals(treatmentData.sampleId())) {
-                biopsyTreatmentDataList.add(ImmutableBiopsyTreatmentData.of(null,
+                biopsyTreatmentDataList.add(BiopsyTreatmentData.of(null,
                         null,
                         readDrugsPostTreatment(treatmentData, treatmentCurator),
                         FormStatus.undefined()));

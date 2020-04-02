@@ -12,7 +12,6 @@ import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +47,7 @@ class BiopsyTreatmentReader {
                 final String treatmentGiven = readTreatmentGiven(treatmentForm);
                 final String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
                 final List<DrugData> drugs = readDrugs(treatmentForm);
-                treatments.add(ImmutableBiopsyTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status()));
+                treatments.add(BiopsyTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status()));
             }
         }
         return treatments;
