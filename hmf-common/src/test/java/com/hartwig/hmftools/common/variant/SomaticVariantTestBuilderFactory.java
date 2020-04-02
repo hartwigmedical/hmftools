@@ -13,6 +13,7 @@ public final class SomaticVariantTestBuilderFactory {
     @NotNull
     public static ImmutableSomaticVariantImpl.Builder create() {
         return ImmutableSomaticVariantImpl.builder()
+                .qual(100)
                 .chromosome(Strings.EMPTY)
                 .position(0L)
                 .ref(Strings.EMPTY)

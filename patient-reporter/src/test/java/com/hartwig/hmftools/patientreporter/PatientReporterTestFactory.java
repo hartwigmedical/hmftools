@@ -62,6 +62,7 @@ public final class PatientReporterTestFactory {
     @NotNull
     public static ImmutableSomaticVariantImpl.Builder createTestSomaticVariantBuilder() {
         return ImmutableSomaticVariantImpl.builder()
+                .qual(100)
                 .trinucleotideContext(Strings.EMPTY)
                 .highConfidenceRegion(false)
                 .microhomology(Strings.EMPTY)

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.knowledgebasegenerator.eventtype;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public abstract class EventType {
     public abstract String description();
 
     @NotNull
-    public abstract Source source();
+    public abstract ViccSource source();
 
     @NotNull
     public abstract Map<String, List<String>> eventMap();

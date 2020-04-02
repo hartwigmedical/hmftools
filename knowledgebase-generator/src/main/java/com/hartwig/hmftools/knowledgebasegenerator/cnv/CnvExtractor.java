@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.knowledgebasegenerator.cnv;
 
-import com.hartwig.hmftools.knowledgebasegenerator.sourceknowledgebase.Source;
 import com.hartwig.hmftools.vicc.datamodel.KbSpecificObject;
 import com.hartwig.hmftools.vicc.datamodel.ViccEntry;
+import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 import com.hartwig.hmftools.vicc.datamodel.brca.Brca;
 import com.hartwig.hmftools.vicc.datamodel.cgi.Cgi;
 import com.hartwig.hmftools.vicc.datamodel.civic.Civic;
@@ -24,20 +24,20 @@ public class CnvExtractor {
     private static final Logger LOGGER = LogManager.getLogger(CnvExtractor.class);
 
     @NotNull
-    public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull Source source, @NotNull String typeEvent,
+    public static KnownAmplificationDeletion determineKnownAmplificationDeletion(@NotNull ViccSource source, @NotNull String typeEvent,
             @NotNull String gene) {
         return knownInformation(source, typeEvent, gene);
 
     }
 
     @NotNull
-    public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull Source source,
+    public static ActionableAmplificationDeletion determineActionableAmplificationDeletion(@NotNull ViccSource source,
             @NotNull String typeEvent, @NotNull String gene, @NotNull ViccEntry viccEntry) {
         return actionableInformation(source, typeEvent, gene, viccEntry);
     }
 
     @NotNull
-    private static KnownAmplificationDeletion knownInformation(@NotNull Source source, @NotNull String typeEvent,
+    private static KnownAmplificationDeletion knownInformation(@NotNull ViccSource source, @NotNull String typeEvent,
             @NotNull String gene) {
         String link = Strings.EMPTY;
         switch (source) {
@@ -60,9 +60,9 @@ public class CnvExtractor {
                 break;
             case PMKB:
                 break;
-            case MOLECULARMATCH:
+            case MOLECULAR_MATCH:
                 break;
-            case MOLECULARMATCH_TRIALS:
+            case MOLECULAR_MATCH_TRIALS:
                 break;
             default:
                 LOGGER.warn("Unknown knowledgebase");
@@ -76,7 +76,7 @@ public class CnvExtractor {
     }
 
     @NotNull
-    private static ActionableAmplificationDeletion actionableInformation(@NotNull Source source, @NotNull String typeEvent,
+    private static ActionableAmplificationDeletion actionableInformation(@NotNull ViccSource source, @NotNull String typeEvent,
             @NotNull String gene, @NotNull ViccEntry viccEntry) {
         KbSpecificObject kbSpecificObject = viccEntry.KbSpecificObject();
         String drug = Strings.EMPTY;
@@ -111,7 +111,7 @@ public class CnvExtractor {
                 drugType = Strings.EMPTY;
                 cancerType = kbCivic.evidenceItem().disease().name();
                 level = viccEntry.association().evidenceLabel();
-                direction = viccEntry.association().responseType();;
+                direction = viccEntry.association().responseType();
                 link = "https://civic.genome.wustl.edu/links/variants/" + kbCivic.id();
                 break;
             case JAX:
@@ -129,10 +129,10 @@ public class CnvExtractor {
             case PMKB:
                 Pmkb kbPmkb = (Pmkb) kbSpecificObject;
                 break;
-            case MOLECULARMATCH:
+            case MOLECULAR_MATCH:
                 MolecularMatch kbMolecularMatch = (MolecularMatch) kbSpecificObject;
                 break;
-            case MOLECULARMATCH_TRIALS:
+            case MOLECULAR_MATCH_TRIALS:
                 MolecularMatchTrials kbMolecularMatchTrials = (MolecularMatchTrials) kbSpecificObject;
                 break;
             default:

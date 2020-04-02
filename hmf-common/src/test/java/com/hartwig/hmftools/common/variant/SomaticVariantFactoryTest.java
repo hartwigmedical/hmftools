@@ -55,7 +55,7 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void canReadCorrectSomaticVariant() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60,60:121";
+        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:59,60:120";
 
         final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("15", variant.chromosome());
@@ -73,7 +73,7 @@ public class SomaticVariantFactoryTest {
 
     @Test
     public void handleZeroReadCount() {
-        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:121";
+        final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:0";
         final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));
         assertFalse(missingAFVariant.isPresent());
     }

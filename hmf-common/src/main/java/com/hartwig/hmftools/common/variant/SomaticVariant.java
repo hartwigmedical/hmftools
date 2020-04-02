@@ -11,6 +11,8 @@ import org.jetbrains.annotations.Nullable;
 
 public interface SomaticVariant extends Variant {
 
+    double qual();
+
     @NotNull
     VariantType type();
 
@@ -111,4 +113,10 @@ public interface SomaticVariant extends Variant {
     default double clonalLikelihood() {
         return 1 - subclonalLikelihood();
     }
+
+    @Nullable
+    AllelicDepth rnaDepth();
+
+    @Nullable
+    AllelicDepth referenceDepth();
 }

@@ -22,6 +22,8 @@ public class LoadPurpleSomaticVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
 
     private static final String SAMPLE = "sample";
+    private static final String REFERENCE = "reference";
+    private static final String RNA = "rna";
     private static final String ALIAS = "alias";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
@@ -36,11 +38,14 @@ public class LoadPurpleSomaticVariants {
         final DatabaseAccess dbAccess = databaseAccess(cmd);
 
         final String tumorSample = cmd.getOptionValue(SAMPLE);
+        final String referenceSample = cmd.getOptionValue(REFERENCE, null);
+        final String rnaSample = cmd.getOptionValue(RNA, null);
+
         final String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
         LOGGER.info("Reading data from {}", somaticVcf);
         final SomaticVariantFactory factory = SomaticVariantFactory.unfilteredInstance();
-        final List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, somaticVcf);
+        final List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf);
 
         LOGGER.info("Persisting to db");
         dbAccess.writeSomaticVariants(cmd.getOptionValue(ALIAS, tumorSample), variants);
@@ -52,6 +57,8 @@ public class LoadPurpleSomaticVariants {
     private static Options createBasicOptions() {
         final Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
+        options.addOption(REFERENCE, true, "Optional name of the reference sample. This should correspond to the value used in PURPLE.");
+        options.addOption(RNA, true, "Optional name of the rna sample. This should correspond to the value used in PURPLE.");
         options.addOption(SOMATIC_VCF, true, "Path to the PURPLE somatic variant VCF file.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");

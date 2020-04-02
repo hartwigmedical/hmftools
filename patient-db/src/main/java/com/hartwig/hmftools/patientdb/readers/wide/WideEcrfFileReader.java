@@ -74,7 +74,6 @@ public class WideEcrfFileReader {
                 LOGGER.warn("Could not properly parse line in WIDE pre treatment csv: {}", line);
             }
         }
-        LOGGER.info(widePreTreatments);
         return widePreTreatments;
     }
 
@@ -98,7 +97,6 @@ public class WideEcrfFileReader {
                 LOGGER.warn("Could not properly parse line in WIDE biopsy csv: {}", line);
             }
         }
-        LOGGER.info(wideBiopsies);
         return wideBiopsies;
     }
 
@@ -121,7 +119,6 @@ public class WideEcrfFileReader {
                 LOGGER.warn("Could not properly parse line in WIDE treatment csv: {}", line);
             }
         }
-        LOGGER.info(wideTreatments);
         return wideTreatments;
     }
 
@@ -147,7 +144,6 @@ public class WideEcrfFileReader {
                 LOGGER.warn("Could not properly parse line in WIDE response csv: {}", line);
             }
         }
-        LOGGER.info(wideResponses);
         return wideResponses;
     }
 

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ViccEntry {
 
     @NotNull
-    public abstract String source();
+    public abstract ViccSource source();
 
     @NotNull
     public abstract List<String> genes();

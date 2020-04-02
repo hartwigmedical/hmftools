@@ -40,6 +40,7 @@ import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
@@ -112,15 +113,28 @@ public class SomaticVariantFactory {
         this.variantContextEnrichmentFactory = variantContextEnrichmentFactory;
     }
 
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @NotNull final String vcfFile) throws IOException {
+        return fromVCFFile(tumor, null, null, vcfFile);
+    }
+
     @NotNull
-    public List<SomaticVariant> fromVCFFile(@NotNull final String sample, @NotNull final String vcfFile) throws IOException {
+    public List<SomaticVariant> fromVCFFile(@NotNull final String tumor, @Nullable final String reference, @Nullable final String rna,
+            @NotNull final String vcfFile) throws IOException {
         final List<VariantContext> variants = Lists.newArrayList();
         final VariantContextEnrichment enrichment = variantContextEnrichmentFactory.create(variants::add);
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
             final VCFHeader header = (VCFHeader) reader.getHeader();
-            if (!sampleInFile(sample, header)) {
-                throw new IllegalArgumentException("Sample " + sample + " not found in vcf file " + vcfFile);
+            if (!sampleInFile(tumor, header)) {
+                throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
+            }
+
+            if (reference != null && !sampleInFile(reference, header)) {
+                throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
+            }
+
+            if (rna != null && !sampleInFile(rna, header)) {
+                throw new IllegalArgumentException("Sample " + rna + " not found in vcf file " + vcfFile);
             }
 
             if (!header.hasFormatLine("AD")) {
@@ -137,11 +151,12 @@ public class SomaticVariantFactory {
             enrichment.flush();
         }
 
-        return process(sample, variants);
+        return process(tumor, reference, rna, variants);
     }
 
     @NotNull
-    private List<SomaticVariant> process(@NotNull final String sample, @NotNull final List<VariantContext> allVariantContexts) {
+    private List<SomaticVariant> process(@NotNull final String sample, @Nullable final String reference, @Nullable final String rna,
+            @NotNull final List<VariantContext> allVariantContexts) {
         final List<SomaticVariant> variants = Lists.newArrayList();
 
         for (int i = 0; i < allVariantContexts.size(); i++) {
@@ -150,7 +165,7 @@ public class SomaticVariantFactory {
                 context.getCommonInfo().addFilter(NEAR_INDEL_PON_FILTER);
             }
 
-            createVariant(sample, context).ifPresent(variants::add);
+            createVariant(sample, reference, rna, context).ifPresent(variants::add);
         }
 
         return variants;
@@ -158,12 +173,31 @@ public class SomaticVariantFactory {
 
     @NotNull
     public Optional<SomaticVariant> createVariant(@NotNull final String sample, @NotNull final VariantContext context) {
+        return createVariant(sample, null, null, context);
+    }
+
+    @NotNull
+    public Optional<SomaticVariant> createVariant(@NotNull final String sample, @Nullable final String reference,
+            @Nullable final String rna, @NotNull final VariantContext context) {
         final Genotype genotype = context.getGenotype(sample);
 
-        if (filter.test(context) && genotype.hasAD() && genotype.getAD().length > 1) {
-            final AllelicDepth allelicDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
-            if (allelicDepth.totalReadCount() > 0) {
-                return Optional.of(createVariantBuilder(allelicDepth, context, canonicalAnnotationFactory))
+        if (filter.test(context) && AllelicDepth.containsAllelicDepth(genotype)) {
+            final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
+
+            final Optional<AllelicDepth> referenceDepth = Optional.ofNullable(reference)
+                    .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
+                    .filter(AllelicDepth::containsAllelicDepth)
+                    .map(AllelicDepth::fromGenotype);
+
+            final Optional<AllelicDepth> rnaDepth = Optional.ofNullable(rna)
+                    .flatMap(x -> Optional.ofNullable(context.getGenotype(x)))
+                    .filter(AllelicDepth::containsAllelicDepth)
+                    .map(AllelicDepth::fromGenotype);
+
+            if (tumorDepth.totalReadCount() > 0) {
+                return Optional.of(createVariantBuilder(tumorDepth, context, canonicalAnnotationFactory))
+                        .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
+                        .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
                         .map(x -> enrichment.enrich(x, context))
                         .map(ImmutableSomaticVariantImpl.Builder::build);
             }
@@ -185,6 +219,7 @@ public class SomaticVariantFactory {
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
+                .qual(context.getPhredScaledQual())
                 .chromosome(context.getContig())
                 .position(context.getStart())
                 .ref(context.getReference().getBaseString())

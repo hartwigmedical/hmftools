@@ -1002,6 +1002,8 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 
 ## Version History and Download Links
+- Upcoming
+  - Updated fitting deviation to aggressively penalise highly negative implied copy number
 - [2.40](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.40) 
   - Increase default value of min_diploid_tumor_ratio_count_centromere to 150
   - Update driver catalog DNDS values

@@ -24,8 +24,9 @@ class PloidyDeviation {
     }
 
     double majorAlleleDeviation(final double purity, final double normFactor, final double ploidy) {
-        final double majorAlleleDeviationMultiplier =
-                Doubles.greaterThan(ploidy, 0) && Doubles.lessThan(ploidy, 1) ? majorAlleleSubOnePenaltyMultiplier : 1;
+        final double majorAlleleDeviationMultiplier = Doubles.greaterThan(ploidy, 0) && Doubles.lessThan(ploidy, 1)
+                ? Math.max(1, majorAlleleSubOnePenaltyMultiplier * (1 - ploidy))
+                : 1;
         final double deviation =
                 majorAlleleDeviationMultiplier * alleleDeviation(purity, normFactor, ploidy) + subMinAdditionalPenalty(1, ploidy);
         return Math.max(deviation, minDeviation);
@@ -37,13 +38,12 @@ class PloidyDeviation {
     }
 
     private double alleleDeviation(final double purity, final double normFactor, final double ploidy) {
-        if (Doubles.lessThan(ploidy, -0.5)) {
-            return 1;
-        }
+        final double ploidyDistanceFromInteger = Doubles.lessThan(ploidy, -0.5)
+                ? 0.5
+                : Doubles.absDistanceFromInteger(ploidy);
 
-        double ploidyDistanceFromInteger = Doubles.absDistanceFromInteger(ploidy);
         double standardDeviationsPerPloidy = Math.max(minStandardDeviationPerPloidyPoint, purity * normFactor / 2 / standardDeviation);
-        return 2 * dist.cumulativeProbability(ploidyDistanceFromInteger * standardDeviationsPerPloidy) - 1;
+        return 2 * dist.cumulativeProbability(ploidyDistanceFromInteger * standardDeviationsPerPloidy) - 1 + Math.max(-0.5 - ploidy, 0);
     }
 
     private double subMinAdditionalPenalty(final double minPloidy, final double ploidy) {
