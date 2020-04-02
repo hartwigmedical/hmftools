@@ -11,8 +11,8 @@ Key features include:
   - no cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
-  - Multiple tumor support
-  - Multiple reference support
+  - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
+  - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.
   - RNA support
   - Tumor only support
 
