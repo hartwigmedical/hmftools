@@ -24,7 +24,7 @@ public final class TreatmentMatcher {
 
     @NotNull
     public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientIdentifier,
-            @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
+            @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments, @NotNull String wideId) {
         final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         final List<ValidationFinding> findings = Lists.newArrayList();
 
@@ -33,7 +33,7 @@ public final class TreatmentMatcher {
         Collections.sort(biopsies);
         Collections.sort(treatments);
 
-        List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments, patientIdentifier);
+        List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments, patientIdentifier, wideId);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
         // First match yes-treatments and wide treatments
@@ -127,12 +127,17 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments, @NotNull final String patientIdentifier) {
+    private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments,
+            @NotNull final String patientIdentifier, @NotNull String wideId) {
         List<BiopsyTreatmentData> yesTreatments = Lists.newArrayList();
         for (BiopsyTreatmentData treatment : treatments) {
             String treatmentGiven = treatment.treatmentGiven();
-            if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes") || patientIdentifier.startsWith("WIDE")) {
+            if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
                 yesTreatments.add(treatment);
+            } else if (patientIdentifier.startsWith("WIDE")) {
+                if (patientIdentifier.equals(wideId)) {
+                    yesTreatments.add(treatment);
+                }
             }
         }
         return yesTreatments;

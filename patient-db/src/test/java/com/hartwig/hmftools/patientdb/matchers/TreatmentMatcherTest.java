@@ -16,6 +16,7 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -160,7 +161,7 @@ public class TreatmentMatcherTest {
     private static List<BiopsyTreatmentData> assertedMatch(@NotNull List<BiopsyData> biopsies,
             @NotNull List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
+                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments, Strings.EMPTY).values();
         assertEquals(treatments.size(), matchedTreatments.size());
         return matchedTreatments;
     }

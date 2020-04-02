@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
-import java.security.acl.LastOwnerException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -71,7 +70,8 @@ public class WidePatientReader {
 
         final MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
                 withSampleMatchOnly(matchedBiopsies),
-                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier));
+                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier),
+                treatmentPatientId(wideEcrfModel.treatments()));
 
         // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
@@ -94,6 +94,15 @@ public class WidePatientReader {
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 findings);
+    }
+
+    @NotNull
+    private static String treatmentPatientId(@NotNull List<WideTreatmentData> wideTreatmentData) {
+        String wideId = Strings.EMPTY;
+        for (WideTreatmentData treatmentData : wideTreatmentData) {
+            wideId = treatmentData.sampleId();
+        }
+        return wideId;
     }
 
     @NotNull
