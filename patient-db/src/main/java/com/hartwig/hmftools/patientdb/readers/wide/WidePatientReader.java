@@ -228,7 +228,7 @@ public class WidePatientReader {
         for (WideResponseData responseData : wideResponseData) {
             if (patientIdentifier.equals(responseData.patientId())) {
                 biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
-                        createInterpretDate(responseData.date().isEmpty() ? null : responseData.date()),
+                        createInterpretDate(responseData.date().isEmpty() ? Strings.EMPTY : responseData.date()),
                         null,
                         responseData.responseAccordingRecist(),
                         null,
