@@ -84,11 +84,12 @@ public class ExpectedTransRates
 
         final double[] fitAllocations = ExpectationMaxFit.performFit(transComboCounts, mCurrentExpRatesData.getTranscriptDefinitions());
         final double[] fittedCounts = calculateFittedCounts(mCurrentExpRatesData.getTranscriptDefinitions(), fitAllocations);
+        double fitTotal = sumVector(fitAllocations);
 
         double[] residuals = calcResiduals(transComboCounts, fittedCounts, totalCounts);
 
-        ISF_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) residuals(%.0f perc=%.3f)",
-                geneSummaryData.GeneNames, totalCounts, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
+        ISF_LOGGER.debug(String.format("gene(%s) totalFragments(%.0f) fitTotal(%.0f) residuals(%.0f perc=%.3f)",
+                geneSummaryData.GeneNames, totalCounts, fitTotal, residuals[RESIDUAL_TOTAL], residuals[RESIDUAL_PERC]));
 
         geneSummaryData.setFitResiduals(residuals[RESIDUAL_TOTAL]);
 

@@ -99,8 +99,6 @@ public class GcRatioCounts
         }
 
         // split proportionally amongst the 2 closest buckets
-        double upperRatio = lowerRatio + GC_RATIO_BUCKET;
-
         gcRatioIndex[0] = getRatioIndex(lowerRatio);
         gcRatioIndex[1] = gcRatioIndex[0] + 1;
         counts[1] = (gcRatio - lowerRatio) / GC_RATIO_BUCKET;

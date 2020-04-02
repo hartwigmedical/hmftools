@@ -295,8 +295,7 @@ public class GcTranscriptCalculator
     {
         try
         {
-            String outputFileName = String.format("%sread_%d_%s", mConfig
-                    .OutputDir, mConfig.ReadLength, "exp_gc_ratios.csv");
+            String outputFileName = String.format("%sread_%d_%s", mConfig.OutputDir, mConfig.ReadLength, "exp_gc_ratios.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 

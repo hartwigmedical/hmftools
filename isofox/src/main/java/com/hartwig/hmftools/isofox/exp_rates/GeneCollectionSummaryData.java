@@ -70,12 +70,24 @@ public class GeneCollectionSummaryData
 
     public void applyGcAdjustments(final double[] gcAdjustments)
     {
-        double totalCounts = TransCategoryCounts.stream().mapToDouble(x -> x.fragmentCount()).sum();
-        TransCategoryCounts.forEach(x -> x.applyGcAdjustments(gcAdjustments));
-        double newTotalCounts = TransCategoryCounts.stream().mapToDouble(x -> x.fragmentCount()).sum();
+        // skip over the unspliced gene category in every instance
+        double originalTotal = 0;
+        double newTotal = 0;
 
-        double adjustFactor = totalCounts/newTotalCounts;
-        TransCategoryCounts.forEach(x -> x.adjustCounts(adjustFactor));
+        for(final CategoryCountsData catCounts : TransCategoryCounts)
+        {
+            if(catCounts.transcriptIds().isEmpty())
+                continue;
+
+            originalTotal += catCounts.fragmentCount();
+            catCounts.applyGcAdjustments(gcAdjustments);
+            newTotal += catCounts.fragmentCount();
+        }
+
+        // ensure no overall net change to counts after the adjustment
+        // eg if old total was 10K and new is 2K, then will mutiply all new counts by 5
+        double adjustFactor = originalTotal/newTotal;
+        TransCategoryCounts.stream().filter(x -> !x.transcriptIds().isEmpty()).forEach(x -> x.adjustCounts(adjustFactor));
     }
 
 }

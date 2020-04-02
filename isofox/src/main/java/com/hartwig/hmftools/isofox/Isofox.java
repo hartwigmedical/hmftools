@@ -173,7 +173,8 @@ public class Isofox
                 convertToPercentages(percentData);
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL_PERC", percentData, true);
 
-                writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
+                if(!mConfig.EnrichedGeneIds.isEmpty())
+                    writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "NON_ENRICHED", nonEnrichedGcRatioCounts.getCounts(), false);
 
                 if(mConfig.ApplyGcBiasAdjust)
                 {
@@ -238,6 +239,9 @@ public class Isofox
 
         // not thread safe at the moment
         chrTasks.forEach(x -> x.applyGcAdjustment());
+
+        ISF_LOGGER.debug("total({}) transcript expected GC counts from fit", String.format("%.0f",
+                mGcTranscriptCalcs.getTranscriptFitGcCounts().getCountsTotal()));
 
         // gather up global expected counts
         mGcTranscriptCalcs.calcGcRatioAdjustments(actualGcCounts);

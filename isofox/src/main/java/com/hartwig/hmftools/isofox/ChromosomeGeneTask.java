@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
@@ -319,6 +320,25 @@ public class ChromosomeGeneTask implements Callable
 
         mGeneCollectionSummaryData.add(geneCollectionSummary);
 
+        if(ISF_LOGGER.isDebugEnabled())
+        {
+            double gcTotals = mBamReader.getGeneGcRatioCounts().getCountsTotal();
+
+            double allCategoryTotals = mBamReader.getTransComboData().stream()
+                    .mapToDouble(x -> x.fragmentCount()).sum();
+
+            double transCategoryTotals = mBamReader.getTransComboData().stream()
+                    .filter(x -> !x.transcriptIds().isEmpty())
+                    .mapToDouble(x -> x.fragmentCount()).sum();
+
+            double transComboGcTotals = mBamReader.getTransComboData().stream()
+                    .filter(x -> !x.transcriptIds().isEmpty())
+                    .mapToDouble(x -> sumVector(x.fragmentCountsByGcRatio())).sum();
+
+            ISF_LOGGER.debug(String.format("genes(%s) gcTotal(%.1f) catCounts(all=%.2f trans=%.1f gcTotal=%.1f)",
+                    geneCollection.geneNames(), gcTotals, allCategoryTotals, transCategoryTotals, transComboGcTotals));
+        }
+
         if(mExpTransRates != null)
         {
             ExpectedRatesData expRatesData = null;
@@ -413,13 +433,9 @@ public class ChromosomeGeneTask implements Callable
 
     private void applyGcAdjustToTranscriptAllocations()
     {
-        // mExpTransRates.runTranscriptEstimation();
         for(final GeneCollectionSummaryData geneSummaryData : mGeneCollectionSummaryData)
         {
             // mPerfCounters[PERF_FIT].start();
-
-            // adjust all fragment counts by the GC adjustment
-            // final List<CategoryCountsData> categoryCountsData = geneSummaryData.TransCategoryCounts;
 
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);

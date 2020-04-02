@@ -170,6 +170,9 @@ public class TransExpressionCohort
 
                 calcPercentileValues(expData.TpmValues, percentileValues);
 
+                if(percentileValues[percentileValues.length - 1] < mConfig.TpmLogThreshold)
+                    continue;
+
                 mTransDistributionWriter.write(String.format("%s,%s,%s",
                         expData.GeneId, expData.GeneName, expData.TransName));
 
