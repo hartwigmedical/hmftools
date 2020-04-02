@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
+import java.security.acl.LastOwnerException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -35,11 +36,14 @@ import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WidePatientReader {
+    private static final Logger LOGGER = LogManager.getLogger(WidePatientReader.class);
 
     @NotNull
     private final WideEcrfModel wideEcrfModel;
@@ -139,22 +143,22 @@ public class WidePatientReader {
                         ? null
                         : createInterpretDate(preTreatment.dateLastSystemicTherapy());
 
-                if (!preTreatment.drug1().isEmpty() || drugsEndDate != null) {
+                if (preTreatment.drug1() != null) {
                     final List<CuratedDrug> curatedDrugs1 = treatmentCurator.search(preTreatment.drug1());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
                 }
 
-                if (!preTreatment.drug2().isEmpty() || drugsEndDate != null) {
+                if (preTreatment.drug2() != null) {
                     final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
                 }
 
-                if (!preTreatment.drug3().isEmpty() || drugsEndDate != null) {
+                if (preTreatment.drug3() != null) {
                     final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
                 }
 
-                if (!preTreatment.drug4().isEmpty() || drugsEndDate != null) {
+                if (preTreatment.drug4() != null) {
                     final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
                     drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
                 }

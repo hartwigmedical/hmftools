@@ -33,10 +33,10 @@ public final class TreatmentMatcher {
         Collections.sort(biopsies);
         Collections.sort(treatments);
 
-        List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
+        List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments, patientIdentifier);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
-        // First match yes-treatments
+        // First match yes-treatments and wide treatments
         for (final BiopsyTreatmentData treatment : yesTreatments) {
             LocalDate startDate = treatment.startDate();
             if (startDate == null) {
@@ -127,11 +127,11 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments) {
+    private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments, @NotNull final String patientIdentifier) {
         List<BiopsyTreatmentData> yesTreatments = Lists.newArrayList();
         for (BiopsyTreatmentData treatment : treatments) {
             String treatmentGiven = treatment.treatmentGiven();
-            if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
+            if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes") || patientIdentifier.startsWith("WIDE")) {
                 yesTreatments.add(treatment);
             }
         }
