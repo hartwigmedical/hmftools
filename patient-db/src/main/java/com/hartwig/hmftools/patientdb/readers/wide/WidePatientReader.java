@@ -60,13 +60,14 @@ public class WidePatientReader {
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
+        LocalDate biopsyDate = bioptDate(wideEcrfModel.biopsies(), patientIdentifier);
         MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
                 sequencedSamples,
                 toBiopsyData(wideEcrfModel.biopsies(), biopsySiteCurator, patientIdentifier));
 
         MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
                 withSampleMatchOnly(matchedBiopsies),
-                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier));
+                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier, biopsyDate));
 
         // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
         MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
@@ -175,6 +176,17 @@ public class WidePatientReader {
     }
 
     @NotNull
+    private static LocalDate bioptDate(@NotNull List<WideBiopsyData> wideBiopsyData, @NotNull String patientIdentifier) {
+        LocalDate biopsyDate = LocalDate.now();
+        for (WideBiopsyData biopsy : wideBiopsyData) {
+            if (patientIdentifier.equals(biopsy.wideId())) {
+                biopsyDate = createInterpretDate(biopsy.bioptDate());
+            }
+        }
+        return biopsyDate;
+    }
+
+    @NotNull
     private static List<BiopsyData> toBiopsyData(@NotNull List<WideBiopsyData> wideBiopsyData, @NotNull BiopsySiteCurator biopsySiteCurator,
             @NotNull String patientIdentifier) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
@@ -193,14 +205,17 @@ public class WidePatientReader {
 
     @NotNull
     private static List<BiopsyTreatmentData> toBiopsyTreatmentData(@NotNull List<WideTreatmentData> wideTreatmentData,
-            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier) {
+            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate) {
         List<BiopsyTreatmentData> biopsyTreatmentDataList = Lists.newArrayList();
         for (WideTreatmentData treatmentData : wideTreatmentData) {
             if (patientIdentifier.equals(treatmentData.sampleId())) {
-                biopsyTreatmentDataList.add(BiopsyTreatmentData.of("yes",
-                        null,
-                        readDrugsPostTreatment(treatmentData, treatmentCurator),
-                        FormStatus.undefined()));
+                if (biopsyDate.isEqual(createInterpretDate(treatmentData.startDate())) || createInterpretDate(
+                        treatmentData.startDate()).isAfter(biopsyDate)) {
+                    biopsyTreatmentDataList.add(BiopsyTreatmentData.of("yes",
+                            null,
+                            readDrugsPostTreatment(treatmentData, treatmentCurator),
+                            FormStatus.undefined()));
+                }
             }
         }
         return biopsyTreatmentDataList;
