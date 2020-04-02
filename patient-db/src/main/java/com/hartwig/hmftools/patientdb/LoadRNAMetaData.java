@@ -10,7 +10,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -30,16 +29,16 @@ public class LoadRNAMetaData {
     private static final String DB_URL = "db_url";
 
     public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        Options options = createBasicOptions();
+        CommandLine cmd = createCommandLine(args, options);
 
-        final String rnaSamplesTsv = cmd.getOptionValue(RNA_SAMPLES_TSV);
+        String rnaSamplesTsv = cmd.getOptionValue(RNA_SAMPLES_TSV);
 
         if (Utils.anyNull(rnaSamplesTsv, cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), cmd.getOptionValue(DB_URL))) {
             printUsageAndExit(options);
         }
 
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
+        DatabaseAccess dbAccess = databaseAccess(cmd);
 
         LOGGER.info("Reading RNA samples from {}", rnaSamplesTsv);
         Set<String> samples = Sets.newHashSet(Files.readAllLines(new File(rnaSamplesTsv).toPath()));
@@ -59,7 +58,7 @@ public class LoadRNAMetaData {
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(RNA_SAMPLES_TSV, true, "RNA samples csv.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
@@ -68,17 +67,16 @@ public class LoadRNAMetaData {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }
