@@ -24,7 +24,7 @@ public final class TreatmentMatcher {
 
     @NotNull
     public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull String patientIdentifier,
-            @NotNull List<BiopsyData> biopsies, @NotNull List<BiopsyTreatmentData> treatments, @NotNull String wideId) {
+            @NotNull List<BiopsyData> biopsies, @NotNull List<BiopsyTreatmentData> treatments) {
          List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         List<ValidationFinding> findings = Lists.newArrayList();
 
@@ -33,7 +33,7 @@ public final class TreatmentMatcher {
         Collections.sort(biopsies);
         Collections.sort(treatments);
 
-        List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments, patientIdentifier, wideId);
+        List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
         // First match yes-treatments and wide treatments
@@ -127,17 +127,13 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments,
-            @NotNull String patientIdentifier, @NotNull String wideId) {
+    private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments) {
         List<BiopsyTreatmentData> yesTreatments = Lists.newArrayList();
+
         for (BiopsyTreatmentData treatment : treatments) {
             String treatmentGiven = treatment.treatmentGiven();
             if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
                 yesTreatments.add(treatment);
-            } else if (patientIdentifier.startsWith("WIDE")) {
-                if (patientIdentifier.equals(wideId)) {
-                    yesTreatments.add(treatment);
-                }
             }
         }
         return yesTreatments;
@@ -153,7 +149,6 @@ public final class TreatmentMatcher {
             }
         }
         return notYesTreatments;
-
     }
 
     @NotNull

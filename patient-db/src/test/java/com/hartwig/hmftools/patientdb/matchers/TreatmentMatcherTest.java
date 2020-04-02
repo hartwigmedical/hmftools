@@ -161,7 +161,7 @@ public class TreatmentMatcherTest {
     private static List<BiopsyTreatmentData> assertedMatch(@NotNull List<BiopsyData> biopsies,
             @NotNull List<BiopsyTreatmentData> treatments) {
         final List<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments, Strings.EMPTY).values();
+                TreatmentMatcher.matchTreatmentsToBiopsies("patient", biopsies, treatments).values();
         assertEquals(treatments.size(), matchedTreatments.size());
         return matchedTreatments;
     }

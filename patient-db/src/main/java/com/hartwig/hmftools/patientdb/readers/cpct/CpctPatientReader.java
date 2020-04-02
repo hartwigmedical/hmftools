@@ -60,8 +60,7 @@ public class CpctPatientReader implements EcrfPatientReader {
         final MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedSamples, clinicalBiopsies);
         final MatchResult<BiopsyTreatmentData> matchedTreatments =
-                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments,
-                        Strings.EMPTY);
+                TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments);
 
         // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
         final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
