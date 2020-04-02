@@ -62,6 +62,7 @@ public class ChromosomeGeneTask implements Callable
     private final GcRatioCounts mNonEnrichedGcRatioCounts;
 
     private TaskType mCurrentTaskType;
+    private boolean mIsValid;
 
     private static final int PERF_TOTAL = 0;
     private static final int PERF_READS = 1;
@@ -113,11 +114,14 @@ public class ChromosomeGeneTask implements Callable
 
         if(mConfig.RunPerfChecks)
             mPerfCounters[PERF_FIT].setSortTimes(true);
+
+        mIsValid = true;
     }
 
     public final GeneBamReader getBamReader() { return mBamReader; }
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummaryData> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
+    public boolean isValid() { return mIsValid; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
 
@@ -492,6 +496,4 @@ public class ChromosomeGeneTask implements Callable
     {
         return mPerfCounters;
     }
-
-
 }

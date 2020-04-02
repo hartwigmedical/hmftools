@@ -48,6 +48,10 @@ public class ResultsWriter
     private BufferedWriter mRetainedIntronWriter;
 
     public static final String DELIMITER = ",";
+    public static final String FLD_GENE_ID = "GeneId";
+    public static final String FLD_GENE_NAME = "GeneName";
+    public static final String FLD_TRANS_ID = "TransId";
+    public static final String FLD_TRANS_NAME = "TransName";
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -152,8 +156,7 @@ public class ResultsWriter
                 final String outputFileName = mConfig.formOutputFile(GENE_RESULTS_FILE);
 
                 mGeneDataWriter = createBufferedWriter(outputFileName, false);
-                mGeneDataWriter.write("GeneId,GeneName,Chromosome,GeneLength,IntronicLength,TransCount");
-                mGeneDataWriter.write(",TotalFragments,SupportingTrans,Alt,Unspliced,ReadThrough,Chimeric,Duplicates,UnsplicedAlloc,FitResiduals,GeneSet");
+                mGeneDataWriter.write(GeneResult.csvHeader());
                 mGeneDataWriter.newLine();
             }
 

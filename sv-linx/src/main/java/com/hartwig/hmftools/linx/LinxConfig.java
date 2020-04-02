@@ -215,11 +215,11 @@ public class LinxConfig
 
     public static boolean validConfig(final CommandLine cmd)
     {
-        return(configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
+        return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, PURPLE_DATA_DIR) && configPathValid(cmd, SV_DATA_DIR)
             && configPathValid(cmd, FRAGILE_SITE_FILE) && configPathValid(cmd, KATAEGIS_FILE) && configPathValid(cmd, LINE_ELEMENT_FILE)
             && configPathValid(cmd, GENE_TRANSCRIPTS_DIR) && configPathValid(cmd, VCF_FILE)
             && configPathValid(cmd, VIRAL_HOSTS_FILE) && configPathValid(cmd, REPLICATION_ORIGINS_FILE) && configPathValid(cmd, INDEL_FILE)
-            && FusionDisruptionAnalyser.validConfig(cmd));
+            && FusionDisruptionAnalyser.validConfig(cmd);
     }
 
     public static boolean configPathValid(final CommandLine cmd, final String configItem)

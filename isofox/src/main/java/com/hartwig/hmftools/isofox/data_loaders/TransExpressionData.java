@@ -1,8 +1,18 @@
 package com.hartwig.hmftools.isofox.data_loaders;
 
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FIT_ALLOCATION;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
+import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
 
 public class TransExpressionData
 {
@@ -10,42 +20,47 @@ public class TransExpressionData
     public final String GeneName;
     public final int TransId;
     public final String TransName;
-    public final int EffectiveLength;
-    public final double FitAllocation;
 
-    private double mTransPerM;
-    private double mFragsPerKb;
+    public final List<String> SampleIds;
+    public final List<Double> FitAllocations;
+    public final List<Double> TpmValues;
 
-    public TransExpressionData(final String geneId, final String geneName, final int transId, final String transName,
-            final int effectiveLength, final double fitAllocation)
+    public TransExpressionData(final String geneId, final String geneName, final int transId, final String transName)
     {
         GeneId = geneId;
         GeneName = geneName;
         TransId = transId;
         TransName = transName;
-        EffectiveLength = effectiveLength;
-        FitAllocation = fitAllocation;
 
-        mTransPerM = 0;
-        mFragsPerKb = effectiveLength > 0 ? fitAllocation / (effectiveLength / 1000.0) : 0;
+        SampleIds = Lists.newArrayList();
+        FitAllocations = Lists.newArrayList();
+        TpmValues = Lists.newArrayList();
     }
 
-    public double fragsPerKb() { return mFragsPerKb; }
-
-    public double transPerM() { return mTransPerM; }
-    public void setTransPerM(double tpm) { mTransPerM = tpm; }
-
-    public static TransExpressionData fromCsv(final String input, final Map<String,Integer> fieldIndexMap)
+    public void addSampleData(final String sampleId, double fitAllocation, double tpm)
     {
-        final String[] items = input.split(DELIMITER);
+        int index = 0;
+        while(index < TpmValues.size())
+        {
+            if(tpm < TpmValues.get(index))
+                break;
 
+            ++index;
+        }
+
+        SampleIds.add(index, sampleId);
+        FitAllocations.add(index, fitAllocation);
+        TpmValues.add(index, tpm);
+    }
+
+
+    public static TransExpressionData fromCsv(final String[] items, final Map<String,Integer> fieldIndexMap)
+    {
         return new TransExpressionData(
-                items[fieldIndexMap.get("GeneId")],
-                items[fieldIndexMap.get("GeneName")],
-                Integer.parseInt(items[fieldIndexMap.get("TransId")]),
-                items[fieldIndexMap.get("TransName")],
-                Integer.parseInt(items[fieldIndexMap.get("EffectiveLength")]),
-                Double.parseDouble(items[fieldIndexMap.get("FitAllocation")]));
+                items[fieldIndexMap.get(FLD_GENE_ID)],
+                items[fieldIndexMap.get(FLD_GENE_NAME)],
+                Integer.parseInt(items[fieldIndexMap.get(FLD_TRANS_ID)]),
+                items[fieldIndexMap.get(FLD_TRANS_NAME)]);
     }
 
 }

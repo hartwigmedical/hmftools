@@ -320,6 +320,28 @@ public class IsofoxConfig
         return true;
     }
 
+    public static boolean validConfigPaths(final CommandLine cmd)
+    {
+        return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
+                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, ENRICHED_GENE_IDS) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
+                && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE);
+    }
+
+    public static boolean configPathValid(final CommandLine cmd, final String configItem)
+    {
+        if(!cmd.hasOption(configItem))
+            return true;
+
+        final String filePath = cmd.getOptionValue(configItem);
+        if(!Files.exists(Paths.get(filePath)))
+        {
+            ISF_LOGGER.error("invalid config path: {} = {}", configItem, filePath);
+            return false;
+        }
+
+        return true;
+    }
+
     public boolean skipChromosome(final String chromosome)
     {
         return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);

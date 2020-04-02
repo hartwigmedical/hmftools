@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_LEVEL;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
 import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
@@ -368,6 +369,12 @@ public class Isofox
         else if(cmd.hasOption(LOG_LEVEL))
         {
             Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
+        }
+
+        if(!validConfigPaths(cmd))
+        {
+            ISF_LOGGER.error("invalid input files or paths, exiting");
+            return;
         }
 
         IsofoxConfig config = new IsofoxConfig(cmd);

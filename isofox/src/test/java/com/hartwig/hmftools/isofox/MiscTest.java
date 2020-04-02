@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.calcPercentileValues;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.calcEffectiveLength;
 
 import static junit.framework.TestCase.assertEquals;
@@ -24,19 +25,37 @@ public class MiscTest
         assertEquals(800, calcEffectiveLength(1000, fragmentLengthData), 0.001);
 
         assertEquals(83.33, calcEffectiveLength(250, fragmentLengthData), 0.1);
+    }
 
-        /*
-        fragmentLengthData.clear();
-        fragmentLengthData.add(new int[]{50,31679});
-        fragmentLengthData.add(new int[]{100, 266724});
-        fragmentLengthData.add(new int[]{150,273855});
-        fragmentLengthData.add(new int[]{200,177957});
-        fragmentLengthData.add(new int[]{250,107339});
-        fragmentLengthData.add(new int[]{300,109962});
-        fragmentLengthData.add(new int[]{550,12691});
+    @Test
+    public void testPercentileSplits()
+    {
+        int slots = 11;
+        double[] percentileValues = new double[slots];
 
-        double length = calcEffectiveLength(8415, fragmentLengthData);
-        // exonicBases(8415) neg calculated effective length(-523.5854130811146) from dist()
-        */
+        List<Double> values = Lists.newArrayList(1.0, 2.0, 3.0, 4.0, 5.0);
+        calcPercentileValues(values, percentileValues);
+
+        assertEquals(1.0, percentileValues[0], 0.001);
+        assertEquals(1.0, percentileValues[1], 0.001);
+        assertEquals(1.8, percentileValues[2], 0.001);
+        assertEquals(2.0, percentileValues[3], 0.001);
+        assertEquals(5.0, percentileValues[9], 0.001);
+        assertEquals(5.0, percentileValues[10], 0.001);
+
+        values.clear();
+
+        for(int i = 0; i < 50; ++i)
+        {
+            values.add((double)i);
+        }
+
+        calcPercentileValues(values, percentileValues);
+
+        assertEquals(1.8, percentileValues[0], 0.001);
+        assertEquals(6.3, percentileValues[1], 0.001);
+        assertEquals(42.7, percentileValues[9], 0.001);
+        assertEquals(47.2, percentileValues[10], 0.001);
+
     }
 }

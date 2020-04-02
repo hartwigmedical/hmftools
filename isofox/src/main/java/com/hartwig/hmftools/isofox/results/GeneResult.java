@@ -8,6 +8,13 @@ import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
+
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
@@ -67,5 +74,14 @@ public abstract class GeneResult
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
 
-
+    public static String csvHeader()
+    {
+        return new StringJoiner(DELIMITER)
+                .add(FLD_GENE_ID)
+                .add(FLD_GENE_NAME)
+                .add("Chromosome").add("GeneLength").add("IntronicLength").add("TransCount")
+                .add("TotalFragments").add("SupportingTrans").add("Alt").add("Unspliced").add("ReadThrough")
+                .add("Chimeric").add("Duplicates").add("UnsplicedAlloc").add("FitResiduals").add("GeneSet")
+                .toString();
+    }
 }

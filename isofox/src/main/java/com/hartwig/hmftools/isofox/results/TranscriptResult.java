@@ -7,6 +7,10 @@ import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FR
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -201,14 +205,26 @@ public abstract class TranscriptResult
         return true;
     }
 
+    public static final String FLD_FIT_ALLOCATION = "FitAllocation";
+    public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
+    public static final String FLD_TPM = "TPM";
+
     public static String csvHeader()
     {
-        return "GeneId,GeneName,TransId,TransName,Canonical,ExonCount"
-                + ",EffectiveLength,FitAllocation,TPM"
-                + ",ExonsMatched,ExonicBases,ExonicCoverage"
-                + ",UniqueBases,UniqueBaseCoverage,UniqueBaseAvgDepth"
-                + ",SpliceJuncSupported,UniqueSpliceJunc,UniqueSpliceJuncSupported"
-                + ",ShortFragments,ShortUniqueFragments,LongFragments,LongUniqueFragments,SpliceJuncFragments,UniqueSpliceJuncFragments";
+        return new StringJoiner(DELIMITER)
+                .add(FLD_GENE_ID)
+                .add(FLD_GENE_NAME)
+                .add(FLD_TRANS_ID)
+                .add(FLD_TRANS_NAME)
+                .add("Canonical").add("ExonCount")
+                .add(FLD_EFFECTIVE_LENGTH)
+                .add(FLD_FIT_ALLOCATION)
+                .add(FLD_TPM)
+                .add("ExonsMatched").add("ExonicBases").add("ExonicCoverage")
+                .add("UniqueBases").add("UniqueBaseCoverage").add("UniqueBaseAvgDepth")
+                .add("SpliceJuncSupported").add("UniqueSpliceJunc").add("UniqueSpliceJuncSupported")
+                .add("ShortFragments").add("ShortUniqueFragments").add("LongFragments").add("LongUniqueFragments")
+                .add("SpliceJuncFragments").add("UniqueSpliceJuncFragments").toString();
     }
 
     public String toCsv(final EnsemblGeneData geneData)
