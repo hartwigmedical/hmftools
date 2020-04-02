@@ -34,6 +34,9 @@ purity_ploidy_range_plot <- function(bestFit, range) {
     maxPloidy = min(range %>% arrange(purity, -ploidy) %>% group_by(purity)  %>% filter(row_number() == 1) %>% select(purity, ploidy = xmax) %>% ungroup() %>% select(ploidy))
     minPloidy = max(range %>% arrange(purity, ploidy) %>% group_by(purity)  %>% filter(row_number() == 1) %>% select(purity, maxPloidy = xmin) %>% ungroup() %>% select(maxPloidy))
 
+    maxPloidy = max(maxPloidy, bestPloidy)
+    minPloidy = min(minPloidy, bestPloidy)
+    
     range = range %>%
         filter(xmin <= maxPloidy, xmax >= minPloidy) %>%
         mutate(xmax = pmin(xmax, maxPloidy), xmin = pmax(xmin, minPloidy))
