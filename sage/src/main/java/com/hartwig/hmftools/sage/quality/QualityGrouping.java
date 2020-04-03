@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -12,8 +13,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class QualityGrouping {
 
-    public static List<QualityCount> removePosition(final Collection<QualityCount> quality) {
-        return groupBy(quality, QualityGrouping::removePosition);
+    public static List<QualityCount> groupByAlt(final Collection<QualityCount> quality) {
+        return groupBy(quality, QualityGrouping::alt);
+    }
+
+    public static List<QualityCount> groupWithoutPosition(final Collection<QualityCount> quality) {
+        return groupBy(quality, QualityGrouping::withoutPosition);
     }
 
     public static List<QualityCount> groupByQuality(final Collection<QualityCount> quality) {
@@ -39,13 +44,13 @@ public class QualityGrouping {
         }
 
         final List<QualityCount> result = Lists.newArrayList(map.values());
-        result.sort(QualityGrouping::compare);
+        Collections.sort(result);
 
         return result;
     }
 
     @NotNull
-    private static QualityRecord removePosition(@NotNull final QualityCount count) {
+    private static QualityRecord withoutPosition(@NotNull final QualityCount count) {
         return ImmutableQualityRecord.builder().from(count).position(0).build();
     }
 
@@ -60,6 +65,11 @@ public class QualityGrouping {
     }
 
     @NotNull
+    public static QualityRecord alt(@NotNull final QualityCount count) {
+        return ImmutableQualityRecord.builder().from(count).qual((byte) 0).trinucleotideContext().readIndex(0).firstOfPair(false).build();
+    }
+
+    @NotNull
     private static QualityRecord strandOnlyKey(@NotNull final QualityCount count) {
         return ImmutableQualityRecord.builder()
                 .ref((byte) 'A')
@@ -70,45 +80,6 @@ public class QualityGrouping {
                 .readIndex(0)
                 .firstOfPair(count.firstOfPair())
                 .build();
-    }
-
-    private static int compare(final QualityCount o1, final QualityCount o2) {
-        int countCompare = Integer.compare(o2.count(), o1.count());
-        if (countCompare != 0) {
-            return countCompare;
-        }
-
-        int refCompare = Byte.compare(o1.ref(), o2.ref());
-        if (refCompare != 0) {
-            return refCompare;
-        }
-
-        int altCompare = Byte.compare(o1.alt(), o2.alt());
-        if (altCompare != 0) {
-            return altCompare;
-        }
-
-        int indexCompare = Integer.compare(o1.readIndex(), o2.readIndex());
-        if (indexCompare != 0) {
-            return indexCompare;
-        }
-
-        int triOne = Byte.compare(o1.trinucleotideContext()[0], o2.trinucleotideContext()[0]);
-        if (triOne != 0) {
-            return triOne;
-        }
-
-        int triTwo = Byte.compare(o1.trinucleotideContext()[1], o2.trinucleotideContext()[1]);
-        if (triTwo != 0) {
-            return triTwo;
-        }
-
-        int triThree = Byte.compare(o1.trinucleotideContext()[2], o2.trinucleotideContext()[2]);
-        if (triThree != 0) {
-            return triThree;
-        }
-
-        return 0;
     }
 
 }

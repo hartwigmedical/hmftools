@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.quality;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -39,23 +40,23 @@ public class QualityCounter implements CigarHandler {
 
     @NotNull
     public Collection<QualityCount> counts() {
-        final Set<QualityCount> result = Sets.newHashSet();
 
-        for (QualityCount value : qualityMap.values()) {
-            if (isValid(value)) {
-                result.add(value);
+        final Set<QualityRecord> altsToRemove = QualityGrouping.groupByAlt(qualityMap.values())
+                .stream()
+                .filter(x -> x.ref() != x.alt())
+                .filter(x -> x.count() > 3)
+                .map(QualityCount::key)
+                .collect(Collectors.toSet());
+
+        final Set<QualityCount> result = Sets.newHashSet();
+        for (QualityCount count : qualityMap.values()) {
+            final QualityRecord altKey = QualityGrouping.alt(count);
+            if (!indelPositions.contains(count.position()) && !altsToRemove.contains(altKey)) {
+                result.add(count);
             }
         }
 
-        return QualityGrouping.removePosition(result);
-    }
-
-    private boolean isValid(QualityCount count) {
-
-        if (indelPositions.contains(count.position())) {
-            return false;
-        }
-        return count.ref() == count.alt() || count.count() <= 3;
+        return QualityGrouping.groupWithoutPosition(result);
     }
 
     @Override
@@ -72,9 +73,9 @@ public class QualityCounter implements CigarHandler {
     }
 
     @Override
-    public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement e, final int readIndex, final int refPos) {
+    public void handleAlignment(@NotNull final SAMRecord r, @NotNull final CigarElement e, final int startReadIndex, final int refPos) {
         for (int i = 0; i < e.getLength(); i++) {
-            int index = readIndex + i;
+            int readIndex = startReadIndex + i;
             int position = refPos + i;
 
             if (position > bounds.end()) {
@@ -86,16 +87,22 @@ public class QualityCounter implements CigarHandler {
             }
 
             byte ref = refGenome.base(position);
-            byte alt = record.getReadBases()[index];
-            byte quality = record.getBaseQualities()[index];
-            boolean firstOfPairFlag = record.getFirstOfPairFlag();
+            byte alt = r.getReadBases()[readIndex];
+            byte quality = r.getBaseQualities()[readIndex];
+            boolean firstOfPairFlag = r.getFirstOfPairFlag();
+            int displayIndex = 75;
+            if (readIndex <= 9) {
+                displayIndex = 0;
+            } else if (readIndex >= 141) {
+                displayIndex = 150;
+            }
 
             final QualityRecord key = ImmutableQualityRecord.builder()
                     .ref(ref)
                     .alt(alt)
                     .qual(quality)
                     .position(position)
-                    .readIndex(readIndex)
+                    .readIndex(displayIndex)
                     .firstOfPair(firstOfPairFlag)
                     .trinucleotideContext(refGenome.trinucleotideContext(position))
                     .build();

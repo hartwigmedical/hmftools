@@ -48,13 +48,13 @@ public class QualityApplication implements AutoCloseable {
 
         LOGGER.info("Starting");
 
-//        addAllRegions("17", 50_000_001, 51_000_000);
-        addAllRegions("17", 50_000_001, 60_000_000);
+        addAllRegions("17", 50_000_001, 51_000_000);
+//        addAllRegions("17", 50_000_001, 60_000_000);
 
         List<QualityCount> allCounts = Lists.newArrayList();
         for (Future<Collection<QualityCount>> counter : counters) {
             allCounts.addAll(counter.get());
-            allCounts = QualityGrouping.removePosition(allCounts);
+            allCounts = QualityGrouping.groupWithoutPosition(allCounts);
 //            allCounts = QualityGrouping.removePosition(allCounts);
         }
 
@@ -63,8 +63,8 @@ public class QualityApplication implements AutoCloseable {
 //        final Collection<QualityCount> strandOnly = QualityGrouping.groupByStrandOnly(allCounts);
 
         LOGGER.info("Finishing");
-        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/detailed.csv", allCounts);
-//        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_detailed.csv", allCounts);
+        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/detailed.1M.csv", allCounts);
+//        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_detailed.10M.csv", allCounts);
 //        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_quality.csv", qualityCounts);
 //        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_strand.csv", strandCounts);
 //        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_strandOnly.csv", strandOnly);
@@ -72,12 +72,25 @@ public class QualityApplication implements AutoCloseable {
         LOGGER.info("Finished in {} seconds", (System.currentTimeMillis() - time) / 1000);
     }
 
+    @NotNull
+    public void addRegion(String contig, int start, int end) {
+        final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
+        final Future<Collection<QualityCount>> future = executorService.submit(() -> new QualityRegion(
+                                "/Users/jon/hmf/analysis/COLO829T/bams/COLO829T.chr17.bam",
+//                "/Users/jon/hmf/analysis/sageValidation/quality/CPCT02010323T.qual.10M.bam",
+                //                "/Users/jon/hmf/analysis/sageValidation/quality/CPCT02010323T.qual.10M.cram",
+                referenceSequenceFile).regionCount(bounds));
+
+        counters.add(future);
+    }
+
+
     public void addAllRegions(String contig) {
         addAllRegions(contig, 1, referenceSequenceFile.getSequence(contig).length());
     }
 
     public void addAllRegions(String contig, int minPosition, int maxPosition) {
-        final int regionSliceSize = 500_000;
+        final int regionSliceSize = 100_000;
         for (int i = 0; ; i++) {
             int start = 1 + i * regionSliceSize;
             int end = start + regionSliceSize - 1;
@@ -94,18 +107,6 @@ public class QualityApplication implements AutoCloseable {
         }
     }
 
-    @NotNull
-    public void addRegion(String contig, int start, int end) {
-        final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-//        LOGGER.info("Adding region {}", bounds);
-
-        Future<Collection<QualityCount>> future = executorService.submit(() -> new QualityRegion(
-                "/Users/jon/hmf/analysis/COLO829T/bams/COLO829T.chr17.bam",
-//                "/Users/jon/hmf/analysis/sageValidation/quality/CPCT02010323T.qual.10M.bam",
-                referenceSequenceFile).regionCount(bounds));
-
-        counters.add(future);
-    }
 
     @Override
     public void close() throws Exception {
