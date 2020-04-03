@@ -29,14 +29,21 @@ public class QualityFile {
 
     @NotNull
     private static String toString(@NotNull final QualityCount baf) {
-        return (char) baf.alt()+ DELIMITER + (char) baf.ref()  + DELIMITER + baf.qual() + DELIMITER + baf.firstOfPair() + DELIMITER
-                + baf.count();
+        return (char) baf.alt() + DELIMITER + (char) baf.ref() + DELIMITER + baf.qual() + DELIMITER + baf.firstOfPair() + DELIMITER
+                + baf.readIndex() + DELIMITER + new String(baf.trinucleotideContext()) + DELIMITER + baf.count();
 
     }
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("alt").add("ref").add("qual").add("strand").add("count").toString();
+        return new StringJoiner(DELIMITER, "", "").add("alt")
+                .add("ref")
+                .add("qual")
+                .add("firstOfPair")
+                .add("readIndex")
+                .add("trinucleotideContext")
+                .add("count")
+                .toString();
     }
 
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
-public class QualityCount {
+public class QualityCount implements QualityRecord {
     private final QualityRecord key;
     private int count;
 
@@ -20,23 +20,33 @@ public class QualityCount {
         count += increment;
     }
 
-    int position() {
+    public int position() {
         return key.position();
     }
 
-    byte ref() {
+    public byte ref() {
         return key.ref();
     }
 
-    byte alt() {
+    public byte alt() {
         return key.alt();
     }
 
-    byte qual() {
+    public byte qual() {
         return key.qual();
     }
 
-    boolean firstOfPair() {
+    @Override
+    public int readIndex() {
+        return key.readIndex();
+    }
+
+    @Override
+    public byte[] trinucleotideContext() {
+        return key.trinucleotideContext();
+    }
+
+    public boolean firstOfPair() {
         return key.firstOfPair();
     }
 

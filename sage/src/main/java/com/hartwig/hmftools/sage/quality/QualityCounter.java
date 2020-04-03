@@ -47,7 +47,7 @@ public class QualityCounter implements CigarHandler {
             }
         }
 
-        return QualityGrouping.groupWithoutPosition(result);
+        return QualityGrouping.removePosition(result);
     }
 
     private boolean isValid(QualityCount count) {
@@ -91,11 +91,13 @@ public class QualityCounter implements CigarHandler {
             boolean firstOfPairFlag = record.getFirstOfPairFlag();
 
             final QualityRecord key = ImmutableQualityRecord.builder()
-                    .position(position)
                     .ref(ref)
                     .alt(alt)
                     .qual(quality)
+                    .position(position)
+                    .readIndex(readIndex)
                     .firstOfPair(firstOfPairFlag)
+                    .trinucleotideContext(refGenome.trinucleotideContext(position))
                     .build();
             qualityMap.computeIfAbsent(key, QualityCount::new).increment();
         }

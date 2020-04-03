@@ -7,13 +7,17 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface QualityRecord {
-    int position();
-
     byte ref();
 
     byte alt();
 
     byte qual();
 
+    int position();
+
+    int readIndex();
+
     boolean firstOfPair();
+
+    byte[] trinucleotideContext();
 }

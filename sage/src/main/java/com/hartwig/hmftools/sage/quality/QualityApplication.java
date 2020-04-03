@@ -44,29 +44,32 @@ public class QualityApplication implements AutoCloseable {
     }
 
     public void run() throws ExecutionException, InterruptedException, IOException {
+        long time = System.currentTimeMillis();
+
         LOGGER.info("Starting");
 
-        addAllRegions("17", 50_000_000, 60_000_000);
+//        addAllRegions("17", 50_000_001, 51_000_000);
+        addAllRegions("17", 50_000_001, 60_000_000);
 
-        final List<QualityCount> allCounts = Lists.newArrayList();
+        List<QualityCount> allCounts = Lists.newArrayList();
         for (Future<Collection<QualityCount>> counter : counters) {
             allCounts.addAll(counter.get());
+            allCounts = QualityGrouping.removePosition(allCounts);
+//            allCounts = QualityGrouping.removePosition(allCounts);
         }
 
-        final Collection<QualityCount> simple = QualityGrouping.groupWithoutPosition(allCounts);
-        final Collection<QualityCount> qualityCounts = QualityGrouping.groupByQuality(allCounts);
-        final Collection<QualityCount> strandCounts = QualityGrouping.groupByStrand(allCounts);
-        final Collection<QualityCount> strandOnly = QualityGrouping.groupByStrandOnly(allCounts);
+//        final Collection<QualityCount> qualityCounts = QualityGrouping.groupByQuality(allCounts);
+//        final Collection<QualityCount> strandCounts = QualityGrouping.groupByStrand(allCounts);
+//        final Collection<QualityCount> strandOnly = QualityGrouping.groupByStrandOnly(allCounts);
 
         LOGGER.info("Finishing");
-        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/detailed.csv", simple);
-//        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_detailed.csv", simple);
+        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/detailed.csv", allCounts);
+//        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_detailed.csv", allCounts);
 //        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_quality.csv", qualityCounts);
 //        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_strand.csv", strandCounts);
 //        QualityFile.write("/Users/jon/hmf/analysis/sageValidation/quality/bad_strandOnly.csv", strandOnly);
 
-        System.out.println("sdf");
-
+        LOGGER.info("Finished in {} seconds", (System.currentTimeMillis() - time) / 1000);
     }
 
     public void addAllRegions(String contig) {
