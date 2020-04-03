@@ -136,7 +136,6 @@ public class Isofox
         if(!validExecution)
             return false;
 
-        // final reporting
         if(!mConfig.generateExpectedDataOnly())
         {
             int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalReadCount()).sum();
@@ -202,34 +201,7 @@ public class Isofox
 
         mResultsWriter.close();
 
-        final PerformanceCounter[] perfCounters = chrTasks.get(0).getPerfCounters();
-
-        for(int i = 1; i < chrTasks.size(); ++i)
-        {
-            final PerformanceCounter[] chrPCs = chrTasks.get(i).getPerfCounters();
-
-            for(int j = 0; j < perfCounters.length; ++j)
-            {
-                perfCounters[j].merge(chrPCs[j]);
-            }
-        }
-
-        Arrays.stream(perfCounters).forEach(x -> x.logStats());
-
-        if(mConfig.RunPerfChecks)
-        {
-            // log 10 slowest times and their interval names
-            final List<Double> fitTimes = perfCounters[PERF_FIT].getTimes();
-            final List<String> fitGenes = perfCounters[PERF_FIT].getTimeNames();
-
-            if(fitTimes.size() >= 10 && fitGenes.size() == fitTimes.size())
-
-            for (int i = fitTimes.size() - 1; i >= fitTimes.size() - 10; --i)
-            {
-                ISF_LOGGER.info(String.format("fit times: geneSet(%s) time(%.3f)", fitGenes.get(i), fitTimes.get(i)));
-            }
-        }
-
+        logPerformanceStats(chrTasks);
         return true;
     }
 
@@ -251,39 +223,6 @@ public class Isofox
 
         if(!validExecution)
             return;
-    }
-
-    private boolean executeChromosomeTask(final List<ChromosomeGeneTask> chrTasks, TaskType taskType)
-    {
-        chrTasks.forEach(x -> x.setTaskType(taskType));
-
-        if(mConfig.Threads <= 1)
-        {
-            chrTasks.forEach(x -> x.call());
-            return true;
-        }
-
-        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Isofox-%d").build();
-
-        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
-        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
-
-        for(ChromosomeGeneTask chrGeneTask : chrTasks)
-        {
-            FutureTask futureTask = new FutureTask(chrGeneTask);
-
-            threadTaskList.add(futureTask);
-            executorService.execute(futureTask);
-        }
-
-        if(!checkThreadCompletion(threadTaskList))
-        {
-            mIsValid = false;
-            return false;
-        }
-
-        executorService.shutdown();
-        return true;
     }
 
     private void calcFragmentLengths(final List<ChromosomeGeneTask> chrTasks)
@@ -337,6 +276,39 @@ public class Isofox
             mIsValid = false;
             return;
         }
+    }
+
+    private boolean executeChromosomeTask(final List<ChromosomeGeneTask> chrTasks, TaskType taskType)
+    {
+        chrTasks.forEach(x -> x.setTaskType(taskType));
+
+        if(mConfig.Threads <= 1)
+        {
+            chrTasks.forEach(x -> x.call());
+            return true;
+        }
+
+        final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Isofox-%d").build();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(mConfig.Threads, namedThreadFactory);
+        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
+
+        for(ChromosomeGeneTask chrGeneTask : chrTasks)
+        {
+            FutureTask futureTask = new FutureTask(chrGeneTask);
+
+            threadTaskList.add(futureTask);
+            executorService.execute(futureTask);
+        }
+
+        if(!checkThreadCompletion(threadTaskList))
+        {
+            mIsValid = false;
+            return false;
+        }
+
+        executorService.shutdown();
+        return true;
     }
 
     private boolean checkThreadCompletion(final List<FutureTask> taskList)
@@ -404,6 +376,37 @@ public class Isofox
     {
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
+    }
+
+    private void logPerformanceStats(final List<ChromosomeGeneTask> chrTasks)
+    {
+        final PerformanceCounter[] perfCounters = chrTasks.get(0).getPerfCounters();
+
+        for(int i = 1; i < chrTasks.size(); ++i)
+        {
+            final PerformanceCounter[] chrPCs = chrTasks.get(i).getPerfCounters();
+
+            for(int j = 0; j < perfCounters.length; ++j)
+            {
+                perfCounters[j].merge(chrPCs[j]);
+            }
+        }
+
+        Arrays.stream(perfCounters).forEach(x -> x.logStats());
+
+        if(mConfig.RunPerfChecks)
+        {
+            // log 10 slowest times and their interval names
+            final List<Double> fitTimes = perfCounters[PERF_FIT].getTimes();
+            final List<String> fitGenes = perfCounters[PERF_FIT].getTimeNames();
+
+            if(fitTimes.size() >= 10 && fitGenes.size() == fitTimes.size())
+
+                for (int i = fitTimes.size() - 1; i >= fitTimes.size() - 10; --i)
+                {
+                    ISF_LOGGER.info(String.format("fit times: geneSet(%s) time(%.3f)", fitGenes.get(i), fitTimes.get(i)));
+                }
+        }
     }
 
 }

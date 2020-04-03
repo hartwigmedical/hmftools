@@ -24,6 +24,7 @@ public class TransExpressionData
     public final List<String> SampleIds;
     public final List<Double> FitAllocations;
     public final List<Double> TpmValues;
+    public final List<Integer> EffectiveLengths;
 
     public TransExpressionData(final String geneId, final String geneName, final int transId, final String transName)
     {
@@ -35,9 +36,10 @@ public class TransExpressionData
         SampleIds = Lists.newArrayList();
         FitAllocations = Lists.newArrayList();
         TpmValues = Lists.newArrayList();
+        EffectiveLengths = Lists.newArrayList();
     }
 
-    public void addSampleData(final String sampleId, double fitAllocation, double tpm)
+    public void addSampleData(final String sampleId, double fitAllocation, double tpm, int effectiveLength)
     {
         int index = 0;
         while(index < TpmValues.size())
@@ -51,6 +53,7 @@ public class TransExpressionData
         SampleIds.add(index, sampleId);
         FitAllocations.add(index, fitAllocation);
         TpmValues.add(index, tpm);
+        EffectiveLengths.add(index, effectiveLength);
     }
 
 
