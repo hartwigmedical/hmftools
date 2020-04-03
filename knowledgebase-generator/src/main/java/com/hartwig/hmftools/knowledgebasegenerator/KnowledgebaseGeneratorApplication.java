@@ -178,6 +178,7 @@ public class KnowledgebaseGeneratorApplication {
         Collections.sort(sortedUniqueKnownFusionPairs);
 
 
+        //TODO: add logica to determine promiscuous genes
         List<KnownFusions> listPromiscuous3KnownFusions = Lists.newArrayList();
         for (KnownFusions knownPromiscuousThree : listKnownFusionPromiscuousThree) {
             if (!knownPromiscuousThree.eventType().isEmpty()) {
@@ -185,6 +186,7 @@ public class KnowledgebaseGeneratorApplication {
             }
         }
 
+        //TODO: add logica to determine promiscuous genes
         List<KnownFusions> listPromiscuous5KnownFusions = Lists.newArrayList();
         for (KnownFusions knownPromiscuousFive : listKnownFusionPromiscuousFive) {
             if (!knownPromiscuousFive.eventType().isEmpty()) {
