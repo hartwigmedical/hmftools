@@ -200,9 +200,9 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         Set<String> promiscuousThreeGenes = Sets.newHashSet();
-        for (String three: promiscusThree) {
-            if (countsPromiscuousThree.get(three) >= 3) {
-                promiscuousThreeGenes.add(three);
+        for (KnownFusions three: listKnownFusionPromiscuousThree) {
+            if (countsPromiscuousThree.get(three.gene()) >= 3) {
+                promiscuousThreeGenes.add(three.gene());
             }
         }
 
@@ -217,9 +217,9 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         Set<String> promiscuousFiveGenes = Sets.newHashSet();
-        for (String five: promiscusFive) {
-            if (countsPromiscuousFive.get(five) >= 3) {
-                promiscuousFiveGenes.add(five);
+        for (KnownFusions five: listKnownFusionPromiscuousFive) {
+            if (countsPromiscuousFive.get(five.gene()) >= 3) {
+                promiscuousFiveGenes.add(five.gene());
             }
         }
 
