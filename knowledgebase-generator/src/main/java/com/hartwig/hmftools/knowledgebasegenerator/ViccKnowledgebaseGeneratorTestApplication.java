@@ -22,10 +22,9 @@ import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 
-public class ViccAmpsDelExtractorTestApplication {
-    private static final Logger LOGGER = LogManager.getLogger(ViccAmpsDelExtractorTestApplication.class);
+public class ViccKnowledgebaseGeneratorTestApplication {
+    private static final Logger LOGGER = LogManager.getLogger(ViccKnowledgebaseGeneratorTestApplication.class);
 
     public static void main(String[] args) throws IOException, InterruptedException {
         String viccJsonPath = System.getProperty("user.home") + "/hmf/projects/vicc/all.json";
@@ -41,8 +40,7 @@ public class ViccAmpsDelExtractorTestApplication {
         List<String> listKnownVariants = Lists.newArrayList();
         List<String> listKnownRange = Lists.newArrayList();
         List<KnownFusions> listKnownFusionPairs = Lists.newArrayList();
-        List<KnownFusions> listKnownFusionPromiscuousFive = Lists.newArrayList();
-        List<KnownFusions> listKnownFusionPromiscuousThree = Lists.newArrayList();
+        List<KnownFusions> listKnownFusionPromiscuous = Lists.newArrayList();
         List<Signatures> listSignatures = Lists.newArrayList();
 
         //Lists of actionable genomic events
@@ -69,10 +67,7 @@ public class ViccAmpsDelExtractorTestApplication {
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
                         listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusionsPairs(viccEntry, entryDB.getKey(), event));
-                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
-                                entryDB.getKey(),
-                                event));
-                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
+                        listKnownFusionPromiscuous.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
                                 entryDB.getKey(),
                                 event));
                         listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, event));
@@ -120,32 +115,11 @@ public class ViccAmpsDelExtractorTestApplication {
                 listKnownFusionsPairsFilter.add(knownPairFusions);
 
                 if (knownPairFusions.gene().equals("TRAC-NKX2-1")) {
-                    promiscusThree.add("TRAC");
-                    promiscusFive.add("NKX2-1");
+                    promiscusFive.add("TRAC");
+                    promiscusThree.add("NKX2-1");
                 } else if (knownPairFusions.gene().contains("-")) {
-                    promiscusThree.add(knownPairFusions.gene().split("-")[0]);
-                    promiscusFive.add(knownPairFusions.gene().split("-")[1]);
-                }
-            }
-        }
-
-        Map<String, Integer> countsPromiscuousThree = Maps.newHashMap();
-        for (String three : promiscusThree) {
-            if (countsPromiscuousThree.containsKey(three)) {
-                int count = countsPromiscuousThree.get(three) + 1;
-                countsPromiscuousThree.put(three, count);
-            } else {
-                countsPromiscuousThree.put(three, 1);
-            }
-        }
-
-        Set<String> promiscuousThreeGenes = Sets.newHashSet();
-        for (KnownFusions three : listKnownFusionPromiscuousThree) {
-            if (!three.eventType().isEmpty()) {
-                if (countsPromiscuousThree.containsKey(three.gene())) {
-                    if (countsPromiscuousThree.get(three.gene()) >= 3) {
-                        promiscuousThreeGenes.add(three.gene());
-                    }
+                    promiscusFive.add(knownPairFusions.gene().split("-")[0]);
+                    promiscusThree.add(knownPairFusions.gene().split("-")[1]);
                 }
             }
         }
@@ -161,11 +135,32 @@ public class ViccAmpsDelExtractorTestApplication {
         }
 
         Set<String> promiscuousFiveGenes = Sets.newHashSet();
-        for (KnownFusions five : listKnownFusionPromiscuousFive) {
+        for (KnownFusions five : listKnownFusionPromiscuous) {
             if (!five.eventType().isEmpty()) {
                 if (countsPromiscuousFive.containsKey(five.gene())) {
                     if (countsPromiscuousFive.get(five.gene()) >= 3) {
                         promiscuousFiveGenes.add(five.gene());
+                    }
+                }
+            }
+        }
+
+        Map<String, Integer> countsPromiscuousThree = Maps.newHashMap();
+        for (String three : promiscusThree) {
+            if (countsPromiscuousThree.containsKey(three)) {
+                int count = countsPromiscuousThree.get(three) + 1;
+                countsPromiscuousThree.put(three, count);
+            } else {
+                countsPromiscuousThree.put(three, 1);
+            }
+        }
+
+        Set<String> promiscuousThreeGenes = Sets.newHashSet();
+        for (KnownFusions three : listKnownFusionPromiscuous) {
+            if (!three.eventType().isEmpty()) {
+                if (countsPromiscuousThree.containsKey(three.gene())) {
+                    if (countsPromiscuousThree.get(three.gene()) >= 3) {
+                        promiscuousThreeGenes.add(three.gene());
                     }
                 }
             }
