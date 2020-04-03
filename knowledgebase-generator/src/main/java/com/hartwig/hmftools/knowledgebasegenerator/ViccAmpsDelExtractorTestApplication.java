@@ -54,7 +54,7 @@ public class ViccAmpsDelExtractorTestApplication {
             List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type : eventType) {
-              //  LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
+                //  LOGGER.info("gene: " + type.gene() + " name: " + type.name() + " eventMap: " + type.eventMap() + " source: " + type.source());
                 // Generating known events
                 //TODO: map every genomic event to one object
                 //TODO: if combined event use single event for determine known events
@@ -130,7 +130,7 @@ public class ViccAmpsDelExtractorTestApplication {
         }
 
         Map<String, Integer> countsPromiscuousThree = Maps.newHashMap();
-        for (String three: promiscusThree) {
+        for (String three : promiscusThree) {
             if (countsPromiscuousThree.containsKey(three)) {
                 int count = countsPromiscuousThree.get(three) + 1;
                 countsPromiscuousThree.put(three, count);
@@ -140,14 +140,18 @@ public class ViccAmpsDelExtractorTestApplication {
         }
 
         Set<String> promiscuousThreeGenes = Sets.newHashSet();
-        for (KnownFusions three: listKnownFusionPromiscuousThree) {
-            if (countsPromiscuousThree.get(three.gene()) >= 3) {
-                promiscuousThreeGenes.add(three.gene());
+        for (KnownFusions three : listKnownFusionPromiscuousThree) {
+            if (!three.eventType().isEmpty()) {
+                if (countsPromiscuousThree.containsKey(three.gene())) {
+                    if (countsPromiscuousThree.get(three.gene()) >= 3) {
+                        promiscuousThreeGenes.add(three.gene());
+                    }
+                }
             }
         }
 
         Map<String, Integer> countsPromiscuousFive = Maps.newHashMap();
-        for (String five: promiscusFive) {
+        for (String five : promiscusFive) {
             if (countsPromiscuousFive.containsKey(five)) {
                 int count = countsPromiscuousFive.get(five) + 1;
                 countsPromiscuousFive.put(five, count);
@@ -157,9 +161,13 @@ public class ViccAmpsDelExtractorTestApplication {
         }
 
         Set<String> promiscuousFiveGenes = Sets.newHashSet();
-        for (KnownFusions five: listKnownFusionPromiscuousFive) {
-            if (countsPromiscuousFive.get(five.gene()) >= 3) {
-                promiscuousFiveGenes.add(five.gene());
+        for (KnownFusions five : listKnownFusionPromiscuousFive) {
+            if (!five.eventType().isEmpty()) {
+                if (countsPromiscuousFive.containsKey(five.gene())) {
+                    if (countsPromiscuousFive.get(five.gene()) >= 3) {
+                        promiscuousFiveGenes.add(five.gene());
+                    }
+                }
             }
         }
 

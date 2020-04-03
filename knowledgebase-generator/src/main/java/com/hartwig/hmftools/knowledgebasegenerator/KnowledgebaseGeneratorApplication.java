@@ -200,9 +200,13 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         Set<String> promiscuousThreeGenes = Sets.newHashSet();
-        for (KnownFusions three: listKnownFusionPromiscuousThree) {
-            if (countsPromiscuousThree.get(three.gene()) >= 3) {
-                promiscuousThreeGenes.add(three.gene());
+        for (KnownFusions three : listKnownFusionPromiscuousThree) {
+            if (!three.eventType().isEmpty()) {
+                if (countsPromiscuousThree.containsKey(three.gene())) {
+                    if (countsPromiscuousThree.get(three.gene()) >= 3) {
+                        promiscuousThreeGenes.add(three.gene());
+                    }
+                }
             }
         }
 
@@ -217,9 +221,13 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         Set<String> promiscuousFiveGenes = Sets.newHashSet();
-        for (KnownFusions five: listKnownFusionPromiscuousFive) {
-            if (countsPromiscuousFive.get(five.gene()) >= 3) {
-                promiscuousFiveGenes.add(five.gene());
+        for (KnownFusions five : listKnownFusionPromiscuousFive) {
+            if (!five.eventType().isEmpty()) {
+                if (countsPromiscuousFive.containsKey(five.gene())) {
+                    if (countsPromiscuousFive.get(five.gene()) >= 3) {
+                        promiscuousFiveGenes.add(five.gene());
+                    }
+                }
             }
         }
 
