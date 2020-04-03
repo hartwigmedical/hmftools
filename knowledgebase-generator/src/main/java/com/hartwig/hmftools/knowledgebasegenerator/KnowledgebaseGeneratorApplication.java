@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.iclusion.data.IclusionTrial;
 import com.hartwig.hmftools.iclusion.io.IclusionTrialFile;
@@ -113,10 +114,10 @@ public class KnowledgebaseGeneratorApplication {
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
                         listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusionsPairs(viccEntry, entryDB.getKey(), event));
-                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous3(viccEntry,
+                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
                                 entryDB.getKey(),
                                 event));
-                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous5(viccEntry,
+                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
                                 entryDB.getKey(),
                                 event));
                         listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, event));
@@ -167,30 +168,58 @@ public class KnowledgebaseGeneratorApplication {
 
         Set<String> uniqueKnownFusionPairs = Sets.newHashSet();
         List<KnownFusions> listKnownFusionsPairsFilter = Lists.newArrayList();
+        List<String> promiscusThree = Lists.newArrayList();
+        List<String> promiscusFive = Lists.newArrayList();
+
         for (KnownFusions knownPairFusions : listKnownFusionPairs) {
             if (!knownPairFusions.eventType().isEmpty()) {
                 listKnownFusionsPairsFilter.add(knownPairFusions);
                 uniqueKnownFusionPairs.add(knownPairFusions.gene());
+
+                if (knownPairFusions.gene().equals("TRAC-NKX2-1")) {
+                    promiscusThree.add("TRAC");
+                    promiscusFive.add("NKX2-1");
+                } else if (knownPairFusions.gene().contains("-")) {
+                    promiscusThree.add(knownPairFusions.gene().split("-")[0]);
+                    promiscusFive.add(knownPairFusions.gene().split("-")[1]);
+                }
             }
         }
 
         List<String> sortedUniqueKnownFusionPairs = new ArrayList<String>(uniqueKnownFusionPairs);
         Collections.sort(sortedUniqueKnownFusionPairs);
 
-
-        //TODO: add logica to determine promiscuous genes
-        List<KnownFusions> listPromiscuous3KnownFusions = Lists.newArrayList();
-        for (KnownFusions knownPromiscuousThree : listKnownFusionPromiscuousThree) {
-            if (!knownPromiscuousThree.eventType().isEmpty()) {
-                listPromiscuous3KnownFusions.add(knownPromiscuousThree);
+        Map<String, Integer> countsPromiscuousThree = Maps.newHashMap();
+        for (String three: promiscusThree) {
+            if (countsPromiscuousThree.containsKey(three)) {
+                int count = countsPromiscuousThree.get(three) + 1;
+                countsPromiscuousThree.put(three, count);
+            } else {
+                countsPromiscuousThree.put(three, 1);
             }
         }
 
-        //TODO: add logica to determine promiscuous genes
-        List<KnownFusions> listPromiscuous5KnownFusions = Lists.newArrayList();
-        for (KnownFusions knownPromiscuousFive : listKnownFusionPromiscuousFive) {
-            if (!knownPromiscuousFive.eventType().isEmpty()) {
-                listPromiscuous5KnownFusions.add(knownPromiscuousFive);
+        Set<String> promiscuousThreeGenes = Sets.newHashSet();
+        for (String three: promiscusThree) {
+            if (countsPromiscuousThree.get(three) >= 3) {
+                promiscuousThreeGenes.add(three);
+            }
+        }
+
+        Map<String, Integer> countsPromiscuousFive = Maps.newHashMap();
+        for (String five: promiscusFive) {
+            if (countsPromiscuousFive.containsKey(five)) {
+                int count = countsPromiscuousFive.get(five) + 1;
+                countsPromiscuousFive.put(five, count);
+            } else {
+                countsPromiscuousFive.put(five, 1);
+            }
+        }
+
+        Set<String> promiscuousFiveGenes = Sets.newHashSet();
+        for (String five: promiscusFive) {
+            if (countsPromiscuousFive.get(five) >= 3) {
+                promiscuousFiveGenes.add(five);
             }
         }
 
@@ -226,6 +255,8 @@ public class KnowledgebaseGeneratorApplication {
                 .signatures(listSignaturesFilter)
                 .knownFusionPairs(listKnownFusionsPairsFilter)
                 .uniqueKnownFusionPairs(sortedUniqueKnownFusionPairs)
+                .knownFusionPromiscuousThree(promiscuousThreeGenes)
+                .knownFusionPromiscuousFive(promiscuousFiveGenes)
                 .build();
 
         // Create all output files from knowledgebase with data

@@ -25,6 +25,8 @@ public class GeneratingOutputFiles {
     private static final String SIGNATURES_TSV = "signatures.tsv";
     private static final String KNOWN_FUSION_PAIRS_INFO_TSV = "knownFusionPairsInfo.tsv";
     private static final String UNIQUE_KNOWN_FUSION_PAIRS_TSV = "uniqueKnownFusionPairs.tsv";
+    private static final String UNIQUE_KNOWN_FUSION_PROMISCUOUS_THREE_TSV = "uniqueKnownFusionPromiscuousThree.tsv";
+    private static final String UNIQUE_KNOWN_FUSION_PROMISCUOUS_FIVE_TSV = "uniqueKnownFusionPromiscuousFive.tsv";
 
     public static void generatingOutputFiles(@NotNull String outputDir, @NotNull AllGenomicEvents genomicEvents) throws IOException {
         generateUniqueKnownAmplification(outputDir + File.separator + UNIQUE_KNOWN_AMPLIFICATION_TSV, genomicEvents);
@@ -35,6 +37,8 @@ public class GeneratingOutputFiles {
         generateSignatures(outputDir + File.separator + SIGNATURES_TSV, genomicEvents);
         generateInfoKnownFusionPairs(outputDir + File.separator + KNOWN_FUSION_PAIRS_INFO_TSV, genomicEvents);
         genertateUniqueKnownFusionPairs(outputDir + File.separator + UNIQUE_KNOWN_FUSION_PAIRS_TSV, genomicEvents);
+        genertateUniqueKnownFusionPromiscuousThree(outputDir + File.separator + UNIQUE_KNOWN_FUSION_PROMISCUOUS_THREE_TSV, genomicEvents);
+        genertateUniqueKnownFusionPromiscuousFive(outputDir + File.separator + UNIQUE_KNOWN_FUSION_PROMISCUOUS_FIVE_TSV, genomicEvents);
 
 
     }
@@ -125,6 +129,28 @@ public class GeneratingOutputFiles {
         writer.write(headerknownFusionPairs);
         for (String knownFusions : genomicEvents.uniqueKnownFusionPairs()) {
             writer.write(knownFusions + NEW_LINE);
+        }
+        writer.close();
+    }
+
+    private static void genertateUniqueKnownFusionPromiscuousThree(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents)
+            throws IOException {
+        String headerknownFusionPromiscuousThree = "Gene" + NEW_LINE;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+        writer.write(headerknownFusionPromiscuousThree);
+        for (String promiscuousThree : genomicEvents.knownFusionPromiscuousThree()) {
+            writer.write(promiscuousThree + NEW_LINE);
+        }
+        writer.close();
+    }
+
+    private static void genertateUniqueKnownFusionPromiscuousFive(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents)
+            throws IOException {
+        String headerknownFusionPromiscuousFive = "Gene" + NEW_LINE;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+        writer.write(headerknownFusionPromiscuousFive);
+        for (String promiscuousFive : genomicEvents.knownFusionPromiscuousFive()) {
+            writer.write(promiscuousFive + NEW_LINE);
         }
         writer.close();
     }

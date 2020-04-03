@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.vicc.reader.ViccJsonReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 public class ViccAmpsDelExtractorTestApplication {
     private static final Logger LOGGER = LogManager.getLogger(ViccAmpsDelExtractorTestApplication.class);
@@ -67,10 +69,10 @@ public class ViccAmpsDelExtractorTestApplication {
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
                         listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusionsPairs(viccEntry, entryDB.getKey(), event));
-                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous5(viccEntry,
+                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
                                 entryDB.getKey(),
                                 event));
-                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous3(viccEntry,
+                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous(viccEntry,
                                 entryDB.getKey(),
                                 event));
                         listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, event));
@@ -110,13 +112,56 @@ public class ViccAmpsDelExtractorTestApplication {
         }
 
         List<KnownFusions> listKnownFusionsPairsFilter = Lists.newArrayList();
+        List<String> promiscusThree = Lists.newArrayList();
+        List<String> promiscusFive = Lists.newArrayList();
+
         for (KnownFusions knownPairFusions : listKnownFusionPairs) {
             if (!knownPairFusions.eventType().isEmpty()) {
                 listKnownFusionsPairsFilter.add(knownPairFusions);
+
+                if (knownPairFusions.gene().equals("TRAC-NKX2-1")) {
+                    promiscusThree.add("TRAC");
+                    promiscusFive.add("NKX2-1");
+                } else if (knownPairFusions.gene().contains("-")) {
+                    promiscusThree.add(knownPairFusions.gene().split("-")[0]);
+                    promiscusFive.add(knownPairFusions.gene().split("-")[1]);
+                }
             }
         }
 
-        LOGGER.info(listKnownFusionsPairsFilter);
+        Map<String, Integer> countsPromiscuousThree = Maps.newHashMap();
+        for (String three: promiscusThree) {
+            if (countsPromiscuousThree.containsKey(three)) {
+                int count = countsPromiscuousThree.get(three) + 1;
+                countsPromiscuousThree.put(three, count);
+            } else {
+                countsPromiscuousThree.put(three, 1);
+            }
+        }
+
+        Set<String> promiscuousThreeGenes = Sets.newHashSet();
+        for (String three: promiscusThree) {
+            if (countsPromiscuousThree.get(three) >= 3) {
+                promiscuousThreeGenes.add(three);
+            }
+        }
+
+        Map<String, Integer> countsPromiscuousFive = Maps.newHashMap();
+        for (String five: promiscusFive) {
+            if (countsPromiscuousFive.containsKey(five)) {
+                int count = countsPromiscuousFive.get(five) + 1;
+                countsPromiscuousFive.put(five, count);
+            } else {
+                countsPromiscuousFive.put(five, 1);
+            }
+        }
+
+        Set<String> promiscuousFiveGenes = Sets.newHashSet();
+        for (String five: promiscusFive) {
+            if (countsPromiscuousFive.get(five) >= 3) {
+                promiscuousFiveGenes.add(five);
+            }
+        }
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();
 
