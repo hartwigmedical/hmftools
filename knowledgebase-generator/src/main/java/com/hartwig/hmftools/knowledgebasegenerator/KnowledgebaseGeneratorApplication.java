@@ -113,10 +113,10 @@ public class KnowledgebaseGeneratorApplication {
                         DetermineEventOfGenomicMutation.checkVariants(viccEntry, entryDB.getKey(), event);
                         DetermineEventOfGenomicMutation.checkRange(viccEntry, entryDB.getKey(), event);
                         listKnownFusionPairs.add(DetermineEventOfGenomicMutation.checkFusionsPairs(viccEntry, entryDB.getKey(), event));
-                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
+                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous3(viccEntry,
                                 entryDB.getKey(),
                                 event));
-                        listKnownFusionPromiscuousThree.add(DetermineEventOfGenomicMutation.checkFusions(viccEntry,
+                        listKnownFusionPromiscuousFive.add(DetermineEventOfGenomicMutation.checkFusionPromiscuous5(viccEntry,
                                 entryDB.getKey(),
                                 event));
                         listSignatures.add(DetermineEventOfGenomicMutation.checkSignatures(viccEntry, event));
@@ -176,6 +176,21 @@ public class KnowledgebaseGeneratorApplication {
 
         List<String> sortedUniqueKnownFusionPairs = new ArrayList<String>(uniqueKnownFusionPairs);
         Collections.sort(sortedUniqueKnownFusionPairs);
+
+
+        List<KnownFusions> listPromiscuous3KnownFusions = Lists.newArrayList();
+        for (KnownFusions knownPromiscuousThree : listKnownFusionPromiscuousThree) {
+            if (!knownPromiscuousThree.eventType().isEmpty()) {
+                listPromiscuous3KnownFusions.add(knownPromiscuousThree);
+            }
+        }
+
+        List<KnownFusions> listPromiscuous5KnownFusions = Lists.newArrayList();
+        for (KnownFusions knownPromiscuousFive : listKnownFusionPromiscuousFive) {
+            if (!knownPromiscuousFive.eventType().isEmpty()) {
+                listPromiscuous5KnownFusions.add(knownPromiscuousFive);
+            }
+        }
 
 
         List<ActionableAmplificationDeletion> listFilterActionableAmplifications = Lists.newArrayList();

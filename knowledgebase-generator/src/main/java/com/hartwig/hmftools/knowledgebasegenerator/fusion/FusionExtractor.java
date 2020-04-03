@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.fusion;
 
+import java.util.List;
+
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,9 +13,33 @@ public class FusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
-    public static KnownFusions determineKnownFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
+    public static KnownFusions determinePromiscuous3Fusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
+        String promiscuous3 = Strings.EMPTY;
+            if (gene.equals("TRAC-NKX2-1")) {
+                promiscuous3 = "TRAC";
+            } else if (gene.contains("-")) {
+                promiscuous3 = gene.split("-")[0];
+            }
+
         return ImmutableKnownFusions.builder()
-                .gene(gene)
+                .gene(promiscuous3)
+                .eventType(typeEvent)
+                .source(source.toString())
+                .sourceLink(source.toString())
+                .build();
+    }
+
+    @NotNull
+    public static KnownFusions determinePromiscuous5Fusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
+        String promiscuous5 = Strings.EMPTY;
+        if (gene.equals("TRAC-NKX2-1")) {
+            promiscuous5 = "NKX2-1";
+        } else if (gene.contains("-")) {
+            promiscuous5 = gene.split("-")[1];
+        }
+
+        return ImmutableKnownFusions.builder()
+                .gene(promiscuous5)
                 .eventType(typeEvent)
                 .source(source.toString())
                 .sourceLink(source.toString())
