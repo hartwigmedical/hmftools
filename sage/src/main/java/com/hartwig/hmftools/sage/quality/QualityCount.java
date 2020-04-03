@@ -39,11 +39,6 @@ public class QualityCount implements QualityRecord, Comparable<QualityCount> {
     }
 
     @Override
-    public int readIndex() {
-        return key.readIndex();
-    }
-
-    @Override
     public byte[] trinucleotideContext() {
         return key.trinucleotideContext();
     }
@@ -72,11 +67,6 @@ public class QualityCount implements QualityRecord, Comparable<QualityCount> {
         int altCompare = Byte.compare(this.alt(), o2.alt());
         if (altCompare != 0) {
             return altCompare;
-        }
-
-        int indexCompare = Integer.compare(this.readIndex(), o2.readIndex());
-        if (indexCompare != 0) {
-            return indexCompare;
         }
 
         if (this.trinucleotideContext().length < 3 || o2.trinucleotideContext().length < 3) {

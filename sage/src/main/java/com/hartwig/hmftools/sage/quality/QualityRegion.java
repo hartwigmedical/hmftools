@@ -21,7 +21,6 @@ public class QualityRegion {
 
     private static final Logger LOGGER = LogManager.getLogger(QualityRegion.class);
 
-
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
 

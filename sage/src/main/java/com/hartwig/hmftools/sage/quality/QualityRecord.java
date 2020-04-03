@@ -15,8 +15,6 @@ public interface QualityRecord {
 
     int position();
 
-    int readIndex();
-
     boolean firstOfPair();
 
     byte[] trinucleotideContext();

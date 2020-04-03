@@ -90,19 +90,12 @@ public class QualityCounter implements CigarHandler {
             byte alt = r.getReadBases()[readIndex];
             byte quality = r.getBaseQualities()[readIndex];
             boolean firstOfPairFlag = r.getFirstOfPairFlag();
-            int displayIndex = 75;
-            if (readIndex <= 9) {
-                displayIndex = 0;
-            } else if (readIndex >= 141) {
-                displayIndex = 150;
-            }
 
             final QualityRecord key = ImmutableQualityRecord.builder()
                     .ref(ref)
                     .alt(alt)
                     .qual(quality)
                     .position(position)
-                    .readIndex(displayIndex)
                     .firstOfPair(firstOfPairFlag)
                     .trinucleotideContext(refGenome.trinucleotideContext(position))
                     .build();

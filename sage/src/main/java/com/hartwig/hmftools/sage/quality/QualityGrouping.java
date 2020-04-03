@@ -66,7 +66,7 @@ public class QualityGrouping {
 
     @NotNull
     public static QualityRecord alt(@NotNull final QualityCount count) {
-        return ImmutableQualityRecord.builder().from(count).qual((byte) 0).trinucleotideContext().readIndex(0).firstOfPair(false).build();
+        return ImmutableQualityRecord.builder().from(count).qual((byte) 0).trinucleotideContext().firstOfPair(false).build();
     }
 
     @NotNull
@@ -77,7 +77,6 @@ public class QualityGrouping {
                 .position(0)
                 .qual((byte) 0)
                 .trinucleotideContext()
-                .readIndex(0)
                 .firstOfPair(count.firstOfPair())
                 .build();
     }
