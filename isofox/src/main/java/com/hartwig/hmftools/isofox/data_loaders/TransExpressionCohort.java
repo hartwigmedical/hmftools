@@ -3,17 +3,13 @@ package com.hartwig.hmftools.isofox.data_loaders;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.TRANSCRIPT;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates.calcTotalTranscriptExpression;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
@@ -34,7 +30,6 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummaryData;
 
 public class TransExpressionCohort
 {
@@ -83,9 +78,9 @@ public class TransExpressionCohort
         closeBufferedWriter(mTransDistributionWriter);
     }
 
-    public static void calcPercentileValues(final List<Double> tpmValues, final double[] percentileValues)
+    public static void calcPercentileValues(final List<Double> values, final double[] percentileValues)
     {
-        int sampleCount = tpmValues.size();
+        int sampleCount = values.size();
 
         // populate the upper and lower bounds
         double percSlots = percentileValues.length;
@@ -99,11 +94,11 @@ public class TransExpressionCohort
 
             int lowerBound = (int)floor(lowerIndex);
             int upperBound = (int)ceil(upperIndex) - 1;
-            upperBound = min(upperBound, tpmValues.size());
+            upperBound = min(upperBound, values.size());
 
             if(lowerBound == upperBound)
             {
-                percentileValues[i] = tpmValues.get(lowerBound);
+                percentileValues[i] = values.get(lowerBound);
                 continue;
             }
 
@@ -112,7 +107,7 @@ public class TransExpressionCohort
 
             for(int s = lowerBound; s <= upperBound; ++s)
             {
-                double tpm = tpmValues.get(s);
+                double tpm = values.get(s);
 
                 double fractionOfTpm;
 

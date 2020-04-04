@@ -35,12 +35,14 @@ public class DataLoader
 
     private final AltSpliceJunctionCohort mAltSpliceJunctionProcessor;
     private final TransExpressionCohort mTransExpressionCohort;
+    private final GeneCohort mGeneCohort;
 
     public DataLoader(final DataLoaderConfig config)
     {
         mConfig = config;
         mAltSpliceJunctionProcessor = new AltSpliceJunctionCohort(mConfig);
         mTransExpressionCohort = new TransExpressionCohort(mConfig);
+        mGeneCohort = new GeneCohort(mConfig);
     }
 
     public boolean load()
@@ -56,8 +58,13 @@ public class DataLoader
                 case ALT_SPLICE_JUNCTION:
                     mAltSpliceJunctionProcessor.processAltSpliceJunctions();
                     break;
+
                 case TRANSCRIPT:
                     mTransExpressionCohort.processTranscripts();
+                    break;
+
+                case GENE:
+                    mGeneCohort.processGenes();
                     break;
 
                 default:

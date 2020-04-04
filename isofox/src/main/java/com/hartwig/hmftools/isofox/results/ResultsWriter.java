@@ -51,6 +51,7 @@ public class ResultsWriter
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_GENE_ID = "GeneId";
     public static final String FLD_GENE_NAME = "GeneName";
+    public static final String FLD_CHROMOSOME = "Chromosome";
     public static final String FLD_TRANS_ID = "TransId";
     public static final String FLD_TRANS_NAME = "TransName";
 

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.isofox.common.GeneMatchType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
+import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
@@ -81,13 +82,17 @@ public abstract class GeneResult
     public void setMedianExpectedGcRatio(double median) { mMedianExpectedGcRatio = median; }
     public void setMedianActualGcRatio(double median) { mMedianActualGcRatio = median; }
 
+    public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
+    public static final String FLD_UNSPLICED = "Unspliced";
+
     public static String csvHeader()
     {
         return new StringJoiner(DELIMITER)
                 .add(FLD_GENE_ID)
                 .add(FLD_GENE_NAME)
-                .add("Chromosome").add("GeneLength").add("IntronicLength").add("TransCount")
-                .add("TotalFragments").add("SupportingTrans").add("Alt").add("Unspliced").add("ReadThrough")
+                .add(FLD_CHROMOSOME)
+                .add("GeneLength").add("IntronicLength").add("TransCount")
+                .add("TotalFragments").add(FLD_SUPPORTING_TRANS).add("Alt").add(FLD_UNSPLICED).add("ReadThrough")
                 .add("Chimeric").add("Duplicates")
                 .add("UnsplicedAlloc").add("FitResiduals")
                 .add("MedianExpectedGcRatio").add("MedianActualGcRatio")
