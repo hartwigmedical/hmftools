@@ -53,15 +53,23 @@ public class GcRatioCounts
         return round(ratio/GC_RATIO_BUCKET) * GC_RATIO_BUCKET;
     }
 
-    public static double calcGcRatio(final String bases)
+    public static boolean isGC(char base) { return base == 'G' || base == 'C'; }
+
+    public static int calcGcCount(final String bases)
     {
         int gcCount = 0;
         for (int i = 0; i < bases.length(); ++i)
         {
-            if (bases.charAt(i) == 'C' || bases.charAt(i) == 'G')
+            if (isGC(bases.charAt(i)))
                 ++gcCount;
         }
 
+        return gcCount;
+    }
+
+    public static double calcGcRatio(final String bases)
+    {
+        int gcCount = calcGcCount(bases);
         return gcCount / (double) bases.length();
     }
 
@@ -128,7 +136,7 @@ public class GcRatioCounts
     {
         double totalCounts = sumVector(mCounts);
 
-        long currentTotal = 0;
+        double currentTotal = 0;
         double prevRatio = 0;
 
         for(int i = 0; i < mRatios.length; ++i)

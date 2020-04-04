@@ -70,7 +70,8 @@ public class ChromosomeGeneTask implements Callable
     private static final int PERF_NOVEL_LOCATIONS = 2;
     public static final int PERF_FIT = 3;
     public static final int PERF_FRAG_LENGTH = 4;
-    private static final int PERF_MAX = PERF_FRAG_LENGTH+1;
+    public static final int PERF_GC_ADJUST = 5;
+    private static final int PERF_MAX = PERF_GC_ADJUST+1;
 
     private final PerformanceCounter[] mPerfCounters;
 
@@ -112,6 +113,7 @@ public class ChromosomeGeneTask implements Callable
         mPerfCounters[PERF_NOVEL_LOCATIONS] = new PerformanceCounter("NovelLocations");
         mPerfCounters[PERF_FIT] = new PerformanceCounter("ExpressFit");
         mPerfCounters[PERF_FRAG_LENGTH] = new PerformanceCounter("FragLengths");
+        mPerfCounters[PERF_GC_ADJUST] = new PerformanceCounter("GcAdjust");
 
         if(mConfig.RunPerfChecks)
             mPerfCounters[PERF_FIT].setSortTimes(true);
@@ -308,7 +310,7 @@ public class ChromosomeGeneTask implements Callable
         GenomeRegion geneRegion = GenomeRegions.create(geneCollection.chromosome(), regionStart, regionEnd);
 
         mPerfCounters[PERF_READS].start();
-        mBamReader.readBamCounts(geneCollection, geneRegion);
+        mBamReader.produceBamCounts(geneCollection, geneRegion);
         mPerfCounters[PERF_READS].stop();
 
         mPerfCounters[PERF_NOVEL_LOCATIONS].start();
@@ -423,19 +425,26 @@ public class ChromosomeGeneTask implements Callable
         if(mTranscriptGcRatios == null)
             return;
 
-        mTranscriptGcRatios.generateExpectedTranscriptCounts(mChromosome, mGeneDataList);
+        mTranscriptGcRatios.generateExpectedCounts(mChromosome, mGeneDataList);
     }
 
     public void applyGcAdjustment()
     {
+        mPerfCounters[PERF_GC_ADJUST].start();
+
         mTranscriptGcRatios.generateGcCountsFromFit(mGeneCollectionSummaryData);
+
+        mPerfCounters[PERF_GC_ADJUST].pause();
     }
 
     private void applyGcAdjustToTranscriptAllocations()
     {
+        mPerfCounters[PERF_GC_ADJUST].resume();
+
         for(final GeneCollectionSummaryData geneSummaryData : mGeneCollectionSummaryData)
         {
-            // mPerfCounters[PERF_FIT].start();
+            // first record the median GC ratio from the supporting fragment counts
+            geneSummaryData.recordMedianGcRatios();
 
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);
@@ -444,18 +453,26 @@ public class ChromosomeGeneTask implements Callable
 
             for (final TranscriptResult transResult : geneSummaryData.TranscriptResults)
             {
-                transResult.setFitAllocation(geneSummaryData.getFitAllocation(transResult.trans().TransName));
+                final String transName = transResult.trans().TransName;
+                double newAllocation = geneSummaryData.getFitAllocation(transName);
+
+                ISF_LOGGER.debug(String.format("trans(%s) fit allocation(%.1f -> %.1f) with GC adjustment",
+                        transName, transResult.getFitAllocation(), newAllocation));
+
+                transResult.setFitAllocation(newAllocation);
+                transResult.setMedianExpectedGcRatio(geneSummaryData.getMedianExpectedGcRatio(transName));
             }
 
             for(final GeneResult geneResult : geneSummaryData.GeneResults)
             {
                 geneResult.setUnsplicedAllocation(geneSummaryData.getFitAllocation(geneResult.geneData().GeneId));
+                geneResult.setMedianExpectedGcRatio(geneSummaryData.getMedianExpectedGcRatio(geneResult.geneData().GeneId));
             }
 
             geneSummaryData.allocateResidualsToGenes();
         }
 
-        // mPerfCounters[PERF_FIT].stop();
+        mPerfCounters[PERF_GC_ADJUST].stop();
     }
 
     private void collectResults(
@@ -471,6 +488,7 @@ public class ChromosomeGeneTask implements Callable
                 geneCollectionSummary.TranscriptResults.add(results);
 
                 results.setFitAllocation(geneCollectionSummary.getFitAllocation(transData.TransName));
+                results.setPreGcFitAllocation(results.getFitAllocation());
             }
         }
 

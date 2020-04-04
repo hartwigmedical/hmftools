@@ -72,7 +72,6 @@ public class GeneBamReader
 
     // state relating to the current gene
     private GeneCollection mCurrentGenes;
-    // private GeneReadData mCurrentGene;
     private final FragmentTracker mFragmentReads; // delay processing of read until both have been read
 
     private int mGeneReadCount;
@@ -126,7 +125,7 @@ public class GeneBamReader
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
 
-    public void readBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
+    public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
     {
         mFragmentReads.clear();
 
@@ -455,33 +454,7 @@ public class GeneBamReader
                     overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList()) : Lists.newArrayList();
 
             CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-
-            if(mGcRatioCounts != null)
-            {
-                double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), commonMappings);
-
-                int[] gcRatioIndex = { -1, -1 };
-                double[] gcRatioCounts = { 0, 0 };
-                mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndex, gcRatioCounts);
-
-                for(int i = 0; i < gcRatioIndex.length; ++i)
-                {
-                    if (gcRatioIndex[i] >= 0)
-                    {
-                        mGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
-                        mGeneGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
-                    }
-                }
-
-                if(mConfig.ApplyGcBiasAdjust)
-                    catCounts.addGcRatioCounts(1, gcRatioIndex, gcRatioCounts);
-                else
-                    catCounts.addCounts(1);
-            }
-            else
-            {
-                catCounts.addCounts(1);
-            }
+            addGcCounts(catCounts, commonMappings);
         }
 
         for(GeneReadData gene : overlapGenes)
@@ -579,9 +552,41 @@ public class GeneBamReader
         List<String> unsplicedGeneIds = genes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
         CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
-        catCounts.addCounts(1);
+
+        List<long[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+        addGcCounts(catCounts, readRegions);
 
         genes.forEach(x -> x.addCount(UNSPLICED, 1));
+    }
+
+    private void addGcCounts(final CategoryCountsData catCounts, List<long[]> readRegions)
+    {
+        if(mGcRatioCounts != null)
+        {
+            double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), readRegions);
+
+            int[] gcRatioIndex = { -1, -1 };
+            double[] gcRatioCounts = { 0, 0 };
+            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndex, gcRatioCounts);
+
+            for(int i = 0; i < gcRatioIndex.length; ++i)
+            {
+                if (gcRatioIndex[i] >= 0)
+                {
+                    mGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
+                    mGeneGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
+                }
+            }
+
+            if(mConfig.ApplyGcBiasAdjust)
+                catCounts.addGcRatioCounts(1, gcRatioIndex, gcRatioCounts);
+            else
+                catCounts.addCounts(1);
+        }
+        else
+        {
+            catCounts.addCounts(1);
+        }
     }
 
     // read depth count state

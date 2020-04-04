@@ -161,23 +161,8 @@ public class ResultsWriter
                 mGeneDataWriter.newLine();
             }
 
-            final EnsemblGeneData geneData = geneResult.geneData();
-
-            long geneLength = geneData.GeneEnd - geneData.GeneStart;
-
-            mGeneDataWriter.write(String.format("%s,%s,%s,%d,%d,%d",
-                    geneData.GeneId, geneData.GeneName, geneData.Chromosome, geneLength,
-                    geneResult.intronicLength(), geneResult.transCount()));
-
-            mGeneDataWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
-                    geneResult.totalFragments(), geneResult.supportingTrans(), geneResult.altFragments(), geneResult.unsplicedFragments(),
-                    geneResult.readThroughFragments(), geneResult.chimericFragments(), geneResult.duplicates()));
-
-            mGeneDataWriter.write(String.format(",%.1f,%.1f,%s",
-                    geneResult.getUnsplicedAlloc(), geneResult.getFitResiduals(), geneResult.collectionId()));
-
+            mGeneDataWriter.write(geneResult.toCsv());
             mGeneDataWriter.newLine();
-
         }
         catch(IOException e)
         {

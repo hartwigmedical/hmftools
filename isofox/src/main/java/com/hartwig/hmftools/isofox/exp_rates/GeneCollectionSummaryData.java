@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
@@ -22,6 +23,7 @@ public class GeneCollectionSummaryData
     public final List<TranscriptResult> TranscriptResults;
 
     private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine, stored per transcript
+    private final Map<String,Double> mMedianExpectedGcRatios; //
     private double mFitResiduals;
 
     public GeneCollectionSummaryData(
@@ -30,11 +32,12 @@ public class GeneCollectionSummaryData
         ChrId = chrId;
         GeneIds = geneIds;
         GeneNames = geneNames;
-        TransCategoryCounts = transCategoryCounts;
+        TransCategoryCounts = Lists.newArrayList(transCategoryCounts);
         GeneResults = Lists.newArrayList();
         TranscriptResults = Lists.newArrayList();
 
         mFitAllocations = Maps.newHashMap();
+        mMedianExpectedGcRatios = Maps.newHashMap();
         mFitResiduals = 0;
     }
 
@@ -47,6 +50,17 @@ public class GeneCollectionSummaryData
     {
         Double allocation = mFitAllocations.get(transName);
         return allocation != null ? allocation : 0;
+    }
+
+    public void addMedianExpectedGcRatio(final String transName, double gcRatio)
+    {
+        mMedianExpectedGcRatios.put(transName, gcRatio);
+    }
+
+    public double getMedianExpectedGcRatio(final String transName)
+    {
+        Double gcRatio = mMedianExpectedGcRatios.get(transName);
+        return gcRatio != null ? gcRatio : 0;
     }
 
     public void allocateResidualsToGenes()
@@ -70,15 +84,11 @@ public class GeneCollectionSummaryData
 
     public void applyGcAdjustments(final double[] gcAdjustments)
     {
-        // skip over the unspliced gene category in every instance
         double originalTotal = 0;
         double newTotal = 0;
 
         for(final CategoryCountsData catCounts : TransCategoryCounts)
         {
-            if(catCounts.transcriptIds().isEmpty())
-                continue;
-
             originalTotal += catCounts.fragmentCount();
             catCounts.applyGcAdjustments(gcAdjustments);
             newTotal += catCounts.fragmentCount();
@@ -87,7 +97,23 @@ public class GeneCollectionSummaryData
         // ensure no overall net change to counts after the adjustment
         // eg if old total was 10K and new is 2K, then will mutiply all new counts by 5
         double adjustFactor = originalTotal/newTotal;
-        TransCategoryCounts.stream().filter(x -> !x.transcriptIds().isEmpty()).forEach(x -> x.adjustCounts(adjustFactor));
+        TransCategoryCounts.forEach(x -> x.adjustCounts(adjustFactor));
+    }
+
+    public void recordMedianGcRatios()
+    {
+        for (final GeneResult geneResult : GeneResults)
+        {
+            GcRatioCounts gcCounts = new GcRatioCounts();
+
+            for(final CategoryCountsData catCounts : TransCategoryCounts)
+            {
+                if(catCounts.unsplicedGeneIds().contains(geneResult.geneData().GeneId))
+                    gcCounts.mergeRatioCounts(catCounts.fragmentCountsByGcRatio());
+            }
+
+            geneResult.setMedianActualGcRatio(gcCounts.getPercentileRatio(0.5));
+        }
     }
 
 }

@@ -7,9 +7,11 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcCount;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
 import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
+import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.isGC;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -67,42 +69,6 @@ public class GcTranscriptCalculator
     public final double[] getGcRatioAdjustments() { return mGcRatioAdjustments; }
     public final GcRatioCounts getTranscriptFitGcCounts() { return mTranscriptFitGcCounts; }
 
-    private static final double MAX_ADJUST_FACTOR = 3;
-    private static final double MIN_ADJUST_FACTOR = 1 / MAX_ADJUST_FACTOR;
-
-    public void calcGcRatioAdjustments(final GcRatioCounts globalGcCounts)
-    {
-        final double[] expectedFrequencies = mTranscriptFitGcCounts.getCounts();
-        final double[] actualFrequencies = globalGcCounts.getCounts();
-
-        double actualFrequencyTotal = globalGcCounts.getCountsTotal();
-        double expectedFrequencyTotal = mTranscriptFitGcCounts.getCountsTotal();
-
-        if(expectedFrequencyTotal == 0 || actualFrequencyTotal == 0)
-        {
-            ISF_LOGGER.error("invalid expected({}) or actual({}) totals", expectedFrequencyTotal, actualFrequencyTotal);
-            return;
-        }
-
-        for(int i = 0; i < actualFrequencies.length; ++ i)
-        {
-            double actualPerc = actualFrequencies[i] / actualFrequencyTotal;
-            double expectedPerc = expectedFrequencies[i] / expectedFrequencyTotal;
-
-            if(actualPerc > 0 && expectedPerc > 0)
-                mGcRatioAdjustments[i] = max(min(expectedPerc/actualPerc, MAX_ADJUST_FACTOR), MIN_ADJUST_FACTOR);
-            else if(actualPerc == 0 && expectedPerc == 0)
-                mGcRatioAdjustments[i] = 1.0;
-            else if(actualPerc == 0)
-                mGcRatioAdjustments[i] = MAX_ADJUST_FACTOR;
-            else
-                mGcRatioAdjustments[i] = MIN_ADJUST_FACTOR;
-
-            ISF_LOGGER.debug(String.format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
-                    globalGcCounts.getRatios()[i], actualPerc, expectedPerc, mGcRatioAdjustments[i]));
-        }
-    }
-
     public void generateGcCountsFromFit(final List<GeneCollectionSummaryData> geneSummaries)
     {
         // use expected GC ratio counts and 1st-pass transcript fits to derive expected GC counts
@@ -115,9 +81,6 @@ public class GcTranscriptCalculator
             for(Map.Entry<String,Double> entry : fitAllocations.entrySet())
             {
                 final String transName = entry.getKey();
-
-                if(transName.startsWith("ENSG")) // since genes also record an allocation
-                    continue;
 
                 double fitAlloc = entry.getValue();
 
@@ -135,11 +98,13 @@ public class GcTranscriptCalculator
                 {
                     frequencies[i] += transFrequencies[i] * fitAlloc;
                 }
+
+                geneSummary.addMedianExpectedGcRatio(transName, transGcCounts.getPercentileRatio(0.5));
             }
         }
     }
 
-    public void generateExpectedTranscriptCounts(final String chromosome, final List<EnsemblGeneData> geneDataList)
+    public void generateExpectedCounts(final String chromosome, final List<EnsemblGeneData> geneDataList)
     {
         ISF_LOGGER.info("chromosome({}) generating expected GC ratios for {} genes", chromosome, geneDataList.size());
 
@@ -147,13 +112,66 @@ public class GcTranscriptCalculator
         {
             final List<TranscriptData> transDataList = mGeneTransCache.getTranscripts(geneData.GeneId);
 
-            if(transDataList == null || transDataList.isEmpty())
-                continue;
+            // for the gene
+            generateExpectedGeneCounts(geneData);
 
-            transDataList.forEach(x -> calculateTranscriptGcRatios(chromosome, x));
+            if(transDataList != null)
+            {
+                transDataList.forEach(x -> calculateTranscriptGcRatios(chromosome, x));
+            }
         }
 
         writeExpectedGcRatios(mWriter, String.format("CHR_%s", chromosome), mTotalExpectedCounts);
+    }
+
+    private void generateExpectedGeneCounts(final EnsemblGeneData geneData)
+    {
+        GcRatioCounts gcRatioCounts = new GcRatioCounts();
+        int readLength = mConfig.ReadLength;
+
+        if(geneData.length() - 1 < readLength)
+        {
+            final String bases = mConfig.RefFastaSeqFile.getSubsequenceAt(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd).getBaseString();
+            gcRatioCounts.addGcRatio(calcGcRatio(bases));
+        }
+        else
+        {
+            // rather than measure GC content for each shifting read, just apply diffs to from the base lost and added
+            List<long[]> readRegions = Lists.newArrayListWithExpectedSize(1);
+            long[] geneRegion = new long[] { 0, 0 };
+            readRegions.add(geneRegion);
+
+            final String geneBases =
+                    mConfig.RefFastaSeqFile.getSubsequenceAt(geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd).getBaseString();
+
+            final String initialBases = geneBases.substring(0, readLength);
+            int gcCount = calcGcCount(initialBases);
+            double baseLength = mConfig.ReadLength;
+            double gcRatio = gcCount / baseLength;
+            gcRatioCounts.addGcRatio(gcRatio);
+
+            for (int startPos = 1; startPos <= geneBases.length() - readLength; ++startPos)
+            {
+                int prevStartPos = startPos - 1;
+                int endPos = startPos + readLength - 1;
+                int countAdjust = (isGC(geneBases.charAt(prevStartPos)) ? -1 : 0) + (isGC(geneBases.charAt(endPos)) ? 1 : 0);
+
+                if (gcCount > readLength || gcCount < 0)
+                {
+                    ISF_LOGGER.error("gene({}) gcCount error", geneData.GeneId);
+                    return;
+                }
+
+                gcCount += countAdjust;
+                gcRatio = gcCount / baseLength;
+                gcRatioCounts.addGcRatio(gcRatio);
+            }
+        }
+
+        sumVectors(gcRatioCounts.getCounts(), mTotalExpectedCounts);
+
+        writeExpectedGcRatios(mWriter, geneData.GeneId, gcRatioCounts.getCounts());
+
     }
 
     private void calculateTranscriptGcRatios(final String chromosome, final TranscriptData transData)
@@ -233,6 +251,50 @@ public class GcTranscriptCalculator
         }
 
         return readRegions;
+    }
+
+    private static final double MAX_ADJUST_FACTOR = 3;
+    private static final double MIN_ADJUST_FACTOR = 1 / MAX_ADJUST_FACTOR;
+    private static final int ADJUST_LOWER_BOUND = 20;
+    private static final int ADJUST_UPPER_BOUND = 80;
+
+    public void calcGcRatioAdjustments(final GcRatioCounts globalGcCounts)
+    {
+        final double[] expectedFrequencies = mTranscriptFitGcCounts.getCounts();
+        final double[] actualFrequencies = globalGcCounts.getCounts();
+
+        double actualFrequencyTotal = globalGcCounts.getCountsTotal();
+        double expectedFrequencyTotal = mTranscriptFitGcCounts.getCountsTotal();
+
+        if(expectedFrequencyTotal == 0 || actualFrequencyTotal == 0)
+        {
+            ISF_LOGGER.error("invalid expected({}) or actual({}) totals", expectedFrequencyTotal, actualFrequencyTotal);
+            return;
+        }
+
+        for(int i = 0; i < actualFrequencies.length; ++ i)
+        {
+            if(i < ADJUST_LOWER_BOUND || i > ADJUST_UPPER_BOUND)
+            {
+                mGcRatioAdjustments[i] = 1;
+                continue;
+            }
+
+            double actualPerc = actualFrequencies[i] / actualFrequencyTotal;
+            double expectedPerc = expectedFrequencies[i] / expectedFrequencyTotal;
+
+            if(actualPerc > 0 && expectedPerc > 0)
+                mGcRatioAdjustments[i] = max(min(expectedPerc/actualPerc, MAX_ADJUST_FACTOR), MIN_ADJUST_FACTOR);
+            else if(actualPerc == 0 && expectedPerc == 0)
+                mGcRatioAdjustments[i] = 1.0;
+            else if(actualPerc == 0)
+                mGcRatioAdjustments[i] = MAX_ADJUST_FACTOR;
+            else
+                mGcRatioAdjustments[i] = MIN_ADJUST_FACTOR;
+
+            ISF_LOGGER.debug(String.format("ratio(%.2f) actual(%.6f) expected(%.6f) adjustment(%.3f)",
+                    globalGcCounts.getRatios()[i], actualPerc, expectedPerc, mGcRatioAdjustments[i]));
+        }
     }
 
     private void loadExpectedData()

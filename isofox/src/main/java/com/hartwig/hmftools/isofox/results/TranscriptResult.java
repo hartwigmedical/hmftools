@@ -49,6 +49,8 @@ public abstract class TranscriptResult
     public abstract double effectiveLength();
 
     private double mFitAllocation;
+    private double mPreGcFitAllocation;
+    private double mMedianExpectedGcRatio;
     private double mTPM;
 
     public static TranscriptResult createTranscriptResults(
@@ -147,12 +149,16 @@ public abstract class TranscriptResult
                 .build();
 
         results.setFitAllocation(0);
+        results.setPreGcFitAllocation(0);
+        results.setMedianExpectedGcRatio(0);
         results.setTPM(0);
 
         return results;
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
+    public void setPreGcFitAllocation(double alloc) { mPreGcFitAllocation = alloc; }
+    public void setMedianExpectedGcRatio(double median) { mMedianExpectedGcRatio = median; }
     public void setTPM(double tpm) { mTPM = tpm; }
     public double getFitAllocation() { return mFitAllocation; }
 
@@ -220,6 +226,7 @@ public abstract class TranscriptResult
                 .add(FLD_EFFECTIVE_LENGTH)
                 .add(FLD_FIT_ALLOCATION)
                 .add(FLD_TPM)
+                .add("PreGcFit").add("MedianExpectedGcRatio")
                 .add("ExonsMatched").add("ExonicBases").add("ExonicCoverage")
                 .add("UniqueBases").add("UniqueBaseCoverage").add("UniqueBaseAvgDepth")
                 .add("SpliceJuncSupported").add("UniqueSpliceJunc").add("UniqueSpliceJuncSupported")
@@ -239,6 +246,8 @@ public abstract class TranscriptResult
                 .add(String.format("%.0f", effectiveLength()))
                 .add(String.format("%.1f", mFitAllocation))
                 .add(String.format("%6.3e", mTPM))
+                .add(String.format("%.1f", mPreGcFitAllocation))
+                .add(String.format("%.2f", mMedianExpectedGcRatio))
                 .add(String.valueOf(exonsFound()))
                 .add(String.valueOf(exonicBases()))
                 .add(String.valueOf(exonicBaseCoverage()))

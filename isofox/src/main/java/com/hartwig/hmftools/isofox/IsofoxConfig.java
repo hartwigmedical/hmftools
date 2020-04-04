@@ -323,7 +323,7 @@ public class IsofoxConfig
     public static boolean validConfigPaths(final CommandLine cmd)
     {
         return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
-                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, ENRICHED_GENE_IDS) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
+                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
                 && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE);
     }
 

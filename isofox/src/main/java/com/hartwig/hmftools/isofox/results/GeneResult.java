@@ -39,6 +39,8 @@ public abstract class GeneResult
 
     private double mUnsplicedAlloc;
     private double mFitResiduals;
+    private double mMedianExpectedGcRatio;
+    private double mMedianActualGcRatio;
 
     public static GeneResult createGeneResults(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
@@ -65,6 +67,8 @@ public abstract class GeneResult
 
         result.setFitResiduals(0);
         result.setUnsplicedAllocation(0);
+        result.setMedianExpectedGcRatio(0);
+        result.setMedianActualGcRatio(0);
         return result;
     }
 
@@ -74,6 +78,9 @@ public abstract class GeneResult
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
 
+    public void setMedianExpectedGcRatio(double median) { mMedianExpectedGcRatio = median; }
+    public void setMedianActualGcRatio(double median) { mMedianActualGcRatio = median; }
+
     public static String csvHeader()
     {
         return new StringJoiner(DELIMITER)
@@ -81,7 +88,34 @@ public abstract class GeneResult
                 .add(FLD_GENE_NAME)
                 .add("Chromosome").add("GeneLength").add("IntronicLength").add("TransCount")
                 .add("TotalFragments").add("SupportingTrans").add("Alt").add("Unspliced").add("ReadThrough")
-                .add("Chimeric").add("Duplicates").add("UnsplicedAlloc").add("FitResiduals").add("GeneSet")
+                .add("Chimeric").add("Duplicates")
+                .add("UnsplicedAlloc").add("FitResiduals")
+                .add("MedianExpectedGcRatio").add("MedianActualGcRatio")
+                .add("GeneSet")
+                .toString();
+    }
+
+    public String toCsv()
+    {
+        return new StringJoiner(DELIMITER)
+                .add(geneData().GeneId)
+                .add(geneData().GeneName)
+                .add(geneData().Chromosome)
+                .add(String.valueOf(geneData().length()))
+                .add(String.valueOf(intronicLength()))
+                .add(String.valueOf(transCount()))
+                .add(String.valueOf(totalFragments()))
+                .add(String.valueOf(supportingTrans()))
+                .add(String.valueOf(altFragments()))
+                .add(String.valueOf(unsplicedFragments()))
+                .add(String.valueOf(readThroughFragments()))
+                .add(String.valueOf(chimericFragments()))
+                .add(String.valueOf(duplicates()))
+                .add(String.format("%.1f", getUnsplicedAlloc()))
+                .add(String.format("%.1f", getFitResiduals()))
+                .add(String.format("%.2f", mMedianExpectedGcRatio))
+                .add(String.format("%.2f", mMedianActualGcRatio))
+                .add(collectionId())
                 .toString();
     }
 }
