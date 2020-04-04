@@ -24,6 +24,7 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class CpctPatientReader implements EcrfPatientReader {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.knowledgebasegenerator.fusion;
 
+import java.util.List;
+
 import com.hartwig.hmftools.vicc.datamodel.ViccSource;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,7 +13,8 @@ public class FusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
-    public static KnownFusions determineKnownFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
+    public static KnownFusions determinePromiscuousFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
+
         return ImmutableKnownFusions.builder()
                 .gene(gene)
                 .eventType(typeEvent)

@@ -246,4 +246,8 @@ public class IndexedBases {
         return bases[position - this.position + index];
     }
 
+    public byte[] trinucleotideContext(int position) {
+        return new byte[] { base(position - 1), base(position), base(position + 1) };
+    }
+
 }

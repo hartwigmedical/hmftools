@@ -1,4 +1,5 @@
 searchTerm,primaryTumorLocation,subType
+"ACUP",Unknown,"CUP"
 "Adenocarcinoma cardia",Stomach,"Cardiacarcinoma"
 "adenocarcinoma characterised by an immunoprofile which could it a primary tumor in the colorectum, stomach or pancreas",Unknown,"Adenocarcinoma"
 "adenocarcinoma of gall bladder, pancreatic or biliary tract",Unknown,"Adenocarcinoma of gall bladder, pancreatic or biliary tract"
@@ -185,6 +186,7 @@ searchTerm,primaryTumorLocation,subType
 "neuroendocrine carcinoma",Neuroendocrine,"NEC"
 "Neuroendocrine tumor",Neuroendocrine,"NET"
 "non-HIV Kaposisarcoom",Skin,"Other"
+"non-small cell carcinoma immunologic differentiation to adenocarcinoma and planocellulair carcinoma",Lung,"Non-Small Cell (Mixed Adeno/Planocellular)"
 "Non-small cell carcinoma NOS (mostly resembling lung carcinoma): working diagnosis ""lung carcinoma""",Lung,"Non-Small Cell"
 "Not in dropdown list (please specify below)_adenocarcinoom van de klier van Bartholin vulva links",Vulva,"Adenocarcinoma"
 "Not in dropdown list (please specify below)_squamous cell carcinoma of the bladder",Urinary tract,"Bladder"

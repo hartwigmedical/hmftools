@@ -11,8 +11,8 @@ Key features include:
   - no cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
-  - Multiple tumor support
-  - Multiple reference support
+  - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
+  - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.
   - RNA support
   - Tumor only support
 
@@ -266,7 +266,7 @@ min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
 max_germline_vaf***|10%|4%|4% | 4% | Normal`RC_CNT[1+2+3+4]` / `RC_CNT[6]`
 max_germline_rel_raw_base_qual|100%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 
-** Even if tumor qual score cutoff is not met, hotspots are also called so long as raw tumor vaf >= 0.05 and raw allelic depth in tumor supporting the ALT >= 5 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
+** Even if tumor qual score cutoff is not met, hotspots are also called so long as tumor vaf >= 0.08 and  allelic depth in tumor supporting the ALT >= 8 reads.  This allows calling of pathogenic hotspots even in known poor mappability regions, eg. HIST2H3C K28M.
 
 *** A special filter (max_germline_alt_support) is applied for MNVs such that it is filtered if 1 or more read in the germline contains evidence of the variant.
 

@@ -22,7 +22,6 @@ import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.DrugData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedDrug;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -232,7 +231,7 @@ public class PatientValidatorTest {
         String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(PATIENT_IDENTIFIER,
                 curationName,
-                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
+                Lists.newArrayList(BiopsyTreatmentData.of("Yes",
                         "Yes",
                         Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
                         FormStatus.undefined())));
@@ -247,7 +246,7 @@ public class PatientValidatorTest {
         String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(PATIENT_IDENTIFIER,
                 curationName,
-                Lists.newArrayList(ImmutableBiopsyTreatmentData.of("Yes",
+                Lists.newArrayList(BiopsyTreatmentData.of("Yes",
                         "Yes",
                         Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
                         FormStatus.undefined())));

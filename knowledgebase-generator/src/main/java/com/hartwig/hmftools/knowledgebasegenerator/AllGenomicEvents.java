@@ -43,4 +43,11 @@ public abstract class AllGenomicEvents {
 
     @NotNull
     public abstract Set<String> uniqueKnownFusionPairs();
+
+    @NotNull
+    public abstract Set<String> knownFusionPromiscuousThree();
+
+    @NotNull
+    public abstract Set<String> knownFusionPromiscuousFive();
+
 }

@@ -23,10 +23,10 @@ public final class TreatmentMatcher {
     }
 
     @NotNull
-    public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull final String patientIdentifier,
-            @NotNull final List<BiopsyData> biopsies, @NotNull final List<BiopsyTreatmentData> treatments) {
-        final List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull String patientIdentifier,
+            @NotNull List<BiopsyData> biopsies, @NotNull List<BiopsyTreatmentData> treatments) {
+         List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
 
         List<BiopsyData> remainingBiopsies = Lists.newArrayList(biopsies);
 
@@ -36,8 +36,8 @@ public final class TreatmentMatcher {
         List<BiopsyTreatmentData> yesTreatments = getYesTreatments(treatments);
         List<BiopsyTreatmentData> notYesTreatments = getNotYesTreatments(treatments);
 
-        // First match yes-treatments
-        for (final BiopsyTreatmentData treatment : yesTreatments) {
+        // First match yes-treatments and wide treatments
+        for (BiopsyTreatmentData treatment : yesTreatments) {
             LocalDate startDate = treatment.startDate();
             if (startDate == null) {
                 matchedTreatments.add(treatment);
@@ -59,8 +59,8 @@ public final class TreatmentMatcher {
         }
 
         // Then distribute not-yes treatments over remaining biopsies.
-        for (final BiopsyTreatmentData treatment : notYesTreatments) {
-            final String treatmentGiven = treatment.treatmentGiven();
+        for (BiopsyTreatmentData treatment : notYesTreatments) {
+            String treatmentGiven = treatment.treatmentGiven();
 
             if (treatmentGiven == null) {
                 matchedTreatments.add(treatment);
@@ -86,7 +86,7 @@ public final class TreatmentMatcher {
 
     @NotNull
     private static Collection<ValidationFinding> validateMatchingForMatchedBiopsies(@NotNull String patientIdentifier,
-            @NotNull final List<BiopsyTreatmentData> matchedTreatments, @NotNull final List<BiopsyData> biopsies) {
+            @NotNull List<BiopsyTreatmentData> matchedTreatments, @NotNull List<BiopsyData> biopsies) {
         List<ValidationFinding> findings = Lists.newArrayList();
         List<Integer> matchedBiopsyIds = Lists.newArrayList();
 
@@ -104,7 +104,7 @@ public final class TreatmentMatcher {
         return findings;
     }
 
-    private static boolean isPossibleMatch(@NotNull final BiopsyData biopsy, @NotNull final LocalDate treatmentStartDate) {
+    private static boolean isPossibleMatch(@NotNull BiopsyData biopsy, @NotNull LocalDate treatmentStartDate) {
         LocalDate biopsyDate = biopsy.date();
 
         return biopsyDate != null && (treatmentStartDate.isAfter(biopsyDate) || treatmentStartDate.isEqual(biopsyDate))
@@ -129,6 +129,7 @@ public final class TreatmentMatcher {
     @NotNull
     private static List<BiopsyTreatmentData> getYesTreatments(@NotNull List<BiopsyTreatmentData> treatments) {
         List<BiopsyTreatmentData> yesTreatments = Lists.newArrayList();
+
         for (BiopsyTreatmentData treatment : treatments) {
             String treatmentGiven = treatment.treatmentGiven();
             if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
@@ -148,7 +149,6 @@ public final class TreatmentMatcher {
             }
         }
         return notYesTreatments;
-
     }
 
     @NotNull

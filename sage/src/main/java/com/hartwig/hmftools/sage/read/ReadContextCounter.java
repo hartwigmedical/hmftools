@@ -170,10 +170,6 @@ public class ReadContextCounter implements VariantHotspot {
         return rawRefBaseQuality;
     }
 
-    public double rawVaf() {
-        return rawDepth == 0 ? 0 : ((double) rawAltSupport) / rawDepth;
-    }
-
     @NotNull
     public ReadContext readContext() {
         return readContext;
