@@ -156,9 +156,4 @@ public class ReadContextFactory {
                 record);
     }
 
-    @NotNull
-    public static ReadContext dummy(int refPosition, @NotNull final String alt) {
-        return new ReadContext(Strings.EMPTY, refPosition, 0, 0, 0, 1, alt.getBytes());
-    }
-
 }

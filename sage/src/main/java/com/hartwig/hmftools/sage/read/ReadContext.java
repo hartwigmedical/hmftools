@@ -16,9 +16,11 @@ public class ReadContext {
     private final int repeatCount;
     private final String microhomology;
     private final IndexedBases readBases;
+    private final IndexedBases refBases;
 
     @VisibleForTesting
-    ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex,  final int rightCentreIndex, final int flankSize, final byte[] readBases) {
+    ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
+            final int flankSize, final byte[] readBases) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
@@ -29,10 +31,11 @@ public class ReadContext {
         this.microhomology = Strings.EMPTY;
         this.repeatCount = 0;
         this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
+        this.refBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
     }
 
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
-            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, IndexedBases refSequence,
+            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
             @NotNull final SAMRecord record) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
@@ -50,6 +53,14 @@ public class ReadContext {
         this.distanceCigar = distance.cigar();
 
         this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
+
+        int refIndex = refSequence.index(position);
+        this.refBases = IndexedBases.resize(position,
+                refIndex,
+                refIndex + leftCentreIndex - readIndex,
+                refIndex + rightCentreIndex - readIndex,
+                0,
+                refSequence.bases());
     }
 
     private ReadContext(@NotNull final ReadContext clone) {
@@ -57,8 +68,9 @@ public class ReadContext {
         this.repeat = clone.repeat;
         this.repeatCount = clone.repeatCount;
         this.microhomology = clone.microhomology;
-        this.distance = clone.distance();
-        this.distanceCigar = clone.distanceCigar();
+        this.distance = clone.distance;
+        this.distanceCigar = clone.distanceCigar;
+        this.refBases = clone.refBases;
 
         this.readBases = IndexedBases.resize(position,
                 clone.readBases.index(),
@@ -66,6 +78,7 @@ public class ReadContext {
                 clone.readBases.rightCentreIndex(),
                 clone.readBases.flankSize(),
                 clone.readBases.bases());
+
     }
 
     @NotNull
@@ -147,7 +160,6 @@ public class ReadContext {
     public int readBasesRightCentreIndex() {
         return readBases.rightCentreIndex();
     }
-
 
     @Override
     public String toString() {
