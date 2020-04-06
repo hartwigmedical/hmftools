@@ -29,13 +29,15 @@ class QualityCounterCigarHandler implements CigarHandler {
 
     private final IndexedBases refGenome;
     private final GenomeRegion bounds;
+    private final int maxAltCount;
 
     private final Set<Integer> indelPositions = Sets.newHashSet();
     private final Map<QualityCounterKey, QualityCounter> qualityMap = Maps.newHashMap();
 
-    public QualityCounterCigarHandler(final RefSequence refGenome, final GenomeRegion bounds) {
+    public QualityCounterCigarHandler(final RefSequence refGenome, final GenomeRegion bounds, final int maxAltCount) {
         this.refGenome = refGenome.alignment();
         this.bounds = bounds;
+        this.maxAltCount = maxAltCount;
     }
 
     public void processRecord(@NotNull final SAMRecord record) {
@@ -47,7 +49,7 @@ class QualityCounterCigarHandler implements CigarHandler {
 
         final Set<QualityCounterKey> altsToRemove = groupByAlt(qualityMap.values()).stream()
                 .filter(x -> x.ref() != x.alt())
-                .filter(x -> x.count() > 3)
+                .filter(x -> x.count() > maxAltCount)
                 .map(QualityCounter::key)
                 .collect(Collectors.toSet());
 

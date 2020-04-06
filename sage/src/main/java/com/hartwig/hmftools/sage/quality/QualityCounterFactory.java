@@ -23,10 +23,12 @@ class QualityCounterFactory {
 
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
+    private final int maxAltCount;
 
-    public QualityCounterFactory(final String bamFile, final ReferenceSequenceFile refGenome) {
+    public QualityCounterFactory(final String bamFile, final ReferenceSequenceFile refGenome, final int maxAltCount) {
         this.bamFile = bamFile;
         this.refGenome = refGenome;
+        this.maxAltCount = maxAltCount;
     }
 
     @NotNull
@@ -35,7 +37,7 @@ class QualityCounterFactory {
         LOGGER.info("Processing region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
-        final QualityCounterCigarHandler counter = new QualityCounterCigarHandler(refSequence, bounds);
+        final QualityCounterCigarHandler counter = new QualityCounterCigarHandler(refSequence, bounds, maxAltCount);
         final SamSlicer slicer = new SamSlicer(10, bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))

@@ -23,11 +23,13 @@ public class QualityRecalibration {
 
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
+    private final int maxAltCount;
     private final List<CompletableFuture<Collection<QualityCounter>>> counters = Lists.newArrayList();
 
-    public QualityRecalibration(final ExecutorService executorService, final IndexedFastaSequenceFile refGenome) {
+    public QualityRecalibration(final ExecutorService executorService, final IndexedFastaSequenceFile refGenome, final int maxAltCount) {
         this.executorService = executorService;
         this.refGenome = refGenome;
+        this.maxAltCount = maxAltCount;
     }
 
     @NotNull
@@ -73,7 +75,7 @@ public class QualityRecalibration {
 
     public void addRegion(String bam, String contig, int start, int end) {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-        counters.add(CompletableFuture.supplyAsync(() -> new QualityCounterFactory(bam, refGenome).regionCount(bounds), executorService));
+        counters.add(CompletableFuture.supplyAsync(() -> new QualityCounterFactory(bam, refGenome, maxAltCount).regionCount(bounds), executorService));
     }
 
     public void submitAllRegions(@NotNull final String bam, @NotNull final String contig, int minPosition, int maxPosition) {

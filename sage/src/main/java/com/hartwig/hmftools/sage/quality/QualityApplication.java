@@ -65,7 +65,7 @@ public class QualityApplication implements AutoCloseable {
 
         LOGGER.info("Starting");
 
-      final QualityRecalibration recalibration = new QualityRecalibration(executorService, refGenome);
+      final QualityRecalibration recalibration = new QualityRecalibration(executorService, refGenome, 3);
       final List<QualityRecalibrationRecord> recalibrationRecords = recalibration.qualityRecalibrationRecords(input).join();
         QualityRecalibrationFile.write(output, recalibrationRecords);
         LOGGER.info("Finished in {} seconds", (System.currentTimeMillis() - time) / 1000);
