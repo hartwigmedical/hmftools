@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +15,7 @@ import java.util.concurrent.ThreadFactory;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -26,6 +29,10 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
+import com.hartwig.hmftools.sage.quality.QualityRecalibration;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationFile;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationRecord;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.apache.commons.cli.CommandLine;
@@ -83,16 +90,18 @@ public class SageApplication implements AutoCloseable {
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("SAGE-%d").build();
         executorService = Executors.newFixedThreadPool(config.threads(), namedThreadFactory);
         refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        vcf = new SageVCF(refGenome, config);
 
-        LOGGER.info("Writing to file {}", config.outputFile());
+        vcf = new SageVCF(refGenome, config);
+        LOGGER.info("Writing to file: {}", config.outputFile());
     }
 
     private void run() throws InterruptedException, ExecutionException, IOException {
 
         long timeStamp = System.currentTimeMillis();
-        final List<Future<ChromosomePipeline>> chromosomePipelines = Lists.newArrayList();
 
+        //final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibrationMap();
+
+        final List<Future<ChromosomePipeline>> chromosomePipelines = Lists.newArrayList();
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
@@ -103,14 +112,14 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-//        ChromosomePipeline custom = createChromosomePipeline("17");
-//        custom.addAllRegions();
-//        custom.addAllRegions(1_000_000);
-//        custom.addRegion(6385360, 6385360);
-//        custom.addRegion(25268011, 25268011);
-//        custom.addRegion(79223325, 79223325);
-//        custom.addRegion(997610, 997610);
-//        chromosomePipelines.add(custom.submit());
+        //        ChromosomePipeline custom = createChromosomePipeline("17");
+        //        custom.addAllRegions();
+        //        custom.addAllRegions(1_000_000);
+        //        custom.addRegion(6385360, 6385360);
+        //        custom.addRegion(25268011, 25268011);
+        //        custom.addRegion(79223325, 79223325);
+        //        custom.addRegion(997610, 997610);
+        //        chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
         while (chromosomeIterator.hasNext()) {
@@ -204,6 +213,42 @@ public class SageApplication implements AutoCloseable {
         }
 
         return panel;
+    }
+
+    @NotNull
+    private Map<String, QualityRecalibrationMap> qualityRecalibrationMap() throws IOException {
+        final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
+        LOGGER.info("Beginning quality recalibration");
+
+        final QualityRecalibration qualityRecalibration =
+                new QualityRecalibration(executorService, refGenome, config.qualityConfig().qualityRecalibrationMaxAltCount());
+
+        final List<CompletableFuture<List<QualityRecalibrationRecord>>> qualityRecalibrationFutures = Lists.newArrayList();
+        for (String referenceBam : config.referenceBam()) {
+            qualityRecalibrationFutures.add(qualityRecalibration.qualityRecalibrationRecords(referenceBam));
+        }
+        for (String tumorBam : config.tumorBam()) {
+            qualityRecalibrationFutures.add(qualityRecalibration.qualityRecalibrationRecords(tumorBam));
+        }
+
+        for (int i = 0; i < config.reference().size(); i++) {
+            final String sample = config.reference().get(i);
+            final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(i).join();
+            result.put(sample, new QualityRecalibrationMap(records));
+            QualityRecalibrationFile.write(config.bqsrFile(sample), records);
+            LOGGER.info("Writing base quality recalibration file {}", config.bqsrFile(sample));
+        }
+
+        for (int i = 0; i < config.tumor().size(); i++) {
+            final String sample = config.tumor().get(i);
+            final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(config.reference().size() + i).join();
+            result.put(sample, new QualityRecalibrationMap(records));
+            QualityRecalibrationFile.write(config.bqsrFile(sample), records);
+            LOGGER.info("Writing base quality recalibration file {}", config.bqsrFile(sample));
+        }
+
+        LOGGER.info("Quality recalibration complete.");
+        return result;
     }
 
 }

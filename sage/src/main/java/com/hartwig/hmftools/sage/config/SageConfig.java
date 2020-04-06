@@ -104,6 +104,11 @@ public interface SageConfig {
     String outputFile();
 
     @NotNull
+    default String bqsrFile(@NotNull final String sample) {
+        return new File(outputFile()).getParent() + File.separator + sample + ".sage.bqsr.tsv";
+    }
+
+    @NotNull
     String panelBed();
 
     boolean panelOnly();

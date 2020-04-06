@@ -57,6 +57,10 @@ public interface QualityConfig {
         return (jitterPenalty() * Math.max(0, repeatCount - jitterMinRepeatCount()));
     }
 
+    default int qualityRecalibrationMaxAltCount() {
+        return 3;
+    }
+
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
