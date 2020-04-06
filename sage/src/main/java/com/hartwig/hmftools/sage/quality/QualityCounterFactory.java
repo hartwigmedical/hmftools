@@ -17,7 +17,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class QualityCounterFactory {
+class QualityCounterFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(QualityCounterFactory.class);
 

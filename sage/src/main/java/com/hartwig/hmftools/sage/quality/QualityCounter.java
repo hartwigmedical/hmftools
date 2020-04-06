@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage.quality;
 
 import org.jetbrains.annotations.NotNull;
 
-public class QualityCounter implements QualityCounterKey, Comparable<QualityCounter> {
+class QualityCounter implements QualityCounterKey, Comparable<QualityCounter> {
     private final QualityCounterKey key;
     private int count;
 

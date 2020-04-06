@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -9,23 +10,18 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public class QualityRecalibrationFactory {
+class QualityRecalibrationFactory {
 
     @NotNull
-    public static List<QualityRecalibrationRecord> create(@NotNull final List<QualityCounter> records) {
+    public static List<QualityRecalibrationRecord> create(@NotNull final Collection<QualityCounter> records) {
 
         final List<QualityRecalibrationRecord> result = Lists.newArrayList();
-        final List<QualityCounter> cleanedRecords = QualityCounterGrouping.groupWithoutPosition(records)
-                .stream()
-                .filter(x -> (char) x.ref() != 'N')
-                .filter(x -> (char) x.alt() != 'N')
-                .collect(Collectors.toList());
 
-        final Map<QualityRecalibrationKey, Integer> refCountMap = cleanedRecords.stream()
+        final Map<QualityRecalibrationKey, Integer> refCountMap = records.stream()
                 .filter(x -> x.ref() == x.alt())
                 .collect(Collectors.toMap(QualityRecalibrationFactory::key, QualityCounter::count));
 
-        for (QualityCounter cleanedRecord : cleanedRecords) {
+        for (QualityCounter cleanedRecord : records) {
             final QualityRecalibrationKey key = key(cleanedRecord);
             final QualityRecalibrationKey refKey = ImmutableQualityRecalibrationKey.builder().from(key).alt(cleanedRecord.ref()).build();
             int refCount = refCountMap.getOrDefault(refKey, 0);

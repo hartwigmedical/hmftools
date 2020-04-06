@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.sage.quality;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -19,7 +22,7 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public class QualityCounterCigarHandler implements CigarHandler {
+class QualityCounterCigarHandler implements CigarHandler {
 
     private static final CigarElement SINGLE = new CigarElement(1, CigarOperator.M);
     private static final byte N = (byte) 'N';
@@ -42,8 +45,7 @@ public class QualityCounterCigarHandler implements CigarHandler {
     @NotNull
     public Collection<QualityCounter> counts() {
 
-        final Set<QualityCounterKey> altsToRemove = QualityCounterGrouping.groupByAlt(qualityMap.values())
-                .stream()
+        final Set<QualityCounterKey> altsToRemove = groupByAlt(qualityMap.values()).stream()
                 .filter(x -> x.ref() != x.alt())
                 .filter(x -> x.count() > 3)
                 .map(QualityCounter::key)
@@ -51,13 +53,13 @@ public class QualityCounterCigarHandler implements CigarHandler {
 
         final Set<QualityCounter> result = Sets.newHashSet();
         for (QualityCounter count : qualityMap.values()) {
-            final QualityCounterKey altKey = QualityCounterGrouping.alt(count);
+            final QualityCounterKey altKey = altKey(count);
             if (!indelPositions.contains(count.position()) && !altsToRemove.contains(altKey)) {
                 result.add(count);
             }
         }
 
-        return QualityCounterGrouping.groupWithoutPosition(result);
+        return result;
     }
 
     @Override
@@ -112,6 +114,26 @@ public class QualityCounterCigarHandler implements CigarHandler {
             }
         }
         return trinucleotideContext.length == 3;
+    }
+
+    @NotNull
+    private static List<QualityCounter> groupByAlt(final Collection<QualityCounter> quality) {
+        final Map<QualityCounterKey, QualityCounter> map = Maps.newHashMap();
+
+        for (QualityCounter count : quality) {
+            final QualityCounterKey key = altKey(count);
+            map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
+        }
+
+        final List<QualityCounter> result = Lists.newArrayList(map.values());
+        Collections.sort(result);
+
+        return result;
+    }
+
+    @NotNull
+    public static QualityCounterKey altKey(@NotNull final QualityCounter count) {
+        return ImmutableQualityCounterKey.builder().from(count).qual((byte) 0).trinucleotideContext().build();
     }
 
 }
