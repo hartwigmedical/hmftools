@@ -17,25 +17,25 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class QualityRegion {
+public class QualityCounterFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(QualityRegion.class);
+    private static final Logger LOGGER = LogManager.getLogger(QualityCounterFactory.class);
 
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
 
-    public QualityRegion(final String bamFile, final ReferenceSequenceFile refGenome) {
+    public QualityCounterFactory(final String bamFile, final ReferenceSequenceFile refGenome) {
         this.bamFile = bamFile;
         this.refGenome = refGenome;
     }
 
     @NotNull
-    public Collection<QualityCount> regionCount(@NotNull final GenomeRegion bounds) {
+    public Collection<QualityCounter> regionCount(@NotNull final GenomeRegion bounds) {
 
         LOGGER.info("Processing region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
-        final QualityCounter counter = new QualityCounter(refSequence, bounds);
+        final QualityCounterCigarHandler counter = new QualityCounterCigarHandler(refSequence, bounds);
         final SamSlicer slicer = new SamSlicer(10, bounds);
         try (final SamReader tumorReader = SamReaderFactory.makeDefault()
                 .referenceSource(new ReferenceSource(refGenome))
