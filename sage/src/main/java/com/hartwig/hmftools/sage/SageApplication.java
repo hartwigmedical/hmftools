@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -99,27 +100,26 @@ public class SageApplication implements AutoCloseable {
 
         long timeStamp = System.currentTimeMillis();
 
-        //final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibrationMap();
-
+        final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibration();
         final List<Future<ChromosomePipeline>> chromosomePipelines = Lists.newArrayList();
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
             if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
-                ChromosomePipeline pipeline = createChromosomePipeline(contig);
+                ChromosomePipeline pipeline = createChromosomePipeline(contig, recalibrationMap);
                 pipeline.addAllRegions();
                 chromosomePipelines.add(pipeline.submit());
             }
         }
 
-        //        ChromosomePipeline custom = createChromosomePipeline("17");
-        //        custom.addAllRegions();
-        //        custom.addAllRegions(1_000_000);
-        //        custom.addRegion(6385360, 6385360);
-        //        custom.addRegion(25268011, 25268011);
-        //        custom.addRegion(79223325, 79223325);
-        //        custom.addRegion(997610, 997610);
-        //        chromosomePipelines.add(custom.submit());
+//                ChromosomePipeline custom = createChromosomePipeline("17", recalibrationMap);
+//                custom.addAllRegions();
+//                custom.addAllRegions(1_000_000);
+//                custom.addRegion(6385360, 6385360);
+//                custom.addRegion(25268011, 25268011);
+//                custom.addRegion(79223325, 79223325);
+//                custom.addRegion(997610, 997610);
+//                chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
         while (chromosomeIterator.hasNext()) {
@@ -143,7 +143,8 @@ public class SageApplication implements AutoCloseable {
         return dictionary;
     }
 
-    private ChromosomePipeline createChromosomePipeline(@NotNull final String contig) throws IOException {
+    private ChromosomePipeline createChromosomePipeline(@NotNull final String contig,
+            Map<String, QualityRecalibrationMap> qualityRecalibrationMap) throws IOException {
         final Chromosome chromosome =
                 HumanChromosome.contains(contig) ? HumanChromosome.fromString(contig) : MitochondrialChromosome.fromString(contig);
         return new ChromosomePipeline(contig,
@@ -151,7 +152,8 @@ public class SageApplication implements AutoCloseable {
                 executorService,
                 hotspots.get(chromosome),
                 panel.get(chromosome),
-                highConfidence.get(chromosome));
+                highConfidence.get(chromosome),
+                qualityRecalibrationMap);
     }
 
     @Override
@@ -216,12 +218,16 @@ public class SageApplication implements AutoCloseable {
     }
 
     @NotNull
-    private Map<String, QualityRecalibrationMap> qualityRecalibrationMap() throws IOException {
+    private Map<String, QualityRecalibrationMap> qualityRecalibration() throws IOException {
+        if (!config.baseQualityRecalibration()) {
+            return disableQualityRecalibration();
+        }
+
         final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
         LOGGER.info("Beginning quality recalibration");
 
         final QualityRecalibration qualityRecalibration =
-                new QualityRecalibration(executorService, refGenome, config.qualityConfig().qualityRecalibrationMaxAltCount());
+                new QualityRecalibration(executorService, refGenome, config.qualityConfig().baseQualityRecalibrationMaxAltCount());
 
         final List<CompletableFuture<List<QualityRecalibrationRecord>>> qualityRecalibrationFutures = Lists.newArrayList();
         for (String referenceBam : config.referenceBam()) {
@@ -235,19 +241,31 @@ public class SageApplication implements AutoCloseable {
             final String sample = config.reference().get(i);
             final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(i).join();
             result.put(sample, new QualityRecalibrationMap(records));
-            QualityRecalibrationFile.write(config.bqsrFile(sample), records);
-            LOGGER.info("Writing base quality recalibration file {}", config.bqsrFile(sample));
+            QualityRecalibrationFile.write(config.baseQualityRecalibrationFile(sample), records);
+            LOGGER.info("Writing base quality recalibration file: {}", config.baseQualityRecalibrationFile(sample));
         }
 
         for (int i = 0; i < config.tumor().size(); i++) {
             final String sample = config.tumor().get(i);
             final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(config.reference().size() + i).join();
             result.put(sample, new QualityRecalibrationMap(records));
-            QualityRecalibrationFile.write(config.bqsrFile(sample), records);
-            LOGGER.info("Writing base quality recalibration file {}", config.bqsrFile(sample));
+            QualityRecalibrationFile.write(config.baseQualityRecalibrationFile(sample), records);
+            LOGGER.info("Writing base quality recalibration file: {}", config.baseQualityRecalibrationFile(sample));
         }
 
-        LOGGER.info("Quality recalibration complete.");
+        return result;
+    }
+
+    private Map<String, QualityRecalibrationMap> disableQualityRecalibration() {
+        final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
+
+        for (String sample : config.reference()) {
+            result.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
+        }
+        for (String sample : config.tumor()) {
+            result.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
+
+        }
         return result;
     }
 

@@ -104,8 +104,8 @@ public interface SageConfig {
     String outputFile();
 
     @NotNull
-    default String bqsrFile(@NotNull final String sample) {
-        return new File(outputFile()).getParent() + File.separator + sample + ".sage.bqsr.tsv";
+    default String baseQualityRecalibrationFile(@NotNull final String sample) {
+        return new File(outputFile()).getParent() + File.separator + sample + ".sage.bqr.tsv";
     }
 
     @NotNull
@@ -146,6 +146,10 @@ public interface SageConfig {
 
     default int readContextFlankSize() {
         return 25;
+    }
+
+    default boolean baseQualityRecalibration() {
+        return true;
     }
 
     @NotNull

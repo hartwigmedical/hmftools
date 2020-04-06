@@ -206,4 +206,8 @@ public class ReadContext {
         return readBases.flankSize();
     }
 
+    public byte[] refTrinucleotideContext(int position) {
+        return refBases.trinucleotideContext(position);
+    }
+
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.read;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.QualityConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.realign.Realigned;
 import com.hartwig.hmftools.sage.realign.RealignedContext;
 import com.hartwig.hmftools.sage.realign.RealignedType;
@@ -22,6 +23,7 @@ public class ReadContextCounter implements VariantHotspot {
     private final VariantHotspot variant;
     private final ReadContext readContext;
     private final RawContextFactory rawFactory;
+    private final QualityRecalibrationMap qualityRecalibrationMap;
     private final SageVariantTier tier;
     private final boolean realign;
     private final int maxCoverage;
@@ -53,7 +55,7 @@ public class ReadContextCounter implements VariantHotspot {
     private int rawRefBaseQuality;
 
     public ReadContextCounter(@NotNull final String sample, @NotNull final VariantHotspot variant, @NotNull final ReadContext readContext,
-            final SageVariantTier tier, final int maxCoverage, boolean realign) {
+            final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, boolean realign) {
         this.sample = sample;
         this.tier = tier;
         assert (readContext.isComplete());
@@ -62,6 +64,7 @@ public class ReadContextCounter implements VariantHotspot {
         this.rawFactory = new RawContextFactory(variant);
         this.realign = realign;
         this.maxCoverage = maxCoverage;
+        this.qualityRecalibrationMap = recalibrationMap;
     }
 
     @NotNull
@@ -289,29 +292,38 @@ public class ReadContextCounter implements VariantHotspot {
     private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {
         final int distanceFromRef = readContext.distance();
 
-        final int baseQuality = baseQuality(readBaseIndex, record);
+        final double baseQuality = baseQuality(readBaseIndex, record);
         final int distanceFromReadEdge = readDistanceFromEdge(readBaseIndex, record);
 
         final int mapQuality = record.getMappingQuality();
 
         int modifiedMapQuality = qualityConfig.modifiedMapQuality(mapQuality, distanceFromRef, record.getProperPairFlag());
-        int modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
+        double modifiedBaseQuality = qualityConfig.modifiedBaseQuality(baseQuality, distanceFromReadEdge);
 
         return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
     }
 
-    private int baseQuality(int readBaseIndex, SAMRecord record) {
+    private double baseQuality(int readBaseIndex, SAMRecord record) {
         return variant.ref().length() == variant.alt().length()
                 ? baseQuality(readBaseIndex, record, variant.ref().length())
                 : readContext.minCentreQuality(readBaseIndex, record);
     }
 
-    private int baseQuality(int readIndex, SAMRecord record, int length) {
-        int maxIndex = Math.min(readIndex + length, record.getBaseQualities().length) - 1;
-        int quality = Integer.MAX_VALUE;
-        for (int i = readIndex; i <= maxIndex; i++) {
-            quality = Math.min(quality, record.getBaseQualities()[i]);
+    private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length) {
+        int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
+        int maxLength = maxIndex - startReadIndex + 1;
+
+        double quality = Integer.MAX_VALUE;
+        for (int i = 0; i < maxLength; i++) {
+            int refPosition = (int) position() + i;
+            int readIndex = startReadIndex + i;
+            byte rawQuality = record.getBaseQualities()[readIndex];
+            byte[] trinucleotideContext = readContext.refTrinucleotideContext(refPosition);
+            double recalibratedQuality =
+                    qualityRecalibrationMap.quality((byte) ref().charAt(i), (byte) alt().charAt(i), trinucleotideContext, rawQuality);
+            quality = Math.min(quality, recalibratedQuality);
         }
+
         return quality;
     }
 

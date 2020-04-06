@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.phase.Phase;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
@@ -43,12 +45,14 @@ public class ChromosomePipeline implements AutoCloseable {
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions) throws IOException {
+            @NotNull final List<GenomeRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+            throws IOException {
         this.chromosome = chromosome;
         this.config = config;
         this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
-        this.sageVariantPipeline = new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions);
+        this.sageVariantPipeline =
+                new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap);
     }
 
     @NotNull

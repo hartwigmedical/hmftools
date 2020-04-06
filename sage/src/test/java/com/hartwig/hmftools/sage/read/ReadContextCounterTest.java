@@ -2,10 +2,13 @@ package com.hartwig.hmftools.sage.read;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
+
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.config.SageConfigTest;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
 import org.apache.logging.log4j.util.Strings;
@@ -19,17 +22,18 @@ public class ReadContextCounterTest {
     private final static String SAMPLE = "sample";
     private final static int MAX_COVERAGE =  1000;
     private final static SageVariantTier TIER =  SageVariantTier.PANEL;
-    private final SageConfig config = SageConfigTest.testConfig();
+    private final static SageConfig CONFIG = SageConfigTest.testConfig();
+    private final static QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
 
     @Test
     public void testInsertInLeftSoftClip() {
         final IndexedBases refBases = new IndexedBases(554, 1, "TGTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
-        victim.accept(record, config);
+        victim.accept(record, CONFIG);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -40,10 +44,10 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(554, 1, "TGTTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
-        victim.accept(record, config);
+        victim.accept(record, CONFIG);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -54,10 +58,10 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
-        victim.accept(record, config);
+        victim.accept(record, CONFIG);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -68,10 +72,10 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(553, 0, "TGTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
-        victim.accept(record, config);
+        victim.accept(record, CONFIG);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -82,10 +86,10 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(553, 0, "TGTTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
-        victim.accept(record, config);
+        victim.accept(record, CONFIG);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());
@@ -96,10 +100,10 @@ public class ReadContextCounterTest {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes());
-        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, TIER, MAX_COVERAGE, true);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
-        victim.accept(record, config);
+        victim.accept(record, CONFIG);
 
         assertEquals(1, victim.depth());
         assertEquals(1, victim.altSupport());

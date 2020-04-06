@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class QualityRecalibrationFile {
 
-    private static final String DELIMITER = ",";
+    private static final String DELIMITER = "\t";
     private static final DecimalFormat FORMAT = new DecimalFormat("0.00");
 
     public static void write(@NotNull final String filename, @NotNull final Collection<QualityRecalibrationRecord> counts)

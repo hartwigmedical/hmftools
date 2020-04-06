@@ -3,12 +3,14 @@ package com.hartwig.hmftools.sage.evidence;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.config.SageConfig;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounterFactory;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
@@ -35,19 +37,19 @@ public class ReadContextEvidence {
     private final ReferenceSequenceFile refGenome;
     private final ReadContextCounterFactory factory;
 
-
     public ReadContextEvidence(@NotNull final SageConfig config, @NotNull final SamSlicerFactory samSlicerFactory,
-            @NotNull final ReferenceSequenceFile refGenome) {
+            @NotNull final ReferenceSequenceFile refGenome, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
         this.minQuality = config.minMapQuality();
         this.sageConfig = config;
         this.samSlicerFactory = samSlicerFactory;
         this.refGenome = refGenome;
-        this.factory = new ReadContextCounterFactory(config);
+        this.factory = new ReadContextCounterFactory(config, qualityRecalibrationMap);
         this.typicalReadLength = config.typicalReadLength();
     }
 
     @NotNull
-    public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample, @NotNull final String bam) {
+    public List<ReadContextCounter> get(@NotNull final List<Candidate> candidates, @NotNull final String sample,
+            @NotNull final String bam) {
 
         final List<ReadContextCounter> counters = factory.create(sample, candidates);
         if (candidates.isEmpty()) {
