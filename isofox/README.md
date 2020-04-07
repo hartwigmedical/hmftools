@@ -184,13 +184,13 @@ Each novel splice junction and retained intron for each sample is annotated with
 Field | Description 
 ---|---
 FragmentLength | Fragment length
-Count | Tota count of fragments of fragment length
+Count | Total count of fragments of fragment length
 
 ### Gene level data
 
 Field | Description 
 ---|---
-GeneId | Ensembl Gene Id
+GeneId | Ensembl gene id
 GeneName | Gene
 Chromosome | Chromosome of gene
 GeneLength | Length of gene
@@ -205,20 +205,20 @@ TPM | TPM for gene excluding unspliced fragments
 
 Field | Description 
 ---|---
-GeneId | Ensembl Id for Gene
+GeneId | Ensembl id for gene
 GeneName | Gene
-TranscriptId | Ensembl Id for Transcript
-TransName | Ensembl Transcript Name eg. TP53-001
+TranscriptId | Ensembl id for transcript
+TranscriptName | Ensembl transcript name eg. TP53-001
 Canonical | Is canonical transcript (T/F)
 ExonCount | Count of exons in transcript
+UniqueSJCount | Number of unique splice junctions in transcript
 TranscriptLength | Total length of transcript
 EffectiveLength | Effective length of transcript (adjusted for fragment size)
 FittedFragments | Count of fragments assigned to transcript
-RawFittedFragments |  Count of fragments assigned to transcript prior to bias adjustments (GC, ...,)
+RawFittedFragments |  Count of fragments assigned to transcript prior to bias adjustments (ie. GC adjustment, etc)
 TPM | Transcripts per million
 TranscriptBasesCovered | Number of bases in transcript with at least 1 supporting fragment
 SJSupported | Count of splice junctions in transcript with at least 1 supporting fragment
-UniqueSJ | Number of unique splice junctions in transcript
 UniqueSJSupported | Count of unique splice junctions in transcript with at least 1 supporting fragment
 UniqueSJFragments | Count of fragmnents supporting a splice junction unique to the transcript
 UniqueNonSJFragments | Count of fragmnents uniquely supporting transcript but without a unique splice junction
@@ -227,27 +227,25 @@ UniqueNonSJFragments | Count of fragmnents uniquely supporting transcript but wi
 
 Field | Description 
 ---|---
-GeneId | Ensembl Id for Gene
+GeneId | Ensembl id for gene
 GeneName | Gene
 Chromosome | Chromosome of gene
 Strand | Strand of gene
 SJStart | Start position of novel splice junction
 SJEnd | End position of novel splice junction
-FragmentCount | Count of fragments supporting novel splice junction
+Fragments | Count of fragments supporting novel splice junction
 StartDepth | Total depth at SJStart position
-EndDepth | Total depth at SJ end position
-Type | 
-StartContext | 
-EndContext | 
-NearestStartExon | 
-NearestEndExon | 
-StartBases | 
-EndBases | 
-StartTrans | 
-EndTrans | 
-PosStrandGenes | ?
-NegStrandGenes | ?
-
+EndDepth | Total depth at SJEnd position
+Type | Type of novel splice junction.  One of:  'SKIPPED_EXON','NOVEL_EXON','NOVEL_3_PRIME_SS','NOVEL_5_PRIME_SS','NOVEL_INTRON','MIXED_TRANSCRIPT','INTRONIC' or 'INTRONIC_TO_EXONIC'
+SJStartContext | Gene context at SJStart position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
+SJEndContext |  Gene context at SJEnd position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
+SJDistanceStart | Distance of SJStart position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
+SJDistanceEnd | Distance of SJEnd position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
+SJMotifStart | 2 previous and 10 next ref genome bases from SJStart position
+SJMotifEnd | 10 previous and 2 next ref genome bases from SJStart position
+SJStartTranscripts | Transcript ids which contain a splice junciton which includes the SJStart splice site
+SJEndTranscripts | Transcript ids which contain a splice junciton which includes the SJEnd splice site
+OverlappingGenes | List of all genes which overlap the novel splice junction
 
 ### Novel retained introns
 
@@ -259,7 +257,7 @@ Chromosome | Chromosome of gene
 Strand | Strand of gene
 Position | Chromosomal base position of exon boundary with overlapping fragments suggesting retained intron
 Type | 'DONOR' or 'ACCEPTOR' splice site
-FragCount | Count of all fragments which overlapp splice site boundary
-SplicedFragCount | Count of fragments which overlap splice site boundary which contain another splice site (ie. evidence of being part of a spliced transcript)
+FragmentCount | Count of all fragments which overlapp splice site boundary
+SplicedFragmentCount | Count of fragments which overlap splice site boundary which contain another splice site (ie. evidence of being part of a spliced transcript)
 TotalDepth | Depth at splice boundary
 TranscriptInfo | Transcript id and exon rank of all transcripts that match splice site boundary
