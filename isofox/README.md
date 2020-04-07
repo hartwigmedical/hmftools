@@ -158,7 +158,7 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 <TO DO>
 
-## 10. Annotation of novel splice features
+### 10. Annotation of novel splice features
 
 <TO DO - Combine intron retention and novel splice site information>
 
