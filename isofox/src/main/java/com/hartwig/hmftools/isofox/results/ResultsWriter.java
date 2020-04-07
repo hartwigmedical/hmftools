@@ -22,6 +22,7 @@ import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
+import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
@@ -37,7 +38,7 @@ public class ResultsWriter
     private BufferedWriter mGeneDataWriter;
     private BufferedWriter mTransDataWriter;
     private BufferedWriter mExonDataWriter;
-    private BufferedWriter mTransComboWriter;
+    private BufferedWriter mCategoryCountsWriter;
 
     // controlled by other components but instantiated once for output synchronosation
     private BufferedWriter mExpRateWriter;
@@ -62,7 +63,7 @@ public class ResultsWriter
         mGeneDataWriter = null;
         mTransDataWriter = null;
         mExonDataWriter = null;
-        mTransComboWriter = null;
+        mCategoryCountsWriter = null;
         mExpRateWriter = null;
         mReadDataWriter = null;
         mAltSpliceJunctionWriter = null;
@@ -78,7 +79,7 @@ public class ResultsWriter
         closeBufferedWriter(mGeneDataWriter);
         closeBufferedWriter(mTransDataWriter);
         closeBufferedWriter(mExonDataWriter);
-        closeBufferedWriter(mTransComboWriter);
+        closeBufferedWriter(mCategoryCountsWriter);
         closeBufferedWriter(mExpRateWriter);
         closeBufferedWriter(mReadDataWriter);
         closeBufferedWriter(mAltSpliceJunctionWriter);
@@ -113,10 +114,14 @@ public class ResultsWriter
 
             if(mConfig.WriteGcData)
                 mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
+
+            if(mConfig.WriteTransComboData)
+                mCategoryCountsWriter = ExpectedTransRates.createWriter(mConfig);
         }
     }
 
     public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}
+    public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
@@ -257,37 +262,4 @@ public class ResultsWriter
         }
     }
 
-    public synchronized void writeTransComboCounts(
-            final String genesId, final List<String> categories, final double[] counts, final double[] fittedCounts)
-    {
-        if(mConfig.OutputDir.isEmpty())
-            return;
-
-        try
-        {
-            if(mTransComboWriter == null)
-            {
-                final String outputFileName = mConfig.formOutputFile("category_counts.csv");
-
-                mTransComboWriter = createBufferedWriter(outputFileName, false);
-                mTransComboWriter.write("GenesId,Category,Count,FitCount");
-                mTransComboWriter.newLine();
-            }
-
-            for(int i = 0; i < categories.size(); ++i)
-            {
-                double count = counts[i];
-                final String category = categories.get(i);
-
-                mTransComboWriter.write(String.format("%s,%s,%.0f,%.1f",
-                        genesId, category, count, fittedCounts[i]));
-
-                mTransComboWriter.newLine();
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write trans combo data file: {}", e.toString());
-        }
-    }
 }

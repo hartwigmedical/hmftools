@@ -13,7 +13,7 @@ public class CategoryCountsData
 {
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
-    private long mFragmentCount;
+    private double mFragmentCount;
     private long[] mFragmentCountsByLength;
     private double[] mFragmentCountsByGcRatio;
 
@@ -88,7 +88,7 @@ public class CategoryCountsData
         return true;
     }
 
-    public final long fragmentCount() { return mFragmentCount; }
+    public final double fragmentCount() { return mFragmentCount; }
     public final long[] fragmentCountsByLength() { return mFragmentCountsByLength; }
     public final double[] fragmentCountsByGcRatio() { return mFragmentCountsByGcRatio; }
 
@@ -197,7 +197,7 @@ public class CategoryCountsData
 
     public String toString()
     {
-        return String.format("trans(%d) genes(%d)  key(%s) count(%d)",
+        return String.format("trans(%d) genes(%d)  key(%s) count(%.0f)",
                 mTranscripts.size(), mUnsplicedGenes.size(), mCombinedKey, mFragmentCount);
     }
 

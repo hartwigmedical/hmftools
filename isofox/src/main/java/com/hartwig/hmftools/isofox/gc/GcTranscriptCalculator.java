@@ -59,6 +59,9 @@ public class GcTranscriptCalculator
         if(config.ExpGcRatiosFile != null)
             loadExpectedData();
 
+        if(config.GcAdjustmentsFile != null)
+            loadGcAdjustments();
+
         mWriter = mConfig.WriteExpectedGcRatios ? createWriter() : null;
 
         mTotalExpectedCounts = mConfig.WriteExpectedGcRatios ? new double[mTranscriptFitGcCounts.size()] : null;
@@ -406,6 +409,55 @@ public class GcTranscriptCalculator
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write transcript expected GC ratio counts file: {}", e.toString());
+        }
+    }
+
+    private void loadGcAdjustments()
+    {
+        if(!Files.exists(Paths.get(mConfig.GcAdjustmentsFile)))
+        {
+            ISF_LOGGER.error("invalid GC adjustments file");
+            return;
+        }
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(mConfig.GcAdjustmentsFile));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                ISF_LOGGER.error("empty GC adjustments file({})", mConfig.GcAdjustmentsFile);
+                return;
+            }
+
+            GcRatioCounts gcRatioCounts = new GcRatioCounts();
+            int expectedColCount = 1 + gcRatioCounts.size();
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(DELIMITER, -1);
+
+                if (items.length != expectedColCount)
+                {
+                    ISF_LOGGER.error("invalid GC adjustments data length({}) vs expected({}): {}", items.length, expectedColCount, line);
+                    return;
+                }
+
+                for(int i = 1; i < items.length; ++i)
+                {
+                    double adjust = Double.parseDouble(items[i]);
+                    mGcRatioAdjustments[i - 1] = adjust;
+                }
+            }
+
+            ISF_LOGGER.info("loaded GC adjustments from file({})", mConfig.GcAdjustmentsFile);
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.warn("failed to load GC adjustments file({}): {}", mConfig.GcAdjustmentsFile, e.toString());
         }
     }
 

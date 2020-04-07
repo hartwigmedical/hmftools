@@ -50,9 +50,9 @@ public class IsofoxConfig
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
-    private static final String GC_BIAS_FILE = "gcbias_file";
     private static final String WRITE_GC_DATA = "write_gc_data";
     private static final String GC_RATIO_BUCKET_SIZE = "gc_ratio_bucket";
+    private static final String GC_ADJUSTS_FILE = "gc_adjusts_file";
 
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
@@ -113,7 +113,7 @@ public class IsofoxConfig
     public final boolean WriteFragmentLengthsOnly;
 
     public final boolean WriteGcData;
-    public final String GcBiasFile;
+    public final String GcAdjustmentsFile;
     public static double GC_RATIO_BUCKET = GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
 
     public final List<String> EnrichedGeneIds;
@@ -164,7 +164,7 @@ public class IsofoxConfig
         OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
 
         BamFile = cmd.getOptionValue(BAM_FILE);
-        GcBiasFile = cmd.getOptionValue(GC_BIAS_FILE, "");
+        GcAdjustmentsFile = cmd.getOptionValue(GC_ADJUSTS_FILE);
 
         final String refGenomeFilename = cmd.getOptionValue(REF_GENOME);
         RefGenomeFile = refGenomeFilename != null ? new File(refGenomeFilename) : null;
@@ -323,7 +323,7 @@ public class IsofoxConfig
     public static boolean validConfigPaths(final CommandLine cmd)
     {
         return configPathValid(cmd, DATA_OUTPUT_DIR) && configPathValid(cmd, REF_GENOME)  && configPathValid(cmd, GENE_TRANSCRIPTS_DIR)
-                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE)
+                && configPathValid(cmd, GENE_ID_FILE) && configPathValid(cmd, EXCLUDED_GENE_ID_FILE) && configPathValid(cmd, GC_ADJUSTS_FILE)
                 && configPathValid(cmd, BAM_FILE) && configPathValid(cmd, EXP_COUNTS_FILE) && configPathValid(cmd, EXP_GC_RATIOS_FILE);
     }
 
@@ -384,7 +384,7 @@ public class IsofoxConfig
         RefFastaSeqFile = null;
         CanonicalTranscriptOnly = false;
         ReadCountLimit = DEFAULT_MAX_READ_COUNT;
-        GcBiasFile = "";
+        GcAdjustmentsFile = "";
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
         KeepDuplicates = false;
         MarkDuplicates = false;
@@ -449,7 +449,7 @@ public class IsofoxConfig
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
         options.addOption(WRITE_EXPECTED_GC_RATIOS, false, "Write expected GC ratios");
-        options.addOption(GC_BIAS_FILE, true, "GC-bias file, generate if not found");
+        options.addOption(GC_ADJUSTS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
         options.addOption(APPLY_EXP_RATES, false, "Generate expected expression rates for transcripts");

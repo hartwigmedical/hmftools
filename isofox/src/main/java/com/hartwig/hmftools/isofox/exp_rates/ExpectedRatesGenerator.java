@@ -624,7 +624,7 @@ public class ExpectedRatesGenerator
             for(CategoryCountsData tcData : transCounts)
             {
                 final String transKey = tcData.combinedKey();
-                long fragmentCount = tcData.fragmentCount();
+                double fragmentCount = tcData.fragmentCount();
 
                 if(fragmentCount > 0)
                 {
@@ -653,9 +653,8 @@ public class ExpectedRatesGenerator
             for(CategoryCountsData tcData : entry.getValue())
             {
                 final String transKey = tcData.combinedKey();
-                long fragmentCount = tcData.fragmentCount();
 
-                if(fragmentCount > 0 || tcData.transcriptIds().isEmpty()) // force inclusion of unspliced gene categories
+                if(tcData.fragmentCount() > 0 || tcData.transcriptIds().isEmpty()) // force inclusion of unspliced gene categories
                 {
                     expRatesData.addCategory(transKey);
                 }

@@ -282,22 +282,22 @@ public class ExpectedRatesTest
 
         CategoryCountsData tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(90, tcData.fragmentCount());
+        assertEquals(90, tcData.fragmentCount(), 0.01);
 
         tcData = findMatchingData(tranIds, Lists.newArrayList(), tcDataList);
-        assertEquals(58, tcData.fragmentCount());
+        assertEquals(58, tcData.fragmentCount(), 0.01);
 
         tcDataList = transComboData.get(geneId);
         assertEquals(2, tcDataList.size());
 
         tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(87, tcData.fragmentCount());
+        assertEquals(87, tcData.fragmentCount(), 0.01);
 
         tranIds.clear();
         tcData = findMatchingData(tranIds, unsplicedGenes, tcDataList);
         assertTrue(tcData != null);
-        assertEquals(196, tcData.fragmentCount());
+        assertEquals(196, tcData.fragmentCount(), 0.01);
     }
 
     private static CategoryCountsData findMatchingData(

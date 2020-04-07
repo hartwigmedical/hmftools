@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
+import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.formTranscriptDefinitions;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.writeExpectedRates;
@@ -10,13 +11,13 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.DataUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.results.GeneResult;
+import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 public class ExpectedTransRates
@@ -110,8 +111,8 @@ public class ExpectedTransRates
 
         if(mConfig.WriteTransComboData)
         {
-            mResultsWriter.writeTransComboCounts(
-                    geneSummaryData.ChrId, mCurrentExpRatesData.Categories, transComboCounts, fittedCounts);
+            writeCategoryCounts(mResultsWriter.getCategoryCountsWriter(), geneSummaryData.ChrId, mCurrentExpRatesData.Categories,
+                    geneSummaryData.TransCategoryCounts, transComboCounts, fittedCounts, mConfig.ApplyGcBiasAdjust);
         }
     }
 
@@ -176,7 +177,7 @@ public class ExpectedTransRates
         for(CategoryCountsData tcData : geneSummaryData.TransCategoryCounts)
         {
             final String categoryKey = tcData.combinedKey();
-            long fragmentCount = tcData.fragmentCount();
+            double fragmentCount = tcData.fragmentCount();
 
             if(fragmentCount > 0)
             {
@@ -185,7 +186,8 @@ public class ExpectedTransRates
                 // for now if a category isn't found just log and then ignore the count in it
                 if(categoryId < 0)
                 {
-                    ISF_LOGGER.trace("category({}) {} fragCount({}) skipped", categoryKey, tcData.impliedType(), fragmentCount);
+                    ISF_LOGGER.trace("category({}) {} fragCount({}) skipped",
+                            categoryKey, tcData.impliedType(), String.format("%.2f", fragmentCount));
                     skippedComboCounts += fragmentCount;
                 }
                 else
@@ -204,6 +206,76 @@ public class ExpectedTransRates
         }
 
         return categoryCounts;
+    }
+
+    public static BufferedWriter createWriter(final IsofoxConfig config)
+    {
+        if(config.OutputDir.isEmpty())
+            return null;
+
+        try
+        {
+            final String outputFileName = config.formOutputFile("category_counts.csv");
+
+            BufferedWriter writer = createBufferedWriter(outputFileName, false);
+            writer.write("GenesId,Category,Count,FitCount");
+
+            if(config.ApplyGcBiasAdjust)
+            {
+                GcRatioCounts tmp = new GcRatioCounts();
+
+                for(Double gcRatio : tmp.getRatios())
+                {
+                    writer.write(String.format(",Gcr_%.2f", gcRatio));
+                }
+            }
+
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write category counts data file: {}", e.toString());
+            return null;
+        }
+    }
+
+    private synchronized static void writeCategoryCounts(final BufferedWriter writer, final String genesId,
+            final List<String> categories, final List<CategoryCountsData> categoryCountsData,
+            final double[] counts, final double[] fittedCounts, boolean writeGcData)
+    {
+        try
+        {
+            final GcRatioCounts tmp = new GcRatioCounts();
+
+            for(int i = 0; i < categories.size(); ++i)
+            {
+                double count = counts[i];
+                final String category = categories.get(i);
+
+                writer.write(String.format("%s,%s,%.0f,%.1f",
+                        genesId, category, count, fittedCounts[i]));
+
+                if(writeGcData)
+                {
+                    final CategoryCountsData catCounts = categoryCountsData.stream()
+                            .filter(x -> x.combinedKey().equals(category)).findFirst().orElse(null);
+
+                    final double[] gcCounts = catCounts != null ? catCounts.fragmentCountsByGcRatio() : tmp.getCounts();
+
+                    for(int j = 0; j < gcCounts.length; ++j)
+                    {
+                        writer.write(String.format(",%.2f", gcCounts[j]));
+                    }
+                }
+
+                writer.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write category counts data file: {}", e.toString());
+        }
     }
 
 }

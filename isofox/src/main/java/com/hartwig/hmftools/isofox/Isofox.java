@@ -209,14 +209,17 @@ public class Isofox
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 
-        // not thread safe at the moment
-        chrTasks.forEach(x -> x.applyGcAdjustment());
+        if(mConfig.GcAdjustmentsFile == null)
+        {
+            // not thread safe at the moment
+            chrTasks.forEach(x -> x.applyGcAdjustment());
 
-        ISF_LOGGER.debug("total({}) transcript expected GC counts from fit", String.format("%.0f",
-                mGcTranscriptCalcs.getTranscriptFitGcCounts().getCountsTotal()));
+            ISF_LOGGER.debug("total({}) transcript expected GC counts from fit", String.format("%.0f",
+                    mGcTranscriptCalcs.getTranscriptFitGcCounts().getCountsTotal()));
 
-        // gather up global expected counts
-        mGcTranscriptCalcs.calcGcRatioAdjustments(actualGcCounts);
+            // gather up global expected counts
+            mGcTranscriptCalcs.calcGcRatioAdjustments(actualGcCounts);
+        }
 
         // now re-fit all transcripts
         boolean validExecution = executeChromosomeTask(chrTasks, APPLY_GC_ADJUSTMENT);
