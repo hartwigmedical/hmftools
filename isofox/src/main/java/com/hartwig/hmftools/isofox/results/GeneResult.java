@@ -91,8 +91,8 @@ public class GeneResult
                 .add(String.valueOf(IntronicLength))
                 .add(String.valueOf(TransCount))
                 .add(CollectionId)
-                .add(String.format("%.1f", mSplicedAlloc))
-                .add(String.format("%.1f", mUnsplicedAlloc))
+                .add(String.format("%.0f", mSplicedAlloc))
+                .add(String.format("%.0f", mUnsplicedAlloc))
                 .add(String.format("%6.3e", mTPM))
                 .add(String.format("%.1f", getFitResiduals()))
                 .toString();

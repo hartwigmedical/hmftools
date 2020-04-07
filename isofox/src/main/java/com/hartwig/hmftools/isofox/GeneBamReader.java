@@ -375,6 +375,15 @@ public class GeneBamReader
 
             if(checkRetainedIntrons)
                 mRetainedIntronFinder.evaluateFragmentReads(read1, read2);
+
+            if(fragmentType == UNSPLICED)
+            {
+                List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+
+                CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
+                final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+                addGcCounts(catCounts, commonMappings);
+            }
         }
         else
         {

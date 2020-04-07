@@ -455,7 +455,7 @@ public class ChromosomeGeneTask implements Callable
                 final String transName = transResult.Trans.TransName;
                 double newAllocation = geneSummaryData.getFitAllocation(transName);
 
-                ISF_LOGGER.debug(String.format("trans(%s) fit allocation(%.1f -> %.1f) with GC adjustment",
+                ISF_LOGGER.trace(String.format("trans(%s) fit allocation(%.1f -> %.1f) with GC adjustment",
                         transName, transResult.getFitAllocation(), newAllocation));
 
                 splicedAllocation += newAllocation;
