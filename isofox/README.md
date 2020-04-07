@@ -8,6 +8,14 @@ ISOFOX uses a similar methodology to several previous transcript abundance estim
 * Avoids overfitting of 'retained intron' transcripts on the basse
 * Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons (eg. B2M)
 
+### A note on duplicates
+
+We recommend to mark duplicates in your pipeline.  They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.   
+
+### A note on TPM
+
+<TO DO>
+
 ## Install
 
 ## Running
@@ -67,9 +75,7 @@ In this example, 50% of all fragments from transcript A are expected to be uniqu
 
 #### B. Expected GC distribution
 
-For each of the sampled fragments in each transcript (including unspliced transcripts), the GC content is also measured.  For each transcript the unbiased proportion of expected fragments with each GC count between 0 and 2x the read length is calculated.   This is used subsequently to estimate GC bias.
-
-*TODO* - Problem with fragments < 2 x read length.
+For each of the sampled fragments in each transcript (including unspliced transcripts), the GC content (rounded to nearest 1%) is also measured.  This is used subsequently to estimate GC bias.
 
 ### 4. Counting abundance per unique group of shared transcripts
 
@@ -96,9 +102,13 @@ For each group of transcripts conidered together we aim to fit the relative abun
 
 #### A. GC Bias estimate
 
-Expected GC distribution for sample is estimated to be the sum of the distribution for each transcript (calcluated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology used in Salmon).  To avoid overfitting highly expressed genes or transcripts, genes with more than X% of fragments are ignored in this calculation
+Expected GC distribution for sample is calculated as the sum of the estimated distribution for each transcript (as calcluated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology implemented in Salmon).  We also count the actual distribution across all genes per 1% GC content bucket.   The GC bias for each percentile is the ratio of the actual to the estimated.
 
-The GC bias for each integer GC content level between 1 & 2 x read length is the ratio of the estimated to the actual distribution ignoring the highly expressed genes. 
+<TO DO - decide on min max GC range and also max ratio change for GC Bias>
+
+To avoid overfitting very highly expressed genes or transcripts, genes with more than X% of fragments are ignored in both expected and actual counts. <TO DO - refine this rule>
+
+
 
 ##### B. Fragment Length Bias
 
