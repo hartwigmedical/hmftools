@@ -237,12 +237,12 @@ Fragments | Count of fragments supporting novel splice junction
 StartDepth | Total depth at SJStart position
 EndDepth | Total depth at SJEnd position
 Type | Type of novel splice junction.  One of:  'SKIPPED_EXON','NOVEL_EXON','NOVEL_3_PRIME_SS','NOVEL_5_PRIME_SS','NOVEL_INTRON','MIXED_TRANSCRIPT','INTRONIC' or 'INTRONIC_TO_EXONIC'
-SJStartContext | Gene context at SJStart position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
+SJStartContext| Gene context at SJStart position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
 SJEndContext |  Gene context at SJEnd position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
-SJDistanceStart | Distance of SJStart position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
-SJDistanceEnd | Distance of SJEnd position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
-SJMotifStart | 2 previous and 10 next ref genome bases from SJStart position
-SJMotifEnd | 10 previous and 2 next ref genome bases from SJStart position
+SJStartDistance | Distance of SJStart position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
+SJEndDistance | Distance of SJEnd position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
+SJStartBases | 2 previous and 10 next ref genome bases from SJStart position
+SJEndBases | 10 previous and 2 next ref genome bases from SJStart position
 SJStartTranscripts | Transcript ids which contain a splice junciton which includes the SJStart splice site
 SJEndTranscripts | Transcript ids which contain a splice junciton which includes the SJEnd splice site
 OverlappingGenes | List of all genes which overlap the novel splice junction
