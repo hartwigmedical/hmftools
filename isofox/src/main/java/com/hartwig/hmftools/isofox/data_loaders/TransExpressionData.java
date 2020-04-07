@@ -1,13 +1,9 @@
 package com.hartwig.hmftools.isofox.data_loaders;
 
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FIT_ALLOCATION;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.util.List;
 import java.util.Map;

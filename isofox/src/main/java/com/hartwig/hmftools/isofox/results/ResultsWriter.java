@@ -202,6 +202,7 @@ public class ResultsWriter
             mGeneCollectionWriter = createBufferedWriter(outputFileName, false);
             mGeneCollectionWriter.write("GeneSetId,GeneCount,Chromosome,RangeStart,RangeEnd");
             mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,Alt,ReadThrough,Chimeric");
+            mGeneCollectionWriter.write(",Genes");
             mGeneCollectionWriter.newLine();
         }
         catch(IOException e)
@@ -217,18 +218,20 @@ public class ResultsWriter
 
         try
         {
-            mGeneDataWriter.write(String.format("%s,%d,%s,%s,%d,%d",
+            mGeneCollectionWriter.write(String.format("%s,%d,%s,%d,%d",
                     geneCollection.chrId(), geneCollection.genes().size(), geneCollection.chromosome(),
                     geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END]));
 
             final int[] fragmentCounts = geneCollection.getCounts();
 
-            mGeneDataWriter.write(String.format(",%d",
+            mGeneCollectionWriter.write(String.format(",%d,%d,%d,%d,%d,%d,%d",
                     fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(DUPLICATE)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)],
                     fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(ALT)], fragmentCounts[typeAsInt(READ_THROUGH)],
                     fragmentCounts[typeAsInt(CHIMERIC)]));
 
-            mGeneDataWriter.newLine();
+            mGeneCollectionWriter.write(String.format(",%s", geneCollection.geneNames(geneCollection.genes().size())));
+
+            mGeneCollectionWriter.newLine();
         }
         catch(IOException e)
         {

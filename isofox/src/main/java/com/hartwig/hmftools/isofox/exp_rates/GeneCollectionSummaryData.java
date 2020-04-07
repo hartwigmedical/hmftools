@@ -23,7 +23,6 @@ public class GeneCollectionSummaryData
     public final List<TranscriptResult> TranscriptResults;
 
     private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine, stored per transcript
-    private final Map<String,Double> mMedianExpectedGcRatios; //
     private double mFitResiduals;
 
     public GeneCollectionSummaryData(
@@ -37,7 +36,6 @@ public class GeneCollectionSummaryData
         TranscriptResults = Lists.newArrayList();
 
         mFitAllocations = Maps.newHashMap();
-        mMedianExpectedGcRatios = Maps.newHashMap();
         mFitResiduals = 0;
     }
 
@@ -50,17 +48,6 @@ public class GeneCollectionSummaryData
     {
         Double allocation = mFitAllocations.get(transName);
         return allocation != null ? allocation : 0;
-    }
-
-    public void addMedianExpectedGcRatio(final String transName, double gcRatio)
-    {
-        mMedianExpectedGcRatios.put(transName, gcRatio);
-    }
-
-    public double getMedianExpectedGcRatio(final String transName)
-    {
-        Double gcRatio = mMedianExpectedGcRatios.get(transName);
-        return gcRatio != null ? gcRatio : 0;
     }
 
     public void allocateResidualsToGenes()

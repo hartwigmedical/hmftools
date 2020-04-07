@@ -16,9 +16,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
+import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
 public class ExpectedTransRates
 {
@@ -132,7 +135,24 @@ public class ExpectedTransRates
     {
         for(final GeneCollectionSummaryData summaryData : geneSummaryData)
         {
-            summaryData.TranscriptResults.forEach(x -> x.setTPM(x.fragmentsPerKb()/tpmFactor));
+            Map<String,Double> geneTPMs = Maps.newHashMap();
+
+            for(TranscriptResult transResult : summaryData.TranscriptResults)
+            {
+                double tpm = transResult.fragmentsPerKb()/tpmFactor;
+                transResult.setTPM(tpm);
+
+                Double geneTpm = geneTPMs.get(transResult.Trans.GeneId);
+                if(geneTpm == null)
+                    geneTPMs.put(transResult.Trans.GeneId, tpm);
+                else
+                    geneTPMs.put(transResult.Trans.GeneId, geneTpm + tpm);
+            }
+
+            for(GeneResult geneResult : summaryData.GeneResults)
+            {
+                geneResult.setTPM(geneTPMs.get(geneResult.GeneData.GeneId));
+            }
         }
     }
 

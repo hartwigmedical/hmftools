@@ -23,59 +23,33 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 
-import org.immutables.value.Value;
-
-@Value.Immutable
-public abstract class TranscriptResult
+public class TranscriptResult
 {
-    public abstract TranscriptData trans();
+    public final TranscriptData Trans;
 
-    public abstract int exonsFound();
-    public abstract int shortSupportingFragments();
-    public abstract int shortUniqueFragments();
-    public abstract int longSupportingFragments();
-    public abstract int longUniqueFragments();
-    public abstract int spliceJunctionsSupported();
-    public abstract int spliceJunctionFragments();
-    public abstract int spliceJunctionUniqueFragments();
-    public abstract int uniqueSpliceJunctions();
-    public abstract int uniqueSpliceJunctionsSupported();
-    public abstract int exonicBases();
-    public abstract int exonicBaseCoverage();
-    public abstract int uniqueBases();
-    public abstract int uniqueBaseCoverage();
-    public abstract double uniqueBaseAvgDepth();
-
-    public abstract double effectiveLength();
+    public final int ExonicBases;
+    public final int ExonicBasesCovered;
+    public final int SpliceJunctionsSupported;
+    public final int UniqueSpliceJunctionsSupported;
+    public final int UniqueSpliceJunctionFragments;
+    public final int UniqueNonSJFragments;
+    public final double EffectiveLength;
 
     private double mFitAllocation;
-    private double mPreGcFitAllocation;
-    private double mMedianExpectedGcRatio;
+    private double mRawFitAllocation;
     private double mTPM;
 
-    public static TranscriptResult createTranscriptResults(
+    public TranscriptResult(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
             final List<int[]> expRateFragmentLengths)
     {
-        int exonsFound = 0;
+        Trans = transData;
 
         int spliceJunctionsSupported = 0;
         int exonicBases = 0;
         int exonicBaseCoverage = 0;
 
-        int uniqueExonicBases = 0;
-        int uniqueExonicBaseCoverage = 0;
-        int uniqueExonicBaseTotalDepth = 0;
-
-        int uniqueSpliceJunctions = 0;
         int uniqueSpliceJunctionsSupported = 0;
-
-        /* Criteria for transcript selection
-        - all exon junctions covered
-        - unique exon junctions
-        - split reads skipping exons
-        - unique exon reads (but could cover introns as well
-         */
 
         final List<ExonData> exons = transData.exons();
 
@@ -90,16 +64,6 @@ public abstract class TranscriptResult
             int exonCoverage = exonReadData.baseCoverage(1);
             exonicBaseCoverage += exonCoverage;
 
-            if(exonCoverage > 0)
-                ++exonsFound;
-
-            if(exonReadData.getTransExonRefs().size() == 1)
-            {
-                uniqueExonicBases += exonReadData.uniqueBaseCount();
-                uniqueExonicBaseCoverage += exonReadData.uniqueBaseCoverage(1);
-                uniqueExonicBaseTotalDepth += exonReadData.uniqueBaseTotalDepth();
-            }
-
             exonicBases += exon.ExonEnd - exon.ExonStart + 1;
 
             if(i > 0)
@@ -108,9 +72,6 @@ public abstract class TranscriptResult
 
                 final ExonData prevExon = exons.get(i - 1);
                 boolean sjUnique = isSpliceJunctionUnique(transData.TransName, geneReadData.getTranscripts(), prevExon.ExonEnd, exon.ExonStart);
-
-                if(sjUnique)
-                    ++uniqueSpliceJunctions;
 
                 if(sjReads[TRANS_COUNT] > 0)
                 {
@@ -122,43 +83,24 @@ public abstract class TranscriptResult
             }
         }
 
-        double uniqueBaseAvgDepth = uniqueExonicBases > 0 ? uniqueExonicBaseTotalDepth / (double)uniqueExonicBases : 0;
+        ExonicBases = exonicBases;
+        ExonicBasesCovered = exonicBaseCoverage;
+        SpliceJunctionsSupported = spliceJunctionsSupported;
+        UniqueSpliceJunctionsSupported = uniqueSpliceJunctionsSupported;
 
         int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
+        UniqueSpliceJunctionFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SPLICED)][UNIQUE_TRANS_COUNT];
+        UniqueNonSJFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.LONG)][UNIQUE_TRANS_COUNT];
 
-        double effectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
+        EffectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
 
-        TranscriptResult results = ImmutableTranscriptResult.builder()
-                .trans(transData)
-                .exonsFound(exonsFound)
-                .spliceJunctionsSupported(spliceJunctionsSupported)
-                .uniqueSpliceJunctions(uniqueSpliceJunctions)
-                .uniqueSpliceJunctionsSupported(uniqueSpliceJunctionsSupported)
-                .spliceJunctionFragments(supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SPLICED)][TRANS_COUNT])
-                .spliceJunctionUniqueFragments(supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SPLICED)][UNIQUE_TRANS_COUNT])
-                .shortSupportingFragments(supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SHORT)][TRANS_COUNT])
-                .shortUniqueFragments(supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SHORT)][UNIQUE_TRANS_COUNT])
-                .longSupportingFragments(supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.LONG)][TRANS_COUNT])
-                .longUniqueFragments(supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.LONG)][UNIQUE_TRANS_COUNT])
-                .exonicBases(exonicBases)
-                .exonicBaseCoverage(exonicBaseCoverage)
-                .uniqueBases(uniqueExonicBases)
-                .uniqueBaseCoverage(uniqueExonicBaseCoverage)
-                .uniqueBaseAvgDepth(uniqueBaseAvgDepth)
-                .effectiveLength(effectiveLength)
-                .build();
-
-        results.setFitAllocation(0);
-        results.setPreGcFitAllocation(0);
-        results.setMedianExpectedGcRatio(0);
-        results.setTPM(0);
-
-        return results;
+        mFitAllocation = 0;
+        mRawFitAllocation = 0;
+        mTPM = 0;
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
-    public void setPreGcFitAllocation(double alloc) { mPreGcFitAllocation = alloc; }
-    public void setMedianExpectedGcRatio(double median) { mMedianExpectedGcRatio = median; }
+    public void setPreGcFitAllocation(double alloc) { mRawFitAllocation = alloc; }
     public void setTPM(double tpm) { mTPM = tpm; }
     public double getFitAllocation() { return mFitAllocation; }
 
@@ -191,7 +133,7 @@ public abstract class TranscriptResult
 
     public double fragmentsPerKb()
     {
-        return effectiveLength() > 0 ? mFitAllocation / (effectiveLength() / 1000.0) : 0;
+        return EffectiveLength > 0 ? mFitAllocation / (EffectiveLength / 1000.0) : 0;
     }
 
     private static boolean isSpliceJunctionUnique(final String transId, final List<TranscriptData> transDataList, long exonEnd, long exonStart)
@@ -211,7 +153,7 @@ public abstract class TranscriptResult
         return true;
     }
 
-    public static final String FLD_FIT_ALLOCATION = "FitAllocation";
+    public static final String FLD_FITTED_FRAGMENTS = "FitAllocation";
     public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
     public static final String FLD_TPM = "TPM";
 
@@ -222,16 +164,19 @@ public abstract class TranscriptResult
                 .add(FLD_GENE_NAME)
                 .add(FLD_TRANS_ID)
                 .add(FLD_TRANS_NAME)
-                .add("Canonical").add("ExonCount")
+                .add("Canonical")
+                .add("ExonCount")
+                .add("TranscriptLength")
                 .add(FLD_EFFECTIVE_LENGTH)
-                .add(FLD_FIT_ALLOCATION)
+                .add(FLD_FITTED_FRAGMENTS)
+                .add("RawFittedFragments")
                 .add(FLD_TPM)
-                .add("PreGcFit").add("MedianExpectedGcRatio")
-                .add("ExonsMatched").add("ExonicBases").add("ExonicCoverage")
-                .add("UniqueBases").add("UniqueBaseCoverage").add("UniqueBaseAvgDepth")
-                .add("SpliceJuncSupported").add("UniqueSpliceJunc").add("UniqueSpliceJuncSupported")
-                .add("ShortFragments").add("ShortUniqueFragments").add("LongFragments").add("LongUniqueFragments")
-                .add("SpliceJuncFragments").add("UniqueSpliceJuncFragments").toString();
+                .add("TranscriptBasesCovered")
+                .add("SJSupported")
+                .add("UniqueSJSupported")
+                .add("UniqueSJFragments")
+                .add("UniqueNonSJFragments")
+                .toString();
     }
 
     public String toCsv(final EnsemblGeneData geneData)
@@ -239,30 +184,20 @@ public abstract class TranscriptResult
         return new StringJoiner(DELIMITER)
                 .add(geneData.GeneId)
                 .add(geneData.GeneName)
-                .add(String.valueOf(trans().TransId))
-                .add(trans().TransName)
-                .add(String.valueOf(trans().IsCanonical))
-                .add(String.valueOf(trans().exons().size()))
-                .add(String.format("%.0f", effectiveLength()))
+                .add(String.valueOf(Trans.TransId))
+                .add(Trans.TransName)
+                .add(String.valueOf(Trans.IsCanonical))
+                .add(String.valueOf(Trans.exons().size()))
+                .add(String.valueOf(ExonicBases))
+                .add(String.format("%.0f", EffectiveLength))
                 .add(String.format("%.1f", mFitAllocation))
+                .add(String.format("%.1f", mRawFitAllocation))
                 .add(String.format("%6.3e", mTPM))
-                .add(String.format("%.1f", mPreGcFitAllocation))
-                .add(String.format("%.2f", mMedianExpectedGcRatio))
-                .add(String.valueOf(exonsFound()))
-                .add(String.valueOf(exonicBases()))
-                .add(String.valueOf(exonicBaseCoverage()))
-                .add(String.valueOf(uniqueBases()))
-                .add(String.valueOf(uniqueBaseCoverage()))
-                .add(String.valueOf(uniqueBaseAvgDepth()))
-                .add(String.valueOf(spliceJunctionsSupported()))
-                .add(String.valueOf(uniqueSpliceJunctions()))
-                .add(String.valueOf(uniqueSpliceJunctionsSupported()))
-                .add(String.valueOf(shortSupportingFragments()))
-                .add(String.valueOf(shortUniqueFragments()))
-                .add(String.valueOf(longSupportingFragments()))
-                .add(String.valueOf(longUniqueFragments()))
-                .add(String.valueOf(spliceJunctionFragments()))
-                .add(String.valueOf(spliceJunctionUniqueFragments()))
+                .add(String.valueOf(ExonicBasesCovered))
+                .add(String.valueOf(SpliceJunctionsSupported))
+                .add(String.valueOf(UniqueSpliceJunctionsSupported))
+                .add(String.valueOf(UniqueSpliceJunctionFragments))
+                .add(String.valueOf(UniqueNonSJFragments))
                 .toString();
     }
 }

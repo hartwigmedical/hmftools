@@ -101,8 +101,6 @@ public class GcTranscriptCalculator
                 {
                     frequencies[i] += transFrequencies[i] * fitAlloc;
                 }
-
-                geneSummary.addMedianExpectedGcRatio(transName, transGcCounts.getPercentileRatio(0.5));
             }
         }
     }

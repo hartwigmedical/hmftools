@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FIT_ALLOCATION;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FITTED_FRAGMENTS;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
@@ -202,7 +202,7 @@ public class TransExpressionCohort
                     .add(FLD_GENE_ID)
                     .add(FLD_GENE_NAME)
                     .add(FLD_TRANS_NAME)
-                    .add(FLD_FIT_ALLOCATION)
+                    .add(FLD_FITTED_FRAGMENTS)
                     .add(FLD_EFFECTIVE_LENGTH)
                     .add(FLD_TPM)
                     .toString();
@@ -246,7 +246,7 @@ public class TransExpressionCohort
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int transIdIndex = fieldsMap.get(FLD_TRANS_ID);
-            int fitAllocIndex = fieldsMap.get(FLD_FIT_ALLOCATION);
+            int fitAllocIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
             int effectiveLengthIndex = fieldsMap.get(FLD_EFFECTIVE_LENGTH);
             int tpmIndex = fieldsMap.containsKey(FLD_TPM) ? fieldsMap.get(FLD_TPM) : -1;
 

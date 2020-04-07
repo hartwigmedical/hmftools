@@ -10,8 +10,6 @@ import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SUPPORTING_TRAN
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FIT_ALLOCATION;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

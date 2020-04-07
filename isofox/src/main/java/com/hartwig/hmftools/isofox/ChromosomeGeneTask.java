@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.createTranscriptResults;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -449,21 +448,24 @@ public class ChromosomeGeneTask implements Callable
 
             mExpTransRates.runTranscriptEstimation(geneSummaryData, null);
 
+            double splicedAllocation = 0;
+
             for (final TranscriptResult transResult : geneSummaryData.TranscriptResults)
             {
-                final String transName = transResult.trans().TransName;
+                final String transName = transResult.Trans.TransName;
                 double newAllocation = geneSummaryData.getFitAllocation(transName);
 
                 ISF_LOGGER.debug(String.format("trans(%s) fit allocation(%.1f -> %.1f) with GC adjustment",
                         transName, transResult.getFitAllocation(), newAllocation));
 
+                splicedAllocation += newAllocation;
                 transResult.setFitAllocation(newAllocation);
-                transResult.setMedianExpectedGcRatio(geneSummaryData.getMedianExpectedGcRatio(transName));
             }
 
             for(final GeneResult geneResult : geneSummaryData.GeneResults)
             {
-                geneResult.setUnsplicedAllocation(geneSummaryData.getFitAllocation(geneResult.GeneData.GeneId));
+                geneResult.setFitAllocation(
+                        splicedAllocation, geneSummaryData.getFitAllocation(geneResult.GeneData.GeneId));
             }
 
             geneSummaryData.allocateResidualsToGenes();
@@ -475,22 +477,22 @@ public class ChromosomeGeneTask implements Callable
     private void collectResults(
             final GeneCollection geneCollection, final GeneCollectionSummaryData geneCollectionSummary, final GeneReadData geneReadData)
     {
-        if(mConfig.WriteTransData)
+        double splicedAllocation = 0;
+
+        for (final TranscriptData transData : geneReadData.getTranscripts())
         {
-            for (final TranscriptData transData : geneReadData.getTranscripts())
-            {
-                final TranscriptResult results =
-                        createTranscriptResults(geneCollection, geneReadData, transData, mConfig.FragmentLengthData);
+            final TranscriptResult results = new TranscriptResult(geneCollection, geneReadData, transData, mConfig.FragmentLengthData);
 
-                geneCollectionSummary.TranscriptResults.add(results);
+            geneCollectionSummary.TranscriptResults.add(results);
 
-                results.setFitAllocation(geneCollectionSummary.getFitAllocation(transData.TransName));
-                results.setPreGcFitAllocation(results.getFitAllocation());
-            }
+            double fitAllocation = geneCollectionSummary.getFitAllocation(transData.TransName);
+            splicedAllocation += fitAllocation;
+            results.setFitAllocation(fitAllocation);
+            results.setPreGcFitAllocation(results.getFitAllocation());
         }
 
         GeneResult geneResult = new GeneResult(geneCollection, geneReadData);
-        geneResult.setUnsplicedAllocation(geneCollectionSummary.getFitAllocation(geneReadData.GeneData.GeneId));
+        geneResult.setFitAllocation(splicedAllocation, geneCollectionSummary.getFitAllocation(geneReadData.GeneData.GeneId));
         geneCollectionSummary.GeneResults.add(geneResult);
     }
 
@@ -510,7 +512,7 @@ public class ChromosomeGeneTask implements Callable
             for(final TranscriptResult transResult : geneCollectionResult.TranscriptResults)
             {
                 final EnsemblGeneData geneData = geneCollectionResult.GeneResults.stream()
-                        .filter(x -> x.GeneData.GeneId.equals(transResult.trans().GeneId))
+                        .filter(x -> x.GeneData.GeneId.equals(transResult.Trans.GeneId))
                         .map(x -> x.GeneData)
                         .findFirst().orElse(null);
 

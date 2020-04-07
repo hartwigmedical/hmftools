@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_SET_ID;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.util.StringJoiner;
 
@@ -29,7 +30,9 @@ public class GeneResult
     public final int IntronicLength;
     public final int TransCount;
 
+    private double mSplicedAlloc;
     private double mUnsplicedAlloc;
+    private double mTPM;
     private double mFitResiduals;
 
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
@@ -42,11 +45,18 @@ public class GeneResult
         TransCount = geneReadData.getTranscripts().size();
 
         mFitResiduals = 0;
+        mSplicedAlloc = 0;
+        mTPM = 0;
         mUnsplicedAlloc = 0;
     }
 
-    public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
-    public void setUnsplicedAllocation(double unsplicedAlloc) { mUnsplicedAlloc = unsplicedAlloc; }
+    public void setFitAllocation(double splicedAlloc, double unsplicedAlloc)
+    {
+        mSplicedAlloc = splicedAlloc;
+        mUnsplicedAlloc = unsplicedAlloc;
+    }
+
+    public void setTPM(double tpm) { mTPM = tpm; }
 
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
@@ -60,9 +70,14 @@ public class GeneResult
                 .add(FLD_GENE_ID)
                 .add(FLD_GENE_NAME)
                 .add(FLD_CHROMOSOME)
-                .add("GeneLength").add("IntronicLength").add("TransCount")
-                .add("UnsplicedAlloc").add("FitResiduals")
+                .add("GeneLength")
+                .add("IntronicLength")
+                .add("TranscriptCount")
                 .add(FLD_GENE_SET_ID)
+                .add("SplicedFragments")
+                .add("UnsplicedFragments")
+                .add(FLD_TPM)
+                .add("FitResiduals")
                 .toString();
     }
 
@@ -75,9 +90,11 @@ public class GeneResult
                 .add(String.valueOf(GeneData.length()))
                 .add(String.valueOf(IntronicLength))
                 .add(String.valueOf(TransCount))
-                .add(String.format("%.1f", getUnsplicedAlloc()))
-                .add(String.format("%.1f", getFitResiduals()))
                 .add(CollectionId)
+                .add(String.format("%.1f", mSplicedAlloc))
+                .add(String.format("%.1f", mUnsplicedAlloc))
+                .add(String.format("%6.3e", mTPM))
+                .add(String.format("%.1f", getFitResiduals()))
                 .toString();
     }
 }
