@@ -184,7 +184,7 @@ Each novel splice junction and retained intron for each sample is annotated with
 Field | Description 
 ---|---
 FragmentLength | Fragment length
-Count | Total count of fragments of fragment length
+Count | Count of fragments with specified fragment length
 
 ### Gene level data
 
