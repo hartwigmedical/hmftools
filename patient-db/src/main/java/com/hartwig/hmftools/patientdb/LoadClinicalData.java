@@ -268,7 +268,7 @@ public final class LoadClinicalData {
         if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
             LOGGER.info("Loading WIDE eCRF");
 
-            String fiveDaysCsv = cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV);
+            String fiveDaysCsv = cmd.getOptionValue(WIDE_FIVE_DAYS_CSV);
             List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(fiveDaysCsv);
             LOGGER.info(" Loaded {} WIDE five days from {}", fiveDays.size(), fiveDaysCsv);
 
