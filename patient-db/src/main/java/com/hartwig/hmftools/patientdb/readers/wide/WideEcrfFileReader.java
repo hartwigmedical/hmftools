@@ -15,6 +15,7 @@ public class WideEcrfFileReader {
 
     private static final Logger LOGGER = LogManager.getLogger(WideEcrfFileReader.class);
     private static final String FIELD_SEPARATOR = ";";
+    private static final String FIELD_SEPARATOR_FIVE_DAYS = ",";
 
     private static final int PRE_TREATMENT_DATA_COUNT = 7;
     private static final int PRE_TREATMENT_DATA_PATIENT_ID = 0;
@@ -49,6 +50,55 @@ public class WideEcrfFileReader {
     private static final int RESPONSE_DATA_CLINICAL_DECISION = 5;
     private static final int RESPONSE_DATA_REASON_STOP_TREATMENT = 6;
     private static final int RESPONSE_DATA_REASON_STOP_TREATMENT_OTHER = 7;
+
+    private static final int FIVE_DAYS_DATA_COUNT = 15;
+    private static final int FIVE_DAYS_DATA_PATIENT_ID = 0;
+    private static final int FIVE_DAYS_DATA_WIDE_ID = 1;
+    private static final int FIVE_DAYS_DATA_BIRTH_YEAR = 2;
+    private static final int FIVE_DAYS_DATA_GENDER = 3;
+    private static final int FIVE_DAYS_DATA_INFORMED_CONSENT = 4;
+    private static final int FIVE_DAYS_DATA_USED_FOR_FEATURE_RESEARCH = 5;
+    private static final int FIVE_DAYS_DATA_SHARED = 6;
+    private static final int FIVE_DAYS_DATA_BIOPSY_DATE = 7;
+    private static final int FIVE_DAYS_DATA_BIOPSY_SITE = 8;
+    private static final int FIVE_DAYS_DATA_SAMPLE_TISSUE = 9;
+    private static final int FIVE_DAYS_DATA_SAMPLE_TYPE = 10;
+    private static final int FIVE_DAYS_DATA_STUDY_CODE = 11;
+    private static final int FIVE_DAYS_DATA_OTHER_TRIAL = 12;
+    private static final int FIVE_DAYS_DATA_OTHER_TRIAL_CODE = 13;
+    private static final int FIVE_DAYS_DATA_START_DATE_OTHER_TRIAL = 14;
+
+    @NotNull
+    public static List<WideFiveDays> readFiveDays(@NotNull String pathToCsv) throws IOException {
+        List<WideFiveDays> wideFiveDays = Lists.newArrayList();
+
+        List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
+        for (String line : lines.subList(1, lines.size())) {
+            String[] parts = line.split(FIELD_SEPARATOR_FIVE_DAYS, FIVE_DAYS_DATA_COUNT);
+            if (parts.length == FIVE_DAYS_DATA_COUNT) {
+                WideFiveDays wideFiveDaysData = ImmutableWideFiveDays.of(parts[FIVE_DAYS_DATA_PATIENT_ID],
+                        toWideID(parts[FIVE_DAYS_DATA_WIDE_ID]),
+                        parts[FIVE_DAYS_DATA_BIRTH_YEAR],
+                        parts[FIVE_DAYS_DATA_GENDER],
+                        parts[FIVE_DAYS_DATA_INFORMED_CONSENT],
+                        parts[FIVE_DAYS_DATA_USED_FOR_FEATURE_RESEARCH],
+                        parts[FIVE_DAYS_DATA_SHARED],
+                        parts[FIVE_DAYS_DATA_BIOPSY_DATE],
+                        parts[FIVE_DAYS_DATA_BIOPSY_SITE],
+                        parts[FIVE_DAYS_DATA_SAMPLE_TISSUE],
+                        parts[FIVE_DAYS_DATA_SAMPLE_TYPE],
+                        parts[FIVE_DAYS_DATA_STUDY_CODE],
+                        parts[FIVE_DAYS_DATA_OTHER_TRIAL],
+                        parts[FIVE_DAYS_DATA_OTHER_TRIAL_CODE],
+                        parts[FIVE_DAYS_DATA_START_DATE_OTHER_TRIAL]);
+
+                wideFiveDays.add(wideFiveDaysData);
+            } else if (parts.length > 0) {
+                LOGGER.warn("Could not properly parse line in WIDE five days csv: {}", line);
+            }
+        }
+        return wideFiveDays;
+    }
 
     private WideEcrfFileReader() {
     }

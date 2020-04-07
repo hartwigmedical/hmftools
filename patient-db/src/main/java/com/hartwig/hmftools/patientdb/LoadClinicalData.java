@@ -41,6 +41,7 @@ import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfFileReader;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.WideFiveDays;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
@@ -75,6 +76,7 @@ public final class LoadClinicalData {
     private static final String WIDE_BIOPSY_CSV = "wide_biopsy_csv";
     private static final String WIDE_TREATMENT_CSV = "wide_treatment_csv";
     private static final String WIDE_RESPONSE_CSV = "wide_response_csv";
+    private static final String WIDE_FIVE_DAYS_CSV = "wide_five_days_csv";
 
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String TUMOR_LOCATION_OUTPUT_DIRECTORY = "tumor_location_dir";
@@ -265,6 +267,11 @@ public final class LoadClinicalData {
 
         if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
             LOGGER.info("Loading WIDE eCRF");
+
+            String fiveDaysCsv = cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV);
+            List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(fiveDaysCsv);
+            LOGGER.info(" Loaded {} WIDE five days from {}", fiveDays.size(), fiveDaysCsv);
+
             String preTreatmentCsv = cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV);
             List<WidePreTreatmentData> pretreatments = WideEcrfFileReader.readPreTreatmentData(preTreatmentCsv);
             LOGGER.info(" Loaded {} WIDE pre-treatments from {}", pretreatments.size(), preTreatmentCsv);
@@ -286,6 +293,7 @@ public final class LoadClinicalData {
                     .biopsies(biopsies)
                     .treatments(treatments)
                     .responses(responses)
+                    .fiveDays(fiveDays)
                     .build();
         } else {
             LOGGER.info("Skipping the loading of WIDE eCRF");
@@ -542,7 +550,8 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(WIDE_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_BIOPSY_CSV),
-                cmd.getOptionValue(WIDE_RESPONSE_CSV));
+                cmd.getOptionValue(WIDE_RESPONSE_CSV),
+                cmd.getOptionValue(WIDE_FIVE_DAYS_CSV));
 
         boolean validRunDirectories = true;
         if (allParamsPresent) {
@@ -576,6 +585,7 @@ public final class LoadClinicalData {
         options.addOption(WIDE_PRE_TREATMENT_CSV, true, "Path towards the wide pre treatment csv.");
         options.addOption(WIDE_BIOPSY_CSV, true, "Path towards the wide biopsy csv.");
         options.addOption(WIDE_RESPONSE_CSV, true, "Path towards the wide response csv.");
+        options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the wide five days csv.");
 
         options.addOption(LIMS_DIRECTORY, true, "Path towards the LIMS directory.");
         options.addOption(TUMOR_LOCATION_OUTPUT_DIRECTORY, true, "Path towards the output directory for tumor location data dumps.");
