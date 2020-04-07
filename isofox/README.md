@@ -183,79 +183,59 @@ Each novel splice junction and retained intron for each sample is annotated with
 
 Field | Description 
 ---|---
-FragmentLength | 
-Count |
+FragmentLength | Fragment length
+Count | Tota count of fragments of fragment length
 
 ### Gene level data
 
 Field | Description 
 ---|---
-Chromosome | 
-GeneLength | 
-IntronicLength | 
-TransCount | 
-TotalFragments | 
-SupportingTrans | 
-Alt | 
-Unspliced | 
-ReadThrough | 
-Chimeric | 
-Duplicates | 
-UnsplicedAlloc | 
-FitResiduals | 
-GeneSet | 
+GeneId | Ensembl Gene Id
+GeneName | Gene
+Chromosome | Chromosome of gene
+GeneLength | Length of gene
+IntronicLength | total bases which are intronic across all transcripts
+TranscriptCount | Count of transcripts in gene
+GeneSet | Identifier shared by all genes in overlapping group
+SplicedFragments | Count of fitted fragments assigned to spliced transcripts in the gene
+UnsplicedFragments | Count of fitted fragments assigned to the 'unspliced' gene transcript
+TPM | TPM for gene excluding unspliced fragments
 
 ### Transcriptome level data
 
-
 Field | Description 
 ---|---
-ExonCount | 
-EffectiveLength | 
-ExonsMatched | 
-ExonicBases | 
-ExonicCoverage | 
-FitAllocation | 
-UniqueBases | 
-UniqueBaseCoverage | 
-UniqueBaseAvgDepth | 
-SpliceJuncSupported | 
-UniqueSpliceJunc | 
-UniqueSpliceJuncSupported | 
-ShortFragments | 
-ShortUniqueFragments | 
-LongFragments | 
-LongUniqueFragments | 
-SpliceJuncFragments | 
-UniqueSpliceJuncFragments | 
-
-### Expected abundance rates per transcript per category
-
-Field | Description 
----|---
-Transcript |
-Category |
-Rate |
-
-### Observed and fitted counts per category
-
-Field | Description 
----|---
-Category |
-Count |
-FittedCount |
+GeneId | Ensembl Id for Gene
+GeneName | Gene
+TranscriptId | Ensembl Id for Transcript
+TransName | Ensembl Transcript Name eg. TP53-001
+Canonical | Is canonical transcript (T/F)
+ExonCount | Count of exons in transcript
+TranscriptLength | Total length of transcript
+EffectiveLength | Effective length of transcript (adjusted for fragment size)
+FittedFragments | Count of fragments assigned to transcript
+RawFittedFragments |  Count of fragments assigned to transcript prior to bias adjustments (GC, ...,)
+TPM | Transcripts per million
+TranscriptBasesCovered | Number of bases in transcript with at least 1 supporting fragment
+SJSupported | Count of splice junctions in transcript with at least 1 supporting fragment
+UniqueSJ | Number of unique splice junctions in transcript
+UniqueSJSupported | Count of unique splice junctions in transcript with at least 1 supporting fragment
+UniqueSJFragments | Count of fragmnents supporting a splice junction unique to the transcript
+UniqueNonSJFragments | Count of fragmnents uniquely supporting transcript but without a unique splice junction
 
 ### Novel splice junctions
 
 Field | Description 
 ---|---
-Chromosome | 
-Strand | 
-SjStart | 
-SjEnd | 
-FragCount | 
-StartDepth | 
-EndDepth | 
+GeneId | Ensembl Id for Gene
+GeneName | Gene
+Chromosome | Chromosome of gene
+Strand | Strand of gene
+SJStart | Start position of novel splice junction
+SJEnd | End position of novel splice junction
+FragmentCount | Count of fragments supporting novel splice junction
+StartDepth | Total depth at SJStart position
+EndDepth | Total depth at SJ end position
 Type | 
 StartContext | 
 EndContext | 
@@ -265,17 +245,21 @@ StartBases |
 EndBases | 
 StartTrans | 
 EndTrans | 
+PosStrandGenes | ?
+NegStrandGenes | ?
 
 
 ### Novel retained introns
 
 Field | Description 
 ---|---
-Chromosome|
-Strand|
-Position|
-Type|
-FragCount|
-SplicedFragCount|
-TotalDepth|
-TranscriptInfo|
+GeneId | Ensembl Id for gene
+GeneName | Gene
+Chromosome | Chromosome of gene
+Strand | Strand of gene
+Position | Chromosomal base position of exon boundary with overlapping fragments suggesting retained intron
+Type | 'DONOR' or 'ACCEPTOR' splice site
+FragCount | Count of all fragments which overlapp splice site boundary
+SplicedFragCount | Count of fragments which overlap splice site boundary which contain another splice site (ie. evidence of being part of a spliced transcript)
+TotalDepth | Depth at splice boundary
+TranscriptInfo | Transcript id and exon rank of all transcripts that match splice site boundary
