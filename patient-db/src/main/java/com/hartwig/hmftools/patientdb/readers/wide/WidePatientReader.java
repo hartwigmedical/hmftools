@@ -34,11 +34,15 @@ import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WidePatientReader {
+
+    private static final Logger LOGGER = LogManager.getLogger(WidePatientReader.class);
 
     @NotNull
     private final WideEcrfModel wideEcrfModel;
@@ -145,26 +149,43 @@ public class WidePatientReader {
                 LocalDate drugsEndDate = preTreatment.dateLastSystemicTherapy().isEmpty()
                         ? null
                         : createInterpretDate(preTreatment.dateLastSystemicTherapy());
+                String drugsName = Strings.EMPTY;
 
                 if (!preTreatment.drug1().equals(Strings.EMPTY)) {
-                    final List<CuratedDrug> curatedDrugs1 = treatmentCurator.search(preTreatment.drug1());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug1(), null, drugsEndDate, null, curatedDrugs1));
+                    if (!drugsName.isEmpty()) {
+                        drugsName = drugsName + "," + preTreatment.drug1();
+                    } else {
+                        drugsName = preTreatment.drug1();
+                    }
                 }
 
                 if (!preTreatment.drug2().equals(Strings.EMPTY)) {
-                    final List<CuratedDrug> curatedDrugs2 = treatmentCurator.search(preTreatment.drug2());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug2(), null, drugsEndDate, null, curatedDrugs2));
+                    if (!drugsName.isEmpty()) {
+                        drugsName = drugsName + "," + preTreatment.drug2();
+                    } else {
+                        drugsName = preTreatment.drug2();
+                    }
                 }
 
                 if (!preTreatment.drug3().equals(Strings.EMPTY)) {
-                    final List<CuratedDrug> curatedDrugs3 = treatmentCurator.search(preTreatment.drug3());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug3(), null, drugsEndDate, null, curatedDrugs3));
+                    if (!drugsName.isEmpty()) {
+                        drugsName = drugsName + "," + preTreatment.drug3();
+                    } else {
+                        drugsName = preTreatment.drug3();
+                    }
                 }
 
                 if (!preTreatment.drug4().equals(Strings.EMPTY)) {
-                    final List<CuratedDrug> curatedDrugs4 = treatmentCurator.search(preTreatment.drug4());
-                    drugs.add(ImmutableDrugData.of(preTreatment.drug4(), null, drugsEndDate, null, curatedDrugs4));
+                    if (!drugsName.isEmpty()) {
+                        drugsName = drugsName + "," + preTreatment.drug4();
+                    } else {
+                        drugsName = preTreatment.drug4();
+                    }
+
                 }
+                final List<CuratedDrug> curatedDrugs = treatmentCurator.search(drugsName);
+                drugs.add(ImmutableDrugData.of(drugsName, null, drugsEndDate, null, curatedDrugs));
+
             }
         }
 
