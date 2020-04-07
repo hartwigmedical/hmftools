@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.common;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.regionExists;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 
 import java.util.List;
@@ -24,9 +24,6 @@ public class GeneReadData
 
     private final List<TranscriptData> mTranscripts;
 
-    private final int[] mFragmentCounts;
-
-    private static final Logger LOGGER = LogManager.getLogger(GeneReadData.class);
 
     public GeneReadData(final EnsemblGeneData geneData)
     {
@@ -34,8 +31,6 @@ public class GeneReadData
 
         mExonRegions = Lists.newArrayList();
         mTranscripts = Lists.newArrayList();
-
-        mFragmentCounts = new int[typeAsInt(GeneMatchType.MAX)];
     }
 
     public String name() { return GeneData.GeneName;}
@@ -53,9 +48,6 @@ public class GeneReadData
         if(!regionExists(mExonRegions, region.PosStart, region.PosEnd))
             mExonRegions.add(region);
     }
-
-    public final int[] getCounts() { return mFragmentCounts; }
-    public void addCount(GeneMatchType type, int count) { mFragmentCounts[typeAsInt(type)] += count; }
 
     public static void generateCommonExonicRegions(final List<RegionReadData> regions, final List<long[]> allCommonRegions)
     {
@@ -89,13 +81,6 @@ public class GeneReadData
     {
         return String.format("%s:%s location(%s:%d -> %d) trans(%d)",
                 GeneData.GeneId, GeneData.GeneName, GeneData.Chromosome, GeneData.GeneStart, GeneData.GeneEnd, mTranscripts.size());
-    }
-
-    @VisibleForTesting
-    public void clearCounts()
-    {
-        for(int i = 0; i < mFragmentCounts.length; ++i)
-            mFragmentCounts[i] = 0;
     }
 
 }

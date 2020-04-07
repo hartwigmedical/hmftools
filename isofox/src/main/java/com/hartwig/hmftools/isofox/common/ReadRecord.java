@@ -34,8 +34,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadRecord
 {
-    private final SAMRecord mSamRecord;
-
     public final String Id;
     public final String Chromosome;
     public final long PosStart;
@@ -44,6 +42,12 @@ public class ReadRecord
     public final String ReadBases;
     public final int Length; // of bases
     public final Cigar Cigar;
+
+    public final boolean IsDuplicate;
+    public final boolean IsFirstOfPair;
+    public final boolean IsNegStrand;
+    public final String MateChromosome;
+    public final boolean MateIsNegStrand;
 
     public final List<long[]> mMappedCoords;
     private boolean mLowerInferredAdded;
@@ -57,16 +61,15 @@ public class ReadRecord
     public static ReadRecord from(final SAMRecord record)
     {
         return new ReadRecord(
-                record, record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getReadString(), record.getCigar());
+                record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
+                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFirstOfPairFlag(),
+                record.getReadNegativeStrandFlag(), record.getMateReferenceName(), record.getMateNegativeStrandFlag(), record.getDuplicateReadFlag());
     }
 
     public ReadRecord(
-            final SAMRecord record, final String id, final String chromosome, long posStart, long posEnd,
-            final String readBases, @NotNull final Cigar cigar)
+            final String id, final String chromosome, long posStart, long posEnd, final String readBases, @NotNull final Cigar cigar,
+            int insertSize, boolean isFirstOfPair, boolean isNegStrand, final String mateChromosome, boolean mateIsNegStrand, boolean isDuplicate)
     {
-        mSamRecord = record;
-
         Id = id;
         Chromosome = chromosome;
         PosStart = posStart;
@@ -74,6 +77,11 @@ public class ReadRecord
         ReadBases = readBases;
         Length = ReadBases.length();
         Cigar = cigar;
+        IsFirstOfPair = isFirstOfPair;
+        IsNegStrand = isNegStrand;
+        MateChromosome = mateChromosome;
+        MateIsNegStrand = mateIsNegStrand;
+        IsDuplicate = isDuplicate;
 
         mMappedCoords = generateMappedCoords(Cigar, PosStart);
 
@@ -81,10 +89,8 @@ public class ReadRecord
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
-        mFragmentInsertSize = mSamRecord != null ? mSamRecord.getInferredInsertSize() : 0;
+        mFragmentInsertSize = insertSize;
     }
-
-    public final SAMRecord samRecord() { return mSamRecord; }
 
     public long range() { return PosEnd - PosStart; }
 
@@ -93,12 +99,12 @@ public class ReadRecord
 
     public boolean isTranslocation()
     {
-        return mSamRecord != null && !mSamRecord.getMateReferenceName().equals(mSamRecord.getReferenceName());
+        return !Chromosome.equals(MateChromosome);
     }
 
     public boolean isLocalInversion()
     {
-        return mSamRecord != null && mSamRecord.getReadNegativeStrandFlag() == mSamRecord.getMateNegativeStrandFlag();
+        return IsNegStrand == MateIsNegStrand;
     }
 
     public List<long[]> getMappedRegionCoords() { return mMappedCoords; }

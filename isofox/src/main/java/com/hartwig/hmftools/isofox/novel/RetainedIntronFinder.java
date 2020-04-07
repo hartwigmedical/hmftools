@@ -60,6 +60,9 @@ public class RetainedIntronFinder
 
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2)
     {
+        if(read1.IsDuplicate || read2.IsDuplicate)
+            return;
+
         // reads must span an exon boundary without being exonic in another transcript
 
         // scenarios: exon-intron read plus:

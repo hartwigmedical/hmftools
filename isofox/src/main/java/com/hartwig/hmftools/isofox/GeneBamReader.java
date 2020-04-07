@@ -5,13 +5,13 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.ALT;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.CHIMERIC;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.DUPLICATE;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.READ_THROUGH;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.TRANS_SUPPORTING;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.UNSPLICED;
+import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
+import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
+import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
@@ -45,7 +45,7 @@ import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.GeneMatchType;
+import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -161,11 +161,10 @@ public class GeneBamReader
 
             if(record.getFirstOfPairFlag())
             {
-                mCurrentGenes.findGenesCoveringRange(record.getStart(), record.getEnd())
-                        .forEach(x -> x.addCount(DUPLICATE, 1));
+                mCurrentGenes.addCount(DUPLICATE, 1);
             }
 
-            if(!mConfig.KeepDuplicates)
+            if(mConfig.DropDuplicates)
                 return;
         }
 
@@ -197,11 +196,10 @@ public class GeneBamReader
 
         if(read.isTranslocation())
         {
-            if(read.samRecord().getFirstOfPairFlag())
+            if(read.IsFirstOfPair)
             {
-                List<GeneReadData> genes = mCurrentGenes.findGenesCoveringRange(read.PosStart, read.PosEnd);
-                genes.forEach(x -> x.addCount(TOTAL, 1));
-                genes.forEach(x -> x.addCount(CHIMERIC, 1));
+                mCurrentGenes.addCount(TOTAL, 1);
+                mCurrentGenes.addCount(CHIMERIC, 1);
             }
             return;
         }
@@ -222,11 +220,8 @@ public class GeneBamReader
     private boolean checkFragmentRead(ReadRecord read)
     {
         // check if the 2 reads from a fragment exist and if so handle them a pair, returning true
-        if(read.samRecord() != null)
-        {
-            if(read.isTranslocation() || read.samRecord().getMateReferenceIndex() == null)
-                return false;
-        }
+        if(read.isTranslocation())
+            return false;
 
         ReadRecord otherRead = mFragmentReads.checkRead(read);
 
@@ -263,14 +258,14 @@ public class GeneBamReader
         long readPosMax = max(read1.PosEnd, read2.PosEnd);
 
         final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax);
-        overlapGenes.forEach(x -> x.addCount(TOTAL, 1));
+        mCurrentGenes.addCount(TOTAL, 1);
 
         if(!mConfig.WriteTransData)
             return;
 
         if(read1.isLocalInversion() || read2.isLocalInversion())
         {
-            overlapGenes.forEach(x -> x.addCount(CHIMERIC, 1));
+            mCurrentGenes.addCount(CHIMERIC, 1);
             return;
         }
 
@@ -329,7 +324,7 @@ public class GeneBamReader
                 invalidTranscripts.add(transId);
         }
 
-        GeneMatchType geneReadType = UNSPLICED;
+        FragmentType fragmentType = UNSPLICED;
 
         // now mark all other transcripts which aren't valid either due to the read pair
         if(validTranscripts.isEmpty())
@@ -339,11 +334,11 @@ public class GeneBamReader
 
             if(r1OutsideGene || r2OutsideGene)
             {
-                geneReadType = READ_THROUGH;
+                fragmentType = READ_THROUGH;
             }
             else if(read1.containsSplit() || read2.containsSplit())
             {
-                geneReadType = ALT;
+                fragmentType = ALT;
                 mAltSpliceJunctionFinder.evaluateFragmentReads(overlapGenes, read1, read2, invalidTranscripts);
                 checkRetainedIntrons = true;
             }
@@ -370,7 +365,7 @@ public class GeneBamReader
 
                     if(regions.size() > 1)
                     {
-                        geneReadType = ALT;
+                        fragmentType = ALT;
                         break;
                     }
                 }
@@ -384,7 +379,7 @@ public class GeneBamReader
         else
         {
             // record valid read info against each region now that it is known
-            geneReadType = TRANS_SUPPORTING;
+            fragmentType = TRANS_SUPPORTING;
 
             // first mark any invalid trans as 'other' meaning it doesn't require any further classification since a valid trans exists
             firstReadTransTypes.entrySet().stream()
@@ -457,17 +452,14 @@ public class GeneBamReader
             addGcCounts(catCounts, commonMappings);
         }
 
-        for(GeneReadData gene : overlapGenes)
-        {
-            gene.addCount(geneReadType, 1);
-        }
+        mCurrentGenes.addCount(fragmentType, 1);
 
         if(mConfig.WriteReadData && mReadDataWriter != null)
         {
             for(final GeneReadData geneReadData : overlapGenes)
             {
-                writeReadData(mReadDataWriter, geneReadData, 0, read1, geneReadType, validTranscripts.size(), calcFragmentLength);
-                writeReadData(mReadDataWriter, geneReadData, 1, read2, geneReadType, validTranscripts.size(), calcFragmentLength);
+                writeReadData(mReadDataWriter, geneReadData, 0, read1, fragmentType, validTranscripts.size(), calcFragmentLength);
+                writeReadData(mReadDataWriter, geneReadData, 1, read2, fragmentType, validTranscripts.size(), calcFragmentLength);
             }
         }
     }
@@ -544,7 +536,7 @@ public class GeneBamReader
     {
         if(read1.Cigar.containsOperator(CigarOperator.N) || read2.Cigar.containsOperator(CigarOperator.N))
         {
-            genes.forEach(x -> x.addCount(ALT, 1));
+            mCurrentGenes.addCount(ALT, 1);
             mAltSpliceJunctionFinder.evaluateFragmentReads(genes, read1, read2, Lists.newArrayList());
             return;
         }
@@ -556,7 +548,7 @@ public class GeneBamReader
         List<long[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
         addGcCounts(catCounts, readRegions);
 
-        genes.forEach(x -> x.addCount(UNSPLICED, 1));
+        mCurrentGenes.addCount(UNSPLICED, 1);
     }
 
     private void addGcCounts(final CategoryCountsData catCounts, List<long[]> readRegions)
@@ -736,7 +728,7 @@ public class GeneBamReader
 
     private synchronized static void writeReadData(
             final BufferedWriter writer, final GeneReadData geneReadData, int readIndex, final ReadRecord read,
-            GeneMatchType geneReadType, int validTranscripts, int calcFragmentLength)
+            FragmentType geneReadType, int validTranscripts, int calcFragmentLength)
     {
         if(read.getTranscriptClassifications().isEmpty())
             return;

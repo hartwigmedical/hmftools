@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.common;
 
-public enum GeneMatchType
+public enum FragmentType
 {
     TOTAL,
     TRANS_SUPPORTING,
@@ -11,7 +11,7 @@ public enum GeneMatchType
     DUPLICATE,
     MAX;
 
-    public static int typeAsInt(GeneMatchType type)
+    public static int typeAsInt(FragmentType type)
     {
         switch(type)
         {

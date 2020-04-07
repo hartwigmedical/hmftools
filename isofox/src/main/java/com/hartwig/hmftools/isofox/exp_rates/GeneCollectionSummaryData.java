@@ -72,11 +72,11 @@ public class GeneCollectionSummaryData
         else
         {
             // divvy up residuals between the genes according to their length
-            long totalGeneLength = GeneResults.stream().mapToLong(x -> x.geneData().length()).sum();
+            long totalGeneLength = GeneResults.stream().mapToLong(x -> x.GeneData.length()).sum();
 
             for (final GeneResult geneResult : GeneResults)
             {
-                double residualsFraction = geneResult.geneData().length() / (double) totalGeneLength * mFitResiduals;
+                double residualsFraction = geneResult.GeneData.length() / (double) totalGeneLength * mFitResiduals;
                 geneResult.setFitResiduals(residualsFraction);
             }
         }
@@ -99,21 +99,4 @@ public class GeneCollectionSummaryData
         double adjustFactor = originalTotal/newTotal;
         TransCategoryCounts.forEach(x -> x.adjustCounts(adjustFactor));
     }
-
-    public void recordMedianGcRatios()
-    {
-        for (final GeneResult geneResult : GeneResults)
-        {
-            GcRatioCounts gcCounts = new GcRatioCounts();
-
-            for(final CategoryCountsData catCounts : TransCategoryCounts)
-            {
-                if(catCounts.unsplicedGeneIds().contains(geneResult.geneData().GeneId))
-                    gcCounts.mergeRatioCounts(catCounts.fragmentCountsByGcRatio());
-            }
-
-            geneResult.setMedianActualGcRatio(gcCounts.getPercentileRatio(0.5));
-        }
-    }
-
 }

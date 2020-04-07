@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.generateCommonExonicRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
@@ -38,6 +40,7 @@ public class GeneCollection
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
+    private final int[] mFragmentCounts; // counts by various classifications
 
     public GeneCollection(int id, final List<GeneReadData> genes)
     {
@@ -60,6 +63,7 @@ public class GeneCollection
         buildCache();
 
         mTranscriptReadCounts = Maps.newHashMap();
+        mFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
     }
 
     public int id() { return mId; }
@@ -171,6 +175,16 @@ public class GeneCollection
         }
 
         ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
+    }
+
+    public final int[] getCounts() { return mFragmentCounts; }
+    public void addCount(FragmentType type, int count) { mFragmentCounts[typeAsInt(type)] += count; }
+
+    @VisibleForTesting
+    public void clearCounts()
+    {
+        for(int i = 0; i < mFragmentCounts.length; ++i)
+            mFragmentCounts[i] = 0;
     }
 
     public void logOverlappingGenes(final List<GeneReadData> overlappingGenes)

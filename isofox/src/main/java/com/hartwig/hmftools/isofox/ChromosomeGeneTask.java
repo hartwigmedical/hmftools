@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.createTranscriptResults;
@@ -395,10 +395,8 @@ public class ChromosomeGeneTask implements Callable
 
         if(!mConfig.EnrichedGeneIds.isEmpty())
         {
-            int enrichedGeneFragments = geneCollection.genes().stream()
-                    .filter(x -> mConfig.EnrichedGeneIds.contains(x.GeneData.GeneId))
-                    .mapToInt(x -> x.getCounts()[typeAsInt(TOTAL)])
-                    .sum();
+            int enrichedGeneFragments = geneCollection.genes().stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneData.GeneId))
+                    ? geneCollection.getCounts()[typeAsInt(TOTAL)] : 0;
 
             if (enrichedGeneFragments > 0)
             {
@@ -417,7 +415,10 @@ public class ChromosomeGeneTask implements Callable
                 mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamReader.getGeneGcRatioCounts().getCounts());
         }
 
+        mTotalFragmentCount += geneCollection.getCounts()[typeAsInt(TOTAL)];
+
         geneCollectionSummary.allocateResidualsToGenes();
+        mResultsWriter.writeGeneCollectionData(geneCollection);
     }
 
     private void calcTranscriptGcRatios()
@@ -443,9 +444,6 @@ public class ChromosomeGeneTask implements Callable
 
         for(final GeneCollectionSummaryData geneSummaryData : mGeneCollectionSummaryData)
         {
-            // first record the median GC ratio from the supporting fragment counts
-            geneSummaryData.recordMedianGcRatios();
-
             final double[] gcAdjustments = mTranscriptGcRatios.getGcRatioAdjustments();
             geneSummaryData.applyGcAdjustments(gcAdjustments);
 
@@ -465,8 +463,7 @@ public class ChromosomeGeneTask implements Callable
 
             for(final GeneResult geneResult : geneSummaryData.GeneResults)
             {
-                geneResult.setUnsplicedAllocation(geneSummaryData.getFitAllocation(geneResult.geneData().GeneId));
-                geneResult.setMedianExpectedGcRatio(geneSummaryData.getMedianExpectedGcRatio(geneResult.geneData().GeneId));
+                geneResult.setUnsplicedAllocation(geneSummaryData.getFitAllocation(geneResult.GeneData.GeneId));
             }
 
             geneSummaryData.allocateResidualsToGenes();
@@ -492,13 +489,9 @@ public class ChromosomeGeneTask implements Callable
             }
         }
 
-        GeneResult geneResult = GeneResult.createGeneResults(geneCollection, geneReadData);
-
+        GeneResult geneResult = new GeneResult(geneCollection, geneReadData);
         geneResult.setUnsplicedAllocation(geneCollectionSummary.getFitAllocation(geneReadData.GeneData.GeneId));
-
         geneCollectionSummary.GeneResults.add(geneResult);
-
-        mTotalFragmentCount += geneResult.totalFragments();
     }
 
     public int getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }
@@ -517,8 +510,8 @@ public class ChromosomeGeneTask implements Callable
             for(final TranscriptResult transResult : geneCollectionResult.TranscriptResults)
             {
                 final EnsemblGeneData geneData = geneCollectionResult.GeneResults.stream()
-                        .filter(x -> x.geneData().GeneId.equals(transResult.trans().GeneId))
-                        .map(x -> x.geneData())
+                        .filter(x -> x.GeneData.GeneId.equals(transResult.trans().GeneId))
+                        .map(x -> x.GeneData)
                         .findFirst().orElse(null);
 
                 mResultsWriter.writeTranscriptResults(geneData, transResult);

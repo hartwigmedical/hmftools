@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.READ_THROUGH;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.GeneMatchType.typeAsInt;
+import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.GeneMatchType;
+import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -277,7 +277,7 @@ public class ReadCountsTest
         GeneCollection geneSet = new GeneCollection(0, Lists.newArrayList(geneReadData));
         bamReader.processReadRecords(geneSet, reads);
 
-        int[] geneCounts = geneReadData.getCounts();
+        int[] geneCounts = geneSet.getCounts();
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(READ_THROUGH)]);
 
@@ -291,7 +291,7 @@ public class ReadCountsTest
         bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(2, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.UNSPLICED)]);
+        assertEquals(1, geneCounts[typeAsInt(FragmentType.UNSPLICED)]);
 
         // fully intronic
         read1 = createReadRecord(1, "1", 2600, 2650, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -299,13 +299,13 @@ public class ReadCountsTest
         read2 = createReadRecord(1, "1", 2800, 2900, REF_BASE_STR_1, createCigar(0, 100, 0));
         read2.setFragmentInsertSize(-300);
 
-        geneReadData.clearCounts();
+        geneSet.clearCounts();
 
         reads = Lists.newArrayList(read1, read2);
         bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.UNSPLICED)]);
+        assertEquals(1, geneCounts[typeAsInt(FragmentType.UNSPLICED)]);
 
         // both reads outside the gene
         read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -319,7 +319,7 @@ public class ReadCountsTest
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
 
         // alternative splicing - first from reads with splits
-        geneReadData.clearCounts();
+        geneSet.clearCounts();
 
         read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 5000, 100, 0));
         read1.setFragmentInsertSize(500);
@@ -330,12 +330,12 @@ public class ReadCountsTest
         bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
+        assertEquals(1, geneCounts[typeAsInt(FragmentType.ALT)]);
 
         int longInsertSize = config.MaxFragmentLength + 100;
 
         // alt splicing - exon to exon read skipping an exon and long, currently not detected
-        geneReadData.clearCounts();
+        geneSet.clearCounts();
 
         read1 = createReadRecord(1, "1", 1050, 1100, REF_BASE_STR_1, createCigar(0, 50, 0));
         read1.setFragmentInsertSize(longInsertSize);
@@ -346,7 +346,7 @@ public class ReadCountsTest
         bamReader.processReadRecords(geneSet, reads);
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(GeneMatchType.ALT)]);
+        assertEquals(1, geneCounts[typeAsInt(FragmentType.ALT)]);
     }
 
     private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)
@@ -359,7 +359,8 @@ public class ReadCountsTest
             final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
-        return new ReadRecord(null, String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar);
+        return new ReadRecord(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
+                0, true, false, chromosome, true, false);
     }
 
     private RegionReadData createRegion(int trans, int exonRank, final String chromosome, long posStart, long posEnd)

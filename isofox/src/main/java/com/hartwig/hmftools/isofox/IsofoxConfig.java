@@ -42,7 +42,7 @@ public class IsofoxConfig
     public static final String REF_GENOME = "ref_genome";
     private static final String BAM_FILE = "bam_file";
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
-    private static final String KEEP_DUPLICATES = "keep_dups";
+    private static final String DROP_DUPLICATES = "drop_dups";
     private static final String MARK_DUPLICATES = "mark_dups";
 
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
@@ -87,7 +87,7 @@ public class IsofoxConfig
     public IndexedFastaSequenceFile RefFastaSeqFile;
     public final int ReadCountLimit;
     public int MaxFragmentLength;
-    public final boolean KeepDuplicates;
+    public final boolean DropDuplicates;
     public final boolean MarkDuplicates;
 
     public final boolean WriteTransData;
@@ -186,7 +186,7 @@ public class IsofoxConfig
 
         ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
-        KeepDuplicates = cmd.hasOption(KEEP_DUPLICATES);
+        DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
         FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
 
@@ -386,7 +386,7 @@ public class IsofoxConfig
         ReadCountLimit = DEFAULT_MAX_READ_COUNT;
         GcAdjustmentsFile = "";
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
-        KeepDuplicates = false;
+        DropDuplicates = false;
         MarkDuplicates = false;
 
         ApplyExpectedRates = false;
@@ -435,8 +435,8 @@ public class IsofoxConfig
         options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
-        options.addOption(KEEP_DUPLICATES, false, "Process duplicate reads (if marked as such eg by picard)");
-        options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate reads");
+        options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");
+        options.addOption(MARK_DUPLICATES, false, "Manually identify duplicate fragments");
         options.addOption(FRAG_LENGTH_MIN_COUNT, true, "Fragment length measurement - min read fragments required");
         options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
         options.addOption(BAM_FILE, true, "RNA BAM file location");

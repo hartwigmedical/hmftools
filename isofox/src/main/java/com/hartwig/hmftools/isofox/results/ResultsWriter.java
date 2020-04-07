@@ -3,6 +3,14 @@ package com.hartwig.hmftools.isofox.results;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
+import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
+import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
@@ -19,6 +27,7 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.GeneBamReader;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
@@ -36,6 +45,7 @@ public class ResultsWriter
     private final IsofoxConfig mConfig;
 
     private BufferedWriter mGeneDataWriter;
+    private BufferedWriter mGeneCollectionWriter;
     private BufferedWriter mTransDataWriter;
     private BufferedWriter mExonDataWriter;
     private BufferedWriter mCategoryCountsWriter;
@@ -51,6 +61,7 @@ public class ResultsWriter
     public static final String DELIMITER = ",";
     public static final String FLD_SAMPLE_ID = "SampleId";
     public static final String FLD_GENE_ID = "GeneId";
+    public static final String FLD_GENE_SET_ID = "GeneSetId";
     public static final String FLD_GENE_NAME = "GeneName";
     public static final String FLD_CHROMOSOME = "Chromosome";
     public static final String FLD_TRANS_ID = "TransId";
@@ -61,6 +72,7 @@ public class ResultsWriter
         mConfig = config;
 
         mGeneDataWriter = null;
+        mGeneCollectionWriter = null;
         mTransDataWriter = null;
         mExonDataWriter = null;
         mCategoryCountsWriter = null;
@@ -71,12 +83,14 @@ public class ResultsWriter
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
 
+        initialiseGeneCollectionWriter();
         initialiseExternalWriters();
     }
 
     public void close()
     {
         closeBufferedWriter(mGeneDataWriter);
+        closeBufferedWriter(mGeneCollectionWriter);
         closeBufferedWriter(mTransDataWriter);
         closeBufferedWriter(mExonDataWriter);
         closeBufferedWriter(mCategoryCountsWriter);
@@ -173,6 +187,52 @@ public class ResultsWriter
         catch(IOException e)
         {
             ISF_LOGGER.error("failed to write gene data file: {}", e.toString());
+        }
+    }
+
+    private void initialiseGeneCollectionWriter()
+    {
+        if(mConfig.OutputDir == null)
+            return;
+
+        try
+        {
+            final String outputFileName = mConfig.formOutputFile("gene_collection_data.csv");
+
+            mGeneCollectionWriter = createBufferedWriter(outputFileName, false);
+            mGeneCollectionWriter.write("GeneSetId,GeneCount,Chromosome,RangeStart,RangeEnd");
+            mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,Alt,ReadThrough,Chimeric");
+            mGeneCollectionWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write gene collection file: {}", e.toString());
+        }
+    }
+
+    public synchronized void writeGeneCollectionData(final GeneCollection geneCollection)
+    {
+        if(mConfig.OutputDir.isEmpty())
+            return;
+
+        try
+        {
+            mGeneDataWriter.write(String.format("%s,%d,%s,%s,%d,%d",
+                    geneCollection.chrId(), geneCollection.genes().size(), geneCollection.chromosome(),
+                    geneCollection.regionBounds()[SE_START], geneCollection.regionBounds()[SE_END]));
+
+            final int[] fragmentCounts = geneCollection.getCounts();
+
+            mGeneDataWriter.write(String.format(",%d",
+                    fragmentCounts[typeAsInt(TOTAL)], fragmentCounts[typeAsInt(DUPLICATE)], fragmentCounts[typeAsInt(TRANS_SUPPORTING)],
+                    fragmentCounts[typeAsInt(UNSPLICED)], fragmentCounts[typeAsInt(ALT)], fragmentCounts[typeAsInt(READ_THROUGH)],
+                    fragmentCounts[typeAsInt(CHIMERIC)]));
+
+            mGeneDataWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to write gene collection file: {}", e.toString());
         }
     }
 
