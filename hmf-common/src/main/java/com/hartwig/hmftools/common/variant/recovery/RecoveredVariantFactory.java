@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -97,19 +98,22 @@ class RecoveredVariantFactory implements AutoCloseable {
                     : null;
 
             final StructuralVariant sv = mate != null ? create(potentialVariant, mate) : createSingleBreakend(potentialVariant);
+            final Optional<StructuralVariantLegPloidy> structuralVariantLegPloidy =
+                    ploidyFactory.singleLegPloidy(sv.start(), prev.averageTumorCopyNumber(), current.averageTumorCopyNumber());
 
-            final double ploidy = ploidyFactory.singleLegPloidy(sv.start(), prev.averageTumorCopyNumber(), current.averageTumorCopyNumber())
-                    .averageImpliedPloidy();
+            if (structuralVariantLegPloidy.isPresent()) {
+                final double ploidy = structuralVariantLegPloidy.get().averageImpliedPloidy();
 
-            if (sv.start().orientation() == expectedOrientation && sufficientPloidy(ploidy, unexplainedCopyNumberChange) && hasPotential(sv,
-                    copyNumbers)) {
-                result.add(ImmutableRecoveredVariant.builder()
-                        .context(potentialVariant)
-                        .mate(mate)
-                        .variant(sv)
-                        .copyNumber(current)
-                        .prevCopyNumber(prev)
-                        .build());
+                if (sv.start().orientation() == expectedOrientation && sufficientPloidy(ploidy, unexplainedCopyNumberChange)
+                        && hasPotential(sv, copyNumbers)) {
+                    result.add(ImmutableRecoveredVariant.builder()
+                            .context(potentialVariant)
+                            .mate(mate)
+                            .variant(sv)
+                            .copyNumber(current)
+                            .prevCopyNumber(prev)
+                            .build());
+                }
             }
         }
 

@@ -1003,6 +1003,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 ## Version History and Download Links
 - Upcoming
+  - Fix bug when trying to recover structural variant without allelic frequency
   - Fix bug when trying to recover structural variant in alt contig
   - Updated fitting deviation to aggressively penalise highly negative implied copy number
 - [2.40](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v2.40) 
