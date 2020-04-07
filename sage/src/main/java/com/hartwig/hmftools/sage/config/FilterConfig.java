@@ -54,7 +54,7 @@ public interface FilterConfig {
 
     SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
-            .minTumorQual(125)
+            .minTumorQual(150)
             .minTumorVaf(0.025)
             .minGermlineReadContextCoverage(10)
             .minGermlineReadContextCoverageAllosome(6)
@@ -64,7 +64,7 @@ public interface FilterConfig {
 
     SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = ImmutableSoftFilterConfig.builder()
             .from(NO_FILTER)
-            .minTumorQual(200)
+            .minTumorQual(225)
             .minTumorVaf(0.025)
             .minGermlineReadContextCoverage(10)
             .minGermlineReadContextCoverageAllosome(6)
@@ -86,11 +86,11 @@ public interface FilterConfig {
     }
 
     default double hotspotMinTumorVafToSkipQualCheck() {
-        return 0.05;
+        return 0.08;
     }
 
     default int hotspotMinTumorAltSupportToSkipQualCheck() {
-        return 5;
+        return 8;
     }
 
     boolean disableSoftFilter();
