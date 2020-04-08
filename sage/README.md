@@ -12,8 +12,8 @@ Key features include:
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
-  - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.
-  - RNA support
+  - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
+  - Mitochondrial calling
   - Tumor only support
   - An internal [Base Qual Recalibration](#1-base-qual-recalibration) method
 
