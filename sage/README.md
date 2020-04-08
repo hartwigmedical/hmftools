@@ -6,16 +6,16 @@ SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller.
 Key features include:
   - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
   - kmer based model which determines a unique [read context](#read-context) for the variant + 25 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
-  - modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
+  - Modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
   - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatelites while ignoring common sequencing errors
-  - no cutoff for homopolymer repeat length for improved INDEL handling 
+  - No cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
+  - Tumor sample only support
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
   - Mitochondrial calling
-  - Tumor only support
-  - An internal [Base Qual Recalibration](#1-base-qual-recalibration) method
+  - An internal [base quality recalibration](#1-base-quality-recalibration) method
 
 ## Installation
 
@@ -162,6 +162,7 @@ A typical example of the chart is shown below:
 ![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
 
 Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_enabled false` argument.
+
 The base quality recalibration chart can be independently disabled by including the `-bqr_plot false` argument.
  
 ## 2. Candidate Variants And Read Contexts
