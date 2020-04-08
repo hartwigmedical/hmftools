@@ -22,4 +22,7 @@ public abstract class WideEcrfModel {
 
     @NotNull
     public abstract List<WideResponseData> responses();
+
+    @NotNull
+    public abstract List<WideFiveDays> fiveDays();
 }
