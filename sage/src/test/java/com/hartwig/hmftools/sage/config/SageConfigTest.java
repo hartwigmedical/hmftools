@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MAX_ALT_COUNT;
+import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_SAMPLE_SIZE;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_QUAL;
@@ -49,6 +51,7 @@ public class SageConfigTest {
                 .maxReadDepthPanel(DEFAULT_MAX_READ_DEPTH_PANEL)
                 .qualityConfig(defaultQualityConfig())
                 .filter(defaultFilterConfig())
+                .baseQualityRecalibrationConfig(defaultQualityRecalibrationConfig())
                 .build();
 
     }
@@ -78,4 +81,14 @@ public class SageConfigTest {
                 .softLowConfidenceFilter(DEFAULT_LOW_CONFIDENCE_FILTER)
                 .build();
     }
+
+    public static BaseQualityRecalibrationConfig defaultQualityRecalibrationConfig() {
+        return ImmutableBaseQualityRecalibrationConfig.builder()
+                .enabled(false)
+                .plot(false)
+                .maxAltCount(DEFAULT_BQR_MAX_ALT_COUNT)
+                .sampleSize(DEFAULT_BQR_SAMPLE_SIZE)
+                .build();
+    }
+
 }
