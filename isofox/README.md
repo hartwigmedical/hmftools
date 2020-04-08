@@ -90,8 +90,6 @@ Any fragment which does not contain a splice junction, is wholly contained withi
 
 Note that reads which marginally overhang an exon boundary or are soft clipped at or beyond an exon boundary have special treatment. This is particularly relevant for reads that have an overhang of 1 or 2 bases which will not be mapped by STAR with default parameters   If the overhanging section can be uniquely mapped either to the reference or to the other side of only a single known spliced junction, then the fragment is deemed to be supporting that splice junction or in the case of supporting just the reference is deemed to be supporting the UNSPLICED transcript.  If it cannot be uniquely mapped or matches neither of those locations exactly, it is truncated at the exon boundary.
 
-We currently ignore marked duplicates in our counting.  This may lead to understimation of abundance for high coverage genes and transcripts which may reach saturation of all read pair positions (particularly for genes where the per base coverage exceeds ~3000). We will address this problem in a later release <TO DO>.
-
 ### 5. Fit abundance estimate per transcript
 
 For each group of transcripts conidered together we aim to fit the relative abundance.   Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximastion algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
