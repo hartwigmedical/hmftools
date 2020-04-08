@@ -3,7 +3,6 @@ package com.hartwig.hmftools.isofox.results;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +11,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 
 import org.immutables.value.Value;
 

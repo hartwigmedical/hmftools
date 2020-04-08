@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 
 import org.junit.Test;
 

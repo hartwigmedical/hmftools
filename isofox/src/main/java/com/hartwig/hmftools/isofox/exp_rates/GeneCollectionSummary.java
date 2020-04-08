@@ -1,18 +1,17 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
-import static com.hartwig.hmftools.common.sigs.DataUtils.RESIDUAL_TOTAL;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class GeneCollectionSummaryData
+public class GeneCollectionSummary
 {
     public final String ChrId;
     public final List<String> GeneIds;
@@ -25,7 +24,7 @@ public class GeneCollectionSummaryData
     private final Map<String,Double> mFitAllocations; // results from the expected rate vs counts fit routine, stored per transcript
     private double mFitResiduals;
 
-    public GeneCollectionSummaryData(
+    public GeneCollectionSummary(
             final String chrId, final List<String> geneIds, final String geneNames, final List<CategoryCountsData> transCategoryCounts)
     {
         ChrId = chrId;
@@ -48,6 +47,33 @@ public class GeneCollectionSummaryData
     {
         Double allocation = mFitAllocations.get(transName);
         return allocation != null ? allocation : 0;
+    }
+
+    public void setFitAllocations()
+    {
+        Map<String,Double> geneSpliceTotals = Maps.newHashMap();
+
+        for (final TranscriptResult transResult : TranscriptResults)
+        {
+            final String transName = transResult.Trans.TransName;
+            double fitAllocation = getFitAllocation(transName);
+
+            transResult.setFitAllocation(fitAllocation);
+
+            Double geneFitAllocation = geneSpliceTotals.get(transResult.Trans.GeneId);
+            if(geneFitAllocation == null)
+                geneSpliceTotals.put(transResult.Trans.GeneId, fitAllocation);
+            else
+                geneSpliceTotals.put(transResult.Trans.GeneId, geneFitAllocation + fitAllocation);
+
+        }
+
+        for(final GeneResult geneResult : GeneResults)
+        {
+            Double geneFitAllocation = geneSpliceTotals.get(geneResult.GeneData.GeneId);
+            geneResult.setFitAllocation(
+                    geneFitAllocation != null ? geneFitAllocation : 0, getFitAllocation(geneResult.GeneData.GeneId));
+        }
     }
 
     public void allocateResidualsToGenes()

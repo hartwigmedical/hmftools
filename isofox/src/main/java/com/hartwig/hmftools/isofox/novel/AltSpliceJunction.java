@@ -316,9 +316,9 @@ public class AltSpliceJunction
 
     public static String csvHeader()
     {
-        return "GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,StartDepth,EndDepth"
-                + ",Type,StartContext,EndContext,NearestStartExon,NearestEndExon"
-                + ",StartBases,EndBases,StartTrans,EndTrans,PosStrandGenes,NegStrandGenes";
+        return "GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd"
+                + ",Type,ContextStart,ContextEnd,NearestStartExon,NearestEndExon"
+                + ",BasesStart,BasesEnd,TransStart,TransEnd,PosStrandGenes,NegStrandGenes";
     }
 
     public String toCsv(final EnsemblGeneData geneData)
@@ -353,8 +353,8 @@ public class AltSpliceJunction
                 { Long.parseLong(items[fieldIndexMap.get("SjStart")]), Long.parseLong(items[fieldIndexMap.get("SjEnd")]) };
 
         final AltSpliceJunctionContext[] contexts =
-                { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("StartContext")]),
-                        AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("EndContext")]) };
+                { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextStart")]),
+                        AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextEnd")]) };
 
         AltSpliceJunction altSJ = new AltSpliceJunction(
                 items[fieldIndexMap.get("Chromosome")], spliceJunction, AltSpliceJunctionType.valueOf(items[fieldIndexMap.get("Type")]),
@@ -362,14 +362,14 @@ public class AltSpliceJunction
 
         altSJ.setGeneId(items[fieldIndexMap.get("GeneId")]);
         altSJ.addFragmentCount(Integer.parseInt(items[fieldIndexMap.get("FragCount")]));
-        altSJ.addPositionCount(SE_START, Integer.parseInt(items[fieldIndexMap.get("StartDepth")]));
-        altSJ.addPositionCount(SE_END, Integer.parseInt(items[fieldIndexMap.get("EndDepth")]));
+        altSJ.addPositionCount(SE_START, Integer.parseInt(items[fieldIndexMap.get("DepthStart")]));
+        altSJ.addPositionCount(SE_END, Integer.parseInt(items[fieldIndexMap.get("DepthEnd")]));
 
-        final String[] baseContext = { items[fieldIndexMap.get("StartBases")], items[fieldIndexMap.get("EndBases")] };
+        final String[] baseContext = { items[fieldIndexMap.get("BasesStart")], items[fieldIndexMap.get("BasesEnd")] };
         altSJ.setDonorAcceptorBases(baseContext);
 
-        altSJ.mTranscriptNames[SE_START] = items[fieldIndexMap.get("StartTrans")];
-        altSJ.mTranscriptNames[SE_END] = items[fieldIndexMap.get("EndTrans")];
+        altSJ.mTranscriptNames[SE_START] = items[fieldIndexMap.get("TransStart")];
+        altSJ.mTranscriptNames[SE_END] = items[fieldIndexMap.get("TransEnd")];
 
         return altSJ;
     }

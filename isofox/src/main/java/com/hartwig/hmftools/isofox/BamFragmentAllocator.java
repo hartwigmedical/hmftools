@@ -27,7 +27,7 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
+import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -52,7 +52,7 @@ import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
@@ -64,7 +64,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class GeneBamReader
+public class BamFragmentAllocator
 {
     private final IsofoxConfig mConfig;
     private final SamReader mSamReader;
@@ -91,7 +91,7 @@ public class GeneBamReader
     private final GcRatioCounts mGcRatioCounts;
     private final GcRatioCounts mGeneGcRatioCounts;
 
-    public GeneBamReader(final IsofoxConfig config, final ResultsWriter resultsWriter)
+    public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
         mConfig = config;
 
@@ -159,13 +159,13 @@ public class GeneBamReader
         {
             ++mTotalDuplicateCount;
 
-            if(record.getFirstOfPairFlag())
-            {
-                mCurrentGenes.addCount(DUPLICATE, 1);
-            }
-
             if(mConfig.DropDuplicates)
+            {
+                if(record.getFirstOfPairFlag())
+                    mCurrentGenes.addCount(DUPLICATE, 1);
+
                 return;
+            }
         }
 
         ++mTotalBamReadCount;
@@ -184,11 +184,12 @@ public class GeneBamReader
             ISF_LOGGER.debug("genes({}) bamRecordCount({})", mCurrentGenes.geneNames(), mGeneReadCount);
         }
 
-        if(mConfig.ReadCountLimit > 0 && mGeneReadCount >= mConfig.ReadCountLimit)
+        if(mConfig.GeneReadLimit > 0 && mGeneReadCount >= mConfig.GeneReadLimit)
         {
-            if(mGeneReadCount == mConfig.ReadCountLimit)
+            if(mGeneReadCount == mConfig.GeneReadLimit)
             {
-                ISF_LOGGER.warn("gene({}) readCount({}) exceeds max read count", mCurrentGenes.geneNames(), mGeneReadCount);
+                mBamSlicer.haltProcessing();
+                ISF_LOGGER.warn("genes({}) readCount({}) exceeds max read count", mCurrentGenes.geneNames(), mGeneReadCount);
             }
 
             return;
@@ -200,18 +201,18 @@ public class GeneBamReader
             {
                 mCurrentGenes.addCount(TOTAL, 1);
                 mCurrentGenes.addCount(CHIMERIC, 1);
+
+                if(read.IsDuplicate)
+                    mCurrentGenes.addCount(DUPLICATE, 1);
             }
             return;
         }
 
-        if(mConfig.WriteTransData)
-        {
-            final List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
+        final List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
 
-            if (!overlappingRegions.isEmpty())
-            {
-                read.processOverlappingRegions(overlappingRegions);
-            }
+        if (!overlappingRegions.isEmpty())
+        {
+            read.processOverlappingRegions(overlappingRegions);
         }
 
         checkFragmentRead(read);
@@ -247,6 +248,9 @@ public class GeneBamReader
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
+        if(read1.IsDuplicate || read2.IsDuplicate)
+            mCurrentGenes.addCount(DUPLICATE, 1);
+
         final long[] genesRange = mCurrentGenes.regionBounds();
         boolean r1OutsideGene = read1.PosStart > genesRange[SE_END] || read1.PosEnd < genesRange[SE_START];
         boolean r2OutsideGene = read2.PosStart > genesRange[SE_END] || read2.PosEnd < genesRange[SE_START];
@@ -259,9 +263,6 @@ public class GeneBamReader
 
         final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax);
         mCurrentGenes.addCount(TOTAL, 1);
-
-        if(!mConfig.WriteTransData)
-            return;
 
         if(read1.isLocalInversion() || read2.isLocalInversion())
         {

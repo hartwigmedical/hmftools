@@ -253,7 +253,7 @@ public class ReadCountsTest
     {
         // one read outside the gene
         IsofoxConfig config = new IsofoxConfig();
-        GeneBamReader bamReader = new GeneBamReader(config, new ResultsWriter(config));
+        BamFragmentAllocator bamReader = new BamFragmentAllocator(config, new ResultsWriter(config));
 
         int transId1 = 1;
         String transName1 = "TRANS01";

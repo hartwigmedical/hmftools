@@ -18,20 +18,26 @@ public class BamSlicer
 {
     private final int mMinMappingQuality;
     private boolean mDropDuplicates;
+    private boolean mConsumerHalt; // allow consumer to halt processing
 
     public BamSlicer(int minMappingQuality, boolean dropDuplicates)
     {
         mMinMappingQuality = minMappingQuality;
         mDropDuplicates = dropDuplicates;
+        mConsumerHalt = false;
     }
+
+    public void haltProcessing() { mConsumerHalt = true; }
 
     public void slice(@NotNull final SamReader samReader, final List<GenomeRegion> regions, @NotNull final Consumer<SAMRecord> consumer)
     {
+        mConsumerHalt = false;
+
         final QueryInterval[] queryIntervals = createIntervals(regions, samReader.getFileHeader());
 
         try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {
-            while (iterator.hasNext())
+            while (!mConsumerHalt && iterator.hasNext())
             {
                 final SAMRecord record = iterator.next();
 
@@ -45,9 +51,11 @@ public class BamSlicer
 
     public void slice(@NotNull final SamReader samReader, final QueryInterval[] queryIntervals, @NotNull final Consumer<SAMRecord> consumer)
     {
+        mConsumerHalt = false;
+
         try (final SAMRecordIterator iterator = samReader.queryOverlapping(queryIntervals))
         {
-            while (iterator.hasNext())
+            while (!mConsumerHalt && iterator.hasNext())
             {
                 final SAMRecord record = iterator.next();
 

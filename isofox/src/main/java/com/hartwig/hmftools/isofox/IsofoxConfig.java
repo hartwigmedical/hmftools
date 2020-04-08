@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -34,7 +34,6 @@ public class IsofoxConfig
     public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
     private static final String CANONICAL_ONLY = "canonical_only";
-    private static final String WRITE_TRANS_DATA = "write_trans_data";
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
@@ -69,7 +68,7 @@ public class IsofoxConfig
 
     private static final String SPECIFIC_TRANS_IDS = "specific_trans";
     private static final String SPECIFIC_CHR = "specific_chr";
-    private static final String READ_COUNT_LIMIT = "read_count_limit";
+    private static final String GENE_READ_LIMIT = "gene_read_limit";
     private static final String RUN_VALIDATIONS = "validate";
     private static final String PERF_CHECKS = "perf_checks";
     private static final String THREADS = "threads";
@@ -85,12 +84,11 @@ public class IsofoxConfig
     public final String BamFile;
     public final File RefGenomeFile;
     public IndexedFastaSequenceFile RefFastaSeqFile;
-    public final int ReadCountLimit;
+    public final int GeneReadLimit;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
     public final boolean MarkDuplicates;
 
-    public final boolean WriteTransData;
     public final boolean WriteExonData;
     public final boolean WriteReadData;
     public final boolean WriteTransComboData;
@@ -124,7 +122,6 @@ public class IsofoxConfig
     public final boolean RunPerfChecks;
     public final int Threads;
 
-    public static final int DEFAULT_MAX_READ_COUNT = 100000;
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 550;
 
     public static final int GENE_FRAGMENT_BUFFER = 1000; // width around a gene within which to search for reads
@@ -184,7 +181,7 @@ public class IsofoxConfig
             }
         }
 
-        ReadCountLimit = Integer.parseInt(cmd.getOptionValue(READ_COUNT_LIMIT, "0"));
+        GeneReadLimit = Integer.parseInt(cmd.getOptionValue(GENE_READ_LIMIT, "0"));
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
@@ -197,7 +194,6 @@ public class IsofoxConfig
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
-        WriteTransData = Boolean.parseBoolean(cmd.getOptionValue(WRITE_TRANS_DATA, "true"));
 
         GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
                 Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
@@ -383,7 +379,7 @@ public class IsofoxConfig
         RefGenomeFile = null;
         RefFastaSeqFile = null;
         CanonicalTranscriptOnly = false;
-        ReadCountLimit = DEFAULT_MAX_READ_COUNT;
+        GeneReadLimit = 0;
         GcAdjustmentsFile = "";
         MaxFragmentLength = DEFAULT_MAX_FRAGMENT_SIZE;
         DropDuplicates = false;
@@ -396,7 +392,6 @@ public class IsofoxConfig
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
 
-        WriteTransData = true;
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
@@ -432,7 +427,7 @@ public class IsofoxConfig
         options.addOption(DATA_OUTPUT_DIR, true, "Output directory");
         options.addOption(LOG_DEBUG, false, "Log verbose");
         options.addOption(LOG_LEVEL, true, "Logging: INFO(default), DEBUG or TRACE (verbose)");
-        options.addOption(READ_COUNT_LIMIT, true, "Cap read-processing for genes with depth greater than this");
+        options.addOption(GENE_READ_LIMIT, true, "Per-gene limit on max reads processed (default=0, not applied)");
         options.addOption(REF_GENOME, true, "Ref genome file location");
         options.addOption(LONG_FRAGMENT_LIMIT, true, "Max RNA fragment size");
         options.addOption(DROP_DUPLICATES, false, "Include duplicate fragments in expression calculations");
@@ -440,7 +435,6 @@ public class IsofoxConfig
         options.addOption(FRAG_LENGTH_MIN_COUNT, true, "Fragment length measurement - min read fragments required");
         options.addOption(FRAG_LENGTHS_BY_GENE, false, "Write fragment lengths by gene");
         options.addOption(BAM_FILE, true, "RNA BAM file location");
-        options.addOption(WRITE_TRANS_DATA, true, "Produce transcript-level counts data (default=true)");
         options.addOption(WRITE_EXON_DATA, false, "Exon region data");
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");

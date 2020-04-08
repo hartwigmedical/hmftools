@@ -24,15 +24,15 @@ import java.util.List;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.isofox.GeneBamReader;
+import com.hartwig.hmftools.isofox.BamFragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
 
@@ -115,13 +115,10 @@ public class ResultsWriter
         if(!mConfig.generateExpectedDataOnly())
         {
             if (mConfig.WriteReadData)
-                mReadDataWriter = GeneBamReader.createReadDataWriter(mConfig);
+                mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
 
-            if(mConfig.WriteTransData)
-            {
-                mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
-                mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
-            }
+            mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
+            mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
 
             if(mConfig.WriteFragmentLengths)
                 mFragLengthWriter = FragmentSizeCalcs.createFragmentLengthWriter(mConfig);

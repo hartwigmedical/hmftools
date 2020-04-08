@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.common;
+package com.hartwig.hmftools.isofox.adjusts;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -6,7 +6,10 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 
@@ -23,8 +26,9 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.isofox.GeneBamReader;
+import com.hartwig.hmftools.isofox.BamFragmentAllocator;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BamSlicer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -41,6 +45,8 @@ public class FragmentSizeCalcs
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
+    private final SamReader mSamReader;
+    private final BamSlicer mBamSlicer;
     private final List<int[]> mFragmentLengths;
     private final List<int[]> mFragmentLengthsByGene;
     private int mMaxReadLength;
@@ -60,6 +66,9 @@ public class FragmentSizeCalcs
         mConfig = config;
         mGeneTransCache = geneTransCache;
 
+        mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
+        mBamSlicer = new BamSlicer(BamFragmentAllocator.DEFAULT_MIN_MAPPING_QUALITY, true);
+
         mCurrentGeneData = null;
         mCurrentTransDataList = null;
         mCurrentReadCount = 0;
@@ -72,12 +81,6 @@ public class FragmentSizeCalcs
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
         mPerfCounter = new PerformanceCounter("FragLengthDist");
-    }
-
-    public void close()
-    {
-        if(ISF_LOGGER.isDebugEnabled())
-            mPerfCounter.logStats();
     }
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
@@ -99,27 +102,28 @@ public class FragmentSizeCalcs
         if (requiredFragCount == 0)
             return;
 
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
-        BamSlicer bamSlicer = new BamSlicer(GeneBamReader.DEFAULT_MIN_MAPPING_QUALITY, true);
-
         // walk through each chromosome, ignoring any gene which overlaps the previous gene
         ISF_LOGGER.info("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
 
+        List<long[]> excludedRegions = generateExcludedRegions(chromosome);
         long lastGeneEnd = 0;
 
         for (int i = 0; i < geneDataList.size(); ++i)
         {
             EnsemblGeneData geneData = geneDataList.get(i);
 
-            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
+            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId) || mConfig.EnrichedGeneIds.contains(geneData.GeneId))
                 continue;
 
             if (geneData.GeneStart < lastGeneEnd)
                 continue;
 
-            long geneLength = geneData.GeneEnd - geneData.GeneStart;
+            long geneLength = geneData.length();
 
             if (geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
+                continue;
+
+            if(excludedRegions.stream().anyMatch(x -> positionsOverlap(x[SE_START], x[SE_END], geneData.GeneStart, geneData.GeneEnd)))
                 continue;
 
             mCurrentTransDataList = mGeneTransCache.getTranscripts(geneData.GeneId).stream()
@@ -143,7 +147,7 @@ public class FragmentSizeCalcs
             mCurrentGeneData = geneData;
             List<GenomeRegion> regions = Lists.newArrayList(GenomeRegions.create(chromosome, geneData.GeneStart, geneData.GeneEnd));
 
-            bamSlicer.slice(samReader, regions, this::processBamRead);
+            mBamSlicer.slice(mSamReader, regions, this::processBamRead);
 
             mPerfCounter.stop();
 
@@ -159,6 +163,29 @@ public class FragmentSizeCalcs
                 break;
             }
         }
+
+        ISF_LOGGER.debug("chromosome({}) processing complete", chromosome);
+    }
+
+    private List<long[]> generateExcludedRegions(final String chromosome)
+    {
+        // create a buffer around the enriched gene to avoid excessive reads in this vacinity
+        int buffer = 100000;
+
+        final List<long[]> excludedRegions = Lists.newArrayList();
+        for(final String geneId : mConfig.EnrichedGeneIds)
+        {
+            final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
+            if(geneData == null)
+                continue;
+
+            if(geneData.Chromosome.equals(chromosome))
+            {
+                excludedRegions.add(new long[] { geneData.GeneStart - buffer, geneData.GeneEnd + buffer});
+            }
+        }
+
+        return excludedRegions;
     }
 
     private void processBamRead(@NotNull final SAMRecord record)
@@ -166,13 +193,19 @@ public class FragmentSizeCalcs
         ++mCurrentReadCount;
         ++mTotalReadCount;
 
+        // ISF_LOGGER.trace("currentGene({}:{}) read count({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mCurrentReadCount);
+
         if(mTotalReadCount > 0 && (mTotalReadCount % 10000) == 0)
         {
             ISF_LOGGER.trace("currentGene({}:{}) totalReads({})", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName, mTotalReadCount);
         }
 
         if(mCurrentReadCount >= MAX_GENE_READ_COUNT)
+        {
+            ISF_LOGGER.trace("currentGene({}:{}) reached max read count", mCurrentGeneData.GeneId, mCurrentGeneData.GeneName);
+            mBamSlicer.haltProcessing();
             return;
+        }
 
         if(!isCandidateRecord(record))
             return;
@@ -184,7 +217,7 @@ public class FragmentSizeCalcs
 
         for(final TranscriptData transData : mCurrentTransDataList)
         {
-            if(transData.exons().stream().anyMatch(x -> !(posStart > x.ExonEnd || posEnd < x.ExonStart)))
+            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.ExonStart, x.ExonEnd)))
                 return;
         }
 

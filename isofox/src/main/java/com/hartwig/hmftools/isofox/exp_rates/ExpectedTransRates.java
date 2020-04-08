@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
@@ -60,7 +60,7 @@ public class ExpectedTransRates
         }
     }
 
-    public void runTranscriptEstimation(final GeneCollectionSummaryData geneSummaryData, final ExpectedRatesData expRatesData)
+    public void runTranscriptEstimation(final GeneCollectionSummary geneSummaryData, final ExpectedRatesData expRatesData)
     {
         if(expRatesData == null)
         {
@@ -119,11 +119,11 @@ public class ExpectedTransRates
         }
     }
 
-    public static double calcTotalTranscriptExpression(final List<GeneCollectionSummaryData> geneSummaryData)
+    public static double calcTotalTranscriptExpression(final List<GeneCollectionSummary> geneSummaryData)
     {
         double totalFragsPerKb = 0;
 
-        for(final GeneCollectionSummaryData summaryData : geneSummaryData)
+        for(final GeneCollectionSummary summaryData : geneSummaryData)
         {
             totalFragsPerKb += summaryData.TranscriptResults.stream().mapToDouble(x -> x.fragmentsPerKb()).sum();
         }
@@ -131,9 +131,9 @@ public class ExpectedTransRates
         return totalFragsPerKb;
     }
 
-    public static void setTranscriptsPerMillion(final List<GeneCollectionSummaryData> geneSummaryData, double tpmFactor)
+    public static void setTranscriptsPerMillion(final List<GeneCollectionSummary> geneSummaryData, double tpmFactor)
     {
-        for(final GeneCollectionSummaryData summaryData : geneSummaryData)
+        for(final GeneCollectionSummary summaryData : geneSummaryData)
         {
             Map<String,Double> geneTPMs = Maps.newHashMap();
 
@@ -188,7 +188,7 @@ public class ExpectedTransRates
         }
     }
 
-    private double[] generateReadCounts(final GeneCollectionSummaryData geneSummaryData)
+    private double[] generateReadCounts(final GeneCollectionSummary geneSummaryData)
     {
         double[] categoryCounts = new double[mCurrentExpRatesData.Categories.size()];
 

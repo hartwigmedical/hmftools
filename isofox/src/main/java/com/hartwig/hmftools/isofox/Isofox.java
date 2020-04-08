@@ -16,10 +16,10 @@ import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.GENERATE_TRANSCRIPT_GC_COUNTS;
-import static com.hartwig.hmftools.isofox.common.FragmentSizeCalcs.setConfigFragmentLengthData;
+import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates.calcTotalTranscriptExpression;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates.setTranscriptsPerMillion;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.writeReadGcRatioCounts;
+import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
 
 import java.util.ArrayList;
@@ -38,10 +38,10 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.isofox.common.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
-import com.hartwig.hmftools.isofox.gc.GcRatioCounts;
-import com.hartwig.hmftools.isofox.gc.GcTranscriptCalculator;
+import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
+import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -138,8 +138,8 @@ public class Isofox
 
         if(!mConfig.generateExpectedDataOnly())
         {
-            int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getBamReader().totalReadCount()).sum();
-            int totalDuplicateReads = chrTasks.stream().mapToInt(x -> x.getBamReader().duplicateReadCount()).sum();
+            int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getFragmentAllocator().totalReadCount()).sum();
+            int totalDuplicateReads = chrTasks.stream().mapToInt(x -> x.getFragmentAllocator().duplicateReadCount()).sum();
             ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
             int totalFragCount = chrTasks.stream().mapToInt(x -> x.getTotalFragmentCount()).sum();
@@ -163,7 +163,7 @@ public class Isofox
             if(mConfig.WriteGcData)
             {
                 GcRatioCounts combinedGcRatioCounts = new GcRatioCounts();
-                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getBamReader().getGcRatioCounts().getCounts()));
+                chrTasks.forEach(x -> combinedGcRatioCounts.mergeRatioCounts(x.getFragmentAllocator().getGcRatioCounts().getCounts()));
 
                 writeReadGcRatioCounts(mResultsWriter.getReadGcRatioWriter(), "ALL", combinedGcRatioCounts.getCounts(), false);
                 double[] percentData = new double[combinedGcRatioCounts.size()];

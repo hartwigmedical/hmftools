@@ -67,7 +67,7 @@ public class GeneCollection
     }
 
     public int id() { return mId; }
-    public String chrId() { return String.format("%s:%d", mChromosome, mId); }
+    public String chrId() { return String.format("%s_%d", mChromosome, mId); }
     public final String chromosome() { return mChromosome; }
     public final List<GeneReadData> genes() { return mGenes; }
     public final List<String> geneIds() { return mGeneIds; }

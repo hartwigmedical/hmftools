@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.gc;
+package com.hartwig.hmftools.isofox.adjusts;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.max;

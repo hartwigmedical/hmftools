@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.gc;
+package com.hartwig.hmftools.isofox.adjusts;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.sumVectors;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcCount;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatio;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.calcGcRatioFromReadRegions;
-import static com.hartwig.hmftools.isofox.gc.GcRatioCounts.isGC;
+import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcCount;
+import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatio;
+import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
+import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.isGC;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -30,7 +30,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummaryData;
+import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
 
 public class GcTranscriptCalculator
 {
@@ -72,12 +72,12 @@ public class GcTranscriptCalculator
     public final double[] getGcRatioAdjustments() { return mGcRatioAdjustments; }
     public final GcRatioCounts getTranscriptFitGcCounts() { return mTranscriptFitGcCounts; }
 
-    public void generateGcCountsFromFit(final List<GeneCollectionSummaryData> geneSummaries)
+    public void generateGcCountsFromFit(final List<GeneCollectionSummary> geneSummaries)
     {
         // use expected GC ratio counts and 1st-pass transcript fits to derive expected GC counts
         final double[] frequencies = mTranscriptFitGcCounts.getCounts();
 
-        for(final GeneCollectionSummaryData geneSummary : geneSummaries)
+        for(final GeneCollectionSummary geneSummary : geneSummaries)
         {
             final Map<String,Double> fitAllocations = geneSummary.getFitAllocations();
 
