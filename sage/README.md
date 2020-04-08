@@ -1,7 +1,7 @@
 
 # Somatic Alterations in Genome (SAGE)
 
-SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller 
+SAGE is a precise and highly sensitive somatic SNV, MNV and small INDEL caller. 
 
 Key features include:
   - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
@@ -15,6 +15,7 @@ Key features include:
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.
   - RNA support
   - Tumor only support
+  - An internal [Base Qual Recalibration](#1-base-qual-recalibration) method
 
 # Usage
 
@@ -125,16 +126,22 @@ java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
 # Algorithm
 
 There are 7 key steps in the SAGE algorithm described in detail below:
-  1. [Candidate Variants And Read Contexts](#1-candidate-variants-and-read-contexts)
-  2. [Tumor Counts and Quality](#2-tumor-counts-and-quality)
-  3. [Normal Counts and Quality](#3-normal-counts-and-quality)
-  4. [Soft Filter](#4-soft-filters)
-  5. [Phasing](#5-phasing)
-  6. [MNV Handling](#6-de-duplication)
-  7. [Output](#7-output)
+  1. [Base Quality Recalibration](#1-base-quality-recalibration)
+  2. [Candidate Variants And Read Contexts](#2-candidate-variants-and-read-contexts)
+  3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
+  4. [Normal Counts and Quality](#4-normal-counts-and-quality)
+  5. [Soft Filter](#5-soft-filters)
+  6. [Phasing](#6-phasing)
+  7. [MNV Handling](#7-de-duplication)
+  8. [Output](#8-output)
+
+## 1. Base Quality Recalibration
+
+SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.  The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual} . Sites with 5 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
+
+For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determing the quality.   SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
  
- 
-## 1. Candidate Variants And Read Contexts
+## 2. Candidate Variants And Read Contexts
 
 In this first parse of the tumor BAM(s), SAGE looks for candidate variants. 
 INDELS are located using the `I` and `D` flag in the CIGAR.
@@ -165,7 +172,7 @@ Note that these raw depth values do NOT contribute to the AD, DP, QUAL or AF fie
 ### Multiple Tumors
 If multiple tumors are supplied, the final set of candidates is the superset of all individual tumor candidates that satisfy the hard filter criteria. 
 
-## 2. Tumor Counts and Quality
+## 3. Tumor Counts and Quality
 
 The aim of the stage it to collect evidence of each candidate variant's read context in the tumor. 
 SAGE examines every read overlapping the variant tallying matches of the read context. 
@@ -241,13 +248,13 @@ hard_min_tumor_raw_base_quality |0| `RABQ[1]`
 
 These variants are excluded from this point onwards and have no further processing applied to them.  
  
-## 3. Normal Counts and Quality
+## 4. Normal Counts and Quality
 
 Evidence of each candidate variant is collected in all of the supplied reference bams in the same manner as step 2. 
 
 RNA bams are valid reference sources.
 
-## 4. Soft Filters
+## 5. Soft Filters
 
 Given evidence of the variants in the tumor and normal we apply somatic filters. 
 The key principles behind the filters are ensuring sufficient support for the variant (minimum VAF and score) in the tumor sample and validating that the variant is highly unlikely to be present in the normal sample.
@@ -281,7 +288,7 @@ Soft filters become hard filters when the `hard_filter` flag is included.
 
 To set the parameters at the command line append the tier to the filter eg `hotspot_min_tumor_qual` and `high_confidence_min_tumor_qual` set the value of the min_tumor_qual for the `HOTSPOT` and `HIGH_CONFIDENCE` tiers respectively.
 
-## 5. Phasing
+## 6. Phasing
 
 Somatic variants can be phased using the complete read context with nearby germline variants or other somatic variants.
 
@@ -310,7 +317,7 @@ Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are p
 
 If multiple tumors are supplied, phasing is evaluated only on the primary tumor, ie, the first in the supplied tumor list.
 
-## 6. De-duplication
+## 7. De-duplication
 
 ### INDEL
 
@@ -323,7 +330,7 @@ Any passing SNVs that are phased with and part of a passing MNVs will be filtere
 This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants. 
 In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
 
-## 7. Output
+## 8. Output
 
 There is one final 'hard' filter that is lazily applied at the end of the process just before writing to file that only apply to variants that are already filtered. 
 They do not save any processing time but do reduce the output file size. 
