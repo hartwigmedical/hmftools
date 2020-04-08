@@ -74,12 +74,15 @@ public class WidePatientReader {
 
         String birthYear = Strings.EMPTY;
         String gender = Strings.EMPTY;
+        String informedConsent = Strings.EMPTY;
+        String sharedData = Strings.EMPTY;
 
         for (WideFiveDays fiveDays : wideEcrfModel.fiveDays()) {
             if (patientIdentifier.equals(fiveDays.wideId())) {
                 birthYear = fiveDays.birthYear();
                 gender = fiveDays.gender();
-
+                informedConsent = fiveDays.informedConsent();
+                sharedData = fiveDays.informedConsent();
             }
         }
 
@@ -107,7 +110,7 @@ public class WidePatientReader {
         //        findings.addAll(matchedResponses.findings());
 
         return new Patient(patientIdentifier,
-                toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender),
+                toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender, informedConsent, sharedData),
                 preTreatmentData(wideEcrfModel.preTreatments(),
                         treatmentCurator,
                         patientIdentifier,
@@ -122,6 +125,13 @@ public class WidePatientReader {
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 findings);
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public static LocalDate createInterpretDateIC(@NotNull String date) {
+        String format = "dd/MM/yyyy";
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
     }
 
     @NotNull
@@ -161,9 +171,9 @@ public class WidePatientReader {
 
     @NotNull
     private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation, @NotNull String birthYear,
-            @NotNull String gender) {
+            @NotNull String gender, @NotNull String informedConsent, @NotNull String sharedData) {
         return ImmutableBaselineData.of(null,
-                null,
+                sharedData.equals("1") ? createInterpretDateIC(informedConsent) : null,
                 convertGender(gender),
                 null,
                 birthYear.isEmpty() ? null : Integer.valueOf(birthYear),
