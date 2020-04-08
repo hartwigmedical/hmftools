@@ -1,4 +1,6 @@
-# PLEASE NOTE - THIS IS AN ARCHIVE PAGE FOR SAGE v1.1 which is no longer supported.
+#This is an archive page for SAGE v1.1 which is no longer supported.
+
+
 
 # Somatic Alterations in Genome (SAGE)
 SAGE is a somatic SNV, MNV and small INDEL caller optimised to call narrow regions of the genome with high prior chance of a variant with very high sensitivity. SAGE looks directly at the provided reference and tumor bams looking for evidence of:
