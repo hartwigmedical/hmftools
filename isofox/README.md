@@ -199,7 +199,7 @@ SplicedFragments | Count of fitted fragments assigned to spliced transcripts in 
 UnsplicedFragments | Count of fitted fragments assigned to the 'unspliced' gene transcript
 TPM | TPM for gene excluding unspliced fragments
 
-### Transcriptome level data
+### Transcript level data
 
 Field | Description 
 ---|---
