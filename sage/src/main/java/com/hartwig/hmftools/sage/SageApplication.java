@@ -25,9 +25,11 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.region.BEDFileLoader;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
+import com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.QualityRecalibration;
@@ -112,14 +114,14 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-//                ChromosomePipeline custom = createChromosomePipeline("17", recalibrationMap);
-//                custom.addAllRegions();
-//                custom.addAllRegions(1_000_000);
-//                custom.addRegion(6385360, 6385360);
-//                custom.addRegion(25268011, 25268011);
-//                custom.addRegion(79223325, 79223325);
-//                custom.addRegion(997610, 997610);
-//                chromosomePipelines.add(custom.submit());
+        //                ChromosomePipeline custom = createChromosomePipeline("17", recalibrationMap);
+        //                custom.addAllRegions();
+        //                custom.addAllRegions(1_000_000);
+        //                custom.addRegion(6385360, 6385360);
+        //                custom.addRegion(25268011, 25268011);
+        //                custom.addRegion(79223325, 79223325);
+        //                custom.addRegion(997610, 997610);
+        //                chromosomePipelines.add(custom.submit());
 
         final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
         while (chromosomeIterator.hasNext()) {
@@ -219,15 +221,16 @@ public class SageApplication implements AutoCloseable {
 
     @NotNull
     private Map<String, QualityRecalibrationMap> qualityRecalibration() throws IOException {
-        if (!config.baseQualityRecalibration()) {
+        final BaseQualityRecalibrationConfig bqrConfig = config.baseQualityRecalibrationConfig();
+
+        if (!bqrConfig.enabled()) {
             return disableQualityRecalibration();
         }
 
         final Map<String, QualityRecalibrationMap> result = Maps.newHashMap();
         LOGGER.info("Beginning quality recalibration");
 
-        final QualityRecalibration qualityRecalibration =
-                new QualityRecalibration(executorService, refGenome, config.qualityConfig().baseQualityRecalibrationMaxAltCount());
+        final QualityRecalibration qualityRecalibration = new QualityRecalibration(bqrConfig, executorService, refGenome);
 
         final List<CompletableFuture<List<QualityRecalibrationRecord>>> qualityRecalibrationFutures = Lists.newArrayList();
         for (String referenceBam : config.referenceBam()) {
@@ -239,18 +242,26 @@ public class SageApplication implements AutoCloseable {
 
         for (int i = 0; i < config.reference().size(); i++) {
             final String sample = config.reference().get(i);
+            final String file = config.baseQualityRecalibrationFile(sample);
             final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(i).join();
             result.put(sample, new QualityRecalibrationMap(records));
-            QualityRecalibrationFile.write(config.baseQualityRecalibrationFile(sample), records);
-            LOGGER.info("Writing base quality recalibration file: {}", config.baseQualityRecalibrationFile(sample));
+            QualityRecalibrationFile.write(file, records);
+            LOGGER.info("Writing base quality recalibration file: {}", file);
+            if (bqrConfig.plot()) {
+                executorService.submit(() -> RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", file));
+            }
         }
 
         for (int i = 0; i < config.tumor().size(); i++) {
             final String sample = config.tumor().get(i);
+            final String file = config.baseQualityRecalibrationFile(sample);
             final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(config.reference().size() + i).join();
             result.put(sample, new QualityRecalibrationMap(records));
-            QualityRecalibrationFile.write(config.baseQualityRecalibrationFile(sample), records);
-            LOGGER.info("Writing base quality recalibration file: {}", config.baseQualityRecalibrationFile(sample));
+            QualityRecalibrationFile.write(file, records);
+            LOGGER.info("Writing base quality recalibration file: {}", file);
+            if (bqrConfig.plot()) {
+                executorService.submit(() -> RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", file));
+            }
         }
 
         return result;

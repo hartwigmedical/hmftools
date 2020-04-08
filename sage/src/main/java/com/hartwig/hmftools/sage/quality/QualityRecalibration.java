@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -23,13 +24,14 @@ public class QualityRecalibration {
 
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
-    private final int maxAltCount;
+    private final BaseQualityRecalibrationConfig config;
     private final List<CompletableFuture<Collection<QualityCounter>>> counters = Lists.newArrayList();
 
-    public QualityRecalibration(final ExecutorService executorService, final IndexedFastaSequenceFile refGenome, final int maxAltCount) {
+    public QualityRecalibration(final BaseQualityRecalibrationConfig config, final ExecutorService executorService,
+            final IndexedFastaSequenceFile refGenome) {
         this.executorService = executorService;
         this.refGenome = refGenome;
-        this.maxAltCount = maxAltCount;
+        this.config = config;
     }
 
     @NotNull
@@ -39,7 +41,7 @@ public class QualityRecalibration {
             if (HumanChromosome.contains(sequenceRecord.getSequenceName())) {
                 final HumanChromosome chromosome = HumanChromosome.fromString(sequenceRecord.getSequenceName());
                 if (chromosome.isAutosome()) {
-                    int start = sequenceRecord.getSequenceLength() - 3_000_000;
+                    int start = sequenceRecord.getSequenceLength() - 1_000_000 - config.sampleSize();
                     int end = sequenceRecord.getSequenceLength() - 1_000_001;
                     submitAllRegions(bamFile, sequenceRecord.getSequenceName(), start, end);
                 }
@@ -75,7 +77,9 @@ public class QualityRecalibration {
 
     public void addRegion(String bam, String contig, int start, int end) {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-        counters.add(CompletableFuture.supplyAsync(() -> new QualityCounterFactory(bam, refGenome, maxAltCount).regionCount(bounds), executorService));
+        counters.add(CompletableFuture.supplyAsync(() -> new QualityCounterFactory(bam,
+                refGenome,
+                config.maxAltCount()).regionCount(bounds), executorService));
     }
 
     public void submitAllRegions(@NotNull final String bam, @NotNull final String contig, int minPosition, int maxPosition) {
