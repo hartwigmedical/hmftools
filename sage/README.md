@@ -17,6 +17,16 @@ Key features include:
   - Tumor only support
   - An internal [Base Qual Recalibration](#1-base-qual-recalibration) method
 
+## Installation
+
+To install, download the latest compiled jar file from the [download links](#version-history-and-download-links). 
+
+HG19 resources are available to download from [HMFTools-Resources > SAGE2](https://resources.hartwigmedicalfoundation.nl/). 
+HG38 resources to follow soon.
+
+R is used to generate the base quality recalibration charts. Required packages include `ggplot2`,`tidyr` and `dplyr`. 
+R is not required if the charts are disable with the `-bqr_plot false` argument. 
+
 # Usage
 
 ## Mandatory Arguments
@@ -137,11 +147,22 @@ There are 8 key steps in the SAGE algorithm described in detail below:
 
 ## 1. Base Quality Recalibration
 
-SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.  This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
+SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
+This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
 
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual} . Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
+Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
 
-For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determing the quality.   SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
+For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determing the quality. 
+SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
+These files are writing into the same directory as the output file.
+
+A typical example of the chart is shown below: 
+
+![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
+
+Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_enabled false` argument.
+The base quality recalibration chart can be independently disabled by including the `-bqr_plot false` argument.
  
 ## 2. Candidate Variants And Read Contexts
 
@@ -376,7 +397,7 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 32 | 28 | 748 | 67
 48 | 27 | 1047 | 66
 
- ## Version History
+# Version History and Download Links
  - Upcoming
    - Base Quality Recalibration
    - Improved sensitivity in high depth regions
@@ -396,5 +417,5 @@ Threads | Elapsed Time| CPU Time | Peak Mem
    - HG38 support
  - 2.0
    - Revamped small indel / SNV caller
- - 1.1
+ - 1.1 (Refer to old [README](./README_2.md) for detailed instructions)
    - SageHotspotAnnotation - Merge all info header fields from hotspots vcf with source vcf   
