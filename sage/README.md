@@ -125,7 +125,7 @@ java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  
 # Algorithm
 
-There are 7 key steps in the SAGE algorithm described in detail below:
+There are 8 key steps in the SAGE algorithm described in detail below:
   1. [Base Quality Recalibration](#1-base-quality-recalibration)
   2. [Candidate Variants And Read Contexts](#2-candidate-variants-and-read-contexts)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
