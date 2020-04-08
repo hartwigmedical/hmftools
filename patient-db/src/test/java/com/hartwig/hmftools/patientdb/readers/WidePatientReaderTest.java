@@ -9,9 +9,14 @@ import org.junit.Test;
 public class WidePatientReaderTest {
 
     @Test
-    public void canInterpretDate() {
-        assertEquals(WidePatientReader.createInterpretDate("18-apr-2019").toString(), "2019-04-18");
-        assertEquals(WidePatientReader.createInterpretDate("17-okt-2018").toString(), "2018-10-17");
+    public void canInterpretDateNL() {
+        assertEquals(WidePatientReader.createInterpretDateNL("18-apr-2019").toString(), "2019-04-18");
+        assertEquals(WidePatientReader.createInterpretDateNL("17-okt-2018").toString(), "2018-10-17");
+    }
+
+    @Test
+    public void canInterpretDateEN() {
+        assertEquals(WidePatientReader.createInterpretDateEN("21-May-2019").toString(), "2019-05-21");
     }
 
 
