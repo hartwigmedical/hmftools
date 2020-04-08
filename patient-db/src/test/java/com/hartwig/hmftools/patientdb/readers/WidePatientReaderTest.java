@@ -33,6 +33,11 @@ public class WidePatientReaderTest {
         assertEquals(WidePatientReader.createInterpretDateIC("12/04/2019").toString(), "2019-04-12");
     }
 
+    @Test
+    public void canConvertStringToDate() {
+        assertEquals(WidePatientReader.convertStringToLocalDate("2018-10-17").toString(), "2018-10-17");
+    }
+
     //    @Test
     //    @Ignore
     //    public void canLoadEmptyPatient() {

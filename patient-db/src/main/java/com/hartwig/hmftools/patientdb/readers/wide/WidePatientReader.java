@@ -63,32 +63,50 @@ public class WidePatientReader {
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String sampleId) {
 
-//        LocalDate biopsyDateCheck = LocalDate.of(0000, 00, 00);
-//        for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
-//            if (patientIdentifier.equals(biopsy.wideId())) {
-//                if (biopsy.tissueId().equals(lims.hospitalPathologySampleId("FR17437144"))) {
-//                    biopsyDateCheck = createInterpretDateNL(biopsy.bioptDate());
-//                }
-//            }
-//        }
+        String biopsyDateCheck = Strings.EMPTY;
+        for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
+            if (patientIdentifier.equals(biopsy.wideId())) {
+                LOGGER.info("Tissue ecrf: " + biopsy.tissueId() + "tissue lims: " + lims.hospitalPathologySampleId("XXX"));
+                if (biopsy.tissueId().equals("XXX")) {
+                    biopsyDateCheck = createInterpretDateNL(biopsy.bioptDate()).toString();
+                }
+            }
+        }
 
         String birthYear = Strings.EMPTY;
         String gender = Strings.EMPTY;
         String informedConsent = Strings.EMPTY;
         String sharedData = Strings.EMPTY;
+        String biopsySite = Strings.EMPTY;
+        String sampleTissue = Strings.EMPTY;
 
         for (WideFiveDays fiveDays : wideEcrfModel.fiveDays()) {
             if (patientIdentifier.equals(fiveDays.wideId())) {
-                birthYear = fiveDays.birthYear();
-                gender = fiveDays.gender();
-                informedConsent = fiveDays.informedConsent();
-                sharedData = fiveDays.informedConsent();
+                if (!fiveDays.dateBiopsy().equals(Strings.EMPTY) && !biopsyDateCheck.equals(Strings.EMPTY)) {
+                    if (createInterpretDateEN(fiveDays.dateBiopsy()).equals(convertStringToLocalDate(biopsyDateCheck))) {
+                        birthYear = fiveDays.birthYear();
+                        gender = fiveDays.gender();
+                        informedConsent = fiveDays.informedConsent();
+                        sharedData = fiveDays.dateShared();
+                        biopsySite = fiveDays.biopsySite();
+                        sampleTissue = fiveDays.sampleTissue();
+                    }
+                }
             }
         }
 
+
+
+
         LocalDate biopsyDate = bioptDate(wideEcrfModel.biopsies(), patientIdentifier);
 
-     //   toBiopsyData(wideEcrfModel.fiveDays(), biopsySiteCurator, patientIdentifier, biopsyDateCheck);
+        List<BiopsyData> matchedBiopsy = toBiopsyData(wideEcrfModel.fiveDays(),
+                biopsySiteCurator,
+                patientIdentifier,
+                biopsyDateCheck,
+                biopsySite,
+                sampleTissue,
+                tumorLocationCurator.search(primaryTumorLocation));
 
         //        MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
         //                sequencedSamples,
@@ -117,7 +135,7 @@ public class WidePatientReader {
                         biopsyDate,
                         wideEcrfModel.treatments()),
                 sequencedSamples,
-                Lists.newArrayList(),
+                matchedBiopsy,
                 Lists.newArrayList(),
                 //matchedTreatments.values(),
                 Lists.newArrayList(),
@@ -131,6 +149,13 @@ public class WidePatientReader {
     @VisibleForTesting
     public static LocalDate createInterpretDateIC(@NotNull String date) {
         String format = "dd/MM/yyyy";
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public static LocalDate convertStringToLocalDate(@NotNull String date) {
+        String format = "yyyy-MM-dd";
         return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
     }
 
@@ -173,7 +198,7 @@ public class WidePatientReader {
     private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation, @NotNull String birthYear,
             @NotNull String gender, @NotNull String informedConsent, @NotNull String sharedData) {
         return ImmutableBaselineData.of(null,
-                sharedData.equals("1") ? createInterpretDateIC(informedConsent) : null,
+                sharedData.equals("1") && !informedConsent.isEmpty() ? createInterpretDateIC(informedConsent) : null,
                 convertGender(gender),
                 null,
                 birthYear.isEmpty() ? null : Integer.valueOf(birthYear),
@@ -287,16 +312,18 @@ public class WidePatientReader {
 
     @NotNull
     private static List<BiopsyData> toBiopsyData(@NotNull List<WideFiveDays> wideBiopsyData, @NotNull BiopsySiteCurator biopsySiteCurator,
-            @NotNull String patientIdentifier, @NotNull LocalDate biopsyCheck) {
+            @NotNull String patientIdentifier, @NotNull String biopsyCheck, @NotNull String biopsySite, @NotNull String sampleTissue,
+            @NotNull CuratedTumorLocation curatedTumorLocation) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
-        final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
+        final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
+                curatedTumorLocation.subType(),
+                biopsySite,
+                sampleTissue);
 
         for (WideFiveDays biopsyData : wideBiopsyData) {
             if (patientIdentifier.equals(biopsyData.wideId())) {
-                LOGGER.info(biopsyData.dateBiopsy());
-                LOGGER.info(biopsyCheck);
-                if (!biopsyData.dateBiopsy().equals(Strings.EMPTY)) {
-                    if (createInterpretDateEN(biopsyData.dateBiopsy()).equals(biopsyCheck)) {
+                if (!biopsyData.dateBiopsy().equals(Strings.EMPTY) && !biopsyCheck.equals(Strings.EMPTY)) {
+                    if (createInterpretDateEN(biopsyData.dateBiopsy()).equals(convertStringToLocalDate(biopsyCheck))) {
                         biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.dateBiopsy().isEmpty()
                                         ? null
                                         : createInterpretDateEN(biopsyData.dateBiopsy()),
@@ -306,14 +333,14 @@ public class WidePatientReader {
                                 biopsyData.biopsySite(),
                                 biopsyData.sampleTissue(),
                                 FormStatus.undefined()));
-                        LOGGER.info(biopsyDataList);
 
                     }
-                }
 
+                }
             }
 
         }
+
         return biopsyDataList;
 
     }
