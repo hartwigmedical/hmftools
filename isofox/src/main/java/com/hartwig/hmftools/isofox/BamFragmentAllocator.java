@@ -248,15 +248,15 @@ public class BamFragmentAllocator
             - not supporting any transcript - eg alternative splice sites or unspliced reads
         */
 
-        if(read1.IsDuplicate || read2.IsDuplicate)
-            mCurrentGenes.addCount(DUPLICATE, 1);
-
         final long[] genesRange = mCurrentGenes.regionBounds();
         boolean r1OutsideGene = read1.PosStart > genesRange[SE_END] || read1.PosEnd < genesRange[SE_START];
         boolean r2OutsideGene = read2.PosStart > genesRange[SE_END] || read2.PosEnd < genesRange[SE_START];
 
         if(r1OutsideGene && r2OutsideGene)
             return;
+
+        if(read1.IsDuplicate || read2.IsDuplicate)
+            mCurrentGenes.addCount(DUPLICATE, 1);
 
         long readPosMin = min(read1.PosStart, read2.PosStart);
         long readPosMax = max(read1.PosEnd, read2.PosEnd);
