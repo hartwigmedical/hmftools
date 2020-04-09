@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.isofox.exp_rates;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -16,6 +20,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -23,7 +28,7 @@ import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
 
-public class ExpectedTransRates
+public class TranscriptExpression
 {
     private final IsofoxConfig mConfig;
     private final ResultsWriter mResultsWriter;
@@ -31,7 +36,7 @@ public class ExpectedTransRates
 
     private ExpectedRatesData mCurrentExpRatesData;
 
-    public ExpectedTransRates(final IsofoxConfig config, final ExpectedCountsCache cache, final ResultsWriter resultsWriter)
+    public TranscriptExpression(final IsofoxConfig config, final ExpectedCountsCache cache, final ResultsWriter resultsWriter)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
@@ -40,9 +45,9 @@ public class ExpectedTransRates
         mCurrentExpRatesData = null;
     }
 
-    public static ExpectedTransRates from(final IsofoxConfig config)
+    public static TranscriptExpression from(final IsofoxConfig config)
     {
-        return new ExpectedTransRates(config, null,null);
+        return new TranscriptExpression(config, null,null);
     }
 
     public boolean validData()
@@ -119,6 +124,103 @@ public class ExpectedTransRates
         }
     }
 
+    private static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
+    private static final int RAW_TPM = 0;
+    private static final int ADJUSTED_TPM = 1;
+    private static final double TPM_MILLION = 1000000;
+
+    public static double[] calcTpmFactors(final List<GeneCollectionSummary> geneSummaryData, final List<String> enrichedGeneIds)
+    {
+        // exclude enriched genes and cap the contribution of any one gene to 1%
+        double[] results = {0, 0};
+
+        List<Double> fragsPerKbSet = Lists.newArrayListWithExpectedSize(200000);
+
+        double maxFragPerKb = 0;
+        double fragsPerKbTotal = 0;
+        double rawFragsPerKbTotal = 0;
+        double minorsTotal = 0;
+
+        for(final GeneCollectionSummary summaryData : geneSummaryData)
+        {
+            for(final TranscriptResult transResult : summaryData.TranscriptResults)
+            {
+                double fragsPerKb = transResult.fragmentsPerKb();
+
+                rawFragsPerKbTotal += fragsPerKb;
+
+                if(enrichedGeneIds.contains(transResult.Trans.GeneId))
+                    continue;
+
+                if(fragsPerKb < 0.5)
+                {
+                    minorsTotal += fragsPerKb;
+                    fragsPerKbTotal += fragsPerKb;
+                }
+                else
+                {
+                    fragsPerKbSet.add(fragsPerKb);
+                    fragsPerKbTotal += fragsPerKb;
+                    maxFragPerKb = max(maxFragPerKb, fragsPerKb);
+                }
+            }
+        }
+
+        results[RAW_TPM] = rawFragsPerKbTotal / TPM_MILLION;
+
+        if(maxFragPerKb <= MAX_GENE_PERC_CONTRIBUTION * fragsPerKbTotal)
+        {
+            results[ADJUSTED_TPM] = fragsPerKbTotal / TPM_MILLION;
+        }
+        else
+        {
+            int iterations = 0;
+            int maxIterations = 10;
+
+            double maxFragsPerKbTotal = fragsPerKbTotal;
+            double nextFragsPerKbTotal = fragsPerKbTotal * 0.5;
+            double minFragsPerKbTotal = 0;
+
+            // frag total is initially too high so halve it (the new min) and set the max to this value
+            //
+
+            while (iterations < maxIterations)
+            {
+                double maxAllowedContrib = nextFragsPerKbTotal * MAX_GENE_PERC_CONTRIBUTION;
+                double maxFragValue = 0;
+                fragsPerKbTotal = 0;
+                for(Double fragsPerKb : fragsPerKbSet)
+                {
+                    double fragValue = min(fragsPerKb, maxAllowedContrib);
+                    maxFragValue = max(maxFragValue, fragValue);
+                    fragsPerKbTotal += fragValue;
+                }
+
+                double maxGeneContribPerc = maxFragValue / fragsPerKbTotal;
+
+                if(abs(maxGeneContribPerc - MAX_GENE_PERC_CONTRIBUTION) < 0.001)
+                    break;
+
+                if (maxGeneContribPerc > MAX_GENE_PERC_CONTRIBUTION)
+                {
+                    maxFragsPerKbTotal = fragsPerKbTotal;
+                    nextFragsPerKbTotal = max(fragsPerKbTotal * 0.5, minFragsPerKbTotal);
+                }
+                else
+                {
+                    // frag total was too low
+                    minFragsPerKbTotal = fragsPerKbTotal;
+                    nextFragsPerKbTotal = (fragsPerKbTotal + maxFragsPerKbTotal) * 0.5;
+                }
+
+                ++iterations;
+            }
+        }
+
+        results[ADJUSTED_TPM] = fragsPerKbTotal / TPM_MILLION;
+        return results;
+    }
+
     public static double calcTotalTranscriptExpression(final List<GeneCollectionSummary> geneSummaryData)
     {
         double totalFragsPerKb = 0;
@@ -131,27 +233,36 @@ public class ExpectedTransRates
         return totalFragsPerKb;
     }
 
-    public static void setTranscriptsPerMillion(final List<GeneCollectionSummary> geneSummaryData, double tpmFactor)
+    public static void setTranscriptsPerMillion(
+            final List<GeneCollectionSummary> geneSummaryData, double[] tmpFactors)
     {
         for(final GeneCollectionSummary summaryData : geneSummaryData)
         {
-            Map<String,Double> geneTPMs = Maps.newHashMap();
+            Map<String,double[]> geneTPMs = Maps.newHashMap();
 
             for(TranscriptResult transResult : summaryData.TranscriptResults)
             {
-                double tpm = transResult.fragmentsPerKb()/tpmFactor;
-                transResult.setTPM(tpm);
+                double fragsPerKb = transResult.fragmentsPerKb();
+                double rawTpm = fragsPerKb/tmpFactors[RAW_TPM];
+                double adjustedTpm = fragsPerKb/tmpFactors[ADJUSTED_TPM];
+                transResult.setTPM(rawTpm, adjustedTpm);
 
-                Double geneTpm = geneTPMs.get(transResult.Trans.GeneId);
+                double[] geneTpm = geneTPMs.get(transResult.Trans.GeneId);
                 if(geneTpm == null)
-                    geneTPMs.put(transResult.Trans.GeneId, tpm);
+                {
+                    geneTPMs.put(transResult.Trans.GeneId, new double[] { rawTpm, adjustedTpm });
+                }
                 else
-                    geneTPMs.put(transResult.Trans.GeneId, geneTpm + tpm);
+                {
+                    geneTpm[RAW_TPM] += rawTpm;
+                    geneTpm[ADJUSTED_TPM] += adjustedTpm;
+                }
             }
 
             for(GeneResult geneResult : summaryData.GeneResults)
             {
-                geneResult.setTPM(geneTPMs.get(geneResult.GeneData.GeneId));
+                final double[] geneTpm = geneTPMs.get(geneResult.GeneData.GeneId);
+                geneResult.setTPM(geneTpm[RAW_TPM], geneTpm[ADJUSTED_TPM]);
             }
         }
     }

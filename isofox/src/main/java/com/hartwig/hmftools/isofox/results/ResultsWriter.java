@@ -31,7 +31,7 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
+import com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
 import com.hartwig.hmftools.isofox.novel.RetainedIntronFinder;
@@ -127,7 +127,7 @@ public class ResultsWriter
                 mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
 
             if(mConfig.WriteTransComboData)
-                mCategoryCountsWriter = ExpectedTransRates.createWriter(mConfig);
+                mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
         }
     }
 

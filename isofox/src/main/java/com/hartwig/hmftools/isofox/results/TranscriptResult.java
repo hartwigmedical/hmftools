@@ -37,7 +37,8 @@ public class TranscriptResult
 
     private double mFitAllocation;
     private double mRawFitAllocation;
-    private double mTPM;
+    private double mRawTpm;
+    private double mAdjustedTpm;
 
     public TranscriptResult(
             final GeneCollection geneCollection, final GeneReadData geneReadData, final TranscriptData transData,
@@ -96,12 +97,19 @@ public class TranscriptResult
 
         mFitAllocation = 0;
         mRawFitAllocation = 0;
-        mTPM = 0;
+        mRawTpm = 0;
+        mAdjustedTpm = 0;
     }
 
     public void setFitAllocation(double alloc) { mFitAllocation = alloc; }
     public void setPreGcFitAllocation(double alloc) { mRawFitAllocation = alloc; }
-    public void setTPM(double tpm) { mTPM = tpm; }
+
+    public void setTPM(double raw, double adjusted)
+    {
+        mRawTpm = raw;
+        mAdjustedTpm = adjusted;
+    }
+
     public double getFitAllocation() { return mFitAllocation; }
 
     public static double calcEffectiveLength(int transLength, final List<int[]> fragmentLengthData)
@@ -153,9 +161,9 @@ public class TranscriptResult
         return true;
     }
 
-    public static final String FLD_FITTED_FRAGMENTS = "FitAllocation";
+    public static final String FLD_FITTED_FRAGMENTS = "FittedFragments";
     public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
-    public static final String FLD_TPM = "TPM";
+    public static final String FLD_TPM = "AdjTPM";
 
     public static String csvHeader()
     {
@@ -170,6 +178,7 @@ public class TranscriptResult
                 .add(FLD_FITTED_FRAGMENTS)
                 .add("RawFittedFragments")
                 .add(FLD_TPM)
+                .add("RawTPM")
                 .add("TranscriptBasesCovered")
                 .add("SJSupported")
                 .add("UniqueSJSupported")
@@ -190,7 +199,8 @@ public class TranscriptResult
                 .add(String.format("%.0f", EffectiveLength))
                 .add(String.format("%.1f", mFitAllocation))
                 .add(String.format("%.1f", mRawFitAllocation))
-                .add(String.format("%6.3e", mTPM))
+                .add(String.format("%6.3e", mAdjustedTpm))
+                .add(String.format("%6.3e", mRawTpm))
                 .add(String.valueOf(ExonicBasesCovered))
                 .add(String.valueOf(SpliceJunctionsSupported))
                 .add(String.valueOf(UniqueSpliceJunctionsSupported))

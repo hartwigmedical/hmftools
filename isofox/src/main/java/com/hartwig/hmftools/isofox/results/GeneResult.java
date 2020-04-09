@@ -32,7 +32,8 @@ public class GeneResult
 
     private double mSplicedAlloc;
     private double mUnsplicedAlloc;
-    private double mTPM;
+    private double mRawTpm;
+    private double mAdjustedTpm;
     private double mFitResiduals;
 
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
@@ -46,7 +47,8 @@ public class GeneResult
 
         mFitResiduals = 0;
         mSplicedAlloc = 0;
-        mTPM = 0;
+        mRawTpm = 0;
+        mAdjustedTpm = 0;
         mUnsplicedAlloc = 0;
     }
 
@@ -56,7 +58,11 @@ public class GeneResult
         mUnsplicedAlloc = unsplicedAlloc;
     }
 
-    public void setTPM(double tpm) { mTPM = tpm; }
+    public void setTPM(double raw, double adjusted)
+    {
+        mRawTpm = raw;
+        mAdjustedTpm = adjusted;
+    }
 
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
@@ -77,6 +83,7 @@ public class GeneResult
                 .add("SplicedFragments")
                 .add("UnsplicedFragments")
                 .add(FLD_TPM)
+                .add("RawTPM")
                 .add("FitResiduals")
                 .toString();
     }
@@ -93,7 +100,8 @@ public class GeneResult
                 .add(CollectionId)
                 .add(String.format("%.0f", mSplicedAlloc))
                 .add(String.format("%.0f", mUnsplicedAlloc))
-                .add(String.format("%6.3e", mTPM))
+                .add(String.format("%6.3e", mAdjustedTpm))
+                .add(String.format("%6.3e", mRawTpm))
                 .add(String.format("%.1f", getFitResiduals()))
                 .toString();
     }

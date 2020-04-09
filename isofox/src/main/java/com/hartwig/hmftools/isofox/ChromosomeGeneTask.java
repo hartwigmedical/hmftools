@@ -27,7 +27,7 @@ import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
-import com.hartwig.hmftools.isofox.exp_rates.ExpectedTransRates;
+import com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression;
 import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
@@ -43,7 +43,7 @@ public class ChromosomeGeneTask implements Callable
     private final ResultsWriter mResultsWriter;
 
     private final BamFragmentAllocator mBamFragmentAllocator;
-    private final ExpectedTransRates mExpTransRates;
+    private final TranscriptExpression mExpTransRates;
     private final ExpectedRatesGenerator mExpRatesGenerator;
     private final GcTranscriptCalculator mTranscriptGcRatios;
     private final FragmentSizeCalcs mFragmentSizeCalc;
@@ -93,7 +93,7 @@ public class ChromosomeGeneTask implements Callable
         mExpectedCountsCache = expectedCountsCache;
 
         mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
-        mExpTransRates = mConfig.ApplyExpectedRates ? new ExpectedTransRates(mConfig, mExpectedCountsCache, resultsWriter) : null;
+        mExpTransRates = mConfig.ApplyExpectedRates ? new TranscriptExpression(mConfig, mExpectedCountsCache, resultsWriter) : null;
 
         mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.WriteExpectedCounts
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
