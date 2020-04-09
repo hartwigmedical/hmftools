@@ -32,6 +32,8 @@ import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
+import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
+import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,6 +65,10 @@ public class WidePatientReader {
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String sampleId) {
+
+        //        for (String barcodes: lims.sampleBarcodes()) {
+        //            LOGGER.info("sampleIdId: " + lims.sampleId(barcodes) + " barcode: " + barcodes + " tissueId: " + lims.hospitalPathologySampleId(barcodes));
+        //        }
 
         String biopsyDateCheck = Strings.EMPTY;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
@@ -96,9 +102,6 @@ public class WidePatientReader {
             }
         }
 
-
-
-
         LocalDate biopsyDate = bioptDate(wideEcrfModel.biopsies(), patientIdentifier);
 
         List<BiopsyData> biopsyData = toBiopsyData(wideEcrfModel.fiveDays(),
@@ -109,19 +112,18 @@ public class WidePatientReader {
                 sampleTissue,
                 tumorLocationCurator.search(primaryTumorLocation));
 
-                MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
-                        sequencedSamples,
-                        biopsyData);
+        MatchResult<BiopsyData> matchedBiopsies =
+                BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier, sequencedSamples, biopsyData);
 
-        //        MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
-        //                withSampleMatchOnly(matchedBiopsies),
-        //                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier, biopsyDate));
-        //
-        //        // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
-        //        MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
-        //                patientIdentifier,
-        //                matchedTreatments.values(),
-        //                toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
+        MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
+                withSampleMatchOnly(matchedBiopsies),
+                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier, biopsyDate));
+
+        // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
+        MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
+                patientIdentifier,
+                matchedTreatments.values(),
+                toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
 
         final List<ValidationFinding> findings = Lists.newArrayList();
         //        findings.addAll(matchedBiopsies.findings());
@@ -137,10 +139,8 @@ public class WidePatientReader {
                         wideEcrfModel.treatments()),
                 sequencedSamples,
                 matchedBiopsies.values(),
-                Lists.newArrayList(),
-                //matchedTreatments.values(),
-                Lists.newArrayList(),
-                //matchedResponses.values(),
+                matchedTreatments.values(),
+                matchedResponses.values(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 findings);
