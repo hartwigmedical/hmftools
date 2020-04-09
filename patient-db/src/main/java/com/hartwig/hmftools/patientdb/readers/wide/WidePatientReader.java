@@ -341,7 +341,7 @@ public class WidePatientReader {
             }
 
         }
-
+        LOGGER.info(biopsyDataList);
         return biopsyDataList;
 
     }
@@ -361,6 +361,7 @@ public class WidePatientReader {
                 }
             }
         }
+        LOGGER.info(biopsyTreatmentDataList);
         return biopsyTreatmentDataList;
     }
 
@@ -387,12 +388,31 @@ public class WidePatientReader {
             if (patientIdentifier.equals(responseData.patientId())) {
                 biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
                         createInterpretDateNL(responseData.date().isEmpty() ? Strings.EMPTY : responseData.date()),
-                        null,
+                        determineResponse(responseData),
                         "yes",
                         null,
                         FormStatus.undefined()));
             }
         }
+
+        LOGGER.info(biopsyTreatmentResponseDataList);
         return biopsyTreatmentResponseDataList;
+    }
+
+    @NotNull
+    private static String determineResponse(@NotNull WideResponseData responseData) {
+        String response = Strings.EMPTY;
+        if (responseData.recistNotDone().equals("FALSE")) {
+            response = responseData.responseAccordingRecist();
+        } else if (responseData.recistNotDone().equals("WAAR")) { //change to TRUE
+            response = responseData.clinicalDecision();
+            if (!response.contains("clinical benifit (continuation of treatment)") && !response.isEmpty()) {
+                response = response + " (" + responseData.reasonStopTreatment() + ")";
+                if (!responseData.reasonStopTreatmentOther().isEmpty()) {
+                    response = response.replace(")", " + " + responseData.reasonStopTreatmentOther() + ")");
+                }
+            }
+        }
+        return response;
     }
 }
