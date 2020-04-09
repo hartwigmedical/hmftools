@@ -12,9 +12,9 @@ ISOFOX uses a similar methodology to several previous transcript abundance estim
 
 We recommend to mark duplicates in your pipeline.  They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.   
 
-### A note on TPM
+### Raw and adjusted TPM
 
-<TO DO>
+<DOCUMENT>
 
 ## Install
 
