@@ -102,8 +102,6 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 
 <TO DO - decide on min max GC range and also max ratio change for GC Bias>
 
-To avoid overfitting very highly expressed genes or transcripts, genes with more than X% of fragments are ignored in both expected and actual counts. <TO DO - refine this rule>
-
 
 ##### B. Fragment Length Bias
 
