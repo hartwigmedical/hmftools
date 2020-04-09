@@ -107,22 +107,21 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 To avoid overfitting very highly expressed genes or transcripts, genes with more than X% of fragments are ignored in both expected and actual counts. <TO DO - refine this rule>
 
 
-
 ##### B. Fragment Length Bias
 
-TO DO
+<TO DO>
 
 #### C. Sequence Start Specific Bias
 
-TO DO 
+<TO DO> 
 
 #### D. 5' CAP bias
 
-TO DO
+<TO DO>
 
 #### E. Adjust expected rates for biases and restimate abundances per transcript
 
-TO DO - Apply adjustments to the expected rates.   Then repeat step 5.
+The calculated biases are applied as a weighting to each raw fragment based on it's GC, positional and fragment length characteristics.  Steps 4 and 5 are then repeated.
 
 
 ### 7. Counting and characterisation of novel splice junctions
@@ -152,15 +151,14 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 <TO DO - Add filtering that the read count must signiificantly exceed the unspliced coverage of all gene overlapping that base>
 
+<TO DO - Combine intron retention and novel splice site information>
+ 
+ 
 ### 9. Counting and characterisation of chimeric and read through junctions
 
 <TO DO>
 
-### 10. Annotation of novel splice features
-
-<TO DO - Combine intron retention and novel splice site information>
-
-### 11. Panel of Normals  <TO DO>
+### 10. Panel of Normals  <TO DO>
 
 We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
 
