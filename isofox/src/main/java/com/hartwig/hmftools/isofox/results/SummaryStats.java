@@ -1,6 +1,14 @@
 package com.hartwig.hmftools.isofox.results;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
+import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
+import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
+import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.IOException;
@@ -12,6 +20,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
+import com.sun.org.apache.bcel.internal.generic.DUP;
 
 import org.immutables.value.Value;
 
@@ -20,8 +29,13 @@ public abstract class SummaryStats
 {
     public abstract String version();
 
-    public abstract int totalFragmentCount();
-    public abstract int duplicateReadCount();
+    public abstract int totalFragments();
+    public abstract int duplicateFragments();
+    public abstract double splicedFragmentPerc();
+    public abstract double unsplicedFragmentPerc();
+    public abstract double altFragmentPerc();
+    public abstract double readThroughFragmentPerc();
+    public abstract double chimericFragmentPerc();
 
     public abstract int readLength();
 
@@ -37,31 +51,41 @@ public abstract class SummaryStats
     public abstract double medianGCRatio();
 
     public static SummaryStats createSummaryStats(
-            int totalFragmentCount, int enrichedGeneFragCount, int duplicateReadCount,
+            final int[] totalCounts, int enrichedGeneFragCount,
             double medianGCRatio, final List<int[]> fragmentLengths, int maxReadLength)
     {
         final VersionInfo version = new VersionInfo("isofox.version");
-        double enrichedGenePercent = totalFragmentCount > 0 ? enrichedGeneFragCount / (double)totalFragmentCount : 0;
+
+        int totalFragments = totalCounts[typeAsInt(TOTAL)];
+        int totalDuplicates = totalCounts[typeAsInt(DUPLICATE)];
+        double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / (double)totalFragments : 0;
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
         return ImmutableSummaryStats.builder()
                 .version(version.version())
-                .totalFragmentCount(totalFragmentCount)
-                .duplicateReadCount(duplicateReadCount)
+                .totalFragments(totalFragments)
+                .duplicateFragments(totalDuplicates)
+                .splicedFragmentPerc(totalCounts[typeAsInt(TRANS_SUPPORTING)] / (double)totalFragments)
+                .unsplicedFragmentPerc(totalCounts[typeAsInt(UNSPLICED)] / (double)totalFragments)
+                .altFragmentPerc(totalCounts[typeAsInt(ALT)] / (double)totalFragments)
+                .readThroughFragmentPerc(totalCounts[typeAsInt(READ_THROUGH)] / (double)totalFragments)
+                .chimericFragmentPerc(totalCounts[typeAsInt(CHIMERIC)] / (double)totalFragments)
                 .readLength(maxReadLength)
-                .enrichedGenePercent(enrichedGenePercent)
-                .medianGCRatio(medianGCRatio)
                 .fragmentLength5thPercent(!fragLengths.isEmpty() ? fragLengths.get(0) : 0)
                 .fragmentLength50thPercent(!fragLengths.isEmpty() ? fragLengths.get(1) : 0)
                 .fragmentLength95thPercent(!fragLengths.isEmpty() ? fragLengths.get(2) : 0)
+                .enrichedGenePercent(enrichedGenePercent)
+                .medianGCRatio(medianGCRatio)
                 .build();
     }
 
     public static String csvHeader()
     {
-        return "SampleId,Version,TotalFragments,ReadLength,FragLength5th,FragLength50th,FragLength95th"
-                + ",EnrichedGenePercent,MedianGCRatio,DuplicateReads";
+        return "SampleId,Version,TotalFragments,DuplicateFragments"
+                + ",SplicedFragmentPerc,UnsplicedFragmentPerc,AltFragmentPerc,ReadThroughFragmentPerc,ChimericFragmentPerc"
+                + ",ReadLength,FragLength5th,FragLength50th,FragLength95th"
+                + ",EnrichedGenePercent,MedianGCRatio";
     }
 
     public String toCsv(final String sampleId)
@@ -69,14 +93,19 @@ public abstract class SummaryStats
         return new StringJoiner(DELIMITER)
                 .add(sampleId)
                 .add(version())
-                .add(String.valueOf(totalFragmentCount()))
+                .add(String.valueOf(totalFragments()))
+                .add(String.valueOf(duplicateFragments()))
+                .add(String.format("%.3f", splicedFragmentPerc()))
+                .add(String.format("%.3f", unsplicedFragmentPerc()))
+                .add(String.format("%.3f", altFragmentPerc()))
+                .add(String.format("%.3f", readThroughFragmentPerc()))
+                .add(String.format("%.3f", chimericFragmentPerc()))
                 .add(String.valueOf(readLength()))
                 .add(String.format("%.0f", fragmentLength5thPercent()))
                 .add(String.format("%.0f", fragmentLength50thPercent()))
                 .add(String.format("%.0f", fragmentLength95thPercent()))
                 .add(String.format("%.3f", enrichedGenePercent()))
                 .add(String.format("%.3f", medianGCRatio()))
-                .add(String.valueOf(duplicateReadCount()))
                 .toString();
     }
 
@@ -87,14 +116,20 @@ public abstract class SummaryStats
 
         return ImmutableSummaryStats.builder()
                 .version(items[index++])
-                .totalFragmentCount(Integer.parseInt(items[index++]))
+                .totalFragments(Integer.parseInt(items[index++]))
+                .duplicateFragments(Integer.parseInt(items[index++]))
+                .splicedFragmentPerc(Double.parseDouble(items[index++]))
+                .unsplicedFragmentPerc(Double.parseDouble(items[index++]))
+                .altFragmentPerc(Double.parseDouble(items[index++]))
+                .readThroughFragmentPerc(Double.parseDouble(items[index++]))
+                .chimericFragmentPerc(Double.parseDouble(items[index++]))
                 .readLength(Integer.parseInt(items[index++]))
                 .fragmentLength5thPercent(Double.parseDouble(items[index++]))
                 .fragmentLength50thPercent(Double.parseDouble(items[index++]))
                 .fragmentLength95thPercent(Double.parseDouble(items[index++]))
                 .enrichedGenePercent(Double.parseDouble(items[index++]))
                 .medianGCRatio(Double.parseDouble(items[index++]))
-                .duplicateReadCount(index < items.length ? Integer.parseInt(items[index++]) : 0)
+                .duplicateFragments(index < items.length ? Integer.parseInt(items[index++]) : 0)
                 .build();
     }
 

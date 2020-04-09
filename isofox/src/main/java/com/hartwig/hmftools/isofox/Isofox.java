@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.isofox.TaskType.FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.GENERATE_TRANSCRIPT_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
-import static com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression.calcTotalTranscriptExpression;
+import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
@@ -31,7 +31,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -41,6 +40,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
@@ -55,7 +55,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.lucene.search.Collector;
 import org.jetbrains.annotations.NotNull;
 
 public class Isofox
@@ -143,10 +142,17 @@ public class Isofox
         if(!mConfig.generateExpectedDataOnly())
         {
             int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.getFragmentAllocator().totalReadCount()).sum();
-            int totalDuplicateReads = chrTasks.stream().mapToInt(x -> x.getFragmentAllocator().duplicateReadCount()).sum();
             ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
-            int totalFragCount = chrTasks.stream().mapToInt(x -> x.getTotalFragmentCount()).sum();
+
+            int[] totalCounts = new int[typeAsInt(FragmentType.MAX)];
+
+            for(int i = 0; i < totalCounts.length; ++i)
+            {
+                final int fragIndex = i;
+                totalCounts[i] += chrTasks.stream().mapToInt(x -> x.getCombinedCounts()[fragIndex]).sum();
+            }
+
             int enrichedGeneFragCount = chrTasks.stream().mapToInt(x -> x.getEnrichedGenesFragmentCount()).sum();
 
             GcRatioCounts nonEnrichedGcRatioCounts = new GcRatioCounts();
@@ -159,7 +165,7 @@ public class Isofox
             }
 
             final SummaryStats summaryStats = createSummaryStats(
-                    totalFragCount, enrichedGeneFragCount, totalDuplicateReads,
+                    totalCounts, enrichedGeneFragCount,
                     medianGCRatio, mFragmentLengthDistribution, mConfig.ReadLength);
 
             mResultsWriter.writeSummaryStats(summaryStats);

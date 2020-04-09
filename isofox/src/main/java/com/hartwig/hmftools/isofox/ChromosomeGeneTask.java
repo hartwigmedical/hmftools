@@ -2,6 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_FRAGMENT_BUFFER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
@@ -21,6 +22,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
@@ -57,7 +59,7 @@ public class ChromosomeGeneTask implements Callable
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
     private int mEnrichedGenesFragmentCount;
-    private int mTotalFragmentCount;
+    private final int[] mCombinedFragmentCounts;
     private final GcRatioCounts mNonEnrichedGcRatioCounts;
 
     private TaskType mCurrentTaskType;
@@ -102,7 +104,7 @@ public class ChromosomeGeneTask implements Callable
 
         mGeneCollectionSummaryData = Lists.newArrayList();
         mEnrichedGenesFragmentCount = 0;
-        mTotalFragmentCount = 0;
+        mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
 
         mPerfCounters = new PerformanceCounter[PERF_MAX];
@@ -407,7 +409,10 @@ public class ChromosomeGeneTask implements Callable
                 mNonEnrichedGcRatioCounts.mergeRatioCounts(mBamFragmentAllocator.getGeneGcRatioCounts().getCounts());
         }
 
-        mTotalFragmentCount += geneCollection.getCounts()[typeAsInt(TOTAL)];
+        for(int i = 0; i < mCombinedFragmentCounts.length; ++i)
+        {
+            mCombinedFragmentCounts[i] += geneCollection.getCounts()[i];
+        }
 
         geneCollectionSummary.allocateResidualsToGenes();
         mResultsWriter.writeGeneCollectionData(geneCollection);
@@ -466,7 +471,7 @@ public class ChromosomeGeneTask implements Callable
     }
 
     public int getEnrichedGenesFragmentCount() { return mEnrichedGenesFragmentCount; }
-    public int getTotalFragmentCount() { return mTotalFragmentCount; }
+    public int[] getCombinedCounts() { return mCombinedFragmentCounts; }
     public GcRatioCounts getNonEnrichedGcRatioCounts() { return mNonEnrichedGcRatioCounts; }
 
     public void writeResults()

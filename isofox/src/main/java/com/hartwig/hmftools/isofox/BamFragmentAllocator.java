@@ -76,7 +76,6 @@ public class BamFragmentAllocator
 
     private int mGeneReadCount;
     private int mTotalBamReadCount;
-    private int mTotalDuplicateCount;
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
@@ -102,7 +101,6 @@ public class BamFragmentAllocator
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
-        mTotalDuplicateCount = 0;
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
@@ -121,7 +119,6 @@ public class BamFragmentAllocator
     }
 
     public int totalReadCount() { return mTotalBamReadCount; }
-    public int duplicateReadCount() { return mTotalDuplicateCount; }
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
 
@@ -157,8 +154,6 @@ public class BamFragmentAllocator
     {
         if(checkDuplicates(record))
         {
-            ++mTotalDuplicateCount;
-
             if(mConfig.DropDuplicates)
             {
                 if(record.getFirstOfPairFlag())
