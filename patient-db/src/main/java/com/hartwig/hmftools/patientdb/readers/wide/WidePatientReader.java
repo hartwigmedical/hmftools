@@ -67,8 +67,8 @@ public class WidePatientReader {
         String biopsyDateCheck = Strings.EMPTY;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.wideId())) {
-                LOGGER.info("Tissue ecrf: " + biopsy.tissueId() + "tissue lims: " + lims.hospitalPathologySampleId("FR17437144"));
-                if (biopsy.tissueId().equals("T19-04088")) {
+                LOGGER.info("Tissue ecrf: " + biopsy.tissueId() + "tissue lims: " + lims.hospitalPathologySampleId("XXX"));
+                if (biopsy.tissueId().equals("XXX")) {
                     biopsyDateCheck = createInterpretDateNL(biopsy.bioptDate()).toString();
                 }
             }
