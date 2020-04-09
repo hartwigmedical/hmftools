@@ -8,13 +8,11 @@ ISOFOX uses a similar methodology to several previous transcript abundance estim
 * Avoids overfitting of 'retained intron' transcripts on the basse
 * Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons (eg. B2M)
 
-### A note on duplicates
+### A note on duplicates, highly expressed genes, raw and adjusted TPM
 
 We recommend to mark duplicates in your pipeline.  They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.   
 
-### Raw and adjusted TPM
-
-<DOCUMENT>
+We find that 6 genes in particular (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and  are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts.    ISOFOX excludes these genes from our GC bias calculations and adjusted TPM calculations so that.   For expression, ISOFOX outputs both a raw TPM (which includes all transcripts) and an adjusted TPM which excludes these 6 genes and which limits the contribution of any one transcript to 1% of the total for the sample.   We suggest to use the adjusted TPM for expression analysis.
 
 ## Install
 
