@@ -30,6 +30,7 @@ import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
 
 import org.apache.logging.log4j.LogManager;
@@ -66,8 +67,8 @@ public class WidePatientReader {
         String biopsyDateCheck = Strings.EMPTY;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.wideId())) {
-                LOGGER.info("Tissue ecrf: " + biopsy.tissueId() + "tissue lims: " + lims.hospitalPathologySampleId("XXX"));
-                if (biopsy.tissueId().equals("XXX")) {
+                LOGGER.info("Tissue ecrf: " + biopsy.tissueId() + "tissue lims: " + lims.hospitalPathologySampleId("FR17437144"));
+                if (biopsy.tissueId().equals("T19-04088")) {
                     biopsyDateCheck = createInterpretDateNL(biopsy.bioptDate()).toString();
                 }
             }
@@ -100,7 +101,7 @@ public class WidePatientReader {
 
         LocalDate biopsyDate = bioptDate(wideEcrfModel.biopsies(), patientIdentifier);
 
-        List<BiopsyData> matchedBiopsy = toBiopsyData(wideEcrfModel.fiveDays(),
+        List<BiopsyData> biopsyData = toBiopsyData(wideEcrfModel.fiveDays(),
                 biopsySiteCurator,
                 patientIdentifier,
                 biopsyDateCheck,
@@ -108,10 +109,10 @@ public class WidePatientReader {
                 sampleTissue,
                 tumorLocationCurator.search(primaryTumorLocation));
 
-        //        MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
-        //                sequencedSamples,
-        //                toBiopsyData(wideEcrfModel.fiveDays(), biopsySiteCurator, patientIdentifier, biopsyDateCheck));
-        //        //
+                MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
+                        sequencedSamples,
+                        biopsyData);
+
         //        MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
         //                withSampleMatchOnly(matchedBiopsies),
         //                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier, biopsyDate));
@@ -135,7 +136,7 @@ public class WidePatientReader {
                         biopsyDate,
                         wideEcrfModel.treatments()),
                 sequencedSamples,
-                matchedBiopsy,
+                matchedBiopsies.values(),
                 Lists.newArrayList(),
                 //matchedTreatments.values(),
                 Lists.newArrayList(),
