@@ -8,10 +8,14 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideResponseData;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
+import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class WidePatientReaderTest {
@@ -42,6 +46,42 @@ public class WidePatientReaderTest {
     public void canConvertTissueId() {
         assertEquals(WidePatientReader.extractYearOfTissueId("T1-00895 P"), "T1");
         assertEquals(WidePatientReader.extractBiopsyIdOfTissueId("T1-00895 P"), "895");
+    }
+
+    @Test
+    public void determineResponse() {
+        WideResponseData responseFollowRecist = ImmutableWideResponseData.builder()
+                .patientId(Strings.EMPTY)
+                .timePoint(Strings.EMPTY)
+                .date(Strings.EMPTY)
+                .recistNotDone("FALSE")
+                .responseAccordingRecist("PD")
+                .clinicalDecision(Strings.EMPTY)
+                .reasonStopTreatment(Strings.EMPTY)
+                .reasonStopTreatmentOther(Strings.EMPTY)
+                .build();
+
+        assertEquals(WidePatientReader.determineResponse(responseFollowRecist), "PD");
+
+        WideResponseData responseNotRecist = ImmutableWideResponseData.builder()
+                .patientId(Strings.EMPTY)
+                .timePoint(Strings.EMPTY)
+                .date(Strings.EMPTY)
+                .recistNotDone("WAAR") // TODO change to TRUE
+                .responseAccordingRecist(Strings.EMPTY)
+                .clinicalDecision("stop treatment")
+                .reasonStopTreatment("other, please specify")
+                .reasonStopTreatmentOther(Strings.EMPTY)
+                .build();
+
+        assertEquals(WidePatientReader.determineResponse(responseNotRecist), "stop treatment (other, please specify)");
+    }
+
+    @Test
+    public void convertGender() {
+        assertEquals(WidePatientReader.convertGender("1"), "Male");
+        assertEquals(WidePatientReader.convertGender("2"), "Female");
+        assertEquals(WidePatientReader.convertGender(""), Strings.EMPTY);
     }
 
     //    @Test

@@ -229,7 +229,7 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static String convertGender(@NotNull String gender) {
+    public static String convertGender(@NotNull String gender) {
         if (gender.equals("1")) {
             return "Male";
         } else if (gender.equals("2")) {
@@ -415,7 +415,7 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static String determineResponse(@NotNull WideResponseData responseData) {
+    public static String determineResponse(@NotNull WideResponseData responseData) {
         String response = Strings.EMPTY;
         if (responseData.recistNotDone().equals("FALSE")) {
             response = responseData.responseAccordingRecist();
