@@ -141,9 +141,9 @@ public class WidePatientReader {
                 toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
 
         final List<ValidationFinding> findings = Lists.newArrayList();
-        //        findings.addAll(matchedBiopsies.findings());
-        //        findings.addAll(matchedTreatments.findings());
-        //        findings.addAll(matchedResponses.findings());
+        findings.addAll(matchedBiopsies.findings());
+        findings.addAll(matchedTreatments.findings());
+        findings.addAll(matchedResponses.findings());
 
         return new Patient(patientIdentifier,
                 toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender, informedConsent, sharedData),
