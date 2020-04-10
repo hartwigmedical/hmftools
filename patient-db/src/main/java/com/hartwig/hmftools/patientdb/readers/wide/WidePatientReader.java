@@ -356,7 +356,6 @@ public class WidePatientReader {
             }
 
         }
-        LOGGER.info(biopsyDataList);
         return biopsyDataList;
 
     }
@@ -376,7 +375,6 @@ public class WidePatientReader {
                 }
             }
         }
-        LOGGER.info(biopsyTreatmentDataList);
         return biopsyTreatmentDataList;
     }
 
