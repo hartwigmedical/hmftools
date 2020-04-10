@@ -52,7 +52,7 @@ public class WidePatientReaderTest {
     public void determineResponse() {
         WideResponseData responseFollowRecist = ImmutableWideResponseData.builder()
                 .patientId(Strings.EMPTY)
-                .timePoint(Strings.EMPTY)
+                .timePoint("1")
                 .date(Strings.EMPTY)
                 .recistNotDone("FALSE")
                 .responseAccordingRecist("PD")
@@ -61,11 +61,11 @@ public class WidePatientReaderTest {
                 .reasonStopTreatmentOther(Strings.EMPTY)
                 .build();
 
-        assertEquals(WidePatientReader.determineResponse(responseFollowRecist), "PD");
+        assertEquals(WidePatientReader.determineResponse(responseFollowRecist), "(1) PD");
 
         WideResponseData responseNotRecist = ImmutableWideResponseData.builder()
                 .patientId(Strings.EMPTY)
-                .timePoint(Strings.EMPTY)
+                .timePoint("2")
                 .date(Strings.EMPTY)
                 .recistNotDone("WAAR") // TODO change to TRUE
                 .responseAccordingRecist(Strings.EMPTY)
@@ -74,7 +74,7 @@ public class WidePatientReaderTest {
                 .reasonStopTreatmentOther(Strings.EMPTY)
                 .build();
 
-        assertEquals(WidePatientReader.determineResponse(responseNotRecist), "stop treatment (other, please specify)");
+        assertEquals(WidePatientReader.determineResponse(responseNotRecist), "(2) stop treatment (other, please specify)");
     }
 
     @Test
