@@ -2,24 +2,31 @@ package com.hartwig.hmftools.patientdb.readers;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsFactory;
+import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
+import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
+import com.hartwig.hmftools.patientdb.data.Patient;
+import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWidePreTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideResponseData;
+import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
+import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
+import com.hartwig.hmftools.patientdb.readers.wide.WideTreatmentData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
+
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class WidePatientReaderTest {
-    private static final Logger LOGGER = LogManager.getLogger(WidePatientReaderTest.class);
 
     @Test
     public void canInterpretDateNL() {
@@ -84,28 +91,66 @@ public class WidePatientReaderTest {
         assertEquals(WidePatientReader.convertGender(""), Strings.EMPTY);
     }
 
-    //    @Test
-    //    @Ignore
-    //    public void canLoadEmptyPatient() {
-    //
-    //
-    //        WideEcrfModel wideEcrfModel;
-    //
-    //        wideEcrfModel = ImmutableWideEcrfModel.builder()
-    //                .preTreatments(Lists.newArrayList())
-    //                .biopsies(Lists.newArrayList())
-    //                .treatments(Lists.newArrayList())
-    //                .responses(Lists.newArrayList())
-    //                .build();
-    //
-    //        WidePatientReader patientReader = new WidePatientReader(wideEcrfModel, TestCuratorFactory.tumorLocationCurator(),
-    //                TestCuratorFactory.biopsySiteCurator(),
-    //                TestCuratorFactory.treatmentCurator());
-    //
-    //        SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
-    //
-    //        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample));
-    //
-    //        assertNotNull(patient);
-    //    }
+    @Test
+    public void canReadCombiPreTreatment() {
+        List<WidePreTreatmentData> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreTreatmentData.builder()
+                .patientId("WIDE00000001")
+                .previousTherapy("1")
+                .drug1("carboplatin")
+                .drug2("erlotinib")
+                .drug3(Strings.EMPTY)
+                .drug4(Strings.EMPTY)
+                .dateLastSystemicTherapy("20-nov-2015")
+                .build());
+        List<WidePreTreatmentData> preTreatmentData = Lists.newArrayList(ImmutableWidePreTreatmentData.builder()
+                .patientId("WIDE00000001")
+                .previousTherapy("1")
+                .drug1("carboplatin")
+                .drug2(Strings.EMPTY)
+                .drug3(Strings.EMPTY)
+                .drug4(Strings.EMPTY)
+                .dateLastSystemicTherapy("20-nov-2015")
+                .build());
+        TreatmentCurator treatmentCurator = TestCuratorFactory.treatmentCurator();
+        String patientIdentifier = "WIDE00000001";
+        LocalDate biopsyDate = WidePatientReader.createInterpretDateEN("21-May-2019");
+        List<WideTreatmentData> treatmentData = Lists.newArrayList();
+
+        assertEquals(WidePatientReader.readDrugsPreTreatment(preTreatmentDataCombi,
+                treatmentCurator,
+                patientIdentifier,
+                biopsyDate,
+                treatmentData).get(0).name(), "carboplatin,erlotinib");
+
+        assertEquals(WidePatientReader.readDrugsPreTreatment(preTreatmentData,
+                treatmentCurator,
+                patientIdentifier,
+                biopsyDate,
+                treatmentData).get(0).name(), "carboplatin");
+
+    }
+
+    @Test
+    public void canLoadEmptyPatient() {
+        Lims lims = LimsFactory.empty();
+        WideEcrfModel wideEcrfModel;
+
+        wideEcrfModel = ImmutableWideEcrfModel.builder()
+                .preTreatments(Lists.newArrayList())
+                .biopsies(Lists.newArrayList())
+                .treatments(Lists.newArrayList())
+                .responses(Lists.newArrayList())
+                .build();
+
+        WidePatientReader patientReader = new WidePatientReader(wideEcrfModel,
+                TestCuratorFactory.tumorLocationCurator(),
+                TestCuratorFactory.biopsySiteCurator(),
+                TestCuratorFactory.treatmentCurator());
+
+        SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
+
+        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), lims, "FR123");
+
+        assertNotNull(patient);
+    }
 }
