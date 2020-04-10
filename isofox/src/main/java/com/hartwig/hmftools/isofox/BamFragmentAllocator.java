@@ -22,6 +22,8 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.validRegionMatchType
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -76,6 +78,7 @@ public class BamFragmentAllocator
 
     private int mGeneReadCount;
     private int mTotalBamReadCount;
+    private int mNextGeneCountLog;
 
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
 
@@ -89,6 +92,7 @@ public class BamFragmentAllocator
     private final BufferedWriter mReadDataWriter;
     private final GcRatioCounts mGcRatioCounts;
     private final GcRatioCounts mGeneGcRatioCounts;
+    private int mEnrichedGeneFragments;
 
     public BamFragmentAllocator(final IsofoxConfig config, final ResultsWriter resultsWriter)
     {
@@ -101,6 +105,8 @@ public class BamFragmentAllocator
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
+        mNextGeneCountLog = 0;
+        mEnrichedGeneFragments = 0;
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
@@ -122,6 +128,8 @@ public class BamFragmentAllocator
     public final GcRatioCounts getGcRatioCounts() { return mGcRatioCounts; }
     public final GcRatioCounts getGeneGcRatioCounts() { return mGeneGcRatioCounts; }
 
+    private static int GENE_LOG_COUNT = 100000;
+
     public void produceBamCounts(final GeneCollection geneCollection, final GenomeRegion genomeRegion)
     {
         mFragmentReads.clear();
@@ -130,6 +138,8 @@ public class BamFragmentAllocator
 
         mCurrentGenes = geneCollection;
         mGeneReadCount = 0;
+        mNextGeneCountLog = GENE_LOG_COUNT;
+        mEnrichedGeneFragments = 0;
         mTransComboData.clear();
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
@@ -138,6 +148,9 @@ public class BamFragmentAllocator
             mGeneGcRatioCounts.clearCounts();
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(genomeRegion), this::processSamRecord);
+
+        if(mEnrichedGeneFragments > 0)
+            processEnrichedGeneFragments();
 
         ISF_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGenes.geneNames(), mGeneReadCount);
     }
@@ -161,6 +174,14 @@ public class BamFragmentAllocator
 
                 return;
             }
+
+            // optimised processing for enriched genes
+            if(checkDuplicateEnrichedReads(record))
+            {
+                ++mTotalBamReadCount;
+                ++mGeneReadCount;
+                return;
+            }
         }
 
         ++mTotalBamReadCount;
@@ -169,13 +190,14 @@ public class BamFragmentAllocator
         processRead(ReadRecord.from(record));
     }
 
-    public void processRead(ReadRecord read)
+    private void processRead(ReadRecord read)
     {
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
 
-        if(mGeneReadCount > 0 && (mGeneReadCount % 100000) == 0)
+        if(mGeneReadCount >= mNextGeneCountLog)
         {
+            mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.debug("genes({}) bamRecordCount({})", mCurrentGenes.geneNames(), mGeneReadCount);
         }
 
@@ -469,6 +491,60 @@ public class BamFragmentAllocator
         }
     }
 
+    private boolean checkDuplicateEnrichedReads(final SAMRecord record)
+    {
+        // returns true if both this read and its pair are handled by the optimised routine, and NOT by normal fragment processing
+        final long[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
+
+        if(enrichedRegion == null || !positionsOverlap(record.getStart(), record.getEnd(), enrichedRegion[SE_START], enrichedRegion[SE_END]))
+            return false;
+
+        if(!record.getFirstOfPairFlag())
+            return true;
+
+        mCurrentGenes.addCount(DUPLICATE, 1);
+
+        if(positionsWithin(record.getStart(), record.getEnd(), enrichedRegion[SE_START], enrichedRegion[SE_END]))
+        {
+            // ignore read-through fragments for enriched genes
+            ++mEnrichedGeneFragments;
+        }
+
+        return true;
+    }
+
+    private void processEnrichedGeneFragments()
+    {
+        // add to overall counts
+        mCurrentGenes.addCount(TOTAL, mEnrichedGeneFragments);
+        mCurrentGenes.addCount(UNSPLICED, mEnrichedGeneFragments);
+
+        // add to category counts
+        final String geneId = mCurrentGenes.getEnrichedTranscripts().get(0).GeneId;
+        CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), Lists.newArrayList(geneId));
+
+        // compute and cache GC data
+        double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), Lists.newArrayList(mCurrentGenes.getEnrichedRegion()));
+
+        int[] gcRatioIndices = { -1, -1 };
+        double[] gcRatioCounts = { 0, 0 };
+
+        if(mGcRatioCounts != null)
+        {
+            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
+            gcRatioCounts[0] *= mEnrichedGeneFragments;
+            gcRatioCounts[1] *= mEnrichedGeneFragments;
+        }
+
+        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, mEnrichedGeneFragments);
+
+        if(ISF_LOGGER.isInfoEnabled() && mGeneReadCount >= mNextGeneCountLog)
+        {
+            mNextGeneCountLog += GENE_LOG_COUNT;
+            ISF_LOGGER.info("enriched gene({}) bamRecordCount({})", geneId, mGeneReadCount);
+        }
+    }
+
     public List<CategoryCountsData> getTransComboData() { return mTransComboData; }
 
     private CategoryCountsData getCategoryCountsData(final List<Integer> transcripts, final List<String> geneIds)
@@ -556,33 +632,41 @@ public class BamFragmentAllocator
         mCurrentGenes.addCount(UNSPLICED, 1);
     }
 
-    private void addGcCounts(final CategoryCountsData catCounts, List<long[]> readRegions)
+    private void addGcCounts(final CategoryCountsData catCounts, final List<long[]> readRegions)
+    {
+        int[] gcRatioIndices = { -1, -1 };
+        double[] gcRatioCounts = { 0, 0 };
+
+        if (mGcRatioCounts != null)
+        {
+            double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), readRegions);
+            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndices, gcRatioCounts);
+        }
+
+        addGcCounts(catCounts, gcRatioIndices, gcRatioCounts, 1);
+    }
+
+    private void addGcCounts(final CategoryCountsData catCounts, final int[] gcRatioIndices, double[] gcRatioCounts, int count)
     {
         if(mGcRatioCounts != null)
         {
-            double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), readRegions);
-
-            int[] gcRatioIndex = { -1, -1 };
-            double[] gcRatioCounts = { 0, 0 };
-            mGcRatioCounts.determineRatioData(gcRatio, gcRatioIndex, gcRatioCounts);
-
-            for(int i = 0; i < gcRatioIndex.length; ++i)
+            for(int i = 0; i < gcRatioIndices.length; ++i)
             {
-                if (gcRatioIndex[i] >= 0)
+                if (gcRatioIndices[i] >= 0)
                 {
-                    mGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
-                    mGeneGcRatioCounts.addGcRatioCount(gcRatioIndex[i], gcRatioCounts[i]);
+                    mGcRatioCounts.addGcRatioCount(gcRatioIndices[i], gcRatioCounts[i]);
+                    mGeneGcRatioCounts.addGcRatioCount(gcRatioIndices[i], gcRatioCounts[i]);
                 }
             }
 
             if(mConfig.ApplyGcBiasAdjust)
-                catCounts.addGcRatioCounts(1, gcRatioIndex, gcRatioCounts);
+                catCounts.addGcRatioCounts(count, gcRatioIndices, gcRatioCounts);
             else
-                catCounts.addCounts(1);
+                catCounts.addCounts(count);
         }
         else
         {
-            catCounts.addCounts(1);
+            catCounts.addCounts(count);
         }
     }
 
@@ -597,12 +681,16 @@ public class BamFragmentAllocator
 
         BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
 
-        QueryInterval[] queryInterval = new QueryInterval[1];
-        int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mCurrentGenes.chromosome());
-
         mFragmentTracker.clear();
 
         mReadDepthPerf.start();
+
+        if(mCurrentGenes.getEnrichedRegion() != null)
+        {
+            mAltSpliceJunctionFinder.setDepthToFragCount();
+            mRetainedIntronFinder.setDepthToFragCount();
+            return;
+        }
 
         int[] readRange = {0, 0};
 
@@ -623,6 +711,8 @@ public class BamFragmentAllocator
             readRange = mRetainedIntronFinder.getPositionsRange();
         }
 
+        QueryInterval[] queryInterval = new QueryInterval[1];
+        int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mCurrentGenes.chromosome());
         queryInterval[0] = new QueryInterval(chrSeqIndex, readRange[SE_START], readRange[SE_END]);
 
         slicer.slice(mSamReader, queryInterval, this::setPositionDepthFromRead);

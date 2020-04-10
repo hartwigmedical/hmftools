@@ -64,6 +64,7 @@ public class RetainedIntron
     public int getSplicedFragmentCount() { return mSplicedFragmentCount; }
 
     public void addReadDepth() { ++mReadDepth; }
+    public void setReadDepth(int count) { mReadDepth = count; }
     public int getDepth() { return mReadDepth; }
 
     public boolean matches(final RetainedIntron other)

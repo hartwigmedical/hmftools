@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+import com.hartwig.hmftools.isofox.IsofoxConfig;
 
 public class GeneCollection
 {
@@ -37,6 +39,9 @@ public class GeneCollection
     private final List<RegionReadData> mExonRegions; // set of unique exons ie with differing start and end positions
     private final List<long[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
     private final List<TranscriptData> mTranscripts;
+
+    private List<TranscriptData> mEnrichedTranscripts;
+    private long[] mEnrichedRegion; // special regions of high read density
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
@@ -64,6 +69,9 @@ public class GeneCollection
 
         mTranscriptReadCounts = Maps.newHashMap();
         mFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
+
+        mEnrichedTranscripts = null;
+        mEnrichedRegion = null;
     }
 
     public int id() { return mId; }
@@ -100,6 +108,26 @@ public class GeneCollection
         }
 
         return geneNames.toString();
+    }
+
+    public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
+    public long[] getEnrichedRegion() { return mEnrichedRegion; }
+
+    public void setEnrichedTranscripts(final List<TranscriptData> transDataList, final IsofoxConfig config)
+    {
+        mEnrichedTranscripts = Lists.newArrayList(transDataList);
+        mEnrichedRegion = new long[SE_PAIR];
+
+        for(TranscriptData transData : mEnrichedTranscripts)
+        {
+            for(ExonData exonData : transData.exons())
+            {
+                mEnrichedRegion[SE_START] = mEnrichedRegion[SE_START] > 0
+                        ? min(mEnrichedRegion[SE_START], exonData.ExonStart) : exonData.ExonStart;
+
+                mEnrichedRegion[SE_END] = max(mEnrichedRegion[SE_END], exonData.ExonEnd);
+            }
+        }
     }
 
     private void buildCache()

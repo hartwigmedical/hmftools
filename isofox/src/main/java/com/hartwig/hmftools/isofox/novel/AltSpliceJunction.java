@@ -318,7 +318,7 @@ public class AltSpliceJunction
     {
         return "GeneId,GeneName,Chromosome,Strand,SjStart,SjEnd,FragCount,DepthStart,DepthEnd"
                 + ",Type,ContextStart,ContextEnd,NearestStartExon,NearestEndExon"
-                + ",BasesStart,BasesEnd,TransStart,TransEnd,PosStrandGenes,NegStrandGenes";
+                + ",BasesStart,BasesEnd,TransStart,TransEnd,OverlappingGenes";
     }
 
     public String toCsv(final EnsemblGeneData geneData)

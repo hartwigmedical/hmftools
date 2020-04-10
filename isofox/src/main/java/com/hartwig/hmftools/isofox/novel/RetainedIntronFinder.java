@@ -230,6 +230,12 @@ public class RetainedIntronFinder
         }
     }
 
+
+    public void setDepthToFragCount()
+    {
+        mRetainedIntrons.forEach(x -> x.setReadDepth(x.getFragmentCount()));
+    }
+
     /*
     Average unspliced coverage of gene
     Pair intron retentions with novel 5’SS, novel 3’ SS or other retained intron evidence.

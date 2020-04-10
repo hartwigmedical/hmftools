@@ -31,14 +31,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.variant.structural.annotation.Transcript;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
@@ -114,6 +117,12 @@ public class Isofox
                     mConfig, chromosome, geneDataList, mGeneTransCache, mResultsWriter, mExpectedCountsCache, mGcTranscriptCalcs);
 
             chrTasks.add(chrGeneTask);
+        }
+
+        if(chrTasks.isEmpty())
+        {
+            ISF_LOGGER.warn("no chromosomes selected");
+            return false;
         }
 
         if(mConfig.requireFragmentLengthCalcs())

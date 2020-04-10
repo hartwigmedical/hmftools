@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
@@ -179,6 +180,14 @@ public class ChromosomeGeneTask implements Callable
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
 
+            for(GeneReadData geneReadData : geneReadDataList)
+            {
+                if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+                {
+                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId), mConfig);
+                }
+            }
+
             mPerfCounters[PERF_TOTAL].start();
 
             // at the moment it is one or the other
@@ -268,7 +277,6 @@ public class ChromosomeGeneTask implements Callable
                 transDataList = transDataList.stream().filter(x -> mConfig.SpecificTransIds.contains(x.TransName)).collect(Collectors.toList());
 
             geneReadData.setTranscripts(transDataList);
-
             geneReadDataList.add(geneReadData);
         }
 

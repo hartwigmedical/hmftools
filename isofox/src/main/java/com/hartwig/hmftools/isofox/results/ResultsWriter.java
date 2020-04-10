@@ -198,7 +198,7 @@ public class ResultsWriter
 
             mGeneCollectionWriter = createBufferedWriter(outputFileName, false);
             mGeneCollectionWriter.write("GeneSetId,GeneCount,Chromosome,RangeStart,RangeEnd");
-            mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,Alt,ReadThrough,Chimeric");
+            mGeneCollectionWriter.write(",TotalFragments,Duplicates,SupportingTrans,Unspliced,AltSJ,ReadThrough,Chimeric");
             mGeneCollectionWriter.write(",Genes");
             mGeneCollectionWriter.newLine();
         }

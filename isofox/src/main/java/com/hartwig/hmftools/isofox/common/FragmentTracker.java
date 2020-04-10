@@ -15,9 +15,6 @@ public class FragmentTracker
         mReadMap = Maps.newHashMap();
     }
 
-    public boolean hasReadId(final String readId) { return mReadMap.containsKey(readId); }
-    public boolean hasRead(final ReadRecord read) { return mReadMap.containsKey(read.Id); }
-
     public List<Object> getValues() { return mReadMap.values().stream().collect(Collectors.toList()); }
 
     public int readsCount() { return mReadMap.size(); }

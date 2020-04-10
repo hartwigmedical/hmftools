@@ -421,6 +421,15 @@ public class AltSpliceJunctionFinder
         }
     }
 
+    public void setDepthToFragCount()
+    {
+        for(AltSpliceJunction altSJ : mAltSpliceJunctions)
+        {
+            altSJ.addPositionCount(SE_START, altSJ.getFragmentCount());
+            altSJ.addPositionCount(SE_END, altSJ.getFragmentCount());
+        }
+    }
+
     public void prioritiseGenes()
     {
         mAltSpliceJunctions.forEach(x -> x.setBaseContext(mConfig.RefFastaSeqFile, mGenes.chromosome()));
@@ -502,25 +511,13 @@ public class AltSpliceJunctionFinder
                 altSJ.calcSummaryData(gene);
             }
 
-            final int[] strandGeneCounts = {0, 0};
-
-            /*
-            for(final GeneReadData gene : mGenes.genes())
-            {
-                if(gene.GeneData.forwardStrand())
-                    ++strandGeneCounts[0];
-                else
-                    ++strandGeneCounts[1];
-            }
-            */
-
-            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mGenes, strandGeneCounts);
+            writeAltSpliceJunctions(mWriter, mAltSpliceJunctions, mGenes);
         }
     }
 
     private synchronized static void writeAltSpliceJunctions(
             final BufferedWriter writer, final List<AltSpliceJunction> altSpliceJunctions,
-            final GeneCollection geneCollection, final int[] strandGeneCounts)
+            final GeneCollection geneCollection)
     {
         try
         {
@@ -530,7 +527,7 @@ public class AltSpliceJunctionFinder
                         .filter(x -> x.GeneData.GeneId.equals(altSJ.getGeneId())).findFirst().orElse(null);
 
                 writer.write(altSJ.toCsv(gene.GeneData));
-                // writer.write(String.format(",%d,%d", strandGeneCounts[0], strandGeneCounts[1]));
+                writer.write(String.format(",%d", geneCollection.genes().size()));
                 writer.newLine();
             }
 
