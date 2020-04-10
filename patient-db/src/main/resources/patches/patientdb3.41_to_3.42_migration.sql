@@ -6,4 +6,4 @@ ALTER TABLE somaticVariant
     ADD qual double precision not null AFTER rnaTotalReadCount;
 
 ALTER TABLE treatmentResponse
-    MODIFY COLUMN response varchar(4000);
+    MODIFY COLUMN response varchar(500);

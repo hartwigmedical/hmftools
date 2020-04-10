@@ -369,7 +369,7 @@ public class WidePatientReader {
             if (patientIdentifier.equals(treatmentData.sampleId())) {
                 if (biopsyDate.isEqual(createInterpretDateNL(treatmentData.startDate())) || createInterpretDateNL(treatmentData.startDate())
                         .isAfter(biopsyDate)) {
-                    biopsyTreatmentDataList.add(BiopsyTreatmentData.of("yes",
+                    biopsyTreatmentDataList.add(BiopsyTreatmentData.of(null, "yes",
                             null,
                             readDrugsPostTreatment(treatmentData, treatmentCurator),
                             FormStatus.undefined()));
