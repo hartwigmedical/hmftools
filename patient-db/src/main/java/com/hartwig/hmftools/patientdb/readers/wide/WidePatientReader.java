@@ -401,7 +401,7 @@ public class WidePatientReader {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
             if (patientIdentifier.equals(responseData.patientId())) {
-                biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
+                biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null, null,
                         createInterpretDateNL(responseData.date().isEmpty() ? Strings.EMPTY : responseData.date()),
                         determineResponse(responseData),
                         "yes",
@@ -410,7 +410,6 @@ public class WidePatientReader {
             }
         }
 
-        LOGGER.info(biopsyTreatmentResponseDataList);
         return biopsyTreatmentResponseDataList;
     }
 

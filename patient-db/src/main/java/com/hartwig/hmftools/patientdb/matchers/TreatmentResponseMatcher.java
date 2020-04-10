@@ -43,8 +43,11 @@ public final class TreatmentResponseMatcher {
         BiopsyTreatmentData nextTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
         boolean hasNewBaselineResponseFound = false;
         for (BiopsyTreatmentResponseData response : responses) {
-            if (patientIdentifier.equals("WIDE")) {
-                matchedResponses.add(response);
+            if (patientIdentifier.startsWith("WIDE")) {
+                matchedResponses.add(BiopsyTreatmentResponseData.of(currentTreatment.id(), response.assessmentDate(),
+                        response.responseDate(),
+                        response.response(),
+                        response.measurementDone(), response.boneOnlyDisease(), response.formStatus()));
             } else {
                 LocalDate responseDate = response.date();
                 if (responseMatchable(responseDate, firstTreatmentStart)) {

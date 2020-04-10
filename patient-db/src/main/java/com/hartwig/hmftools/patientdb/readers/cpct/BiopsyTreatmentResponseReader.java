@@ -67,7 +67,7 @@ final class BiopsyTreatmentResponseReader {
                         response = responseValue;
                     }
                 }
-                BiopsyTreatmentResponseData responseData = ImmutableBiopsyTreatmentResponseData.of(assessmentDate,
+                BiopsyTreatmentResponseData responseData = ImmutableBiopsyTreatmentResponseData.of(null, assessmentDate,
                         responseDate,
                         response,
                         measurementDone,
