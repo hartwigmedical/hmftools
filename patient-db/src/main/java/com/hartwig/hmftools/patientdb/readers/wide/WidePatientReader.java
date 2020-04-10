@@ -63,18 +63,33 @@ public class WidePatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
-            @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String sampleId) {
+    public static String extractYearOfTissueId(@NotNull String tissueId) {
+        return tissueId.split("-")[0];
+    }
 
-        //        for (String barcodes: lims.sampleBarcodes()) {
-        //            LOGGER.info("sampleIdId: " + lims.sampleId(barcodes) + " barcode: " + barcodes + " tissueId: " + lims.hospitalPathologySampleId(barcodes));
-        //        }
+    @NotNull
+    public static String extractBiopsyIdOfTissueId(@NotNull String tissueId) {
+        return tissueId.split("-")[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
+
+    }
+
+    @NotNull
+    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
+            @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String tumorBarcode) {
 
         String biopsyDateCheck = Strings.EMPTY;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.wideId())) {
-                LOGGER.info("Tissue ecrf: " + biopsy.tissueId() + "tissue lims: " + lims.hospitalPathologySampleId("XXX"));
-                if (biopsy.tissueId().equals("XXX")) {
+                String limsPathologyTissueId = lims.hospitalPathologySampleId(tumorBarcode);
+                String limsPathologyTissueIdYear = extractYearOfTissueId(limsPathologyTissueId);
+                String limsPathologyTissueIdConvert = extractBiopsyIdOfTissueId(limsPathologyTissueId);
+
+                String ecrfPathologyTissueId = biopsy.tissueId();
+                String ecrfPathologyTissueIdYear = extractYearOfTissueId(ecrfPathologyTissueId);
+                String ecrfPathologyTissueIdConvert = extractBiopsyIdOfTissueId(ecrfPathologyTissueId);
+
+                if (ecrfPathologyTissueIdYear.equals(limsPathologyTissueIdYear) && ecrfPathologyTissueIdConvert.equals(
+                        limsPathologyTissueIdConvert)) {
                     biopsyDateCheck = createInterpretDateNL(biopsy.bioptDate()).toString();
                 }
             }

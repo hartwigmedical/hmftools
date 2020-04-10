@@ -19,7 +19,8 @@ public final class TestDatamodelFactory {
                 .setName(Strings.EMPTY)
                 .sequenced(false)
                 .arrivalDate(arrivalDate)
-                .pathologyTumorPercentage("N/A");
+                .pathologyTumorPercentage("N/A")
+                .tumorBarcode("FR123");
     }
 
     @NotNull

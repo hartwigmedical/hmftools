@@ -38,6 +38,12 @@ public class WidePatientReaderTest {
         assertEquals(WidePatientReader.convertStringToLocalDate("2018-10-17").toString(), "2018-10-17");
     }
 
+    @Test
+    public void canConvertTissueId() {
+        assertEquals(WidePatientReader.extractYearOfTissueId("T1-00895 P"), "T1");
+        assertEquals(WidePatientReader.extractBiopsyIdOfTissueId("T1-00895 P"), "895");
+    }
+
     //    @Test
     //    @Ignore
     //    public void canLoadEmptyPatient() {
