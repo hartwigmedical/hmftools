@@ -515,13 +515,17 @@ public class BamFragmentAllocator
 
     private void processEnrichedGeneFragments()
     {
-        // add to overall counts
+        // add to overall counts - since these are within a single exon, consider them supporting the transcript + unspliced
         mCurrentGenes.addCount(TOTAL, mEnrichedGeneFragments);
-        mCurrentGenes.addCount(UNSPLICED, mEnrichedGeneFragments);
+        mCurrentGenes.addCount(TRANS_SUPPORTING, mEnrichedGeneFragments);
 
         // add to category counts
-        final String geneId = mCurrentGenes.getEnrichedTranscripts().get(0).GeneId;
-        CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), Lists.newArrayList(geneId));
+        final long[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
+        final List<String> unsplicedGeneIds = mCurrentGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END])
+                .stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
+
+        final List<Integer> transIds = mCurrentGenes.getEnrichedTranscripts().stream().map(x -> new Integer(x.TransId)).collect(Collectors.toList());
+        CategoryCountsData catCounts = getCategoryCountsData(transIds, unsplicedGeneIds);
 
         // compute and cache GC data
         double gcRatio = calcGcRatioFromReadRegions(mConfig.RefFastaSeqFile, mCurrentGenes.chromosome(), Lists.newArrayList(mCurrentGenes.getEnrichedRegion()));
@@ -541,6 +545,7 @@ public class BamFragmentAllocator
         if(ISF_LOGGER.isInfoEnabled() && mGeneReadCount >= mNextGeneCountLog)
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
+            final String geneId = mCurrentGenes.getEnrichedTranscripts().get(0).GeneId;
             ISF_LOGGER.info("enriched gene({}) bamRecordCount({})", geneId, mGeneReadCount);
         }
     }
