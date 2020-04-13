@@ -15,7 +15,6 @@ final class WideFileInputInterpreter {
     private WideFileInputInterpreter() {
     }
 
-
     @Nullable
     public static LocalDate interpretDateIC(@NotNull String date) {
         if (date.isEmpty()) {
