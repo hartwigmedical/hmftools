@@ -22,11 +22,6 @@ import org.junit.Test;
 public class WidePatientReaderTest {
 
     @Test
-    public void canInterpretDateIC() {
-        assertEquals(WidePatientReader.createInterpretDateIC("12/04/2019").toString(), "2019-04-12");
-    }
-
-    @Test
     public void canConvertStringToDate() {
         assertEquals(WidePatientReader.convertStringToLocalDate("2018-10-17").toString(), "2018-10-17");
     }
@@ -64,13 +59,6 @@ public class WidePatientReaderTest {
                 .build();
 
         assertEquals(WidePatientReader.determineResponse(responseNotRecist), "(2) stop treatment (other, please specify)");
-    }
-
-    @Test
-    public void convertGender() {
-        assertEquals(WidePatientReader.convertGender("1"), "Male");
-        assertEquals(WidePatientReader.convertGender("2"), "Female");
-        assertEquals(WidePatientReader.convertGender(""), Strings.EMPTY);
     }
 
     @Test

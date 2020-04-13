@@ -14,7 +14,6 @@ import com.hartwig.hmftools.common.utils.io.reader.FileReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,6 +70,9 @@ public class WideEcrfFileReader {
     private static final int RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT = 6;
     private static final int RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT_OTHER = 7;
 
+    private WideEcrfFileReader() {
+    }
+
     @NotNull
     public static List<WideFiveDays> readFiveDays(@NotNull String pathToCsv) throws IOException {
         List<WideFiveDays> wideFiveDays = Lists.newArrayList();
@@ -82,15 +84,15 @@ public class WideEcrfFileReader {
                 WideFiveDays wideFiveDaysData = ImmutableWideFiveDays.builder()
                         .patientId(toWideID(parts[FIVE_DAYS_DATA_PATIENT_ID]))
                         .dataIsAvailable(parts[FIVE_DAYS_DATA_IS_AVAILABLE].equals("1"))
-                        .informedConsentDate(interpretDateEN(parts[FIVE_DAYS_DATA_INFORMED_CONSENT_DATE]))
-                        .gender(parts[FIVE_DAYS_DATA_GENDER])
-                        .birthYear(Integer.parseInt(parts[FIVE_DAYS_DATA_BIRTH_YEAR]))
+                        .informedConsentDate(interpretDateIC(parts[FIVE_DAYS_DATA_INFORMED_CONSENT_DATE]))
+                        .gender(convertGender(parts[FIVE_DAYS_DATA_GENDER]))
+                        .birthYear(interpretBirthYear(parts[FIVE_DAYS_DATA_BIRTH_YEAR]))
                         .biopsyDate(interpretDateEN(parts[FIVE_DAYS_DATA_BIOPSY_DATE]))
                         .biopsySite(parts[FIVE_DAYS_DATA_BIOPSY_SITE])
                         .sampleTissue(parts[FIVE_DAYS_DATA_SAMPLE_TISSUE])
                         .sampleType(parts[FIVE_DAYS_DATA_SAMPLE_TYPE])
                         .studyCode(parts[FIVE_DAYS_DATA_STUDY_CODE])
-                        .participatesInOtherTrials(parts[FIVE_DAYS_DATA_OTHER_TRIALS].equals("Y"))
+                        .participatesInOtherTrials(convertParticipatesInOtherTrials(parts[FIVE_DAYS_DATA_OTHER_TRIALS]))
                         .otherTrialCodes(parts[FIVE_DAYS_DATA_OTHER_TRIAL_CODES])
                         .otherTrialStartDates(parts[FIVE_DAYS_DATA_OTHER_TRIAL_START_DATES])
                         .build();
@@ -101,9 +103,6 @@ public class WideEcrfFileReader {
             }
         }
         return wideFiveDays;
-    }
-
-    private WideEcrfFileReader() {
     }
 
     @NotNull
@@ -208,8 +207,19 @@ public class WideEcrfFileReader {
 
     @Nullable
     @VisibleForTesting
+    public static LocalDate interpretDateIC(@NotNull String date) {
+        if (date.isEmpty()) {
+            return null;
+        }
+
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+
+    @Nullable
+    @VisibleForTesting
     public static LocalDate interpretDateEN(@NotNull String date) {
-        if (date.equals(Strings.EMPTY)) {
+        if (date.isEmpty()) {
             return null;
         }
 
@@ -225,7 +235,7 @@ public class WideEcrfFileReader {
     @Nullable
     @VisibleForTesting
     public static LocalDate interpretDateNL(@NotNull String date) {
-        if (date.equals(Strings.EMPTY)) {
+        if (date.isEmpty()) {
             return null;
         }
 
@@ -238,8 +248,43 @@ public class WideEcrfFileReader {
         return LocalDate.parse(formattedString);
     }
 
+    @Nullable
+    @VisibleForTesting
+    static Integer interpretBirthYear(@NotNull String birthYear) {
+        if (birthYear.isEmpty()) {
+            return null;
+        }
+
+        return Integer.parseInt(birthYear);
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static String convertGender(@NotNull String gender) {
+        if (gender.equals("1")) {
+            return "male";
+        } else if (gender.equals("2")) {
+            return "female";
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static Boolean convertParticipatesInOtherTrials(@NotNull String participatesInOtherTrials) {
+        if (participatesInOtherTrials.equals("Y")) {
+            return true;
+        } else if (participatesInOtherTrials.equals("N")) {
+            return false;
+        } else {
+            return null;
+        }
+    }
+
     @NotNull
-    private static String toWideID(@NotNull String wideIdentifier) {
+    @VisibleForTesting
+    static String toWideID(@NotNull String wideIdentifier) {
         return wideIdentifier.replace("-", "");
     }
 }

@@ -28,24 +28,24 @@ public abstract class WideFiveDays {
     @Nullable
     public abstract LocalDate biopsyDate();
 
-    @Nullable
+    @NotNull
     public abstract String biopsySite();
 
-    @Nullable
+    @NotNull
     public abstract String sampleTissue();
 
-    @Nullable
+    @NotNull
     public abstract String sampleType();
 
-    @Nullable
+    @NotNull
     public abstract String studyCode();
 
     @Nullable
     public abstract Boolean participatesInOtherTrials();
 
-    @Nullable
+    @NotNull
     public abstract String otherTrialCodes();
 
-    @Nullable
+    @NotNull
     public abstract String otherTrialStartDates();
 }

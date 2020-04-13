@@ -157,13 +157,6 @@ public class WidePatientReader {
 
     @NotNull
     @VisibleForTesting
-    public static LocalDate createInterpretDateIC(@NotNull String date) {
-        String format = "dd/MM/yyyy";
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
-    }
-
-    @NotNull
-    @VisibleForTesting
     public static LocalDate convertStringToLocalDate(@NotNull String date) {
         String format = "yyyy-MM-dd";
         return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
@@ -185,7 +178,7 @@ public class WidePatientReader {
             @NotNull String gender, @NotNull LocalDate informedConsentDate, boolean dataIsAvailable) {
         return ImmutableBaselineData.of(null,
                 dataIsAvailable ? informedConsentDate : null,
-                convertGender(gender),
+                gender,
                 null,
                 birthYear,
                 curatedTumorLocation,
@@ -196,17 +189,6 @@ public class WidePatientReader {
                 FormStatus.undefined(),
                 FormStatus.undefined(),
                 FormStatus.undefined());
-    }
-
-    @NotNull
-    public static String convertGender(@NotNull String gender) {
-        if (gender.equals("1")) {
-            return "Male";
-        } else if (gender.equals("2")) {
-            return "Female";
-        } else {
-            return Strings.EMPTY;
-        }
     }
 
     @NotNull
