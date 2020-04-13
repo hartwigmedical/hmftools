@@ -20,8 +20,8 @@ import org.jetbrains.annotations.Nullable;
 public class WideEcrfFileReader {
 
     private static final Logger LOGGER = LogManager.getLogger(WideEcrfFileReader.class);
-    private static final String FIELD_SEPARATOR = ";";
-    private static final String FIELD_SEPARATOR_FIVE_DAYS = ",";
+    private static final String SEMICOLON = ";";
+    private static final String COMMA = ",";
 
     private static final int FIVE_DAYS_DATA_COUNT = 15;
     private static final int FIVE_DAYS_DATA_PATIENT_ID = 1;
@@ -38,7 +38,7 @@ public class WideEcrfFileReader {
     private static final int FIVE_DAYS_DATA_OTHER_TRIAL_CODES = 13;
     private static final int FIVE_DAYS_DATA_OTHER_TRIAL_START_DATES = 14;
 
-    private static final int PRE_AVL_TREATMENT_DATA_COUNT = 7;
+    private static final int PRE_AVL_TREATMENT_DATA_COUNT = 8;
     private static final int PRE_AVL_TREATMENT_DATA_PATIENT_ID = 0;
     private static final int PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY = 1;
     private static final int PRE_AVL_TREATMENT_DATA_DRUG1 = 2;
@@ -60,15 +60,15 @@ public class WideEcrfFileReader {
     private static final int AVL_TREATMENT_DATA_START_DATE = 3;
     private static final int AVL_TREATMENT_DATA_END_DATE = 4;
 
-    private static final int RESPONSE_DATA_COUNT = 8;
+    private static final int RESPONSE_DATA_COUNT = 10;
     private static final int RESPONSE_DATA_PATIENT_ID = 0;
-    private static final int RESPONSE_DATA_TIME_POINT = 1;
-    private static final int RESPONSE_DATA_DATE = 2;
-    private static final int RESPONSE_DATA_RECIST_NOT_DONE = 3;
-    private static final int RESPONSE_DATA_RECIST_RESPONSE = 4;
-    private static final int RESPONSE_DATA_NO_RECIST_RESPONSE = 5;
-    private static final int RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT = 6;
-    private static final int RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT_OTHER = 7;
+    private static final int RESPONSE_DATA_TIME_POINT = 3;
+    private static final int RESPONSE_DATA_DATE = 4;
+    private static final int RESPONSE_DATA_RECIST_NOT_DONE = 5;
+    private static final int RESPONSE_DATA_RECIST_RESPONSE = 6;
+    private static final int RESPONSE_DATA_NO_RECIST_RESPONSE = 7;
+    private static final int RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT = 8;
+    private static final int RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT_OTHER = 9;
 
     private WideEcrfFileReader() {
     }
@@ -79,7 +79,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR_FIVE_DAYS, FIVE_DAYS_DATA_COUNT);
+            String[] parts = line.split(COMMA, FIVE_DAYS_DATA_COUNT);
             if (parts.length == FIVE_DAYS_DATA_COUNT) {
                 WideFiveDays wideFiveDaysData = ImmutableWideFiveDays.builder()
                         .patientId(toWideID(parts[FIVE_DAYS_DATA_PATIENT_ID]))
@@ -98,7 +98,7 @@ public class WideEcrfFileReader {
                         .build();
 
                 wideFiveDays.add(wideFiveDaysData);
-            } else if (parts.length > 0) {
+            } else {
                 LOGGER.warn("Could not properly parse line in WIDE five days csv: {}", line);
             }
         }
@@ -111,9 +111,9 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, PRE_AVL_TREATMENT_DATA_COUNT);
+            String[] parts = line.split(COMMA, PRE_AVL_TREATMENT_DATA_COUNT);
             if (parts.length == PRE_AVL_TREATMENT_DATA_COUNT) {
-                WidePreAvlTreatmentData widePreAvlTreatmentData = ImmutableWidePreAvlTreatmentData.builder()
+                WidePreAvlTreatmentData widePreAvlTreatment = ImmutableWidePreAvlTreatmentData.builder()
                         .patientId(toWideID(parts[PRE_AVL_TREATMENT_DATA_PATIENT_ID]))
                         .hasPreviousTherapy(parts[PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY].equals("1"))
                         .drug1(parts[PRE_AVL_TREATMENT_DATA_DRUG1])
@@ -123,9 +123,9 @@ public class WideEcrfFileReader {
                         .lastSystemicTherapyDate(interpretDateEN(parts[PRE_AVL_TREATMENT_DATA_LAST_SYSTEMIC_THERAPY_DATE]))
                         .build();
 
-                widePreTreatments.add(widePreAvlTreatmentData);
-            } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE pre treatment csv: {}", line);
+                widePreTreatments.add(widePreAvlTreatment);
+            } else {
+                LOGGER.warn("Could not properly parse line in WIDE pre-AVL treatment csv: {}", line);
             }
         }
         return widePreTreatments;
@@ -137,17 +137,17 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, BIOPSY_DATA_COUNT);
+            String[] parts = line.split(COMMA, BIOPSY_DATA_COUNT);
             if (parts.length == BIOPSY_DATA_COUNT) {
-                WideBiopsyData wideBiopsyData = ImmutableWideBiopsyData.builder()
+                WideBiopsyData wideBiopsy = ImmutableWideBiopsyData.builder()
                         .patientId(toWideID(parts[BIOPSY_DATA_PATIENT_ID]))
                         .pathologySampleId(parts[BIOPSY_DATA_PATHOLOGY_SAMPLE_ID])
                         .biopsyDate(interpretDateEN(parts[BIOPSY_DATA_DATE]))
-                        .hasReceivedSuccessfulReport(parts[BIOPSY_DATA_HAS_RECEIVED_SUCCESSFUL_REPORT].equals("yes"))
+                        .hasReceivedSuccessfulReport(convertHasReceivedSuccessfulReport(parts[BIOPSY_DATA_HAS_RECEIVED_SUCCESSFUL_REPORT]))
                         .build();
 
-                wideBiopsies.add(wideBiopsyData);
-            } else if (parts.length > 0) {
+                wideBiopsies.add(wideBiopsy);
+            } else {
                 LOGGER.warn("Could not properly parse line in WIDE biopsy csv: {}", line);
             }
         }
@@ -160,7 +160,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, AVL_TREATMENT_DATA_COUNT);
+            String[] parts = line.split(SEMICOLON, AVL_TREATMENT_DATA_COUNT);
             if (parts.length == AVL_TREATMENT_DATA_COUNT) {
                 WideAvlTreatmentData wideTreatment = ImmutableWideAvlTreatmentData.builder()
                         .patientId(toWideID(parts[AVL_TREATMENT_DATA_PATIENT_ID]))
@@ -171,8 +171,8 @@ public class WideEcrfFileReader {
                         .build();
 
                 wideTreatments.add(wideTreatment);
-            } else if (parts.length > 0) {
-                LOGGER.warn("Could not properly parse line in WIDE treatment csv: {}", line);
+            } else {
+                LOGGER.warn("Could not properly parse line in WIDE AVL treatment csv: {}", line);
             }
         }
         return wideTreatments;
@@ -184,9 +184,9 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(FIELD_SEPARATOR, RESPONSE_DATA_COUNT);
+            String[] parts = line.split(COMMA, RESPONSE_DATA_COUNT);
             if (parts.length == RESPONSE_DATA_COUNT) {
-                WideResponseData wideResponseData = ImmutableWideResponseData.builder()
+                WideResponseData wideResponse = ImmutableWideResponseData.builder()
                         .patientId(toWideID(parts[RESPONSE_DATA_PATIENT_ID]))
                         .timePoint(Integer.parseInt(parts[RESPONSE_DATA_TIME_POINT]))
                         .date(interpretDateNL(parts[RESPONSE_DATA_DATE]))
@@ -197,8 +197,8 @@ public class WideEcrfFileReader {
                         .noRecistReasonStopTreatmentOther(parts[RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT_OTHER])
                         .build();
 
-                wideResponses.add(wideResponseData);
-            } else if (parts.length > 0) {
+                wideResponses.add(wideResponse);
+            } else {
                 LOGGER.warn("Could not properly parse line in WIDE response csv: {}", line);
             }
         }
@@ -214,7 +214,6 @@ public class WideEcrfFileReader {
 
         return LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
-
 
     @Nullable
     @VisibleForTesting
@@ -276,6 +275,18 @@ public class WideEcrfFileReader {
         if (participatesInOtherTrials.equals("Y")) {
             return true;
         } else if (participatesInOtherTrials.equals("N")) {
+            return false;
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
+    @VisibleForTesting
+    static Boolean convertHasReceivedSuccessfulReport(@NotNull String hasReceivedSuccessfulReport) {
+        if (hasReceivedSuccessfulReport.equals("yes")) {
+            return true;
+        } else if (hasReceivedSuccessfulReport.equals("no")) {
             return false;
         } else {
             return null;
