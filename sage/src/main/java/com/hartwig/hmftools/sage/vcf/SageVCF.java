@@ -160,6 +160,7 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
 
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIXED_GERMLINE_SOMATIC_MNV.toString(), "MNV contains combination of somatic and germline SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));

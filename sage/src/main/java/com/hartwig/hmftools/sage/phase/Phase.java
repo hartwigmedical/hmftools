@@ -11,12 +11,13 @@ public class Phase implements Consumer<SageVariant> {
     private final DedupMnv mnvMerge;
     private final LocalPhaseSet localPhaseSet;
     private final DedupIndel dedupIndel;
+    private final MixedGermlineMnv mixedGermlineMnv;
 
     public Phase(@NotNull final SageConfig config, @NotNull final Consumer<SageVariant> consumer) {
         dedupIndel = new DedupIndel(consumer);
         mnvMerge = new DedupMnv(dedupIndel);
-        localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), mnvMerge);
-
+        mixedGermlineMnv = new MixedGermlineMnv(mnvMerge);
+        localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), mixedGermlineMnv);
     }
 
     @Override
@@ -26,6 +27,7 @@ public class Phase implements Consumer<SageVariant> {
 
     public void flush() {
         localPhaseSet.flush();
+        mixedGermlineMnv.flush();
         mnvMerge.flush();
         dedupIndel.flush();
     }
