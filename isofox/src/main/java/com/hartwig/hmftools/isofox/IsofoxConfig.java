@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 
@@ -43,9 +46,9 @@ public class IsofoxConfig
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String DROP_DUPLICATES = "drop_dups";
     private static final String MARK_DUPLICATES = "mark_dups";
+    private static final String FIND_FUSIONS = "find_fusions";
 
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
-    private static final String WRITE_FRAG_LENGTHS_ONLY = "write_frag_lengths_only";
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
 
@@ -88,6 +91,7 @@ public class IsofoxConfig
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
     public final boolean MarkDuplicates;
+    public final boolean FindFusions;
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
@@ -108,11 +112,10 @@ public class IsofoxConfig
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
     public final boolean FragmentLengthsByGene;
-    public final boolean WriteFragmentLengthsOnly;
 
     public final boolean WriteGcData;
     public final String GcAdjustmentsFile;
-    public static double GC_RATIO_BUCKET = GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
+    public static double GC_RATIO_BUCKET = DEFAULT_GC_RATIO_BUCKET;
 
     public final List<String> EnrichedGeneIds;
 
@@ -121,10 +124,6 @@ public class IsofoxConfig
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
-
-    public static final int DEFAULT_MAX_FRAGMENT_SIZE = 550;
-
-    public static final int GENE_FRAGMENT_BUFFER = 1000; // width around a gene within which to search for reads
 
     public static final Logger ISF_LOGGER = LogManager.getLogger(IsofoxConfig.class);
 
@@ -185,18 +184,18 @@ public class IsofoxConfig
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
-        FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, "0"));
+        FindFusions = cmd.hasOption(FIND_FUSIONS);
+        FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, String.valueOf(DEFAULT_FRAG_LENGTH_MIN_COUNT)));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
-        WriteFragmentLengthsOnly = cmd.hasOption(WRITE_FRAG_LENGTHS_ONLY);
         FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
 
         GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
-                Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : GcRatioCounts.DEFAULT_GC_RATIO_BUCKET;
+                Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
 
         SpecificTransIds = cmd.hasOption(SPECIFIC_TRANS_IDS) ?
                 Arrays.stream(cmd.getOptionValue(SPECIFIC_TRANS_IDS).split(";")).collect(Collectors.toList())
@@ -275,10 +274,21 @@ public class IsofoxConfig
 
         if(ApplyExpectedRates && ExpCountsFile == null)
         {
-            if(!ApplyFragmentLengthAdjust && (ReadLength == 0 || FragmentLengthData.isEmpty()))
+            if(ApplyFragmentLengthAdjust)
             {
-                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
-                return false;
+                if(FragmentLengthMinCount == 0)
+                {
+                    ISF_LOGGER.error("invalid min fragment length count for fragment length sampling");
+                    return false;
+                }
+            }
+            else
+            {
+                if(ReadLength == 0 || FragmentLengthData.isEmpty())
+                {
+                    ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
+                    return false;
+                }
             }
 
             return true;
@@ -299,12 +309,6 @@ public class IsofoxConfig
         if(RefFastaSeqFile == null)
         {
             ISF_LOGGER.error("ref genome missing");
-            return false;
-        }
-
-        if(WriteFragmentLengthsOnly && FragmentLengthMinCount == 0)
-        {
-            ISF_LOGGER.error("min frag count missing for frag length distribution logging");
             return false;
         }
 
@@ -345,12 +349,7 @@ public class IsofoxConfig
 
     public boolean generateExpectedDataOnly()
     {
-        return (WriteExpectedCounts && !ApplyFragmentLengthAdjust && !ApplyExpectedRates) || WriteExpectedGcRatios;
-    }
-
-    public boolean writeExpectedRateData()
-    {
-        return WriteExpectedCounts || WriteExpectedRates;
+        return WriteExpectedCounts || WriteExpectedGcRatios;
     }
 
     public boolean requireFragmentLengthCalcs()
@@ -395,7 +394,6 @@ public class IsofoxConfig
         WriteExonData = false;
         WriteReadData = false;
         WriteFragmentLengths = false;
-        WriteFragmentLengthsOnly = false;
         WriteTransComboData = false;
         WriteGcData = false;
 
@@ -407,6 +405,9 @@ public class IsofoxConfig
         OutputIdentifier = null;
         FragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
+
+        FindFusions = true;
+
         SpecificTransIds = Lists.newArrayList();
         SpecificChromosomes = Lists.newArrayList();
         RunValidations = true;
@@ -439,7 +440,6 @@ public class IsofoxConfig
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
-        options.addOption(WRITE_FRAG_LENGTHS_ONLY, false, "Only write intronic fragment lengths then exit");
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
         options.addOption(WRITE_EXPECTED_GC_RATIOS, false, "Write expected GC ratios");
@@ -456,6 +456,8 @@ public class IsofoxConfig
 
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");
+
+        options.addOption(FIND_FUSIONS, false, "Search for fusions");
 
         options.addOption(WRITE_EXPECTED_RATES, false, "Write sample expected expression rates to file");
         options.addOption(WRITE_EXPECTED_COUNTS, false, "Write expected expression counts from common frag lengths to file");

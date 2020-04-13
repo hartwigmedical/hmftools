@@ -46,8 +46,6 @@ public class ReadRecord
     public final boolean IsDuplicate;
     public final boolean IsFirstOfPair;
     public final boolean IsNegStrand;
-    public final String MateChromosome;
-    public final boolean MateIsNegStrand;
 
     public final List<long[]> mMappedCoords;
     private boolean mLowerInferredAdded;
@@ -63,12 +61,12 @@ public class ReadRecord
         return new ReadRecord(
                 record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
                 record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFirstOfPairFlag(),
-                record.getReadNegativeStrandFlag(), record.getMateReferenceName(), record.getMateNegativeStrandFlag(), record.getDuplicateReadFlag());
+                record.getReadNegativeStrandFlag(), record.getDuplicateReadFlag());
     }
 
     public ReadRecord(
             final String id, final String chromosome, long posStart, long posEnd, final String readBases, @NotNull final Cigar cigar,
-            int insertSize, boolean isFirstOfPair, boolean isNegStrand, final String mateChromosome, boolean mateIsNegStrand, boolean isDuplicate)
+            int insertSize, boolean isFirstOfPair, boolean isNegStrand, boolean isDuplicate)
     {
         Id = id;
         Chromosome = chromosome;
@@ -79,8 +77,6 @@ public class ReadRecord
         Cigar = cigar;
         IsFirstOfPair = isFirstOfPair;
         IsNegStrand = isNegStrand;
-        MateChromosome = mateChromosome;
-        MateIsNegStrand = mateIsNegStrand;
         IsDuplicate = isDuplicate;
 
         mMappedCoords = generateMappedCoords(Cigar, PosStart);
@@ -97,14 +93,14 @@ public class ReadRecord
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
-    public boolean isTranslocation()
+    public static boolean isTranslocation(@NotNull final SAMRecord record)
     {
-        return !Chromosome.equals(MateChromosome);
+        return !record.getReferenceName().equals(record.getMateReferenceName());
     }
 
-    public boolean isLocalInversion()
+    public static boolean isInversion(@NotNull final SAMRecord record)
     {
-        return IsNegStrand == MateIsNegStrand;
+        return record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag();
     }
 
     public List<long[]> getMappedRegionCoords() { return mMappedCoords; }

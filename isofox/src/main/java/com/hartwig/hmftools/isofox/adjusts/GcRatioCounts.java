@@ -26,7 +26,6 @@ public class GcRatioCounts
     private final double[] mRatios; // the ratios
     private final double[] mCounts; // the frequencies of the ratios
 
-    public static final double DEFAULT_GC_RATIO_BUCKET = 0.01;
 
     public GcRatioCounts()
     {

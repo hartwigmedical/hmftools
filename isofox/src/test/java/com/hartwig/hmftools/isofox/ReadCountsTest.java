@@ -360,7 +360,7 @@ public class ReadCountsTest
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
         return new ReadRecord(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
-                0, true, false, chromosome, true, false);
+                0, true, false, false);
     }
 
     private RegionReadData createRegion(int trans, int exonRank, final String chromosome, long posStart, long posEnd)

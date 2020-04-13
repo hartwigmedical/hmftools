@@ -107,7 +107,7 @@ public class ResultsWriter
         if(mConfig.OutputDir == null)
             return;
 
-        if(mConfig.writeExpectedRateData())
+        if(mConfig.WriteExpectedCounts || mConfig.WriteExpectedRates)
         {
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
         }

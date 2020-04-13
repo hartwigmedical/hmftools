@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
@@ -59,6 +60,14 @@ public class FragmentSizeCalcs
     private int mTotalReadCount;
     private int mProcessedFragments;
 
+    private static final int MIN_GENE_LENGTH = 1000;
+    private static final int MAX_GENE_LENGTH = 1000000;
+    private static final int MAX_GENE_TRANS = 20;
+    private static final int MAX_TRAN_EXONS = 20;
+    private static final int MAX_GENE_READ_COUNT = 1000; // to avoid impact of highly enriched genes
+
+    private static int FRAG_LENGTH_CAP = 3000; // to prevent map blowing out in size
+
     private PerformanceCounter mPerfCounter;
 
     public FragmentSizeCalcs(final IsofoxConfig config, final EnsemblDataCache geneTransCache, final BufferedWriter writer)
@@ -67,7 +76,7 @@ public class FragmentSizeCalcs
         mGeneTransCache = geneTransCache;
 
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
-        mBamSlicer = new BamSlicer(BamFragmentAllocator.DEFAULT_MIN_MAPPING_QUALITY, true);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
 
         mCurrentGeneData = null;
         mCurrentTransDataList = null;
@@ -85,14 +94,6 @@ public class FragmentSizeCalcs
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
     public final int getMaxReadLength() { return mMaxReadLength; }
-
-    private static final int MIN_GENE_LENGTH = 1000;
-    private static final int MAX_GENE_LENGTH = 1000000;
-    private static final int MAX_GENE_TRANS = 20;
-    private static final int MAX_TRAN_EXONS = 20;
-    private static final int MAX_GENE_READ_COUNT = 1000; // to avoid impact of highly enriched genes
-
-    private static int FRAG_LENGTH_CAP = 3000; // to prevent map blowing out in size
 
     public void calcSampleFragmentSize(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
     {
