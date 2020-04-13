@@ -16,7 +16,7 @@ public class WideEcrfFileReaderTest {
 
     @Test
     public void canReadWidePreAvlTreatments() throws IOException {
-        List<WidePreAvlTreatmentData2> preTreatments =
+        List<WidePreAvlTreatmentData> preTreatments =
                 WideEcrfFileReader.readPreAvlTreatmentData(WIDE_TEST_DIR + File.separator + "wide_pre_avl_treatments.csv");
 
         assertEquals(2, preTreatments.size());
