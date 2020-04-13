@@ -1,6 +1,9 @@
-package com.hartwig.hmftools.patientdb.readers;
+package com.hartwig.hmftools.patientdb.readers.wide;
 
-import static org.junit.Assert.*;
+import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,32 +15,11 @@ import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
-import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
-import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWidePreTreatmentData;
-import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideResponseData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideTreatmentData;
-
-import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 public class WidePatientReaderTest {
-
-    @Test
-    public void canInterpretDateNL() {
-        assertEquals(WidePatientReader.createInterpretDateNL("18-apr-2019").toString(), "2019-04-18");
-        assertEquals(WidePatientReader.createInterpretDateNL("17-okt-2018").toString(), "2018-10-17");
-    }
-
-    @Test
-    public void canInterpretDateEN() {
-        assertEquals(WidePatientReader.createInterpretDateEN("21-May-2019").toString(), "2019-05-21");
-    }
 
     @Test
     public void canInterpretDateIC() {
@@ -59,26 +41,26 @@ public class WidePatientReaderTest {
     public void determineResponse() {
         WideResponseData responseFollowRecist = ImmutableWideResponseData.builder()
                 .patientId(Strings.EMPTY)
-                .timePoint("1")
-                .date(Strings.EMPTY)
-                .recistNotDone("FALSE")
-                .responseAccordingRecist("PD")
-                .clinicalDecision(Strings.EMPTY)
-                .reasonStopTreatment(Strings.EMPTY)
-                .reasonStopTreatmentOther(Strings.EMPTY)
+                .timePoint(1)
+                .date(LocalDate.parse("2017-01-01"))
+                .recistDone(true)
+                .recistResponse("PD")
+                .noRecistResponse(Strings.EMPTY)
+                .noRecistReasonStopTreatment(Strings.EMPTY)
+                .noRecistReasonStopTreatmentOther(Strings.EMPTY)
                 .build();
 
         assertEquals(WidePatientReader.determineResponse(responseFollowRecist), "(1) PD");
 
         WideResponseData responseNotRecist = ImmutableWideResponseData.builder()
                 .patientId(Strings.EMPTY)
-                .timePoint("2")
-                .date(Strings.EMPTY)
-                .recistNotDone("WAAR") // TODO change to TRUE
-                .responseAccordingRecist(Strings.EMPTY)
-                .clinicalDecision("stop treatment")
-                .reasonStopTreatment("other, please specify")
-                .reasonStopTreatmentOther(Strings.EMPTY)
+                .timePoint(2)
+                .date(LocalDate.parse("2017-01-01"))
+                .recistDone(false)
+                .recistResponse(Strings.EMPTY)
+                .noRecistResponse("stop treatment")
+                .noRecistReasonStopTreatment("other, please specify")
+                .noRecistReasonStopTreatmentOther(Strings.EMPTY)
                 .build();
 
         assertEquals(WidePatientReader.determineResponse(responseNotRecist), "(2) stop treatment (other, please specify)");
@@ -93,28 +75,28 @@ public class WidePatientReaderTest {
 
     @Test
     public void canReadCombiPreTreatment() {
-        List<WidePreTreatmentData> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreTreatmentData.builder()
+        List<WidePreAVLTreatmentData> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreAVLTreatmentData.builder()
                 .patientId("WIDE00000001")
-                .previousTherapy("1")
+                .hasPreviousTherapy(true)
                 .drug1("carboplatin")
                 .drug2("erlotinib")
                 .drug3(Strings.EMPTY)
                 .drug4(Strings.EMPTY)
-                .dateLastSystemicTherapy("20-nov-2015")
+                .lastSystemicTherapyDate(LocalDate.parse("2015-11-20"))
                 .build());
-        List<WidePreTreatmentData> preTreatmentData = Lists.newArrayList(ImmutableWidePreTreatmentData.builder()
+        List<WidePreAVLTreatmentData> preTreatmentData = Lists.newArrayList(ImmutableWidePreAVLTreatmentData.builder()
                 .patientId("WIDE00000001")
-                .previousTherapy("1")
+                .hasPreviousTherapy(true)
                 .drug1("carboplatin")
                 .drug2(Strings.EMPTY)
                 .drug3(Strings.EMPTY)
                 .drug4(Strings.EMPTY)
-                .dateLastSystemicTherapy("20-nov-2015")
+                .lastSystemicTherapyDate(LocalDate.parse("2015-11-20"))
                 .build());
         TreatmentCurator treatmentCurator = TestCuratorFactory.treatmentCurator();
         String patientIdentifier = "WIDE00000001";
-        LocalDate biopsyDate = WidePatientReader.createInterpretDateEN("21-May-2019");
-        List<WideTreatmentData> treatmentData = Lists.newArrayList();
+        LocalDate biopsyDate = LocalDate.parse("2019-05-21");
+        List<WideAvlTreatmentData> treatmentData = Lists.newArrayList();
 
         assertEquals(WidePatientReader.readDrugsPreTreatment(preTreatmentDataCombi,
                 treatmentCurator,
@@ -133,12 +115,10 @@ public class WidePatientReaderTest {
     @Test
     public void canLoadEmptyPatient() {
         Lims lims = LimsFactory.empty();
-        WideEcrfModel wideEcrfModel;
-
-        wideEcrfModel = ImmutableWideEcrfModel.builder()
-                .preTreatments(Lists.newArrayList())
+        WideEcrfModel wideEcrfModel = ImmutableWideEcrfModel.builder()
+                .preAvlTreatments(Lists.newArrayList())
                 .biopsies(Lists.newArrayList())
-                .treatments(Lists.newArrayList())
+                .avlTreatments(Lists.newArrayList())
                 .responses(Lists.newArrayList())
                 .build();
 

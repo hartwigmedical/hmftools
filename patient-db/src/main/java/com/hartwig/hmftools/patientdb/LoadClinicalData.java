@@ -38,14 +38,14 @@ import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
 import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.WideAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfFileReader;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WideFiveDays;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
+import com.hartwig.hmftools.patientdb.readers.wide.WidePreAVLTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideTreatmentData;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -273,7 +273,7 @@ public final class LoadClinicalData {
             LOGGER.info(" Loaded {} WIDE five days from {}", fiveDays.size(), fiveDaysCsv);
 
             String preTreatmentCsv = cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV);
-            List<WidePreTreatmentData> pretreatments = WideEcrfFileReader.readPreTreatmentData(preTreatmentCsv);
+            List<WidePreAVLTreatmentData> pretreatments = WideEcrfFileReader.readPreAvlTreatmentData(preTreatmentCsv);
             LOGGER.info(" Loaded {} WIDE pre-treatments from {}", pretreatments.size(), preTreatmentCsv);
 
             String biopsyCsv = cmd.getOptionValue(WIDE_BIOPSY_CSV);
@@ -281,7 +281,7 @@ public final class LoadClinicalData {
             LOGGER.info(" Loaded {} WIDE biopsies from {}", biopsies.size(), biopsyCsv);
 
             String treatmentCsv = cmd.getOptionValue(WIDE_TREATMENT_CSV);
-            List<WideTreatmentData> treatments = WideEcrfFileReader.readTreatmentData(treatmentCsv);
+            List<WideAvlTreatmentData> treatments = WideEcrfFileReader.readAvlTreatmentData(treatmentCsv);
             LOGGER.info(" Loaded {} WIDE treatments from {}", treatments.size(), treatmentCsv);
 
             String wideResponseCsv = cmd.getOptionValue(WIDE_RESPONSE_CSV);
@@ -289,18 +289,18 @@ public final class LoadClinicalData {
             LOGGER.info(" Loaded {} WIDE responses from {}", responses.size(), wideResponseCsv);
 
             wideEcrfModel = ImmutableWideEcrfModel.builder()
-                    .preTreatments(pretreatments)
+                    .preAvlTreatments(pretreatments)
                     .biopsies(biopsies)
-                    .treatments(treatments)
+                    .avlTreatments(treatments)
                     .responses(responses)
                     .fiveDays(fiveDays)
                     .build();
         } else {
             LOGGER.info("Skipping the loading of WIDE eCRF");
             wideEcrfModel = ImmutableWideEcrfModel.builder()
-                    .preTreatments(Lists.newArrayList())
+                    .preAvlTreatments(Lists.newArrayList())
                     .biopsies(Lists.newArrayList())
-                    .treatments(Lists.newArrayList())
+                    .avlTreatments(Lists.newArrayList())
                     .responses(Lists.newArrayList())
                     .build();
         }

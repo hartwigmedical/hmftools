@@ -15,9 +15,9 @@ public class WideEcrfFileReaderTest {
     private static final String WIDE_TEST_DIR = Resources.getResource("wide").getPath();
 
     @Test
-    public void canReadWidePreTreatments() throws IOException {
-        List<WidePreTreatmentData> preTreatments =
-                WideEcrfFileReader.readPreTreatmentData(WIDE_TEST_DIR + File.separator + "wide_pre_treatments.csv");
+    public void canReadWidePreAvlTreatments() throws IOException {
+        List<WidePreAVLTreatmentData> preTreatments =
+                WideEcrfFileReader.readPreAvlTreatmentData(WIDE_TEST_DIR + File.separator + "wide_pre_avl_treatments.csv");
 
         assertEquals(2, preTreatments.size());
     }
@@ -31,18 +31,29 @@ public class WideEcrfFileReaderTest {
     }
 
     @Test
-    public void canReadWideTreatments() throws IOException {
-        List<WideTreatmentData> treatments =
-                WideEcrfFileReader.readTreatmentData(WIDE_TEST_DIR + File.separator + "wide_treatments.csv");
+    public void canReadWideAvlTreatments() throws IOException {
+        List<WideAvlTreatmentData> treatments =
+                WideEcrfFileReader.readAvlTreatmentData(WIDE_TEST_DIR + File.separator + "wide_avl_treatments.csv");
 
         assertEquals(2, treatments.size());
     }
 
     @Test
-    public void canReadPreResponses() throws IOException {
+    public void canReadWideResponses() throws IOException {
         List<WideResponseData> responses =
                 WideEcrfFileReader.readResponseData(WIDE_TEST_DIR + File.separator + "wide_responses.csv");
 
         assertEquals(2, responses.size());
+    }
+
+    @Test
+    public void canInterpretDateNL() {
+        assertEquals(WideEcrfFileReader.interpretDateNL("18-apr-2019").toString(), "2019-04-18");
+        assertEquals(WideEcrfFileReader.interpretDateNL("17-okt-2018").toString(), "2018-10-17");
+    }
+
+    @Test
+    public void canInterpretDateEN() {
+        assertEquals(WideEcrfFileReader.interpretDateEN("21-May-2019").toString(), "2019-05-21");
     }
 }
