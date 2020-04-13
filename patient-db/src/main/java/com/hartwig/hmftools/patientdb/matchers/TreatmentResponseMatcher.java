@@ -43,36 +43,44 @@ public final class TreatmentResponseMatcher {
         BiopsyTreatmentData nextTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
         boolean hasNewBaselineResponseFound = false;
         for (BiopsyTreatmentResponseData response : responses) {
-            LocalDate responseDate = response.date();
-            if (responseMatchable(responseDate, firstTreatmentStart)) {
-                LocalDate nextTreatmentStart = nextTreatment != null ? nextTreatment.startDate() : null;
-                while (nextTreatmentStart != null && responseDate.isAfter(nextTreatmentStart)) {
-                    currentTreatment = nextTreatment;
-                    nextTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
-                    nextTreatmentStart = nextTreatment != null ? nextTreatment.startDate() : null;
-                    hasNewBaselineResponseFound = false;
-                }
-
-                if (hasNewBaselineResponseFound) {
-                    matchedResponses.add(response);
-                    findings.add(responseMatchFinding(patientIdentifier,
-                            "Response after new baseline and before next treatment",
-                            "response: " + response));
-                } else {
-                    String actualResponse = response.response();
-                    if (actualResponse != null && actualResponse.equalsIgnoreCase("ne")) {
-                        matchedResponses.add(response);
-                        hasNewBaselineResponseFound = true;
-                    } else {
-                        matchedResponses.add(ImmutableBiopsyTreatmentResponseData.builder()
-                                .from(response)
-                                .treatmentId(currentTreatment.id())
-                                .build());
-                    }
-                }
+            if (patientIdentifier.startsWith("WIDE")) {
+                matchedResponses.add(BiopsyTreatmentResponseData.of(currentTreatment.id(), response.assessmentDate(),
+                        response.responseDate(),
+                        response.response(),
+                        response.measurementDone(), response.boneOnlyDisease(), response.formStatus()));
             } else {
-                matchedResponses.add(response);
+                LocalDate responseDate = response.date();
+                if (responseMatchable(responseDate, firstTreatmentStart)) {
+                    LocalDate nextTreatmentStart = nextTreatment != null ? nextTreatment.startDate() : null;
+                    while (nextTreatmentStart != null && responseDate.isAfter(nextTreatmentStart)) {
+                        currentTreatment = nextTreatment;
+                        nextTreatment = treatmentIterator.hasNext() ? treatmentIterator.next() : null;
+                        nextTreatmentStart = nextTreatment != null ? nextTreatment.startDate() : null;
+                        hasNewBaselineResponseFound = false;
+                    }
+
+                    if (hasNewBaselineResponseFound) {
+                        matchedResponses.add(response);
+                        findings.add(responseMatchFinding(patientIdentifier,
+                                "Response after new baseline and before next treatment",
+                                "response: " + response));
+                    } else {
+                        String actualResponse = response.response();
+                        if (actualResponse != null && actualResponse.equalsIgnoreCase("ne")) {
+                            matchedResponses.add(response);
+                            hasNewBaselineResponseFound = true;
+                        } else {
+                            matchedResponses.add(ImmutableBiopsyTreatmentResponseData.builder()
+                                    .from(response)
+                                    .treatmentId(currentTreatment.id())
+                                    .build());
+                        }
+                    }
+                } else {
+                    matchedResponses.add(response);
+                }
             }
+
         }
 
         return new MatchResult<>(matchedResponses, findings);

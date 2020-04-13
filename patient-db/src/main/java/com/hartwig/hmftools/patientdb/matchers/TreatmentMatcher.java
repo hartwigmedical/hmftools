@@ -25,7 +25,7 @@ public final class TreatmentMatcher {
     @NotNull
     public static MatchResult<BiopsyTreatmentData> matchTreatmentsToBiopsies(@NotNull String patientIdentifier,
             @NotNull List<BiopsyData> biopsies, @NotNull List<BiopsyTreatmentData> treatments) {
-         List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
+        List<BiopsyTreatmentData> matchedTreatments = Lists.newArrayList();
         List<ValidationFinding> findings = Lists.newArrayList();
 
         List<BiopsyData> remainingBiopsies = Lists.newArrayList(biopsies);
@@ -44,12 +44,22 @@ public final class TreatmentMatcher {
             } else {
                 BiopsyData bestMatch = null;
                 for (BiopsyData remainingBiopsy : remainingBiopsies) {
+
                     if (isPossibleMatch(remainingBiopsy, startDate)) {
-                        bestMatch = determineBestMatch(remainingBiopsy, bestMatch);
+                        if (patientIdentifier.startsWith("WIDE")) {
+                            bestMatch = remainingBiopsy;
+                            matchedTreatments.add(BiopsyTreatmentData.of(bestMatch.id(),
+                                    treatment.treatmentGiven(),
+                                    treatment.radiotherapyGiven(),
+                                    treatment.drugs(),
+                                    treatment.formStatus()));
+                        } else {
+                            bestMatch = determineBestMatch(remainingBiopsy, bestMatch);
+                        }
                     }
                 }
 
-                if (bestMatch != null) {
+                if (bestMatch != null && !patientIdentifier.equals("WIDE")) {
                     matchedTreatments.add(ImmutableBiopsyTreatmentData.builder().from(treatment).biopsyId(bestMatch.id()).build());
                     remainingBiopsies.remove(bestMatch);
                 } else {

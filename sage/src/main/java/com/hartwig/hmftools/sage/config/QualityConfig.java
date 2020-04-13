@@ -49,7 +49,7 @@ public interface QualityConfig {
         return mapQuality - mapQualityFixedPenalty() - improperPairPenalty - distancePenalty;
     }
 
-    default int modifiedBaseQuality(int baseQuality, int distanceFromReadEdge) {
+    default double modifiedBaseQuality(double baseQuality, int distanceFromReadEdge) {
         return Math.min(baseQuality - baseQualityFixedPenalty(), 3 * distanceFromReadEdge - distanceFromReadEdgeFixedPenalty());
     }
 

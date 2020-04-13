@@ -32,16 +32,14 @@ import com.hartwig.hmftools.patientdb.data.PreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.matchers.BiopsyMatcher;
 import com.hartwig.hmftools.patientdb.matchers.MatchResult;
+import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
+import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WidePatientReader {
-
-    private static final Logger LOGGER = LogManager.getLogger(WidePatientReader.class);
 
     @NotNull
     private final WideEcrfModel wideEcrfModel;
@@ -61,63 +59,99 @@ public class WidePatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
-            @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String sampleId) {
+    public static String extractYearOfTissueId(@NotNull String tissueId) {
+        return tissueId.split("-")[0];
+    }
 
-        LocalDate biopsyDateCheck = LocalDate.now();
+    @NotNull
+    public static String extractBiopsyIdOfTissueId(@NotNull String tissueId) {
+        return tissueId.split("-")[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
+
+    }
+
+    @NotNull
+    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
+            @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String tumorBarcode) {
+
+        String biopsyDateCheck = Strings.EMPTY;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.wideId())) {
-                if (biopsy.tissueId().equals(lims.hospitalPathologySampleId("XXX"))) {
-                    biopsyDateCheck = createInterpretDate(biopsy.bioptDate());
+                String limsPathologyTissueId = lims.hospitalPathologySampleId(tumorBarcode);
+                String limsPathologyTissueIdYear = extractYearOfTissueId(limsPathologyTissueId);
+                String limsPathologyTissueIdConvert = extractBiopsyIdOfTissueId(limsPathologyTissueId);
+
+                String ecrfPathologyTissueId = biopsy.tissueId();
+                String ecrfPathologyTissueIdYear = extractYearOfTissueId(ecrfPathologyTissueId);
+                String ecrfPathologyTissueIdConvert = extractBiopsyIdOfTissueId(ecrfPathologyTissueId);
+
+                if (ecrfPathologyTissueIdYear.equals(limsPathologyTissueIdYear) && ecrfPathologyTissueIdConvert.equals(
+                        limsPathologyTissueIdConvert)) {
+                    biopsyDateCheck = createInterpretDateNL(biopsy.bioptDate()).toString();
                 }
             }
         }
 
         String birthYear = Strings.EMPTY;
         String gender = Strings.EMPTY;
+        String informedConsent = Strings.EMPTY;
+        String sharedData = Strings.EMPTY;
+        String biopsySite = Strings.EMPTY;
+        String sampleTissue = Strings.EMPTY;
 
         for (WideFiveDays fiveDays : wideEcrfModel.fiveDays()) {
             if (patientIdentifier.equals(fiveDays.wideId())) {
-                birthYear = fiveDays.birthYear();
-                gender = fiveDays.gender();
-
+                if (!fiveDays.dateBiopsy().equals(Strings.EMPTY) && !biopsyDateCheck.equals(Strings.EMPTY)) {
+                    if (createInterpretDateEN(fiveDays.dateBiopsy()).equals(convertStringToLocalDate(biopsyDateCheck))) {
+                        birthYear = fiveDays.birthYear();
+                        gender = fiveDays.gender();
+                        informedConsent = fiveDays.informedConsent();
+                        sharedData = fiveDays.dateShared();
+                        biopsySite = fiveDays.biopsySite();
+                        sampleTissue = fiveDays.sampleTissue();
+                    }
+                }
             }
         }
 
         LocalDate biopsyDate = bioptDate(wideEcrfModel.biopsies(), patientIdentifier);
 
-//        MatchResult<BiopsyData> matchedBiopsies = BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier,
-//                sequencedSamples,
-//                toBiopsyData(wideEcrfModel.fiveDays(), biopsySiteCurator, patientIdentifier, biopsyDateCheck));
-//        //
-        //        MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
-        //                withSampleMatchOnly(matchedBiopsies),
-        //                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier, biopsyDate));
-        //
-        //        // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
-        //        MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
-        //                patientIdentifier,
-        //                matchedTreatments.values(),
-        //                toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
+        List<BiopsyData> biopsyData = toBiopsyData(wideEcrfModel.fiveDays(),
+                biopsySiteCurator,
+                patientIdentifier,
+                biopsyDateCheck,
+                biopsySite,
+                sampleTissue,
+                tumorLocationCurator.search(primaryTumorLocation));
+
+        MatchResult<BiopsyData> matchedBiopsies =
+                BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier, sequencedSamples, biopsyData);
+
+        MatchResult<BiopsyTreatmentData> matchedTreatments = TreatmentMatcher.matchTreatmentsToBiopsies(patientIdentifier,
+                withSampleMatchOnly(matchedBiopsies),
+                toBiopsyTreatmentData(wideEcrfModel.treatments(), treatmentCurator, patientIdentifier, biopsyDate));
+
+        // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
+        MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
+                patientIdentifier,
+                matchedTreatments.values(),
+                toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
 
         final List<ValidationFinding> findings = Lists.newArrayList();
-        //        findings.addAll(matchedBiopsies.findings());
-        //        findings.addAll(matchedTreatments.findings());
-        //        findings.addAll(matchedResponses.findings());
+        findings.addAll(matchedBiopsies.findings());
+        findings.addAll(matchedTreatments.findings());
+        findings.addAll(matchedResponses.findings());
 
         return new Patient(patientIdentifier,
-                toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender),
+                toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender, informedConsent, sharedData),
                 preTreatmentData(wideEcrfModel.preTreatments(),
                         treatmentCurator,
                         patientIdentifier,
                         biopsyDate,
                         wideEcrfModel.treatments()),
                 sequencedSamples,
-                Lists.newArrayList(),
-                Lists.newArrayList(),
-                //matchedTreatments.values(),
-                Lists.newArrayList(),
-                //matchedResponses.values(),
+                matchedBiopsies.values(),
+                matchedTreatments.values(),
+                matchedResponses.values(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 findings);
@@ -125,9 +159,35 @@ public class WidePatientReader {
 
     @NotNull
     @VisibleForTesting
-    public static LocalDate createInterpretDate(@NotNull String date) {
+    public static LocalDate createInterpretDateIC(@NotNull String date) {
+        String format = "dd/MM/yyyy";
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public static LocalDate convertStringToLocalDate(@NotNull String date) {
+        String format = "yyyy-MM-dd";
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public static LocalDate createInterpretDateNL(@NotNull String date) {
         DateTimeFormatter inputFormatter =
                 new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(new Locale("nl", "NL"));
+        LocalDate localDate = LocalDate.parse(date, inputFormatter);
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedString = localDate.format(outputFormatter);
+        return LocalDate.parse(formattedString);
+    }
+
+    @NotNull
+    @VisibleForTesting
+    public static LocalDate createInterpretDateEN(@NotNull String date) {
+        DateTimeFormatter inputFormatter =
+                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH);
         LocalDate localDate = LocalDate.parse(date, inputFormatter);
 
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -148,12 +208,12 @@ public class WidePatientReader {
 
     @NotNull
     private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation, @NotNull String birthYear,
-            @NotNull String gender) {
+            @NotNull String gender, @NotNull String informedConsent, @NotNull String sharedData) {
         return ImmutableBaselineData.of(null,
+                sharedData.equals("1") && !informedConsent.isEmpty() ? createInterpretDateIC(informedConsent) : null,
+                convertGender(gender),
                 null,
-                gender,
-                null,
-                null,
+                birthYear.isEmpty() ? null : Integer.valueOf(birthYear),
                 curatedTumorLocation,
                 null,
                 FormStatus.undefined(),
@@ -162,6 +222,17 @@ public class WidePatientReader {
                 FormStatus.undefined(),
                 FormStatus.undefined(),
                 FormStatus.undefined());
+    }
+
+    @NotNull
+    public static String convertGender(@NotNull String gender) {
+        if (gender.equals("1")) {
+            return "Male";
+        } else if (gender.equals("2")) {
+            return "Female";
+        } else {
+            return Strings.EMPTY;
+        }
     }
 
     @NotNull
@@ -176,7 +247,7 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreTreatmentData> preTreatmentData,
+    public static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreTreatmentData> preTreatmentData,
             @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
             @NotNull List<WideTreatmentData> treatmentData) {
         List<DrugData> drugs = Lists.newArrayList();
@@ -184,7 +255,7 @@ public class WidePatientReader {
             if (patientIdentifier.equals(preTreatment.patientId())) {
                 LocalDate drugsEndDate = preTreatment.dateLastSystemicTherapy().isEmpty()
                         ? null
-                        : createInterpretDate(preTreatment.dateLastSystemicTherapy());
+                        : createInterpretDateNL(preTreatment.dateLastSystemicTherapy());
                 String drugsName = Strings.EMPTY;
 
                 if (!preTreatment.drug1().equals(Strings.EMPTY)) {
@@ -227,11 +298,11 @@ public class WidePatientReader {
 
         for (WideTreatmentData postTreatment : treatmentData) {
             if (patientIdentifier.equals(postTreatment.sampleId())) {
-                if (createInterpretDate(postTreatment.startDate()).isBefore(biopsyDate)) {
+                if (createInterpretDateNL(postTreatment.startDate()).isBefore(biopsyDate)) {
                     final List<CuratedDrug> curatedDrugs = treatmentCurator.search(postTreatment.drug());
                     drugs.add(ImmutableDrugData.of(postTreatment.drug(),
-                            postTreatment.startDate().equals(Strings.EMPTY) ? null : createInterpretDate(postTreatment.startDate()),
-                            postTreatment.endDate().equals(Strings.EMPTY) ? null : createInterpretDate(postTreatment.endDate()),
+                            postTreatment.startDate().equals(Strings.EMPTY) ? null : createInterpretDateNL(postTreatment.startDate()),
+                            postTreatment.endDate().equals(Strings.EMPTY) ? null : createInterpretDateNL(postTreatment.endDate()),
                             null,
                             curatedDrugs));
                 }
@@ -245,7 +316,7 @@ public class WidePatientReader {
         LocalDate biopsyDate = LocalDate.now();
         for (WideBiopsyData biopsy : wideBiopsyData) {
             if (patientIdentifier.equals(biopsy.wideId())) {
-                biopsyDate = createInterpretDate(biopsy.bioptDate());
+                biopsyDate = createInterpretDateNL(biopsy.bioptDate());
             }
         }
         return biopsyDate;
@@ -253,22 +324,30 @@ public class WidePatientReader {
 
     @NotNull
     private static List<BiopsyData> toBiopsyData(@NotNull List<WideFiveDays> wideBiopsyData, @NotNull BiopsySiteCurator biopsySiteCurator,
-            @NotNull String patientIdentifier, @NotNull LocalDate biopsyCheck) {
+            @NotNull String patientIdentifier, @NotNull String biopsyCheck, @NotNull String biopsySite, @NotNull String sampleTissue,
+            @NotNull CuratedTumorLocation curatedTumorLocation) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
-        final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
+        final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
+                curatedTumorLocation.subType(),
+                biopsySite,
+                sampleTissue);
 
         for (WideFiveDays biopsyData : wideBiopsyData) {
             if (patientIdentifier.equals(biopsyData.wideId())) {
-                if (createInterpretDate(biopsyData.dateBiopsy()).equals(biopsyCheck)) {
-                    biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.dateBiopsy().isEmpty()
-                                    ? null
-                                    : createInterpretDate(biopsyData.dateBiopsy()),
-                            null,
-                            null,
-                            curatedBiopsyType,
-                            biopsyData.biopsySite(),
-                            biopsyData.sampleTissue(),
-                            FormStatus.undefined()));
+                if (!biopsyData.dateBiopsy().equals(Strings.EMPTY) && !biopsyCheck.equals(Strings.EMPTY)) {
+                    if (createInterpretDateEN(biopsyData.dateBiopsy()).equals(convertStringToLocalDate(biopsyCheck))) {
+                        biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.dateBiopsy().isEmpty()
+                                        ? null
+                                        : createInterpretDateEN(biopsyData.dateBiopsy()),
+                                null,
+                                null,
+                                curatedBiopsyType,
+                                biopsyData.biopsySite(),
+                                biopsyData.sampleTissue(),
+                                FormStatus.undefined()));
+
+                    }
+
                 }
             }
 
@@ -283,9 +362,9 @@ public class WidePatientReader {
         List<BiopsyTreatmentData> biopsyTreatmentDataList = Lists.newArrayList();
         for (WideTreatmentData treatmentData : wideTreatmentData) {
             if (patientIdentifier.equals(treatmentData.sampleId())) {
-                if (biopsyDate.isEqual(createInterpretDate(treatmentData.startDate()))
-                        || createInterpretDate(treatmentData.startDate()).isAfter(biopsyDate)) {
-                    biopsyTreatmentDataList.add(BiopsyTreatmentData.of("yes",
+                if (biopsyDate.isEqual(createInterpretDateNL(treatmentData.startDate())) || createInterpretDateNL(treatmentData.startDate())
+                        .isAfter(biopsyDate)) {
+                    biopsyTreatmentDataList.add(BiopsyTreatmentData.of(null, "yes",
                             null,
                             readDrugsPostTreatment(treatmentData, treatmentCurator),
                             FormStatus.undefined()));
@@ -300,8 +379,8 @@ public class WidePatientReader {
             @NotNull final TreatmentCurator treatmentCurator) {
         final List<DrugData> drugs = Lists.newArrayList();
         String drugName = treatmentData.drug();
-        LocalDate drugsStartDate = treatmentData.startDate().isEmpty() ? null : createInterpretDate(treatmentData.startDate());
-        LocalDate drugsEndDate = treatmentData.endDate().isEmpty() ? null : createInterpretDate(treatmentData.endDate());
+        LocalDate drugsStartDate = treatmentData.startDate().isEmpty() ? null : createInterpretDateNL(treatmentData.startDate());
+        LocalDate drugsEndDate = treatmentData.endDate().isEmpty() ? null : createInterpretDateNL(treatmentData.endDate());
 
         if (!drugName.isEmpty() || drugsStartDate != null || drugsEndDate != null) {
             final List<CuratedDrug> curatedDrugs = drugName.isEmpty() ? Lists.newArrayList() : treatmentCurator.search(drugName);
@@ -316,14 +395,32 @@ public class WidePatientReader {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
             if (patientIdentifier.equals(responseData.patientId())) {
-                biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
-                        createInterpretDate(responseData.date().isEmpty() ? Strings.EMPTY : responseData.date()),
-                        null,
+                biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null, null,
+                        createInterpretDateNL(responseData.date().isEmpty() ? Strings.EMPTY : responseData.date()),
+                        determineResponse(responseData),
                         "yes",
                         null,
                         FormStatus.undefined()));
             }
         }
+
         return biopsyTreatmentResponseDataList;
+    }
+
+    @NotNull
+    public static String determineResponse(@NotNull WideResponseData responseData) {
+        String response = Strings.EMPTY;
+        if (responseData.recistNotDone().equals("FALSE")) {
+            response = "(" + responseData.timePoint() + ") " + responseData.responseAccordingRecist();
+        } else if (responseData.recistNotDone().equals("WAAR")) { //change to TRUE
+            response = "(" + responseData.timePoint() + ") " + responseData.clinicalDecision();
+            if (!response.contains("clinical benifit (continuation of treatment)") && !response.isEmpty()) {
+                response = response + " (" + responseData.reasonStopTreatment() + ")";
+                if (!responseData.reasonStopTreatmentOther().isEmpty()) {
+                    response = response.replace(")", " + " + responseData.reasonStopTreatmentOther() + ")");
+                }
+            }
+        }
+        return response;
     }
 }

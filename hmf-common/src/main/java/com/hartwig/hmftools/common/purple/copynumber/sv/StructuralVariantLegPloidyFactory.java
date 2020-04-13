@@ -114,10 +114,12 @@ public class StructuralVariantLegPloidyFactory<T extends GenomeRegion> {
         return create(leg, legCopyNumber.leftCopyNumber(), legCopyNumber.rightCopyNumber());
     }
 
-    public StructuralVariantLegPloidy singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber,
+    @NotNull
+    public Optional<StructuralVariantLegPloidy> singleLegPloidy(@NotNull final StructuralVariantLeg leg, double leftCopyNumber,
             double rightCopyNumber) {
-        ModifiableStructuralVariantLegPloidy modifiable = create(leg, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber)).get();
-        return modifiable.setAverageImpliedPloidy(modifiable.unweightedImpliedPloidy());
+        Optional<ModifiableStructuralVariantLegPloidy> modifiable = create(leg, Optional.of(leftCopyNumber), Optional.of(rightCopyNumber));
+        modifiable.ifPresent(x -> x.setAverageImpliedPloidy(x.unweightedImpliedPloidy()));
+        return modifiable.map(x -> x);
     }
 
     @NotNull

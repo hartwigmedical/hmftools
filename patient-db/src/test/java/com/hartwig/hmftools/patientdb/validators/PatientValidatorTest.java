@@ -231,7 +231,7 @@ public class PatientValidatorTest {
         String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(PATIENT_IDENTIFIER,
                 curationName,
-                Lists.newArrayList(BiopsyTreatmentData.of("Yes",
+                Lists.newArrayList(BiopsyTreatmentData.of(null, "Yes",
                         "Yes",
                         Lists.newArrayList(DRUG_MISSING_CURATED_ENTRY),
                         FormStatus.undefined())));
@@ -246,7 +246,7 @@ public class PatientValidatorTest {
         String curationName = "testTreatmentCuration";
         final List<ValidationFinding> findings = PatientValidator.validateTreatmentCuration(PATIENT_IDENTIFIER,
                 curationName,
-                Lists.newArrayList(BiopsyTreatmentData.of("Yes",
+                Lists.newArrayList(BiopsyTreatmentData.of(null, "Yes",
                         "Yes",
                         Lists.newArrayList(DRUG_WITH_PARTIAL_CURATED_ENTRY),
                         FormStatus.undefined())));

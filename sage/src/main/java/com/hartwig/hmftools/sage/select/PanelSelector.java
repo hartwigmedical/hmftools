@@ -18,7 +18,6 @@ public class PanelSelector<R extends GenomeRegion> {
         this.regions = regions;
     }
 
-    @NotNull
     public boolean inPanel(long start, long end) {
         if (regions.isEmpty()) {
             return false;

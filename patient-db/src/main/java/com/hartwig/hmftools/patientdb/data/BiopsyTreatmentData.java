@@ -42,9 +42,9 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
     }
 
     @NotNull
-    public static BiopsyTreatmentData of(@Nullable final String treatmentGiven, @Nullable final String radiotherapyGiven,
+    public static BiopsyTreatmentData of(@Nullable Integer biopsyId, @Nullable final String treatmentGiven, @Nullable final String radiotherapyGiven,
             @NotNull final List<DrugData> drugs, @NotNull final FormStatus formStatus) {
-        return ImmutableBiopsyTreatmentData.of(createId(), null, treatmentGiven, radiotherapyGiven, drugs, formStatus);
+        return ImmutableBiopsyTreatmentData.of(createId(), biopsyId, treatmentGiven, radiotherapyGiven, drugs, formStatus);
     }
 
     @Override

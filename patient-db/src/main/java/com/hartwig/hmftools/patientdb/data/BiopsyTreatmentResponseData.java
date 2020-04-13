@@ -35,10 +35,10 @@ public abstract class BiopsyTreatmentResponseData implements Comparable<BiopsyTr
     public abstract FormStatus formStatus();
 
     @NotNull
-    public static BiopsyTreatmentResponseData of(@Nullable final LocalDate assessmentDate, @Nullable final LocalDate responseDate,
+    public static BiopsyTreatmentResponseData of(@Nullable Integer treatmentId, @Nullable final LocalDate assessmentDate, @Nullable final LocalDate responseDate,
             @Nullable final String response, @Nullable final String measurementDone, @Nullable final String boneOnlyDisease,
             @NotNull final FormStatus formStatus) {
-        return ImmutableBiopsyTreatmentResponseData.of(null,
+        return ImmutableBiopsyTreatmentResponseData.of(treatmentId,
                 assessmentDate,
                 responseDate,
                 response,

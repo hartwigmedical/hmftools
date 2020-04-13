@@ -121,7 +121,7 @@ CREATE TABLE treatmentResponse
     measurementDone varchar(5),
     boneOnlyDisease varchar(5),
     responseDate DATE,
-    response varchar(25),
+    response varchar(500),
     PRIMARY KEY (id),
     FOREIGN KEY (treatmentId) REFERENCES treatment(id),
     FOREIGN KEY (patientId) REFERENCES patient(id)

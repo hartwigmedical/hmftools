@@ -4,6 +4,7 @@ import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.config.SageConfig;
 import com.hartwig.hmftools.sage.evidence.CandidateEvidence;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.read.ReadContextCounters;
 import com.hartwig.hmftools.sage.ref.RefSequence;
@@ -43,7 +45,8 @@ public class SomaticPipeline implements SageVariantPipeline {
 
     SomaticPipeline(@NotNull final SageConfig config, @NotNull final Executor executor, @NotNull final ReferenceSequenceFile refGenome,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions) {
+            @NotNull final List<GenomeRegion> highConfidenceRegions,
+            @NotNull final Map<String, QualityRecalibrationMap> qualityRecalibrationMap) {
         this.config = config;
         this.executor = executor;
         final SamSlicerFactory samSlicerFactory = new SamSlicerFactory(config, panelRegions);
@@ -51,7 +54,7 @@ public class SomaticPipeline implements SageVariantPipeline {
         this.panelRegions = panelRegions;
         this.highConfidenceRegions = highConfidenceRegions;
         this.candidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, samSlicerFactory, refGenome);
-        this.readContextEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome);
+        this.readContextEvidence = new ReadContextEvidence(config, samSlicerFactory, refGenome, qualityRecalibrationMap);
         this.refGenome = refGenome;
     }
 
@@ -123,8 +126,7 @@ public class SomaticPipeline implements SageVariantPipeline {
 
     @NotNull
     private CompletableFuture<List<SageVariant>> combine(@NotNull final GenomeRegion region,
-            final CompletableFuture<List<Candidate>> candidates,
-            final CompletableFuture<ReadContextCounters> doneTumor,
+            final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
             final CompletableFuture<ReadContextCounters> doneNormal) {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) -> {
             LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());

@@ -8,13 +8,11 @@ ISOFOX uses a similar methodology to several previous transcript abundance estim
 * Avoids overfitting of 'retained intron' transcripts on the basse
 * Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons (eg. B2M)
 
-### A note on duplicates
+### A note on duplicates, highly expressed genes, raw and adjusted TPM
 
 We recommend to mark duplicates in your pipeline.  They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.   
 
-### A note on TPM
-
-<TO DO>
+We find that 6 genes in particular (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and  are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts.    ISOFOX excludes these genes from our GC bias calculations and adjusted TPM calculations so that.   For expression, ISOFOX outputs both a raw TPM (which includes all transcripts) and an adjusted TPM which excludes these 6 genes and which limits the contribution of any one transcript to 1% of the total for the sample.   We suggest to use the adjusted TPM for expression analysis.
 
 ## Install
 
@@ -104,25 +102,22 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 
 <TO DO - decide on min max GC range and also max ratio change for GC Bias>
 
-To avoid overfitting very highly expressed genes or transcripts, genes with more than X% of fragments are ignored in both expected and actual counts. <TO DO - refine this rule>
-
-
 
 ##### B. Fragment Length Bias
 
-TO DO
+<TO DO>
 
 #### C. Sequence Start Specific Bias
 
-TO DO 
+<TO DO> 
 
 #### D. 5' CAP bias
 
-TO DO
+<TO DO>
 
 #### E. Adjust expected rates for biases and restimate abundances per transcript
 
-TO DO - Apply adjustments to the expected rates.   Then repeat step 5.
+The calculated biases are applied as a weighting to each raw fragment based on it's GC, positional and fragment length characteristics.  Steps 4 and 5 are then repeated.
 
 
 ### 7. Counting and characterisation of novel splice junctions
@@ -152,15 +147,14 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 <TO DO - Add filtering that the read count must signiificantly exceed the unspliced coverage of all gene overlapping that base>
 
+<TO DO - Combine intron retention and novel splice site information>
+ 
+ 
 ### 9. Counting and characterisation of chimeric and read through junctions
 
 <TO DO>
 
-### 10. Annotation of novel splice features
-
-<TO DO - Combine intron retention and novel splice site information>
-
-### 11. Panel of Normals  <TO DO>
+### 10. Panel of Normals  <TO DO>
 
 We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
 

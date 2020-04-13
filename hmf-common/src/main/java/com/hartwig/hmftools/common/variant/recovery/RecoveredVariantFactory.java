@@ -18,8 +18,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.copynumber.PurpleCopyNumber;
+import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidy;
 import com.hartwig.hmftools.common.purple.copynumber.sv.StructuralVariantLegPloidyFactory;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariant;
@@ -90,25 +92,28 @@ class RecoveredVariantFactory implements AutoCloseable {
             final Long matePosition = matePosition(mateLocation);
             final int uncertainty = uncertainty(potentialVariant);
 
-            final VariantContext mate = mateChromosome != null && matePosition != null && mateId != null ? findMate(mateId,
-                    mateChromosome,
-                    Math.max(1, matePosition - uncertainty),
-                    matePosition + uncertainty) : null;
+            final boolean mateValid = mateChromosome != null && matePosition != null && mateId != null;
+            final VariantContext mate = mateValid
+                    ? findMate(mateId, mateChromosome, Math.max(1, matePosition - uncertainty), matePosition + uncertainty)
+                    : null;
 
             final StructuralVariant sv = mate != null ? create(potentialVariant, mate) : createSingleBreakend(potentialVariant);
+            final Optional<StructuralVariantLegPloidy> structuralVariantLegPloidy =
+                    ploidyFactory.singleLegPloidy(sv.start(), prev.averageTumorCopyNumber(), current.averageTumorCopyNumber());
 
-            final double ploidy = ploidyFactory.singleLegPloidy(sv.start(), prev.averageTumorCopyNumber(), current.averageTumorCopyNumber())
-                    .averageImpliedPloidy();
+            if (structuralVariantLegPloidy.isPresent()) {
+                final double ploidy = structuralVariantLegPloidy.get().averageImpliedPloidy();
 
-            if (sv.start().orientation() == expectedOrientation && sufficientPloidy(ploidy, unexplainedCopyNumberChange) && hasPotential(sv,
-                    copyNumbers)) {
-                result.add(ImmutableRecoveredVariant.builder()
-                        .context(potentialVariant)
-                        .mate(mate)
-                        .variant(sv)
-                        .copyNumber(current)
-                        .prevCopyNumber(prev)
-                        .build());
+                if (sv.start().orientation() == expectedOrientation && sufficientPloidy(ploidy, unexplainedCopyNumberChange)
+                        && hasPotential(sv, copyNumbers)) {
+                    result.add(ImmutableRecoveredVariant.builder()
+                            .context(potentialVariant)
+                            .mate(mate)
+                            .variant(sv)
+                            .copyNumber(current)
+                            .prevCopyNumber(prev)
+                            .build());
+                }
             }
         }
 
@@ -227,8 +232,13 @@ class RecoveredVariantFactory implements AutoCloseable {
     }
 
     @Nullable
-    private static String mateChromosome(@Nullable String mate) {
-        return mate == null || !mate.contains(":") ? null : mate.split(":")[0];
+    static String mateChromosome(@Nullable String mate) {
+        if (mate == null || !mate.contains(":")) {
+            return null;
+        }
+
+        String chromosome = mate.split(":")[0];
+        return HumanChromosome.contains(chromosome) ? chromosome : null;
     }
 
     @Nullable

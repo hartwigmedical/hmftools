@@ -73,6 +73,7 @@ public interface SageConfig {
         options.addOption(HOTSPOTS, true, "Hotspots");
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
+        BaseQualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
 
         return options;
     }
@@ -104,6 +105,11 @@ public interface SageConfig {
     String outputFile();
 
     @NotNull
+    default String baseQualityRecalibrationFile(@NotNull final String sample) {
+        return new File(outputFile()).getParent() + File.separator + sample + ".sage.bqr.tsv";
+    }
+
+    @NotNull
     String panelBed();
 
     boolean panelOnly();
@@ -116,6 +122,9 @@ public interface SageConfig {
 
     @NotNull
     QualityConfig qualityConfig();
+
+    @NotNull
+    BaseQualityRecalibrationConfig baseQualityRecalibrationConfig();
 
     default int typicalReadLength() {
         return 151;
@@ -211,6 +220,7 @@ public interface SageConfig {
                 .highConfidenceBed(cmd.getOptionValue(HIGH_CONFIDENCE_BED, Strings.EMPTY))
                 .hotspots(cmd.getOptionValue(HOTSPOTS, Strings.EMPTY))
                 .qualityConfig(QualityConfig.createConfig(cmd))
+                .baseQualityRecalibrationConfig(BaseQualityRecalibrationConfig.createConfig(cmd))
                 .panelOnly(Configs.containsFlag(cmd, PANEL_ONLY))
                 .build();
     }

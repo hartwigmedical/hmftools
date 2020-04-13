@@ -35,6 +35,18 @@ public final class Configs {
         return defaultValue;
     }
 
+    public static boolean defaultBooleanValue(@NotNull final CommandLine cmd, @NotNull final String opt, final boolean defaultValue) {
+        if (cmd.hasOption(opt)) {
+            final boolean result = Boolean.parseBoolean(cmd.getOptionValue(opt));
+            if (result  != defaultValue) {
+                LOGGER.info("Using non default value {} for parameter {}", result, opt);
+            }
+            return result;
+        }
+
+        return defaultValue;
+    }
+
     public static double defaultDoubleValue(@NotNull final CommandLine cmd, @NotNull final String opt, final double defaultValue) {
         if (cmd.hasOption(opt)) {
             final double result = Double.parseDouble(cmd.getOptionValue(opt));

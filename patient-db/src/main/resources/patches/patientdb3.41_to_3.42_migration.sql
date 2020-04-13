@@ -4,3 +4,6 @@ ALTER TABLE somaticVariant
     ADD rnaAlleleReadCount int AFTER referenceTotalReadCount,
     ADD rnaTotalReadCount int AFTER rnaAlleleReadCount,
     ADD qual double precision not null AFTER rnaTotalReadCount;
+
+ALTER TABLE treatmentResponse
+    MODIFY COLUMN response varchar(500);
