@@ -224,11 +224,7 @@ public class WideEcrfFileReader {
 
         DateTimeFormatter inputFormatter =
                 new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH);
-        LocalDate localDate = LocalDate.parse(date, inputFormatter);
-
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String formattedString = localDate.format(outputFormatter);
-        return LocalDate.parse(formattedString);
+        return LocalDate.parse(date, inputFormatter);
     }
 
     @Nullable
@@ -240,11 +236,7 @@ public class WideEcrfFileReader {
 
         DateTimeFormatter inputFormatter =
                 new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(new Locale("nl", "NL"));
-        LocalDate localDate = LocalDate.parse(date, inputFormatter);
-
-        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String formattedString = localDate.format(outputFormatter);
-        return LocalDate.parse(formattedString);
+        return LocalDate.parse(date, inputFormatter);
     }
 
     @Nullable
