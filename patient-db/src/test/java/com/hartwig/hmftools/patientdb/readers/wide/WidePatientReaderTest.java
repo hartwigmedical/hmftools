@@ -22,11 +22,6 @@ import org.junit.Test;
 public class WidePatientReaderTest {
 
     @Test
-    public void canConvertStringToDate() {
-        assertEquals(WidePatientReader.convertStringToLocalDate("2018-10-17").toString(), "2018-10-17");
-    }
-
-    @Test
     public void canConvertTissueId() {
         assertEquals(WidePatientReader.extractYearOfTissueId("T1-00895 P"), "T1");
         assertEquals(WidePatientReader.extractBiopsyIdOfTissueId("T1-00895 P"), "895");
@@ -97,7 +92,6 @@ public class WidePatientReaderTest {
                 patientIdentifier,
                 biopsyDate,
                 treatmentData).get(0).name(), "carboplatin");
-
     }
 
     @Test

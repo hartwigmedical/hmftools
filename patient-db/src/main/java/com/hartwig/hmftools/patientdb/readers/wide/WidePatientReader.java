@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
@@ -134,7 +132,7 @@ public class WidePatientReader {
                 matchedTreatments.values(),
                 toBiopsyTreatmentResponseData(wideEcrfModel.responses(), patientIdentifier));
 
-        final List<ValidationFinding> findings = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
         findings.addAll(matchedBiopsies.findings());
         findings.addAll(matchedTreatments.findings());
         findings.addAll(matchedResponses.findings());
@@ -153,13 +151,6 @@ public class WidePatientReader {
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 findings);
-    }
-
-    @NotNull
-    @VisibleForTesting
-    public static LocalDate convertStringToLocalDate(@NotNull String date) {
-        String format = "yyyy-MM-dd";
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern(format));
     }
 
     @NotNull
@@ -193,9 +184,8 @@ public class WidePatientReader {
 
     @NotNull
     private static PreTreatmentData preTreatmentData(@NotNull List<WidePreAvlTreatmentData> widePreAvlTreatmentDatum2s,
-            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
+            @NotNull TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
             @NotNull List<WideAvlTreatmentData> treatmentData) {
-
         return ImmutablePreTreatmentData.of(null,
                 null,
                 readDrugsPreTreatment(widePreAvlTreatmentDatum2s, treatmentCurator, patientIdentifier, biopsyDate, treatmentData),
@@ -204,7 +194,7 @@ public class WidePatientReader {
 
     @NotNull
     public static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreAvlTreatmentData> preTreatmentData,
-            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
+            @NotNull TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
             @NotNull List<WideAvlTreatmentData> treatmentData) {
         List<DrugData> drugs = Lists.newArrayList();
         for (WidePreAvlTreatmentData preTreatment : preTreatmentData) {
@@ -244,9 +234,8 @@ public class WidePatientReader {
                     }
 
                 }
-                final List<CuratedDrug> curatedDrugs = treatmentCurator.search(drugsName);
+                List<CuratedDrug> curatedDrugs = treatmentCurator.search(drugsName);
                 drugs.add(ImmutableDrugData.of(drugsName, null, drugsEndDate, null, curatedDrugs));
-
             }
         }
 
@@ -281,7 +270,7 @@ public class WidePatientReader {
             @NotNull String patientIdentifier, @NotNull LocalDate biopsyCheckDate, @NotNull String biopsySite, @NotNull String sampleTissue,
             @NotNull CuratedTumorLocation curatedTumorLocation) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
-        final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
+        CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
                 curatedTumorLocation.subType(),
                 biopsySite,
                 sampleTissue);
@@ -307,7 +296,7 @@ public class WidePatientReader {
 
     @NotNull
     private static List<BiopsyTreatmentData> toBiopsyTreatmentData(@NotNull List<WideAvlTreatmentData> wideAvlTreatmentData,
-            @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate) {
+            @NotNull TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate) {
         List<BiopsyTreatmentData> biopsyTreatmentDataList = Lists.newArrayList();
         for (WideAvlTreatmentData treatmentData : wideAvlTreatmentData) {
             if (patientIdentifier.equals(treatmentData.patientId())) {
@@ -325,14 +314,14 @@ public class WidePatientReader {
 
     @NotNull
     private static List<DrugData> readDrugsPostTreatment(@NotNull WideAvlTreatmentData treatmentData,
-            @NotNull final TreatmentCurator treatmentCurator) {
-        final List<DrugData> drugs = Lists.newArrayList();
+            @NotNull TreatmentCurator treatmentCurator) {
+        List<DrugData> drugs = Lists.newArrayList();
         String drugName = treatmentData.drug();
         LocalDate drugsStartDate = treatmentData.startDate();
         LocalDate drugsEndDate = treatmentData.endDate();
 
         if (!drugName.isEmpty() || drugsStartDate != null || drugsEndDate != null) {
-            final List<CuratedDrug> curatedDrugs = drugName.isEmpty() ? Lists.newArrayList() : treatmentCurator.search(drugName);
+            List<CuratedDrug> curatedDrugs = drugName.isEmpty() ? Lists.newArrayList() : treatmentCurator.search(drugName);
             drugs.add(ImmutableDrugData.of(drugName, drugsStartDate, drugsEndDate, null, curatedDrugs));
         }
         return drugs;
