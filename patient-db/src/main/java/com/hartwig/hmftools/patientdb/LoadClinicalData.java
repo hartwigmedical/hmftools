@@ -44,7 +44,7 @@ import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfFileReader;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WideFiveDays;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePreAVLTreatmentData;
+import com.hartwig.hmftools.patientdb.readers.wide.WidePreAvlTreatmentData2;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
@@ -273,7 +273,7 @@ public final class LoadClinicalData {
             LOGGER.info(" Loaded {} WIDE five days from {}", fiveDays.size(), fiveDaysCsv);
 
             String preTreatmentCsv = cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV);
-            List<WidePreAVLTreatmentData> pretreatments = WideEcrfFileReader.readPreAvlTreatmentData(preTreatmentCsv);
+            List<WidePreAvlTreatmentData2> pretreatments = WideEcrfFileReader.readPreAvlTreatmentData(preTreatmentCsv);
             LOGGER.info(" Loaded {} WIDE pre-treatments from {}", pretreatments.size(), preTreatmentCsv);
 
             String biopsyCsv = cmd.getOptionValue(WIDE_BIOPSY_CSV);

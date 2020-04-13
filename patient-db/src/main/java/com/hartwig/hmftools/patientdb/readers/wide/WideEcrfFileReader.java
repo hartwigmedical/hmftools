@@ -107,14 +107,14 @@ public class WideEcrfFileReader {
     }
 
     @NotNull
-    public static List<WidePreAVLTreatmentData> readPreAvlTreatmentData(@NotNull String pathToCsv) throws IOException {
-        List<WidePreAVLTreatmentData> widePreTreatments = Lists.newArrayList();
+    public static List<WidePreAvlTreatmentData2> readPreAvlTreatmentData(@NotNull String pathToCsv) throws IOException {
+        List<WidePreAvlTreatmentData2> widePreTreatments = Lists.newArrayList();
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
             String[] parts = line.split(FIELD_SEPARATOR, PRE_AVL_TREATMENT_DATA_COUNT);
             if (parts.length == PRE_AVL_TREATMENT_DATA_COUNT) {
-                WidePreAVLTreatmentData widePreAvlTreatmentData = ImmutableWidePreAVLTreatmentData.builder()
+                WidePreAvlTreatmentData2 widePreAvlTreatmentData2 = ImmutableWidePreAvlTreatmentData2.builder()
                         .patientId(toWideID(parts[PRE_AVL_TREATMENT_DATA_PATIENT_ID]))
                         .hasPreviousTherapy(parts[PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY].equals("1"))
                         .drug1(parts[PRE_AVL_TREATMENT_DATA_DRUG1])
@@ -124,7 +124,7 @@ public class WideEcrfFileReader {
                         .lastSystemicTherapyDate(interpretDateEN(parts[PRE_AVL_TREATMENT_DATA_LAST_SYSTEMIC_THERAPY_DATE]))
                         .build();
 
-                widePreTreatments.add(widePreAvlTreatmentData);
+                widePreTreatments.add(widePreAvlTreatmentData2);
             } else if (parts.length > 0) {
                 LOGGER.warn("Could not properly parse line in WIDE pre treatment csv: {}", line);
             }

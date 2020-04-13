@@ -75,7 +75,7 @@ public class WidePatientReaderTest {
 
     @Test
     public void canReadCombiPreTreatment() {
-        List<WidePreAVLTreatmentData> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreAVLTreatmentData.builder()
+        List<WidePreAvlTreatmentData2> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreAvlTreatmentData2.builder()
                 .patientId("WIDE00000001")
                 .hasPreviousTherapy(true)
                 .drug1("carboplatin")
@@ -84,7 +84,7 @@ public class WidePatientReaderTest {
                 .drug4(Strings.EMPTY)
                 .lastSystemicTherapyDate(LocalDate.parse("2015-11-20"))
                 .build());
-        List<WidePreAVLTreatmentData> preTreatmentData = Lists.newArrayList(ImmutableWidePreAVLTreatmentData.builder()
+        List<WidePreAvlTreatmentData2> preTreatmentData = Lists.newArrayList(ImmutableWidePreAvlTreatmentData2.builder()
                 .patientId("WIDE00000001")
                 .hasPreviousTherapy(true)
                 .drug1("carboplatin")

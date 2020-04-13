@@ -210,22 +210,22 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static PreTreatmentData preTreatmentData(@NotNull List<WidePreAVLTreatmentData> widePreAVLTreatmentData,
+    private static PreTreatmentData preTreatmentData(@NotNull List<WidePreAvlTreatmentData2> widePreAvlTreatmentDatum2s,
             @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
             @NotNull List<WideAvlTreatmentData> treatmentData) {
 
         return ImmutablePreTreatmentData.of(null,
                 null,
-                readDrugsPreTreatment(widePreAVLTreatmentData, treatmentCurator, patientIdentifier, biopsyDate, treatmentData),
+                readDrugsPreTreatment(widePreAvlTreatmentDatum2s, treatmentCurator, patientIdentifier, biopsyDate, treatmentData),
                 FormStatus.undefined());
     }
 
     @NotNull
-    public static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreAVLTreatmentData> preTreatmentData,
+    public static List<DrugData> readDrugsPreTreatment(@NotNull List<WidePreAvlTreatmentData2> preTreatmentData,
             @NotNull final TreatmentCurator treatmentCurator, @NotNull String patientIdentifier, @NotNull LocalDate biopsyDate,
             @NotNull List<WideAvlTreatmentData> treatmentData) {
         List<DrugData> drugs = Lists.newArrayList();
-        for (WidePreAVLTreatmentData preTreatment : preTreatmentData) {
+        for (WidePreAvlTreatmentData2 preTreatment : preTreatmentData) {
             if (patientIdentifier.equals(preTreatment.patientId())) {
                 LocalDate drugsEndDate = preTreatment.lastSystemicTherapyDate();
                 String drugsName = Strings.EMPTY;
