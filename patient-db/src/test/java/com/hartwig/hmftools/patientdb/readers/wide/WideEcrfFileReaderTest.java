@@ -175,41 +175,4 @@ public class WideEcrfFileReaderTest {
         assertTrue(fiveDays.get(2).otherTrialCodes().isEmpty());
         assertTrue(fiveDays.get(2).otherTrialStartDates().isEmpty());
     }
-
-    @Test
-    public void canInterpretDateIC() {
-        assertEquals(LocalDate.parse("2019-04-12"), WideEcrfFileReader.interpretDateIC("12/04/2019"));
-    }
-
-    @Test
-    public void canInterpretDateNL() {
-        assertEquals(LocalDate.parse("2019-04-18"), WideEcrfFileReader.interpretDateNL("18-apr-2019"));
-        assertEquals(LocalDate.parse("2018-10-17"), WideEcrfFileReader.interpretDateNL("17-okt-2018"));
-    }
-
-    @Test
-    public void canInterpretDateEN() {
-        assertEquals(LocalDate.parse("2019-05-21"), WideEcrfFileReader.interpretDateEN("21-May-2019"));
-    }
-
-    @Test
-    public void canConvertGender() {
-        assertEquals("male", WideEcrfFileReader.convertGender("1"));
-        assertEquals("female", WideEcrfFileReader.convertGender("2"));
-        assertNull(WideEcrfFileReader.convertGender(""));
-    }
-
-    @Test
-    public void canConvertParticipatesInOtherTrials() {
-        assertTrue(WideEcrfFileReader.convertParticipatesInOtherTrials("Y"));
-        assertFalse(WideEcrfFileReader.convertParticipatesInOtherTrials("N"));
-        assertNull(WideEcrfFileReader.convertParticipatesInOtherTrials(""));
-    }
-
-    @Test
-    public void canConvertHasSuccessfulReport() {
-        assertTrue(WideEcrfFileReader.convertHasReceivedSuccessfulReport("yes"));
-        assertFalse(WideEcrfFileReader.convertHasReceivedSuccessfulReport("no"));
-        assertNull(WideEcrfFileReader.convertHasReceivedSuccessfulReport(""));
-    }
 }

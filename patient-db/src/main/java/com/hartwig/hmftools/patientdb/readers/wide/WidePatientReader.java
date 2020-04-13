@@ -138,7 +138,7 @@ public class WidePatientReader {
         findings.addAll(matchedResponses.findings());
 
         return new Patient(patientIdentifier,
-                toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender, informedConsentDate, dataIsAvailable),
+                toBaselineData(tumorLocationCurator.search(primaryTumorLocation), birthYear, gender, informedConsentDate),
                 preTreatmentData(wideEcrfModel.preAvlTreatments(),
                         treatmentCurator,
                         patientIdentifier,
@@ -165,10 +165,10 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation, @NotNull Integer birthYear,
-            @NotNull String gender, @NotNull LocalDate informedConsentDate, boolean dataIsAvailable) {
+    private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation, @Nullable Integer birthYear,
+            @NotNull String gender, @Nullable LocalDate informedConsentDate) {
         return ImmutableBaselineData.of(null,
-                dataIsAvailable ? informedConsentDate : null,
+                informedConsentDate,
                 gender,
                 null,
                 birthYear,
@@ -267,7 +267,7 @@ public class WidePatientReader {
 
     @NotNull
     private static List<BiopsyData> toBiopsyData(@NotNull List<WideFiveDays> wideBiopsyData, @NotNull BiopsySiteCurator biopsySiteCurator,
-            @NotNull String patientIdentifier, @NotNull LocalDate biopsyCheckDate, @NotNull String biopsySite, @NotNull String sampleTissue,
+            @NotNull String patientIdentifier, @Nullable LocalDate biopsyCheckDate, @NotNull String biopsySite, @NotNull String sampleTissue,
             @NotNull CuratedTumorLocation curatedTumorLocation) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
         CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
