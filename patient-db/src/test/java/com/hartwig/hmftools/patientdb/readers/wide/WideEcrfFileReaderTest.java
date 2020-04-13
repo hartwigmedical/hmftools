@@ -17,7 +17,7 @@ public class WideEcrfFileReaderTest {
     @Test
     public void canReadWidePreAvlTreatments() throws IOException {
         List<WidePreAvlTreatmentData> preTreatments =
-                WideEcrfFileReader.readPreAvlTreatmentData(WIDE_TEST_DIR + File.separator + "wide_pre_avl_treatments.csv");
+                WideEcrfFileReader.readPreAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_pre_avl_treatments.csv");
 
         assertEquals(2, preTreatments.size());
     }
@@ -25,7 +25,7 @@ public class WideEcrfFileReaderTest {
     @Test
     public void canReadWideBiopsies() throws IOException {
         List<WideBiopsyData> biopsies =
-                WideEcrfFileReader.readBiopsyData(WIDE_TEST_DIR + File.separator + "wide_biopsies.csv");
+                WideEcrfFileReader.readBiopsies(WIDE_TEST_DIR + File.separator + "wide_biopsies.csv");
 
         assertEquals(1, biopsies.size());
     }
@@ -33,7 +33,7 @@ public class WideEcrfFileReaderTest {
     @Test
     public void canReadWideAvlTreatments() throws IOException {
         List<WideAvlTreatmentData> treatments =
-                WideEcrfFileReader.readAvlTreatmentData(WIDE_TEST_DIR + File.separator + "wide_avl_treatments.csv");
+                WideEcrfFileReader.readAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_avl_treatments.csv");
 
         assertEquals(2, treatments.size());
     }
@@ -41,7 +41,7 @@ public class WideEcrfFileReaderTest {
     @Test
     public void canReadWideResponses() throws IOException {
         List<WideResponseData> responses =
-                WideEcrfFileReader.readResponseData(WIDE_TEST_DIR + File.separator + "wide_responses.csv");
+                WideEcrfFileReader.readResponses(WIDE_TEST_DIR + File.separator + "wide_responses.csv");
 
         assertEquals(2, responses.size());
     }

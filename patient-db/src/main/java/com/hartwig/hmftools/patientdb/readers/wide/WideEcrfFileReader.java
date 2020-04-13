@@ -107,7 +107,7 @@ public class WideEcrfFileReader {
     }
 
     @NotNull
-    public static List<WidePreAvlTreatmentData> readPreAvlTreatmentData(@NotNull String pathToCsv) throws IOException {
+    public static List<WidePreAvlTreatmentData> readPreAvlTreatments(@NotNull String pathToCsv) throws IOException {
         List<WidePreAvlTreatmentData> widePreTreatments = Lists.newArrayList();
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
@@ -133,7 +133,7 @@ public class WideEcrfFileReader {
     }
 
     @NotNull
-    public static List<WideBiopsyData> readBiopsyData(@NotNull String pathToCsv) throws IOException {
+    public static List<WideBiopsyData> readBiopsies(@NotNull String pathToCsv) throws IOException {
         List<WideBiopsyData> wideBiopsies = Lists.newArrayList();
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
@@ -156,7 +156,7 @@ public class WideEcrfFileReader {
     }
 
     @NotNull
-    public static List<WideAvlTreatmentData> readAvlTreatmentData(@NotNull String pathToCsv) throws IOException {
+    public static List<WideAvlTreatmentData> readAvlTreatments(@NotNull String pathToCsv) throws IOException {
         List<WideAvlTreatmentData> wideTreatments = Lists.newArrayList();
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
@@ -180,7 +180,7 @@ public class WideEcrfFileReader {
     }
 
     @NotNull
-    public static List<WideResponseData> readResponseData(@NotNull String pathToCsv) throws IOException {
+    public static List<WideResponseData> readResponses(@NotNull String pathToCsv) throws IOException {
         List<WideResponseData> wideResponses = Lists.newArrayList();
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
