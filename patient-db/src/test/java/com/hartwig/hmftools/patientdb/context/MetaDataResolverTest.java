@@ -17,33 +17,33 @@ public class MetaDataResolverTest {
 
     @Test
     public void noMetaDataReturnsNull() {
-        final String noMetaDataRunDir = RESOURCE_DIR + File.separator + "RunDirNoMetaData";
+        String noMetaDataRunDir = RESOURCE_DIR + File.separator + "RunDirNoMetaData";
         assertNull(MetaDataResolver.fromMetaDataFile(noMetaDataRunDir));
     }
 
     @Test
     public void noRefSampleReturnsNull() {
-        final String noRefSampleRunDir = RESOURCE_DIR + File.separator + "RunDirNoRefSample";
+        String noRefSampleRunDir = RESOURCE_DIR + File.separator + "RunDirNoRefSample";
         assertNull(MetaDataResolver.fromMetaDataFile(noRefSampleRunDir));
     }
 
     @Test
     public void noSetNameReturnsNull() {
-        final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirNoSetName";
+        String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirNoSetName";
         assertNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
     }
 
     @Test
     public void canResolveMetaDataFilePV5() {
-        final String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirP5";
+        String noSetNameRunDir = RESOURCE_DIR + File.separator + "RunDirP5";
         assertNotNull(MetaDataResolver.fromMetaDataFile(noSetNameRunDir));
     }
 
     @Test
     public void canResolveSomaticMetaDataP4() {
-        final String setName = "RunDirSomatic";
-        final String runDirectory = RESOURCE_DIR + File.separator + setName;
-        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
+        String setName = "RunDirSomatic";
+        String runDirectory = RESOURCE_DIR + File.separator + setName;
+        RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
         assertEquals("CPCT12345678R", runContext.refSample());
@@ -55,9 +55,9 @@ public class MetaDataResolverTest {
 
     @Test
     public void canResolveSomaticMetaDataP5() {
-        final String setName = "RunDirP5";
-        final String runDirectory = RESOURCE_DIR + File.separator + setName;
-        final RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
+        String setName = "RunDirP5";
+        String runDirectory = RESOURCE_DIR + File.separator + setName;
+        RunContext runContext = MetaDataResolver.fromMetaDataFile(runDirectory);
 
         assertNotNull(runContext);
         assertEquals("CPCT12345678R", runContext.refSample());

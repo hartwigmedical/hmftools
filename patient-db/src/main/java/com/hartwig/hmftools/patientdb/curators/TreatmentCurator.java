@@ -94,7 +94,7 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @VisibleForTesting
-    TreatmentCurator(@NotNull final InputStream mappingInputStream) throws IOException {
+    TreatmentCurator(@NotNull InputStream mappingInputStream) throws IOException {
         List<DrugEntry> drugEntries = readEntries(mappingInputStream);
         Directory index = createIndex(drugEntries);
         IndexReader reader = DirectoryReader.open(index);
@@ -150,7 +150,7 @@ public class TreatmentCurator implements CleanableCurator {
     private static List<DrugEntry> readEntries(@NotNull InputStream mappingInputStream) throws IOException {
         List<DrugEntry> drugEntries = Lists.newArrayList();
         CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
-        for (final CSVRecord record : parser) {
+        for (CSVRecord record : parser) {
             String canonicalName = record.get(DRUG_NAME_CSV_FIELD).trim();
             String drugType = record.get(DRUG_TYPE_CSV_FIELD).trim();
             String synonymsField = record.get(DRUG_SYNONYMS_CSV_FIELD).trim();
@@ -269,7 +269,7 @@ public class TreatmentCurator implements CleanableCurator {
     private static Directory createIndex(@NotNull List<DrugEntry> drugEntries) throws IOException {
         Directory drugIndex = new RAMDirectory();
         IndexWriter indexWriter = createIndexWriter(drugIndex);
-        for (final DrugEntry drugEntry : drugEntries) {
+        for (DrugEntry drugEntry : drugEntries) {
             indexDrugEntry(indexWriter, drugEntry);
         }
         indexWriter.close();
@@ -298,7 +298,7 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static SpellChecker createIndexSpellchecker(@NotNull final Directory index) throws IOException {
+    private static SpellChecker createIndexSpellchecker(@NotNull Directory index) throws IOException {
         Directory spellCheckerDirectory = new RAMDirectory();
         IndexReader indexReader = DirectoryReader.open(index);
         Analyzer analyzer = new SimpleAnalyzer();
@@ -315,10 +315,10 @@ public class TreatmentCurator implements CleanableCurator {
     private static Analyzer createShingleAnalyzer(int maxShingles) {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(@NotNull final String field) {
-                final Tokenizer source = new WhitespaceTokenizer();
+            protected TokenStreamComponents createComponents(@NotNull String field) {
+                Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
-                final ShingleFilter shingleFilter = new ShingleFilter(defaultTokenFilter(source), maxShingles);
+                ShingleFilter shingleFilter = new ShingleFilter(defaultTokenFilter(source), maxShingles);
                 shingleFilter.setOutputUnigrams(true);
                 return new TokenStreamComponents(source, shingleFilter);
             }
@@ -329,7 +329,7 @@ public class TreatmentCurator implements CleanableCurator {
     private static Analyzer spellcheckAnalyzer(@NotNull SpellChecker spellChecker) {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(@NotNull final String field) {
+            protected TokenStreamComponents createComponents(@NotNull String field) {
                 Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
                 SpellCheckerTokenFilter spellCheckFilter = new SpellCheckerTokenFilter(defaultTokenFilter(source), spellChecker);
@@ -343,7 +343,7 @@ public class TreatmentCurator implements CleanableCurator {
     private static Analyzer wordDelimiterAnalyzer() {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(@NotNull final String field) {
+            protected TokenStreamComponents createComponents(@NotNull String field) {
                 Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
                 return new TokenStreamComponents(source, defaultTokenFilter(source));
@@ -355,7 +355,7 @@ public class TreatmentCurator implements CleanableCurator {
     private static Analyzer concatenatingAnalyzer() {
         return new Analyzer() {
             @Override
-            protected TokenStreamComponents createComponents(@NotNull final String field) {
+            protected TokenStreamComponents createComponents(@NotNull String field) {
                 Tokenizer source = new WhitespaceTokenizer();
                 source.setReader(new StringReader(field));
                 TokenFilter concatenatingFilter = new ConcatenatingFilter(defaultTokenFilter(source), ' ');
@@ -365,7 +365,7 @@ public class TreatmentCurator implements CleanableCurator {
     }
 
     @NotNull
-    private static TokenFilter defaultTokenFilter(@NotNull final Tokenizer source) {
+    private static TokenFilter defaultTokenFilter(@NotNull Tokenizer source) {
         TokenFilter filteredSource = new LowerCaseFilter(source);
         return new WordDelimiterGraphFilter(filteredSource, SPLIT_ON_NUMERICS | GENERATE_WORD_PARTS | GENERATE_NUMBER_PARTS, null);
     }
