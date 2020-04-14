@@ -34,4 +34,24 @@ public interface VariantHotspot extends GenomePosition {
     default boolean isSimpleDelete() {
         return alt().length() == 1 && ref().length() > 1 && ref().charAt(0) == alt().charAt(0);
     }
+
+    default boolean isIndel() {
+        return ref().length() != alt().length();
+    }
+
+    default int indelLength() {
+        if (ref().length() == alt().length()) {
+            return 0;
+        }
+        return alt().length() - ref().length();
+    }
+
+    default boolean isFrameshiftIndel() {
+        return isIndel() && indelLength() % 3 != 0;
+    }
+
+    default boolean isInframeIndel() {
+        return isIndel() && indelLength() % 3 == 0;
+    }
+
 }
