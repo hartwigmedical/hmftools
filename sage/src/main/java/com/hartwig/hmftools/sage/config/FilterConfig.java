@@ -52,7 +52,7 @@ public interface FilterConfig {
             .from(NO_FILTER)
             .minTumorQual(100)
             .minTumorVaf(0.015)
-            .maxGermlineVaf(0.06)
+            .maxGermlineVaf(0.04)
             .maxGermlineRelativeQual(0.04)
             .build();
 
