@@ -184,9 +184,9 @@ AltFragmentPerc | % of total fragments supporting an alternate splice junction w
 ReadThroughFragmentPerc | % of total fragments supporting a read through transcript
 ChimericFragmentPerc | % of total fragments supporting a chimeric junction
 ReadLength | Raw read length of fragments
-FragLength5th | 5th percentile of genic, intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
-FragLength50th | 50th percentile of intronic fragment lengths ???
-FragLength95th | 95th percentile of intronic fragment lengths  ???
+FragLength5th | 5th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
+FragLength50th | 50th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
+FragLength95th | 95th percentile of genic intronic fragment lengths (from 1M fragments sampled with a max of 1000 per gene)
 EnrichedGenePercent | % of fragments supporting one of the following 6 genes: (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK)
 MedianGCRatio | Median GC ratio excluding the 6 highly enriched genes
 
