@@ -2,6 +2,8 @@ package com.hartwig.hmftools.sage.snpeff;
 
 import static java.util.Collections.singletonList;
 
+import static com.hartwig.hmftools.common.sage.SagePostProcessVCF.HMF_CANONICAL_EFFECT;
+import static com.hartwig.hmftools.common.sage.SagePostProcessVCF.HMF_CANONICAL_IMPACT;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.VariantConsequence.SPLICE_DONOR_VARIANT;
@@ -14,6 +16,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -34,6 +38,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 
 public class SagePostProcessTest {
 
+    private final List<CanonicalTranscript> transcripts = CanonicalTranscriptFactory.create37();
     private final Map<String, HmfTranscriptRegion> geneMap = HmfGenePanelSupplier.allGenesMap37();
     private final int phase = 1;
 
@@ -61,7 +66,9 @@ public class SagePostProcessTest {
         final VariantContext first = create(tertExon.chromosome(), tertExon.start(), "GATAC", "G", phase, annotation);
         final VariantContext second = create(tertExon.chromosome(), tertExon.start() + 10, "GAT", "G", phase, annotation);
 
-        processAndCheckPhased(true, first, second);
+        postProcess(first, second);
+        assertPhasedIndel(first);
+        assertPhasedIndel(second);
     }
 
     @Test
@@ -73,7 +80,10 @@ public class SagePostProcessTest {
         final VariantContext first = create(tertExon.chromosome(), tertExon.start(), "G", "GATAC", phase, annotation);
         final VariantContext second = create(tertExon.chromosome(), tertExon.start() + 10, "G", "GAT", phase, annotation);
 
-        processAndCheckPhased(true, first, second);
+        postProcess(first, second);
+        assertPhasedIndel(first);
+        assertPhasedIndel(second);
+
     }
 
     @Test
@@ -85,7 +95,9 @@ public class SagePostProcessTest {
         final VariantContext first = create(tertExon.chromosome(), tertExon.start(), "G", "GATAC", phase, annotation);
         final VariantContext second = create(tertExon.chromosome(), tertExon.start() + 10, "GA", "G", phase, annotation);
 
-        processAndCheckPhased(true, first, second);
+        postProcess(first, second);
+        assertPhasedIndel(first);
+        assertPhasedIndel(second);
     }
 
     @Test
@@ -96,7 +108,9 @@ public class SagePostProcessTest {
         final VariantContext first = create(tertExon.chromosome(), tertExon.start(), "G", "GATAC", phase, annotation);
         final VariantContext second = create(tertExon.chromosome(), tertExon.start() + 10, "GA", "G", phase + 1, annotation);
 
-        processAndCheckPhased(false, first, second);
+        postProcess(first, second);
+        assertStuff(CodingEffect.NONE, "upstream_gene_variant", first);
+        assertStuff(CodingEffect.NONE, "upstream_gene_variant", second);
     }
 
     @Test
@@ -108,7 +122,9 @@ public class SagePostProcessTest {
         final VariantContext first = create(tertExon.chromosome(), tertExon.start(), "G", "GATAC", phase, annotation);
         final VariantContext second = create(tertExon.chromosome(), tertExon.start() + 10, "GAT", "G", phase, annotation);
 
-        processAndCheckPhased(false, first, second);
+        postProcess(first, second);
+        assertStuff(CodingEffect.NONE, "upstream_gene_variant", first);
+        assertStuff(CodingEffect.NONE, "upstream_gene_variant", second);
     }
 
     @Test
@@ -121,30 +137,29 @@ public class SagePostProcessTest {
         final CodingEffect originalEffect = CodingEffect.effect("KIT", originalAnnotation.consequences());
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, originalEffect);
 
-        final List<VariantContext> catcher = Lists.newArrayList();
-        final SagePostProcess postProcess = new SagePostProcess(geneMap, catcher::add);
-        postProcess.accept(original);
-        postProcess.close();
+        postProcess(original);
 
-        final SnpEffAnnotation modifiedAnnotation = SnpEffAnnotationFactory.fromContext(catcher.get(0)).get(0);
-        final CodingEffect modifiedEffect = CodingEffect.effect("KIT", modifiedAnnotation.consequences());
-        assertEquals(CodingEffect.MISSENSE, modifiedEffect);
+        assertStuff(CodingEffect.MISSENSE, "inframe_mh", original);
     }
 
-    private void processAndCheckPhased(boolean expectedFlag, VariantContext... contexts) {
+    private void postProcess(VariantContext... contexts) {
         final List<VariantContext> catcher = Lists.newArrayList();
-        final SagePostProcess postProcess = new SagePostProcess(geneMap, catcher::add);
+        final SagePostProcess postProcess = new SagePostProcess(geneMap, transcripts, catcher::add);
 
         for (VariantContext context : contexts) {
             postProcess.accept(context);
         }
 
         postProcess.close();
+    }
 
-        for (int i = 0; i < contexts.length; i++) {
-            assertEquals(contexts[i], catcher.get(i));
-            assertEquals(expectedFlag, catcher.get(i).hasAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL));
-        }
+    private void assertPhasedIndel(VariantContext context) {
+        assertStuff(CodingEffect.MISSENSE, "inframe_phased", context);
+    }
+
+    private void assertStuff(CodingEffect expectedEffect, String expectedImpact, VariantContext context) {
+        assertEquals(expectedImpact, context.getAttributeAsStringList(HMF_CANONICAL_EFFECT, "").get(0));
+        assertEquals(expectedEffect.toString(), context.getAttribute(HMF_CANONICAL_IMPACT));
     }
 
     @NotNull
