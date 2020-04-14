@@ -71,6 +71,8 @@ public class SageVCF implements AutoCloseable {
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
     public final static String MIXED_GERMLINE_IMPACT = "MGI";
     public final static String MIXED_GERMLINE_IMPACT_DESCRIPTION = "Mixed Germline Impact";
+    public final static String PHASED_INFRAME_INDEL = "PII";
+    public final static String PHASED_INFRAME_INDEL_DESCRIPTION = "Phased inframe indel";
 
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
@@ -159,6 +161,7 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_GERMLINE_IMPACT, 1, VCFHeaderLineType.Integer, MIXED_GERMLINE_IMPACT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(PHASED_INFRAME_INDEL, 1, VCFHeaderLineType.Integer, PHASED_INFRAME_INDEL_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));

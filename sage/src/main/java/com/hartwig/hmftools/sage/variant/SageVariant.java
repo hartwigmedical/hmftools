@@ -21,6 +21,7 @@ public class SageVariant implements GenomePosition {
 
     private int localPhaseSet;
     private int mixedImpact;
+    private int phasedInframeIndel;
 
     public SageVariant(@NotNull final SageVariantTier tier, @NotNull final VariantHotspot variant, @NotNull final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
@@ -48,6 +49,14 @@ public class SageVariant implements GenomePosition {
 
     public boolean isIndel() {
         return variant.ref().length() != variant.alt().length();
+    }
+
+    public int phasedInframeIndel() {
+        return phasedInframeIndel;
+    }
+
+    public void phasedInframeIndel(final int phasedInframeIndel) {
+        this.phasedInframeIndel = phasedInframeIndel;
     }
 
     public boolean isMnv() {

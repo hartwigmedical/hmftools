@@ -8,6 +8,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cli.Configs;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -42,6 +44,7 @@ public interface SageConfig {
     String MAX_READ_DEPTH = "max_read_depth";
     String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
+    String ASSEMBLY = "assembly";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
@@ -53,6 +56,7 @@ public interface SageConfig {
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
+        options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -103,6 +107,9 @@ public interface SageConfig {
 
     @NotNull
     String outputFile();
+
+    @NotNull
+    List<HmfTranscriptRegion> transcriptRegions();
 
     @NotNull
     default String baseQualityRecalibrationFile(@NotNull final String sample) {
@@ -156,6 +163,10 @@ public interface SageConfig {
     static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
 
         final int threads = defaultIntValue(cmd, THREADS, DEFAULT_THREADS);
+        final String assembly = cmd.getOptionValue(ASSEMBLY, "UNKNOWN");
+        if (!assembly.equals("hg19") && !assembly.equals("hg38")) {
+            throw new ParseException("Assembly must be one of hg19 or hg38");
+        }
 
         final List<String> referenceList = Lists.newArrayList();
         if (cmd.hasOption(REFERENCE)) {
@@ -201,8 +212,12 @@ public interface SageConfig {
             throw new ParseException("At least one tumor must be supplied");
         }
 
+        final List<HmfTranscriptRegion> transcripts =
+                assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
+
         return ImmutableSageConfig.builder()
                 .version(version)
+                .transcriptRegions(transcripts)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
                 .reference(referenceList)
