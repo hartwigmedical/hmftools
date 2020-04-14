@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator;
-import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -111,7 +110,7 @@ public class IsofoxConfig
 
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
-    public final boolean FragmentLengthsByGene;
+    public final boolean WriteFragmentLengthsByGene;
 
     public final boolean WriteGcData;
     public final String GcAdjustmentsFile;
@@ -189,7 +188,7 @@ public class IsofoxConfig
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
         WriteFragmentLengths = cmd.hasOption(WRITE_FRAG_LENGTHS);
-        FragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
+        WriteFragmentLengthsByGene = cmd.hasOption(FRAG_LENGTHS_BY_GENE);
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
@@ -403,7 +402,7 @@ public class IsofoxConfig
         ApplyFragmentLengthAdjust = false;
         ApplyGcBiasAdjust = false;
         OutputIdentifier = null;
-        FragmentLengthsByGene = false;
+        WriteFragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
 
         FindFusions = true;

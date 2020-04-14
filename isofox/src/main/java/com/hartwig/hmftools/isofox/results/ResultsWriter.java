@@ -54,7 +54,7 @@ public class ResultsWriter
     private BufferedWriter mExpRateWriter;
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
-    private BufferedWriter mFragLengthWriter;
+    private BufferedWriter mGeneFragLengthWriter;
     private BufferedWriter mReadGcRatioWriter;
     private BufferedWriter mRetainedIntronWriter;
 
@@ -79,7 +79,7 @@ public class ResultsWriter
         mExpRateWriter = null;
         mReadDataWriter = null;
         mAltSpliceJunctionWriter = null;
-        mFragLengthWriter = null;
+        mGeneFragLengthWriter = null;
         mReadGcRatioWriter = null;
         mRetainedIntronWriter = null;
 
@@ -97,7 +97,7 @@ public class ResultsWriter
         closeBufferedWriter(mExpRateWriter);
         closeBufferedWriter(mReadDataWriter);
         closeBufferedWriter(mAltSpliceJunctionWriter);
-        closeBufferedWriter(mFragLengthWriter);
+        closeBufferedWriter(mGeneFragLengthWriter);
         closeBufferedWriter(mReadGcRatioWriter);
         closeBufferedWriter(mRetainedIntronWriter);
     }
@@ -112,16 +112,19 @@ public class ResultsWriter
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
         }
 
+        if(mConfig.WriteFragmentLengthsByGene)
+        {
+            mGeneFragLengthWriter = FragmentSizeCalcs.createGeneFragmentLengthWriter(mConfig);
+            return;
+        }
+
         if(!mConfig.generateExpectedDataOnly())
         {
-            if (mConfig.WriteReadData)
+            if(mConfig.WriteReadData)
                 mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
 
             mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
             mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
-
-            if(mConfig.WriteFragmentLengths)
-                mFragLengthWriter = FragmentSizeCalcs.createFragmentLengthWriter(mConfig);
 
             if(mConfig.WriteGcData)
                 mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
@@ -136,7 +139,7 @@ public class ResultsWriter
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
     public BufferedWriter getReadDataWriter() { return mReadDataWriter; }
-    public BufferedWriter getFragmentLengthWriter() { return mFragLengthWriter; }
+    public BufferedWriter getFragmentLengthWriter() { return mGeneFragLengthWriter; }
     public BufferedWriter getReadGcRatioWriter() { return mReadGcRatioWriter; }
 
     public void writeSummaryStats(final SummaryStats summaryStats)

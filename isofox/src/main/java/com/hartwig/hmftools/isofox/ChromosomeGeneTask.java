@@ -173,11 +173,13 @@ public class ChromosomeGeneTask implements Callable
             ISF_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
+        mCurrentGeneIndex = 0;
+        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int nextLogCount = 100;
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
-            final List<EnsemblGeneData> overlappingGenes = findNextOverlappingGenes();
+            mCurrentGeneIndex = findNextOverlappingGenes(mGeneDataList, mCurrentGeneIndex, overlappingGenes);
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
@@ -219,11 +221,13 @@ public class ChromosomeGeneTask implements Callable
             ISF_LOGGER.info("processing {} genes for chromosome({})", mGeneDataList.size(), mChromosome);
         }
 
+        mCurrentGeneIndex = 0;
+        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int nextLogCount = 100;
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
-            final List<EnsemblGeneData> overlappingGenes = findNextOverlappingGenes();
+            mCurrentGeneIndex = findNextOverlappingGenes(mGeneDataList, mCurrentGeneIndex, overlappingGenes);
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
@@ -269,25 +273,20 @@ public class ChromosomeGeneTask implements Callable
         mPerfCounters[PERF_FRAG_LENGTH].stop();
     }
 
-    private List<EnsemblGeneData> findNextOverlappingGenes()
+    public static int findNextOverlappingGenes(
+            final List<EnsemblGeneData> geneDataList, int currentIndex, final List<EnsemblGeneData> overlappingGenes)
     {
-        final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
+        overlappingGenes.clear();
 
-        while(mCurrentGeneIndex < mGeneDataList.size())
+        while(currentIndex < geneDataList.size())
         {
-            EnsemblGeneData geneData = mGeneDataList.get(mCurrentGeneIndex);
-
-            if(mConfig.ExcludedGeneIds.contains(geneData.GeneId))
-            {
-                ++mCurrentGeneIndex;
-                continue;
-            }
+            EnsemblGeneData geneData = geneDataList.get(currentIndex);
 
             if(overlappingGenes.isEmpty()
             || overlappingGenes.stream().anyMatch(x -> positionsOverlap(geneData.GeneStart, geneData.GeneEnd, x.GeneStart, x.GeneEnd)))
             {
                 overlappingGenes.add(geneData);
-                ++mCurrentGeneIndex;
+                ++currentIndex;
             }
             else
             {
@@ -295,7 +294,7 @@ public class ChromosomeGeneTask implements Callable
             }
         }
 
-        return overlappingGenes;
+        return currentIndex;
     }
 
     private List<GeneReadData> createGeneReadData(final List<EnsemblGeneData> geneDataList)

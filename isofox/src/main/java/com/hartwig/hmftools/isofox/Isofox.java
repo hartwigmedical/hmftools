@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.sigs.DataUtils.copyVector;
 import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.PERF_FIT;
-import static com.hartwig.hmftools.isofox.ChromosomeGeneTask.PERF_FRAG_LENGTH;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_TRANSCRIPTS_DIR;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -132,6 +131,12 @@ public class Isofox
         if(mConfig.requireFragmentLengthCalcs())
         {
             calcFragmentLengths(chrTasks);
+
+            if(mConfig.WriteFragmentLengthsByGene)
+            {
+                mResultsWriter.close();
+                return true;
+            }
         }
 
         if(mConfig.WriteExpectedGcRatios)
@@ -257,7 +262,7 @@ public class Isofox
 
     private void calcFragmentLengths(final List<ChromosomeGeneTask> chrTasks)
     {
-        // for now a way of only calculating fragment lengths and nothing more
+        // determine the distribution of fragment lengths for analysis and adjustment of expected transcript rates
         boolean validExecution = executeChromosomeTask(chrTasks, FRAGMENT_LENGTHS);
 
         if(!validExecution)
@@ -278,10 +283,8 @@ public class Isofox
         if(mConfig.ApplyFragmentLengthAdjust)
             setConfigFragmentLengthData(mConfig, maxReadLength, mFragmentLengthDistribution);
 
-        if (mConfig.WriteFragmentLengths && !mConfig.FragmentLengthsByGene)
-        {
-            FragmentSizeCalcs.writeFragmentLengths(mResultsWriter.getFragmentLengthWriter(), mFragmentLengthDistribution, null);
-        }
+        if (mConfig.WriteFragmentLengths)
+            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution);
     }
 
     private void generateGcRatios(final List<ChromosomeGeneTask> chrTasks)
