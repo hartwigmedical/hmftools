@@ -16,7 +16,8 @@ public abstract class WideResponseData {
 
     public abstract int timePoint();
 
-    @NotNull
+    // Response date can be null if no response was taken because patient died before first response
+    @Nullable
     public abstract LocalDate date();
 
     public abstract boolean recistDone();
@@ -24,6 +25,7 @@ public abstract class WideResponseData {
     @NotNull
     public abstract String recistResponse();
 
+    // When recist is done, these fields will be null.
     @Nullable
     public abstract String noRecistResponse();
 

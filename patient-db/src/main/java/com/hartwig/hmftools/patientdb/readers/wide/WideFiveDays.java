@@ -16,6 +16,7 @@ public abstract class WideFiveDays {
 
     public abstract boolean dataIsAvailable();
 
+    // When data is not available, all other fields will be null
     @Nullable
     public abstract LocalDate informedConsentDate();
 
