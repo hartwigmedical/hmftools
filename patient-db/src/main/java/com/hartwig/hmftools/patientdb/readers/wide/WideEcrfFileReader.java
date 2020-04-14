@@ -199,7 +199,7 @@ public class WideEcrfFileReader {
                     ImmutableWideResponseData.Builder wideResponseBuilder = ImmutableWideResponseData.builder()
                             .patientId(WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID)))
                             .timePoint(Integer.parseInt(line.get(RESPONSE_DATA_TIME_POINT)))
-                            .date(WideFileInputInterpreter.interpretDateNL(line.get(RESPONSE_DATA_DATE)))
+                            .date(WideFileInputInterpreter.interpretDateEN(line.get(RESPONSE_DATA_DATE)))
                             .recistDone(recistDone)
                             .recistResponse(line.get(RESPONSE_DATA_RECIST_RESPONSE));
 
