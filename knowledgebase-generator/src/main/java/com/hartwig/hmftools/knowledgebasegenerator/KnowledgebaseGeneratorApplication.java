@@ -82,6 +82,7 @@ public class KnowledgebaseGeneratorApplication {
         ImmutableAllGenomicEvents.Builder genomicEventsBuilder = ImmutableAllGenomicEvents.builder();
 
         //Lists of known genomic events
+        List<EventType> eventType = Lists.newArrayList();
         List<KnownAmplificationDeletion> listKnownAmplification = Lists.newArrayList();
         List<KnownAmplificationDeletion> listKnownDeletion = Lists.newArrayList();
         List<String> listKnownVariants = Lists.newArrayList();
@@ -97,7 +98,7 @@ public class KnowledgebaseGeneratorApplication {
         LOGGER.info("Analyzing all VICC entries");
         for (ViccEntry viccEntry : viccEntries) {
 
-            List<EventType> eventType = EventTypeAnalyzer.determineEventType(viccEntry);
+            eventType = EventTypeAnalyzer.determineEventType(viccEntry);
 
             for (EventType type : eventType) {
                 // Generating known events
@@ -249,6 +250,7 @@ public class KnowledgebaseGeneratorApplication {
         }
 
         AllGenomicEvents finalAllGenomicEvents = ImmutableAllGenomicEvents.builder()
+                .eventType(eventType)
                 .knownAmplifications(listAmpsFilter)
                 .uniqueAmplification(sortedUniqueAmps)
                 .knownDeletions(listDelsFIlter)

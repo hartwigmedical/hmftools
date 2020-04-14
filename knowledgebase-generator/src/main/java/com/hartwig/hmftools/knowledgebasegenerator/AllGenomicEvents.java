@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.ActionableAmplificationDeletion;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 
@@ -16,6 +17,9 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class AllGenomicEvents {
+
+    @NotNull
+    public abstract List<EventType> eventType();
 
     @NotNull
     public abstract List<KnownAmplificationDeletion> knownAmplifications();
