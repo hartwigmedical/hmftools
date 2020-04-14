@@ -14,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class BiopsyData implements Comparable<BiopsyData>  {
 
+    private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
+
     public abstract int id();
 
     @Nullable
@@ -39,8 +41,6 @@ public abstract class BiopsyData implements Comparable<BiopsyData>  {
 
     @NotNull
     public abstract FormStatus formStatus();
-
-    private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
     private static int createId() {
         return ID_COUNTER.getAndIncrement();
@@ -76,7 +76,7 @@ public abstract class BiopsyData implements Comparable<BiopsyData>  {
     }
 
     @Override
-    public int compareTo(@NotNull final BiopsyData other) {
+    public int compareTo(@NotNull  BiopsyData other) {
         LocalDate date1 = date();
         LocalDate date2 = other.date();
         if (date1 == null && date2 == null) {

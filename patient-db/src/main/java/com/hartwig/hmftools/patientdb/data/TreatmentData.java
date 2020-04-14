@@ -47,7 +47,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     default String treatmentName() {
         List<CuratedDrug> drugs = sortedDrugs();
 
-        final String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining(SEPARATOR));
+        String concatenatedTreatmentName = drugs.stream().map(CuratedDrug::name).collect(Collectors.joining(SEPARATOR));
         return Strings.emptyToNull(concatenatedTreatmentName);
     }
 
@@ -104,8 +104,8 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     @Value.Derived
     default LocalDate startDate() {
         LocalDate startDate = null;
-        for (final DrugData drug : drugs()) {
-            final LocalDate drugStartDate = drug.startDate();
+        for (DrugData drug : drugs()) {
+            LocalDate drugStartDate = drug.startDate();
             if (startDate == null || (drugStartDate != null && drugStartDate.isBefore(startDate))) {
                 startDate = drugStartDate;
             }
@@ -120,8 +120,8 @@ public interface TreatmentData extends Comparable<TreatmentData> {
             return null;
         } else {
             LocalDate endDate = drugs().get(0).endDate();
-            for (final DrugData drug : drugs()) {
-                final LocalDate drugEndDate = drug.endDate();
+            for (DrugData drug : drugs()) {
+                LocalDate drugEndDate = drug.endDate();
                 if (drugEndDate == null || (endDate != null && drugEndDate.isAfter(endDate))) {
                     endDate = drugEndDate;
                 }
@@ -131,7 +131,7 @@ public interface TreatmentData extends Comparable<TreatmentData> {
     }
 
     @Override
-    default int compareTo(@NotNull final TreatmentData other) {
+    default int compareTo(@NotNull TreatmentData other) {
         LocalDate startDate1 = startDate();
         LocalDate startDate2 = other.startDate();
         if (startDate1 == null && startDate2 == null) {
