@@ -34,7 +34,7 @@ public class SageVariant implements GenomePosition {
 
     @NotNull
     public String ref() {
-        return variant.alt();
+        return variant.ref();
     }
 
     @NotNull
