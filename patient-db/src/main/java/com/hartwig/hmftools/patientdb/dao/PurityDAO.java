@@ -44,7 +44,7 @@ class PurityDAO {
             return null;
         }
 
-        final FittedPurity purity = ImmutableFittedPurity.builder()
+        FittedPurity purity = ImmutableFittedPurity.builder()
                 .purity(result.getValue(PURITY.PURITY_))
                 .normFactor(result.getValue(PURITY.NORMFACTOR))
                 .score(result.getValue(PURITY.SCORE))
@@ -53,7 +53,7 @@ class PurityDAO {
                 .somaticPenalty(result.getValue(PURITY.SOMATICPENALTY))
                 .build();
 
-        final FittedPurityScore score = ImmutableFittedPurityScore.builder()
+        FittedPurityScore score = ImmutableFittedPurityScore.builder()
                 .minPurity(result.getValue(PURITY.MINPURITY))
                 .maxPurity(result.getValue(PURITY.MAXPURITY))
                 .minPloidy(result.getValue(PURITY.MINPLOIDY))
@@ -83,7 +83,7 @@ class PurityDAO {
     List<String> getSamplesPassingQC(double minPurity) {
         List<String> sampleIds = Lists.newArrayList();
 
-        final Result<Record> result = context.select()
+        Result<Record> result = context.select()
                 .from(PURITY)
                 .where(PURITY.PURITY_.ge(minPurity))
                 .and(PURITY.STATUS.ne(NO_TUMOR.toString()))
@@ -101,7 +101,7 @@ class PurityDAO {
     List<String> getSampleIds() {
         List<String> sampleIds = Lists.newArrayList();
 
-        final Result<Record> result = context.select().from(PURITY).fetch();
+        Result<Record> result = context.select().from(PURITY).fetch();
 
         for (Record record : result) {
             sampleIds.add(record.getValue(PURITY.SAMPLEID));
@@ -110,9 +110,9 @@ class PurityDAO {
         return sampleIds;
     }
 
-    void write(@NotNull final String sample, @NotNull final PurityContext purity, @NotNull final PurpleQC checks) {
-        final FittedPurity bestFit = purity.bestFit();
-        final FittedPurityScore score = purity.score();
+    void write(@NotNull String sample, @NotNull PurityContext purity, @NotNull PurpleQC checks) {
+        FittedPurity bestFit = purity.bestFit();
+        FittedPurityScore score = purity.score();
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
@@ -173,7 +173,7 @@ class PurityDAO {
                 .execute();
     }
 
-    void write(@NotNull final String sample, @NotNull List<FittedPurity> purities) {
+    void write(@NotNull String sample, @NotNull List<FittedPurity> purities) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(PURITYRANGE).where(PURITYRANGE.SAMPLEID.eq(sample)).execute();
 

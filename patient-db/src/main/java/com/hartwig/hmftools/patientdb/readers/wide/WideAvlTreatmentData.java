@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
+import java.time.LocalDate;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class WideTreatmentData {
+public abstract class WideAvlTreatmentData {
 
     @NotNull
-    public abstract String sampleId();
+    public abstract String patientId();
 
     @NotNull
     public abstract String drugCode();
@@ -18,9 +20,9 @@ public abstract class WideTreatmentData {
     @NotNull
     public abstract String drug();
 
-    @NotNull
-    public abstract String startDate();
+    @Nullable
+    public abstract LocalDate startDate();
 
-    @NotNull
-    public abstract String endDate();
+    @Nullable
+    public abstract LocalDate endDate();
 }

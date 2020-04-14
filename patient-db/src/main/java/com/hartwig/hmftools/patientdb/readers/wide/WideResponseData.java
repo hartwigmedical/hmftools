@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
+import java.time.LocalDate;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,25 +14,25 @@ public abstract class WideResponseData {
     @NotNull
     public abstract String patientId();
 
-    @NotNull
-    public abstract String timePoint();
+    public abstract int timePoint();
+
+    // Response date can be null if no response was taken because patient died before first response
+    @Nullable
+    public abstract LocalDate date();
+
+    public abstract boolean recistDone();
 
     @NotNull
-    public abstract String date();
+    public abstract String recistResponse();
 
-    @NotNull
-    public abstract String recistNotDone();
+    // When recist is done, these fields will be null.
+    @Nullable
+    public abstract String noRecistResponse();
 
-    @NotNull
-    public abstract String responseAccordingRecist();
+    @Nullable
+    public abstract String noRecistReasonStopTreatment();
 
-    @NotNull
-    public abstract String clinicalDecision();
-
-    @NotNull
-    public abstract String reasonStopTreatment();
-
-    @NotNull
-    public abstract String reasonStopTreatmentOther();
+    @Nullable
+    public abstract String noRecistReasonStopTreatmentOther();
 
 }

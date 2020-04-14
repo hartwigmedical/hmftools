@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
+import java.time.LocalDate;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,17 +15,11 @@ public abstract class WideBiopsyData {
     public abstract String patientId();
 
     @NotNull
-    public abstract String wideId();
+    public abstract String pathologySampleId();
 
-    @NotNull
-    public abstract String dataAvailable();
+    @Nullable
+    public abstract LocalDate biopsyDate();
 
-    @NotNull
-    public abstract String tissueId();
-
-    @NotNull
-    public abstract String bioptDate();
-
-    @NotNull
-    public abstract String WGSsuccesfull();
+    @Nullable
+    public abstract Boolean hasReceivedSuccessfulReport();
 }

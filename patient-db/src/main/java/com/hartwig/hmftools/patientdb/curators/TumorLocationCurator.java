@@ -35,12 +35,12 @@ public class TumorLocationCurator implements CleanableCurator {
     }
 
     @VisibleForTesting
-    TumorLocationCurator(@NotNull final InputStream mappingInputStream) throws IOException {
-        final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
-        for (final CSVRecord record : parser) {
-            final String searchTerm = record.get("searchTerm");
-            final String primaryTumorLocation = record.get("primaryTumorLocation");
-            final String subType = record.get("subType");
+    TumorLocationCurator(@NotNull InputStream mappingInputStream) throws IOException {
+        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        for (CSVRecord record : parser) {
+            String searchTerm = record.get("searchTerm");
+            String primaryTumorLocation = record.get("primaryTumorLocation");
+            String subType = record.get("subType");
             tumorLocationMap.put(searchTerm.toLowerCase(),
                     ImmutableCuratedTumorLocation.of(Utils.capitalize(primaryTumorLocation), Utils.capitalize(subType), searchTerm));
         }
@@ -49,11 +49,11 @@ public class TumorLocationCurator implements CleanableCurator {
     }
 
     @NotNull
-    public CuratedTumorLocation search(@Nullable final String searchTerm) {
+    public CuratedTumorLocation search(@Nullable String searchTerm) {
         if (searchTerm != null && !searchTerm.isEmpty()) {
             String effectiveSearchTerm = searchTerm.toLowerCase();
             unusedSearchTerms.remove(effectiveSearchTerm);
-            final CuratedTumorLocation result = tumorLocationMap.get(effectiveSearchTerm);
+            CuratedTumorLocation result = tumorLocationMap.get(effectiveSearchTerm);
 
             if (result != null) {
                 return result;

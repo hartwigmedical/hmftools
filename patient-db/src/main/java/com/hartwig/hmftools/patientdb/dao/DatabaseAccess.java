@@ -93,8 +93,8 @@ public class DatabaseAccess implements AutoCloseable {
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException {
         // Disable annoying jooq self-ad message
         System.setProperty("org.jooq.no-logo", "true");
-        final Connection conn = DriverManager.getConnection(url, userName, password);
-        final String catalog = conn.getCatalog();
+        Connection conn = DriverManager.getConnection(url, userName, password);
+        String catalog = conn.getCatalog();
         LOGGER.debug("Connecting to database {}", catalog);
         this.context = DSL.using(conn, SQLDialect.MYSQL, settings(catalog));
 
@@ -137,27 +137,27 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public final List<String> readPurpleSampleList() {
+    public List<String> readPurpleSampleList() {
         return purityDAO.getSampleIds();
     }
 
     @NotNull
-    public final List<String> readPurpleSampleListPassingQC(double minPurity) {
+    public List<String> readPurpleSampleListPassingQC(double minPurity) {
         return purityDAO.getSamplesPassingQC(minPurity);
     }
 
     @Nullable
-    public PurityContext readPurityContext(@NotNull final String sampleId) {
+    public PurityContext readPurityContext(@NotNull String sampleId) {
         return purityDAO.readPurityContext(sampleId);
     }
 
     @NotNull
-    public List<PurpleCopyNumber> readCopynumbers(@NotNull final String sample) {
+    public List<PurpleCopyNumber> readCopynumbers(@NotNull String sample) {
         return copyNumberDAO.read(sample);
     }
 
     @NotNull
-    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull final String sample, @NotNull final List<String> genes) {
+    public List<GeneCopyNumber> readGeneCopynumbers(@NotNull String sample, @NotNull List<String> genes) {
         return geneCopyNumberDAO.read(sample, genes);
     }
 
@@ -167,87 +167,82 @@ public class DatabaseAccess implements AutoCloseable {
     }
 
     @NotNull
-    public List<SomaticVariant> readSomaticVariants(@NotNull final String sample) {
-        return somaticVariantDAO.read(sample);
-    }
-
-    @NotNull
-    public List<SomaticVariant> readSomaticVariants(@NotNull final String sample, VariantType type) {
+    public List<SomaticVariant> readSomaticVariants(@NotNull String sample, VariantType type) {
         return somaticVariantDAO.read(sample, type);
     }
 
     @NotNull
-    public List<String> readStructuralVariantSampleList(@NotNull final String sampleSearch) {
+    public List<String> readStructuralVariantSampleList(@NotNull String sampleSearch) {
         return structuralVariantDAO.getSamplesList(sampleSearch);
     }
 
     @NotNull
-    public List<StructuralVariantData> readStructuralVariantData(@NotNull final String sample) {
+    public List<StructuralVariantData> readStructuralVariantData(@NotNull String sample) {
         return structuralVariantDAO.read(sample);
     }
 
     @NotNull
-    public final List<DriverCatalog> readDriverCatalog(@NotNull final String sample) {
+    public List<DriverCatalog> readDriverCatalog(@NotNull String sample) {
         return driverCatalogDAO.readDriverData(sample);
     }
 
-    public void writeCanonicalTranscripts(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
+    public void writeCanonicalTranscripts(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
         canonicalTranscriptDAO.write(assembly, transcripts);
     }
 
-    public void writePurity(@NotNull final String sampleId, @NotNull final PurityContext context, @NotNull final PurpleQC checks) {
+    public void writePurity(@NotNull String sampleId, @NotNull PurityContext context, @NotNull PurpleQC checks) {
         purityDAO.write(sampleId, context, checks);
     }
 
-    public void writeBestFitPerPurity(@NotNull final String sampleId, @NotNull final List<FittedPurity> bestFitPerPurity) {
+    public void writeBestFitPerPurity(@NotNull String sampleId, @NotNull List<FittedPurity> bestFitPerPurity) {
         purityDAO.write(sampleId, bestFitPerPurity);
     }
 
-    public void writeCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    public void writeCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeCopyNumber(sample, copyNumbers);
     }
 
-    public void writeAmberBAF(@NotNull final String sampleId, @NotNull final List<AmberBAF> amber) {
+    public void writeAmberBAF(@NotNull String sampleId, @NotNull List<AmberBAF> amber) {
         amberDAO.write(sampleId, amber);
     }
 
-    public void writeSomaticVariants(@NotNull final String sampleId, @NotNull final List<SomaticVariant> variants) {
+    public void writeSomaticVariants(@NotNull String sampleId, @NotNull List<SomaticVariant> variants) {
         somaticVariantDAO.write(sampleId, variants);
     }
 
-    public void writeStructuralVariants(@NotNull final String sampleId, @NotNull final List<StructuralVariantData> variants) {
+    public void writeStructuralVariants(@NotNull String sampleId, @NotNull List<StructuralVariantData> variants) {
         structuralVariantDAO.write(sampleId, variants);
     }
 
-    public void writeGermlineCopynumbers(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    public void writeGermlineCopynumbers(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         copyNumberDAO.writeGermlineCopyNumber(sample, copyNumbers);
     }
 
-    public void writeSvClusters(@NotNull final String sample, @NotNull List<LinxCluster> clusters) {
+    public void writeSvClusters(@NotNull String sample, @NotNull List<LinxCluster> clusters) {
         structuralVariantClusterDAO.writeClusters(sample, clusters);
     }
 
-    public void writeSvLinxData(@NotNull final String sample, @NotNull List<LinxSvData> svData) {
+    public void writeSvLinxData(@NotNull String sample, @NotNull List<LinxSvData> svData) {
         structuralVariantClusterDAO.writeSvData(sample, svData);
     }
 
-    public void writeSvLinks(@NotNull final String sample, @NotNull List<LinxLink> links) {
+    public void writeSvLinks(@NotNull String sample, @NotNull List<LinxLink> links) {
         structuralVariantClusterDAO.writeLinks(sample, links);
     }
 
-    public void writeSvDrivers(@NotNull final String sample, @NotNull List<LinxDriver> drivers) {
+    public void writeSvDrivers(@NotNull String sample, @NotNull List<LinxDriver> drivers) {
         structuralVariantClusterDAO.writeDrivers(sample, drivers);
     }
 
-    public void writeSvViralInserts(@NotNull final String sample, @NotNull List<LinxViralInsertFile> inserts) {
+    public void writeSvViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertFile> inserts) {
         structuralVariantClusterDAO.writeViralInserts(sample, inserts);
     }
 
-    public void writeGeneCopynumberRegions(@NotNull final String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
+    public void writeGeneCopynumberRegions(@NotNull String sample, @NotNull List<GeneCopyNumber> geneCopyNumbers) {
         geneCopyNumberDAO.writeCopyNumber(sample, geneCopyNumbers);
     }
 
-    public void writeDriverCatalog(@NotNull final String sample, @NotNull List<DriverCatalog> driverCatalog) {
+    public void writeDriverCatalog(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
         driverCatalogDAO.write(sample, driverCatalog);
     }
 
@@ -292,7 +287,7 @@ public class DatabaseAccess implements AutoCloseable {
         clinicalDAO.writeSampleClinicalData(patientIdentifier, blacklisted, samples);
     }
 
-    public void writeDrupEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
+    public void writeDrupEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients) {
         LOGGER.info("Writing DRUP datamodel...");
         ecrfDAO.writeDrupDatamodel(model.fields());
         LOGGER.info(" Done writing DRUP datamodel.");
@@ -301,7 +296,7 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info(" Done writing raw DRUP patient data.");
     }
 
-    public void writeCpctEcrf(@NotNull final EcrfModel model, @NotNull final Set<String> sequencedPatients) {
+    public void writeCpctEcrf(@NotNull EcrfModel model, @NotNull Set<String> sequencedPatients) {
         LOGGER.info("Writing CPCT datamodel...");
         ecrfDAO.writeCpctDatamodel(model.fields());
         LOGGER.info(" Done writing CPCT datamodel.");
@@ -310,56 +305,56 @@ public class DatabaseAccess implements AutoCloseable {
         LOGGER.info(" Done writing raw CPCT patient data.");
     }
 
-    public void writeValidationFindings(@NotNull final List<ValidationFinding> findings) {
+    public void writeValidationFindings(@NotNull List<ValidationFinding> findings) {
         validationFindingsDAO.write(findings);
     }
 
     public void deleteAllDataForSample(@NotNull String sample) {
         LOGGER.info("Starting deleting data");
 
-        LOGGER.info("Deleting metric data for sample: " + sample);
+        LOGGER.info("Deleting metric data for sample: {}", sample);
         metricDAO.deleteMetricForSample(sample);
 
-        LOGGER.info("Deleting CHORD data for sample: " + sample);
+        LOGGER.info("Deleting CHORD data for sample: {}", sample);
         chordDAO.deleteChordForSample(sample);
 
-        LOGGER.info("Deleting amber data for sample: " + sample);
+        LOGGER.info("Deleting amber data for sample: {}", sample);
         amberDAO.deleteAmberRecordsForSample(sample);
 
-        LOGGER.info("Deleting purity data for sample: " + sample);
+        LOGGER.info("Deleting purity data for sample: {}", sample);
         purityDAO.deletePurityForSample(sample);
 
-        LOGGER.info("Deleting copy number data for sample: " + sample);
+        LOGGER.info("Deleting copy number data for sample: {}", sample);
         copyNumberDAO.deleteCopyNumberForSample(sample);
 
-        LOGGER.info("Deleting gene copy numbers for sample: " + sample);
+        LOGGER.info("Deleting gene copy numbers for sample: {}", sample);
         geneCopyNumberDAO.deleteGeneCopyNumberForSample(sample);
 
-        LOGGER.info("Deleting somatic variants for sample: " + sample);
+        LOGGER.info("Deleting somatic variants for sample: {}", sample);
         somaticVariantDAO.deleteSomaticVariantForSample(sample);
 
-        LOGGER.info("Deleting germline variant data for sample: " + sample);
+        LOGGER.info("Deleting germline variant data for sample: {}", sample);
         context.delete(Tables.GERMLINEVARIANT).where(Tables.GERMLINEVARIANT.SAMPLEID.eq(sample)).execute();
 
-        LOGGER.info("Deleting structural variant annotation data for sample: " + sample);
+        LOGGER.info("Deleting structural variant annotation data for sample: {}", sample);
         structuralVariantFusionDAO.deleteAnnotationsForSample(sample);
 
-        LOGGER.info("Deleting structural variant cluster data for sample: " + sample);
+        LOGGER.info("Deleting structural variant cluster data for sample: {}", sample);
         structuralVariantClusterDAO.deleteClusterDataForSample(sample);
 
-        LOGGER.info("Deleting structural variants for sample: " + sample);
+        LOGGER.info("Deleting structural variants for sample: {}", sample);
         structuralVariantDAO.deleteStructuralVariantsForSample(sample);
 
-        LOGGER.info("Deleting evidence data for sample: " + sample);
+        LOGGER.info("Deleting evidence data for sample: {}", sample);
         clinicalEvidenceDAO.deleteClinicalEvidenceForSample(sample);
 
-        LOGGER.info("Deleting driver catalog for sample: " + sample);
+        LOGGER.info("Deleting driver catalog for sample: {}", sample);
         driverCatalogDAO.deleteForSample(sample);
 
-        LOGGER.info("Deleting pgx data for sample: " + sample);
+        LOGGER.info("Deleting pgx data for sample: {}", sample);
         pgxDAO.deletePgxForSample(sample);
 
-        LOGGER.info("All data for sample: " + sample + " has been deleted");
+        LOGGER.info("All data for sample '{}' has been deleted", sample);
     }
 }
 

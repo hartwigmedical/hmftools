@@ -23,7 +23,7 @@ class ValidationFindingDAO {
         context.truncate(CLINICALFINDINGS).execute();
     }
 
-    void write(@NotNull final List<ValidationFinding> findings) {
+    void write(@NotNull List<ValidationFinding> findings) {
         context.batch(findings.stream()
                 .map(finding -> context.insertInto(CLINICALFINDINGS,
                         CLINICALFINDINGS.LEVEL,

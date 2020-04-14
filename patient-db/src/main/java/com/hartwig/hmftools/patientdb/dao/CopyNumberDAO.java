@@ -32,7 +32,7 @@ class CopyNumberDAO {
     }
 
     @NotNull
-    public List<PurpleCopyNumber> read(@NotNull final String sample) {
+    public List<PurpleCopyNumber> read(@NotNull String sample) {
         List<PurpleCopyNumber> copyNumbers = Lists.newArrayList();
 
         Result<Record> result = context.select().from(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).fetch();
@@ -60,7 +60,7 @@ class CopyNumberDAO {
         return copyNumbers;
     }
 
-    void writeCopyNumber(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    void writeCopyNumber(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBER).where(COPYNUMBER.SAMPLEID.eq(sample)).execute();
 
@@ -89,7 +89,7 @@ class CopyNumberDAO {
         }
     }
 
-    void writeGermlineCopyNumber(@NotNull final String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
+    void writeGermlineCopyNumber(@NotNull String sample, @NotNull List<PurpleCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(COPYNUMBERGERMLINE).where(COPYNUMBERGERMLINE.SAMPLEID.eq(sample)).execute();
 

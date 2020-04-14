@@ -38,14 +38,14 @@ import com.hartwig.hmftools.patientdb.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.readers.drup.DrupPatientReader;
 import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.WideAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfFileReader;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WideFiveDays;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePatientReader;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePreTreatmentData;
+import com.hartwig.hmftools.patientdb.readers.wide.WidePreAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideTreatmentData;
 import com.hartwig.hmftools.patientdb.validators.CurationValidator;
 import com.hartwig.hmftools.patientdb.validators.PatientValidator;
 
@@ -72,9 +72,9 @@ public final class LoadClinicalData {
     private static final String DO_LOAD_RAW_ECRF = "do_load_raw_ecrf";
 
     private static final String DO_PROCESS_WIDE_CLINICAL_DATA = "do_process_wide_clinical_data";
-    private static final String WIDE_PRE_TREATMENT_CSV = "wide_pre_treatment_csv";
+    private static final String WIDE_PRE_AVL_TREATMENT_CSV = "wide_pre_avl_treatment_csv";
     private static final String WIDE_BIOPSY_CSV = "wide_biopsy_csv";
-    private static final String WIDE_TREATMENT_CSV = "wide_treatment_csv";
+    private static final String WIDE_AVL_TREATMENT_CSV = "wide_avl_treatment_csv";
     private static final String WIDE_RESPONSE_CSV = "wide_response_csv";
     private static final String WIDE_FIVE_DAYS_CSV = "wide_five_days_csv";
 
@@ -268,40 +268,41 @@ public final class LoadClinicalData {
         if (cmd.hasOption(DO_PROCESS_WIDE_CLINICAL_DATA)) {
             LOGGER.info("Loading WIDE eCRF");
 
-            String fiveDaysCsv = cmd.getOptionValue(WIDE_FIVE_DAYS_CSV);
-            List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(fiveDaysCsv);
-            LOGGER.info(" Loaded {} WIDE five days from {}", fiveDays.size(), fiveDaysCsv);
-
-            String preTreatmentCsv = cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV);
-            List<WidePreTreatmentData> pretreatments = WideEcrfFileReader.readPreTreatmentData(preTreatmentCsv);
-            LOGGER.info(" Loaded {} WIDE pre-treatments from {}", pretreatments.size(), preTreatmentCsv);
+            String preAvlTreatmentCsv = cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV);
+            List<WidePreAvlTreatmentData> preAvlTreatments = WideEcrfFileReader.readPreAvlTreatments(preAvlTreatmentCsv);
+            LOGGER.info(" Loaded {} WIDE pre-AVL-treatments from {}", preAvlTreatments.size(), preAvlTreatmentCsv);
 
             String biopsyCsv = cmd.getOptionValue(WIDE_BIOPSY_CSV);
-            List<WideBiopsyData> biopsies = WideEcrfFileReader.readBiopsyData(biopsyCsv);
+            List<WideBiopsyData> biopsies = WideEcrfFileReader.readBiopsies(biopsyCsv);
             LOGGER.info(" Loaded {} WIDE biopsies from {}", biopsies.size(), biopsyCsv);
 
-            String treatmentCsv = cmd.getOptionValue(WIDE_TREATMENT_CSV);
-            List<WideTreatmentData> treatments = WideEcrfFileReader.readTreatmentData(treatmentCsv);
-            LOGGER.info(" Loaded {} WIDE treatments from {}", treatments.size(), treatmentCsv);
+            String avlTreatmentCsv = cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV);
+            List<WideAvlTreatmentData> avlTreatments = WideEcrfFileReader.readAvlTreatments(avlTreatmentCsv);
+            LOGGER.info(" Loaded {} WIDE AVL treatments from {}", avlTreatments.size(), avlTreatmentCsv);
 
             String wideResponseCsv = cmd.getOptionValue(WIDE_RESPONSE_CSV);
-            List<WideResponseData> responses = WideEcrfFileReader.readResponseData(wideResponseCsv);
+            List<WideResponseData> responses = WideEcrfFileReader.readResponses(wideResponseCsv);
             LOGGER.info(" Loaded {} WIDE responses from {}", responses.size(), wideResponseCsv);
 
+            String fiveDaysCsv = cmd.getOptionValue(WIDE_FIVE_DAYS_CSV);
+            List<WideFiveDays> fiveDays = WideEcrfFileReader.readFiveDays(fiveDaysCsv);
+            LOGGER.info(" Loaded {} WIDE five days entries from {}", fiveDays.size(), fiveDaysCsv);
+
             wideEcrfModel = ImmutableWideEcrfModel.builder()
-                    .preTreatments(pretreatments)
+                    .preAvlTreatments(preAvlTreatments)
                     .biopsies(biopsies)
-                    .treatments(treatments)
+                    .avlTreatments(avlTreatments)
                     .responses(responses)
                     .fiveDays(fiveDays)
                     .build();
         } else {
             LOGGER.info("Skipping the loading of WIDE eCRF");
             wideEcrfModel = ImmutableWideEcrfModel.builder()
-                    .preTreatments(Lists.newArrayList())
+                    .preAvlTreatments(Lists.newArrayList())
                     .biopsies(Lists.newArrayList())
-                    .treatments(Lists.newArrayList())
+                    .avlTreatments(Lists.newArrayList())
                     .responses(Lists.newArrayList())
+                    .fiveDays(Lists.newArrayList())
                     .build();
         }
 
@@ -556,8 +557,8 @@ public final class LoadClinicalData {
                 cmd.getOptionValue(DRUP_ECRF_FILE),
                 cmd.getOptionValue(LIMS_DIRECTORY),
                 cmd.getOptionValue(TUMOR_LOCATION_OUTPUT_DIRECTORY),
-                cmd.getOptionValue(WIDE_TREATMENT_CSV),
-                cmd.getOptionValue(WIDE_PRE_TREATMENT_CSV),
+                cmd.getOptionValue(WIDE_AVL_TREATMENT_CSV),
+                cmd.getOptionValue(WIDE_PRE_AVL_TREATMENT_CSV),
                 cmd.getOptionValue(WIDE_BIOPSY_CSV),
                 cmd.getOptionValue(WIDE_RESPONSE_CSV),
                 cmd.getOptionValue(WIDE_FIVE_DAYS_CSV));
@@ -590,8 +591,8 @@ public final class LoadClinicalData {
         options.addOption(DO_PROCESS_WIDE_CLINICAL_DATA,
                 false,
                 "if set, creates clinical timeline for wide patients and persists to database");
-        options.addOption(WIDE_TREATMENT_CSV, true, "Path towards the wide treatment csv");
-        options.addOption(WIDE_PRE_TREATMENT_CSV, true, "Path towards the wide pre treatment csv.");
+        options.addOption(WIDE_AVL_TREATMENT_CSV, true, "Path towards the wide avl treatment csv");
+        options.addOption(WIDE_PRE_AVL_TREATMENT_CSV, true, "Path towards the wide pre avl treatment csv.");
         options.addOption(WIDE_BIOPSY_CSV, true, "Path towards the wide biopsy csv.");
         options.addOption(WIDE_RESPONSE_CSV, true, "Path towards the wide response csv.");
         options.addOption(WIDE_FIVE_DAYS_CSV, true, "Path towards the wide five days csv.");

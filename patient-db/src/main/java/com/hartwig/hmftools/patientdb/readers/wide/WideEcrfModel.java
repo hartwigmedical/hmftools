@@ -12,13 +12,13 @@ import org.jetbrains.annotations.Nullable;
 public abstract class WideEcrfModel {
 
     @NotNull
-    public abstract List<WidePreTreatmentData> preTreatments();
+    public abstract List<WidePreAvlTreatmentData> preAvlTreatments();
 
     @NotNull
     public abstract List<WideBiopsyData> biopsies();
 
     @NotNull
-    public abstract List<WideTreatmentData> treatments();
+    public abstract List<WideAvlTreatmentData> avlTreatments();
 
     @NotNull
     public abstract List<WideResponseData> responses();

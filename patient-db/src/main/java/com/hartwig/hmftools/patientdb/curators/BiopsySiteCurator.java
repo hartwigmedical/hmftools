@@ -36,19 +36,19 @@ public class BiopsySiteCurator {
     }
 
     @VisibleForTesting
-    BiopsySiteCurator(@NotNull final InputStream mappingInputStream) throws IOException {
-        final CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+    BiopsySiteCurator(@NotNull InputStream mappingInputStream) throws IOException {
+        CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         for (final CSVRecord record : parser) {
-            final String primaryTumorLocation = record.get("primaryTumorLocation");
-            final String cancerSubType = record.get("cancerSubType");
-            final String biopsySite = record.get("biopsySite");
-            final String biopsyLocation = record.get("biopsyLocation");
-            final String biopsyType = record.get("biopsyType");
+            String primaryTumorLocation = record.get("primaryTumorLocation");
+            String cancerSubType = record.get("cancerSubType");
+            String biopsySite = record.get("biopsySite");
+            String biopsyLocation = record.get("biopsyLocation");
+            String biopsyType = record.get("biopsyType");
 
             Key key = Key.fromInputs(primaryTumorLocation, cancerSubType, biopsySite, biopsyLocation);
 
             if (curationMap.get(key) != null) {
-                LOGGER.warn("Duplicate key found: " + key);
+                LOGGER.warn("Duplicate key found: '{}'", key);
             }
 
             curationMap.put(key,

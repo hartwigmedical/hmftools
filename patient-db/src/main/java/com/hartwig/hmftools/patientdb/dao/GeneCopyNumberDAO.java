@@ -31,13 +31,16 @@ class GeneCopyNumberDAO {
     }
 
     @NotNull
-    List<GeneCopyNumber> read(@NotNull final String sample, @NotNull final List<String> genes) {
+    List<GeneCopyNumber> read(@NotNull String sample, @NotNull List<String> genes) {
         List<GeneCopyNumber> geneCopyNumbers = Lists.newArrayList();
 
-        final Result<Record> result = genes.isEmpty() ?
-                context.select().from(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).fetch()
-                : context.select().from(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample))
-                .and(GENECOPYNUMBER.GENE.in(genes)).fetch();
+        Result<Record> result = genes.isEmpty()
+                ? context.select().from(GENECOPYNUMBER).where(GENECOPYNUMBER.SAMPLEID.eq(sample)).fetch()
+                : context.select()
+                        .from(GENECOPYNUMBER)
+                        .where(GENECOPYNUMBER.SAMPLEID.eq(sample))
+                        .and(GENECOPYNUMBER.GENE.in(genes))
+                        .fetch();
 
         for (Record record : result) {
             geneCopyNumbers.add(ImmutableGeneCopyNumber.builder()
@@ -65,7 +68,7 @@ class GeneCopyNumberDAO {
         return geneCopyNumbers;
     }
 
-    void writeCopyNumber(@NotNull final String sample, @NotNull List<GeneCopyNumber> copyNumbers) {
+    void writeCopyNumber(@NotNull String sample, @NotNull List<GeneCopyNumber> copyNumbers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteGeneCopyNumberForSample(sample);
 

@@ -47,25 +47,24 @@ final class MetaDataResolver {
             try {
                 return fromPv4MetaData(runDirectory, metaDataFileP4);
             } catch (FileNotFoundException exception) {
-                LOGGER.warn("Could not find meta data file {} for run dir {}.", METADATA_FILE_P4, runDirectory);
+                LOGGER.warn("Could not find meta data file '{}' for run dir '{}'.", METADATA_FILE_P4, runDirectory);
                 return null;
             }
         } else if (metaDataFileP5.exists()) {
             try {
                 return fromPv5MetaData(runDirectory, metaDataFileP5);
             } catch (FileNotFoundException exception) {
-                LOGGER.warn("Could not find meta data file {} for run dir {}.", METADATA_FILE_P5, runDirectory);
+                LOGGER.warn("Could not find meta data file '{}' for run dir '{}'.", METADATA_FILE_P5, runDirectory);
                 return null;
             }
         } else {
-            LOGGER.warn("No metadata file found for run dir {}.", runDirectory);
+            LOGGER.warn("No metadata file found for run dir '{}'.", runDirectory);
             return null;
         }
     }
 
     @Nullable
-    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile)
-            throws FileNotFoundException {
+    private static RunContext fromPv4MetaData(@NotNull String runDirectory, @NotNull File pv4MetadataFile) throws FileNotFoundException {
         JsonObject json = GSON.fromJson(new FileReader(pv4MetadataFile), JsonObject.class);
 
         String refSample = fieldValue(json, REF_SAMPLE_ID_FIELD_P4);
@@ -73,13 +72,13 @@ final class MetaDataResolver {
         String setName = fieldValue(json, SET_NAME_FIELD_P4);
 
         if (refSample == null) {
-            LOGGER.warn("Could not find {} in metadata file!", REF_SAMPLE_ID_FIELD_P4);
+            LOGGER.warn("Could not find '{}' in metadata file!", REF_SAMPLE_ID_FIELD_P4);
             return null;
         } else if (tumorSample == null) {
-            LOGGER.warn("Could not find {} in metadata file!", TUMOR_SAMPLE_ID_FIELD_P4);
+            LOGGER.warn("Could not find '{}' in metadata file!", TUMOR_SAMPLE_ID_FIELD_P4);
             return null;
         } else if (setName == null) {
-            LOGGER.warn("Could not find {} in metadata file!", SET_NAME_FIELD_P4);
+            LOGGER.warn("Could not find '{}' in metadata file!", SET_NAME_FIELD_P4);
             return null;
         }
 
@@ -92,6 +91,7 @@ final class MetaDataResolver {
                 tumorBarcodeSample = setNamePart;
             }
         }
+
         if (!containsBarcode) {
             LOGGER.warn("No tumor barcode could be derived from set name for '{}'", setName);
         }
@@ -109,16 +109,16 @@ final class MetaDataResolver {
         String setName = fieldValue(json, SET_NAME_FIELD_P5);
 
         if (refSample == null) {
-            LOGGER.warn("Could not find ref sample id in metadata object {}!", REF_SAMPLE_OBJECT_P5);
+            LOGGER.warn("Could not find ref sample id in metadata object '{}'!", REF_SAMPLE_OBJECT_P5);
             return null;
         } else if (tumorSample == null) {
-            LOGGER.warn("Could not find tumor sample id in metadata object {}!", TUMOR_SAMPLE_OBJECT_P5);
+            LOGGER.warn("Could not find tumor sample id in metadata object '{}'!", TUMOR_SAMPLE_OBJECT_P5);
             return null;
         } else if (tumorBarcodeSample == null) {
-            LOGGER.warn("Could not find tumor sample barcode in metadata object {}!", TUMOR_SAMPLE_OBJECT_P5);
+            LOGGER.warn("Could not find tumor sample barcode in metadata object '{}'!", TUMOR_SAMPLE_OBJECT_P5);
             return null;
         } else if (setName == null) {
-            LOGGER.warn("Could not find {} in metadata file!", SET_NAME_FIELD_P5);
+            LOGGER.warn("Could not find '{}' in metadata file!", SET_NAME_FIELD_P5);
             return null;
         }
 
@@ -126,13 +126,13 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static String fieldValue(@NotNull final JsonObject object, @NotNull final String fieldName) {
+    private static String fieldValue(@NotNull JsonObject object, @NotNull String fieldName) {
         JsonElement element = object.get(fieldName);
         return element != null && !(element instanceof JsonNull) ? element.getAsString() : null;
     }
 
     @Nullable
-    private static String sampleIdP5(@NotNull final JsonObject metadata, @NotNull final String objectName) {
+    private static String sampleIdP5(@NotNull JsonObject metadata, @NotNull String objectName) {
         JsonObject object = metadata.getAsJsonObject(objectName);
         if (object == null) {
             return null;
@@ -142,7 +142,7 @@ final class MetaDataResolver {
     }
 
     @Nullable
-    private static String sampleBarcodeP5(@NotNull final JsonObject metadata, @NotNull final String objectName) {
+    private static String sampleBarcodeP5(@NotNull JsonObject metadata, @NotNull String objectName) {
         JsonObject object = metadata.getAsJsonObject(objectName);
         if (object == null) {
             return null;

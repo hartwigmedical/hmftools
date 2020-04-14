@@ -23,7 +23,7 @@ class CanonicalTranscriptDAO {
         this.context = context;
     }
 
-    void write(@NotNull final String assembly, @NotNull final List<CanonicalTranscript> transcripts) {
+    void write(@NotNull String assembly, @NotNull List<CanonicalTranscript> transcripts) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         context.delete(CANONICALTRANSCRIPT).where(CANONICALTRANSCRIPT.ASSEMBLY.eq(assembly)).execute();
 
@@ -54,7 +54,7 @@ class CanonicalTranscriptDAO {
         }
     }
 
-    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull final String assembly,
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep20 inserter, @NotNull String assembly,
             @NotNull CanonicalTranscript transcript) {
         inserter.values(assembly,
                 transcript.gene(),

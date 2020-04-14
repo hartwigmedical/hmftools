@@ -14,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class BiopsyTreatmentData implements TreatmentData {
 
+    private static final AtomicInteger ID_COUNTER = new AtomicInteger();
+
     public abstract int id();
 
     @Nullable
@@ -35,15 +37,13 @@ public abstract class BiopsyTreatmentData implements TreatmentData {
     @Override
     public abstract FormStatus formStatus();
 
-    private static final AtomicInteger ID_COUNTER = new AtomicInteger();
-
     private static int createId() {
         return ID_COUNTER.getAndIncrement();
     }
 
     @NotNull
-    public static BiopsyTreatmentData of(@Nullable Integer biopsyId, @Nullable final String treatmentGiven, @Nullable final String radiotherapyGiven,
-            @NotNull final List<DrugData> drugs, @NotNull final FormStatus formStatus) {
+    public static BiopsyTreatmentData of(@Nullable Integer biopsyId, @Nullable  String treatmentGiven, @Nullable  String radiotherapyGiven,
+            @NotNull  List<DrugData> drugs, @NotNull  FormStatus formStatus) {
         return ImmutableBiopsyTreatmentData.of(createId(), biopsyId, treatmentGiven, radiotherapyGiven, drugs, formStatus);
     }
 

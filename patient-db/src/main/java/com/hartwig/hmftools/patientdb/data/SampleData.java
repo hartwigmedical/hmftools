@@ -40,7 +40,7 @@ public abstract class SampleData implements Comparable<SampleData> {
     @NotNull
     @Value.Derived
     public LocalDate date() {
-        final LocalDate samplingDate = samplingDate();
+        LocalDate samplingDate = samplingDate();
         return samplingDate != null ? samplingDate : arrivalDate();
     }
 
@@ -50,7 +50,7 @@ public abstract class SampleData implements Comparable<SampleData> {
     }
 
     @Override
-    public int compareTo(@NotNull final SampleData other) {
+    public int compareTo(@NotNull SampleData other) {
         return date().compareTo(other.date());
     }
 }

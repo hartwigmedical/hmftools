@@ -23,8 +23,8 @@ class SpellCheckerTokenFilter extends TokenFilter {
         if (!this.input.incrementToken()) {
             return false;
         }
-        final String currentTokenInStream = this.input.getAttribute(CharTermAttribute.class).toString();
-        final String nextToken = spellcheck(currentTokenInStream);
+        String currentTokenInStream = this.input.getAttribute(CharTermAttribute.class).toString();
+        String nextToken = spellcheck(currentTokenInStream);
         this.charTermAttribute.setEmpty().append(nextToken);
         return true;
     }

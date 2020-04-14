@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.readers.wide;
 
+import java.time.LocalDate;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,45 +14,39 @@ public abstract class WideFiveDays {
     @NotNull
     public abstract String patientId();
 
-    @NotNull
-    public abstract String wideId();
+    public abstract boolean dataIsAvailable();
 
-    @NotNull
-    public abstract String birthYear();
+    // When data is not available, all other fields will be null
+    @Nullable
+    public abstract LocalDate informedConsentDate();
 
-    @NotNull
+    @Nullable
     public abstract String gender();
 
-    @NotNull
-    public abstract String informedConsent();
+    @Nullable
+    public abstract Integer birthYear();
 
-    @NotNull
-    public abstract String usedForFutureResearch();
+    @Nullable
+    public abstract LocalDate biopsyDate();
 
-    @NotNull
-    public abstract String dateShared();
-
-    @NotNull
-    public abstract String dateBiopsy();
-
-    @NotNull
+    @Nullable
     public abstract String biopsySite();
 
-    @NotNull
+    @Nullable
     public abstract String sampleTissue();
 
-    @NotNull
+    @Nullable
     public abstract String sampleType();
 
-    @NotNull
+    @Nullable
     public abstract String studyCode();
 
-    @NotNull
-    public abstract String otherTrial();
+    @Nullable
+    public abstract Boolean participatesInOtherTrials();
 
-    @NotNull
-    public abstract String otherTrialCode();
+    @Nullable
+    public abstract String otherTrialCodes();
 
-    @NotNull
-    public abstract String dateStartOtherTrial();
+    @Nullable
+    public abstract String otherTrialStartDates();
 }
