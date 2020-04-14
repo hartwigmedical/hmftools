@@ -45,8 +45,8 @@ public class WideEcrfFileReaderTest {
         assertTrue(preTreatments.get(2).hasPreviousTherapy());
         assertEquals("carboplatin", preTreatments.get(2).drug1());
         assertEquals("pemetrexed", preTreatments.get(2).drug2());
-        assertTrue(preTreatments.get(2).drug3().isEmpty());
-        assertTrue(preTreatments.get(2).drug4().isEmpty());
+        assertEquals("irinotecan", preTreatments.get(2).drug3());
+        assertEquals("bevacizumab", preTreatments.get(2).drug4());
         assertEquals(LocalDate.parse("2018-12-17"), preTreatments.get(2).lastSystemicTherapyDate());
     }
 

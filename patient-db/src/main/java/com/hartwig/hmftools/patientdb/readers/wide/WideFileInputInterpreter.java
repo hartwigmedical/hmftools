@@ -3,47 +3,52 @@ package com.hartwig.hmftools.patientdb.readers.wide;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.Locale;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 final class WideFileInputInterpreter {
 
+    private static final Logger LOGGER = LogManager.getLogger(WideFileInputInterpreter.class);
+
     private WideFileInputInterpreter() {
     }
 
     @Nullable
-    public static LocalDate interpretDateIC(@NotNull String date) {
-        if (date.isEmpty()) {
-            return null;
-        }
-
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    static LocalDate interpretDateIC(@NotNull String date) {
+        return interpretDate(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
     @Nullable
-    public static LocalDate interpretDateEN(@NotNull String date) {
-        if (date.isEmpty()) {
-            return null;
-        }
-
-        DateTimeFormatter inputFormatter =
-                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH);
-        return LocalDate.parse(date, inputFormatter);
+    static LocalDate interpretDateEN(@NotNull String date) {
+        return interpretDate(date,
+                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(Locale.ENGLISH));
     }
 
     @Nullable
-    public static LocalDate interpretDateNL(@NotNull String date) {
+    static LocalDate interpretDateNL(@NotNull String date) {
+        return interpretDate(date,
+                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(new Locale("nl", "NL")));
+    }
+
+    @Nullable
+    private static LocalDate interpretDate(@NotNull String date, @NotNull DateTimeFormatter formatter) {
         if (date.isEmpty()) {
             return null;
         }
 
-        DateTimeFormatter inputFormatter =
-                new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd-MMM-yyyy").toFormatter(new Locale("nl", "NL"));
-        return LocalDate.parse(date, inputFormatter);
+        try {
+            return LocalDate.parse(date, formatter);
+        } catch (DateTimeParseException exception) {
+            LOGGER.warn("Could not convert '{}' to date!", date);
+            return null;
+        }
     }
 
     @Nullable

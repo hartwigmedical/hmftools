@@ -32,14 +32,14 @@ public class WideEcrfFileReader {
     private static final int FIVE_DAYS_DATA_OTHER_TRIAL_CODES = 13;
     private static final int FIVE_DAYS_DATA_OTHER_TRIAL_START_DATES = 14;
 
-    private static final int PRE_AVL_TREATMENT_DATA_COUNT = 8;
+    private static final int PRE_AVL_TREATMENT_DATA_COUNT = 9;
     private static final int PRE_AVL_TREATMENT_DATA_PATIENT_ID = 0;
-    private static final int PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY = 1;
-    private static final int PRE_AVL_TREATMENT_DATA_DRUG1 = 2;
-    private static final int PRE_AVL_TREATMENT_DATA_DRUG2 = 3;
-    private static final int PRE_AVL_TREATMENT_DATA_DRUG3 = 4;
-    private static final int PRE_AVL_TREATMENT_DATA_DRUG4 = 5;
-    private static final int PRE_AVL_TREATMENT_DATA_LAST_SYSTEMIC_THERAPY_DATE = 6;
+    private static final int PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY = 2;
+    private static final int PRE_AVL_TREATMENT_DATA_DRUG1 = 3;
+    private static final int PRE_AVL_TREATMENT_DATA_DRUG2 = 4;
+    private static final int PRE_AVL_TREATMENT_DATA_DRUG3 = 5;
+    private static final int PRE_AVL_TREATMENT_DATA_DRUG4 = 6;
+    private static final int PRE_AVL_TREATMENT_DATA_LAST_SYSTEMIC_THERAPY_DATE = 7;
 
     private static final int BIOPSY_DATA_COUNT = 6;
     private static final int BIOPSY_DATA_PATIENT_ID = 1;
@@ -73,7 +73,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(COMMA, FIVE_DAYS_DATA_COUNT);
+            String[] parts = line.split(COMMA);
             if (parts.length == FIVE_DAYS_DATA_COUNT) {
                 WideFiveDays wideFiveDaysData = ImmutableWideFiveDays.builder()
                         .patientId(WideFileInputInterpreter.toWideID(parts[FIVE_DAYS_DATA_PATIENT_ID]))
@@ -105,7 +105,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(COMMA, PRE_AVL_TREATMENT_DATA_COUNT);
+            String[] parts = line.split(COMMA);
             if (parts.length == PRE_AVL_TREATMENT_DATA_COUNT) {
                 WidePreAvlTreatmentData widePreAvlTreatment = ImmutableWidePreAvlTreatmentData.builder()
                         .patientId(WideFileInputInterpreter.toWideID(parts[PRE_AVL_TREATMENT_DATA_PATIENT_ID]))
@@ -131,7 +131,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(COMMA, BIOPSY_DATA_COUNT);
+            String[] parts = line.split(COMMA);
             if (parts.length == BIOPSY_DATA_COUNT) {
                 WideBiopsyData wideBiopsy = ImmutableWideBiopsyData.builder()
                         .patientId(WideFileInputInterpreter.toWideID(parts[BIOPSY_DATA_PATIENT_ID]))
@@ -154,7 +154,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(SEMICOLON, AVL_TREATMENT_DATA_COUNT);
+            String[] parts = line.split(SEMICOLON);
             if (parts.length == AVL_TREATMENT_DATA_COUNT) {
                 WideAvlTreatmentData wideTreatment = ImmutableWideAvlTreatmentData.builder()
                         .patientId(WideFileInputInterpreter.toWideID(parts[AVL_TREATMENT_DATA_PATIENT_ID]))
@@ -178,7 +178,7 @@ public class WideEcrfFileReader {
 
         List<String> lines = FileReader.build().readLines(new File(pathToCsv).toPath());
         for (String line : lines.subList(1, lines.size())) {
-            String[] parts = line.split(COMMA, RESPONSE_DATA_COUNT);
+            String[] parts = line.split(COMMA);
             if (parts.length == RESPONSE_DATA_COUNT) {
                 WideResponseData wideResponse = ImmutableWideResponseData.builder()
                         .patientId(WideFileInputInterpreter.toWideID(parts[RESPONSE_DATA_PATIENT_ID]))
