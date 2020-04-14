@@ -38,9 +38,6 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract String pathologySampleId();
 
     @NotNull
-    public abstract String tumorBarcode();
-
-    @NotNull
     @Value.Derived
     public LocalDate date() {
         LocalDate samplingDate = samplingDate();

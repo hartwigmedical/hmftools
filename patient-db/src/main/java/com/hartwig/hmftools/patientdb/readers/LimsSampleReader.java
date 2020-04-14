@@ -64,7 +64,6 @@ public class LimsSampleReader {
                 .limsPrimaryTumor(lims.primaryTumor(sampleBarcode))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(sampleBarcode))
                 .pathologySampleId(lims.hospitalPathologySampleId(sampleBarcode))
-                .tumorBarcode(sampleBarcode)
                 .build();
     }
 
@@ -97,7 +96,6 @@ public class LimsSampleReader {
                 .limsPrimaryTumor(null)
                 .pathologyTumorPercentage(Lims.NOT_AVAILABLE_STRING)
                 .pathologySampleId(Lims.NOT_AVAILABLE_STRING)
-                .tumorBarcode(Strings.EMPTY)
                 .build();
     }
 }
