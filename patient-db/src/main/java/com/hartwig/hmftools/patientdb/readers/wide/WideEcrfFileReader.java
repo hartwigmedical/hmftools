@@ -77,28 +77,30 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == FIVE_DAYS_DATA_COUNT) {
-                boolean dataIsAvailable = line.get(FIVE_DAYS_DATA_IS_AVAILABLE).equals("1");
-                ImmutableWideFiveDays.Builder wideFiveDaysDataBuilder = ImmutableWideFiveDays.builder()
-                        .patientId(WideFileInputInterpreter.toWideID(line.get(FIVE_DAYS_DATA_PATIENT_ID)))
-                        .dataIsAvailable(dataIsAvailable);
+                String patientId = WideFileInputInterpreter.toWideID(line.get(FIVE_DAYS_DATA_PATIENT_ID));
+                if (!patientId.isEmpty()) {
+                    boolean dataIsAvailable = line.get(FIVE_DAYS_DATA_IS_AVAILABLE).equals("1");
+                    ImmutableWideFiveDays.Builder wideFiveDaysDataBuilder =
+                            ImmutableWideFiveDays.builder().patientId(patientId).dataIsAvailable(dataIsAvailable);
 
-                if (dataIsAvailable) {
-                    wideFiveDaysDataBuilder.informedConsentDate(WideFileInputInterpreter.interpretDateIC(line.get(
-                            FIVE_DAYS_DATA_INFORMED_CONSENT_DATE)))
-                            .gender(WideFileInputInterpreter.convertGender(line.get(FIVE_DAYS_DATA_GENDER)))
-                            .birthYear(WideFileInputInterpreter.interpretBirthYear(line.get(FIVE_DAYS_DATA_BIRTH_YEAR)))
-                            .biopsyDate(WideFileInputInterpreter.interpretDateEN(line.get(FIVE_DAYS_DATA_BIOPSY_DATE)))
-                            .biopsySite(line.get(FIVE_DAYS_DATA_BIOPSY_SITE))
-                            .sampleTissue(line.get(FIVE_DAYS_DATA_SAMPLE_TISSUE))
-                            .sampleType(line.get(FIVE_DAYS_DATA_SAMPLE_TYPE))
-                            .studyCode(line.get(FIVE_DAYS_DATA_STUDY_CODE))
-                            .participatesInOtherTrials(WideFileInputInterpreter.convertParticipatesInOtherTrials(line.get(
-                                    FIVE_DAYS_DATA_OTHER_TRIALS)))
-                            .otherTrialCodes(line.get(FIVE_DAYS_DATA_OTHER_TRIAL_CODES))
-                            .otherTrialStartDates(line.get(FIVE_DAYS_DATA_OTHER_TRIAL_START_DATES));
+                    if (dataIsAvailable) {
+                        wideFiveDaysDataBuilder.informedConsentDate(WideFileInputInterpreter.interpretDateIC(line.get(
+                                FIVE_DAYS_DATA_INFORMED_CONSENT_DATE)))
+                                .gender(WideFileInputInterpreter.convertGender(line.get(FIVE_DAYS_DATA_GENDER)))
+                                .birthYear(WideFileInputInterpreter.interpretBirthYear(line.get(FIVE_DAYS_DATA_BIRTH_YEAR)))
+                                .biopsyDate(WideFileInputInterpreter.interpretDateEN(line.get(FIVE_DAYS_DATA_BIOPSY_DATE)))
+                                .biopsySite(line.get(FIVE_DAYS_DATA_BIOPSY_SITE))
+                                .sampleTissue(line.get(FIVE_DAYS_DATA_SAMPLE_TISSUE))
+                                .sampleType(line.get(FIVE_DAYS_DATA_SAMPLE_TYPE))
+                                .studyCode(line.get(FIVE_DAYS_DATA_STUDY_CODE))
+                                .participatesInOtherTrials(WideFileInputInterpreter.convertParticipatesInOtherTrials(line.get(
+                                        FIVE_DAYS_DATA_OTHER_TRIALS)))
+                                .otherTrialCodes(line.get(FIVE_DAYS_DATA_OTHER_TRIAL_CODES))
+                                .otherTrialStartDates(line.get(FIVE_DAYS_DATA_OTHER_TRIAL_START_DATES));
+                    }
+
+                    wideFiveDays.add(wideFiveDaysDataBuilder.build());
                 }
-
-                wideFiveDays.add(wideFiveDaysDataBuilder.build());
             } else {
                 LOGGER.warn("Could not properly parse record in WIDE five days csv: {}", line);
             }
@@ -112,18 +114,21 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == PRE_AVL_TREATMENT_DATA_COUNT) {
-                WidePreAvlTreatmentData widePreAvlTreatment = ImmutableWidePreAvlTreatmentData.builder()
-                        .patientId(WideFileInputInterpreter.toWideID(line.get(PRE_AVL_TREATMENT_DATA_PATIENT_ID)))
-                        .hasPreviousTherapy(line.get(PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY).equals("1"))
-                        .drug1(line.get(PRE_AVL_TREATMENT_DATA_DRUG1))
-                        .drug2(line.get(PRE_AVL_TREATMENT_DATA_DRUG2))
-                        .drug3(line.get(PRE_AVL_TREATMENT_DATA_DRUG3))
-                        .drug4(line.get(PRE_AVL_TREATMENT_DATA_DRUG4))
-                        .lastSystemicTherapyDate(WideFileInputInterpreter.interpretDateEN(line.get(
-                                PRE_AVL_TREATMENT_DATA_LAST_SYSTEMIC_THERAPY_DATE)))
-                        .build();
+                String patientId = WideFileInputInterpreter.toWideID(line.get(PRE_AVL_TREATMENT_DATA_PATIENT_ID));
+                if (!patientId.isEmpty()) {
+                    WidePreAvlTreatmentData widePreAvlTreatment = ImmutableWidePreAvlTreatmentData.builder()
+                            .patientId(patientId)
+                            .hasPreviousTherapy(line.get(PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY).equals("1"))
+                            .drug1(line.get(PRE_AVL_TREATMENT_DATA_DRUG1))
+                            .drug2(line.get(PRE_AVL_TREATMENT_DATA_DRUG2))
+                            .drug3(line.get(PRE_AVL_TREATMENT_DATA_DRUG3))
+                            .drug4(line.get(PRE_AVL_TREATMENT_DATA_DRUG4))
+                            .lastSystemicTherapyDate(WideFileInputInterpreter.interpretDateEN(line.get(
+                                    PRE_AVL_TREATMENT_DATA_LAST_SYSTEMIC_THERAPY_DATE)))
+                            .build();
 
-                widePreTreatments.add(widePreAvlTreatment);
+                    widePreTreatments.add(widePreAvlTreatment);
+                }
             } else {
                 LOGGER.warn("Could not properly parse record in WIDE pre-AVL treatment csv: {}", line);
             }
@@ -137,15 +142,18 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == BIOPSY_DATA_COUNT) {
-                WideBiopsyData wideBiopsy = ImmutableWideBiopsyData.builder()
-                        .patientId(WideFileInputInterpreter.toWideID(line.get(BIOPSY_DATA_PATIENT_ID)))
-                        .pathologySampleId(line.get(BIOPSY_DATA_PATHOLOGY_SAMPLE_ID))
-                        .biopsyDate(WideFileInputInterpreter.interpretDateEN(line.get(BIOPSY_DATA_DATE)))
-                        .hasReceivedSuccessfulReport(WideFileInputInterpreter.convertHasReceivedSuccessfulReport(line.get(
-                                BIOPSY_DATA_HAS_RECEIVED_SUCCESSFUL_REPORT)))
-                        .build();
+                String patientId = WideFileInputInterpreter.toWideID(line.get(BIOPSY_DATA_PATIENT_ID));
+                if (!patientId.isEmpty()) {
+                    WideBiopsyData wideBiopsy = ImmutableWideBiopsyData.builder()
+                            .patientId(patientId)
+                            .pathologySampleId(line.get(BIOPSY_DATA_PATHOLOGY_SAMPLE_ID))
+                            .biopsyDate(WideFileInputInterpreter.interpretDateEN(line.get(BIOPSY_DATA_DATE)))
+                            .hasReceivedSuccessfulReport(WideFileInputInterpreter.convertHasReceivedSuccessfulReport(line.get(
+                                    BIOPSY_DATA_HAS_RECEIVED_SUCCESSFUL_REPORT)))
+                            .build();
 
-                wideBiopsies.add(wideBiopsy);
+                    wideBiopsies.add(wideBiopsy);
+                }
             } else {
                 LOGGER.warn("Could not properly parse record in WIDE biopsy csv: {}", line);
             }
@@ -159,15 +167,18 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, SEMICOLON_DELIMITER)) {
             if (line.size() == AVL_TREATMENT_DATA_COUNT) {
-                WideAvlTreatmentData wideTreatment = ImmutableWideAvlTreatmentData.builder()
-                        .patientId(WideFileInputInterpreter.toWideID(line.get(AVL_TREATMENT_DATA_PATIENT_ID)))
-                        .drugCode(line.get(AVL_TREATMENT_DATA_DRUG_CODE))
-                        .drug(line.get(AVL_TREATMENT_DATA_DRUG))
-                        .startDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_START_DATE)))
-                        .endDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_END_DATE)))
-                        .build();
+                String patientId = WideFileInputInterpreter.toWideID(line.get(AVL_TREATMENT_DATA_PATIENT_ID));
+                if (!patientId.isEmpty()) {
+                    WideAvlTreatmentData wideTreatment = ImmutableWideAvlTreatmentData.builder()
+                            .patientId(patientId)
+                            .drugCode(line.get(AVL_TREATMENT_DATA_DRUG_CODE))
+                            .drug(line.get(AVL_TREATMENT_DATA_DRUG))
+                            .startDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_START_DATE)))
+                            .endDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_END_DATE)))
+                            .build();
 
-                wideTreatments.add(wideTreatment);
+                    wideTreatments.add(wideTreatment);
+                }
             } else {
                 LOGGER.warn("Could not properly parse record in WIDE AVL treatment csv: {}", line);
             }
@@ -181,21 +192,25 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == RESPONSE_DATA_COUNT) {
-                boolean recistDone = line.get(RESPONSE_DATA_RECIST_NOT_DONE).equals("FALSE");
-                ImmutableWideResponseData.Builder wideResponseBuilder = ImmutableWideResponseData.builder()
-                        .patientId(WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID)))
-                        .timePoint(Integer.parseInt(line.get(RESPONSE_DATA_TIME_POINT)))
-                        .date(WideFileInputInterpreter.interpretDateNL(line.get(RESPONSE_DATA_DATE)))
-                        .recistDone(recistDone)
-                        .recistResponse(line.get(RESPONSE_DATA_RECIST_RESPONSE));
+                String patientId = WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID));
+                if (!patientId.isEmpty()) {
+                    boolean recistDone = line.get(RESPONSE_DATA_RECIST_NOT_DONE).equals("FALSE");
 
-                if (!recistDone) {
-                    wideResponseBuilder.noRecistResponse(line.get(RESPONSE_DATA_NO_RECIST_RESPONSE))
-                            .noRecistReasonStopTreatment(line.get(RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT))
-                            .noRecistReasonStopTreatmentOther(line.get(RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT_OTHER));
+                    ImmutableWideResponseData.Builder wideResponseBuilder = ImmutableWideResponseData.builder()
+                            .patientId(WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID)))
+                            .timePoint(Integer.parseInt(line.get(RESPONSE_DATA_TIME_POINT)))
+                            .date(WideFileInputInterpreter.interpretDateNL(line.get(RESPONSE_DATA_DATE)))
+                            .recistDone(recistDone)
+                            .recistResponse(line.get(RESPONSE_DATA_RECIST_RESPONSE));
+
+                    if (!recistDone) {
+                        wideResponseBuilder.noRecistResponse(line.get(RESPONSE_DATA_NO_RECIST_RESPONSE))
+                                .noRecistReasonStopTreatment(line.get(RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT))
+                                .noRecistReasonStopTreatmentOther(line.get(RESPONSE_DATA_NO_RECIST_REASON_STOP_TREATMENT_OTHER));
+                    }
+
+                    wideResponses.add(wideResponseBuilder.build());
                 }
-
-                wideResponses.add(wideResponseBuilder.build());
             } else {
                 LOGGER.warn("Could not properly parse record in WIDE response csv: {}", line);
             }
