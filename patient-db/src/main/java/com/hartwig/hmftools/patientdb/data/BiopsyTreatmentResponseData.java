@@ -38,13 +38,15 @@ public abstract class BiopsyTreatmentResponseData implements Comparable<BiopsyTr
     public static BiopsyTreatmentResponseData of(@Nullable Integer treatmentId, @Nullable LocalDate assessmentDate,
             @Nullable LocalDate responseDate, @Nullable String response, @Nullable String measurementDone, @Nullable String boneOnlyDisease,
             @NotNull FormStatus formStatus) {
-        return ImmutableBiopsyTreatmentResponseData.of(treatmentId,
-                assessmentDate,
-                responseDate,
-                response,
-                measurementDone,
-                boneOnlyDisease,
-                formStatus);
+        return ImmutableBiopsyTreatmentResponseData.builder()
+                .treatmentId(treatmentId)
+                .assessmentDate(assessmentDate)
+                .responseDate(responseDate)
+                .response(response)
+                .measurementDone(measurementDone)
+                .boneOnlyDisease(boneOnlyDisease)
+                .formStatus(formStatus)
+                .build();
     }
 
     @Nullable

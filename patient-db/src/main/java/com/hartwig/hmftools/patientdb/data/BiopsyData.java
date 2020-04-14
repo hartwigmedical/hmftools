@@ -50,7 +50,17 @@ public abstract class BiopsyData implements Comparable<BiopsyData> {
     public static BiopsyData of(@Nullable LocalDate date, @Nullable String biopsyTaken, @Nullable String biopsyEvaluable,
             @NotNull CuratedBiopsyType curatedBiopsyType, @Nullable String site, @Nullable String location,
             @NotNull FormStatus formStatus) {
-        return ImmutableBiopsyData.of(createId(), null, date, biopsyTaken, biopsyEvaluable, curatedBiopsyType, site, location, formStatus);
+        return ImmutableBiopsyData.builder()
+                .id(createId())
+                .sampleId(null)
+                .date(date)
+                .biopsyTaken(biopsyTaken)
+                .biopsyEvaluable(biopsyEvaluable)
+                .type(curatedBiopsyType)
+                .site(site)
+                .location(location)
+                .formStatus(formStatus)
+                .build();
     }
 
     @Nullable
