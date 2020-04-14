@@ -174,13 +174,13 @@ public class WideEcrfFileReader {
             if (parts.length >= AVL_TREATMENT_DATA_MIN_COUNT && parts.length <= AVL_TREATMENT_DATA_MAX_COUNT) {
                 // End date is optional
                 LocalDate endDate = parts.length > AVL_TREATMENT_DATA_END_DATE
-                        ? WideFileInputInterpreter.interpretDateEN(parts[AVL_TREATMENT_DATA_END_DATE])
+                        ? WideFileInputInterpreter.interpretDateNL(parts[AVL_TREATMENT_DATA_END_DATE])
                         : null;
                 WideAvlTreatmentData wideTreatment = ImmutableWideAvlTreatmentData.builder()
                         .patientId(WideFileInputInterpreter.toWideID(parts[AVL_TREATMENT_DATA_PATIENT_ID]))
                         .drugCode(parts[AVL_TREATMENT_DATA_DRUG_CODE])
                         .drug(parts[AVL_TREATMENT_DATA_DRUG])
-                        .startDate(WideFileInputInterpreter.interpretDateEN(parts[AVL_TREATMENT_DATA_START_DATE]))
+                        .startDate(WideFileInputInterpreter.interpretDateNL(parts[AVL_TREATMENT_DATA_START_DATE]))
                         .endDate(endDate)
                         .build();
 

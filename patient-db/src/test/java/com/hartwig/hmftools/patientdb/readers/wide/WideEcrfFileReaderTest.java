@@ -77,13 +77,13 @@ public class WideEcrfFileReaderTest {
         assertEquals("WIDE01018888", treatments.get(0).patientId());
         assertEquals("L01BA04", treatments.get(0).drugCode());
         assertEquals("pemetrexed", treatments.get(0).drug());
-        assertEquals(LocalDate.parse("2018-07-03"), treatments.get(0).startDate());
+        assertEquals(LocalDate.parse("2018-03-03"), treatments.get(0).startDate());
         assertEquals(LocalDate.parse("2018-07-20"), treatments.get(0).endDate());
 
         assertEquals("WIDE01019999", treatments.get(1).patientId());
         assertEquals("L01XE03", treatments.get(1).drugCode());
         assertEquals("erlotinib", treatments.get(1).drug());
-        assertEquals(LocalDate.parse("2018-07-06"), treatments.get(1).startDate());
+        assertEquals(LocalDate.parse("2018-10-06"), treatments.get(1).startDate());
         assertNull(treatments.get(1).endDate());
 
         assertEquals("WIDE01019999", treatments.get(2).patientId());
