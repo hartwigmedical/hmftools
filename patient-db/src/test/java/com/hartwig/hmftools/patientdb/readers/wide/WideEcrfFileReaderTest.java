@@ -122,9 +122,9 @@ public class WideEcrfFileReaderTest {
         assertEquals(LocalDate.parse("2019-09-24"), responses.get(2).date());
         assertTrue(responses.get(2).recistDone());
         assertEquals("PD", responses.get(2).recistResponse());
-        assertTrue(responses.get(2).noRecistResponse().isEmpty());
-        assertTrue(responses.get(2).noRecistReasonStopTreatment().isEmpty());
-        assertTrue(responses.get(2).noRecistReasonStopTreatmentOther().isEmpty());
+        assertNull(responses.get(2).noRecistResponse());
+        assertNull(responses.get(2).noRecistReasonStopTreatment());
+        assertNull(responses.get(2).noRecistReasonStopTreatmentOther());
     }
 
     @Test
@@ -167,12 +167,12 @@ public class WideEcrfFileReaderTest {
         assertNull(fiveDays.get(2).gender());
         assertNull(fiveDays.get(2).birthYear());
         assertNull(fiveDays.get(2).biopsyDate());
-        assertTrue(fiveDays.get(2).biopsySite().isEmpty());
-        assertTrue(fiveDays.get(2).sampleTissue().isEmpty());
-        assertTrue(fiveDays.get(2).sampleType().isEmpty());
-        assertTrue(fiveDays.get(2).studyCode().isEmpty());
+        assertNull(fiveDays.get(2).biopsySite());
+        assertNull(fiveDays.get(2).sampleTissue());
+        assertNull(fiveDays.get(2).sampleType());
+        assertNull(fiveDays.get(2).studyCode());
         assertNull(fiveDays.get(2).participatesInOtherTrials());
-        assertTrue(fiveDays.get(2).otherTrialCodes().isEmpty());
-        assertTrue(fiveDays.get(2).otherTrialStartDates().isEmpty());
+        assertNull(fiveDays.get(2).otherTrialCodes());
+        assertNull(fiveDays.get(2).otherTrialStartDates());
     }
 }

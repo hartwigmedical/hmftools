@@ -24,13 +24,13 @@ public abstract class WideResponseData {
     @NotNull
     public abstract String recistResponse();
 
-    @NotNull
+    @Nullable
     public abstract String noRecistResponse();
 
-    @NotNull
+    @Nullable
     public abstract String noRecistReasonStopTreatment();
 
-    @NotNull
+    @Nullable
     public abstract String noRecistReasonStopTreatmentOther();
 
 }
