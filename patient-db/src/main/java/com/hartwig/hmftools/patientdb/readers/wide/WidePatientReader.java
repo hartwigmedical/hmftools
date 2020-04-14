@@ -6,8 +6,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.curators.TumorLocationCurator;
 import com.hartwig.hmftools.patientdb.data.BaselineData;
@@ -21,6 +19,7 @@ import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
+import com.hartwig.hmftools.patientdb.data.ImmutableCuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -42,15 +41,12 @@ public class WidePatientReader {
     @NotNull
     private final TumorLocationCurator tumorLocationCurator;
     @NotNull
-    private final BiopsySiteCurator biopsySiteCurator;
-    @NotNull
     private final TreatmentCurator treatmentCurator;
 
     public WidePatientReader(@NotNull final WideEcrfModel wideEcrfModel, @NotNull final TumorLocationCurator tumorLocationCurator,
-            @NotNull BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator) {
+            @NotNull final TreatmentCurator treatmentCurator) {
         this.wideEcrfModel = wideEcrfModel;
         this.tumorLocationCurator = tumorLocationCurator;
-        this.biopsySiteCurator = biopsySiteCurator;
         this.treatmentCurator = treatmentCurator;
     }
 
@@ -62,17 +58,15 @@ public class WidePatientReader {
     @NotNull
     public static String extractBiopsyIdOfTissueId(@NotNull String tissueId) {
         return tissueId.split("-")[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
-
     }
 
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
-            @NotNull List<SampleData> sequencedSamples, @NotNull Lims lims, @NotNull String tumorBarcode) {
-
+            @NotNull List<SampleData> sequencedSamples) {
         LocalDate biopsyDateCheck = null;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.patientId())) {
-                String limsPathologyTissueId = lims.hospitalPathologySampleId(tumorBarcode);
+                String limsPathologyTissueId = sequencedSamples.get(0).pathologySampleId();
                 String limsPathologyTissueIdYear = extractYearOfTissueId(limsPathologyTissueId);
                 String limsPathologyTissueIdConvert = extractBiopsyIdOfTissueId(limsPathologyTissueId);
 
@@ -112,12 +106,8 @@ public class WidePatientReader {
         LocalDate biopsyDate = bioptDate(wideEcrfModel.biopsies(), patientIdentifier);
 
         List<BiopsyData> biopsyData = toBiopsyData(wideEcrfModel.fiveDays(),
-                biopsySiteCurator,
                 patientIdentifier,
-                biopsyDateCheck,
-                biopsySite,
-                sampleTissue,
-                tumorLocationCurator.search(primaryTumorLocation));
+                biopsyDateCheck);
 
         MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(patientIdentifier, sequencedSamples, biopsyData);
@@ -266,14 +256,16 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private static List<BiopsyData> toBiopsyData(@NotNull List<WideFiveDays> wideBiopsyData, @NotNull BiopsySiteCurator biopsySiteCurator,
-            @NotNull String patientIdentifier, @Nullable LocalDate biopsyCheckDate, @NotNull String biopsySite, @NotNull String sampleTissue,
-            @NotNull CuratedTumorLocation curatedTumorLocation) {
+    private static List<BiopsyData> toBiopsyData(@NotNull List<WideFiveDays> wideBiopsyData,
+            @NotNull String patientIdentifier, @Nullable LocalDate biopsyCheckDate) {
         List<BiopsyData> biopsyDataList = Lists.newArrayList();
-        CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
-                curatedTumorLocation.subType(),
-                biopsySite,
-                sampleTissue);
+        CuratedBiopsyType curatedBiopsyType = ImmutableCuratedBiopsyType.builder()
+                .type("Unknown")
+                .searchPrimaryTumorLocation(Strings.EMPTY)
+                .searchCancerSubType(Strings.EMPTY)
+                .searchBiopsySite(Strings.EMPTY)
+                .searchBiopsyLocation(Strings.EMPTY)
+                .build();
 
         for (WideFiveDays biopsyData : wideBiopsyData) {
             if (patientIdentifier.equals(biopsyData.patientId())) {
