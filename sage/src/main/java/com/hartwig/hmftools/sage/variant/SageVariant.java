@@ -74,11 +74,11 @@ public class SageVariant implements GenomePosition {
         this.localPhaseSet = localPhaseSet;
     }
 
-    public int mixedGermlineEffect() {
+    public int mixedGermlineImpact() {
         return mixedImpact;
     }
 
-    public void mixedGermlineEffect(final int mixedImpact) {
+    public void mixedGermlineImpact(final int mixedImpact) {
         this.mixedImpact = mixedImpact;
     }
 
