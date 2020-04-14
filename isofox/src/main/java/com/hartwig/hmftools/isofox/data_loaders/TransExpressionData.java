@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 public class TransExpressionData
 {
@@ -18,9 +19,10 @@ public class TransExpressionData
     public final String TransName;
 
     public final List<String> SampleIds;
-    public final List<Double> FitAllocations;
-    public final List<Double> TpmValues;
-    public final List<Integer> EffectiveLengths;
+    public final List<double[]> TpmValues;
+
+    public static final int TPM_VALUE = 0;
+    public static final int TPM_COUNT = 1;
 
     public TransExpressionData(final String geneId, final String geneName, final int transId, final String transName)
     {
@@ -30,26 +32,30 @@ public class TransExpressionData
         TransName = transName;
 
         SampleIds = Lists.newArrayList();
-        FitAllocations = Lists.newArrayList();
         TpmValues = Lists.newArrayList();
-        EffectiveLengths = Lists.newArrayList();
     }
 
-    public void addSampleData(final String sampleId, double fitAllocation, double tpm, int effectiveLength)
+    public void addSampleData(final String sampleId, double tpm)
     {
         int index = 0;
         while(index < TpmValues.size())
         {
-            if(tpm < TpmValues.get(index))
+            final double[] tpmData = TpmValues.get(index);
+
+            if(Doubles.equal(tpm, tpmData[TPM_VALUE]))
+            {
+                ++tpmData[TPM_COUNT];
+                return;
+            }
+
+            if(tpm < tpmData[TPM_VALUE])
                 break;
 
             ++index;
         }
 
         SampleIds.add(index, sampleId);
-        FitAllocations.add(index, fitAllocation);
-        TpmValues.add(index, tpm);
-        EffectiveLengths.add(index, effectiveLength);
+        TpmValues.add(index, new double[] {tpm, 1});
     }
 
 

@@ -129,7 +129,6 @@ public abstract class SummaryStats
                 .fragmentLength95thPercent(Double.parseDouble(items[index++]))
                 .enrichedGenePercent(Double.parseDouble(items[index++]))
                 .medianGCRatio(Double.parseDouble(items[index++]))
-                .duplicateFragments(index < items.length ? Integer.parseInt(items[index++]) : 0)
                 .build();
     }
 

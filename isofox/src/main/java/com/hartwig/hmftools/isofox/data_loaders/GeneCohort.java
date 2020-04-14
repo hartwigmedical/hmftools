@@ -5,7 +5,9 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.calcPercentileValues;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.convertDistribution;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.roundTPM;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SUPPORTING_TRANS;
 import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -26,7 +28,6 @@ public class GeneCohort
     private final DataLoaderConfig mConfig;
 
     private final Map<String,GeneCohortData> mGeneCohortDataMap;
-    // private final Map<String,Map<String,GeneCohortData>> mChrGeneCohortDataMap;
 
     private BufferedWriter mGeneDistributionWriter;
 
@@ -36,7 +37,6 @@ public class GeneCohort
     {
         mConfig = config;
         mGeneCohortDataMap = Maps.newHashMap();
-        // mChrGeneCohortDataMap = Maps.newHashMap();
 
         mGeneDistributionWriter = null;
     }
@@ -95,18 +95,13 @@ public class GeneCohort
     {
         try
         {
-            /*
-            for(final Map<String,GeneCohortData> geneMap : mChrGeneCohortDataMap.values())
-            {
-                for(final GeneCohortData geneData : geneMap.values())
-                {
+            int sampleCount = mConfig.SampleData.SampleIds.size();
 
-             */
             for(final GeneCohortData geneData : mGeneCohortDataMap.values())
             {
                 final double[] percentileValues = new double[DISTRIBUTION_SIZE + 1];
 
-                calcPercentileValues(geneData.FragsPerMillionValues, percentileValues);
+                calcPercentileValues(convertDistribution(geneData.FragsPerMillionValues, sampleCount), percentileValues);
 
                 mGeneDistributionWriter.write(String.format("%s,%s",geneData.GeneId, geneData.GeneName));
 
@@ -183,6 +178,8 @@ public class GeneCohort
         long totalFragments = geneFpmData.values().stream().mapToLong(x -> (long)x[FPM_SUPPORTING] + (long)x[FPM_UNSPLICED]).sum();
         double fpmFactor = 1000000.0 / totalFragments;
 
+        boolean roundValues = mConfig.SampleData.SampleIds.size() >= 100;
+
         for(Map.Entry<String,double[]> entry : geneFpmData.entrySet())
         {
             final String geneId = entry.getKey();
@@ -194,7 +191,9 @@ public class GeneCohort
             if(geneData == null) // filtered out earlier
                 continue;
 
-            geneData.addSampleData(sampleId, fpmData[FPM_FPM]);
+            geneData.addSampleData(
+                    sampleId,
+                    roundValues ? roundTPM(fpmData[FPM_FPM], mConfig.TpmRounding) : fpmData[FPM_FPM]);
         }
     }
 

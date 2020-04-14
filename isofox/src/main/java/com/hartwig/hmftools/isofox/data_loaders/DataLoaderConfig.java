@@ -37,7 +37,7 @@ public class DataLoaderConfig
     public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
     public static final String SPLICE_VARIANT_FILE = "splice_variant_file";
     public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
-    public static final String CONSOLIDATE_TPM_DATA = "consolidate_tpm_data";
+    public static final String TPM_ROUNDING = "tpm_rounding";
 
     public final String RootDataDir;
     public final String OutputDir;
@@ -57,7 +57,7 @@ public class DataLoaderConfig
     public final String EnsemblDataCache;
 
     public final double TpmLogThreshold;
-    public final boolean ConsolidateTpmData;
+    public final double TpmRounding;
 
     public DataLoaderConfig(final CommandLine cmd)
     {
@@ -90,7 +90,7 @@ public class DataLoaderConfig
         EnsemblDataCache = cmd.getOptionValue(GENE_TRANSCRIPTS_DIR);
 
         TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
-        ConsolidateTpmData = cmd.hasOption(CONSOLIDATE_TPM_DATA);
+        TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
@@ -176,8 +176,8 @@ public class DataLoaderConfig
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
 
+        options.addOption(TPM_ROUNDING, true, "TPM/FPM rounding factor, base-10 integer (default=2, ie 1%)");
         options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
-        options.addOption(CONSOLIDATE_TPM_DATA, false, "Write single output file with all transcripts' TPM data");
 
         options.addOption(LOG_DEBUG, false, "Log verbose");
 

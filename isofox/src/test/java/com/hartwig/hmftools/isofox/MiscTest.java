@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.calcPercentileValues;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.calcEffectiveLength;
 
 import static junit.framework.TestCase.assertEquals;

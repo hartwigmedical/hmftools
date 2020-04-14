@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.data_loaders;
 
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.TPM_COUNT;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.TPM_VALUE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
 
 public class GeneCohortData
 {
@@ -18,7 +21,7 @@ public class GeneCohortData
     public final String Chromosome;
 
     public final List<String> SampleIds;
-    public final List<Double> FragsPerMillionValues;
+    public final List<double[]> FragsPerMillionValues;
 
     public GeneCohortData(final String geneId, final String geneName, final String chromosome)
     {
@@ -35,14 +38,22 @@ public class GeneCohortData
         int index = 0;
         while(index < FragsPerMillionValues.size())
         {
-            if(fragsPerMillion < FragsPerMillionValues.get(index))
+            final double[] fpmData = FragsPerMillionValues.get(index);
+
+            if(Doubles.equal(fragsPerMillion, fpmData[TPM_VALUE]))
+            {
+                ++fpmData[TPM_COUNT];
+                return;
+            }
+
+            if(fragsPerMillion < fpmData[TPM_VALUE])
                 break;
 
             ++index;
         }
 
         SampleIds.add(index, sampleId);
-        FragsPerMillionValues.add(index, fragsPerMillion);
+        FragsPerMillionValues.add(index, new double[] {fragsPerMillion, 1});
     }
 
     public static GeneCohortData fromCsv(final String[] items, final Map<String,Integer> fieldIndexMap)
