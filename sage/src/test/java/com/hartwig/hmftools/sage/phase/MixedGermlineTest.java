@@ -46,9 +46,9 @@ public class MixedGermlineTest {
         assertEquals(3, consumer.size());
 
         assertTrue(mixedMnv.filters().contains(SoftFilter.MIXED_GERMLINE_SOMATIC_MNV.toString()));
-        assertEquals(1, mixedMnv.mixedGermlineImpact());
-        assertEquals(1, somaticSnv.mixedGermlineImpact());
-        assertEquals(0, germlineSnv.mixedGermlineImpact());
+        assertEquals(1, mixedMnv.mixedGermlineEffect());
+        assertEquals(1, somaticSnv.mixedGermlineEffect());
+        assertEquals(0, germlineSnv.mixedGermlineEffect());
     }
 
     @NotNull

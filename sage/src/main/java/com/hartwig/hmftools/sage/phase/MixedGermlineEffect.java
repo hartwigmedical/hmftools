@@ -10,15 +10,15 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MixedGermlineImpact implements Consumer<SageVariant> {
+public class MixedGermlineEffect implements Consumer<SageVariant> {
 
     private static final int BUFFER = 10;
     private final ArrayDeque<SageVariant> buffer = new ArrayDeque<>();
     private final Consumer<SageVariant> consumer;
 
-    private int sharedImpact;
+    private int sharedEffect;
 
-    public MixedGermlineImpact(final Consumer<SageVariant> consumer) {
+    public MixedGermlineEffect(final Consumer<SageVariant> consumer) {
         this.consumer = consumer;
     }
 
@@ -53,10 +53,10 @@ public class MixedGermlineImpact implements Consumer<SageVariant> {
     private void process(SageVariant mnv, SageVariant snv) {
         if (DedupMnv.longerContainsShorter(snv, mnv)) {
 
-            if (mnv.mixedGermlineImpact() == 0) {
-                mnv.mixedGermlineImpact(++sharedImpact);
+            if (mnv.mixedGermlineEffect() == 0) {
+                mnv.mixedGermlineEffect(++sharedEffect);
             }
-            snv.mixedGermlineImpact(mnv.mixedGermlineImpact());
+            snv.mixedGermlineEffect(mnv.mixedGermlineEffect());
         }
     }
 

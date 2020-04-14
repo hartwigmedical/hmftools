@@ -69,8 +69,8 @@ public class SageVCF implements AutoCloseable {
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
     public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
-    public final static String MIXED_GERMLINE_IMPACT = "MGI";
-    public final static String MIXED_GERMLINE_IMPACT_DESCRIPTION = "Mixed Germline Impact";
+    public final static String MIXED_GERMLINE_EFFECT = "MGE";
+    public final static String MIXED_GERMLINE_EFFECT_DESCRIPTION = "Mixed Germline Effect";
 
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
@@ -158,7 +158,7 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_GERMLINE_IMPACT, 1, VCFHeaderLineType.Integer, MIXED_GERMLINE_IMPACT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_GERMLINE_EFFECT, 1, VCFHeaderLineType.Integer, MIXED_GERMLINE_EFFECT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
