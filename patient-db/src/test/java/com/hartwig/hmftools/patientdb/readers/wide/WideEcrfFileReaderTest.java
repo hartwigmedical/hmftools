@@ -43,7 +43,7 @@ public class WideEcrfFileReaderTest {
 
         assertEquals("WIDE01019999", preTreatments.get(2).patientId());
         assertTrue(preTreatments.get(2).hasPreviousTherapy());
-        assertEquals("carboplatin", preTreatments.get(2).drug1());
+        assertEquals("carboplatin,others", preTreatments.get(2).drug1());
         assertEquals("pemetrexed", preTreatments.get(2).drug2());
         assertEquals("irinotecan", preTreatments.get(2).drug3());
         assertEquals("bevacizumab", preTreatments.get(2).drug4());
@@ -72,7 +72,7 @@ public class WideEcrfFileReaderTest {
         List<WideAvlTreatmentData> treatments =
                 WideEcrfFileReader.readAvlTreatments(WIDE_TEST_DIR + File.separator + "wide_avl_treatments.csv");
 
-        assertEquals(3, treatments.size());
+        assertEquals(4, treatments.size());
 
         assertEquals("WIDE01018888", treatments.get(0).patientId());
         assertEquals("L01BA04", treatments.get(0).drugCode());

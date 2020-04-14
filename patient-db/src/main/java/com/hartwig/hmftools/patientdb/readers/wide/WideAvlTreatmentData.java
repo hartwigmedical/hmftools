@@ -20,7 +20,7 @@ public abstract class WideAvlTreatmentData {
     @NotNull
     public abstract String drug();
 
-    @NotNull
+    @Nullable
     public abstract LocalDate startDate();
 
     @Nullable
