@@ -39,11 +39,6 @@ class SomaticVariantDAO {
     }
 
     @NotNull
-    public List<SomaticVariant> read(@NotNull String sample) {
-        return read(sample, VariantType.UNDEFINED);
-    }
-
-    @NotNull
     public List<SomaticVariant> read(@NotNull String sample, VariantType type) {
         List<SomaticVariant> variants = Lists.newArrayList();
 

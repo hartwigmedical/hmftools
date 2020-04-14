@@ -51,10 +51,6 @@ public class Patient {
         return patientIdentifier;
     }
 
-    public boolean isBlacklisted() {
-        return false;
-    }
-
     @NotNull
     public BaselineData baselineData() {
         return baselineData;
