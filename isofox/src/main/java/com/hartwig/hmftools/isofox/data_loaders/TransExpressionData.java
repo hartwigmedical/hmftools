@@ -21,8 +21,8 @@ public class TransExpressionData
     public final List<String> SampleIds;
     public final List<double[]> TpmValues;
 
-    public static final int TPM_VALUE = 0;
-    public static final int TPM_COUNT = 1;
+    public static final int RATE_VALUE = 0;
+    public static final int RATE_COUNT = 1;
 
     public TransExpressionData(final String geneId, final String geneName, final int transId, final String transName)
     {
@@ -42,13 +42,13 @@ public class TransExpressionData
         {
             final double[] tpmData = TpmValues.get(index);
 
-            if(Doubles.equal(tpm, tpmData[TPM_VALUE]))
+            if(Doubles.equal(tpm, tpmData[RATE_VALUE]))
             {
-                ++tpmData[TPM_COUNT];
+                ++tpmData[RATE_COUNT];
                 return;
             }
 
-            if(tpm < tpmData[TPM_VALUE])
+            if(tpm < tpmData[RATE_VALUE])
                 break;
 
             ++index;

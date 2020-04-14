@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.isofox.data_loaders;
 
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
 import static java.lang.Math.log10;
 import static java.lang.Math.min;
 import static java.lang.Math.pow;
@@ -12,32 +10,29 @@ import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBuffere
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.TRANSCRIPT;
+import static com.hartwig.hmftools.isofox.data_loaders.DataLoadType.TRANSCRIPT_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.TPM_COUNT;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.TPM_VALUE;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.RATE_COUNT;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.RATE_VALUE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FITTED_FRAGMENTS;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class TransExpressionCohort
+public class TransExpressionDistribution
 {
     private final DataLoaderConfig mConfig;
 
@@ -45,21 +40,39 @@ public class TransExpressionCohort
 
     private BufferedWriter mTransDistributionWriter;
 
-    private static final int DISTRIBUTION_SIZE = 101;
+    private final Map<String,double[]> mCohortTranscriptDistribution;
+    private final Map<String,double[]> mCancerTypeTranscriptDistribution;
 
-    public TransExpressionCohort(final DataLoaderConfig config)
+    public static final int DISTRIBUTION_SIZE = 101; // percentiles from 0 to 100
+
+    public TransExpressionDistribution(final DataLoaderConfig config)
     {
         mConfig = config;
         mTranscriptExpressionData = Maps.newHashMap();
+        mCohortTranscriptDistribution = Maps.newHashMap();
+        mCancerTypeTranscriptDistribution = Maps.newHashMap();
 
         mTransDistributionWriter = null;
+
+        if(mConfig.CohortTransFile != null)
+        {
+            loadCohortDistribution(
+                    mConfig.CohortTransFile, mCohortTranscriptDistribution,
+                    "transcript", DISTRIBUTION_SIZE + 1, Lists.newArrayList());
+        }
+
+        if(mConfig.CancerTransFile != null)
+        {
+            loadCohortDistribution(mConfig.CancerTransFile, mCancerTypeTranscriptDistribution,
+                    "transcript", DISTRIBUTION_SIZE + 1, Lists.newArrayList());
+        }
     }
 
-    public void processTranscripts()
+    public void processSampleTranscriptFiles()
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, TRANSCRIPT, filenames))
+        if(!formSampleFilenames(mConfig, TRANSCRIPT_DISTRIBUTION, filenames))
             return;
 
         initialiseWriter();
@@ -90,11 +103,9 @@ public class TransExpressionCohort
 
             mTransDistributionWriter.write("GeneId,GeneName,TransName");
 
-            double distributionSize = DISTRIBUTION_SIZE;
-
-            for(int i = 0; i <= DISTRIBUTION_SIZE; ++i)
+            for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {
-                mTransDistributionWriter.write(String.format(",Pct_%.2f", i/distributionSize));
+                mTransDistributionWriter.write(String.format(",Pct_%d", i));
             }
 
             mTransDistributionWriter.newLine();
@@ -115,7 +126,7 @@ public class TransExpressionCohort
             {
                 final TransExpressionData expData = entry.getValue();
 
-                final double[] percentileValues = new double[DISTRIBUTION_SIZE + 1];
+                final double[] percentileValues = new double[DISTRIBUTION_SIZE];
 
                 calcPercentileValues(convertDistribution(expData.TpmValues, sampleCount), percentileValues);
 
@@ -126,7 +137,7 @@ public class TransExpressionCohort
                 mTransDistributionWriter.write(String.format("%s,%s,%s",
                         expData.GeneId, expData.GeneName, expData.TransName));
 
-                for(int i = 0; i <= DISTRIBUTION_SIZE; ++i)
+                for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
                 {
                     mTransDistributionWriter.write(String.format(",%6.3e", percentileValues[i]));
                 }
@@ -206,12 +217,130 @@ public class TransExpressionCohort
         for(int i = 0; i < tpmValueCounts.size(); ++i)
         {
             final double tpmData[] = tpmValueCounts.get(i);
-            for(int j = 0; j < tpmData[TPM_COUNT]; ++j)
+            for(int j = 0; j < tpmData[RATE_COUNT]; ++j)
             {
-                tpmValues.add(tpmData[TPM_VALUE]);
+                tpmValues.add(tpmData[RATE_VALUE]);
             }
         }
 
         return tpmValues;
     }
+
+    public static void loadCohortDistribution(
+            final String inputFile, final Map<String,double[]> percentilesMap,
+            final String fileType, int expectedColCount, final List<String> restrictions)
+    {
+        if(!Files.exists(Paths.get(inputFile)))
+        {
+            ISF_LOGGER.error("invalid cohort {} distribution file", fileType);
+            return;
+        }
+
+        try
+        {
+            BufferedReader fileReader = new BufferedReader(new FileReader(inputFile));
+
+            // skip field names
+            String line = fileReader.readLine();
+
+            if (line == null)
+            {
+                ISF_LOGGER.error("empty {} distribution file({})", fileType, inputFile);
+                return;
+            }
+
+            while ((line = fileReader.readLine()) != null)
+            {
+                String[] items = line.split(DELIMITER, -1);
+
+                if (items.length != expectedColCount)
+                {
+                    ISF_LOGGER.error("invalid {} distribution data length({}) vs expected({}): {}",
+                            fileType, items.length, expectedColCount, line);
+                    return;
+                }
+
+                final String itemName = items[0];
+
+                if(!restrictions.isEmpty() && !restrictions.contains(itemName))
+                    continue;
+
+                double[] percentileData = new double[DISTRIBUTION_SIZE];
+
+                int startIndex = fileType.equals("gene") ? 2 : 1;
+
+                for(int i = startIndex; i < items.length; ++i)
+                {
+                    double tpm = Double.parseDouble(items[i]);
+                    percentileData[i - startIndex] = tpm;
+                }
+
+                percentilesMap.put(itemName, percentileData);
+            }
+
+            ISF_LOGGER.info("loaded {} distribution from file({})", fileType, inputFile);
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.warn("failed to load {} distribution file({}): {}", fileType, inputFile, e.toString());
+        }
+    }
+
+    public double getCohortTpmPercentile(final String transName, double tpm, boolean isCohort)
+    {
+        return getTpmPercentile(mCohortTranscriptDistribution, transName, tpm);
+    }
+
+    public double getCancerTypeTpmPercentile(final String transName, double tpm, boolean isCohort)
+    {
+        return getTpmPercentile(mCancerTypeTranscriptDistribution, transName, tpm);
+    }
+
+    public double getCohortTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
+    {
+        return getTpmMedian(mCohortTranscriptDistribution, transName);
+    }
+
+    public double getCancerTypeTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
+    {
+        return getTpmMedian(mCancerTypeTranscriptDistribution, transName);
+    }
+
+    public static double getTpmMedian(final Map<String,double[]> transPercentilesMap, final String transName)
+    {
+        final double[] transPercentiles = transPercentilesMap.get(transName);
+
+        if(transPercentiles == null)
+            return -1;
+
+        return (transPercentiles[49] + transPercentiles[50]) / 2;
+    }
+
+    public static double getTpmPercentile(final Map<String,double[]> transPercentilesMap, final String transName, double tpm)
+    {
+        final double[] transPercentiles = transPercentilesMap.get(transName);
+
+        if(transPercentiles == null)
+            return -1;
+
+        if(tpm < transPercentiles[0])
+            return 0;
+        else if(tpm > transPercentiles[transPercentiles.length - 1])
+            return transPercentiles.length - 1;
+
+        for(int i = 0; i < transPercentiles.length - 1; ++i)
+        {
+            if(tpm >= transPercentiles[i] && tpm <= transPercentiles[i + 1])
+            {
+                if(transPercentiles[i + 1] == transPercentiles[i])
+                    return i;
+
+                double upperFactor = (tpm - transPercentiles[i]) / (transPercentiles[i + 1] - transPercentiles[i]);
+                return upperFactor * (i + 1) + (1 - upperFactor) * i;
+            }
+        }
+
+        return -1;
+    }
+
 }

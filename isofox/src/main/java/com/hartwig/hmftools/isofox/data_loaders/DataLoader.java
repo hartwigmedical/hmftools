@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,16 +32,9 @@ public class DataLoader
 {
     private final DataLoaderConfig mConfig;
 
-    private final AltSpliceJunctionCohort mAltSpliceJunctionProcessor;
-    private final TransExpressionCohort mTransExpressionCohort;
-    private final GeneCohort mGeneCohort;
-
     public DataLoader(final DataLoaderConfig config)
     {
         mConfig = config;
-        mAltSpliceJunctionProcessor = new AltSpliceJunctionCohort(mConfig);
-        mTransExpressionCohort = new TransExpressionCohort(mConfig);
-        mGeneCohort = new GeneCohort(mConfig);
     }
 
     public boolean load()
@@ -56,16 +48,32 @@ public class DataLoader
                     break;
 
                 case ALT_SPLICE_JUNCTION:
-                    mAltSpliceJunctionProcessor.processAltSpliceJunctions();
+                {
+                    AltSpliceJunctionCohort altSjCohort = new AltSpliceJunctionCohort(mConfig);
+                    altSjCohort.processAltSpliceJunctions();
                     break;
+                }
 
-                case TRANSCRIPT:
-                    mTransExpressionCohort.processTranscripts();
+                case TRANSCRIPT_DISTRIBUTION:
+                {
+                    TransExpressionDistribution transExpDist = new TransExpressionDistribution(mConfig);
+                    transExpDist.processSampleTranscriptFiles();
                     break;
+                }
 
-                case GENE:
-                    mGeneCohort.processGenes();
+                case GENE_DISTRIBUTION:
+                {
+                    GeneExpressionDistribution geneExpDistribution = new GeneExpressionDistribution(mConfig);
+                    geneExpDistribution.processGenes();
                     break;
+                }
+
+                case SAMPLE_GENE_PERCENTILES:
+                {
+                    SampleGenePercentiles sampleGenePerc = new SampleGenePercentiles(mConfig);
+                    sampleGenePerc.processSampleFiles();
+                    break;
+                }
 
                 default:
                     break;

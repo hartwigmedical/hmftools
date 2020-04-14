@@ -6,12 +6,14 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.data_loaders.DataLoaderConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.calcPercentileValues;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.convertDistribution;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionCohort.roundTPM;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SUPPORTING_TRANS;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.DISTRIBUTION_SIZE;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.convertDistribution;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionDistribution.roundTPM;
+import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
+import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,29 +25,33 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class GeneCohort
+public class GeneExpressionDistribution
 {
     private final DataLoaderConfig mConfig;
 
+    private final String mGeneRateType;
+
     private final Map<String,GeneCohortData> mGeneCohortDataMap;
 
-    private BufferedWriter mGeneDistributionWriter;
+    private BufferedWriter mWriter;
 
-    private static final int DISTRIBUTION_SIZE = 101;
+    public static final String GENE_RATE_TPM = "TPM";
+    public static final String GENE_RATE_FPM = "FPM";
 
-    public GeneCohort(final DataLoaderConfig config)
+    public GeneExpressionDistribution(final DataLoaderConfig config)
     {
         mConfig = config;
         mGeneCohortDataMap = Maps.newHashMap();
 
-        mGeneDistributionWriter = null;
+        mGeneRateType = GENE_RATE_TPM;
+        mWriter = null;
     }
 
     public void processGenes()
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, DataLoadType.GENE, filenames))
+        if(!formSampleFilenames(mConfig, DataLoadType.GENE_DISTRIBUTION, filenames))
             return;
 
         initialiseWriter();
@@ -62,9 +68,9 @@ public class GeneCohort
 
         ISF_LOGGER.info("loaded {} samples gene files", mConfig.SampleData.SampleIds.size());
 
-        writeGeneFpmPercentiles();
+        writeGeneRatePercentiles();
 
-        closeBufferedWriter(mGeneDistributionWriter);
+        closeBufferedWriter(mWriter);
     }
 
     private void initialiseWriter()
@@ -72,18 +78,18 @@ public class GeneCohort
         try
         {
             final String outputFileName = mConfig.formCohortFilename("gene_distribution.csv");
-            mGeneDistributionWriter = createBufferedWriter(outputFileName, false);
+            mWriter = createBufferedWriter(outputFileName, false);
 
-            mGeneDistributionWriter.write("GeneId,GeneName");
+            mWriter.write("GeneId,GeneName");
 
             double distributionSize = DISTRIBUTION_SIZE;
 
-            for(int i = 0; i <= DISTRIBUTION_SIZE; ++i)
+            for(int i = 0; i < DISTRIBUTION_SIZE; ++i)
             {
-                mGeneDistributionWriter.write(String.format(",Pct_%.2f", i/distributionSize));
+                mWriter.write(String.format(",Pct_%d", i));
             }
 
-            mGeneDistributionWriter.newLine();
+            mWriter.newLine();
         }
         catch(IOException e)
         {
@@ -91,7 +97,7 @@ public class GeneCohort
         }
     }
 
-    private void writeGeneFpmPercentiles()
+    private void writeGeneRatePercentiles()
     {
         try
         {
@@ -99,18 +105,18 @@ public class GeneCohort
 
             for(final GeneCohortData geneData : mGeneCohortDataMap.values())
             {
-                final double[] percentileValues = new double[DISTRIBUTION_SIZE + 1];
+                final double[] percentileValues = new double[DISTRIBUTION_SIZE];
 
-                calcPercentileValues(convertDistribution(geneData.FragsPerMillionValues, sampleCount), percentileValues);
+                calcPercentileValues(convertDistribution(geneData.GeneRates, sampleCount), percentileValues);
 
-                mGeneDistributionWriter.write(String.format("%s,%s",geneData.GeneId, geneData.GeneName));
+                mWriter.write(String.format("%s,%s",geneData.GeneId, geneData.GeneName));
 
-                for (int i = 0; i <= DISTRIBUTION_SIZE; ++i)
+                for (int i = 0; i < DISTRIBUTION_SIZE; ++i)
                 {
-                    mGeneDistributionWriter.write(String.format(",%6.3e", percentileValues[i]));
+                    mWriter.write(String.format(",%6.3e", percentileValues[i]));
                 }
 
-                mGeneDistributionWriter.newLine();
+                mWriter.newLine();
             }
         }
         catch(IOException e)
@@ -123,14 +129,17 @@ public class GeneCohort
     {
         try
         {
+            boolean roundValues = mConfig.SampleData.SampleIds.size() >= 100;
+
             final List<String> lines = Files.readAllLines(filename);
 
             final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
             lines.remove(0);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
-            int supportTransIndex = fieldsMap.get(FLD_SUPPORTING_TRANS);
-            int unsplicedIndex = fieldsMap.get(FLD_UNSPLICED);
+            int splicedIndex = fieldsMap.get(FLD_SPLICED_FRAGS);
+            int unsplicedIndex = fieldsMap.get(FLD_UNSPLICED_FRAGS);
+            int tpmIndex = fieldsMap.get(FLD_TPM);
 
             final Map<String,double[]> geneFpmData = Maps.newHashMap();
 
@@ -142,9 +151,11 @@ public class GeneCohort
 
                 boolean excludeGene = !mConfig.RestrictedGeneIds.isEmpty() && !mConfig.RestrictedGeneIds.contains(geneId);
 
-                if(!excludeGene)
+                GeneCohortData geneData = null;
+
+                if (!excludeGene)
                 {
-                    GeneCohortData geneData = mGeneCohortDataMap.get(geneId);
+                    geneData = mGeneCohortDataMap.get(geneId);
 
                     if (geneData == null)
                     {
@@ -153,18 +164,26 @@ public class GeneCohort
                     }
                 }
 
-                double[] fpmData = new double[FPM_FPM + 1];
-                fpmData[FPM_SUPPORTING] = Integer.parseInt(items[supportTransIndex]);
-                fpmData[FPM_UNSPLICED] = Integer.parseInt(items[unsplicedIndex]);
+                if (mGeneRateType.equals(GENE_RATE_FPM))
+                {
+                    double[] fpmData = new double[FPM_FPM + 1];
+                    fpmData[FPM_SUPPORTING] = Integer.parseInt(items[splicedIndex]);
+                    fpmData[FPM_UNSPLICED] = Integer.parseInt(items[unsplicedIndex]);
 
-                geneFpmData.put(geneId, fpmData);
+                    geneFpmData.put(geneId, fpmData);
+                }
+                else if (geneData != null)
+                {
+                    double tpm = Double.parseDouble(items[tpmIndex]);
+                    geneData.addSampleData(sampleId, roundValues ? roundTPM(tpm, mConfig.TpmRounding) : tpm);
+                }
             }
 
             calcAndAddFpmData(sampleId, geneFpmData);
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to load transcript data file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load gene data file({}): {}", filename.toString(), e.toString());
             return;
         }
     }
@@ -196,6 +215,5 @@ public class GeneCohort
                     roundValues ? roundTPM(fpmData[FPM_FPM], mConfig.TpmRounding) : fpmData[FPM_FPM]);
         }
     }
-
 
 }

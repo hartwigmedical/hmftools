@@ -68,7 +68,8 @@ public class GeneResult
     public double getFitResiduals() { return mFitResiduals; }
 
     public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
-    public static final String FLD_UNSPLICED = "Unspliced";
+    public static final String FLD_SPLICED_FRAGS = "SplicedFragments";
+    public static final String FLD_UNSPLICED_FRAGS = "UnsplicedFragments";
 
     public static String csvHeader()
     {
@@ -80,8 +81,8 @@ public class GeneResult
                 .add("IntronicLength")
                 .add("TranscriptCount")
                 .add(FLD_GENE_SET_ID)
-                .add("SplicedFragments")
-                .add("UnsplicedFragments")
+                .add(FLD_SPLICED_FRAGS)
+                .add(FLD_UNSPLICED_FRAGS)
                 .add(FLD_TPM)
                 .add("RawTPM")
                 .add("FitResiduals")

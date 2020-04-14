@@ -1,12 +1,10 @@
 package com.hartwig.hmftools.isofox.data_loaders;
 
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.TPM_COUNT;
-import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.TPM_VALUE;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.RATE_COUNT;
+import static com.hartwig.hmftools.isofox.data_loaders.TransExpressionData.RATE_VALUE;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_NAME;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_ID;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_TRANS_NAME;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +19,7 @@ public class GeneCohortData
     public final String Chromosome;
 
     public final List<String> SampleIds;
-    public final List<double[]> FragsPerMillionValues;
+    public final List<double[]> GeneRates;
 
     public GeneCohortData(final String geneId, final String geneName, final String chromosome)
     {
@@ -30,30 +28,30 @@ public class GeneCohortData
         Chromosome = chromosome;
 
         SampleIds = Lists.newArrayList();
-        FragsPerMillionValues = Lists.newArrayList();
+        GeneRates = Lists.newArrayList();
     }
 
-    public void addSampleData(final String sampleId, double fragsPerMillion)
+    public void addSampleData(final String sampleId, double geneRate)
     {
         int index = 0;
-        while(index < FragsPerMillionValues.size())
+        while(index < GeneRates.size())
         {
-            final double[] fpmData = FragsPerMillionValues.get(index);
+            final double[] fpmData = GeneRates.get(index);
 
-            if(Doubles.equal(fragsPerMillion, fpmData[TPM_VALUE]))
+            if(Doubles.equal(geneRate, fpmData[RATE_VALUE]))
             {
-                ++fpmData[TPM_COUNT];
+                ++fpmData[RATE_COUNT];
                 return;
             }
 
-            if(fragsPerMillion < fpmData[TPM_VALUE])
+            if(geneRate < fpmData[RATE_VALUE])
                 break;
 
             ++index;
         }
 
         SampleIds.add(index, sampleId);
-        FragsPerMillionValues.add(index, new double[] {fragsPerMillion, 1});
+        GeneRates.add(index, new double[] {geneRate, 1});
     }
 
     public static GeneCohortData fromCsv(final String[] items, final Map<String,Integer> fieldIndexMap)

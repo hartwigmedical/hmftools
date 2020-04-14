@@ -8,8 +8,9 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.TRANSCRIPT_RESUL
 public enum DataLoadType
 {
     SUMMARY,
-    GENE,
-    TRANSCRIPT,
+    GENE_DISTRIBUTION,
+    SAMPLE_GENE_PERCENTILES,
+    TRANSCRIPT_DISTRIBUTION,
     ALT_SPLICE_JUNCTION,
     RETAINED_INTRON;
 
@@ -17,10 +18,11 @@ public enum DataLoadType
     {
         switch(type)
         {
-            case GENE:
+            case GENE_DISTRIBUTION:
+            case SAMPLE_GENE_PERCENTILES:
                 return GENE_RESULTS_FILE;
 
-            case TRANSCRIPT:
+            case TRANSCRIPT_DISTRIBUTION:
                 return TRANSCRIPT_RESULTS_FILE;
 
             case SUMMARY:

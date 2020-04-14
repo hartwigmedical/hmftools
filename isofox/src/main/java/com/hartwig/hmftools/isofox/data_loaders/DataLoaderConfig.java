@@ -16,9 +16,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -36,8 +38,16 @@ public class DataLoaderConfig
     public static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     public static final String ALT_SJ_MIN_FRAGS_REQ_GENES = "alt_sj_min_frags_req_genes";
     public static final String SPLICE_VARIANT_FILE = "splice_variant_file";
+
     public static final String TPM_LOG_THRESHOLD = "tpm_log_threshold";
     public static final String TPM_ROUNDING = "tpm_rounding";
+
+    public static final String WRITE_SAMPLE_GENE_DISTRIBUTION_DATA = "write_sample_gene_dist";
+
+    public static final String CANCER_GENE_FILES = "cancer_gene_files";
+
+    public static final String COHORT_TRANS_FILE = "cohort_trans_file";
+    public static final String CANCER_TRANS_FILE = "cancer_trans_file";
 
     public final String RootDataDir;
     public final String OutputDir;
@@ -56,6 +66,12 @@ public class DataLoaderConfig
     public final String SpliceVariantFile;
     public final String EnsemblDataCache;
 
+    public final boolean WriteSampleGeneDistributionData;
+
+    public final String CohortTransFile;
+    public final String CancerTransFile;
+
+    public final String CancerGeneFiles;
     public final double TpmLogThreshold;
     public final double TpmRounding;
 
@@ -92,6 +108,11 @@ public class DataLoaderConfig
         TpmLogThreshold = Double.parseDouble(cmd.getOptionValue(TPM_LOG_THRESHOLD, "0"));
         TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
 
+        WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
+        CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
+        CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
+
+        CancerGeneFiles = cmd.getOptionValue(CANCER_GENE_FILES);
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
 
@@ -119,7 +140,7 @@ public class DataLoaderConfig
     public String formCohortFilename(final String fileId)
     {
         if(OutputIdentifier != null)
-            return OutputDir + "isfox_" + OutputIdentifier + "." + fileId;
+            return OutputDir + "isofox_" + OutputIdentifier + "." + fileId;
         else
             return OutputDir + "isofox_" + fileId;
     }
@@ -176,6 +197,10 @@ public class DataLoaderConfig
         options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
         options.addOption(SPLICE_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
 
+        options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
+        options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
+        options.addOption(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
+        options.addOption(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
         options.addOption(TPM_ROUNDING, true, "TPM/FPM rounding factor, base-10 integer (default=2, ie 1%)");
         options.addOption(TPM_LOG_THRESHOLD, true, "Only write transcripts with TPM greater than this");
 
