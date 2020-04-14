@@ -24,7 +24,6 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 import com.hartwig.hmftools.patientdb.readers.EcrfPatientReader;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public class CpctPatientReader implements EcrfPatientReader {
@@ -49,33 +48,34 @@ public class CpctPatientReader implements EcrfPatientReader {
     @NotNull
     @Override
     public Patient read(@NotNull EcrfPatient ecrfPatient, @NotNull List<SampleData> sequencedSamples) {
-        final BaselineData baselineData = baselineReader.read(ecrfPatient);
-        final PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
-        final List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
-        final List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
-        final List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
-        final List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(ecrfPatient);
-        final List<RanoMeasurementData> ranoMeasurements = RanoMeasurementReader.read(ecrfPatient);
+        BaselineData baselineData = baselineReader.read(ecrfPatient);
+        PreTreatmentData preTreatmentData = preTreatmentReader.read(ecrfPatient);
+        List<BiopsyData> clinicalBiopsies = biopsyReader.read(ecrfPatient, baselineData.curatedTumorLocation());
+        List<BiopsyTreatmentData> treatments = biopsyTreatmentReader.read(ecrfPatient);
+        List<BiopsyTreatmentResponseData> treatmentResponses = BiopsyTreatmentResponseReader.read(ecrfPatient);
+        List<TumorMarkerData> tumorMarkers = TumorMarkerReader.read(ecrfPatient);
+        List<RanoMeasurementData> ranoMeasurements = RanoMeasurementReader.read(ecrfPatient);
 
-        final MatchResult<BiopsyData> matchedBiopsies =
+        MatchResult<BiopsyData> matchedBiopsies =
                 BiopsyMatcher.matchBiopsiesToTumorSamples(ecrfPatient.patientId(), sequencedSamples, clinicalBiopsies);
-        final MatchResult<BiopsyTreatmentData> matchedTreatments =
+        MatchResult<BiopsyTreatmentData> matchedTreatments =
                 TreatmentMatcher.matchTreatmentsToBiopsies(ecrfPatient.patientId(), withSampleMatchOnly(matchedBiopsies), treatments);
 
         // We also match responses to unmatched treatments. Not sure that is optimal. See also DEV-477.
-        final MatchResult<BiopsyTreatmentResponseData> matchedResponses = TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(
-                ecrfPatient.patientId(),
-                matchedTreatments.values(),
-                treatmentResponses);
+        MatchResult<BiopsyTreatmentResponseData> matchedResponses =
+                TreatmentResponseMatcher.matchTreatmentResponsesToTreatments(ecrfPatient.patientId(),
+                        matchedTreatments.values(),
+                        treatmentResponses);
 
-        final List<ValidationFinding> findings = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
         findings.addAll(matchedBiopsies.findings());
         findings.addAll(matchedTreatments.findings());
         findings.addAll(matchedResponses.findings());
 
         return new Patient(ecrfPatient.patientId(),
                 baselineData,
-                preTreatmentData, sequencedSamples,
+                preTreatmentData,
+                sequencedSamples,
                 matchedBiopsies.values(),
                 matchedTreatments.values(),
                 matchedResponses.values(),

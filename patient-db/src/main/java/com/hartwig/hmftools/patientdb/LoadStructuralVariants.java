@@ -19,14 +19,12 @@ import com.hartwig.hmftools.common.variant.structural.StructuralVariantFileLoade
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 
 public class LoadStructuralVariants {
 
@@ -42,18 +40,18 @@ public class LoadStructuralVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
+    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
+        Options options = createBasicOptions();
+        CommandLine cmd = createCommandLine(args, options);
+        DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
-        final String vcfPath = cmd.getOptionValue(SV_VCF);
-        final String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
+        String tumorSample = cmd.getOptionValue(SAMPLE);
+        String vcfPath = cmd.getOptionValue(SV_VCF);
+        String svDataOutputDir = cmd.getOptionValue(SV_DATA_DIRECTORY);
 
         LOGGER.info("Reading data from {}", vcfPath);
-        final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfPath, new AlwaysPassFilter());
-        final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
+        List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfPath, new AlwaysPassFilter());
+        List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
         // generate a unique ID for each SV record
         int svId = 0;
@@ -69,7 +67,7 @@ public class LoadStructuralVariants {
         if (svDataOutputDir != null) {
             // write data to file
             try {
-                final String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
+                String svFilename = StructuralVariantFile.generateFilename(svDataOutputDir, tumorSample);
                 StructuralVariantFile.write(svFilename, svDataList);
             } catch (IOException e) {
                 LOGGER.error("failed to write SV data: {}", e.toString());
@@ -145,7 +143,7 @@ public class LoadStructuralVariants {
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
         options.addOption(SV_VCF, true, "Path to the PURPLE structural variant VCF file.");
@@ -158,17 +156,16 @@ public class LoadStructuralVariants {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

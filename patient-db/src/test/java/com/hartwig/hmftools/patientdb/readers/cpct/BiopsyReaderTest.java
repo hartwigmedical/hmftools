@@ -47,7 +47,7 @@ public class BiopsyReaderTest {
 
     @NotNull
     private static EcrfPatient buildTestPatient() {
-        final String patient = "dummy";
+        String patient = "dummy";
 
         EcrfItemGroup biopsy = new EcrfItemGroup();
         biopsy.addItem(BiopsyReader.FIELD_BIOPSY_TAKEN, "Yes");

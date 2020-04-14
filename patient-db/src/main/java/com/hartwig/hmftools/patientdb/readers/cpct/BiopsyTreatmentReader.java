@@ -40,13 +40,13 @@ class BiopsyTreatmentReader {
     }
 
     @NotNull
-    List<BiopsyTreatmentData> read(@NotNull final EcrfPatient patient) {
-        final List<BiopsyTreatmentData> treatments = Lists.newArrayList();
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
-            for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT)) {
-                final String treatmentGiven = readTreatmentGiven(treatmentForm);
-                final String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
-                final List<DrugData> drugs = readDrugs(treatmentForm);
+    List<BiopsyTreatmentData> read(@NotNull EcrfPatient patient) {
+        List<BiopsyTreatmentData> treatments = Lists.newArrayList();
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_AFTERBIOPT)) {
+            for (EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT)) {
+                String treatmentGiven = readTreatmentGiven(treatmentForm);
+                String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
+                List<DrugData> drugs = readDrugs(treatmentForm);
                 treatments.add(BiopsyTreatmentData.of(null, treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status()));
             }
         }
@@ -54,17 +54,17 @@ class BiopsyTreatmentReader {
     }
 
     @NotNull
-    private List<DrugData> readDrugs(@NotNull final EcrfForm treatmentForm) {
-        final List<DrugData> drugs = Lists.newArrayList();
-        for (final EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO)) {
-            final LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START);
-            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END);
+    private List<DrugData> readDrugs(@NotNull EcrfForm treatmentForm) {
+        List<DrugData> drugs = Lists.newArrayList();
+        for (EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SYSPOSTBIO)) {
+            LocalDate drugStart = itemGroup.readItemDate(FIELD_DRUG_START);
+            LocalDate drugEnd = itemGroup.readItemDate(FIELD_DRUG_END);
             String drugName = itemGroup.readItemString(FIELD_DRUG);
             if (drugName == null || drugName.trim().toLowerCase().startsWith("other")) {
                 drugName = itemGroup.readItemString(FIELD_DRUG_OTHER);
             }
             if (drugName != null || drugStart != null || drugEnd != null) {
-                final List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
+                List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
                 drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, null, curatedDrugs));
             }
         }
@@ -72,8 +72,8 @@ class BiopsyTreatmentReader {
     }
 
     @Nullable
-    private static String readTreatmentGiven(@NotNull final EcrfForm treatmentForm) {
-        final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER);
+    private static String readTreatmentGiven(@NotNull EcrfForm treatmentForm) {
+        List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER);
         if (itemGroups.size() > 0) {
             return itemGroups.get(0).readItemString(FIELD_TREATMENT_GIVEN);
         }
@@ -81,8 +81,8 @@ class BiopsyTreatmentReader {
     }
 
     @Nullable
-    private static String readRadiotherapyGiven(@NotNull final EcrfForm treatmentForm) {
-        final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER);
+    private static String readRadiotherapyGiven(@NotNull EcrfForm treatmentForm) {
+        List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT_AFTER);
         if (itemGroups.size() > 0) {
             return itemGroups.get(0).readItemString(FIELD_RADIOTHERAPY_GIVEN);
         }

@@ -23,8 +23,8 @@ public final class TreatmentResponseMatcher {
     @NotNull
     public static MatchResult<BiopsyTreatmentResponseData> matchTreatmentResponsesToTreatments(@NotNull String patientIdentifier,
             @NotNull List<BiopsyTreatmentData> treatments, @NotNull List<BiopsyTreatmentResponseData> responses) {
-        final List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
-        final List<ValidationFinding> findings = Lists.newArrayList();
+         List<BiopsyTreatmentResponseData> matchedResponses = Lists.newArrayList();
+         List<ValidationFinding> findings = Lists.newArrayList();
         Collections.sort(responses);
 
         List<BiopsyTreatmentData> sortedTreatments = sortAndWithStartDate(treatments);

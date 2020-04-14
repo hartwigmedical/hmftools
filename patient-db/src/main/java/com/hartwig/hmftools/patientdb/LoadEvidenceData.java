@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneF
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -49,21 +48,21 @@ public class LoadEvidenceData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
+        Options options = createOptions();
+        CommandLine cmd = createCommandLine(args, options);
 
-        final String sampleId = cmd.getOptionValue(SAMPLE);
+        String sampleId = cmd.getOptionValue(SAMPLE);
 
         // General params needed for every sample
-        final String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
-        final String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
+        String knowledgebaseDirectory = cmd.getOptionValue(KNOWLEDGEBASE_DIRECTORY);
+        String tumorLocationCsv = cmd.getOptionValue(TUMOR_LOCATION_CSV);
 
         // Params specific for specific sample
-        final String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
-        final String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
-        final String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
-        final String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
+        String somaticVariantVcf = cmd.getOptionValue(SOMATIC_VARIANT_VCF);
+        String purplePurityTsv = cmd.getOptionValue(PURPLE_PURITY_TSV);
+        String purpleGeneCnvTsv = cmd.getOptionValue(PURPLE_GENE_CNV_TSV);
+        String linxFusionTsv = cmd.getOptionValue(LINX_FUSION_TSV);
 
         if (Utils.anyNull(sampleId,
                 knowledgebaseDirectory,
@@ -188,7 +187,7 @@ public class LoadEvidenceData {
         return evidenceItemList;
     }
 
-    private static void printUsageAndExit(@NotNull final Options options) {
+    private static void printUsageAndExit(@NotNull Options options) {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("patient-db - load evidence data", options);
         System.exit(1);
@@ -196,7 +195,7 @@ public class LoadEvidenceData {
 
     @NotNull
     private static Options createOptions() {
-        final Options options = new Options();
+        Options options = new Options();
 
         options.addOption(SAMPLE, true, "Tumor sample of run");
 
@@ -216,17 +215,16 @@ public class LoadEvidenceData {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

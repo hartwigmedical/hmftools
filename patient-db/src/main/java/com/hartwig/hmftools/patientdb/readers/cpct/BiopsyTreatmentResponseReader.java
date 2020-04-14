@@ -29,14 +29,14 @@ final class BiopsyTreatmentResponseReader {
     }
 
     @NotNull
-    static List<BiopsyTreatmentResponseData> read(@NotNull final EcrfPatient patient) {
-        final List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT)) {
+    static List<BiopsyTreatmentResponseData> read(@NotNull EcrfPatient patient) {
+        List<BiopsyTreatmentResponseData> treatmentResponses = Lists.newArrayList();
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
+            for (EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_TUMOR_MEASUREMENT)) {
                 // There are generally multiple assessment dates per tumor measurement (one per target lesion)
                 LocalDate assessmentDate = null;
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT)) {
-                    final LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE);
+                for (EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_MEASUREMENT)) {
+                    LocalDate date = itemGroup.readItemDate(FIELD_ASSESSMENT_DATE);
                     if (date != null) {
                         assessmentDate = date;
                         break;
@@ -46,28 +46,29 @@ final class BiopsyTreatmentResponseReader {
                 String measurementDone = null;
                 String boneOnlyDisease = null;
                 String response = null;
-                for (final EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT)) {
-                    final LocalDate responseDateValue = itemGroup.readItemDate(FIELD_RESPONSE_DATE);
+                for (EcrfItemGroup itemGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_TUMOR_MEASUREMENT)) {
+                    LocalDate responseDateValue = itemGroup.readItemDate(FIELD_RESPONSE_DATE);
                     if (responseDateValue != null) {
                         responseDate = responseDateValue;
                     }
 
-                    final String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_DONE);
+                    String measurementDoneValue = itemGroup.readItemString(FIELD_MEASUREMENT_DONE);
                     if (measurementDoneValue != null) {
                         measurementDone = measurementDoneValue;
                     }
 
-                    final String boneOnlyDiseaseValue = itemGroup.readItemString(FIELD_BONE_ONLY_DISEASE);
+                    String boneOnlyDiseaseValue = itemGroup.readItemString(FIELD_BONE_ONLY_DISEASE);
                     if (boneOnlyDiseaseValue != null) {
                         boneOnlyDisease = boneOnlyDiseaseValue;
                     }
 
-                    final String responseValue = itemGroup.readItemString(FIELD_RESPONSE);
+                    String responseValue = itemGroup.readItemString(FIELD_RESPONSE);
                     if (responseValue != null) {
                         response = responseValue;
                     }
                 }
-                BiopsyTreatmentResponseData responseData = ImmutableBiopsyTreatmentResponseData.of(null, assessmentDate,
+                BiopsyTreatmentResponseData responseData = ImmutableBiopsyTreatmentResponseData.of(null,
+                        assessmentDate,
                         responseDate,
                         response,
                         measurementDone,

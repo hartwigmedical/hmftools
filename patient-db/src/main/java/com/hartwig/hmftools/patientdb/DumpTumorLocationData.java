@@ -44,12 +44,12 @@ final class DumpTumorLocationData {
 
     @NotNull
     private static String fileLocation(@NotNull String outputDir, @NotNull String suffix) {
-        final String fileName = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + suffix;
+        String fileName = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + suffix;
         return outputDir + File.separator + fileName;
     }
 
     private static void updateSymlink(@NotNull String linkName, @NotNull String fileName) {
-        final Path linkPath = Paths.get(linkName);
+        Path linkPath = Paths.get(linkName);
         try {
             Files.deleteIfExists(linkPath);
             Files.createSymbolicLink(linkPath, Paths.get(fileName));

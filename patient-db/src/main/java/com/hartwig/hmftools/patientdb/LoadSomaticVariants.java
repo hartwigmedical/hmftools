@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.variant.filter.SomaticFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -44,14 +43,14 @@ public class LoadSomaticVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
-        final String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
-        final String sample = cmd.getOptionValue(SAMPLE);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
-        final CompoundFilter filter = new CompoundFilter(true);
+    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
+        Options options = createBasicOptions();
+        CommandLine cmd = createCommandLine(args, options);
+        String vcfFileLocation = cmd.getOptionValue(SOMATIC_VCF);
+        String highConfidenceBed = cmd.getOptionValue(HIGH_CONFIDENCE_BED);
+        String sample = cmd.getOptionValue(SAMPLE);
+        DatabaseAccess dbAccess = databaseAccess(cmd);
+        CompoundFilter filter = new CompoundFilter(true);
         if (cmd.hasOption(PASS_FILTER)) {
             filter.add(new PassingVariantFilter());
         }
@@ -59,18 +58,18 @@ public class LoadSomaticVariants {
             filter.add(new SomaticFilter());
         }
 
-        final CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
+        CompoundEnrichment compoundEnrichment = new CompoundEnrichment();
         if (cmd.hasOption(HOTSPOT_TSV)) {
-            final String hotspotFile = cmd.getOptionValue(HOTSPOT_TSV);
+            String hotspotFile = cmd.getOptionValue(HOTSPOT_TSV);
             LOGGER.info("Reading hotspot file: {}", hotspotFile);
             compoundEnrichment.add(HotspotEnrichment.fromHotspotsFile(hotspotFile));
         }
 
         LOGGER.info("Reading high confidence bed file: {}", highConfidenceBed);
-        final Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
+        Multimap<String, GenomeRegion> highConfidenceRegions = BEDFileLoader.fromBedFile(highConfidenceBed);
 
         LOGGER.info("Reading somatic VCF file: {}", vcfFileLocation);
-        final List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(filter,
+        List<SomaticVariant> variants = SomaticVariantFactory.filteredInstanceWithEnrichment(filter,
                 compoundEnrichment,
                 VariantContextEnrichmentLoadSomatics.factory(highConfidenceRegions)).fromVCFFile(sample, vcfFileLocation);
 
@@ -82,7 +81,7 @@ public class LoadSomaticVariants {
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample.");
         options.addOption(SOMATIC_VCF, true, "Path to the somatic SNV/indel vcf file.");
         options.addOption(HOTSPOT_TSV, true, "Location of hotspot tsv file");
@@ -97,17 +96,16 @@ public class LoadSomaticVariants {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

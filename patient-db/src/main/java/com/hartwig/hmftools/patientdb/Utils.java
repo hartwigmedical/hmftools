@@ -16,12 +16,12 @@ public final class Utils {
     }
 
     @Nullable
-    public static java.sql.Date toSQLDate(@Nullable final LocalDate date) {
+    public static java.sql.Date toSQLDate(@Nullable LocalDate date) {
         return date != null ? java.sql.Date.valueOf(date) : null;
     }
 
-    static boolean anyNull(@NotNull final Object... arguments) {
-        for (final Object object : arguments) {
+    static boolean anyNull(@NotNull Object... arguments) {
+        for (Object object : arguments) {
             if (object == null) {
                 return true;
             }
@@ -30,7 +30,7 @@ public final class Utils {
     }
 
     @NotNull
-    public static String capitalize(@NotNull final String string) {
+    public static String capitalize(@NotNull String string) {
         if (string.isEmpty()) {
             return string;
         } else {
@@ -39,8 +39,8 @@ public final class Utils {
     }
 
     @NotNull
-    static String extractPatientIdentifier(@NotNull final String setName) {
-        final String[] names = setName.split("_");
+    static String extractPatientIdentifier(@NotNull String setName) {
+        String[] names = setName.split("_");
         if (names.length < 5) {
             LOGGER.error("Run name {} had less than 5 parts after splitting on _", setName);
             return Strings.EMPTY;

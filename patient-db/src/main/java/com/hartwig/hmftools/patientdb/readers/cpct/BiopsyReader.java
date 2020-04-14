@@ -40,30 +40,30 @@ class BiopsyReader {
 
     @NotNull
     List<BiopsyData> read(@NotNull EcrfPatient patient, @NotNull CuratedTumorLocation curatedTumorLocation) {
-        final List<BiopsyData> biopsies = Lists.newArrayList();
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
+        List<BiopsyData> biopsies = Lists.newArrayList();
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BIOPSY)) {
+            for (EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_BIOPS)) {
                 String biopsyTaken = null;
                 String biopsyEvaluable = null;
                 // This works as there is generally a 1:N relation between BIOPSY and BIOPSIES item groups.
-                for (final EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY)) {
+                for (EcrfItemGroup biopsyGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSY)) {
                     biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN);
                     biopsyEvaluable = biopsyGroup.readItemString(FIELD_BIOPSY_EVALUABLE);
                 }
-                for (final EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES)) {
-                    final LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE);
+                for (EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES)) {
+                    LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE);
 
-                    final String site = biopsiesGroup.readItemString(FIELD_SITE);
-                    final String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER);
-                    final String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
+                    String site = biopsiesGroup.readItemString(FIELD_SITE);
+                    String siteOther = biopsiesGroup.readItemString(FIELD_SITE_OTHER);
+                    String finalSite = (site == null || site.trim().toLowerCase().startsWith("other")) ? siteOther : site;
 
-                    final String location = biopsiesGroup.readItemString(FIELD_LOCATION);
+                    String location = biopsiesGroup.readItemString(FIELD_LOCATION);
 
-                    final CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
+                    CuratedBiopsyType curatedBiopsyType = biopsySiteCurator.search(curatedTumorLocation.primaryTumorLocation(),
                             curatedTumorLocation.subType(),
                             finalSite,
                             location);
-                    final BiopsyData biopsy = ImmutableBiopsyData.of(date,
+                    BiopsyData biopsy = ImmutableBiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,
                             curatedBiopsyType,

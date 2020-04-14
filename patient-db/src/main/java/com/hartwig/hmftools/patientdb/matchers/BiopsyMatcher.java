@@ -23,10 +23,10 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    public static MatchResult<BiopsyData> matchBiopsiesToTumorSamples(@NotNull final String patientIdentifier,
-            @NotNull final List<SampleData> sequencedBiopsies, @NotNull final List<BiopsyData> clinicalBiopsies) {
-        final List<BiopsyData> matchedBiopsies = Lists.newArrayList();
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    public static MatchResult<BiopsyData> matchBiopsiesToTumorSamples(@NotNull String patientIdentifier,
+            @NotNull List<SampleData> sequencedBiopsies, @NotNull List<BiopsyData> clinicalBiopsies) {
+        List<BiopsyData> matchedBiopsies = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
 
         List<BiopsyData> remainingBiopsies = clinicalBiopsies;
         Collections.sort(remainingBiopsies);
@@ -38,12 +38,12 @@ public final class BiopsyMatcher {
                     "Clinical biopsies: " + clinicalBiopsies.size() + ", sequenced samples: " + sequencedBiopsies.size()));
         }
 
-        for (final SampleData sequencedBiopsy : sequencedBiopsies) {
-            final Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()
+        for (SampleData sequencedBiopsy : sequencedBiopsies) {
+            Map<Boolean, List<BiopsyData>> partitions = remainingBiopsies.stream()
                     .collect(Collectors.partitioningBy(clinicalBiopsy -> isPossibleMatch(sequencedBiopsy, clinicalBiopsy)));
-            final List<BiopsyData> possibleMatches = partitions.get(true);
+            List<BiopsyData> possibleMatches = partitions.get(true);
             if (possibleMatches.size() == 1 && possibleMatches.get(0).date() != null) {
-                final BiopsyData clinicalBiopsy = possibleMatches.get(0);
+                BiopsyData clinicalBiopsy = possibleMatches.get(0);
                 matchedBiopsies.add(ImmutableBiopsyData.builder().from(clinicalBiopsy).sampleId(sequencedBiopsy.sampleId()).build());
                 if (hasMismatchOnSamplingDate(sequencedBiopsy, clinicalBiopsy) && !patientIdentifier.startsWith("WIDE")) {
                     findings.add(biopsyMatchFinding(patientIdentifier,
@@ -75,20 +75,20 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    private static String sampleDataToString(@NotNull final SampleData sampleData) {
+    private static String sampleDataToString(@NotNull SampleData sampleData) {
         return sampleData.sampleId() + "(S:" + sampleData.samplingDate() + ", A:" + sampleData.arrivalDate() + ")";
     }
 
-    private static boolean isPossibleMatch(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {
+    private static boolean isPossibleMatch(@NotNull SampleData sequencedBiopsy, @NotNull BiopsyData clinicalBiopsy) {
         return clinicalBiopsy.date() == null || (isWithinThreshold(sequencedBiopsy, clinicalBiopsy)
                 && clinicalBiopsy.isPotentiallyEvaluable());
     }
 
-    private static boolean isWithinThreshold(@NotNull final SampleData sequencedBiopsy, @NotNull final BiopsyData clinicalBiopsy) {
-        final LocalDate biopsyDate = clinicalBiopsy.date();
+    private static boolean isWithinThreshold(@NotNull SampleData sequencedBiopsy, @NotNull BiopsyData clinicalBiopsy) {
+        LocalDate biopsyDate = clinicalBiopsy.date();
         assert biopsyDate != null;
 
-        final LocalDate samplingDate = sequencedBiopsy.samplingDate();
+        LocalDate samplingDate = sequencedBiopsy.samplingDate();
         if (samplingDate != null) {
             return Math.abs(Duration.between(biopsyDate.atStartOfDay(), samplingDate.atStartOfDay()).toDays())
                     < Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
@@ -112,7 +112,7 @@ public final class BiopsyMatcher {
     }
 
     @NotNull
-    private static String getMatchDateCriteria(@NotNull final SampleData sampleData) {
+    private static String getMatchDateCriteria(@NotNull SampleData sampleData) {
         if (sampleData.samplingDate() != null) {
             return "Sampling date " + sampleData.samplingDate() + " threshold: " + Config.MAX_DAYS_BETWEEN_SAMPLING_AND_BIOPSY_DATE;
         }
