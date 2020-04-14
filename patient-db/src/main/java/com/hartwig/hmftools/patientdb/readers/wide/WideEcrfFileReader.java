@@ -51,13 +51,13 @@ public class WideEcrfFileReader {
     private static final int BIOPSY_DATA_DATE = 4;
     private static final int BIOPSY_DATA_HAS_RECEIVED_SUCCESSFUL_REPORT = 5;
 
-    private static final int AVL_TREATMENT_DATA_MIN_COUNT = 4;
-    private static final int AVL_TREATMENT_DATA_MAX_COUNT = 5;
+    private static final int AVL_TREATMENT_DATA_MIN_COUNT = 5;
+    private static final int AVL_TREATMENT_DATA_MAX_COUNT = 6;
     private static final int AVL_TREATMENT_DATA_PATIENT_ID = 0;
-    private static final int AVL_TREATMENT_DATA_DRUG_CODE = 1;
-    private static final int AVL_TREATMENT_DATA_DRUG = 2;
-    private static final int AVL_TREATMENT_DATA_START_DATE = 3;
-    private static final int AVL_TREATMENT_DATA_END_DATE = 4;
+    private static final int AVL_TREATMENT_DATA_DRUG_CODE = 2;
+    private static final int AVL_TREATMENT_DATA_DRUG = 3;
+    private static final int AVL_TREATMENT_DATA_START_DATE = 4;
+    private static final int AVL_TREATMENT_DATA_END_DATE = 5;
 
     private static final int RESPONSE_DATA_MIN_COUNT = 6;
     private static final int RESPONSE_DATA_MAX_COUNT = 10;
