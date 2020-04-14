@@ -23,7 +23,6 @@ public class LoadPurpleSomaticVariants {
     private static final String SAMPLE = "sample";
     private static final String REFERENCE = "reference";
     private static final String RNA = "rna";
-    private static final String ALIAS = "alias";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
 
@@ -47,7 +46,7 @@ public class LoadPurpleSomaticVariants {
         List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf);
 
         LOGGER.info("Persisting to db");
-        dbAccess.writeSomaticVariants(cmd.getOptionValue(ALIAS, tumorSample), variants);
+        dbAccess.writeSomaticVariants(tumorSample, variants);
 
         LOGGER.info("Complete");
     }
@@ -62,7 +61,6 @@ public class LoadPurpleSomaticVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
 
         return options;
     }

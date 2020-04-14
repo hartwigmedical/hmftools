@@ -31,7 +31,6 @@ public class LoadStructuralVariants {
     private static final Logger LOGGER = LogManager.getLogger(LoadStructuralVariants.class);
 
     private static final String SAMPLE = "sample";
-    private static final String ALIAS = "alias";
 
     private static final String SV_VCF = "structural_vcf";
     private static final String SV_DATA_DIRECTORY = "sv_data_dir";
@@ -62,7 +61,7 @@ public class LoadStructuralVariants {
         }
 
         LOGGER.info("Persisting {} SVs to db", svDataList.size());
-        dbAccess.writeStructuralVariants(cmd.getOptionValue(ALIAS, tumorSample), svDataList);
+        dbAccess.writeStructuralVariants(tumorSample, svDataList);
 
         if (svDataOutputDir != null) {
             // write data to file
@@ -145,7 +144,6 @@ public class LoadStructuralVariants {
     private static Options createBasicOptions() {
         Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
-        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
         options.addOption(SV_VCF, true, "Path to the PURPLE structural variant VCF file.");
         options.addOption(SV_DATA_DIRECTORY, true, "Optional: directory to write SV data in TSV format");
         options.addOption(DB_USER, true, "Database user name.");
