@@ -35,37 +35,35 @@ class EcrfDAO {
         clear(DRUPECRF.getName(), DRUPECRFDATAMODEL.getName());
     }
 
-    private void clear(@NotNull final String ecrfTable, @NotNull final String ecrfDatamodelTable) {
+    private void clear(@NotNull String ecrfTable, @NotNull String ecrfDatamodelTable) {
         context.truncate(ecrfTable).execute();
         context.truncate(ecrfDatamodelTable).execute();
     }
 
-    void writeCpctDatamodel(@NotNull final Iterable<EcrfDatamodelField> datamodelFields) {
+    void writeCpctDatamodel(@NotNull Iterable<EcrfDatamodelField> datamodelFields) {
         writeDatamodel(datamodelFields, this::cpctDatamodelInserter);
     }
 
-    void writeDrupDatamodel(@NotNull final Iterable<EcrfDatamodelField> datamodelFields) {
+    void writeDrupDatamodel(@NotNull Iterable<EcrfDatamodelField> datamodelFields) {
         writeDatamodel(datamodelFields, this::drupDatamodelInserter);
     }
 
-    private void writeDatamodel(@NotNull final Iterable<EcrfDatamodelField> datamodelFields,
-            @NotNull final Supplier<InsertValuesStep4> inserter) {
+    private void writeDatamodel(@NotNull Iterable<EcrfDatamodelField> datamodelFields, @NotNull Supplier<InsertValuesStep4> inserter) {
         context.batch(StreamSupport.stream(datamodelFields.spliterator(), false).map(field -> {
-            final String codeList = StringUtils.join(field.codeList().values().toArray(), ",");
+            String codeList = StringUtils.join(field.codeList().values().toArray(), ",");
             return inserter.get().values(field.name(), field.description(), codeList, field.isRelevant() ? "TRUE" : "FALSE");
         }).collect(Collectors.toList())).execute();
     }
 
-    void writeCpctPatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
+    void writeCpctPatient(@NotNull EcrfPatient patient, boolean sequenced) {
         writePatient(patient, sequenced, this::cpctInserter);
     }
 
-    void writeDrupPatient(@NotNull final EcrfPatient patient, final boolean sequenced) {
+    void writeDrupPatient(@NotNull EcrfPatient patient, boolean sequenced) {
         writePatient(patient, sequenced, this::drupInserter);
     }
 
-    private void writePatient(@NotNull final EcrfPatient patient, final boolean sequenced,
-            @NotNull final Supplier<InsertValuesStep14> inserter) {
+    private void writePatient(@NotNull EcrfPatient patient, boolean sequenced, @NotNull Supplier<InsertValuesStep14> inserter) {
         context.batch(patient.fields()
                 .stream()
                 .map(field -> inserter.get()

@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.patientdb.dao;
 
-import com.google.common.collect.Iterables;
-import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
-import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
-
 import static com.hartwig.hmftools.patientdb.Config.DB_BATCH_INSERT_SIZE;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PGXCALLS;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PGXGENOTYPE;
@@ -11,6 +7,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PGXGENO
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+
+import com.google.common.collect.Iterables;
+import com.hartwig.hmftools.common.pharmacogenetics.PGXCalls;
+import com.hartwig.hmftools.common.pharmacogenetics.PGXGenotype;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -27,7 +27,6 @@ class PgxDAO {
     }
 
     void writePgx(@NotNull String sample, @NotNull List<PGXGenotype> pgxGenotype, @NotNull List<PGXCalls> pgxCalls) {
-
         deletePgxForSample(sample);
 
         Timestamp timestamp = new Timestamp(new Date().getTime());
@@ -99,5 +98,4 @@ class PgxDAO {
         context.delete(PGXCALLS).where(PGXCALLS.SAMPLEID.eq(sample)).execute();
         context.delete(PGXGENOTYPE).where(PGXGENOTYPE.SAMPLEID.eq(sample)).execute();
     }
-
 }

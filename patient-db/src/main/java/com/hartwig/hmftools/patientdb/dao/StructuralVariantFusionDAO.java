@@ -35,6 +35,7 @@ public class StructuralVariantFusionDAO {
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
     }
 
+    @NotNull
     private InsertValuesStep19 createBreakendInserter() {
         return context.insertInto(SVBREAKEND,
                 SVBREAKEND.MODIFIED,
@@ -63,16 +64,16 @@ public class StructuralVariantFusionDAO {
         context.delete(SVFUSION).where(SVFUSION.SAMPLEID.eq(sampleId)).execute();
         context.delete(SVBREAKEND).where(SVBREAKEND.SAMPLEID.eq(sampleId)).execute();
 
-        final Timestamp timestamp = new Timestamp(new Date().getTime());
+        Timestamp timestamp = new Timestamp(new Date().getTime());
 
         // a map of breakend DB Ids to transcripts for the fusion DB record foreign key to the breakend table
-        final Map<Integer, Integer> breakendIdToDbIdMap = Maps.newHashMap();
+        Map<Integer, Integer> breakendIdToDbIdMap = Maps.newHashMap();
 
         InsertValuesStep19 inserter = createBreakendInserter();
         List<LinxBreakend> insertedBreakends = Lists.newArrayList();
 
         for (int i = 0; i < breakends.size(); ++i) {
-            final LinxBreakend breakend = breakends.get(i);
+            LinxBreakend breakend = breakends.get(i);
 
             inserter.values(timestamp,
                     sampleId,
@@ -98,7 +99,7 @@ public class StructuralVariantFusionDAO {
 
             // batch-insert transcripts since there can be many more than the batch size per sample
             if (insertedBreakends.size() >= DB_BATCH_INSERT_SIZE || i == breakends.size() - 1) {
-                final List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
+                List<UInteger> ids = inserter.returning(SVBREAKEND.ID).fetch().getValues(0, UInteger.class);
 
                 if (ids.size() != insertedBreakends.size()) {
                     throw new RuntimeException("Not all transcripts were inserted successfully");
@@ -114,7 +115,7 @@ public class StructuralVariantFusionDAO {
         }
 
         for (List<LinxFusion> batch : Iterables.partition(fusions, DB_BATCH_INSERT_SIZE)) {
-            final InsertValuesStep17 fusionInserter = context.insertInto(SVFUSION,
+            InsertValuesStep17 fusionInserter = context.insertInto(SVFUSION,
                     SVFUSION.MODIFIED,
                     SVFUSION.SAMPLEID,
                     SVFUSION.FIVEPRIMEBREAKENDID,
@@ -133,12 +134,13 @@ public class StructuralVariantFusionDAO {
                     SVFUSION.FUSEDEXONUP,
                     SVFUSION.FUSEDEXONDOWN);
 
-            for (final LinxFusion fusion : batch) {
+            for (LinxFusion fusion : batch) {
                 Integer fivePrimeId = breakendIdToDbIdMap.get(fusion.fivePrimeBreakendId());
                 Integer threePrimeId = breakendIdToDbIdMap.get(fusion.threePrimeBreakendId());
 
-                if (fivePrimeId == null || threePrimeId == null)
+                if (fivePrimeId == null || threePrimeId == null) {
                     return;
+                }
 
                 fusionInserter.values(timestamp,
                         sampleId,

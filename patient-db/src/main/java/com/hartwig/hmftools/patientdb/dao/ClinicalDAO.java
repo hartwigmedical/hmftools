@@ -240,9 +240,9 @@ class ClinicalDAO {
         treatment.drugs().forEach(drug -> writeDrugData(patientId, treatment.id(), drug, treatment.formStatus()));
     }
 
-    private void writeDrugData(int patientId, int treatmentId, @NotNull DrugData drug, @NotNull final FormStatus formStatus) {
+    private void writeDrugData(int patientId, int treatmentId, @NotNull DrugData drug, @NotNull FormStatus formStatus) {
         drug.filteredCuratedDrugs().forEach(curatedTreatment -> {
-            final int id = context.insertInto(DRUG,
+            int id = context.insertInto(DRUG,
                     DRUG.TREATMENTID,
                     DRUG.PATIENTID,
                     DRUG.STARTDATE,

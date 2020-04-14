@@ -31,7 +31,7 @@ class DriverCatalogDAO {
         this.context = context;
     }
 
-    void write(@NotNull final String sample, @NotNull List<DriverCatalog> driverCatalog) {
+    void write(@NotNull String sample, @NotNull List<DriverCatalog> driverCatalog) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteForSample(sample);
 
@@ -62,7 +62,6 @@ class DriverCatalogDAO {
 
     private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
             @NotNull DriverCatalog entry) {
-        //noinspection unchecked
         inserter.values(sample,
                 entry.chromosome(),
                 entry.chromosomeBand(),
@@ -88,13 +87,13 @@ class DriverCatalogDAO {
     }
 
     @NotNull
-    List<DriverCatalog> readDriverData(@NotNull final String sample) {
-        final List<DriverCatalog> dcList = Lists.newArrayList();
+    List<DriverCatalog> readDriverData(@NotNull String sample) {
+        List<DriverCatalog> dcList = Lists.newArrayList();
 
-        final Result<Record> result = context.select().from(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).fetch();
+        Result<Record> result = context.select().from(DRIVERCATALOG).where(DRIVERCATALOG.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
-            final DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
+            DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .gene(record.getValue(DRIVERCATALOG.GENE))
                     .chromosome(record.getValue(DRIVERCATALOG.CHROMOSOME))
                     .chromosomeBand(record.getValue(DRIVERCATALOG.CHROMOSOMEBAND))

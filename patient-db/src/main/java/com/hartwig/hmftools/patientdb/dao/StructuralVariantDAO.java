@@ -34,15 +34,15 @@ class StructuralVariantDAO {
     }
 
     @NotNull
-    public final List<StructuralVariantData> read(@NotNull final String sample) {
+    public List<StructuralVariantData> read(@NotNull String sample) {
         List<StructuralVariantData> structuralVariants = Lists.newArrayList();
 
-        final Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
+        Result<Record> result = context.select().from(STRUCTURALVARIANT).where(STRUCTURALVARIANT.SAMPLEID.eq(sample)).fetch();
 
         for (Record record : result) {
             StructuralVariantType type = StructuralVariantType.fromAttribute(record.getValue(STRUCTURALVARIANT.TYPE));
 
-            final String filterStr = record.getValue(STRUCTURALVARIANT.FILTER);
+            String filterStr = record.getValue(STRUCTURALVARIANT.FILTER);
 
             if (type == SGL && filterStr.equals(INFERRED)) {
                 type = INF;
@@ -116,8 +116,8 @@ class StructuralVariantDAO {
     }
 
     @NotNull
-    final List<String> getSamplesList(@NotNull final String sampleSearch) {
-        final Result<Record1<String>> result = sampleSearch.equals("")
+    List<String> getSamplesList(@NotNull String sampleSearch) {
+        Result<Record1<String>> result = sampleSearch.equals("")
                 ? context.select(STRUCTURALVARIANT.SAMPLEID)
                 .from(STRUCTURALVARIANT)
                 .groupBy(STRUCTURALVARIANT.SAMPLEID)
@@ -137,7 +137,7 @@ class StructuralVariantDAO {
         return samplesList;
     }
 
-    void write(@NotNull final String sample, @NotNull final List<StructuralVariantData> variants) {
+    void write(@NotNull String sample, @NotNull List<StructuralVariantData> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         deleteStructuralVariantsForSample(sample);

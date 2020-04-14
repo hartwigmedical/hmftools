@@ -24,7 +24,7 @@ class AmberDAO {
         this.context = context;
     }
 
-    void write(@NotNull final String sample, @NotNull final List<AmberBAF> variants) {
+    void write(@NotNull String sample, @NotNull List<AmberBAF> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteAmberRecordsForSample(sample);
 

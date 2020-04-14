@@ -56,7 +56,8 @@ class StructuralVariantClusterDAO {
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep9 inserter, final String sample, final LinxCluster cluster) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep9 inserter, @NotNull String sample,
+            @NotNull LinxCluster cluster) {
         inserter.values(sample,
                 timestamp,
                 cluster.clusterId(),
@@ -68,7 +69,7 @@ class StructuralVariantClusterDAO {
                 DatabaseUtil.checkStringLength(cluster.clusterDesc(), SVCLUSTER.CLUSTERDESC));
     }
 
-    void writeSvData(final String sample, final List<LinxSvData> svData) {
+    void writeSvData(@NotNull String sample, @NotNull List<LinxSvData> svData) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVANNOTATION).where(SVANNOTATION.SAMPLEID.eq(sample)).execute();
@@ -103,7 +104,8 @@ class StructuralVariantClusterDAO {
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep22 inserter, final String sample, final LinxSvData svData) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep22 inserter, @NotNull String sample,
+            @NotNull LinxSvData svData) {
         inserter.values(sample,
                 timestamp,
                 svData.svId(),
@@ -128,7 +130,7 @@ class StructuralVariantClusterDAO {
                 svData.localTICountEnd());
     }
 
-    void writeLinks(final String sample, final List<LinxLink> links) {
+    void writeLinks(@NotNull String sample, @NotNull List<LinxLink> links) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVLINK).where(SVLINK.SAMPLEID.eq(sample)).execute();
@@ -159,7 +161,8 @@ class StructuralVariantClusterDAO {
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep18 inserter, final String sample, final LinxLink link) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep18 inserter, @NotNull String sample,
+            @NotNull LinxLink link) {
         inserter.values(sample,
                 timestamp,
                 link.clusterId(),
@@ -180,7 +183,7 @@ class StructuralVariantClusterDAO {
                 link.pseudogeneInfo());
     }
 
-    void writeViralInserts(final String sample, final List<LinxViralInsertFile> inserts) {
+    void writeViralInserts(@NotNull String sample, @NotNull List<LinxViralInsertFile> inserts) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(VIRALINSERTION).where(VIRALINSERTION.SAMPLEID.eq(sample)).execute();
@@ -199,11 +202,12 @@ class StructuralVariantClusterDAO {
         inserter.execute();
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep5 inserter, final String sample, final LinxViralInsertFile insert) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
+            @NotNull LinxViralInsertFile insert) {
         inserter.values(sample, timestamp, insert.SvId, insert.VirusId, insert.VirusName);
     }
 
-    void writeDrivers(final String sample, final List<LinxDriver> drivers) {
+    void writeDrivers(@NotNull String sample, @NotNull List<LinxDriver> drivers) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
 
         context.delete(SVDRIVER).where(SVDRIVER.SAMPLEID.eq(sample)).execute();
@@ -221,7 +225,8 @@ class StructuralVariantClusterDAO {
         }
     }
 
-    private static void addRecord(Timestamp timestamp, InsertValuesStep5 inserter, final String sample, final LinxDriver driver) {
+    private static void addRecord(@NotNull Timestamp timestamp, @NotNull InsertValuesStep5 inserter, @NotNull String sample,
+            @NotNull LinxDriver driver) {
         inserter.values(sample,
                 timestamp,
                 driver.clusterId() == -1 ? null : driver.clusterId(),

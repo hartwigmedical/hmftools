@@ -39,34 +39,37 @@ class SomaticVariantDAO {
     }
 
     @NotNull
-    public final List<SomaticVariant> read(@NotNull final String sample)
-    {
+    public List<SomaticVariant> read(@NotNull String sample) {
         return read(sample, VariantType.UNDEFINED);
     }
 
     @NotNull
-    public final List<SomaticVariant> read(@NotNull final String sample, VariantType type) {
+    public List<SomaticVariant> read(@NotNull String sample, VariantType type) {
         List<SomaticVariant> variants = Lists.newArrayList();
 
-        final Result<Record> result = type == VariantType.UNDEFINED ?
-                context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch()
-                : context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample))
-                        .and(SOMATICVARIANT.TYPE.eq(type.toString())).fetch();
+        Result<Record> result = type == VariantType.UNDEFINED
+                ? context.select().from(SOMATICVARIANT).where(SOMATICVARIANT.SAMPLEID.eq(sample)).fetch()
+                : context.select()
+                        .from(SOMATICVARIANT)
+                        .where(SOMATICVARIANT.SAMPLEID.eq(sample))
+                        .and(SOMATICVARIANT.TYPE.eq(type.toString()))
+                        .fetch();
 
         for (Record record : result) {
+            Integer referenceAlleleReadCount = record.getValue(SOMATICVARIANT.REFERENCEALLELEREADCOUNT);
+            Integer referenceTotalCount = record.getValue(SOMATICVARIANT.REFERENCETOTALREADCOUNT);
+            AllelicDepth referenceAllelicDepth = referenceAlleleReadCount != null && referenceTotalCount != null ? ImmutableAllelicDepthImpl
+                    .builder()
+                    .alleleReadCount(referenceAlleleReadCount)
+                    .totalReadCount(referenceTotalCount)
+                    .build() : null;
 
-            @Nullable Integer referenceAlleleReadCount = record.getValue(SOMATICVARIANT.REFERENCEALLELEREADCOUNT);
-            @Nullable Integer referenceTotalCount = record.getValue(SOMATICVARIANT.REFERENCETOTALREADCOUNT);
-            final AllelicDepth referenceAllelicDepth = referenceAlleleReadCount != null && referenceTotalCount != null
-                    ? ImmutableAllelicDepthImpl.builder().alleleReadCount(referenceAlleleReadCount).totalReadCount(referenceTotalCount).build()
-                    : null;
-
-
-            @Nullable Integer rnaAlleleReadCount = record.getValue(SOMATICVARIANT.RNAALLELEREADCOUNT);
-            @Nullable Integer rnaTotalCount = record.getValue(SOMATICVARIANT.RNATOTALREADCOUNT);
-            final AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null
-                    ? ImmutableAllelicDepthImpl.builder().alleleReadCount(rnaAlleleReadCount).totalReadCount(rnaTotalCount).build()
-                    : null;
+            Integer rnaAlleleReadCount = record.getValue(SOMATICVARIANT.RNAALLELEREADCOUNT);
+            Integer rnaTotalCount = record.getValue(SOMATICVARIANT.RNATOTALREADCOUNT);
+            AllelicDepth rnaAllelicDepth = rnaAlleleReadCount != null && rnaTotalCount != null ? ImmutableAllelicDepthImpl.builder()
+                    .alleleReadCount(rnaAlleleReadCount)
+                    .totalReadCount(rnaTotalCount)
+                    .build() : null;
 
             variants.add(ImmutableSomaticVariantImpl.builder()
                     .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
@@ -124,7 +127,7 @@ class SomaticVariantDAO {
         return b != 0;
     }
 
-    void write(@NotNull final String sample, @NotNull List<SomaticVariant> variants) {
+    void write(@NotNull String sample, @NotNull List<SomaticVariant> variants) {
         Timestamp timestamp = new Timestamp(new Date().getTime());
         deleteSomaticVariantForSample(sample);
 
@@ -230,8 +233,8 @@ class SomaticVariantDAO {
     }
 
     @NotNull
-    final List<String> getSamplesList() {
-        final Result<Record1<String>> result =
+    List<String> getSamplesList() {
+        Result<Record1<String>> result =
                 context.select(SOMATICVARIANT.SAMPLEID).from(SOMATICVARIANT).groupBy(SOMATICVARIANT.SAMPLEID).fetch();
 
         List<String> samplesList = Lists.newArrayList();
