@@ -17,7 +17,7 @@ public abstract class WideBiopsyData {
     @NotNull
     public abstract String pathologySampleId();
 
-    @NotNull
+    @Nullable
     public abstract LocalDate biopsyDate();
 
     @Nullable
