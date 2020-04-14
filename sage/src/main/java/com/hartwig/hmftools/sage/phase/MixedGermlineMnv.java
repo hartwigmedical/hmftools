@@ -24,7 +24,6 @@ public class MixedGermlineMnv implements Consumer<SageVariant> {
     @Override
     public void accept(final SageVariant newVariant) {
         flush(newVariant);
-        buffer.add(newVariant);
 
         if (!newVariant.isIndel()) {
             boolean newIsPassingMnv = isPassingMnv(newVariant);
@@ -43,6 +42,8 @@ public class MixedGermlineMnv implements Consumer<SageVariant> {
                 }
             }
         }
+
+        buffer.add(newVariant);
     }
 
     private static boolean isGermlineFilteredSnv(final SageVariant newVariant) {

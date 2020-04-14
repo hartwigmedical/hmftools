@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.variant;
 
+import static com.hartwig.hmftools.sage.vcf.SageVCF.MIXED_GERMLINE_IMPACT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PASS;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_BASE_QUALITY;
@@ -78,6 +79,10 @@ public class SageVariantContextFactory {
 
         if (variant.localPhaseSet() > 0) {
             builder.attribute(PHASE, variant.localPhaseSet());
+        }
+
+        if (variant.mixedGermlineImpact() > 0) {
+            builder.attribute(MIXED_GERMLINE_IMPACT, variant.mixedGermlineImpact());
         }
 
         final VariantContext context = builder.make();

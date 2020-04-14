@@ -111,6 +111,11 @@ public class ReadContextCounterTest {
 
 
     @NotNull
+    public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases) {
+        return new ReadContext(Strings.EMPTY, refPosition, readIndex, leftCentreIndex, rightCentreIndex, 0, bases.getBytes());
+    }
+
+    @NotNull
     public static SAMRecord buildSamRecord(final int alignmentStart, @NotNull final String cigar, @NotNull final String readString,
             @NotNull final String qualities) {
         final SAMRecord record = new SAMRecord(null);

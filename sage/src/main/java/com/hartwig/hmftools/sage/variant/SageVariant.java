@@ -20,6 +20,7 @@ public class SageVariant implements GenomePosition {
     private final List<ReadContextCounter> tumorAltContexts;
 
     private int localPhaseSet;
+    private int mixedImpact;
 
     public SageVariant(@NotNull final SageVariantTier tier, @NotNull final VariantHotspot variant, @NotNull final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
@@ -49,6 +50,14 @@ public class SageVariant implements GenomePosition {
         return variant.ref().length() != variant.alt().length();
     }
 
+    public boolean isMnv() {
+        return variant.ref().length() >= 1 && variant.ref().length() == variant.alt().length();
+    }
+
+    public boolean isSnv() {
+        return variant.ref().length() == 1 && variant.alt().length() == 1;
+    }
+
     public boolean isInsert() {
         return variant.ref().length() < variant.alt().length();
     }
@@ -63,6 +72,14 @@ public class SageVariant implements GenomePosition {
 
     public void localPhaseSet(int localPhaseSet) {
         this.localPhaseSet = localPhaseSet;
+    }
+
+    public int mixedGermlineImpact() {
+        return mixedImpact;
+    }
+
+    public void mixedGermlineImpact(final int mixedImpact) {
+        this.mixedImpact = mixedImpact;
     }
 
     public boolean isPassing() {

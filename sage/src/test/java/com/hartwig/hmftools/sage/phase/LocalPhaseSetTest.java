@@ -86,7 +86,7 @@ public class LocalPhaseSetTest {
     }
 
     @NotNull
-    private static VariantHotspot create(long position, String ref, String alt) {
+    static VariantHotspot create(long position, String ref, String alt) {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").ref(ref).alt(alt).position(position).build();
     }
 
