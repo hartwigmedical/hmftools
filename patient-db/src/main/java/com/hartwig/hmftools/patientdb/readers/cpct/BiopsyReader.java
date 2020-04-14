@@ -12,7 +12,6 @@ import com.hartwig.hmftools.patientdb.curators.BiopsySiteCurator;
 import com.hartwig.hmftools.patientdb.data.BiopsyData;
 import com.hartwig.hmftools.patientdb.data.CuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +62,7 @@ class BiopsyReader {
                             curatedTumorLocation.subType(),
                             finalSite,
                             location);
-                    BiopsyData biopsy = ImmutableBiopsyData.of(date,
+                    BiopsyData biopsy = BiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,
                             curatedBiopsyType,

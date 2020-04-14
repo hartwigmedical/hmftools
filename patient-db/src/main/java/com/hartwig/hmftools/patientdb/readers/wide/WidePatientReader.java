@@ -18,8 +18,6 @@ import com.hartwig.hmftools.patientdb.data.CuratedDrug;
 import com.hartwig.hmftools.patientdb.data.CuratedTumorLocation;
 import com.hartwig.hmftools.patientdb.data.DrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutableBaselineData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 import com.hartwig.hmftools.patientdb.data.ImmutableCuratedBiopsyType;
 import com.hartwig.hmftools.patientdb.data.ImmutableDrugData;
 import com.hartwig.hmftools.patientdb.data.ImmutablePreTreatmentData;
@@ -268,7 +266,7 @@ public class WidePatientReader {
             if (patientIdentifier.equals(biopsyData.patientId())) {
                 if (biopsyData.biopsyDate() != null && biopsyCheckDate != null) {
                     if (biopsyData.biopsyDate().equals(biopsyCheckDate)) {
-                        biopsyDataList.add(ImmutableBiopsyData.of(biopsyData.biopsyDate(),
+                        biopsyDataList.add(BiopsyData.of(biopsyData.biopsyDate(),
                                 null,
                                 null,
                                 curatedBiopsyType,
@@ -322,7 +320,7 @@ public class WidePatientReader {
         List<BiopsyTreatmentResponseData> biopsyTreatmentResponseDataList = Lists.newArrayList();
         for (WideResponseData responseData : wideResponseData) {
             if (patientIdentifier.equals(responseData.patientId())) {
-                biopsyTreatmentResponseDataList.add(ImmutableBiopsyTreatmentResponseData.of(null,
+                biopsyTreatmentResponseDataList.add(BiopsyTreatmentResponseData.of(null,
                         null,
                         responseData.date(),
                         determineResponse(responseData),

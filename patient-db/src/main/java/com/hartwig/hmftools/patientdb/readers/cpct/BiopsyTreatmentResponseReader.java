@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.ecrf.datamodel.EcrfItemGroup;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.common.ecrf.datamodel.EcrfStudyEvent;
 import com.hartwig.hmftools.patientdb.data.BiopsyTreatmentResponseData;
-import com.hartwig.hmftools.patientdb.data.ImmutableBiopsyTreatmentResponseData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -67,7 +66,7 @@ final class BiopsyTreatmentResponseReader {
                         response = responseValue;
                     }
                 }
-                BiopsyTreatmentResponseData responseData = ImmutableBiopsyTreatmentResponseData.of(null,
+                BiopsyTreatmentResponseData responseData = BiopsyTreatmentResponseData.of(null,
                         assessmentDate,
                         responseDate,
                         response,
