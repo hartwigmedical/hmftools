@@ -20,6 +20,7 @@ public final class TestDatamodelFactory {
                 .sequenced(false)
                 .arrivalDate(arrivalDate)
                 .pathologyTumorPercentage("N/A")
+                .pathologySampleId("N/A")
                 .tumorBarcode("FR123");
     }
 

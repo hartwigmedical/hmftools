@@ -3,6 +3,7 @@ package com.hartwig.hmftools.patientdb.readers.wide;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
@@ -51,28 +52,18 @@ public class WidePatientReader {
     }
 
     @NotNull
-    public static String extractYearOfTissueId(@NotNull String tissueId) {
-        return tissueId.split("-")[0];
-    }
-
-    @NotNull
-    public static String extractBiopsyIdOfTissueId(@NotNull String tissueId) {
-        return tissueId.split("-")[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
-    }
-
-    @NotNull
     public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
         LocalDate biopsyDateCheck = null;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.patientId())) {
                 String limsPathologyTissueId = sequencedSamples.get(0).pathologySampleId();
-                String limsPathologyTissueIdYear = extractYearOfTissueId(limsPathologyTissueId);
-                String limsPathologyTissueIdConvert = extractBiopsyIdOfTissueId(limsPathologyTissueId);
+                String limsPathologyTissueIdYear = extractYearFromPathologySampleId(limsPathologyTissueId);
+                String limsPathologyTissueIdConvert = extractBiopsyIdFromPathologySampleId(limsPathologyTissueId);
 
                 String ecrfPathologyTissueId = biopsy.pathologySampleId();
-                String ecrfPathologyTissueIdYear = extractYearOfTissueId(ecrfPathologyTissueId);
-                String ecrfPathologyTissueIdConvert = extractBiopsyIdOfTissueId(ecrfPathologyTissueId);
+                String ecrfPathologyTissueIdYear = extractYearFromPathologySampleId(ecrfPathologyTissueId);
+                String ecrfPathologyTissueIdConvert = extractBiopsyIdFromPathologySampleId(ecrfPathologyTissueId);
 
                 if (ecrfPathologyTissueIdYear.equals(limsPathologyTissueIdYear) && ecrfPathologyTissueIdConvert.equals(
                         limsPathologyTissueIdConvert)) {
@@ -84,9 +75,6 @@ public class WidePatientReader {
         Integer birthYear = null;
         String gender = Strings.EMPTY;
         LocalDate informedConsentDate = null;
-        boolean dataIsAvailable = false;
-        String biopsySite = Strings.EMPTY;
-        String sampleTissue = Strings.EMPTY;
 
         for (WideFiveDays fiveDays : wideEcrfModel.fiveDays()) {
             if (patientIdentifier.equals(fiveDays.patientId())) {
@@ -95,9 +83,6 @@ public class WidePatientReader {
                         birthYear = fiveDays.birthYear();
                         gender = fiveDays.gender();
                         informedConsentDate = fiveDays.informedConsentDate();
-                        dataIsAvailable = fiveDays.dataIsAvailable();
-                        biopsySite = fiveDays.biopsySite();
-                        sampleTissue = fiveDays.sampleTissue();
                     }
                 }
             }
@@ -141,6 +126,18 @@ public class WidePatientReader {
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 findings);
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String extractYearFromPathologySampleId(@NotNull String pathologySampleId) {
+        return pathologySampleId.split("-")[0];
+    }
+
+    @NotNull
+    @VisibleForTesting
+    static String extractBiopsyIdFromPathologySampleId(@NotNull String pathologySampleId) {
+        return pathologySampleId.split("-")[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
     }
 
     @NotNull

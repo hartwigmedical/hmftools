@@ -9,8 +9,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.Patient;
@@ -22,9 +20,10 @@ import org.junit.Test;
 public class WidePatientReaderTest {
 
     @Test
-    public void canConvertTissueId() {
-        assertEquals(WidePatientReader.extractYearOfTissueId("T1-00895 P"), "T1");
-        assertEquals(WidePatientReader.extractBiopsyIdOfTissueId("T1-00895 P"), "895");
+    public void canInterpretPathologySampleId() {
+        assertEquals(WidePatientReader.extractYearFromPathologySampleId("T1-00895 P"), "T1");
+        assertEquals(WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895"), "895");
+        assertEquals(WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895 P"), "895");
     }
 
     @Test
@@ -96,7 +95,6 @@ public class WidePatientReaderTest {
 
     @Test
     public void canLoadEmptyPatient() {
-        Lims lims = LimsFactory.empty();
         WideEcrfModel wideEcrfModel = ImmutableWideEcrfModel.builder()
                 .preAvlTreatments(Lists.newArrayList())
                 .biopsies(Lists.newArrayList())
@@ -106,12 +104,11 @@ public class WidePatientReaderTest {
 
         WidePatientReader patientReader = new WidePatientReader(wideEcrfModel,
                 TestCuratorFactory.tumorLocationCurator(),
-                TestCuratorFactory.biopsySiteCurator(),
                 TestCuratorFactory.treatmentCurator());
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample), lims, "FR123");
+        Patient patient = patientReader.read("ID", "Melanoma", Lists.newArrayList(sample));
 
         assertNotNull(patient);
     }
