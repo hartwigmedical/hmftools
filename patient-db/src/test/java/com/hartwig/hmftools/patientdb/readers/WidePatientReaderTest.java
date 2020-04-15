@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBui
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 
@@ -44,7 +45,6 @@ public class WidePatientReaderTest {
                 .noRecistResponse("stop treatment")
                 .noRecistReasonStopTreatment("death")
                 .build();
-
         assertEquals("(2) stop treatment (death)", WidePatientReader.determineResponse(responseNotRecist));
 
         WideResponseData responseNotRecistOther = baseBuilder().timePoint(3)
@@ -53,8 +53,10 @@ public class WidePatientReaderTest {
                 .noRecistReasonStopTreatment("other, please specify")
                 .noRecistReasonStopTreatmentOther("don't like it anymore")
                 .build();
-
         assertEquals("(3) stop treatment (don't like it anymore)", WidePatientReader.determineResponse(responseNotRecistOther));
+
+        WideResponseData responseNotFilledIn = baseBuilder().timePoint(1).recistDone(true).build();
+        assertTrue(WidePatientReader.determineResponse(responseNotFilledIn).isEmpty());
     }
 
     private static ImmutableWideResponseData.Builder baseBuilder() {

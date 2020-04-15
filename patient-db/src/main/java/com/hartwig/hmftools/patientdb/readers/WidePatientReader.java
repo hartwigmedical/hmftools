@@ -319,10 +319,12 @@ public class WidePatientReader {
     @NotNull
     @VisibleForTesting
     static String determineResponse(@NotNull WideResponseData response) {
-        String responseString;
+        String responseString = Strings.EMPTY;
         if (response.recistDone()) {
-            responseString = "(" + response.timePoint() + ") " + response.recistResponse();
-        } else {
+            if (!response.recistResponse().isEmpty()) {
+                responseString = "(" + response.timePoint() + ") " + response.recistResponse();
+            }
+        } else if (!response.noRecistResponse().isEmpty()) {
             responseString = "(" + response.timePoint() + ") " + response.noRecistResponse();
             if (!response.noRecistReasonStopTreatment().isEmpty()) {
                 if (response.noRecistReasonStopTreatmentOther().isEmpty()) {
