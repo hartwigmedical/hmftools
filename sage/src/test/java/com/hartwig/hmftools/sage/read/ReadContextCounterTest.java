@@ -29,7 +29,7 @@ public class ReadContextCounterTest {
     public void testInsertInLeftSoftClip() {
         final IndexedBases refBases = new IndexedBases(554, 1, "TGTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes());
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
@@ -43,7 +43,7 @@ public class ReadContextCounterTest {
     public void testDeleteInLeftSoftClip() {
         final IndexedBases refBases = new IndexedBases(554, 1, "TGTTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes());
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
@@ -57,7 +57,7 @@ public class ReadContextCounterTest {
     public void testMnvInLeftSoftClip() {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes());
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
@@ -71,7 +71,7 @@ public class ReadContextCounterTest {
     public void testInsertInRightSoftClip() {
         final IndexedBases refBases = new IndexedBases(553, 0, "TGTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes());
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 5, 0, "TGTTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
@@ -85,7 +85,7 @@ public class ReadContextCounterTest {
     public void testDeleteInRightSoftClip() {
         final IndexedBases refBases = new IndexedBases(553, 0, "TGTTTC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes());
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 4, 0, "TGTTC".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
@@ -99,7 +99,7 @@ public class ReadContextCounterTest {
     public void testMnvInRightSoftClip() {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
-        final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes());
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 552, 2, 0, 6, 0, "GAAAAAT".getBytes(), Strings.EMPTY);
         final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
@@ -111,8 +111,8 @@ public class ReadContextCounterTest {
 
 
     @NotNull
-    public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases) {
-        return new ReadContext(Strings.EMPTY, refPosition, readIndex, leftCentreIndex, rightCentreIndex, 0, bases.getBytes());
+    public static ReadContext readContext(int refPosition, int readIndex, int leftCentreIndex, int rightCentreIndex, String bases, String microhomology) {
+        return new ReadContext(Strings.EMPTY, refPosition, readIndex, leftCentreIndex, rightCentreIndex, 0, bases.getBytes(), microhomology);
     }
 
     @NotNull

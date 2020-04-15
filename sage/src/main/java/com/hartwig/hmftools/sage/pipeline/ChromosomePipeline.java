@@ -101,7 +101,7 @@ public class ChromosomePipeline implements AutoCloseable {
             }
         };
 
-        final Phase phase = new Phase(config, phasedConsumer);
+        final Phase phase = new Phase(config, chromosome, phasedConsumer);
 
         // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.

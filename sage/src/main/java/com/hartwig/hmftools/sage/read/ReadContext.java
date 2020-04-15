@@ -20,7 +20,7 @@ public class ReadContext {
 
     @VisibleForTesting
     ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
-            final int flankSize, final byte[] readBases) {
+            final int flankSize, final byte[] readBases, final String microhomology) {
         assert (leftCentreIndex >= 0);
         assert (rightCentreIndex >= leftCentreIndex);
 
@@ -28,7 +28,7 @@ public class ReadContext {
         this.distance = 0;
         this.distanceCigar = Strings.EMPTY;
         this.repeat = repeat;
-        this.microhomology = Strings.EMPTY;
+        this.microhomology = microhomology;
         this.repeatCount = 0;
         this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
         this.refBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);

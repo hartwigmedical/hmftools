@@ -26,7 +26,7 @@ public class BufferedProcessorTest {
         assertTrue(BufferedProcessor.longerContainsShorter(create(100, "CAC", "TGT"), mnv));
     }
 
-    private VariantHotspot create(long position, String ref, String alt) {
+    static VariantHotspot create(long position, String ref, String alt) {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").position(position).ref(ref).alt(alt).build();
     }
 

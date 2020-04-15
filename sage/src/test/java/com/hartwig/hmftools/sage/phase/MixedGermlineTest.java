@@ -18,6 +18,7 @@ import com.hartwig.hmftools.sage.read.ReadContextCounterTest;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
 
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ public class MixedGermlineTest {
         somaticSnv.localPhaseSet(3);
         mixedMnv.localPhaseSet(3);
 
-        final Phase victim = new Phase(SageConfigTest.testConfig(), consumer::add);
+        final Phase victim = new Phase(SageConfigTest.testConfig(), "1", consumer::add);
 
         victim.accept(mixedMnv);
         victim.accept(germlineSnv);
@@ -61,16 +62,20 @@ public class MixedGermlineTest {
     @NotNull
     private static SageVariant create(long position, @NotNull String ref, @NotNull String alt) {
         VariantHotspot variant = LocalPhaseSetTest.create(position, ref, alt);
-        ReadContext dummyReadContext = ReadContextCounterTest.readContext(100, 0, 0, 0, "AAA");
-        ReadContextCounter counter = new ReadContextCounter("SAMPLE",
+        ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
+        return new SageVariant(SageVariantTier.PANEL, variant, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
+    }
+
+    @NotNull
+    static ReadContextCounter dummyCounter(@NotNull VariantHotspot variant, @NotNull final String microhomology) {
+        ReadContext dummyReadContext = ReadContextCounterTest.readContext(100, 0, 0, 0, "AAA", microhomology);
+        return new ReadContextCounter("SAMPLE",
                 variant,
                 dummyReadContext,
                 new QualityRecalibrationMap(Collections.emptyList()),
                 SageVariantTier.PANEL,
                 1000,
                 false);
-
-        return new SageVariant(SageVariantTier.PANEL, variant, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
     }
 
 }

@@ -52,7 +52,7 @@ public class IndexedBasesTest {
     @Test
     public void testPartialMatchMustHaveAtLeastOneFullSide() {
 
-        ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
         Assert.assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
 
         assertEquals(ReadContextMatch.PARTIAL, victim.matchAtPosition(2, "GGTA".getBytes()));
@@ -67,15 +67,15 @@ public class IndexedBasesTest {
 
     @Test
     public void testNegativeReadIndex() {
-        ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes());
+        ReadContext victim = new ReadContext("", 1000, 2, 2, 2, 2, "GGTAA".getBytes(), Strings.EMPTY);
         assertEquals(ReadContextMatch.FULL, victim.matchAtPosition(2, "GGTAA".getBytes()));
         assertEquals(ReadContextMatch.NONE, victim.matchAtPosition(-1, "GGTAA".getBytes()));
     }
 
     @Test
     public void testPhasedMNV() {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGAT".getBytes());
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATC".getBytes());
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGAT".getBytes(), Strings.EMPTY);
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATC".getBytes(), Strings.EMPTY);
 
         assertTrue(victim1.phased(-1, victim2));
         assertTrue(victim2.phased(1, victim1));
@@ -83,8 +83,8 @@ public class IndexedBasesTest {
 
     @Test
     public void testPhasedReadLongEnoughOnAtLeastOneSide() {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGA".getBytes());
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATCT".getBytes());
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "GATCTTGA".getBytes(), Strings.EMPTY);
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1001, 5, 5, 5, 4, "GATCTTGATCT".getBytes(), Strings.EMPTY);
 
         assertTrue(victim1.phased(-1, victim2));
         assertTrue(victim2.phased(1, victim1));
@@ -92,8 +92,8 @@ public class IndexedBasesTest {
 
     @Test
     public void testBothCentreMatches() {
-        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "AAAATGGGG".getBytes());
-        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1005, 5, 5, 5, 4,     "TGGGGACCCC".getBytes());
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1000, 4, 4, 4, 4, "AAAATGGGG".getBytes(), Strings.EMPTY);
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1005, 5, 5, 5, 4,     "TGGGGACCCC".getBytes(), Strings.EMPTY);
         assertFalse(victim1.phased(-5, victim2));
         assertFalse(victim2.phased(5, victim1));
     }

@@ -142,8 +142,9 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   4. [Normal Counts and Quality](#4-normal-counts-and-quality)
   5. [Soft Filter](#5-soft-filters)
   6. [Phasing](#6-phasing)
-  7. [MNV Handling](#7-de-duplication)
-  8. [Output](#8-output)
+  7. [De-duplication](#7-de-duplication)
+  8. [Re-alignment](#8-re-alignment)
+  8. [Output](#9-output)
 
 ## 1. Base Quality Recalibration
 
@@ -359,7 +360,18 @@ Any passing SNVs that are phased with and part of a passing MNVs will be filtere
 This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants. 
 In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
 
-## 8. Output
+## 8. Re-alignment
+
+Inframe deletes with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
+
+For example, because of the `AG` microhomology at this (hg19) location, the following KIT variants are equivalent but the first will be interpreted as a splice variant while the second will be interpreted as an inframe missense.
+
+```
+4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C
+4:55593581 GAAACCCATGTATGAAGTACAGTGGAAG > G
+```
+
+## 9. Output
 
 There is one final 'hard' filter that is lazily applied at the end of the process just before writing to file that only apply to variants that are already filtered. 
 They do not save any processing time but do reduce the output file size. 

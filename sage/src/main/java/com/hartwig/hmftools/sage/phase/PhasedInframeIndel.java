@@ -31,7 +31,7 @@ public class PhasedInframeIndel extends BufferedProcessor {
     protected void processSageVariant(@NotNull final SageVariant newVariant, @NotNull final Collection<SageVariant> buffer) {
 
         final int lps = newVariant.localPhaseSet();
-        if (lps == 0 || !newVariant.variant().isFrameshiftIndel()) {
+        if (lps == 0 || !newVariant.isPassing() || !newVariant.variant().isFrameshiftIndel()) {
             return;
         }
 
@@ -43,7 +43,7 @@ public class PhasedInframeIndel extends BufferedProcessor {
         final int newLength = newVariant.variant().indelLength();
 
         for (final SageVariant other : buffer) {
-            if (other.localPhaseSet() == lps && other.variant().isFrameshiftIndel()) {
+            if (other.localPhaseSet() == lps && other.isPassing() && other.variant().isFrameshiftIndel()) {
                 final Optional<HmfExonRegion> maybeOtherExon = frameshiftExon(other.variant());
                 if (!maybeOtherExon.filter(x -> x.equals(maybeExon.get())).isPresent()) {
                     continue;
@@ -66,17 +66,18 @@ public class PhasedInframeIndel extends BufferedProcessor {
 
     @NotNull
     private Optional<HmfExonRegion> frameshiftExon(@Nullable final VariantHotspot hotspot) {
-        return Optional.ofNullable(hotspot)
-                .filter(VariantHotspot::isFrameshiftIndel)
-                .flatMap(x -> selector.select(x.position()))
-                .map(x -> selectExon(hotspot, x));
+        return Optional.ofNullable(hotspot).filter(VariantHotspot::isFrameshiftIndel).flatMap(x -> selectExon(selector, x.position() + 1));
     }
 
+    @NotNull
+    static Optional<HmfExonRegion> selectExon(@NotNull final RegionSelector<HmfTranscriptRegion> selector, long position) {
+        return selector.select(position).map(x -> selectExon(position, x));
+    }
 
     @Nullable
-    private HmfExonRegion selectExon(@NotNull final VariantHotspot hotspot, @NotNull final HmfTranscriptRegion transcript) {
+    static HmfExonRegion selectExon(@NotNull final long position, @NotNull final HmfTranscriptRegion transcript) {
         for (HmfExonRegion exon : transcript.exome()) {
-            if (hotspot.position() >= exon.start() && hotspot.position() <= exon.end()) {
+            if (position >= exon.start() && position <= exon.end()) {
                 return exon;
             }
         }

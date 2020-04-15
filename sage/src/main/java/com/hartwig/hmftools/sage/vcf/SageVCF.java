@@ -73,6 +73,8 @@ public class SageVCF implements AutoCloseable {
     public final static String MIXED_GERMLINE_IMPACT_DESCRIPTION = "Mixed Germline Impact";
     public final static String PHASED_INFRAME_INDEL = "PII";
     public final static String PHASED_INFRAME_INDEL_DESCRIPTION = "Phased inframe indel";
+    public final static String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
+    public final static String RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION = "Right aligned microhomology";
 
     private final VariantContextWriter writer;
     private final SomaticRefContextEnrichment refContextEnrichment;
@@ -160,13 +162,20 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_GERMLINE_IMPACT, 1, VCFHeaderLineType.Integer, MIXED_GERMLINE_IMPACT_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_GERMLINE_IMPACT,
+                1,
+                VCFHeaderLineType.Integer,
+                MIXED_GERMLINE_IMPACT_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASED_INFRAME_INDEL, 1, VCFHeaderLineType.Integer, PHASED_INFRAME_INDEL_DESCRIPTION));
+        header.addMetaDataLine(new VCFInfoHeaderLine(RIGHT_ALIGNED_MICROHOMOLOGY,
+                0,
+                VCFHeaderLineType.Flag, RIGHT_ALIGNED_MICROHOMOLOGY_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIXED_GERMLINE_SOMATIC_MNV.toString(), "MNV contains combination of somatic and germline SNV"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIXED_GERMLINE_SOMATIC_MNV.toString(),
+                "MNV contains combination of somatic and germline SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));
