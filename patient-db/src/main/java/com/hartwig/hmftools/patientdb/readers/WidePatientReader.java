@@ -143,7 +143,8 @@ public class WidePatientReader {
         }
 
         for (WideFiveDays fiveDays : fiveDaysForPatient) {
-            if (fiveDays.biopsyDate().equals(biopsyDate)) {
+            LocalDate fiveDaysBiopsyDate = fiveDays.biopsyDate();
+            if (fiveDaysBiopsyDate != null && fiveDaysBiopsyDate.equals(biopsyDate)) {
                 return fiveDays;
             }
         }
