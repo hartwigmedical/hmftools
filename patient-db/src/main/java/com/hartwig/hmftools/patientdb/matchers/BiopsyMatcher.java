@@ -68,7 +68,6 @@ public final class BiopsyMatcher {
                             "sample: " + sampleDataToString(sequencedBiopsy)));
                 }
             }
-
         }
         matchedBiopsies.addAll(remainingBiopsies);
         return new MatchResult<>(matchedBiopsies, findings);

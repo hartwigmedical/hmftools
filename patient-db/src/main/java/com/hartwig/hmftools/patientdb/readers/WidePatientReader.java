@@ -30,6 +30,7 @@ import com.hartwig.hmftools.patientdb.matchers.TreatmentMatcher;
 import com.hartwig.hmftools.patientdb.matchers.TreatmentResponseMatcher;
 import com.hartwig.hmftools.patientdb.readers.wide.WideAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideBiopsyData;
+import com.hartwig.hmftools.patientdb.readers.wide.WideClinicalData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
 import com.hartwig.hmftools.patientdb.readers.wide.WideFiveDays;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePreAvlTreatmentData;
@@ -171,7 +172,12 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private List<BiopsyData> matchedBiopsies(@NotNull String patientIdentifier, @NotNull List<SampleData> sequencedSamples) {
+    private MatchResult<BiopsyData> matchedBiopsies(@NotNull String patientIdentifier, @NotNull List<SampleData> sequencedSamples) {
+        List<WideFiveDays> fiveDaysForPatient = dataForPatient(wideEcrfModel.fiveDays(), patientIdentifier);
+        List<WideBiopsyData> biopsiesForPatient = dataForPatient(wideEcrfModel.biopsies(), patientIdentifier);
+
+        List<ValidationFinding> findings = Lists.newArrayList();
+
         LocalDate biopsyDateCheck = null;
         for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
             if (patientIdentifier.equals(biopsy.widePatientId())) {
@@ -201,25 +207,14 @@ public class WidePatientReader {
     }
 
     @NotNull
-    private List<WideFiveDays> fiveDaysForPatient(@NotNull String patientIdentifier) {
-        List<WideFiveDays> fiveDaysForPatient = Lists.newArrayList();
-        for (WideFiveDays fiveDays : wideEcrfModel.fiveDays()) {
-            if (fiveDays.widePatientId().equals(patientIdentifier)) {
-                fiveDaysForPatient.add(fiveDays);
+    private static <T extends WideClinicalData> List<T> dataForPatient(@NotNull List<T> data, @NotNull String patientIdentifier) {
+        List<T> elementsForPatient = Lists.newArrayList();
+        for (T element : data) {
+            if (element.widePatientId().equals(patientIdentifier)) {
+                elementsForPatient.add(element);
             }
         }
-        return fiveDaysForPatient;
-    }
-
-    @NotNull
-    private List<WideBiopsyData> biopsiesForPatient(@NotNull String patientIdentifier) {
-        List<WideBiopsyData> fiveDaysForPatient = Lists.newArrayList();
-        for (WideBiopsyData biopsy : wideEcrfModel.biopsies()) {
-            if (biopsy.widePatientId().equals(patientIdentifier)) {
-                fiveDaysForPatient.add(biopsy);
-            }
-        }
-        return fiveDaysForPatient;
+        return elementsForPatient;
     }
 
     @NotNull
