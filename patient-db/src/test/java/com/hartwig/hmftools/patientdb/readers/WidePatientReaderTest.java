@@ -6,19 +6,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
-import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
 import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
-import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWidePreAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideResponseData;
-import com.hartwig.hmftools.patientdb.readers.wide.WideAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
-import com.hartwig.hmftools.patientdb.readers.wide.WidePreAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
 
 import org.apache.logging.log4j.util.Strings;
@@ -34,7 +29,7 @@ public class WidePatientReaderTest {
     }
 
     @Test
-    public void determineResponse() {
+    public void canDetermineResponse() {
         WideResponseData responseFollowRecist = ImmutableWideResponseData.builder()
                 .widePatientId(Strings.EMPTY)
                 .timePoint(1)
@@ -60,44 +55,6 @@ public class WidePatientReaderTest {
                 .build();
 
         assertEquals(WidePatientReader.determineResponse(responseNotRecist), "(2) stop treatment (other, please specify)");
-    }
-
-    @Test
-    public void canReadCombiPreTreatment() {
-        List<WidePreAvlTreatmentData> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreAvlTreatmentData.builder()
-                .widePatientId("WIDE00000001")
-                .hasPreviousTherapy(true)
-                .drug1("carboplatin")
-                .drug2("erlotinib")
-                .drug3(Strings.EMPTY)
-                .drug4(Strings.EMPTY)
-                .lastSystemicTherapyDate(LocalDate.parse("2015-11-20"))
-                .build());
-        List<WidePreAvlTreatmentData> preTreatmentData = Lists.newArrayList(ImmutableWidePreAvlTreatmentData.builder()
-                .widePatientId("WIDE00000001")
-                .hasPreviousTherapy(true)
-                .drug1("carboplatin")
-                .drug2(Strings.EMPTY)
-                .drug3(Strings.EMPTY)
-                .drug4(Strings.EMPTY)
-                .lastSystemicTherapyDate(LocalDate.parse("2015-11-20"))
-                .build());
-        TreatmentCurator treatmentCurator = TestCuratorFactory.treatmentCurator();
-        String patientIdentifier = "WIDE00000001";
-        LocalDate biopsyDate = LocalDate.parse("2019-05-21");
-        List<WideAvlTreatmentData> treatmentData = Lists.newArrayList();
-
-        assertEquals(WidePatientReader.preAvlTreatmentDrugList(preTreatmentDataCombi,
-                treatmentCurator,
-                patientIdentifier,
-                biopsyDate,
-                treatmentData).get(0).name(), "carboplatin,erlotinib");
-
-        assertEquals(WidePatientReader.preAvlTreatmentDrugList(preTreatmentData,
-                treatmentCurator,
-                patientIdentifier,
-                biopsyDate,
-                treatmentData).get(0).name(), "carboplatin");
     }
 
     @Test
