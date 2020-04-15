@@ -356,9 +356,29 @@ If SAGE finds two phased INDELs of the same type at the same position where one 
 
 ### SNV / MNV
 
-Any passing SNVs that are phased with and part of a passing MNVs will be filtered with `dedup`. 
-This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants. 
-In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
+Any passing SNVs that are phased with and part of a passing somatic MNV are filtered with `dedup`. 
+
+In the special case where the MNV is comprised of both somatic and germline SNVs, additional logic applies. 
+Typically, the MNV will be filtered, except when the MNV is in a coding region and impacts more than one base of the codon impacted by the SNV. 
+In this case the SNV is filtered to capture the functional impact of the mixed somatic and germline variant. This is illustrated below.
+
+In the following example, the somatic and germline SNV both impact the same codon so the SNV is filtered.
+
+Codon | 1 | 1 | 1 
+---|---|---|---
+Mixed MNV | X |  | X 
+Germline SNV | X |  |  
+Somatic SNV |  |  | X 
+
+In this next example, the somatic and germline SNV impact different codons so the MNV is filtered.
+
+Codon | 1 | 1 | 2 
+---|---|---|---
+Mixed MNV | X |  | X 
+Germline SNV | X |  |  
+Somatic SNV |  |  | X  
+ 
+Regardless of filtering, the MNV and both germline and somatic SNVs are all tagged with a common MGI (Mixed Germline Impact) identifier.
 
 ## 8. Re-alignment
 

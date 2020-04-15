@@ -11,11 +11,11 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 import org.jetbrains.annotations.NotNull;
 
 public class Phase implements Consumer<SageVariant> {
-    private final DedupMnv mnvMerge;
+    private final DedupMnv dedupMnv;
     private final LocalPhaseSet localPhaseSet;
     private final DedupIndel dedupIndel;
     private final MixedGermlineMnv mixedGermlineMnv;
-    private final MixedGermlineImpact mixedGermlineImpact;
+    private final MixedGermlineDedup mixedGermlineDedup;
     private final PhasedInframeIndel phasedInframeIndel;
     private final RightAlignMicrohomology rightAlignMicrohomology;
 
@@ -25,10 +25,10 @@ public class Phase implements Consumer<SageVariant> {
                 config.transcriptRegions().stream().filter(x -> x.chromosome().equals(chromosome)).collect(Collectors.toList());
 
         dedupIndel = new DedupIndel(consumer);
-        mnvMerge = new DedupMnv(dedupIndel);
-        mixedGermlineImpact = new MixedGermlineImpact(mnvMerge);
-        mixedGermlineMnv = new MixedGermlineMnv(mixedGermlineImpact);
-        phasedInframeIndel = new PhasedInframeIndel(mixedGermlineImpact, transcripts);
+        dedupMnv = new DedupMnv(dedupIndel);
+        mixedGermlineDedup = new MixedGermlineDedup(dedupMnv, transcripts);
+        mixedGermlineMnv = new MixedGermlineMnv(mixedGermlineDedup);
+        phasedInframeIndel = new PhasedInframeIndel(mixedGermlineMnv, transcripts);
         rightAlignMicrohomology = new RightAlignMicrohomology(phasedInframeIndel, transcripts);
         localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), rightAlignMicrohomology);
     }
@@ -43,8 +43,8 @@ public class Phase implements Consumer<SageVariant> {
         rightAlignMicrohomology.flush();
         phasedInframeIndel.flush();
         mixedGermlineMnv.flush();
-        mixedGermlineImpact.flush();
-        mnvMerge.flush();
+        mixedGermlineDedup.flush();
+        dedupMnv.flush();
         dedupIndel.flush();
     }
 }

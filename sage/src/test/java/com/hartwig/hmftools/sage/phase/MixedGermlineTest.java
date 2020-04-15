@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,12 +25,25 @@ import org.junit.Test;
 public class MixedGermlineTest {
 
     @Test
-    public void testStandard() {
+    public void testNonCodingMnv() {
+        testMixed(100, false);
+    }
+
+    @Test
+    public void testCodingMnv() {
+        testMixed(115251156, true);
+        testMixed(115251157, false);
+        testMixed(115251158, false);
+        testMixed(115251159, true);
+    }
+
+
+    private void testMixed(int germlinePosition, boolean mvnPass) {
         final List<SageVariant> consumer = Lists.newArrayList();
 
-        final SageVariant germlineSnv = createGermline(100, "A", "G");
-        final SageVariant somaticSnv = create(102, "A", "G");
-        final SageVariant mixedMnv = create(100, "ACA", "GAG");
+        final SageVariant germlineSnv = createGermline(germlinePosition, "A", "G");
+        final SageVariant somaticSnv = create(germlinePosition + 2, "A", "G");
+        final SageVariant mixedMnv = create(germlinePosition, "ACA", "GCG");
 
         somaticSnv.localPhaseSet(3);
         mixedMnv.localPhaseSet(3);
@@ -46,10 +59,13 @@ public class MixedGermlineTest {
         victim.flush();
         assertEquals(3, consumer.size());
 
-        assertTrue(mixedMnv.filters().contains(SoftFilter.MIXED_GERMLINE_SOMATIC_MNV.toString()));
         assertEquals(1, mixedMnv.mixedGermlineImpact());
         assertEquals(1, somaticSnv.mixedGermlineImpact());
-        assertEquals(0, germlineSnv.mixedGermlineImpact());
+        assertEquals(1, germlineSnv.mixedGermlineImpact());
+
+        assertFalse(germlineSnv.isPassing());
+        assertEquals(!mvnPass, somaticSnv.isPassing());
+        assertEquals(mvnPass, mixedMnv.isPassing());
     }
 
     @NotNull

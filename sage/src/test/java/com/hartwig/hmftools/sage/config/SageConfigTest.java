@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_MAP_QUALIT
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_THREADS;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -35,6 +36,7 @@ public class SageConfigTest {
                 .panelOnly(false)
                 .version("2.2")
                 .outputFile("output file")
+                .transcriptRegions(HmfGenePanelSupplier.allGeneList37())
                 .reference(Lists.newArrayList("reference"))
                 .referenceBam(Lists.newArrayList("referenceBam"))
                 .tumor(Lists.newArrayList("tumorList"))
