@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.patientdb.readers.wide;
+package com.hartwig.hmftools.patientdb.readers;
 
 import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBuilder;
 
@@ -13,6 +13,13 @@ import com.hartwig.hmftools.patientdb.curators.TestCuratorFactory;
 import com.hartwig.hmftools.patientdb.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.data.Patient;
 import com.hartwig.hmftools.patientdb.data.SampleData;
+import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideEcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWidePreAvlTreatmentData;
+import com.hartwig.hmftools.patientdb.readers.wide.ImmutableWideResponseData;
+import com.hartwig.hmftools.patientdb.readers.wide.WideAvlTreatmentData;
+import com.hartwig.hmftools.patientdb.readers.wide.WideEcrfModel;
+import com.hartwig.hmftools.patientdb.readers.wide.WidePreAvlTreatmentData;
+import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
 
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
@@ -29,7 +36,7 @@ public class WidePatientReaderTest {
     @Test
     public void determineResponse() {
         WideResponseData responseFollowRecist = ImmutableWideResponseData.builder()
-                .patientId(Strings.EMPTY)
+                .widePatientId(Strings.EMPTY)
                 .timePoint(1)
                 .date(LocalDate.parse("2017-01-01"))
                 .recistDone(true)
@@ -42,7 +49,7 @@ public class WidePatientReaderTest {
         assertEquals(WidePatientReader.determineResponse(responseFollowRecist), "(1) PD");
 
         WideResponseData responseNotRecist = ImmutableWideResponseData.builder()
-                .patientId(Strings.EMPTY)
+                .widePatientId(Strings.EMPTY)
                 .timePoint(2)
                 .date(LocalDate.parse("2017-01-01"))
                 .recistDone(false)
@@ -58,7 +65,7 @@ public class WidePatientReaderTest {
     @Test
     public void canReadCombiPreTreatment() {
         List<WidePreAvlTreatmentData> preTreatmentDataCombi = Lists.newArrayList(ImmutableWidePreAvlTreatmentData.builder()
-                .patientId("WIDE00000001")
+                .widePatientId("WIDE00000001")
                 .hasPreviousTherapy(true)
                 .drug1("carboplatin")
                 .drug2("erlotinib")
@@ -67,7 +74,7 @@ public class WidePatientReaderTest {
                 .lastSystemicTherapyDate(LocalDate.parse("2015-11-20"))
                 .build());
         List<WidePreAvlTreatmentData> preTreatmentData = Lists.newArrayList(ImmutableWidePreAvlTreatmentData.builder()
-                .patientId("WIDE00000001")
+                .widePatientId("WIDE00000001")
                 .hasPreviousTherapy(true)
                 .drug1("carboplatin")
                 .drug2(Strings.EMPTY)

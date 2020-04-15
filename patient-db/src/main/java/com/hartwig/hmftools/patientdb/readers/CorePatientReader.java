@@ -26,10 +26,10 @@ public class CorePatientReader {
     }
 
     @NotNull
-    public Patient read(@NotNull String patientIdentifier, @Nullable String primaryTumorLocation,
+    public Patient read(@NotNull String patientIdentifier, @Nullable String limsPrimaryTumorLocation,
             @NotNull List<SampleData> sequencedSamples) {
         return new Patient(patientIdentifier,
-                toBaselineData(tumorLocationCurator.search(primaryTumorLocation)),
+                toBaselineData(tumorLocationCurator.search(limsPrimaryTumorLocation)),
                 noPreTreatmentData(),
                 sequencedSamples,
                 Lists.newArrayList(),
