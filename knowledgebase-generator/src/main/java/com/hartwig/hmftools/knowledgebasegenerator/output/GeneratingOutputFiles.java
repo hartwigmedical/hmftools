@@ -48,9 +48,7 @@ public class GeneratingOutputFiles {
     }
 
     private static void generateEventTypes(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
-        String headerEvents =
-                "EventMap" + DELIMITER + "Map gene" + DELIMITER + "Map event" + DELIMITER
-                        + "Source" + NEW_LINE;
+        String headerEvents = "EventMap" + DELIMITER + "Map gene" + DELIMITER + "Map event" + DELIMITER + "Source" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
         writer.write(headerEvents);
@@ -58,8 +56,8 @@ public class GeneratingOutputFiles {
         for (EventType eventType : genomicEvents.eventType()) {
             for (Map.Entry<String, List<String>> entryDB : eventType.eventMap().entrySet()) {
                 for (String event : entryDB.getValue()) {
-                    writer.write(eventType.eventMap() + DELIMITER
-                            + entryDB.getKey() + DELIMITER + event + DELIMITER + eventType.source() + NEW_LINE);
+                    writer.write(eventType.eventMap() + DELIMITER + entryDB.getKey() + DELIMITER + event + DELIMITER + eventType.source()
+                            + NEW_LINE);
                 }
             }
         }
