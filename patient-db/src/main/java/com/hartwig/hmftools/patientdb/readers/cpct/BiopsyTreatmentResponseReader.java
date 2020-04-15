@@ -41,6 +41,7 @@ final class BiopsyTreatmentResponseReader {
                         break;
                     }
                 }
+
                 LocalDate responseDate = null;
                 String measurementDone = null;
                 String boneOnlyDisease = null;
@@ -66,6 +67,7 @@ final class BiopsyTreatmentResponseReader {
                         response = responseValue;
                     }
                 }
+
                 BiopsyTreatmentResponseData responseData = BiopsyTreatmentResponseData.of(null,
                         assessmentDate,
                         responseDate,

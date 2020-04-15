@@ -49,6 +49,7 @@ class BiopsyReader {
                     biopsyTaken = biopsyGroup.readItemString(FIELD_BIOPSY_TAKEN);
                     biopsyEvaluable = biopsyGroup.readItemString(FIELD_BIOPSY_EVALUABLE);
                 }
+
                 for (EcrfItemGroup biopsiesGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_BIOPSIES)) {
                     LocalDate date = biopsiesGroup.readItemDate(FIELD_BIOPSY_DATE);
 
@@ -62,6 +63,7 @@ class BiopsyReader {
                             curatedTumorLocation.subType(),
                             finalSite,
                             location);
+
                     BiopsyData biopsy = BiopsyData.of(date,
                             biopsyTaken,
                             biopsyEvaluable,

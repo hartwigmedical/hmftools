@@ -95,11 +95,11 @@ class BaselineReader {
             Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
             String hospital = hospitals.get(hospitalCode);
             if (hospital == null) {
-                LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no hospitalPerHospital with code " + hospitalCode);
+                LOGGER.warn("Fields '{}' and '{}' contained no hospital with code '{}'", FIELD_HOSPITAL1, FIELD_HOSPITAL2, hospitalCode);
             }
             return hospital;
         } else {
-            LOGGER.warn("Could not extract hospitalPerHospital code for patient: " + patient.patientId());
+            LOGGER.warn("Could not extract hospital code for patient: {}", patient.patientId());
             return null;
         }
     }

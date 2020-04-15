@@ -56,7 +56,7 @@ class PreTreatmentReader {
                 if (preTreatmentData == null) {
                     preTreatmentData = ImmutablePreTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status());
                 } else {
-                    LOGGER.warn("Multiple pre-therapy forms for found patient: " + patient.patientId());
+                    LOGGER.warn("Multiple pre-therapy forms for found patient: {}", patient.patientId());
                 }
             }
         }
