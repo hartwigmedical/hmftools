@@ -87,13 +87,13 @@ public class WidePatientReaderTest {
         LocalDate biopsyDate = LocalDate.parse("2019-05-21");
         List<WideAvlTreatmentData> treatmentData = Lists.newArrayList();
 
-        assertEquals(WidePatientReader.readDrugsPreTreatment(preTreatmentDataCombi,
+        assertEquals(WidePatientReader.preAvlTreatmentDrugList(preTreatmentDataCombi,
                 treatmentCurator,
                 patientIdentifier,
                 biopsyDate,
                 treatmentData).get(0).name(), "carboplatin,erlotinib");
 
-        assertEquals(WidePatientReader.readDrugsPreTreatment(preTreatmentData,
+        assertEquals(WidePatientReader.preAvlTreatmentDrugList(preTreatmentData,
                 treatmentCurator,
                 patientIdentifier,
                 biopsyDate,

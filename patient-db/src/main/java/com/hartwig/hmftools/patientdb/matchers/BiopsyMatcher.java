@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.ecrf.datamodel.ImmutableValidationFinding;
 import com.hartwig.hmftools.common.ecrf.datamodel.ValidationFinding;
 import com.hartwig.hmftools.common.ecrf.formstatus.FormStatus;
 import com.hartwig.hmftools.patientdb.Config;
@@ -121,6 +122,12 @@ public final class BiopsyMatcher {
     @NotNull
     private static ValidationFinding biopsyMatchFinding(@NotNull String patientIdentifier, @NotNull String finding,
             @NotNull String details) {
-        return ValidationFinding.of("match", patientIdentifier, finding, FormStatus.undefined(), details);
+        return ImmutableValidationFinding.builder()
+                .level("match")
+                .patientIdentifier(patientIdentifier)
+                .message(finding)
+                .formStatus(FormStatus.undefined())
+                .details(details)
+                .build();
     }
 }
