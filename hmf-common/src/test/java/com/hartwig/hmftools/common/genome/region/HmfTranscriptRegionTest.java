@@ -286,6 +286,18 @@ public class HmfTranscriptRegionTest {
         assertEquals(0, region.codonRangeAtGenomicPosition(21).size());
     }
 
+    @Test
+    public void testCodonRangeAtGenomicPositionWorksForRealNRAS() {
+        HmfTranscriptRegion nras = HmfGenePanelSupplier.allGenesMap37().get("NRAS");
+        assertEquals(0, nras.codonRangeAtGenomicPosition(115251155).size());
+        assertEquals(nras.codonByIndex(190), nras.codonRangeAtGenomicPosition(115251156));
+        assertEquals(nras.codonByIndex(190), nras.codonRangeAtGenomicPosition(115251157));
+        assertEquals(nras.codonByIndex(190), nras.codonRangeAtGenomicPosition(115251158));
+        assertEquals(nras.codonByIndex(189), nras.codonRangeAtGenomicPosition(115251159));
+        assertEquals(nras.codonByIndex(189), nras.codonRangeAtGenomicPosition(115251160));
+        assertEquals(nras.codonByIndex(189), nras.codonRangeAtGenomicPosition(115251161));
+    }
+
     @NotNull
     private static GenomeRegion assertedCodonGet(@NotNull HmfTranscriptRegion transcript, int codonIndex) {
         return assertedCodonGet(transcript, codonIndex, 0);
