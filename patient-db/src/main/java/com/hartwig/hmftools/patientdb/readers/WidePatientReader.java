@@ -324,10 +324,11 @@ public class WidePatientReader {
             responseString = "(" + response.timePoint() + ") " + response.recistResponse();
         } else {
             responseString = "(" + response.timePoint() + ") " + response.noRecistResponse();
-            if (!responseString.contains("clinical benefit") && !responseString.isEmpty()) {
-                responseString = responseString + " (" + response.noRecistReasonStopTreatment() + ")";
-                if (!response.noRecistReasonStopTreatmentOther().isEmpty()) {
-                    responseString = responseString.replace(")", " + " + response.noRecistReasonStopTreatmentOther() + ")");
+            if (!response.noRecistReasonStopTreatment().isEmpty()) {
+                if (response.noRecistReasonStopTreatmentOther().isEmpty()) {
+                    responseString = responseString + " (" + response.noRecistReasonStopTreatment() + ")";
+                } else {
+                    responseString = responseString + " (" + response.noRecistReasonStopTreatmentOther() + ")";
                 }
             }
         }

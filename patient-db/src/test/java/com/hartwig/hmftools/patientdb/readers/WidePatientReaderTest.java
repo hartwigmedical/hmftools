@@ -36,31 +36,35 @@ public class WidePatientReaderTest {
 
     @Test
     public void canDetermineResponse() {
-        WideResponseData responseFollowRecist = ImmutableWideResponseData.builder()
-                .widePatientId(Strings.EMPTY)
-                .timePoint(1)
-                .date(LocalDate.parse("2017-01-01"))
-                .recistDone(true)
-                .recistResponse("PD")
-                .noRecistResponse(Strings.EMPTY)
-                .noRecistReasonStopTreatment(Strings.EMPTY)
-                .noRecistReasonStopTreatmentOther(Strings.EMPTY)
+        WideResponseData responseFollowRecist = baseBuilder().timePoint(1).recistDone(true).recistResponse("PD").build();
+        assertEquals("(1) PD", WidePatientReader.determineResponse(responseFollowRecist));
+
+        WideResponseData responseNotRecist = baseBuilder().timePoint(2)
+                .recistDone(false)
+                .noRecistResponse("stop treatment")
+                .noRecistReasonStopTreatment("death")
                 .build();
 
-        assertEquals(WidePatientReader.determineResponse(responseFollowRecist), "(1) PD");
+        assertEquals("(2) stop treatment (death)", WidePatientReader.determineResponse(responseNotRecist));
 
-        WideResponseData responseNotRecist = ImmutableWideResponseData.builder()
-                .widePatientId(Strings.EMPTY)
-                .timePoint(2)
-                .date(LocalDate.parse("2017-01-01"))
+        WideResponseData responseNotRecistOther = baseBuilder().timePoint(3)
                 .recistDone(false)
-                .recistResponse(Strings.EMPTY)
                 .noRecistResponse("stop treatment")
                 .noRecistReasonStopTreatment("other, please specify")
-                .noRecistReasonStopTreatmentOther(Strings.EMPTY)
+                .noRecistReasonStopTreatmentOther("don't like it anymore")
                 .build();
 
-        assertEquals(WidePatientReader.determineResponse(responseNotRecist), "(2) stop treatment (other, please specify)");
+        assertEquals("(3) stop treatment (don't like it anymore)", WidePatientReader.determineResponse(responseNotRecistOther));
+    }
+
+    private static ImmutableWideResponseData.Builder baseBuilder() {
+        return ImmutableWideResponseData.builder()
+                .widePatientId(Strings.EMPTY)
+                .date(null)
+                .recistResponse(Strings.EMPTY)
+                .noRecistResponse(Strings.EMPTY)
+                .noRecistReasonStopTreatment(Strings.EMPTY)
+                .noRecistReasonStopTreatmentOther(Strings.EMPTY);
     }
 
     @Test
@@ -72,9 +76,8 @@ public class WidePatientReaderTest {
                 .responses(Lists.newArrayList())
                 .build();
 
-        WidePatientReader patientReader = new WidePatientReader(wideEcrfModel,
-                TestCuratorFactory.tumorLocationCurator(),
-                TestCuratorFactory.treatmentCurator());
+        WidePatientReader patientReader =
+                new WidePatientReader(wideEcrfModel, TestCuratorFactory.tumorLocationCurator(), TestCuratorFactory.treatmentCurator());
 
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
