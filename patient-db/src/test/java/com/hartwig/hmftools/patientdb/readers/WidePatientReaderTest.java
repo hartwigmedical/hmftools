@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.patientdb.data.TestDatamodelFactory.sampleBui
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.time.LocalDate;
 
@@ -23,9 +24,13 @@ public class WidePatientReaderTest {
 
     @Test
     public void canInterpretPathologySampleId() {
-        assertEquals(WidePatientReader.extractYearFromPathologySampleId("T1-00895 P"), "T1");
-        assertEquals(WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895"), "895");
-        assertEquals(WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895 P"), "895");
+        assertNull(WidePatientReader.extractYearFromPathologySampleId(Strings.EMPTY));
+        assertEquals("T1", WidePatientReader.extractYearFromPathologySampleId("T1-00895 P"));
+
+        assertNull(WidePatientReader.extractBiopsyIdFromPathologySampleId(Strings.EMPTY));
+        assertNull(WidePatientReader.extractBiopsyIdFromPathologySampleId("weird id"));
+        assertEquals("895", WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895"));
+        assertEquals("895", WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895 P"));
     }
 
     @Test

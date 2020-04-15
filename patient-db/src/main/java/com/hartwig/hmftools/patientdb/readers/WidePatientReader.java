@@ -32,11 +32,15 @@ import com.hartwig.hmftools.patientdb.readers.wide.WideFiveDays;
 import com.hartwig.hmftools.patientdb.readers.wide.WidePreAvlTreatmentData;
 import com.hartwig.hmftools.patientdb.readers.wide.WideResponseData;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WidePatientReader {
+
+    private static final Logger LOGGER = LogManager.getLogger(WidePatientReader.class);
 
     @NotNull
     private final WideEcrfModel wideEcrfModel;
@@ -152,28 +156,44 @@ public class WidePatientReader {
         String clinicalPathologySampleIdYear = extractYearFromPathologySampleId(pathologySampleId);
         String clinicalPathologySampleIdConvert = extractBiopsyIdFromPathologySampleId(pathologySampleId);
 
-        for (SampleData sequencedBiopsy : sequencedBiopsies) {
-            String limsPathologySampleIdYear = extractYearFromPathologySampleId(sequencedBiopsy.pathologySampleId());
-            String limsPathologySampleIdConvert = extractBiopsyIdFromPathologySampleId(sequencedBiopsy.pathologySampleId());
+        if (clinicalPathologySampleIdYear != null && clinicalPathologySampleIdConvert != null) {
+            for (SampleData sequencedBiopsy : sequencedBiopsies) {
+                String limsPathologySampleIdYear = extractYearFromPathologySampleId(sequencedBiopsy.pathologySampleId());
+                String limsPathologySampleIdConvert = extractBiopsyIdFromPathologySampleId(sequencedBiopsy.pathologySampleId());
 
-            if (clinicalPathologySampleIdConvert.equals(limsPathologySampleIdConvert) && clinicalPathologySampleIdYear.equals(
-                    limsPathologySampleIdYear)) {
-                return sequencedBiopsy;
+                if (clinicalPathologySampleIdConvert.equals(limsPathologySampleIdConvert) && clinicalPathologySampleIdYear.equals(
+                        limsPathologySampleIdYear)) {
+                    return sequencedBiopsy;
+                }
             }
         }
         return null;
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
     static String extractYearFromPathologySampleId(@NotNull String pathologySampleId) {
+        if (pathologySampleId.isEmpty()) {
+            return null;
+        }
+
         return pathologySampleId.split("-")[0];
     }
 
-    @NotNull
+    @Nullable
     @VisibleForTesting
     static String extractBiopsyIdFromPathologySampleId(@NotNull String pathologySampleId) {
-        return pathologySampleId.split("-")[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
+        if (pathologySampleId.isEmpty()) {
+            return null;
+        }
+
+        String[] parts = pathologySampleId.split("-");
+        if (parts.length == 2) {
+            return parts[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
+        } else {
+            LOGGER.warn("Could not extract biopsy id from pathology sample id: {}", pathologySampleId);
+            return null;
+        }
     }
 
     @NotNull
