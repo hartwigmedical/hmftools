@@ -31,6 +31,7 @@ public class WidePatientReaderTest {
         assertNull(WidePatientReader.extractBiopsyIdFromPathologySampleId("weird id"));
         assertEquals("895", WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895"));
         assertEquals("895", WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895 P"));
+        assertEquals("895", WidePatientReader.extractBiopsyIdFromPathologySampleId("T1-00895 P-2"));
     }
 
     @Test

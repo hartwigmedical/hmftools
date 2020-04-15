@@ -189,7 +189,7 @@ public class WidePatientReader {
         }
 
         String[] parts = pathologySampleId.split("-");
-        if (parts.length == 2) {
+        if (parts.length >= 2) {
             return parts[1].replaceFirst("^0+(?!$)", "").split(" ")[0];
         } else {
             LOGGER.warn("Could not extract biopsy id from pathology sample id: {}", pathologySampleId);
