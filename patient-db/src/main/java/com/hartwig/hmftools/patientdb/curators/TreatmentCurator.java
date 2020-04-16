@@ -192,19 +192,11 @@ public class TreatmentCurator implements CleanableCurator {
             }
 
             if (hits.length == 1) {
-                if (searchTerm.contains(",")) {
-                    Document searchResult = indexSearcher.doc(hits[0].doc);
-                    return Optional.of(ImmutableCuratedDrug.of(searchResult.get(searchTerm),
-                            searchResult.get("Combined"),
-                            searchResult.get("Combined"),
-                            searchTerm));
-                } else {
-                    Document searchResult = indexSearcher.doc(hits[0].doc);
-                    return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
-                            searchResult.get(DRUG_TYPE_FIELD),
-                            searchResult.get(DRUG_MECHANISM_FIELD),
-                            searchTerm));
-                }
+                Document searchResult = indexSearcher.doc(hits[0].doc);
+                return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
+                        searchResult.get(DRUG_TYPE_FIELD),
+                        searchResult.get(DRUG_MECHANISM_FIELD),
+                        searchTerm));
             }
 
             return Optional.empty();
