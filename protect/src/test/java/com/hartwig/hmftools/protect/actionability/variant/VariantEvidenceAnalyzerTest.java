@@ -91,7 +91,7 @@ public class VariantEvidenceAnalyzerTest {
                 .totalReadCount(0)
                 .alleleReadCount(0)
                 .gene(Strings.EMPTY)
-                .genesEffected(0)
+                .genesAffected(0)
                 .worstEffect(Strings.EMPTY)
                 .worstCodingEffect(CodingEffect.NONE)
                 .worstEffectTranscript(Strings.EMPTY)

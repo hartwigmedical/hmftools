@@ -26,8 +26,7 @@ public interface SomaticVariant extends Variant {
     @Nullable
     String canonicalCosmicID();
 
-    //TODO: Rename to genesAffected
-    int genesEffected();
+    int genesAffected();
 
     @NotNull
     String worstEffect();

@@ -293,7 +293,7 @@ public class SomaticVariantFactory {
                 .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
                 .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
                 .gene(snpEffSummary.gene())
-                .genesEffected(snpEffSummary.genesAffected());
+                .genesAffected(snpEffSummary.genesAffected());
     }
 
     private static void attachFilter(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
