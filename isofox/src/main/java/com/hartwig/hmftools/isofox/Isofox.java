@@ -18,6 +18,9 @@ import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.TaskType.GENERATE_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.exp_rates.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
@@ -46,7 +49,6 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
-import com.hartwig.hmftools.isofox.novel.ChimericRead;
 import com.hartwig.hmftools.isofox.novel.FusionFinder;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
@@ -91,10 +93,10 @@ public class Isofox
 
         mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.ApplyGcBiasAdjust ? new ExpectedCountsCache(mConfig) : null;
 
-        mGcTranscriptCalcs = mConfig.WriteExpectedGcRatios || mConfig.ApplyGcBiasAdjust ?
+        mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.ApplyGcBiasAdjust ?
                 new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
-        mFusionFinder = mConfig.FindFusions ? new FusionFinder(mConfig) : null;
+        mFusionFinder = mConfig.runFunction(FUSIONS) ? new FusionFinder(mConfig) : null;
 
         mFragmentLengthDistribution = Lists.newArrayList();
         mIsValid = true;
@@ -139,14 +141,14 @@ public class Isofox
             }
         }
 
-        if(mConfig.WriteExpectedGcRatios)
+        if(mConfig.runFunction(EXPECTED_GC_COUNTS))
         {
             generateGcRatios(chrTasks);
             mGcTranscriptCalcs.close();
             return true;
         }
 
-        if(mConfig.WriteExpectedCounts)
+        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
         {
             generateExpectedCounts(chrTasks);
             mResultsWriter.close();
@@ -224,11 +226,10 @@ public class Isofox
 
         chrTasks.forEach(x -> x.writeResults());
 
-        if(mConfig.FindFusions)
+        if(mConfig.runFunction(FUSIONS))
         {
-            final Map<String,List<ChimericRead>> chimericReads = Maps.newHashMap();
-            chrTasks.forEach(x -> chimericReads.put(x.chromosome(), x.getFragmentAllocator().getChimericReads()));
-            mFusionFinder.findFusions(chimericReads);
+            chrTasks.forEach(x -> mFusionFinder.addChimericReads(x.getChimericReadMap()));
+            mFusionFinder.findFusions();
         }
 
         mResultsWriter.close();

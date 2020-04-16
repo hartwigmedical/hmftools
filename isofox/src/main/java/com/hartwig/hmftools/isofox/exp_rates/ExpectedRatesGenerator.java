@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.UNSPLICED;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -197,7 +198,7 @@ public class ExpectedRatesGenerator
             mTransCategoryCounts.put(geneId, emptyList);
         }
 
-        if(mConfig.WriteExpectedCounts)
+        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
         {
             writeExpectedCounts(mExpRateWriter, geneCollection.chrId(), mTransCategoryCounts);
         }
@@ -345,13 +346,13 @@ public class ExpectedRatesGenerator
         {
             matchingCounts = new CategoryCountsData(transcripts, unsplicedGenes);
 
-            if(mConfig.WriteExpectedCounts)
+            if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
                 matchingCounts.initialiseLengthCounts(mConfig.FragmentLengthData.size());
 
             transComboDataList.add(matchingCounts);
         }
 
-        if(mConfig.WriteExpectedCounts)
+        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
             matchingCounts.addFragLengthCounts(mCurrentFragFrequency, mFragSizeIndex);
         else
             matchingCounts.addCounts(mCurrentFragFrequency);
@@ -675,7 +676,7 @@ public class ExpectedRatesGenerator
         {
             String outputFileName;
 
-            if(config.WriteExpectedCounts)
+            if(config.runFunction(EXPECTED_TRANS_COUNTS))
             {
                 outputFileName = String.format("%sread_%d_%s", config.OutputDir, config.ReadLength, "exp_counts.csv");
             }
@@ -686,7 +687,7 @@ public class ExpectedRatesGenerator
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            if(config.WriteExpectedCounts)
+            if(config.runFunction(EXPECTED_TRANS_COUNTS))
             {
                 writer.write("GeneSetId,TransId,Category");
 

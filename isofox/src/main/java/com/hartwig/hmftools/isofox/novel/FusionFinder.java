@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -23,47 +24,67 @@ public class FusionFinder
     private final List<FusionReadData> mFusionReadData;
     private BufferedWriter mReadWriter;
 
+    private final Map<String,List<ReadRecord>> mReadsMap;
+
     public FusionFinder(final IsofoxConfig config)
     {
         mConfig = config;
+
+        mReadsMap = Maps.newHashMap();
         mFusionReadData = Lists.newArrayList();
 
         mReadWriter = null;
     }
 
-    public void findFusions(final Map<String,List<ChimericRead>> chimericReadsMap)
+    public void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap)
     {
-        // make a list of chimeric reads by their ID
-        Map<String,List<ChimericRead>> readsByIdMap = Maps.newHashMap();
+        mergeChimericReadMaps(mReadsMap, chimericReadMap);
+    }
 
-        for(final List<ChimericRead> chimericReads : chimericReadsMap.values())
+    public static void addChimericRead(final Map<String,List<ReadRecord>> chimericReadMap, final ReadRecord read)
+    {
+        List<ReadRecord> chimericReads = chimericReadMap.get(read.Id);
+        if (chimericReads == null)
         {
-            for(final ChimericRead read : chimericReads)
-            {
-                List<ChimericRead> readsById = readsByIdMap.get(read.Id);
-
-                if(readsById == null)
-                {
-                    readsById = Lists.newArrayList();
-                    readsByIdMap.put(read.Id, readsById);
-                }
-
-                readsById.add(read);
-            }
+            chimericReads = Lists.newArrayList();
+            chimericReadMap.put(read.Id, chimericReads);
         }
 
+        chimericReads.add(read);
+    }
+
+    public static void mergeChimericReadMaps(final Map<String,List<ReadRecord>> destMap, final Map<String,List<ReadRecord>> sourceMap)
+    {
+        for(Map.Entry<String,List<ReadRecord>> entry :  sourceMap.entrySet())
+        {
+            List<ReadRecord> readsById = destMap.get(entry.getKey());
+
+            if(readsById == null)
+            {
+                destMap.put(entry.getKey(), entry.getValue());
+            }
+            else
+            {
+                readsById.addAll(entry.getValue());
+            }
+        }
+    }
+
+    public void findFusions()
+    {
+        // make a list of chimeric reads by their ID
         int unpairedReads = 0;
 
-        for(Map.Entry<String,List<ChimericRead>> entry : readsByIdMap.entrySet())
+        for(Map.Entry<String,List<ReadRecord>> entry : mReadsMap.entrySet())
         {
             final String readId = entry.getKey();
 
-            final List<ChimericRead> reads = entry.getValue();
+            final List<ReadRecord> reads = entry.getValue();
 
             if(reads.size() == 1)
             {
                 ++unpairedReads;
-                continue;
+                // continue;
             }
 
             // ISF_LOGGER.debug("read({}) count({})", readId, reads.size());
@@ -80,7 +101,7 @@ public class FusionFinder
             */
         }
 
-        ISF_LOGGER.info("chimeric fragments({}) unpaired({})", readsByIdMap.size(), unpairedReads);
+        ISF_LOGGER.info("chimeric fragments({}) unpaired({})", mReadsMap.size(), unpairedReads);
 
 
         closeBufferedWriter(mReadWriter);
@@ -113,28 +134,6 @@ public class FusionFinder
 
     }
 
-    private ChimericRead findPairedRead(final ChimericRead read, final Map<String,List<ChimericRead>> chimericReadsMap)
-    {
-        final List<ChimericRead> chimericReads = chimericReadsMap.get(read.MateChromosome);
-
-        if(chimericReads == null)
-            return null;
-
-        for(int index = 0; index < chimericReads.size(); ++index)
-        {
-            final ChimericRead otherRead = chimericReads.get(index);
-
-            if(otherRead.Id.equals(read.Id))
-            {
-                chimericReads.remove(index);
-                return otherRead;
-            }
-        }
-
-        return null;
-    }
-
-
     public static final String FUSION_FILE_ID = "fusions.csv";
 
     private void writeFusionData()
@@ -156,7 +155,7 @@ public class FusionFinder
         }
     }
 
-    private void writeReadData(final List<ChimericRead> reads)
+    private void writeReadData(final List<ReadRecord> reads)
     {
         try
         {
@@ -170,10 +169,10 @@ public class FusionFinder
                 mReadWriter.newLine();
             }
 
-            for(final ChimericRead read : reads)
+            for(final ReadRecord read : reads)
             {
                 mReadWriter.write(String.format("%s,%s,%s,%d,%d,%s,%d",
-                        reads.size(), read.Id, read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.InsertSize));
+                        reads.size(), read.Id, read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s",
                     read.isDuplicate(), read.isSecondaryAlignment(), read.isSupplementaryAlignment(), read.isNegStrand(), read.isProperPair()));

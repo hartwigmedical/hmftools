@@ -67,6 +67,7 @@ public class FragmentSizeCalcs
     private static final int MAX_GENE_LENGTH = 1000000;
     private static final int MAX_GENE_TRANS = 50;
     private static final int MAX_GENE_FRAGMENT_COUNT = 5000; // to avoid impact of highly enriched genes
+    private static final int MAX_FRAGMENT_LENGTH = 5000; // ignored beyond this
 
     private static final int FD_LENGTH = 0;
     private static final int FD_FREQUENCY = 1;
@@ -245,25 +246,14 @@ public class FragmentSizeCalcs
         if(mConfig.WriteFragmentLengthsByGene)
         {
             addFragmentLength(read, mFragmentLengthsByGene);
-
-            if(ISF_LOGGER.isDebugEnabled() && abs(read.getInferredInsertSize()) > FRAGMENT_LENGTH_CAP)
-            {
-                // Time,Genes,Chromosome,Read1Start,Read1End,Read2Start,Read2End,InsertSize,Cigar1,Cigar2,ReadId
-                ISF_LOGGER.trace(String.format("LONG_FRAG:%s,%s,%d,%d,%d,%d,%d,%s,%s,%s",
-                        mCurrentGenes, read.getReferenceName(), read.getStart(), read.getEnd(), otherRead.getStart(), otherRead.getEnd(),
-                        abs(read.getInferredInsertSize()), read.getCigar().toString(), otherRead.getCigar().toString(), read.getReadName()));
-            }
         }
     }
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
-        boolean logRecord = record.getReadName().equals("NB500901:18:HTYNHBGX2:4:13408:6440:3475");
-
-        if(logRecord)
-        {
-            ISF_LOGGER.info("read({}) length({})", record.getReadName(), record.getInferredInsertSize());
-        }
+        int fragmentLength = abs(record.getInferredInsertSize());
+        if(fragmentLength > MAX_FRAGMENT_LENGTH)
+            return false;
 
         // ignore translocations and inversions
         if(!record.getMateReferenceName().equals(record.getReferenceName()) || record.getMateNegativeStrandFlag() == record.getReadNegativeStrandFlag())
@@ -275,8 +265,12 @@ public class FragmentSizeCalcs
 
         int readLength = max(mMaxReadLength, mConfig.ReadLength);
 
-        // if(readLength > 0 && abs(record.getInferredInsertSize()) > readLength && record.getCigar().containsOperator(CigarOperator.S))
-        //    return false;
+        if(readLength > 0 && fragmentLength > readLength && record.getCigar().containsOperator(CigarOperator.S))
+        {
+            // permit small soft-clips up to a point and then none for longer fragments
+            if(record.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == CigarOperator.S && x.getLength() > 2))
+                return false;
+        }
 
         // both reads must fall in the current gene
         long otherStartPos = record.getMateAlignmentStart();
@@ -293,15 +287,8 @@ public class FragmentSizeCalcs
                 return false;
         }
 
-        if(logRecord)
-        {
-            ISF_LOGGER.info("read({}) included", record.getReadName(), record.getInferredInsertSize());
-        }
-
         return true;
     }
-
-    private static final int FRAGMENT_LENGTH_CAP = 10000;
 
     private int getLengthBucket(int fragmentLength)
     {
@@ -311,10 +298,7 @@ public class FragmentSizeCalcs
         if(fragmentLength < 3000)
             return 10 * (int)round(fragmentLength/10.0);
 
-        if(fragmentLength < FRAGMENT_LENGTH_CAP)
-            return 100 * (int)round(fragmentLength/100.0);
-
-        return FRAGMENT_LENGTH_CAP;
+        return 100 * (int)round(fragmentLength/100.0);
     }
 
     private int getSoftClipBucketIndex(int scLength)

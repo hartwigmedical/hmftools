@@ -64,7 +64,7 @@ public class AltSpliceJunctionFinder
     public void evaluateFragmentReads(
             final List<GeneReadData> genes, final ReadRecord read1, final ReadRecord read2, final List<Integer> relatedTransIds)
     {
-        if(read1.IsDuplicate || read2.IsDuplicate)
+        if(read1.isDuplicate() || read2.isDuplicate())
             return;
 
         // for now exclude SJs outside known transcripts

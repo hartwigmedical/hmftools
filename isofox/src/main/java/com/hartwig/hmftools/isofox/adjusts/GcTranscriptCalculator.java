@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcCount;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatio;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.isGC;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -62,9 +63,9 @@ public class GcTranscriptCalculator
         if(config.GcAdjustmentsFile != null)
             loadGcAdjustments();
 
-        mWriter = mConfig.WriteExpectedGcRatios ? createWriter() : null;
+        mWriter = mConfig.runFunction(EXPECTED_GC_COUNTS) ? createWriter() : null;
 
-        mTotalExpectedCounts = mConfig.WriteExpectedGcRatios ? new double[mTranscriptFitGcCounts.size()] : null;
+        mTotalExpectedCounts = mConfig.runFunction(EXPECTED_GC_COUNTS) ? new double[mTranscriptFitGcCounts.size()] : null;
     }
 
     public void close() { closeBufferedWriter(mWriter); }

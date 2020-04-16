@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
@@ -22,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import static htsjdk.samtools.SAMFlag.PROPER_PAIR;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -41,6 +44,7 @@ import org.junit.Test;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFlag;
 
 public class ReadCountsTest
 {
@@ -279,7 +283,7 @@ public class ReadCountsTest
 
         int[] geneCounts = geneSet.getCounts();
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
-        assertEquals(1, geneCounts[typeAsInt(READ_THROUGH)]);
+        assertEquals(1, geneCounts[typeAsInt(CHIMERIC)]);
 
         // exon to intronic read
         read1 = createReadRecord(1, "1", 1300, 1350, REF_BASE_STR_1, createCigar(0, 50, 0));
@@ -306,17 +310,6 @@ public class ReadCountsTest
 
         assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
         assertEquals(1, geneCounts[typeAsInt(FragmentType.UNSPLICED)]);
-
-        // both reads outside the gene
-        read1 = createReadRecord(1, "1", 100, 200, REF_BASE_STR_1, createCigar(0, 50, 0));
-        read1.setFragmentInsertSize(400);
-        read2 = createReadRecord(1, "1", 400, 500, REF_BASE_STR_1, createCigar(0, 100, 0));
-        read2.setFragmentInsertSize(-300);
-
-        reads = Lists.newArrayList(read1, read2);
-        bamReader.processReadRecords(geneSet, reads);
-
-        assertEquals(1, geneCounts[typeAsInt(TOTAL)]);
 
         // alternative splicing - first from reads with splits
         geneSet.clearCounts();
@@ -359,8 +352,13 @@ public class ReadCountsTest
             final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
-        return new ReadRecord(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
-                0, true, false, false);
+
+        ReadRecord read = new ReadRecord(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
+                0, 0, chromosome);
+
+        read.setFlag(SAMFlag.PROPER_PAIR, true);
+        read.setStrand(false, true);
+        return read;
     }
 
     private RegionReadData createRegion(int trans, int exonRank, final String chromosome, long posStart, long posEnd)

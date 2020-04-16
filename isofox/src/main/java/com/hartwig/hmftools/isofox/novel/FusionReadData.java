@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.isofox.novel;
 
+import java.util.List;
+
+import com.hartwig.hmftools.isofox.common.ReadRecord;
+
 public class FusionReadData
 {
-    public final ChimericRead Read1;
-    public final ChimericRead Read2;
+    public final List<ReadRecord> Reads;
 
-    public FusionReadData(final ChimericRead read1, final ChimericRead read2)
+    public FusionReadData(List<ReadRecord> reads)
     {
-        Read1 = read1;
-        Read2 = read2;
-
+        Reads = reads;
     }
 
 }

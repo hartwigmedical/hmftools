@@ -2,18 +2,24 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.GENE_FRAGMENT_BUFFER;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.novel.FusionFinder.mergeChimericReadMaps;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
@@ -24,6 +30,7 @@ import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
+import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesData;
@@ -54,6 +61,7 @@ public class ChromosomeGeneTask implements Callable
     private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
+    private final Map<String,List<ReadRecord>> mChimericReadMap;
 
     // cache of results
     private final List<GeneCollectionSummary> mGeneCollectionSummaryData;
@@ -96,7 +104,7 @@ public class ChromosomeGeneTask implements Callable
         mBamFragmentAllocator = new BamFragmentAllocator(mConfig, resultsWriter);
         mExpTransRates = mConfig.ApplyExpectedRates ? new TranscriptExpression(mConfig, mExpectedCountsCache, resultsWriter) : null;
 
-        mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.WriteExpectedCounts
+        mExpRatesGenerator = (mConfig.ApplyExpectedRates && mConfig.ExpCountsFile == null) || mConfig.runFunction(EXPECTED_TRANS_COUNTS)
                 ? new ExpectedRatesGenerator(mConfig, resultsWriter) : null;
 
         mTranscriptGcRatios = transcriptGcCalcs;
@@ -105,6 +113,7 @@ public class ChromosomeGeneTask implements Callable
         mEnrichedGenesFragmentCount = 0;
         mCombinedFragmentCounts = new int[typeAsInt(FragmentType.MAX)];
         mNonEnrichedGcRatioCounts = new GcRatioCounts();
+        mChimericReadMap = Maps.newHashMap();
 
         mPerfCounters = new PerformanceCounter[PERF_MAX];
         mPerfCounters[PERF_TOTAL] = new PerformanceCounter("Total");
@@ -124,6 +133,7 @@ public class ChromosomeGeneTask implements Callable
     public final BamFragmentAllocator getFragmentAllocator() { return mBamFragmentAllocator; }
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
+    public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReadMap; }
     public boolean isValid() { return mIsValid; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
@@ -354,11 +364,20 @@ public class ChromosomeGeneTask implements Callable
 
         mPerfCounters[PERF_READS].start();
         mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);
+
+        if(mConfig.runFunction(FUSIONS))
+        {
+            mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
+        }
+
         mPerfCounters[PERF_READS].stop();
 
-        mPerfCounters[PERF_NOVEL_LOCATIONS].start();
-        mBamFragmentAllocator.annotateNovelLocations();
-        mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
+        if(mConfig.runFunction(NOVEL_LOCATIONS))
+        {
+            mPerfCounters[PERF_NOVEL_LOCATIONS].start();
+            mBamFragmentAllocator.annotateNovelLocations();
+            mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
+        }
 
         GeneCollectionSummary geneCollectionSummary = new GeneCollectionSummary(
                 geneCollection.chrId(), geneCollection.geneIds(), geneCollection.geneNames(), mBamFragmentAllocator.getTransComboData());

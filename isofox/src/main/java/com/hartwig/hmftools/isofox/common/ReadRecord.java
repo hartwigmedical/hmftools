@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadRecord
@@ -42,31 +43,35 @@ public class ReadRecord
     public final String ReadBases;
     public final int Length; // of bases
     public final Cigar Cigar;
+    public final String MateChromosome;
 
-    public final boolean IsDuplicate;
-    public final boolean IsFirstOfPair;
-    public final boolean IsNegStrand;
+    private int mFlags;
 
     public final List<long[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
     private int mFragmentInsertSize;
+    private String mSupplementaryAlignment;
+
+    private static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
 
     private final Map<RegionReadData,RegionMatchType> mMappedRegions; // regions related to this read and their match type
-
     private final Map<Integer,TransMatchType> mTranscriptClassification;
+    private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
 
     public static ReadRecord from(final SAMRecord record)
     {
-        return new ReadRecord(
+        ReadRecord read = new ReadRecord(
                 record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFirstOfPairFlag(),
-                record.getReadNegativeStrandFlag(), record.getDuplicateReadFlag());
+                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(), record.getMateReferenceName());
+
+        read.setSupplementaryAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        return read;
     }
 
     public ReadRecord(
             final String id, final String chromosome, long posStart, long posEnd, final String readBases, @NotNull final Cigar cigar,
-            int insertSize, boolean isFirstOfPair, boolean isNegStrand, boolean isDuplicate)
+            int insertSize, int flags, final String mateChromosome)
     {
         Id = id;
         Chromosome = chromosome;
@@ -75,23 +80,54 @@ public class ReadRecord
         ReadBases = readBases;
         Length = ReadBases.length();
         Cigar = cigar;
-        IsFirstOfPair = isFirstOfPair;
-        IsNegStrand = isNegStrand;
-        IsDuplicate = isDuplicate;
+        MateChromosome = mateChromosome;
 
-        mMappedCoords = generateMappedCoords(Cigar, PosStart);
+        mFlags = flags;
+
+        List<long[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
+        mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
+        mMappedCoords.addAll(mappedCoords);
 
         mMappedRegions = Maps.newHashMap();
+        mTransExonRefs = Maps.newHashMap();
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
         mFragmentInsertSize = insertSize;
+        mSupplementaryAlignment = null;
     }
 
     public long range() { return PosEnd - PosStart; }
 
+    public boolean isNegStrand() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
+    public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
+    public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
+    public boolean isTranslocation() { return !Chromosome.equals(MateChromosome); }
+    public boolean isMateNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
+    public boolean isInversion() { return isNegStrand() == isMateNegStrand(); }
+    public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
+    public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
+    public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.NOT_PRIMARY_ALIGNMENT.intValue()) != 0; }
+
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
+    public void setSupplementaryAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
+
+    public void setFlag(SAMFlag flag, boolean toggle)
+    {
+        if(toggle)
+            mFlags |= flag.intValue();
+        else
+            mFlags &= ~flag.intValue();
+    }
+
+    public void setStrand(boolean isNeg, boolean mateIsNeg)
+    {
+        setFlag(SAMFlag.READ_REVERSE_STRAND, isNeg);
+        setFlag(SAMFlag.MATE_REVERSE_STRAND, mateIsNeg);
+    }
+
+    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs() { return mTransExonRefs; }
 
     public static boolean isTranslocation(@NotNull final SAMRecord record)
     {
@@ -101,6 +137,17 @@ public class ReadRecord
     public static boolean isInversion(@NotNull final SAMRecord record)
     {
         return record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag();
+    }
+
+    public boolean isChimeric()
+    {
+        if(isTranslocation() || isInversion())
+            return true;
+
+        if(isSecondaryAlignment() || isSupplementaryAlignment() || mSupplementaryAlignment != null)
+            return true;
+
+        return false;
     }
 
     public List<long[]> getMappedRegionCoords() { return mMappedCoords; }
@@ -297,6 +344,12 @@ public class ReadRecord
 
             mTranscriptClassification.put(transId, transMatchType);
         }
+    }
+
+    public void cacheTransExonRefs()
+    {
+        mMappedRegions.entrySet().forEach(x -> mTransExonRefs.put(x.getValue(), x.getKey().getTransExonRefs()));
+        mMappedRegions.clear();
     }
 
     public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)

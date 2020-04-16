@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox.results;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -107,7 +109,7 @@ public class ResultsWriter
         if(mConfig.OutputDir == null)
             return;
 
-        if(mConfig.WriteExpectedCounts || mConfig.WriteExpectedRates)
+        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS) || mConfig.WriteExpectedRates)
         {
             mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
         }
@@ -123,8 +125,11 @@ public class ResultsWriter
             if(mConfig.WriteReadData)
                 mReadDataWriter = BamFragmentAllocator.createReadDataWriter(mConfig);
 
-            mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
-            mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
+            if(mConfig.runFunction(NOVEL_LOCATIONS))
+            {
+                mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
+                mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
+            }
 
             if(mConfig.WriteGcData)
                 mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);

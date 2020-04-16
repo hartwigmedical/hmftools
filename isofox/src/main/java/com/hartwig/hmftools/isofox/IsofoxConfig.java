@@ -3,6 +3,10 @@ package com.hartwig.hmftools.isofox;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_FRAG_LENGTH_MIN_COUNT;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_GC_RATIO_BUCKET;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MAX_FRAGMENT_SIZE;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
+import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
 import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 
@@ -31,6 +35,7 @@ public class IsofoxConfig
     public static final String SAMPLE = "sample";
     public static final String DATA_OUTPUT_DIR = "output_dir";
     public static final String OUTPUT_ID = "output_id";
+    public static final String FUNCTIONS = "functions";
 
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String EXCLUDED_GENE_ID_FILE = "excluded_gene_id_file";
@@ -65,8 +70,6 @@ public class IsofoxConfig
     private static final String APPLY_GC_BIAS_ADJUSTMENT = "apply_gc_bias_adjust";
     private static final String UNSPLICED_WEIGHT = "unspliced_weight";
     private static final String WRITE_EXPECTED_RATES = "write_exp_rates";
-    private static final String WRITE_EXPECTED_COUNTS = "write_exp_counts";
-    private static final String WRITE_EXPECTED_GC_RATIOS = "write_exp_gc_ratios";
 
     private static final String SPECIFIC_TRANS_IDS = "specific_trans";
     private static final String SPECIFIC_CHR = "specific_chr";
@@ -82,6 +85,9 @@ public class IsofoxConfig
     public final List<String> ExcludedGeneIds; // genes to ignore
     public final String OutputDir;
     public final String OutputIdentifier; // optionally include extra identifier in output files
+
+    public final List<IsofoxFunction> Functions;
+
     public final boolean CanonicalTranscriptOnly;
     public final String BamFile;
     public final File RefGenomeFile;
@@ -90,7 +96,6 @@ public class IsofoxConfig
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
     public final boolean MarkDuplicates;
-    public final boolean FindFusions;
 
     public final boolean WriteExonData;
     public final boolean WriteReadData;
@@ -105,8 +110,6 @@ public class IsofoxConfig
     public final List<int[]> FragmentLengthData;
     public final double UnsplicedWeight;
     public final boolean WriteExpectedRates;
-    public final boolean WriteExpectedCounts;
-    public final boolean WriteExpectedGcRatios;
 
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthMinCount;
@@ -150,6 +153,24 @@ public class IsofoxConfig
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
+        Functions = Lists.newArrayList();
+
+        if(cmd.hasOption(FUNCTIONS))
+        {
+            final String[] functionsStr = cmd.getOptionValue(FUNCTIONS).split(";");
+
+            for(final String functionStr : functionsStr)
+            {
+                Functions.add(IsofoxFunction.valueOf(functionStr));
+                ISF_LOGGER.info("running function: {}", functionStr);
+            }
+        }
+        else
+        {
+            Functions.add(TRANSCRIPT_COUNTS);
+            Functions.add(NOVEL_LOCATIONS);
+        }
+
         CanonicalTranscriptOnly = cmd.hasOption(CANONICAL_ONLY);
 
         String outputdir = cmd.getOptionValue(DATA_OUTPUT_DIR);
@@ -183,7 +204,6 @@ public class IsofoxConfig
         MaxFragmentLength = Integer.parseInt(cmd.getOptionValue(LONG_FRAGMENT_LIMIT, String.valueOf(DEFAULT_MAX_FRAGMENT_SIZE)));
         DropDuplicates = cmd.hasOption(DROP_DUPLICATES);
         MarkDuplicates = cmd.hasOption(MARK_DUPLICATES);
-        FindFusions = cmd.hasOption(FIND_FUSIONS);
         FragmentLengthMinCount = Integer.parseInt(cmd.getOptionValue(FRAG_LENGTH_MIN_COUNT, String.valueOf(DEFAULT_FRAG_LENGTH_MIN_COUNT)));
 
         WriteExonData = cmd.hasOption(WRITE_EXON_DATA);
@@ -210,9 +230,7 @@ public class IsofoxConfig
         ExpCountsFile = cmd.getOptionValue(EXP_COUNTS_FILE);
         ExpGcRatiosFile = cmd.getOptionValue(EXP_GC_RATIOS_FILE);
 
-        WriteExpectedCounts = cmd.hasOption(WRITE_EXPECTED_COUNTS);
         WriteExpectedRates = cmd.hasOption(WRITE_EXPECTED_RATES);
-        WriteExpectedGcRatios = cmd.hasOption(WRITE_EXPECTED_GC_RATIOS);
         ApplyFragmentLengthAdjust = cmd.hasOption(APPLY_FRAG_LENGTH_ADJUSTMENT);
         ApplyGcBiasAdjust = cmd.hasOption(APPLY_GC_BIAS_ADJUSTMENT);
         ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, "0"));
@@ -249,22 +267,22 @@ public class IsofoxConfig
             }
         }
 
-        if(WriteExpectedCounts)
+        if(runFunction(EXPECTED_TRANS_COUNTS))
         {
             if(ReadLength == 0 || FragmentLengthData.isEmpty())
             {
-                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans rates");
+                ISF_LOGGER.error("invalid read or fragment lengths for generating expected trans counts");
                 return false;
             }
 
             return true;
         }
 
-        if(WriteExpectedGcRatios)
+        if(runFunction(EXPECTED_GC_COUNTS))
         {
             if(ReadLength == 0 || RefFastaSeqFile == null)
             {
-                ISF_LOGGER.error("invalid read length or ref genome for generating expected GC ratio rates");
+                ISF_LOGGER.error("invalid read length or ref genome for generating expected GC ratio counts");
                 return false;
             }
 
@@ -341,6 +359,8 @@ public class IsofoxConfig
         return true;
     }
 
+    public boolean runFunction(IsofoxFunction function) { return Functions.contains(function); }
+
     public boolean skipChromosome(final String chromosome)
     {
         return !SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome);
@@ -348,7 +368,7 @@ public class IsofoxConfig
 
     public boolean generateExpectedDataOnly()
     {
-        return WriteExpectedCounts || WriteExpectedGcRatios;
+        return runFunction(EXPECTED_GC_COUNTS) || runFunction(EXPECTED_TRANS_COUNTS);
     }
 
     public boolean requireFragmentLengthCalcs()
@@ -368,6 +388,10 @@ public class IsofoxConfig
     public IsofoxConfig()
     {
         SampleId = "TEST";
+
+        Functions = Lists.newArrayList();
+        Functions.add(TRANSCRIPT_COUNTS);
+        Functions.add(NOVEL_LOCATIONS);
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
@@ -397,15 +421,11 @@ public class IsofoxConfig
         WriteGcData = false;
 
         WriteExpectedRates = false;
-        WriteExpectedCounts = false;
-        WriteExpectedGcRatios = false;
         ApplyFragmentLengthAdjust = false;
         ApplyGcBiasAdjust = false;
         OutputIdentifier = null;
         WriteFragmentLengthsByGene = false;
         FragmentLengthMinCount = 0;
-
-        FindFusions = true;
 
         SpecificTransIds = Lists.newArrayList();
         SpecificChromosomes = Lists.newArrayList();
@@ -420,6 +440,7 @@ public class IsofoxConfig
         options.addOption(SAMPLE, true, "Tumor sample ID");
         options.addOption(GENE_TRANSCRIPTS_DIR, true, "Path to Ensembl data cache");
 
+        options.addOption(FUNCTIONS, true, "Optional: list of functional routines to run (see documentation)");
         options.addOption(CANONICAL_ONLY, false, "Check all transcripts, not just canonical");
         options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
         options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
@@ -441,7 +462,6 @@ public class IsofoxConfig
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
-        options.addOption(WRITE_EXPECTED_GC_RATIOS, false, "Write expected GC ratios");
         options.addOption(GC_ADJUSTS_FILE, true, "GC-bias file, generate if not found");
         options.addOption(GC_RATIO_BUCKET_SIZE, true, "Rounding size for GC-calcs (default=0.01");
 
@@ -456,10 +476,7 @@ public class IsofoxConfig
         options.addOption(ER_FRAGMENT_LENGTHS, true,
                 "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms");
 
-        options.addOption(FIND_FUSIONS, false, "Search for fusions");
-
         options.addOption(WRITE_EXPECTED_RATES, false, "Write sample expected expression rates to file");
-        options.addOption(WRITE_EXPECTED_COUNTS, false, "Write expected expression counts from common frag lengths to file");
 
         options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
         options.addOption(SPECIFIC_TRANS_IDS, true, "List of transcripts separated by ';'");
