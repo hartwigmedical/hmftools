@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.sage.variant;
 
+import static com.hartwig.hmftools.common.sage.SageMetaData.PHASED_INFRAME_INDEL;
+import static com.hartwig.hmftools.common.sage.SageMetaData.TIER;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PASS;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASE;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASED_INFRAME_INDEL;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RAW_DEPTH;
@@ -18,7 +19,6 @@ import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.READ_CONTEXT_REPEAT_SEQUENCE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.RIGHT_ALIGNED_MICROHOMOLOGY;
-import static com.hartwig.hmftools.sage.vcf.SageVCF.TIER;
 
 import java.util.List;
 

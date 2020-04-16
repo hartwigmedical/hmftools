@@ -6,15 +6,13 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class SagePostProcessVCF implements AutoCloseable {
 
-    public static String HMF_CANONICAL_GENE = "HCG";
-    public static String HMF_CANONICAL_EFFECT = "HCE";
-    public static String HMF_CANONICAL_IMPACT = "HCI";
+    public static String SNPEFF_WORST = "SEW";
+    public static String SNPEFF_CANONICAL = "SEC";
 
     private final VariantContextWriter writer;
 
@@ -23,9 +21,14 @@ public class SagePostProcessVCF implements AutoCloseable {
     }
 
     public void writeHeader(@NotNull final VCFHeader header) {
-        header.addMetaDataLine(new VCFInfoHeaderLine(HMF_CANONICAL_GENE, 1, VCFHeaderLineType.String, "HMF canonical gene"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(HMF_CANONICAL_EFFECT, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "HMF canonical effect"));
-        header.addMetaDataLine(new VCFInfoHeaderLine(HMF_CANONICAL_IMPACT, 1, VCFHeaderLineType.String, "HMF canonical impact"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(SNPEFF_WORST,
+                5,
+                VCFHeaderLineType.String,
+                "SnpEff worst transcript summary [Gene, Transcript, Effect, CodingEffect, GenesAffected]"));
+        header.addMetaDataLine(new VCFInfoHeaderLine(SNPEFF_CANONICAL,
+                6,
+                VCFHeaderLineType.String,
+                "SnpEff canonical transcript summary [Gene, Transcript, Effect, CodingEffect, HgvsCodingImpact, HgvsProteinImpact]"));
         writer.writeHeader(header);
     }
 

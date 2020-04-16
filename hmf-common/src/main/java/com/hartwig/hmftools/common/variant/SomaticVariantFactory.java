@@ -35,8 +35,6 @@ import com.hartwig.hmftools.common.variant.enrich.VariantContextEnrichmentFactor
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
 
@@ -285,8 +283,7 @@ public class SomaticVariantFactory {
 
     private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context,
             @NotNull SnpEffSummaryFactory snpEffSummaryFactory) {
-        final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
-        final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromAnnotations(allAnnotations);
+        final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromAnnotations(context);
 
         builder.worstEffect(snpEffSummary.worstEffect())
                 .worstCodingEffect(snpEffSummary.worstCodingEffect())
