@@ -33,6 +33,7 @@ public class RnaUtils
 
     public static List<long[]> deriveCommonRegions(final List<long[]> regions1, final List<long[]> regions2)
     {
+        // merges any overlapping regoins to create a combined set without overlaps
         List<long[]> newRegions = Lists.newArrayList();
 
         int index1 = 0;

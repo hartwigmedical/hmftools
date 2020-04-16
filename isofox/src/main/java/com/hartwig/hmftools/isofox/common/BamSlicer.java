@@ -18,12 +18,14 @@ public class BamSlicer
 {
     private final int mMinMappingQuality;
     private boolean mDropDuplicates;
+    private boolean mDropSecondarySupplementaries;
     private boolean mConsumerHalt; // allow consumer to halt processing
 
-    public BamSlicer(int minMappingQuality, boolean dropDuplicates)
+    public BamSlicer(int minMappingQuality, boolean dropDuplicates, boolean dropSecondSupps)
     {
         mMinMappingQuality = minMappingQuality;
         mDropDuplicates = dropDuplicates;
+        mDropSecondarySupplementaries = dropSecondSupps;
         mConsumerHalt = false;
     }
 
@@ -108,7 +110,15 @@ public class BamSlicer
 
     private boolean passesFilters(@NotNull final SAMRecord record)
     {
-        return record.getMappingQuality() >= mMinMappingQuality && !record.getReadUnmappedFlag()
-                && (!record.getDuplicateReadFlag() || !mDropDuplicates) && !record.isSecondaryOrSupplementary();
+        if(record.getMappingQuality() < mMinMappingQuality || record.getReadUnmappedFlag())
+            return false;
+
+        if(mDropSecondarySupplementaries && record.isSecondaryOrSupplementary())
+            return false;
+
+        if(mDropDuplicates && record.getDuplicateReadFlag())
+            return false;
+
+        return true;
     }
 }

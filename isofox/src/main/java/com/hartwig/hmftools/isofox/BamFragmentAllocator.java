@@ -117,7 +117,7 @@ public class BamFragmentAllocator
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, !mConfig.FindFusions);
 
         mDuplicateCache = Maps.newHashMap();
         mDuplicateReadIds = Lists.newArrayList();
@@ -177,6 +177,9 @@ public class BamFragmentAllocator
             processChimericReads(record);
             return;
         }
+
+        if(record.isSecondaryOrSupplementary())
+            return;
 
         if(checkDuplicates(record))
         {
@@ -675,7 +678,7 @@ public class BamFragmentAllocator
         if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
             return;
 
-        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
+        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
 
         mFragmentTracker.clear();
 
@@ -756,19 +759,19 @@ public class BamFragmentAllocator
 
         // ignore enriched genes?
 
+        ChimericRead chimericRead = ChimericRead.from(record);
+
         final ReadRecord read = ReadRecord.from(record);
         final List<RegionReadData> overlappingRegions = findOverlappingRegions(mCurrentGenes.getExonRegions(), read);
 
         if (!overlappingRegions.isEmpty())
         {
             read.processOverlappingRegions(overlappingRegions);
+            final Map<RegionMatchType,List<TransExonRef>> transExonData = chimericRead.getTransExonRefs();
+            read.getMappedRegions().entrySet().forEach(x -> transExonData.put(x.getValue(), x.getKey().getTransExonRefs()));
         }
 
-        final List<TransExonRef> transExonData = Lists.newArrayList();
-
-        read.getMappedRegions().keySet().forEach(x -> transExonData.addAll(x.getTransExonRefs()));
-
-        mChimericReads.add(ChimericRead.from(record, transExonData));
+        mChimericReads.add(chimericRead);
     }
 
     private boolean otherReadOutsideGeneCollection(final SAMRecord record)

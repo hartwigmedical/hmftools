@@ -1,14 +1,17 @@
 package com.hartwig.hmftools.isofox.novel;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 
 public class ChimericRead
@@ -17,51 +20,44 @@ public class ChimericRead
     public final String Chromosome;
     public final long PosStart;
     public final long PosEnd;
-
-    public final String ReadBases;
-    public final int Length; // of bases
     public final Cigar Cigar;
-
-    public final boolean IsDuplicate;
-    public final boolean IsFirstOfPair;
-    public final boolean IsNegStrand;
     public final String MateChromosome;
-    public final boolean MateIsNegStrand;
+    public final int InsertSize;
 
-    public final List<TransExonRef> TransExonData;
+    private final Map<RegionMatchType,List<TransExonRef>> mTransExonRefs;
 
+    private final int mFlags;
     // public final List<long[]> mMappedCoords;
 
-    public static ChimericRead from(final SAMRecord record, final List<TransExonRef> transExonData)
+    public static ChimericRead from(final SAMRecord record)
     {
         return new ChimericRead(
                 record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getReadString(), record.getCigar(), record.getFirstOfPairFlag(),
-                record.getReadNegativeStrandFlag(), record.getMateReferenceName(), record.getMateNegativeStrandFlag(),
-                record.getDuplicateReadFlag(), transExonData);
+                record.getCigar(), record.getMateReferenceName(), record.getFlags(), record.getInferredInsertSize());
     }
 
     public ChimericRead(
-            final String id, final String chromosome, long posStart, long posEnd, final String readBases, @NotNull final Cigar cigar,
-            boolean isFirstOfPair, boolean isNegStrand, final String mateChromosome, boolean mateIsNegStrand, boolean isDuplicate,
-            final List<TransExonRef> transExonData)
+            final String id, final String chromosome, long posStart, long posEnd, @NotNull final Cigar cigar,
+            final String mateChromosome, int flags, int insertSize)
     {
         Id = id;
         Chromosome = chromosome;
         PosStart = posStart;
         PosEnd = posEnd;
-        ReadBases = readBases;
-        Length = ReadBases.length();
         Cigar = cigar;
-        IsFirstOfPair = isFirstOfPair;
-        IsNegStrand = isNegStrand;
+        mFlags = flags;
         MateChromosome = mateChromosome;
-        MateIsNegStrand = mateIsNegStrand;
-        IsDuplicate = isDuplicate;
+        InsertSize = insertSize;
 
-        TransExonData = transExonData;
-
-        // mMappedCoords = generateMappedCoords(Cigar, PosStart);
+        mTransExonRefs = Maps.newHashMap();
     }
+
+    public final Map<RegionMatchType,List<TransExonRef>> getTransExonRefs() { return mTransExonRefs; }
+
+    public boolean isNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
+    public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
+    public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
+    public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
+    public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.NOT_PRIMARY_ALIGNMENT.intValue()) != 0; }
 
 }

@@ -15,14 +15,11 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_FREQUENCY;
-import static com.hartwig.hmftools.isofox.exp_rates.ExpectedRatesGenerator.FL_LENGTH;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -69,8 +66,12 @@ public class FragmentSizeCalcs
     private static final int MIN_GENE_LENGTH = 1000;
     private static final int MAX_GENE_LENGTH = 1000000;
     private static final int MAX_GENE_TRANS = 50;
-    private static final int MAX_TRAN_EXONS = 20;
     private static final int MAX_GENE_FRAGMENT_COUNT = 5000; // to avoid impact of highly enriched genes
+
+    private static final int FD_LENGTH = 0;
+    private static final int FD_FREQUENCY = 1;
+
+    private final List<Integer> mSoftClipLengthBuckets;
 
     private PerformanceCounter mPerfCounter;
 
@@ -80,7 +81,7 @@ public class FragmentSizeCalcs
         mGeneTransCache = geneTransCache;
 
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile));
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true);
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
 
         mCurrentGenes = "";
         mCurrentGenesRange = new long[SE_PAIR];
@@ -95,11 +96,15 @@ public class FragmentSizeCalcs
 
         mFragmentLengths = Lists.newArrayList();
         mFragmentLengthsByGene = Lists.newArrayList();
+
+        mSoftClipLengthBuckets = Lists.newArrayList(1,2,3,5,10,25,50);
+
         mPerfCounter = new PerformanceCounter("FragLengthDist");
     }
 
     public final List<int[]> getFragmentLengths() { return mFragmentLengths; }
     public final int getMaxReadLength() { return mMaxReadLength; }
+    public final List<Integer> getSoftClipLengthBuckets() { return mSoftClipLengthBuckets; }
 
     public void calcSampleFragmentSize(final String chromosome, final List<EnsemblGeneData> geneDataList, int requiredFragCount)
     {
@@ -122,7 +127,11 @@ public class FragmentSizeCalcs
         {
             currentGeneIndex = findNextOverlappingGenes(geneDataList, currentGeneIndex, overlappingGenes);
 
+            if(overlappingGenes.stream().anyMatch(x -> mConfig.EnrichedGeneIds.contains(x.GeneId)))
+                continue;
+
             mCurrentTransDataList.clear();
+
             mFragmentTracker.clear();
             mCurrentGenesRange[SE_START] = 0;
             mCurrentGenesRange[SE_END] = 0;
@@ -131,17 +140,10 @@ public class FragmentSizeCalcs
             {
                 EnsemblGeneData geneData = overlappingGenes.get(i);
 
-                if (mConfig.EnrichedGeneIds.contains(geneData.GeneId))
-                {
-                    mCurrentTransDataList.clear();
-                    break;
-                }
-
                 mCurrentGenesRange[SE_START] = i == 0 ? geneData.GeneStart : min(geneData.GeneStart, mCurrentGenesRange[SE_START]);
                 mCurrentGenesRange[SE_END] = i == 0 ? geneData.GeneEnd : max(geneData.GeneEnd, mCurrentGenesRange[SE_END]);
 
-                mCurrentTransDataList.addAll(mGeneTransCache.getTranscripts(geneData.GeneId).stream()
-                        .filter(x -> x.exons().size() <= MAX_TRAN_EXONS).collect(Collectors.toList()));
+                mCurrentTransDataList.addAll(mGeneTransCache.getTranscripts(geneData.GeneId));
             }
 
             if (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
@@ -221,33 +223,22 @@ public class FragmentSizeCalcs
         if(!isCandidateRecord(read))
             return;
 
-        mMaxReadLength = max(mMaxReadLength, read.getReadLength());
-
-        // reads cannot cover any part of an exon
-
-        long posStart = read.getStart();
-        long posEnd = read.getEnd();
-
-        for(final TranscriptData transData : mCurrentTransDataList)
-        {
-            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.ExonStart, x.ExonEnd)))
-                return;
-        }
-
-        final SAMRecord otherRead = (SAMRecord)mFragmentTracker.checkRead(read.getReadName(), read);
-
-        if(otherRead == null)
-            return;
-
         ++mCurrentFragmentCount;
         ++mTotalFragmentCount;
 
         if(mCurrentFragmentCount >= MAX_GENE_FRAGMENT_COUNT)
         {
-            ISF_LOGGER.trace("currentGenes({}) reached max fragment count", mCurrentGenes);
+            ISF_LOGGER.debug("currentGenes({}) reached max fragment count", mCurrentGenes);
             mBamSlicer.haltProcessing();
             return;
         }
+
+        mMaxReadLength = max(mMaxReadLength, read.getReadLength());
+
+        final SAMRecord otherRead = (SAMRecord)mFragmentTracker.checkRead(read.getReadName(), read);
+
+        if(otherRead == null)
+            return;
 
         addFragmentLength(read, mFragmentLengths);
 
@@ -255,10 +246,10 @@ public class FragmentSizeCalcs
         {
             addFragmentLength(read, mFragmentLengthsByGene);
 
-            if(abs(read.getInferredInsertSize()) > FRAGMENT_LENGTH_CAP)
+            if(ISF_LOGGER.isDebugEnabled() && abs(read.getInferredInsertSize()) > FRAGMENT_LENGTH_CAP)
             {
                 // Time,Genes,Chromosome,Read1Start,Read1End,Read2Start,Read2End,InsertSize,Cigar1,Cigar2,ReadId
-                ISF_LOGGER.info(String.format("LONG_FRAG:%s,%s,%d,%d,%d,%d,%d,%s,%s,%s",
+                ISF_LOGGER.trace(String.format("LONG_FRAG:%s,%s,%d,%d,%d,%d,%d,%s,%s,%s",
                         mCurrentGenes, read.getReferenceName(), read.getStart(), read.getEnd(), otherRead.getStart(), otherRead.getEnd(),
                         abs(read.getInferredInsertSize()), read.getCigar().toString(), otherRead.getCigar().toString(), read.getReadName()));
             }
@@ -267,18 +258,45 @@ public class FragmentSizeCalcs
 
     private boolean isCandidateRecord(final SAMRecord record)
     {
+        boolean logRecord = record.getReadName().equals("NB500901:18:HTYNHBGX2:4:13408:6440:3475");
+
+        if(logRecord)
+        {
+            ISF_LOGGER.info("read({}) length({})", record.getReadName(), record.getInferredInsertSize());
+        }
+
         // ignore translocations and inversions
         if(!record.getMateReferenceName().equals(record.getReferenceName()) || record.getMateNegativeStrandFlag() == record.getReadNegativeStrandFlag())
             return false;
 
-        // ignore split or unmapped reads
-        if(record.getCigar() == null || record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
+        // ignore split and soft-clipped reads above the read length
+        if(record.getCigar().containsOperator(CigarOperator.N) || !record.getCigar().containsOperator(CigarOperator.M))
             return false;
+
+        int readLength = max(mMaxReadLength, mConfig.ReadLength);
+
+        // if(readLength > 0 && abs(record.getInferredInsertSize()) > readLength && record.getCigar().containsOperator(CigarOperator.S))
+        //    return false;
 
         // both reads must fall in the current gene
         long otherStartPos = record.getMateAlignmentStart();
         if(!positionWithin(otherStartPos, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
             return false;
+
+        // reads cannot cover any part of an exon
+        long posStart = record.getStart();
+        long posEnd = record.getEnd();
+
+        for(final TranscriptData transData : mCurrentTransDataList)
+        {
+            if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.ExonStart, x.ExonEnd)))
+                return false;
+        }
+
+        if(logRecord)
+        {
+            ISF_LOGGER.info("read({}) included", record.getReadName(), record.getInferredInsertSize());
+        }
 
         return true;
     }
@@ -299,6 +317,20 @@ public class FragmentSizeCalcs
         return FRAGMENT_LENGTH_CAP;
     }
 
+    private int getSoftClipBucketIndex(int scLength)
+    {
+        if(scLength == 0)
+            return -1;
+
+        for(int i = 0; i < mSoftClipLengthBuckets.size(); ++i)
+        {
+            if(scLength <= mSoftClipLengthBuckets.get(i))
+                return i;
+        }
+
+        return mSoftClipLengthBuckets.size() - 1;
+    }
+
     private void addFragmentLength(final SAMRecord record, final List<int[]> fragmentLengths)
     {
         int fragmentLength = getLengthBucket(abs(record.getInferredInsertSize()));
@@ -306,21 +338,30 @@ public class FragmentSizeCalcs
         if(fragmentLength == 0)
             return;
 
+        int scLength = record.getCigar().getCigarElements().stream()
+                .filter(x -> x.getOperator() == CigarOperator.S).mapToInt(x -> x.getLength()).sum();
+
+        int scIndex = getSoftClipBucketIndex(scLength);
+
         int index = 0;
         boolean exists = false;
         while(index < fragmentLengths.size())
         {
             final int[] fragLengthCount = fragmentLengths.get(index);
 
-            if(fragLengthCount[FL_LENGTH] < fragmentLength)
+            if(fragLengthCount[FD_LENGTH] < fragmentLength)
             {
                 ++index;
                 continue;
             }
 
-            if(fragLengthCount[FL_LENGTH] == fragmentLength)
+            if(fragLengthCount[FD_LENGTH] == fragmentLength)
             {
-                ++fragLengthCount[FL_FREQUENCY];
+                ++fragLengthCount[FD_FREQUENCY];
+
+                if(scIndex >= 0)
+                    ++fragLengthCount[scIndex];
+
                 exists = true;
             }
 
@@ -329,7 +370,13 @@ public class FragmentSizeCalcs
 
         if(!exists)
         {
-            int[] newFragLengthCount = { fragmentLength, 1 };
+            int[] newFragLengthCount = new int[2 + mSoftClipLengthBuckets.size()];
+            newFragLengthCount[FD_LENGTH] = fragmentLength;
+            newFragLengthCount[FD_FREQUENCY] = 1;
+
+            if(scIndex >= 0)
+                ++newFragLengthCount[scIndex];
+
             fragmentLengths.add(index, newFragLengthCount);
         }
 
@@ -366,21 +413,21 @@ public class FragmentSizeCalcs
             else
             {
                 int[] nextLengthFrequency = lengthFrequencies.get(i + 1);
-                currentRangeMax = (lengthFrequency[FL_LENGTH] + nextLengthFrequency[FL_LENGTH]) / 2;
+                currentRangeMax = (lengthFrequency[FD_LENGTH] + nextLengthFrequency[FD_LENGTH]) / 2;
             }
 
             int lengthCount = 0;
 
             for (final int[] fragLengthCount : fragmentLengths)
             {
-                if(fragLengthCount[FL_LENGTH] >= currentRangeMin && fragLengthCount[FL_LENGTH] <= currentRangeMax)
+                if(fragLengthCount[FD_LENGTH] >= currentRangeMin && fragLengthCount[FD_LENGTH] <= currentRangeMax)
                 {
-                    lengthCount += fragLengthCount[FL_FREQUENCY];
+                    lengthCount += fragLengthCount[FD_FREQUENCY];
                 }
             }
 
-            lengthFrequency[FL_FREQUENCY] = lengthCount;
-            ISF_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FL_LENGTH], lengthCount);
+            lengthFrequency[FD_FREQUENCY] = lengthCount;
+            ISF_LOGGER.info("fragmentLength({}) frequency({})", lengthFrequency[FD_LENGTH], lengthCount);
         }
     }
 
@@ -388,7 +435,7 @@ public class FragmentSizeCalcs
     {
         final List<Double> percentileLengths = Lists.newArrayList();
 
-        double totalFragments = fragmentLengths.stream().mapToLong(x -> x[FL_FREQUENCY]).sum();
+        double totalFragments = fragmentLengths.stream().mapToLong(x -> x[FD_FREQUENCY]).sum();
 
         for(Double percentile : percentiles)
         {
@@ -397,17 +444,17 @@ public class FragmentSizeCalcs
 
             for (final int[] fragLengthCount : fragmentLengths)
             {
-                double nextPercTotal = (currentTotal + fragLengthCount[FL_FREQUENCY]) / totalFragments;
+                double nextPercTotal = (currentTotal + fragLengthCount[FD_FREQUENCY]) / totalFragments;
 
                 if(nextPercTotal >= percentile)
                 {
-                    double percLength = prevLength > 0 ? (prevLength + fragLengthCount[FL_LENGTH]) * 0.5 : fragLengthCount[FL_LENGTH];
+                    double percLength = prevLength > 0 ? (prevLength + fragLengthCount[FD_LENGTH]) * 0.5 : fragLengthCount[FD_LENGTH];
                     percentileLengths.add(percLength);
                     break;
                 }
 
-                currentTotal += fragLengthCount[FL_FREQUENCY];
-                prevLength = fragLengthCount[FL_LENGTH];
+                currentTotal += fragLengthCount[FD_FREQUENCY];
+                prevLength = fragLengthCount[FD_LENGTH];
             }
         }
 
@@ -416,10 +463,9 @@ public class FragmentSizeCalcs
 
     public static void mergeData(final List<int[]> fragmentLengths, final FragmentSizeCalcs other)
     {
-        for(final int[] lengthData : other.getFragmentLengths())
+        for(final int[] otherLengthData : other.getFragmentLengths())
         {
-            int fragmentLength = lengthData[FL_LENGTH];
-            int frequency = lengthData[FL_FREQUENCY];
+            int fragmentLength = otherLengthData[FD_LENGTH];
 
             int index = 0;
             boolean exists = false;
@@ -427,15 +473,18 @@ public class FragmentSizeCalcs
             {
                 final int[] fragLengthCount = fragmentLengths.get(index);
 
-                if (fragLengthCount[FL_LENGTH] < fragmentLength)
+                if (fragLengthCount[FD_LENGTH] < fragmentLength)
                 {
                     ++index;
                     continue;
                 }
 
-                if (fragLengthCount[FL_LENGTH] == fragmentLength)
+                if (fragLengthCount[FD_LENGTH] == fragmentLength)
                 {
-                    fragLengthCount[FL_FREQUENCY] += frequency;
+                    for(int i = FD_FREQUENCY; i < fragLengthCount.length; ++i)
+                    {
+                        fragLengthCount[i] += otherLengthData[i];
+                    }
                     exists = true;
                 }
 
@@ -444,8 +493,13 @@ public class FragmentSizeCalcs
 
             if (!exists)
             {
-                int[] newFragLengthCount = { fragmentLength, frequency };
-                fragmentLengths.add(index, newFragLengthCount);
+                int[] newLengthData = new int[otherLengthData.length];
+
+                for(int i = 0; i < otherLengthData.length; ++i)
+                {
+                    newLengthData[i] = otherLengthData[i];
+                }
+                fragmentLengths.add(index, newLengthData);
             }
         }
     }
@@ -454,8 +508,7 @@ public class FragmentSizeCalcs
     {
         try
         {
-            final String outputFileName = config.WriteFragmentLengthsByGene ?
-                    config.formOutputFile("frag_length_by_gene.csv") : config.formOutputFile("frag_length.csv");
+            final String outputFileName = config.formOutputFile("frag_length_by_gene.csv");
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
@@ -488,7 +541,7 @@ public class FragmentSizeCalcs
                 writer.write(String.format("%s,%d,%s,%d,%d",
                         geneNames, geneCount, chromosome, genesRegion[SE_START], genesRegion[SE_END]));
 
-                writer.write(String.format(",%d,%d", fragLengthCount[FL_LENGTH], fragLengthCount[FL_FREQUENCY]));
+                writer.write(String.format(",%d,%d", fragLengthCount[FD_LENGTH], fragLengthCount[FD_FREQUENCY]));
                 writer.newLine();
             }
         }
@@ -498,7 +551,7 @@ public class FragmentSizeCalcs
         }
     }
 
-    public static void writeFragmentLengths(final IsofoxConfig config, final List<int[]> fragmentLengths)
+    public static void writeFragmentLengths(final IsofoxConfig config, final List<int[]> fragmentLengths, final List<Integer> scLengths)
     {
         if(fragmentLengths.isEmpty())
             return;
@@ -510,11 +563,23 @@ public class FragmentSizeCalcs
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write("FragmentLength,Count");
+
+            for(Integer scLength : scLengths)
+            {
+                writer.write(String.format(",Sc%d", scLength));
+            }
+
             writer.newLine();
 
-            for (final int[] fragLengthCount : fragmentLengths)
+            for (final int[] fragLengthData : fragmentLengths)
             {
-                writer.write(String.format("%d,%d", fragLengthCount[FL_LENGTH], fragLengthCount[FL_FREQUENCY]));
+                writer.write(String.format("%d,%d", fragLengthData[FD_LENGTH], fragLengthData[FD_FREQUENCY]));
+
+                for(int i = 2; i < fragLengthData.length; ++i)
+                {
+                    writer.write(String.format(",%d", fragLengthData[i]));
+                }
+
                 writer.newLine();
             }
 

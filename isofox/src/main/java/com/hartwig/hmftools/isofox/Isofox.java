@@ -284,7 +284,10 @@ public class Isofox
             setConfigFragmentLengthData(mConfig, maxReadLength, mFragmentLengthDistribution);
 
         if (mConfig.WriteFragmentLengths)
-            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution);
+        {
+            FragmentSizeCalcs.writeFragmentLengths(mConfig, mFragmentLengthDistribution,
+                    chrTasks.get(0).getFragSizeCalcs().getSoftClipLengthBuckets());
+        }
     }
 
     private void generateGcRatios(final List<ChromosomeGeneTask> chrTasks)
