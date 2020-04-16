@@ -3,8 +3,6 @@ package com.hartwig.hmftools.common.variant;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.region.GermlineStatus;
-import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
-import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,12 +25,6 @@ public interface SomaticVariant extends Variant {
 
     @Nullable
     String canonicalCosmicID();
-
-    @NotNull
-    List<SnpEffAnnotation> snpEffAnnotations();
-
-    @NotNull
-    List<CosmicAnnotation> cosmicAnnotations();
 
     //TODO: Rename to genesAffected
     int genesEffected();

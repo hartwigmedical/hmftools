@@ -274,10 +274,7 @@ public class SomaticVariantFactory {
         builder.cosmicIDs(cosmicIDs);
 
         final List<CosmicAnnotation> cosmicAnnotations = CosmicAnnotationFactory.fromContext(context);
-        builder.cosmicAnnotations(cosmicAnnotations);
-
-        final Optional<CosmicAnnotation> canonicalCosmicAnnotation =
-                canonicalAnnotationFactory.canonicalCosmicAnnotation(cosmicAnnotations);
+        final Optional<CosmicAnnotation> canonicalCosmicAnnotation = canonicalAnnotationFactory.canonicalCosmicAnnotation(cosmicAnnotations);
 
         if (canonicalCosmicAnnotation.isPresent()) {
             builder.canonicalCosmicID(canonicalCosmicAnnotation.get().id());
@@ -291,8 +288,7 @@ public class SomaticVariantFactory {
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
         final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromAnnotations(allAnnotations);
 
-        builder.snpEffAnnotations(allAnnotations)
-                .worstEffect(snpEffSummary.worstEffect())
+        builder.worstEffect(snpEffSummary.worstEffect())
                 .worstCodingEffect(snpEffSummary.worstCodingEffect())
                 .worstEffectTranscript(snpEffSummary.worstTranscript())
                 .canonicalEffect(snpEffSummary.canonicalEffect())
