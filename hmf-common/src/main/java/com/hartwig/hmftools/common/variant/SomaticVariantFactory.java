@@ -37,6 +37,8 @@ import com.hartwig.hmftools.common.variant.filter.ChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummary;
+import com.hartwig.hmftools.common.variant.snpeff.SnpEffSummaryFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -218,6 +220,8 @@ public class SomaticVariantFactory {
     @NotNull
     private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(@NotNull final AllelicDepth allelicDepth,
             @NotNull final VariantContext context, @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
+        SnpEffSummaryFactory snpEffSummaryFactory = new SnpEffSummaryFactory(canonicalAnnotationFactory);
+
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(context.getPhredScaledQual())
                 .chromosome(context.getContig())
@@ -246,7 +250,7 @@ public class SomaticVariantFactory {
                 .highConfidenceRegion(context.getAttributeAsBoolean(HIGH_CONFIDENCE_FLAG, false));
 
         attachIDAndCosmicAnnotations(builder, context, canonicalAnnotationFactory);
-        attachSnpEffAnnotations(builder, context, canonicalAnnotationFactory);
+        attachSnpEffAnnotations(builder, context, snpEffSummaryFactory);
         attachFilter(builder, context);
         attachType(builder, context);
 
@@ -283,46 +287,20 @@ public class SomaticVariantFactory {
     }
 
     private static void attachSnpEffAnnotations(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context,
-            @NotNull CanonicalAnnotation canonicalAnnotationFactory) {
+            @NotNull SnpEffSummaryFactory snpEffSummaryFactory) {
         final List<SnpEffAnnotation> allAnnotations = SnpEffAnnotationFactory.fromContext(context);
-        builder.snpEffAnnotations(allAnnotations);
+        final SnpEffSummary snpEffSummary = snpEffSummaryFactory.fromAnnotations(allAnnotations);
 
-        final List<SnpEffAnnotation> transcriptAnnotations =
-                allAnnotations.stream().filter(SnpEffAnnotation::isTranscriptFeature).collect(Collectors.toList());
-        if (!transcriptAnnotations.isEmpty()) {
-            final SnpEffAnnotation worstAnnotation = transcriptAnnotations.get(0);
-            builder.worstEffect(worstAnnotation.consequenceString());
-            builder.worstCodingEffect(CodingEffect.effect(worstAnnotation.gene(), worstAnnotation.consequences()));
-            builder.worstEffectTranscript(worstAnnotation.transcript());
-        } else {
-            builder.worstEffect(Strings.EMPTY);
-            builder.worstCodingEffect(CodingEffect.UNDEFINED);
-            builder.worstEffectTranscript(Strings.EMPTY);
-        }
-
-        final Optional<SnpEffAnnotation> canonicalAnnotation = canonicalAnnotationFactory.canonicalSnpEffAnnotation(transcriptAnnotations);
-        if (canonicalAnnotation.isPresent()) {
-            final SnpEffAnnotation annotation = canonicalAnnotation.get();
-            builder.canonicalEffect(annotation.consequenceString());
-            builder.canonicalCodingEffect(CodingEffect.effect(annotation.gene(), annotation.consequences()));
-            builder.canonicalHgvsCodingImpact(annotation.hgvsCoding());
-            builder.canonicalHgvsProteinImpact(annotation.hgvsProtein());
-        } else {
-            builder.canonicalEffect(Strings.EMPTY);
-            builder.canonicalCodingEffect(CodingEffect.UNDEFINED);
-            builder.canonicalHgvsCodingImpact(Strings.EMPTY);
-            builder.canonicalHgvsProteinImpact(Strings.EMPTY);
-        }
-
-        final String firstGene = transcriptAnnotations.isEmpty() ? Strings.EMPTY : transcriptAnnotations.get(0).gene();
-        final String gene = canonicalAnnotation.map(SnpEffAnnotation::gene).orElse(firstGene);
-        builder.gene(gene);
-
-        builder.genesEffected((int) transcriptAnnotations.stream()
-                .map(SnpEffAnnotation::gene)
-                .filter(x -> !x.isEmpty())
-                .distinct()
-                .count());
+        builder.snpEffAnnotations(allAnnotations)
+                .worstEffect(snpEffSummary.worstEffect())
+                .worstCodingEffect(snpEffSummary.worstCodingEffect())
+                .worstEffectTranscript(snpEffSummary.worstTranscript())
+                .canonicalEffect(snpEffSummary.canonicalEffect())
+                .canonicalCodingEffect(snpEffSummary.canonicalCodingEffect())
+                .canonicalHgvsCodingImpact(snpEffSummary.canonicalHgvsCodingImpact())
+                .canonicalHgvsProteinImpact(snpEffSummary.canonicalHgvsProteinImpact())
+                .gene(snpEffSummary.gene())
+                .genesEffected(snpEffSummary.genesAffected());
     }
 
     private static void attachFilter(@NotNull final ImmutableSomaticVariantImpl.Builder builder, @NotNull VariantContext context) {
