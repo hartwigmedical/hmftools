@@ -34,15 +34,18 @@ public final class SnpEffAnnotationFactory {
     @NotNull
     public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context) {
         if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
-            return context.getAttributeAsStringList(SNPEFF_IDENTIFIER, "")
-                    .stream()
-                    .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
-                    .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
-                    .map(SnpEffAnnotationFactory::fromParts)
-                    .collect(Collectors.toList());
-
+            return fromAnnotationList(context.getAttributeAsStringList(SNPEFF_IDENTIFIER, ""));
         }
         return Collections.emptyList();
+    }
+
+    @NotNull
+    static List<SnpEffAnnotation> fromAnnotationList(@NotNull final List<String> annotation) {
+        return annotation.stream()
+                .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
+                .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
+                .map(SnpEffAnnotationFactory::fromParts)
+                .collect(Collectors.toList());
     }
 
     @NotNull
@@ -69,10 +72,16 @@ public final class SnpEffAnnotationFactory {
 
     @NotNull
     private static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
+
+        final String hgvsCoding = parts[9];
+        String effects = parts[1];
+        if (effects.contains("splice") && hgvsCoding.contains("+5")) {
+            effects = "splice_donor_variant" + CONSEQUENCE_SEPARATOR + effects;
+        }
         return ImmutableSnpEffAnnotation.builder()
                 .allele(parts[0])
-                .effects(parts[1])
-                .consequences(sufferConsequences(toEffects(parts[1])))
+                .effects(effects)
+                .consequences(sufferConsequences(toEffects(effects)))
                 .severity(parts[2])
                 .gene(parts[3])
                 .geneID(parts[4])
@@ -80,7 +89,7 @@ public final class SnpEffAnnotationFactory {
                 .featureID(parts[6])
                 .transcriptBioType(parts[7])
                 .rank(parts[8])
-                .hgvsCoding(parts[9])
+                .hgvsCoding(hgvsCoding)
                 .hgvsProtein(parts[10])
                 .cDNAPosAndLength(parts[11])
                 .cdsPosAndLength(parts[12])
@@ -109,6 +118,5 @@ public final class SnpEffAnnotationFactory {
     private static List<String> toEffects(@NotNull final String effectString) {
         return Lists.newArrayList(effectString.split(CONSEQUENCE_SEPARATOR));
     }
-
 
 }
