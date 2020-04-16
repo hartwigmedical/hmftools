@@ -84,6 +84,66 @@ public abstract class HmfTranscriptRegion implements TranscriptRegion {
         return codonRangeByIndex(index, index);
     }
 
+    @NotNull
+    public List<GenomeRegion> codonRangeAtGenomicPosition(long position) {
+        final List<GenomeRegion> codonRegions = Lists.newArrayList();
+        if (position < codingStart() || position > codingEnd()) {
+            return codonRegions;
+        }
+
+        int basesConvered = 0;
+        for (int i = 0; i < exome().size(); i++) {
+            final HmfExonRegion exon = exome().get(i);
+            long exonCodingStart = Math.max(exon.start(), codingStart());
+            long exonCodingEnd = Math.min(exon.end(), codingEnd());
+            long exonBaseLength = exonCodingEnd - exonCodingStart + 1;
+
+            if (exonBaseLength <= 0) {
+                // Exon is entirely non-coding so can be skipped.
+                continue;
+            }
+
+            if (position >= exonCodingStart && position <= exonCodingEnd) {
+                long lookBack = (basesConvered + position - exonCodingStart) % 3;
+                long lookForward = 2 - lookBack;
+
+                // Do we need previous exon?
+                if (position - lookBack < exon.start() && i > 0) {
+                    final HmfExonRegion previous = exome().get(i - 1);
+                    final long previousExonLookBack = lookBack + exon.start() - position - 1;
+                    codonRegions.add(GenomeRegions.create(chromosome(),
+                            Math.max(previous.start(), previous.end() - previousExonLookBack),
+                            previous.end()));
+                }
+
+                // Current exon
+                codonRegions.add(GenomeRegions.create(chromosome(),
+                        Math.max(exon.start(), position - lookBack),
+                        Math.min(exon.end(), position + lookForward)));
+
+                // Do we need next exon?
+                if (position + lookForward > exon.end() && i < exome().size() - 1) {
+                    final HmfExonRegion next = exome().get(i + 1);
+                    final long nextExonLookForward = lookForward - exon.end() + position - 1;
+                    codonRegions.add(GenomeRegions.create(chromosome(),
+                            next.start(),
+                            Math.min(next.end(), next.start() + nextExonLookForward)));
+                }
+
+                return codonRegions;
+            }
+
+            if (exonCodingStart > position) {
+                return codonRegions;
+            }
+
+            basesConvered += exonBaseLength;
+        }
+
+        return codonRegions;
+
+    }
+
     @Value.Derived
     @Nullable
     public List<GenomeRegion> codonRangeByIndex(int startCodon, int endCodon) {

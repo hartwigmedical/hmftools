@@ -21,9 +21,9 @@ public class ColoPatientReader {
 
         String patientId = isColo829 ? "COLO829" : Strings.EMPTY;
 
-        CuratedTumorLocation curatedTumorLocation = isColo829 ?
-                ImmutableCuratedTumorLocation.of("Skin", "Melanoma", Strings.EMPTY) :
-                ImmutableCuratedTumorLocation.of(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
+        CuratedTumorLocation curatedTumorLocation = isColo829
+                ? ImmutableCuratedTumorLocation.of("Skin", "Melanoma", Strings.EMPTY)
+                : ImmutableCuratedTumorLocation.of(Strings.EMPTY, Strings.EMPTY, Strings.EMPTY);
 
         return new Patient(patientId,
                 toBaselineData(curatedTumorLocation),
@@ -39,23 +39,30 @@ public class ColoPatientReader {
 
     @NotNull
     private static BaselineData toBaselineData(@NotNull CuratedTumorLocation curatedTumorLocation) {
-        return ImmutableBaselineData.of(null,
-                null,
-                null,
-                null,
-                null,
-                curatedTumorLocation,
-                null,
-                FormStatus.undefined(),
-                FormStatus.undefined(),
-                FormStatus.undefined(),
-                FormStatus.undefined(),
-                FormStatus.undefined(),
-                FormStatus.undefined());
+        return ImmutableBaselineData.builder()
+                .registrationDate(null)
+                .informedConsentDate(null)
+                .gender(null)
+                .hospital(null)
+                .birthYear(null)
+                .curatedTumorLocation(curatedTumorLocation)
+                .deathDate(null)
+                .demographyStatus(FormStatus.undefined())
+                .primaryTumorStatus(FormStatus.undefined())
+                .informedConsentStatus(FormStatus.undefined())
+                .eligibilityStatus(FormStatus.undefined())
+                .selectionCriteriaStatus(FormStatus.undefined())
+                .deathStatus(FormStatus.undefined())
+                .build();
     }
 
     @NotNull
     private static PreTreatmentData noPreTreatmentData() {
-        return ImmutablePreTreatmentData.of(null, null, Lists.newArrayList(), FormStatus.undefined());
+        return ImmutablePreTreatmentData.builder()
+                .treatmentGiven(null)
+                .radiotherapyGiven(null)
+                .drugs(Lists.newArrayList())
+                .formStatus(FormStatus.undefined())
+                .build();
     }
 }

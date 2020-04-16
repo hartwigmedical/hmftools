@@ -44,8 +44,8 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull final EcrfPatient patient) {
-        final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
+    BaselineData read(@NotNull EcrfPatient patient) {
+        ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
                 .demographyStatus(FormStatus.undefined())
                 .deathStatus(FormStatus.undefined())
@@ -54,25 +54,24 @@ class BaselineReader {
                 .primaryTumorStatus(FormStatus.undefined())
                 .informedConsentStatus(FormStatus.undefined());
 
-        for (final EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
+        for (EcrfStudyEvent baselineEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setInformedConsentAndTumorLocation(baselineBuilder, baselineEvent);
         }
 
-        for (final EcrfStudyEvent registrationEvent : patient.studyEventsPerOID(STUDY_REGISTRATION)) {
+        for (EcrfStudyEvent registrationEvent : patient.studyEventsPerOID(STUDY_REGISTRATION)) {
             setBirthYearGenderHospital(baselineBuilder, registrationEvent);
         }
 
-        for (final EcrfStudyEvent endOfTrialEvent : patient.studyEventsPerOID(STUDY_END_OF_TRIAL)) {
+        for (EcrfStudyEvent endOfTrialEvent : patient.studyEventsPerOID(STUDY_END_OF_TRIAL)) {
             setDeathDate(baselineBuilder, endOfTrialEvent);
         }
 
         return baselineBuilder.build();
     }
 
-    private void setInformedConsentAndTumorLocation(@NotNull final ImmutableBaselineData.Builder builder,
-            @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
-            for (final EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
+    private void setInformedConsentAndTumorLocation(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        for (EcrfForm baselineForm : studyEvent.nonEmptyFormsPerOID(FORM_BASELINE)) {
+            for (EcrfItemGroup baselineItemGroup : baselineForm.nonEmptyItemGroupsPerOID(ITEMGROUP_BASELINE)) {
                 builder.informedConsentDate(baselineItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
 
                 String primaryTumorLocation = baselineItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
@@ -87,10 +86,9 @@ class BaselineReader {
         }
     }
 
-    private void setBirthYearGenderHospital(@NotNull final ImmutableBaselineData.Builder builder,
-            @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm csfForm : studyEvent.nonEmptyFormsPerOID(FORM_CSF)) {
-            for (final EcrfItemGroup csfItemGroup : csfForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CSF)) {
+    private void setBirthYearGenderHospital(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        for (EcrfForm csfForm : studyEvent.nonEmptyFormsPerOID(FORM_CSF)) {
+            for (EcrfItemGroup csfItemGroup : csfForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CSF)) {
                 builder.gender(csfItemGroup.readItemString(FIELD_GENDER));
 
                 String birthYear = csfItemGroup.readItemString(FIELD_BIRTH_YEAR);
@@ -103,8 +101,8 @@ class BaselineReader {
             }
         }
 
-        for (final EcrfForm registrationForm : studyEvent.nonEmptyFormsPerOID(FORM_REGISTRATION)) {
-            for (final EcrfItemGroup registrationItemGroup : registrationForm.nonEmptyItemGroupsPerOID(ITEMGROUP_REGISTRATION)) {
+        for (EcrfForm registrationForm : studyEvent.nonEmptyFormsPerOID(FORM_REGISTRATION)) {
+            for (EcrfItemGroup registrationItemGroup : registrationForm.nonEmptyItemGroupsPerOID(ITEMGROUP_REGISTRATION)) {
                 builder.hospital(registrationItemGroup.readItemString(FIELD_HOSPITAL));
                 // This is somewhat ugly, the states are too tied with CPCT datamodel.
                 builder.selectionCriteriaStatus(registrationForm.status());
@@ -112,9 +110,9 @@ class BaselineReader {
         }
     }
 
-    private void setDeathDate(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm endOfTrialForm : studyEvent.nonEmptyFormsPerOID(FORM_END_OF_TRIAL)) {
-            for (final EcrfItemGroup endOfTrialItemGroup : endOfTrialForm.nonEmptyItemGroupsPerOID(ITEMGROUP_END_OF_TRIAL)) {
+    private void setDeathDate(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        for (EcrfForm endOfTrialForm : studyEvent.nonEmptyFormsPerOID(FORM_END_OF_TRIAL)) {
+            for (EcrfItemGroup endOfTrialItemGroup : endOfTrialForm.nonEmptyItemGroupsPerOID(ITEMGROUP_END_OF_TRIAL)) {
                 builder.deathDate(endOfTrialItemGroup.readItemDate(FIELD_DEATH_DATE));
                 builder.deathStatus(endOfTrialForm.status());
             }

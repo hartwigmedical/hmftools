@@ -38,7 +38,7 @@ public class BiopsySiteCurator {
     @VisibleForTesting
     BiopsySiteCurator(@NotNull InputStream mappingInputStream) throws IOException {
         CSVParser parser = CSVParser.parse(mappingInputStream, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
-        for (final CSVRecord record : parser) {
+        for (CSVRecord record : parser) {
             String primaryTumorLocation = record.get("primaryTumorLocation");
             String cancerSubType = record.get("cancerSubType");
             String biopsySite = record.get("biopsySite");

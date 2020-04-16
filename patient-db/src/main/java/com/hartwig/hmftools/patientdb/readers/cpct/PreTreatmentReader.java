@@ -46,17 +46,17 @@ class PreTreatmentReader {
     }
 
     @NotNull
-    PreTreatmentData read(@NotNull final EcrfPatient patient) {
+    PreTreatmentData read(@NotNull EcrfPatient patient) {
         PreTreatmentData preTreatmentData = null;
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
-            for (final EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT)) {
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
+            for (EcrfForm treatmentForm : studyEvent.nonEmptyFormsPerOID(FORM_TREATMENT)) {
                 String treatmentGiven = readTreatmentGiven(treatmentForm);
                 String radiotherapyGiven = readRadiotherapyGiven(treatmentForm);
-                final List<DrugData> drugs = readDrugs(treatmentForm);
+                List<DrugData> drugs = readDrugs(treatmentForm);
                 if (preTreatmentData == null) {
                     preTreatmentData = ImmutablePreTreatmentData.of(treatmentGiven, radiotherapyGiven, drugs, treatmentForm.status());
                 } else {
-                    LOGGER.warn("Multiple pre-therapy forms for found patient: " + patient.patientId());
+                    LOGGER.warn("Multiple pre-therapy forms for found patient: {}", patient.patientId());
                 }
             }
         }
@@ -67,23 +67,23 @@ class PreTreatmentReader {
     }
 
     @NotNull
-    private List<DrugData> readDrugs(@NotNull final EcrfForm treatmentForm) {
-        final List<DrugData> drugs = Lists.newArrayList();
-        for (final EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DRUGS)) {
-            final LocalDate drugStart = itemGroup.readItemDate(FIELD_PRE_DRUG_START);
-            final LocalDate drugEnd = itemGroup.readItemDate(FIELD_PRE_DRUG_END);
-            final String drugName = itemGroup.readItemString(FIELD_PRE_DRUG);
-            final String bestResponse = itemGroup.readItemString(FIELD_PRE_BEST_RESPONSE);
+    private List<DrugData> readDrugs(@NotNull EcrfForm treatmentForm) {
+        List<DrugData> drugs = Lists.newArrayList();
+        for (EcrfItemGroup itemGroup : treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DRUGS)) {
+            LocalDate drugStart = itemGroup.readItemDate(FIELD_PRE_DRUG_START);
+            LocalDate drugEnd = itemGroup.readItemDate(FIELD_PRE_DRUG_END);
+            String drugName = itemGroup.readItemString(FIELD_PRE_DRUG);
+            String bestResponse = itemGroup.readItemString(FIELD_PRE_BEST_RESPONSE);
 
-            final List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
+            List<CuratedDrug> curatedDrugs = drugName == null ? Lists.newArrayList() : treatmentCurator.search(drugName);
             drugs.add(ImmutableDrugData.of(drugName, drugStart, drugEnd, bestResponse, curatedDrugs));
         }
         return drugs;
     }
 
     @Nullable
-    private static String readTreatmentGiven(@NotNull final EcrfForm treatmentForm) {
-        final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT);
+    private static String readTreatmentGiven(@NotNull EcrfForm treatmentForm) {
+        List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT);
         if (itemGroups.size() > 0) {
             return itemGroups.get(0).readItemString(FIELD_PRETREATMENT_GIVEN);
         }
@@ -91,8 +91,8 @@ class PreTreatmentReader {
     }
 
     @Nullable
-    private static String readRadiotherapyGiven(@NotNull final EcrfForm treatmentForm) {
-        final List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT);
+    private static String readRadiotherapyGiven(@NotNull EcrfForm treatmentForm) {
+        List<EcrfItemGroup> itemGroups = treatmentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_TREATMENT);
         if (itemGroups.size() > 0) {
             return itemGroups.get(0).readItemString(FIELD_PRERADIOTHERAPY_GIVEN);
         }

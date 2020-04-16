@@ -142,8 +142,9 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   4. [Normal Counts and Quality](#4-normal-counts-and-quality)
   5. [Soft Filter](#5-soft-filters)
   6. [Phasing](#6-phasing)
-  7. [MNV Handling](#7-de-duplication)
-  8. [Output](#8-output)
+  7. [De-duplication](#7-de-duplication)
+  8. [Re-alignment](#8-re-alignment)
+  8. [Output](#9-output)
 
 ## 1. Base Quality Recalibration
 
@@ -337,9 +338,14 @@ A>T: CAACAATCGA<b>T</b>CGATACAATC
 T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 </pre>
 
-Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together will be given a shared local phase set (`LPS`) identifier.
+Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together are given a shared `LPS` (local phase set) identifier.
 
 If multiple tumors are supplied, phasing is evaluated only on the primary tumor, ie, the first in the supplied tumor list.
+
+### Phased Inframe Indels
+
+If two phased frameshift variant in a single coding exon together form an inframe INDEL, then both are given a shared `PII` (phased inframe indel) identifier.
+
 
 ## 7. De-duplication
 
@@ -350,11 +356,42 @@ If SAGE finds two phased INDELs of the same type at the same position where one 
 
 ### SNV / MNV
 
-Any passing SNVs that are phased with and part of a passing MNVs will be filtered with `dedup`. 
-This may occur in particular when a somatic SNV is phased with a germline SNV which given the rate of germline variants in the genome may be expected to occur approximately 1 in ~250 variants. 
-In this case the functional impact of the variant is as an MNV but the mechanism is SNV.   
+Any passing SNVs that are phased with and part of a passing somatic MNV are filtered with `dedup`. 
 
-## 8. Output
+In the special case where the MNV is comprised of both somatic and germline SNVs, additional logic applies. 
+Typically, the MNV will be filtered, except when the MNV is in a coding region and impacts more than one base of the codon impacted by the SNV. 
+In this case the SNV is filtered to capture the functional impact of the mixed somatic and germline variant. This is illustrated below.
+
+In the following example, the somatic and germline SNV both impact the same codon so the SNV is filtered.
+
+Codon | 1 | 1 | 1 
+---|---|---|---
+Mixed MNV | X |  | X 
+Germline SNV | X |  |  
+Somatic SNV |  |  | X 
+
+In this next example, the somatic and germline SNV impact different codons so the MNV is filtered.
+
+Codon | 1 | 1 | 2 
+---|---|---|---
+Mixed MNV | X |  | X 
+Germline SNV | X |  |  
+Somatic SNV |  |  | X  
+ 
+Regardless of filtering, the MNV and both germline and somatic SNVs are all given a shared `MSG` (mixed somatic germline) identifier.
+
+## 8. Re-alignment
+
+Inframe deletes with microhomology are re-aligned to the right if the left-aligned variant is not in a coding region but the right-aligned variant is.
+
+For example, because of the `AG` microhomology at this (hg19) location, the following KIT variants are equivalent but the first will be interpreted as a splice variant while the second will be interpreted as an inframe missense.
+
+```
+4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C
+4:55593581 GAAACCCATGTATGAAGTACAGTGGAAG > G
+```
+
+## 9. Output
 
 There is one final 'hard' filter that is lazily applied at the end of the process just before writing to file that only apply to variants that are already filtered. 
 They do not save any processing time but do reduce the output file size. 

@@ -63,7 +63,7 @@ public class LimsSampleReader {
                 .dnaNanograms(lims.dnaNanograms(sampleBarcode))
                 .limsPrimaryTumor(lims.primaryTumor(sampleBarcode))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(sampleBarcode))
-                .tumorBarcode(sampleBarcode)
+                .pathologySampleId(lims.hospitalPathologySampleId(sampleBarcode))
                 .build();
     }
 
@@ -95,7 +95,7 @@ public class LimsSampleReader {
                 .dnaNanograms(null)
                 .limsPrimaryTumor(null)
                 .pathologyTumorPercentage(Lims.NOT_AVAILABLE_STRING)
-                .tumorBarcode(Strings.EMPTY)
+                .pathologySampleId(Lims.NOT_AVAILABLE_STRING)
                 .build();
     }
 }

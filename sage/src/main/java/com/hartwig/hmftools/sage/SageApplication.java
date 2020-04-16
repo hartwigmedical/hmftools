@@ -7,11 +7,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.BiFunction;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -35,7 +37,6 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.QualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationFile;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationRecord;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.apache.commons.cli.CommandLine;
@@ -231,38 +232,34 @@ public class SageApplication implements AutoCloseable {
         LOGGER.info("Beginning quality recalibration");
 
         final QualityRecalibration qualityRecalibration = new QualityRecalibration(bqrConfig, executorService, refGenome);
+        final List<CompletableFuture<Void>> done = Lists.newArrayList();
 
-        final List<CompletableFuture<List<QualityRecalibrationRecord>>> qualityRecalibrationFutures = Lists.newArrayList();
-        for (String referenceBam : config.referenceBam()) {
-            qualityRecalibrationFutures.add(qualityRecalibration.qualityRecalibrationRecords(referenceBam));
-        }
-        for (String tumorBam : config.tumorBam()) {
-            qualityRecalibrationFutures.add(qualityRecalibration.qualityRecalibrationRecords(tumorBam));
-        }
+        final BiFunction<String, String, CompletableFuture<Void>> processSample =
+                (sample, sampleBam) -> qualityRecalibration.qualityRecalibrationRecords(sampleBam).thenAccept(records -> {
+                    try {
+
+                        final String tsvFile = config.baseQualityRecalibrationFile(sample);
+                        QualityRecalibrationFile.write(tsvFile, records);
+                        result.put(sample, new QualityRecalibrationMap(records));
+                        LOGGER.info("Writing base quality recalibration file: {}", tsvFile);
+                        if (bqrConfig.plot()) {
+                            RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", tsvFile);
+                        }
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                });
 
         for (int i = 0; i < config.reference().size(); i++) {
-            final String sample = config.reference().get(i);
-            final String file = config.baseQualityRecalibrationFile(sample);
-            final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(i).join();
-            result.put(sample, new QualityRecalibrationMap(records));
-            QualityRecalibrationFile.write(file, records);
-            LOGGER.info("Writing base quality recalibration file: {}", file);
-            if (bqrConfig.plot()) {
-                executorService.submit(() -> RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", file));
-            }
+            done.add(processSample.apply(config.reference().get(i), config.referenceBam().get(i)));
         }
 
         for (int i = 0; i < config.tumor().size(); i++) {
-            final String sample = config.tumor().get(i);
-            final String file = config.baseQualityRecalibrationFile(sample);
-            final List<QualityRecalibrationRecord> records = qualityRecalibrationFutures.get(config.reference().size() + i).join();
-            result.put(sample, new QualityRecalibrationMap(records));
-            QualityRecalibrationFile.write(file, records);
-            LOGGER.info("Writing base quality recalibration file: {}", file);
-            if (bqrConfig.plot()) {
-                executorService.submit(() -> RExecutor.executeFromClasspath("r/baseQualityRecalibrationPlot.R", file));
-            }
+            done.add(processSample.apply(config.tumor().get(i), config.tumorBam().get(i)));
         }
+
+        // Wait for all tasks to be finished
+        done.forEach(CompletableFuture::join);
 
         return result;
     }

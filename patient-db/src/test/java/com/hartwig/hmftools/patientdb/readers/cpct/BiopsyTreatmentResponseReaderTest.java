@@ -30,7 +30,7 @@ public class BiopsyTreatmentResponseReaderTest {
 
     @NotNull
     private static EcrfPatient buildTestPatient() {
-        final String patient = "dummy";
+        String patient = "dummy";
 
         EcrfItemGroup response1 = new EcrfItemGroup();
         response1.addItem(BiopsyTreatmentResponseReader.FIELD_MEASUREMENT_DONE, "Yes");

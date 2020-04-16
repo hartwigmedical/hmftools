@@ -28,11 +28,11 @@ final class TumorMarkerReader {
     }
 
     @NotNull
-    static List<TumorMarkerData> read(@NotNull final EcrfPatient patient) {
-        final List<TumorMarkerData> tumorMarkers = Lists.newArrayList();
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE)) {
-                for (final EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE)) {
+    static List<TumorMarkerData> read(@NotNull EcrfPatient patient) {
+        List<TumorMarkerData> tumorMarkers = Lists.newArrayList();
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
+            for (EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE)) {
+                for (EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE)) {
                     LocalDate date = responseGroup.readItemDate(FIELD_DATE);
                     String marker = responseGroup.readItemString(FIELD_MARKER);
                     String measurement = responseGroup.readItemString(FIELD_MEASUREMENT);
@@ -41,6 +41,7 @@ final class TumorMarkerReader {
                 }
             }
         }
+
         return tumorMarkers;
     }
 }

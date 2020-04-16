@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.chord.ChordFileReader;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
@@ -30,36 +29,35 @@ public final class LoadChordData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);
+    public static void main(@NotNull String[] args) throws ParseException, SQLException {
+        Options options = createOptions();
+        CommandLine cmd = createCommandLine(args, options);
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);
 
-        final String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
-        final String sample = cmd.getOptionValue(SAMPLE);
+        String predictionFile = cmd.getOptionValue(PREDICTION_FILE);
+        String sample = cmd.getOptionValue(SAMPLE);
 
         if (Utils.anyNull(userName, password, databaseUrl, predictionFile, sample)) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load chord data", options);
         } else {
-            final File fileObject = new File(predictionFile);
+            File fileObject = new File(predictionFile);
             if (fileObject.isFile()) {
-                final String jdbcUrl = "jdbc:" + databaseUrl;
-                final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+                String jdbcUrl = "jdbc:" + databaseUrl;
+                DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
-                LOGGER.info(String.format("Extracting and writing chord for %s", predictionFile));
+                LOGGER.info("Extracting and writing chord for {}", predictionFile);
                 try {
                     ChordAnalysis chordAnalysis = generateChordForRun(predictionFile);
                     dbWriter.writeChord(sample, chordAnalysis);
-
                 } catch (IOException e) {
-                    LOGGER.warn(String.format("Cannot extract chord for %s.", predictionFile));
+                    LOGGER.warn("Cannot extract chord for {}", predictionFile);
                 }
             } else {
                 if (!fileObject.exists()) {
-                    LOGGER.warn("file " + predictionFile + " does not exist.");
+                    LOGGER.warn("file '{}' does not exist.", predictionFile);
                 }
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("patient-db - load chord data", options);
@@ -74,7 +72,7 @@ public final class LoadChordData {
 
     @NotNull
     private static Options createOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(SAMPLE, true, "The tumor sample.");
         options.addOption(PREDICTION_FILE, true, "Path towards the chord prediction file.");
         options.addOption(DB_USER, true, "Database user name.");
@@ -85,8 +83,7 @@ public final class LoadChordData {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 }

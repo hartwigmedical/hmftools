@@ -33,10 +33,10 @@ public final class PatientValidator {
     private static final String ECRF_LEVEL = "ecrf";
 
     @NotNull
-    public static List<ValidationFinding> validatePatient(@NotNull final Patient patient) {
-        final String patientIdentifier = patient.patientIdentifier();
+    public static List<ValidationFinding> validatePatient(@NotNull Patient patient) {
+        String patientIdentifier = patient.patientIdentifier();
 
-        final List<ValidationFinding> findings = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
 
         findings.addAll(validateBaselineData(patientIdentifier, patient.baselineData()));
         findings.addAll(validatePreTreatmentData(patientIdentifier, patient.preTreatmentData()));
@@ -56,7 +56,7 @@ public final class PatientValidator {
     @NotNull
     @VisibleForTesting
     static List<ValidationFinding> validateBaselineData(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
         if (baselineData.curatedTumorLocation().searchTerm() == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
                     patientIdentifier,
@@ -101,11 +101,10 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validatePreTreatmentData(@NotNull final String patientIdentifier,
-            @NotNull final PreTreatmentData preTreatmentData) {
-        final String preTreatmentGiven = preTreatmentData.treatmentGiven();
-        final String preRadioTreatmentGiven = preTreatmentData.radiotherapyGiven();
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    static List<ValidationFinding> validatePreTreatmentData(@NotNull String patientIdentifier, @NotNull PreTreatmentData preTreatmentData) {
+        String preTreatmentGiven = preTreatmentData.treatmentGiven();
+        String preRadioTreatmentGiven = preTreatmentData.radiotherapyGiven();
+        List<ValidationFinding> findings = Lists.newArrayList();
 
         if (preTreatmentGiven == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
@@ -126,8 +125,8 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateBiopsies(@NotNull final String patientIdentifier, @NotNull final List<BiopsyData> biopsies) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    static List<ValidationFinding> validateBiopsies(@NotNull String patientIdentifier, @NotNull List<BiopsyData> biopsies) {
+        List<ValidationFinding> findings = Lists.newArrayList();
 
         for (BiopsyData biopsy : biopsies) {
             if (biopsy.sampleId() != null) {
@@ -152,9 +151,8 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTreatments(@NotNull final String patientIdentifier,
-            @NotNull final List<BiopsyTreatmentData> treatments) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    static List<ValidationFinding> validateTreatments(@NotNull String patientIdentifier, @NotNull List<BiopsyTreatmentData> treatments) {
+        List<ValidationFinding> findings = Lists.newArrayList();
         List<BiopsyTreatmentData> matchedTreatments =
                 treatments.stream().filter(treatment -> treatment.biopsyId() != null).collect(Collectors.toList());
         matchedTreatments.forEach(treatment -> findings.addAll(validateTreatmentData(patientIdentifier, treatment)));
@@ -162,9 +160,9 @@ public final class PatientValidator {
 
         if (matchedTreatments.size() > 1) {
             for (int index = 1; index < matchedTreatments.size(); index++) {
-                final BiopsyTreatmentData currentTreatment = matchedTreatments.get(index);
-                final LocalDate startDate = currentTreatment.startDate();
-                final LocalDate previousTreatmentEnd = matchedTreatments.get(index - 1).endDate();
+                BiopsyTreatmentData currentTreatment = matchedTreatments.get(index);
+                LocalDate startDate = currentTreatment.startDate();
+                LocalDate previousTreatmentEnd = matchedTreatments.get(index - 1).endDate();
                 if (startDate != null && (previousTreatmentEnd == null || startDate.isBefore(previousTreatmentEnd))) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL,
                             patientIdentifier,
@@ -172,7 +170,7 @@ public final class PatientValidator {
                             currentTreatment.formStatus()));
                 }
             }
-            final List<BiopsyTreatmentData> nonFinishedTreatments = matchedTreatments.stream()
+            List<BiopsyTreatmentData> nonFinishedTreatments = matchedTreatments.stream()
                     .filter(treatment -> treatment.startDate() != null)
                     .filter(treatment -> treatment.endDate() == null)
                     .collect(Collectors.toList());
@@ -187,10 +185,10 @@ public final class PatientValidator {
     }
 
     @NotNull
-    private static List<ValidationFinding> validateTreatmentData(@NotNull final String patientIdentifier,
-            @NotNull final BiopsyTreatmentData treatment) {
-        final String treatmentGiven = treatment.treatmentGiven();
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    private static List<ValidationFinding> validateTreatmentData(@NotNull String patientIdentifier,
+            @NotNull BiopsyTreatmentData treatment) {
+        String treatmentGiven = treatment.treatmentGiven();
+        List<ValidationFinding> findings = Lists.newArrayList();
         if (treatmentGiven == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "Treatment given field empty", treatment.formStatus()));
         } else if (treatmentGiven.equalsIgnoreCase("yes")) {
@@ -218,7 +216,7 @@ public final class PatientValidator {
                     treatmentGiven));
         }
 
-        final String postRadioTherapy = treatment.radiotherapyGiven();
+        String postRadioTherapy = treatment.radiotherapyGiven();
         if (postRadioTherapy == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "Radio therapy given field empty", treatment.formStatus()));
         }
@@ -227,14 +225,14 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateDrugData(@NotNull final String patientIdentifier, @NotNull final DrugData drugData,
-            @NotNull final FormStatus formStatus) {
-        final LocalDate drugStart = drugData.startDate();
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    static List<ValidationFinding> validateDrugData(@NotNull String patientIdentifier, @NotNull DrugData drugData,
+            @NotNull FormStatus formStatus) {
+        LocalDate drugStart = drugData.startDate();
+        List<ValidationFinding> findings = Lists.newArrayList();
         if (drugStart == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "Drug start date empty or in wrong format", formStatus));
         } else {
-            final LocalDate drugEnd = drugData.endDate();
+            LocalDate drugEnd = drugData.endDate();
             if (drugEnd != null) {
                 if (drugStart.isAfter(drugEnd)) {
                     findings.add(ValidationFinding.of(ECRF_LEVEL, patientIdentifier, "Drug start date is after drug end date", formStatus));
@@ -248,24 +246,24 @@ public final class PatientValidator {
     }
 
     @NotNull
-    private static List<ValidationFinding> validatePreTreatmentCuration(@NotNull final String patientIdentifier,
+    private static List<ValidationFinding> validatePreTreatmentCuration(@NotNull String patientIdentifier,
             @NotNull PreTreatmentData preTreatmentData) {
         return validateTreatmentCuration(patientIdentifier, "preTreatmentCuration", Lists.newArrayList(preTreatmentData));
     }
 
     @NotNull
-    private static List<ValidationFinding> validateBiopsyTreatmentsCuration(@NotNull final String patientIdentifier,
+    private static List<ValidationFinding> validateBiopsyTreatmentsCuration(@NotNull String patientIdentifier,
             @NotNull List<BiopsyTreatmentData> treatments) {
         return validateTreatmentCuration(patientIdentifier, "treatmentCuration", treatments);
     }
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTreatmentCuration(@NotNull final String patientIdentifier, @NotNull String curationName,
-            @NotNull final List<? extends TreatmentData> treatments) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    static List<ValidationFinding> validateTreatmentCuration(@NotNull String patientIdentifier, @NotNull String curationName,
+            @NotNull List<? extends TreatmentData> treatments) {
+        List<ValidationFinding> findings = Lists.newArrayList();
         treatments.forEach(treatment -> treatment.drugs().forEach(drug -> {
-            final String drugName = drug.name();
+            String drugName = drug.name();
             if (drugName != null) {
                 if (drug.curatedDrugs().isEmpty()) {
                     findings.add(ValidationFinding.of(curationName,
@@ -274,17 +272,17 @@ public final class PatientValidator {
                             treatment.formStatus(),
                             drugName));
                 } else {
-                    final List<String> curatedTreatments = drug.curatedDrugs().stream().map(CuratedDrug::name).collect(Collectors.toList());
-                    final List<String> matchedTerms =
-                            drug.curatedDrugs().stream().map(CuratedDrug::searchTerm).collect(Collectors.toList());
-                    final long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
-                    final long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
+                    List<String> curatedTreatments = drug.curatedDrugs().stream().map(CuratedDrug::name).collect(Collectors.toList());
+                    List<String> matchedTerms = drug.curatedDrugs().stream().map(CuratedDrug::searchTerm).collect(Collectors.toList());
+                    long lengthOfMatchedCharacters = matchedTerms.stream().mapToLong(String::length).sum();
+                    long lengthOfSearchCharacters = drugName.chars().filter(Character::isLetterOrDigit).count();
                     if (lengthOfMatchedCharacters > 0 && (double) lengthOfMatchedCharacters / lengthOfSearchCharacters < 0.9) {
                         findings.add(ValidationFinding.of(curationName,
                                 patientIdentifier,
                                 "Matched drugs are based on less than 90% of search term.",
                                 treatment.formStatus(),
-                                "'" + drugName + "' matched to '" + Strings.join(curatedTreatments, ',') + "' based on '" + Strings.join(matchedTerms,
+                                "'" + drugName + "' matched to '" + Strings.join(curatedTreatments, ',') + "' based on '" + Strings.join(
+                                        matchedTerms,
                                         ',') + "'"));
                     }
                 }
@@ -296,8 +294,8 @@ public final class PatientValidator {
     @NotNull
     @VisibleForTesting
     static List<ValidationFinding> validateTumorLocationCuration(@NotNull String patientIdentifier, @NotNull BaselineData baselineData) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
-        final String searchTerm = baselineData.curatedTumorLocation().searchTerm();
+        List<ValidationFinding> findings = Lists.newArrayList();
+        String searchTerm = baselineData.curatedTumorLocation().searchTerm();
         if (searchTerm != null && !searchTerm.isEmpty() && baselineData.curatedTumorLocation().primaryTumorLocation() == null) {
             findings.add(ValidationFinding.of("tumorLocationCuration",
                     patientIdentifier,
@@ -310,14 +308,14 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTreatmentResponses(@NotNull final String patientIdentifier,
-            @NotNull final List<BiopsyTreatmentData> treatments, @NotNull final List<BiopsyTreatmentResponseData> responses) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
+    static List<ValidationFinding> validateTreatmentResponses(@NotNull String patientIdentifier,
+            @NotNull List<BiopsyTreatmentData> treatments, @NotNull List<BiopsyTreatmentResponseData> responses) {
+        List<ValidationFinding> findings = Lists.newArrayList();
         for (int i = 0; i < responses.size(); i++) {
             findings.addAll(validateTreatmentResponse(patientIdentifier, responses.get(i), i == 0));
         }
 
-        final List<BiopsyTreatmentData> matchedTreatmentsMissingResponse = treatments.stream()
+        List<BiopsyTreatmentData> matchedTreatmentsMissingResponse = treatments.stream()
                 .filter(treatment -> shouldHaveResponse(treatment) && !hasResponse(treatment.id(), responses)
                         && treatment.biopsyId() != null)
                 .collect(Collectors.toList());
@@ -336,15 +334,15 @@ public final class PatientValidator {
         return findings;
     }
 
-    private static boolean shouldHaveResponse(@NotNull final BiopsyTreatmentData treatment) {
-        final LocalDate treatmentStart = treatment.startDate();
+    private static boolean shouldHaveResponse(@NotNull BiopsyTreatmentData treatment) {
+        LocalDate treatmentStart = treatment.startDate();
         return (treatmentStart != null && Duration.between(treatmentStart.atStartOfDay(), LocalDate.now().atStartOfDay()).toDays()
                 > Config.START_DATE_RESPONSE_THRESHOLD) && !endedImmediately(treatment);
     }
 
-    private static boolean endedImmediately(@NotNull final BiopsyTreatmentData treatment) {
-        final LocalDate treatmentStart = treatment.startDate();
-        final LocalDate treatmentEnd = treatment.endDate();
+    private static boolean endedImmediately(@NotNull BiopsyTreatmentData treatment) {
+        LocalDate treatmentStart = treatment.startDate();
+        LocalDate treatmentEnd = treatment.endDate();
         return treatmentStart != null && treatmentEnd != null
                 && Duration.between(treatmentStart.atStartOfDay(), treatmentEnd.atStartOfDay()).toDays()
                 < Config.IMMEDIATE_TREATMENT_END_THRESHOLD;
@@ -356,12 +354,12 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateTreatmentResponse(@NotNull final String patientIdentifier,
-            @NotNull final BiopsyTreatmentResponseData treatmentResponse, boolean isFirstResponse) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
-        final String measurementDone = treatmentResponse.measurementDone();
-        final String response = treatmentResponse.response();
-        final LocalDate date = treatmentResponse.date();
+    static List<ValidationFinding> validateTreatmentResponse(@NotNull String patientIdentifier,
+            @NotNull BiopsyTreatmentResponseData treatmentResponse, boolean isFirstResponse) {
+        List<ValidationFinding> findings = Lists.newArrayList();
+        String measurementDone = treatmentResponse.measurementDone();
+        String response = treatmentResponse.response();
+        LocalDate date = treatmentResponse.date();
 
         if (measurementDone == null) {
             findings.add(ValidationFinding.of(ECRF_LEVEL,
@@ -419,16 +417,16 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateDeathDate(@NotNull final String patientIdentifier, @NotNull final BaselineData baselineData,
-            @NotNull final List<BiopsyTreatmentData> treatments) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
-        final LocalDate deathDate = baselineData.deathDate();
+    static List<ValidationFinding> validateDeathDate(@NotNull String patientIdentifier, @NotNull BaselineData baselineData,
+            @NotNull List<BiopsyTreatmentData> treatments) {
+        List<ValidationFinding> findings = Lists.newArrayList();
+        LocalDate deathDate = baselineData.deathDate();
         if (deathDate != null && !treatments.isEmpty()) {
             treatments.sort(comparing(BiopsyTreatmentData::endDate, nullsLast(naturalOrder())));
-            final BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
-            final String treatmentGiven = lastTreatment.treatmentGiven();
+            BiopsyTreatmentData lastTreatment = treatments.get(treatments.size() - 1);
+            String treatmentGiven = lastTreatment.treatmentGiven();
             if (treatmentGiven != null && treatmentGiven.equalsIgnoreCase("yes")) {
-                final LocalDate lastTreatmentEndDate = lastTreatment.endDate();
+                LocalDate lastTreatmentEndDate = lastTreatment.endDate();
                 if (lastTreatmentEndDate == null || lastTreatmentEndDate.isAfter(deathDate)) {
                     String details = "Death date (" + deathDate + ") before end of last treatment (" + lastTreatmentEndDate + ")";
 
@@ -446,17 +444,17 @@ public final class PatientValidator {
 
     @NotNull
     @VisibleForTesting
-    static List<ValidationFinding> validateInformedConsentDate(@NotNull final String patientIdentifier,
-            @NotNull final BaselineData baselineData, @NotNull final List<BiopsyData> biopsies) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
-        final LocalDate informedConsentDate = baselineData.informedConsentDate();
+    static List<ValidationFinding> validateInformedConsentDate(@NotNull String patientIdentifier, @NotNull BaselineData baselineData,
+            @NotNull List<BiopsyData> biopsies) {
+        List<ValidationFinding> findings = Lists.newArrayList();
+        LocalDate informedConsentDate = baselineData.informedConsentDate();
         if (informedConsentDate != null && !biopsies.isEmpty()) {
-            final List<BiopsyData> biopsiesPriorToInformedConsent = biopsies.stream().filter(biopsy -> {
-                final LocalDate biopsyDate = biopsy.date();
+            List<BiopsyData> biopsiesPriorToInformedConsent = biopsies.stream().filter(biopsy -> {
+                LocalDate biopsyDate = biopsy.date();
                 return biopsyDate != null && biopsyDate.isBefore(informedConsentDate);
             }).collect(Collectors.toList());
             if (biopsiesPriorToInformedConsent.size() > 0) {
-                final String detailsMessage =
+                String detailsMessage =
                         "InformedConsentDate: " + informedConsentDate + ". biopsies: " + biopsiesPriorToInformedConsent.stream()
                                 .map(BiopsyData::toString)
                                 .collect(Collectors.toList());

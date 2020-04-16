@@ -260,6 +260,44 @@ public class HmfTranscriptRegionTest {
         assertEquals(140453137, codon600.get(0).end());
     }
 
+    @Test
+    public void testCodonRangeAtGenomicPosition() {
+        HmfTranscriptRegion region = create(Strand.FORWARD);
+        assertEquals(0, region.codonRangeAtGenomicPosition(1).size());
+        assertEquals(region.codonByIndex(1), region.codonRangeAtGenomicPosition(2));
+        assertEquals(region.codonByIndex(1), region.codonRangeAtGenomicPosition(3));
+        assertEquals(region.codonByIndex(1), region.codonRangeAtGenomicPosition(4));
+        assertEquals(region.codonByIndex(2), region.codonRangeAtGenomicPosition(5));
+        assertEquals(0, region.codonRangeAtGenomicPosition(6).size());
+        assertEquals(region.codonByIndex(2), region.codonRangeAtGenomicPosition(7));
+        assertEquals(region.codonByIndex(2), region.codonRangeAtGenomicPosition(8));
+        assertEquals(region.codonByIndex(3), region.codonRangeAtGenomicPosition(9));
+        assertEquals(region.codonByIndex(3), region.codonRangeAtGenomicPosition(10));
+        assertEquals(region.codonByIndex(3), region.codonRangeAtGenomicPosition(11));
+        assertEquals(region.codonByIndex(4), region.codonRangeAtGenomicPosition(12));
+        assertEquals(region.codonByIndex(4), region.codonRangeAtGenomicPosition(13));
+        assertEquals(region.codonByIndex(4), region.codonRangeAtGenomicPosition(14));
+        assertEquals(region.codonByIndex(5), region.codonRangeAtGenomicPosition(15));
+        assertEquals(region.codonByIndex(5), region.codonRangeAtGenomicPosition(16));
+        assertEquals(0, region.codonRangeAtGenomicPosition(17).size());
+        assertEquals(region.codonByIndex(5), region.codonRangeAtGenomicPosition(18));
+        assertEquals(0, region.codonRangeAtGenomicPosition(19).size());
+        assertEquals(0, region.codonRangeAtGenomicPosition(20).size());
+        assertEquals(0, region.codonRangeAtGenomicPosition(21).size());
+    }
+
+    @Test
+    public void testCodonRangeAtGenomicPositionWorksForRealNRAS() {
+        HmfTranscriptRegion nras = HmfGenePanelSupplier.allGenesMap37().get("NRAS");
+        assertEquals(0, nras.codonRangeAtGenomicPosition(115251155).size());
+        assertEquals(nras.codonByIndex(190), nras.codonRangeAtGenomicPosition(115251156));
+        assertEquals(nras.codonByIndex(190), nras.codonRangeAtGenomicPosition(115251157));
+        assertEquals(nras.codonByIndex(190), nras.codonRangeAtGenomicPosition(115251158));
+        assertEquals(nras.codonByIndex(189), nras.codonRangeAtGenomicPosition(115251159));
+        assertEquals(nras.codonByIndex(189), nras.codonRangeAtGenomicPosition(115251160));
+        assertEquals(nras.codonByIndex(189), nras.codonRangeAtGenomicPosition(115251161));
+    }
+
     @NotNull
     private static GenomeRegion assertedCodonGet(@NotNull HmfTranscriptRegion transcript, int codonIndex) {
         return assertedCodonGet(transcript, codonIndex, 0);

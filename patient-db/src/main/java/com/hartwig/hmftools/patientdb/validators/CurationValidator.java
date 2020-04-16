@@ -29,7 +29,7 @@ public final class CurationValidator {
     @NotNull
     private static List<ValidationFinding> validateCurator(@NotNull CleanableCurator curator, @NotNull String level,
             @NotNull String message) {
-        final List<ValidationFinding> findings = Lists.newArrayList();
+        List<ValidationFinding> findings = Lists.newArrayList();
 
         for (String unusedTerm : curator.unusedSearchTerms()) {
             findings.add(ValidationFinding.of(level, null, message, FormStatus.undefined(), unusedTerm));

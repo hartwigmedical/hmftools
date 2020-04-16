@@ -4,9 +4,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.knowledgebasegenerator.AllGenomicEvents;
 import com.hartwig.hmftools.knowledgebasegenerator.cnv.KnownAmplificationDeletion;
+import com.hartwig.hmftools.knowledgebasegenerator.eventtype.EventType;
 import com.hartwig.hmftools.knowledgebasegenerator.fusion.KnownFusions;
 import com.hartwig.hmftools.knowledgebasegenerator.signatures.Signatures;
 
@@ -27,8 +30,10 @@ public class GeneratingOutputFiles {
     private static final String UNIQUE_KNOWN_FUSION_PAIRS_TSV = "uniqueKnownFusionPairs.tsv";
     private static final String UNIQUE_KNOWN_FUSION_PROMISCUOUS_THREE_TSV = "uniqueKnownFusionPromiscuousThree.tsv";
     private static final String UNIQUE_KNOWN_FUSION_PROMISCUOUS_FIVE_TSV = "uniqueKnownFusionPromiscuousFive.tsv";
+    private static final String EVENT_TYPES_TSV = "eventTypes.tsv";
 
     public static void generatingOutputFiles(@NotNull String outputDir, @NotNull AllGenomicEvents genomicEvents) throws IOException {
+        generateEventTypes(outputDir + File.separator + EVENT_TYPES_TSV, genomicEvents);
         generateUniqueKnownAmplification(outputDir + File.separator + UNIQUE_KNOWN_AMPLIFICATION_TSV, genomicEvents);
         generateUniqueKnownDeletions(outputDir + File.separator + UNIQUE_KNOWN_DELETION_TSV, genomicEvents);
         generateInfoKnownAmplification(outputDir + File.separator + KNOWN_AMPLIFICATION_INFO_TSV, genomicEvents);
@@ -40,7 +45,23 @@ public class GeneratingOutputFiles {
         genertateUniqueKnownFusionPromiscuousThree(outputDir + File.separator + UNIQUE_KNOWN_FUSION_PROMISCUOUS_THREE_TSV, genomicEvents);
         genertateUniqueKnownFusionPromiscuousFive(outputDir + File.separator + UNIQUE_KNOWN_FUSION_PROMISCUOUS_FIVE_TSV, genomicEvents);
 
+    }
 
+    private static void generateEventTypes(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
+        String headerEvents = "EventMap" + DELIMITER + "Map gene" + DELIMITER + "Map event" + DELIMITER + "Source" + NEW_LINE;
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));
+        writer.write(headerEvents);
+
+        for (EventType eventType : genomicEvents.eventType()) {
+            for (Map.Entry<String, List<String>> entryDB : eventType.eventMap().entrySet()) {
+                for (String event : entryDB.getValue()) {
+                    writer.write(eventType.eventMap() + DELIMITER + entryDB.getKey() + DELIMITER + event + DELIMITER + eventType.source()
+                            + NEW_LINE);
+                }
+            }
+        }
+        writer.close();
     }
 
     private static void generateUniqueKnownAmplification(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents)
@@ -110,7 +131,8 @@ public class GeneratingOutputFiles {
         writer.close();
     }
 
-    private static void generateInfoKnownFusionPairs(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents) throws IOException {
+    private static void generateInfoKnownFusionPairs(@NotNull String outputFile, @NotNull AllGenomicEvents genomicEvents)
+            throws IOException {
         String headerknownCNV = "gene" + DELIMITER + "eventType" + DELIMITER + "Source" + DELIMITER + "Link" + NEW_LINE;
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));

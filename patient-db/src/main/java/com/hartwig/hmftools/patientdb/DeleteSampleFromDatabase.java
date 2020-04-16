@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -23,11 +22,11 @@ public class DeleteSampleFromDatabase {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
-        final String sample = cmd.getOptionValue(SAMPLE);
+    public static void main(@NotNull String[] args) throws ParseException, SQLException {
+        Options options = createBasicOptions();
+        CommandLine cmd = createCommandLine(args, options);
+        DatabaseAccess dbAccess = databaseAccess(cmd);
+        String sample = cmd.getOptionValue(SAMPLE);
 
         LOGGER.info("Removing sample: " + sample + " from hmf database");
         dbAccess.deleteAllDataForSample(sample);
@@ -36,7 +35,7 @@ public class DeleteSampleFromDatabase {
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(SAMPLE, true, "Tumor sample to delete.");
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
@@ -46,17 +45,16 @@ public class DeleteSampleFromDatabase {
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }

@@ -2,12 +2,15 @@ package com.hartwig.hmftools.sage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
+import com.hartwig.hmftools.common.sage.SagePostProcessVCF;
 import com.hartwig.hmftools.sage.snpeff.SagePostProcess;
-import com.hartwig.hmftools.sage.snpeff.SagePostProcessVCF;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,7 +35,6 @@ public class SagePostProcessApplication implements AutoCloseable {
     private static final String IN_VCF = "in";
     private static final String OUT_VCF = "out";
     private static final String ASSEMBLY = "assembly";
-
 
     public static void main(String[] args) throws IOException, ParseException {
         final Options options = createOptions();
@@ -71,7 +73,9 @@ public class SagePostProcessApplication implements AutoCloseable {
         this.fileWriter = new SagePostProcessVCF(outputVCF);
         Map<String, HmfTranscriptRegion> geneMap =
                 assembly.equals(HG19) ? HmfGenePanelSupplier.allGenesMap37() : HmfGenePanelSupplier.allGenesMap38();
-        this.postProcess = new SagePostProcess(geneMap, fileWriter::writeVariant);
+        List<CanonicalTranscript> canonicalTranscripts =
+                assembly.equals(HG19) ? CanonicalTranscriptFactory.create37() : CanonicalTranscriptFactory.create38();
+        this.postProcess = new SagePostProcess(geneMap, canonicalTranscripts, fileWriter::writeVariant);
     }
 
     private void run() {

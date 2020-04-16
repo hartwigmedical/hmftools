@@ -9,13 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.HmfExonRegion;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.genome.region.Strand;
+import com.hartwig.hmftools.common.sage.SagePostProcessVCF;
 import com.hartwig.hmftools.common.variant.CanonicalAnnotation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.VariantConsequence;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotation;
 import com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
@@ -32,14 +36,17 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
     static final String INFRAME_DELETION = "inframe_deletion";
     static final String SPLICE_DONOR_VARIANT = "splice_donor_variant";
 
+    private final List<VariantContext> buffer;
     private final Consumer<VariantContext> consumer;
-    private final List<VariantContext> buffer = Lists.newArrayList();
-    private final CanonicalAnnotation canonicalAnnotation = new CanonicalAnnotation();
+    private final CanonicalAnnotation canonicalAnnotation;
     private final Map<String, HmfTranscriptRegion> allGenesMap;
 
-    public SagePostProcess(@NotNull final Map<String, HmfTranscriptRegion> allGenesMap, @NotNull final Consumer<VariantContext> consumer) {
+    public SagePostProcess(@NotNull final Map<String, HmfTranscriptRegion> allGenesMap,
+            @NotNull final List<CanonicalTranscript> transcripts, @NotNull final Consumer<VariantContext> consumer) {
+        this.buffer = Lists.newArrayList();
         this.consumer = consumer;
         this.allGenesMap = allGenesMap;
+        this.canonicalAnnotation = new CanonicalAnnotation(transcripts);
     }
 
     @Override
@@ -67,16 +74,73 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
             final SnpEffAnnotation canonical = optionalCanonical.get();
             final CodingEffect codingEffect = effect(canonical.gene(), canonical.consequences());
 
-            if (context.isSNP()) {
-                spliceDonorPlus5(context, canonical);
-            } else if (context.isIndel()) {
-                phasedInframeIndel(context, canonical);
-                inframeIndelWithMH(context, canonical, codingEffect);
+            context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_GENE, canonical.gene());
+            context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_EFFECT, consequences(canonical));
+            context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_IMPACT, codingEffect.toString());
+
+            if (spliceDonorPlus5(context, canonical)) {
+                context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_EFFECT, "splice_donor_5_base_variant", true);
+                context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_IMPACT, CodingEffect.SPLICE.toString(), true);
+            } else if (inframeIndelWithMH(context, canonical, codingEffect)) {
+                context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_EFFECT, "inframe_mh", true);
+                context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_IMPACT, CodingEffect.MISSENSE.toString(), true);
+            }
+
+            processPhasedInframeIndel(context, canonical);
+            processMixedGermlineImpact(context);
+        }
+    }
+
+    @NotNull
+    private List<String> consequences(@NotNull final SnpEffAnnotation annotation) {
+        return annotation.consequences().stream().map(VariantConsequence::parentSequenceOntologyTerm).collect(Collectors.toList());
+    }
+
+    private void processMixedGermlineImpact(@NotNull final VariantContext context) {
+        int mixedImpact = context.getAttributeAsInt(SageVCF.MIXED_SOMATIC_GERMLINE, 0);
+        if (mixedImpact == 0) {
+            return;
+        }
+
+        boolean newIsSnv = context.isSNP();
+        boolean newIsMnv = context.isMNP();
+
+        for (VariantContext otherContext : buffer) {
+            if (otherContext.getAttributeAsInt(SageVCF.MIXED_SOMATIC_GERMLINE, 0) == mixedImpact) {
+
+                boolean otherIsSnv = otherContext.isSNP();
+                boolean otherIsMnv = otherContext.isMNP();
+
+                final VariantContext snv;
+                final VariantContext mnv;
+                if (newIsSnv && otherIsMnv) {
+                    snv = context;
+                    mnv = otherContext;
+                } else if (newIsMnv && otherIsSnv) {
+                    snv = otherContext;
+                    mnv = context;
+                } else {
+                    snv = null;
+                    mnv = null;
+                }
+
+                if (snv != null && mnv != null) {
+                    final List<SnpEffAnnotation> mnvAnnotations = SnpEffAnnotationFactory.fromContext(context);
+                    final Optional<SnpEffAnnotation> optionalCanonical = canonicalAnnotation.canonicalSnpEffAnnotation(mnvAnnotations);
+                    if (optionalCanonical.isPresent()) {
+                        final SnpEffAnnotation canonical = optionalCanonical.get();
+                        final CodingEffect codingEffect = effect(canonical.gene(), canonical.consequences());
+
+                        snv.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_GENE, canonical.gene(), true);
+                        snv.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_EFFECT, consequences(canonical), true);
+                        snv.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_IMPACT, codingEffect.toString(), true);
+                    }
+                }
             }
         }
     }
 
-    private void phasedInframeIndel(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical) {
+    private void processPhasedInframeIndel(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical) {
         int phase = context.getAttributeAsInt(SageVCF.PHASE, 0);
         if (phase == 0) {
             return;
@@ -97,8 +161,12 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
             if (other.isIndel() && other.getAttributeAsInt(SageVCF.PHASE, 0) == phase) {
                 int otherLength = indelLength(other);
                 if ((indelLength + otherLength) % 3 == 0 && other.getStart() >= exon.start() && other.getEnd() <= exon.end()) {
-                    other.getCommonInfo().putAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL, true, true);
-                    context.getCommonInfo().putAttribute(SagePostProcessVCF.PHASED_INFRAME_INDEL, true, true);
+
+                    other.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_EFFECT, "inframe_phased", true);
+                    context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_EFFECT, "inframe_phased", true);
+
+                    other.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_IMPACT, CodingEffect.MISSENSE.toString(), true);
+                    context.getCommonInfo().putAttribute(SagePostProcessVCF.HMF_CANONICAL_IMPACT, CodingEffect.MISSENSE.toString(), true);
                 }
             }
         }
@@ -111,14 +179,13 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
                 return exon;
             }
         }
-
         return null;
     }
 
-    private void spliceDonorPlus5(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical) {
+    private boolean spliceDonorPlus5(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical) {
 
         if (!context.isSNP() || !canonical.effects().contains("splice_region_variant")) {
-            return;
+            return false;
         }
 
         final HmfTranscriptRegion transcript = allGenesMap.get(canonical.gene());
@@ -129,19 +196,20 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
                 final HmfExonRegion exon = transcript.exonByIndex(i);
                 if (exon != null) {
                     if (forward && context.getStart() == exon.end() + 5 || !forward && context.getStart() == exon.start() - 5) {
-                        insertEffectBeforeCanonicalAnnotation(context, canonical, SPLICE_DONOR_VARIANT);
-                        return;
+                        return true;
                     }
                 }
             }
         }
+
+        return false;
     }
 
-    private void inframeIndelWithMH(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical,
+    private boolean inframeIndelWithMH(@NotNull final VariantContext context, @NotNull final SnpEffAnnotation canonical,
             @NotNull final CodingEffect codingEffect) {
         if (!context.isIndel() || !context.hasAttribute(MICROHOMOLOGY_FLAG) || !codingEffect.equals(NONSENSE_OR_FRAMESHIFT)
                 || !canonical.effects().contains("splice") || !isMod3RefOrAlt(context)) {
-            return;
+            return false;
         }
 
         int microhomologyLength = context.getAttributeAsString(MICROHOMOLOGY_FLAG, "").length();
@@ -155,34 +223,12 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
 
                 final HmfExonRegion exon = transcriptRegion.exonByIndex(i);
                 if (exon != null && rightAlignedIndelStart >= exon.start() && rightAlignedIndelEnd <= exon.end()) {
-
-                    addInframeIndelEffectToCanonicalAnnotation(context, canonical);
-                    return;
+                    return true;
                 }
             }
         }
-    }
 
-    private static void addInframeIndelEffectToCanonicalAnnotation(@NotNull final VariantContext context,
-            @NotNull final SnpEffAnnotation canonical) {
-        String effect = context.getReference().length() > context.getAlternateAllele(0).length() ? INFRAME_INSERTION : INFRAME_INSERTION;
-        insertEffectBeforeCanonicalAnnotation(context, canonical, effect);
-    }
-
-    private static void insertEffectBeforeCanonicalAnnotation(@NotNull final VariantContext context,
-            @NotNull final SnpEffAnnotation canonical, @NotNull final String newEffect) {
-
-        final List<String> snpEffAnnotations = context.getAttributeAsStringList("ANN", "");
-        for (int i = 0; i < snpEffAnnotations.size(); i++) {
-            final String annotation = snpEffAnnotations.get(i);
-            if (annotation.contains(canonical.effects()) && annotation.contains(canonical.transcript())) {
-                final String updatedAnnotation = annotation.replace(canonical.effects(), newEffect);
-                final String hmgTag = updatedAnnotation.charAt(updatedAnnotation.length() - 1) == '|' ? "HMF" : "&HMF";
-                snpEffAnnotations.add(i, updatedAnnotation + hmgTag);
-                context.getCommonInfo().putAttribute("ANN", snpEffAnnotations, true);
-                return;
-            }
-        }
+        return false;
     }
 
     private int indelLength(@NotNull final VariantContext context) {

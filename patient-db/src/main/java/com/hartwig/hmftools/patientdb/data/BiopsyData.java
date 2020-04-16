@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BiopsyData implements Comparable<BiopsyData>  {
+public abstract class BiopsyData implements Comparable<BiopsyData> {
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
 
@@ -50,13 +50,17 @@ public abstract class BiopsyData implements Comparable<BiopsyData>  {
     public static BiopsyData of(@Nullable LocalDate date, @Nullable String biopsyTaken, @Nullable String biopsyEvaluable,
             @NotNull CuratedBiopsyType curatedBiopsyType, @Nullable String site, @Nullable String location,
             @NotNull FormStatus formStatus) {
-        return ImmutableBiopsyData.of(createId(), null,
-                date,
-                biopsyTaken,
-                biopsyEvaluable,
-                curatedBiopsyType,
-                site,
-                location, formStatus);
+        return ImmutableBiopsyData.builder()
+                .id(createId())
+                .sampleId(null)
+                .date(date)
+                .biopsyTaken(biopsyTaken)
+                .biopsyEvaluable(biopsyEvaluable)
+                .type(curatedBiopsyType)
+                .site(site)
+                .location(location)
+                .formStatus(formStatus)
+                .build();
     }
 
     @Nullable
@@ -76,7 +80,7 @@ public abstract class BiopsyData implements Comparable<BiopsyData>  {
     }
 
     @Override
-    public int compareTo(@NotNull  BiopsyData other) {
+    public int compareTo(@NotNull BiopsyData other) {
         LocalDate date1 = date();
         LocalDate date2 = other.date();
         if (date1 == null && date2 == null) {

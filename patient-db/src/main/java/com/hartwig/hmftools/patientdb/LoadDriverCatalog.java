@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -30,17 +29,16 @@ public class LoadDriverCatalog {
     private static final Logger LOGGER = LogManager.getLogger(LoadDriverCatalog.class);
 
     public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(DATA_DIR, true, "Location of purple output files");
         options.addOption(SAMPLE, true, "Tumor sample.");
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        CommandLine cmd = new DefaultParser().parse(options, args);
 
-        final String sample = cmd.getOptionValue(SAMPLE);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
+        String sample = cmd.getOptionValue(SAMPLE);
+        DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        final List<DriverCatalog> driverCatalog =
+        List<DriverCatalog> driverCatalog =
                 DriverCatalogFile.read(DriverCatalogFile.generateFilename(cmd.getOptionValue(DATA_DIR), sample));
 
         if (!driverCatalog.isEmpty()) {
@@ -50,11 +48,11 @@ public class LoadDriverCatalog {
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 

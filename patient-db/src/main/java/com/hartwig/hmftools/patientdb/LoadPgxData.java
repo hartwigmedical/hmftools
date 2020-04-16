@@ -30,7 +30,7 @@ public class LoadPgxData {
     private static final String PGX_CALLS_TXT = "pgx_calls_txt";
     private static final String PGX_GENOTYPE_TXT = "pgx_genotype_txt";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
@@ -47,8 +47,8 @@ public class LoadPgxData {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
-            final String jdbcUrl = "jdbc:" + databaseUrl;
-            final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+             String jdbcUrl = "jdbc:" + databaseUrl;
+             DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
             LOGGER.info("Reading pgx calls file {}", pgxCallsFileName);
             List<PGXCalls> pgxCalls = PGXCallsFile.read(pgxCallsFileName);
@@ -59,7 +59,7 @@ public class LoadPgxData {
             LOGGER.info("Writing pgx into database");
             dbWriter.writePGX(sample, pgxGenotype, pgxCalls);
 
-            LOGGER.info("Pgx data is writed into database for sample {}", sample);
+            LOGGER.info("Pgx data is written into database for sample {}", sample);
         }
 
     }
@@ -79,5 +79,4 @@ public class LoadPgxData {
 
         return options;
     }
-
 }

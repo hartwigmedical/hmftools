@@ -77,11 +77,11 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == FIVE_DAYS_DATA_COUNT) {
-                String patientId = WideFileInputInterpreter.toWideID(line.get(FIVE_DAYS_DATA_PATIENT_ID));
-                if (!patientId.isEmpty()) {
+                String widePatientId = WideFileInputInterpreter.toWideID(line.get(FIVE_DAYS_DATA_PATIENT_ID));
+                if (!widePatientId.isEmpty()) {
                     boolean dataIsAvailable = line.get(FIVE_DAYS_DATA_IS_AVAILABLE).equals("1");
                     ImmutableWideFiveDays.Builder wideFiveDaysDataBuilder =
-                            ImmutableWideFiveDays.builder().patientId(patientId).dataIsAvailable(dataIsAvailable);
+                            ImmutableWideFiveDays.builder().widePatientId(widePatientId).dataIsAvailable(dataIsAvailable);
 
                     if (dataIsAvailable) {
                         wideFiveDaysDataBuilder.informedConsentDate(WideFileInputInterpreter.interpretDateIC(line.get(
@@ -114,10 +114,10 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == PRE_AVL_TREATMENT_DATA_COUNT) {
-                String patientId = WideFileInputInterpreter.toWideID(line.get(PRE_AVL_TREATMENT_DATA_PATIENT_ID));
-                if (!patientId.isEmpty()) {
+                String widePatientId = WideFileInputInterpreter.toWideID(line.get(PRE_AVL_TREATMENT_DATA_PATIENT_ID));
+                if (!widePatientId.isEmpty()) {
                     WidePreAvlTreatmentData widePreAvlTreatment = ImmutableWidePreAvlTreatmentData.builder()
-                            .patientId(patientId)
+                            .widePatientId(widePatientId)
                             .hasPreviousTherapy(line.get(PRE_AVL_TREATMENT_DATA_HAS_PREVIOUS_THERAPY).equals("1"))
                             .drug1(line.get(PRE_AVL_TREATMENT_DATA_DRUG1))
                             .drug2(line.get(PRE_AVL_TREATMENT_DATA_DRUG2))
@@ -142,10 +142,10 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == BIOPSY_DATA_COUNT) {
-                String patientId = WideFileInputInterpreter.toWideID(line.get(BIOPSY_DATA_PATIENT_ID));
-                if (!patientId.isEmpty()) {
+                String widePatientId = WideFileInputInterpreter.toWideID(line.get(BIOPSY_DATA_PATIENT_ID));
+                if (!widePatientId.isEmpty()) {
                     WideBiopsyData wideBiopsy = ImmutableWideBiopsyData.builder()
-                            .patientId(patientId)
+                            .widePatientId(widePatientId)
                             .pathologySampleId(line.get(BIOPSY_DATA_PATHOLOGY_SAMPLE_ID))
                             .biopsyDate(WideFileInputInterpreter.interpretDateEN(line.get(BIOPSY_DATA_DATE)))
                             .hasReceivedSuccessfulReport(WideFileInputInterpreter.convertHasReceivedSuccessfulReport(line.get(
@@ -167,10 +167,10 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, SEMICOLON_DELIMITER)) {
             if (line.size() == AVL_TREATMENT_DATA_COUNT) {
-                String patientId = WideFileInputInterpreter.toWideID(line.get(AVL_TREATMENT_DATA_PATIENT_ID));
-                if (!patientId.isEmpty()) {
+                String widePatientId = WideFileInputInterpreter.toWideID(line.get(AVL_TREATMENT_DATA_PATIENT_ID));
+                if (!widePatientId.isEmpty()) {
                     WideAvlTreatmentData wideTreatment = ImmutableWideAvlTreatmentData.builder()
-                            .patientId(patientId)
+                            .widePatientId(widePatientId)
                             .drugCode(line.get(AVL_TREATMENT_DATA_DRUG_CODE))
                             .drug(line.get(AVL_TREATMENT_DATA_DRUG))
                             .startDate(WideFileInputInterpreter.interpretDateNL(line.get(AVL_TREATMENT_DATA_START_DATE)))
@@ -192,12 +192,12 @@ public class WideEcrfFileReader {
 
         for (CSVRecord line : readCsvSkipHeader(pathToCsv, COMMA_DELIMITER)) {
             if (line.size() == RESPONSE_DATA_COUNT) {
-                String patientId = WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID));
-                if (!patientId.isEmpty()) {
+                String widePatientId = WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID));
+                if (!widePatientId.isEmpty()) {
                     boolean recistDone = line.get(RESPONSE_DATA_RECIST_NOT_DONE).equals("FALSE");
 
                     ImmutableWideResponseData.Builder wideResponseBuilder = ImmutableWideResponseData.builder()
-                            .patientId(WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID)))
+                            .widePatientId(WideFileInputInterpreter.toWideID(line.get(RESPONSE_DATA_PATIENT_ID)))
                             .timePoint(Integer.parseInt(line.get(RESPONSE_DATA_TIME_POINT)))
                             .date(WideFileInputInterpreter.interpretDateEN(line.get(RESPONSE_DATA_DATE)))
                             .recistDone(recistDone)

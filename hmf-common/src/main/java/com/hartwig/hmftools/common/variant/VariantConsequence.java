@@ -76,6 +76,10 @@ public enum VariantConsequence {
         return parentSequenceOntologyTerm.replace("_", " ");
     }
 
+    @NotNull
+    public String parentSequenceOntologyTerm() {
+        return parentSequenceOntologyTerm;
+    }
 
     @NotNull
     public static List<VariantConsequence> sufferConsequences(@NotNull final List<String> effects) {

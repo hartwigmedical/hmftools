@@ -43,7 +43,7 @@ public class DedupMnv implements Consumer<SageVariant> {
                             shorter = newVariant;
                             longer = oldVariant;
                         }
-                        if (filterShorter(shorter, longer)) {
+                        if (longerContainsShorter(shorter, longer)) {
                             shorter.filters().add(SageVCF.DEDUP_FILTER);
                         }
                     }
@@ -54,7 +54,7 @@ public class DedupMnv implements Consumer<SageVariant> {
         buffer.add(newVariant);
     }
 
-    private static boolean filterShorter(@NotNull final SageVariant shorter, @NotNull final SageVariant longer) {
+    public static boolean longerContainsShorter(@NotNull final SageVariant shorter, @NotNull final SageVariant longer) {
         long longerStart = longer.position();
         long longerEnd = longer.end();
 

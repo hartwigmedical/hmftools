@@ -29,11 +29,11 @@ final class RanoMeasurementReader {
     }
 
     @NotNull
-    static List<RanoMeasurementData> read(@NotNull final EcrfPatient patient) {
-        final List<RanoMeasurementData> rano = Lists.newArrayList();
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
-            for (final EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE_RANO)) {
-                for (final EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE_RANO)) {
+    static List<RanoMeasurementData> read(@NotNull EcrfPatient patient) {
+        List<RanoMeasurementData> rano = Lists.newArrayList();
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_TREATMENT)) {
+            for (EcrfForm form : studyEvent.nonEmptyFormsPerOID(FORM_RESPONSE_RANO)) {
+                for (EcrfItemGroup responseGroup : form.nonEmptyItemGroupsPerOID(ITEMGROUP_RESPONSE_RANO)) {
                     String therapyGiven = responseGroup.readItemString(FIELD_THERAPY_GIVEN);
                     LocalDate responseDate = responseGroup.readItemDate(FIELD_RESPONSE_DATE);
                     String targetLesionResponse = responseGroup.readItemString(FIELD_TARGET_LESION_RESPONSE);
@@ -49,6 +49,7 @@ final class RanoMeasurementReader {
                 }
             }
         }
+
         return rano;
     }
 }

@@ -67,8 +67,8 @@ class BaselineReader {
     }
 
     @NotNull
-    BaselineData read(@NotNull final EcrfPatient patient) {
-        final ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
+    BaselineData read(@NotNull EcrfPatient patient) {
+        ImmutableBaselineData.Builder baselineBuilder = ImmutableBaselineData.builder()
                 .demographyStatus(FormStatus.undefined())
                 .primaryTumorStatus(FormStatus.undefined())
                 .curatedTumorLocation(ImmutableCuratedTumorLocation.of(null, null, null))
@@ -78,7 +78,7 @@ class BaselineReader {
                 .deathStatus(FormStatus.undefined())
                 .hospital(getHospital(patient, hospitals));
 
-        for (final EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
+        for (EcrfStudyEvent studyEvent : patient.studyEventsPerOID(STUDY_BASELINE)) {
             setDemographyData(baselineBuilder, studyEvent);
             setPrimaryTumorData(baselineBuilder, studyEvent, patient.patientId());
             setRegistrationAndBirthData(baselineBuilder, studyEvent);
@@ -90,23 +90,23 @@ class BaselineReader {
     }
 
     @Nullable
-    private static String getHospital(@NotNull final EcrfPatient patient, @NotNull final Map<Integer, String> hospitals) {
+    private static String getHospital(@NotNull EcrfPatient patient, @NotNull Map<Integer, String> hospitals) {
         if (patient.patientId().length() >= 8) {
-            final Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
-            final String hospital = hospitals.get(hospitalCode);
+            Integer hospitalCode = Integer.parseInt(patient.patientId().substring(6, 8));
+            String hospital = hospitals.get(hospitalCode);
             if (hospital == null) {
-                LOGGER.warn(FIELD_HOSPITAL1 + ", " + FIELD_HOSPITAL2 + " contained no hospitalPerHospital with code " + hospitalCode);
+                LOGGER.warn("Fields '{}' and '{}' contained no hospital with code '{}'", FIELD_HOSPITAL1, FIELD_HOSPITAL2, hospitalCode);
             }
             return hospital;
         } else {
-            LOGGER.warn("Could not extract hospitalPerHospital code for patient: " + patient.patientId());
+            LOGGER.warn("Could not extract hospital code for patient: {}", patient.patientId());
             return null;
         }
     }
 
-    private void setDemographyData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY)) {
-            for (final EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY)) {
+    private void setDemographyData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        for (EcrfForm demographyForm : studyEvent.nonEmptyFormsPerOID(FORM_DEMOGRAPHY)) {
+            for (EcrfItemGroup demographyItemGroup : demographyForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEMOGRAPHY)) {
                 builder.gender(demographyItemGroup.readItemString(FIELD_GENDER));
                 builder.demographyStatus(demographyForm.status());
             }
@@ -120,25 +120,25 @@ class BaselineReader {
         String primaryTumorLocationCarcinoma = null;
         FormStatus primaryTumorLocationCarcinomaStatus = null;
 
-        for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
-            for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
+        for (EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
+            for (EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
                 primaryTumorLocationSelcrit = selcritItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_SELCRIT);
                 primaryTumorLocationSelcritStatus = selcritForm.status();
             }
         }
 
-        for (final EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
-            for (final EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
+        for (EcrfForm carcinomaForm : studyEvent.nonEmptyFormsPerOID(FORM_CARCINOMA)) {
+            for (EcrfItemGroup carcinomaItemGroup : carcinomaForm.nonEmptyItemGroupsPerOID(ITEMGROUP_CARCINOMA)) {
                 primaryTumorLocationCarcinoma = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION);
                 String primaryTumorLocationOther = carcinomaItemGroup.readItemString(FIELD_PRIMARY_TUMOR_LOCATION_OTHER);
                 if (primaryTumorLocationCarcinoma != null && primaryTumorLocationCarcinoma.trim().toLowerCase().startsWith("other")) {
                     primaryTumorLocationCarcinoma = primaryTumorLocationOther;
                 } else if (primaryTumorLocationOther != null && !primaryTumorLocationOther.isEmpty()) {
                     // TODO See DEV-906
-//                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
-//                            patientId,
-//                            primaryTumorLocationCarcinoma,
-//                            primaryTumorLocationOther);
+                    //                    LOGGER.warn("{} has extra details specified for primary tumor location {}: {}",
+                    //                            patientId,
+                    //                            primaryTumorLocationCarcinoma,
+                    //                            primaryTumorLocationOther);
                 }
                 primaryTumorLocationCarcinomaStatus = carcinomaForm.status();
             }
@@ -151,26 +151,25 @@ class BaselineReader {
         // See DEV-540
         if (primaryTumorLocationCarcinoma != null && !primaryTumorLocationCarcinoma.isEmpty() && primaryTumorLocationSelcrit != null
                 && !primaryTumorLocationSelcrit.isEmpty() && !primaryTumorLocationCarcinoma.equals(primaryTumorLocationSelcrit)) {
-//            LOGGER.warn("Selcrit primary tumor location ({}) does not match carcinoma primary tumor location ({}) for {}",
-//                    primaryTumorLocationSelcrit,
-//                    primaryTumorLocationCarcinoma,
-//                    patientId);
+            //            LOGGER.warn("Selcrit primary tumor location ({}) does not match carcinoma primary tumor location ({}) for {}",
+            //                    primaryTumorLocationSelcrit,
+            //                    primaryTumorLocationCarcinoma,
+            //                    patientId);
         }
 
         builder.curatedTumorLocation(tumorLocationCurator.search(primaryTumorLocation));
         builder.primaryTumorStatus(primaryTumorFormStatus != null ? primaryTumorFormStatus : FormStatus.undefined());
     }
 
-    private static void setRegistrationAndBirthData(@NotNull final ImmutableBaselineData.Builder builder,
-            @NotNull final EcrfStudyEvent studyEvent) {
+    private static void setRegistrationAndBirthData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
         LocalDate registrationDate1 = null;
         LocalDate registrationDate2 = null;
         String birthYear1 = null;
         String birthYear2 = null;
         LocalDate birthYear3 = null;
 
-        for (final EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY)) {
-            for (final EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY)) {
+        for (EcrfForm eligibilityForm : studyEvent.nonEmptyFormsPerOID(FORM_ELIGIBILITY)) {
+            for (EcrfItemGroup eligibilityItemGroup : eligibilityForm.nonEmptyItemGroupsPerOID(ITEMGROUP_ELIGIBILITY)) {
                 registrationDate1 = eligibilityItemGroup.readItemDate(FIELD_REGISTRATION_DATE1);
                 birthYear2 = eligibilityItemGroup.readItemString(FIELD_BIRTH_YEAR2);
                 birthYear3 = eligibilityItemGroup.readItemDate(FIELD_BIRTH_YEAR3);
@@ -178,8 +177,8 @@ class BaselineReader {
             }
         }
 
-        for (final EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
-            for (final EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
+        for (EcrfForm selcritForm : studyEvent.nonEmptyFormsPerOID(FORM_SELCRIT)) {
+            for (EcrfItemGroup selcritItemGroup : selcritForm.nonEmptyItemGroupsPerOID(ITEMGROUP_SELCRIT)) {
                 birthYear1 = selcritItemGroup.readItemString(FIELD_BIRTH_YEAR1);
                 if (registrationDate1 == null) {
                     registrationDate2 = selcritItemGroup.readItemDate(FIELD_REGISTRATION_DATE2);
@@ -188,15 +187,14 @@ class BaselineReader {
             }
         }
 
-        final LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
-        final Integer birthYear = determineBirthYear(birthYear1, birthYear2, birthYear3);
+        LocalDate registrationDate = registrationDate2 == null ? registrationDate1 : registrationDate2;
+        Integer birthYear = determineBirthYear(birthYear1, birthYear2, birthYear3);
         builder.registrationDate(registrationDate);
         builder.birthYear(birthYear);
     }
 
     @Nullable
-    private static Integer determineBirthYear(@Nullable final String birthYear1, @Nullable final String birthYear2,
-            @Nullable final LocalDate birthYear3) {
+    private static Integer determineBirthYear(@Nullable String birthYear1, @Nullable String birthYear2, @Nullable LocalDate birthYear3) {
         if (birthYear1 != null) {
             return Integer.parseInt(birthYear1);
         }
@@ -209,19 +207,19 @@ class BaselineReader {
         return null;
     }
 
-    private void setInformedConsent(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfStudyEvent studyEvent) {
-        for (final EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
-            for (final EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT)) {
+    private void setInformedConsent(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfStudyEvent studyEvent) {
+        for (EcrfForm informedConsentForm : studyEvent.nonEmptyFormsPerOID(FORM_INFORMED_CONSENT)) {
+            for (EcrfItemGroup informedConsentItemGroup : informedConsentForm.nonEmptyItemGroupsPerOID(ITEMGROUP_INFORMED_CONSENT)) {
                 builder.informedConsentDate(informedConsentItemGroup.readItemDate(FIELD_INFORMED_CONSENT_DATE));
                 builder.informedConsentStatus(informedConsentForm.status());
             }
         }
     }
 
-    private static void setDeathData(@NotNull final ImmutableBaselineData.Builder builder, @NotNull final EcrfPatient patient) {
-        for (final EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
-            for (final EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH)) {
-                for (final EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH)) {
+    private static void setDeathData(@NotNull ImmutableBaselineData.Builder builder, @NotNull EcrfPatient patient) {
+        for (EcrfStudyEvent endStudyEvent : patient.studyEventsPerOID(STUDY_ENDSTUDY)) {
+            for (EcrfForm deathForm : endStudyEvent.nonEmptyFormsPerOID(FORM_DEATH)) {
+                for (EcrfItemGroup deathItemGroup : deathForm.nonEmptyItemGroupsPerOID(ITEMGROUP_DEATH)) {
                     builder.deathDate(deathItemGroup.readItemDate(FIELD_DEATH_DATE));
                     builder.deathStatus(deathForm.status());
                 }

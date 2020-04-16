@@ -9,10 +9,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class WidePreAvlTreatmentData {
+public abstract class WidePreAvlTreatmentData implements WideClinicalData {
 
     @NotNull
-    public abstract String patientId();
+    @Override
+    public abstract String widePatientId();
 
     public abstract boolean hasPreviousTherapy();
 

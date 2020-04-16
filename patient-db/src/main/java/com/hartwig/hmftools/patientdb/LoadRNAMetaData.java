@@ -28,7 +28,7 @@ public class LoadRNAMetaData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createBasicOptions();
         CommandLine cmd = createCommandLine(args, options);
 

@@ -35,7 +35,7 @@ public abstract class SampleData implements Comparable<SampleData> {
     public abstract String pathologyTumorPercentage();
 
     @NotNull
-    public abstract String tumorBarcode();
+    public abstract String pathologySampleId();
 
     @NotNull
     @Value.Derived

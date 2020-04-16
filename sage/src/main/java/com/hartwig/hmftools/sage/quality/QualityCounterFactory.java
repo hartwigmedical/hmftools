@@ -5,9 +5,12 @@ import java.util.Collection;
 import java.util.concurrent.CompletionException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.sage.SageApplication;
 import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.SamSlicer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SamReader;
@@ -16,6 +19,8 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 class QualityCounterFactory {
+
+    private static final Logger LOGGER = LogManager.getLogger(SageApplication.class);
 
     private final String bamFile;
     private final ReferenceSequenceFile refGenome;
@@ -29,6 +34,7 @@ class QualityCounterFactory {
 
     @NotNull
     public Collection<QualityCounter> regionCount(@NotNull final GenomeRegion bounds) {
+        LOGGER.debug("Processing bqr region {}", bounds);
 
         final RefSequence refSequence = new RefSequence(bounds, refGenome);
         final QualityCounterCigarHandler counter = new QualityCounterCigarHandler(refSequence, bounds, maxAltCount);

@@ -20,6 +20,9 @@ public class SageVariant implements GenomePosition {
     private final List<ReadContextCounter> tumorAltContexts;
 
     private int localPhaseSet;
+    private int mixedImpact;
+    private int phasedInframeIndel;
+    private boolean realigned;
 
     public SageVariant(@NotNull final SageVariantTier tier, @NotNull final VariantHotspot variant, @NotNull final Set<String> filters,
             final List<ReadContextCounter> normal, final List<ReadContextCounter> tumorAltContexts) {
@@ -33,12 +36,20 @@ public class SageVariant implements GenomePosition {
 
     @NotNull
     public String ref() {
-        return variant.alt();
+        return variant.ref();
     }
 
     @NotNull
     public String alt() {
         return variant.alt();
+    }
+
+    public boolean isRealigned() {
+        return realigned;
+    }
+
+    public void realigned(final boolean realigned) {
+        this.realigned = realigned;
     }
 
     public long end() {
@@ -47,6 +58,22 @@ public class SageVariant implements GenomePosition {
 
     public boolean isIndel() {
         return variant.ref().length() != variant.alt().length();
+    }
+
+    public int phasedInframeIndel() {
+        return phasedInframeIndel;
+    }
+
+    public void phasedInframeIndel(final int phasedInframeIndel) {
+        this.phasedInframeIndel = phasedInframeIndel;
+    }
+
+    public boolean isMnv() {
+        return variant.ref().length() >= 1 && variant.ref().length() == variant.alt().length();
+    }
+
+    public boolean isSnv() {
+        return variant.ref().length() == 1 && variant.alt().length() == 1;
     }
 
     public boolean isInsert() {
@@ -63,6 +90,14 @@ public class SageVariant implements GenomePosition {
 
     public void localPhaseSet(int localPhaseSet) {
         this.localPhaseSet = localPhaseSet;
+    }
+
+    public int mixedGermlineImpact() {
+        return mixedImpact;
+    }
+
+    public void mixedGermlineImpact(final int mixedImpact) {
+        this.mixedImpact = mixedImpact;
     }
 
     public boolean isPassing() {
@@ -94,7 +129,12 @@ public class SageVariant implements GenomePosition {
 
     @NotNull
     public ReadContext readContext() {
-        return tumorAltContexts.isEmpty() ? normalAltContexts.get(0).readContext() : tumorAltContexts.get(0).readContext();
+        return tumorAltContexts.get(0).readContext();
+    }
+
+    @NotNull
+    public String microhomology() {
+        return readContext().microhomology();
     }
 
     @NotNull

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihoodSupplier;
+import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
 import com.hartwig.hmftools.common.genome.region.TranscriptRegion;
 import com.hartwig.hmftools.common.variant.cosmic.CosmicAnnotation;
@@ -26,14 +27,17 @@ public class CanonicalAnnotation {
     private final Map<String, String> canonicalTranscriptGeneMap;
 
     public CanonicalAnnotation() {
+        this(CanonicalTranscriptFactory.create37());
+    }
+
+    public CanonicalAnnotation(@NotNull final List<CanonicalTranscript> transcripts) {
         this.driverCatalogGenes = Sets.newHashSet(DndsDriverGeneLikelihoodSupplier.tsgLikelihood().keySet());
         this.driverCatalogGenes.addAll(DndsDriverGeneLikelihoodSupplier.oncoLikelihood().keySet());
 
         // The p14Arf transcript for CDKN2A is included in our canonical transcript map.
         // We need to filter it out since this map assumes only "real" canonical transcripts.
         // See also DEV-783
-        this.canonicalTranscriptGeneMap = CanonicalTranscriptFactory.create37()
-                .stream()
+        this.canonicalTranscriptGeneMap = transcripts.stream()
                 .filter(canonicalTranscript -> !canonicalTranscript.transcriptID().equals(CDKN2A_P14ARF_TRANSCRIPT))
                 .collect(Collectors.toMap(TranscriptRegion::transcriptID, TranscriptRegion::gene));
     }
@@ -69,7 +73,6 @@ public class CanonicalAnnotation {
 
         return Optional.empty();
     }
-
 
     @NotNull
     static String trimEnsembleVersion(@NotNull final String transcriptId) {

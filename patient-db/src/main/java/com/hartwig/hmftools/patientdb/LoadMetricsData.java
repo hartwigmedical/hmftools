@@ -31,7 +31,7 @@ public final class LoadMetricsData {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
 
@@ -47,8 +47,8 @@ public final class LoadMetricsData {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("patient-db - load metrics data", options);
         } else {
-            final String jdbcUrl = "jdbc:" + databaseUrl;
-            final DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
+            String jdbcUrl = "jdbc:" + databaseUrl;
+            DatabaseAccess dbWriter = new DatabaseAccess(userName, password, jdbcUrl);
 
             LOGGER.info("Extracting and writing metrics for {}", sample);
 

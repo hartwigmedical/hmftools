@@ -9,7 +9,6 @@ import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -24,7 +23,6 @@ public class LoadPurpleSomaticVariants {
     private static final String SAMPLE = "sample";
     private static final String REFERENCE = "reference";
     private static final String RNA = "rna";
-    private static final String ALIAS = "alias";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
 
@@ -32,30 +30,30 @@ public class LoadPurpleSomaticVariants {
     private static final String DB_PASS = "db_pass";
     private static final String DB_URL = "db_url";
 
-    public static void main(@NotNull final String[] args) throws ParseException, IOException, SQLException {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final DatabaseAccess dbAccess = databaseAccess(cmd);
+    public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException {
+        Options options = createBasicOptions();
+        CommandLine cmd = createCommandLine(args, options);
+        DatabaseAccess dbAccess = databaseAccess(cmd);
 
-        final String tumorSample = cmd.getOptionValue(SAMPLE);
-        final String referenceSample = cmd.getOptionValue(REFERENCE, null);
-        final String rnaSample = cmd.getOptionValue(RNA, null);
+        String tumorSample = cmd.getOptionValue(SAMPLE);
+        String referenceSample = cmd.getOptionValue(REFERENCE, null);
+        String rnaSample = cmd.getOptionValue(RNA, null);
 
-        final String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
+        String somaticVcf = cmd.getOptionValue(SOMATIC_VCF);
 
         LOGGER.info("Reading data from {}", somaticVcf);
-        final SomaticVariantFactory factory = SomaticVariantFactory.unfilteredInstance();
-        final List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf);
+        SomaticVariantFactory factory = SomaticVariantFactory.unfilteredInstance();
+        List<SomaticVariant> variants = factory.fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVcf);
 
         LOGGER.info("Persisting to db");
-        dbAccess.writeSomaticVariants(cmd.getOptionValue(ALIAS, tumorSample), variants);
+        dbAccess.writeSomaticVariants(tumorSample, variants);
 
         LOGGER.info("Complete");
     }
 
     @NotNull
     private static Options createBasicOptions() {
-        final Options options = new Options();
+        Options options = new Options();
         options.addOption(SAMPLE, true, "Name of the tumor sample. This should correspond to the value used in PURPLE.");
         options.addOption(REFERENCE, true, "Optional name of the reference sample. This should correspond to the value used in PURPLE.");
         options.addOption(RNA, true, "Optional name of the rna sample. This should correspond to the value used in PURPLE.");
@@ -63,23 +61,21 @@ public class LoadPurpleSomaticVariants {
         options.addOption(DB_USER, true, "Database user name.");
         options.addOption(DB_PASS, true, "Database password.");
         options.addOption(DB_URL, true, "Database url.");
-        options.addOption(ALIAS, true, "Overwrite the sample name with specified alias when writing to db");
 
         return options;
     }
 
     @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+    private static CommandLine createCommandLine(@NotNull String[] args, @NotNull Options options) throws ParseException {
+        return new DefaultParser().parse(options, args);
     }
 
     @NotNull
-    private static DatabaseAccess databaseAccess(@NotNull final CommandLine cmd) throws SQLException {
-        final String userName = cmd.getOptionValue(DB_USER);
-        final String password = cmd.getOptionValue(DB_PASS);
-        final String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
-        final String jdbcUrl = "jdbc:" + databaseUrl;
+    private static DatabaseAccess databaseAccess(@NotNull CommandLine cmd) throws SQLException {
+        String userName = cmd.getOptionValue(DB_USER);
+        String password = cmd.getOptionValue(DB_PASS);
+        String databaseUrl = cmd.getOptionValue(DB_URL);  //e.g. mysql://localhost:port/database";
+        String jdbcUrl = "jdbc:" + databaseUrl;
         return new DatabaseAccess(userName, password, jdbcUrl);
     }
 }
