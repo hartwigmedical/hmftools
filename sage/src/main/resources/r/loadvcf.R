@@ -3,6 +3,29 @@ library(tidyr)
 library(dplyr)
 library(GenomicRanges)
 
+snp_data_frame <- function(vcf) {
+  vcf.info = info(vcf)
+  vcf.alt = CharacterList(alt(vcf))
+  vcf.alt[elementNROWS(vcf.alt) > 1L ] <- lapply(vcf.alt[elementNROWS(vcf.alt) > 1L ], paste0, collapse=",")
+
+  vcf.df = data.frame(
+    chromosome = seqnames(vcf),
+    pos = start(vcf),
+    ref = as.character(ref(vcf)), 
+    alt = as.character(vcf.alt), stringsAsFactors = F)
+  
+  snpEffWorst = data.frame(as.matrix(vcf.info$SEW), stringsAsFactors = F)
+  names(snpEffWorst) <- c("worstGene", "worstTranscript", "worstEffect", "worstCodingEffect", "genesAffected")
+  snpEffWorst = snpEffWorst %>% mutate(genesAffected = as.integer(genesAffected))
+
+  snpEffCanonical = data.frame(as.matrix(vcf.info$SEC), stringsAsFactors = F)
+  names(snpEffCanonical) <- c("canonicalGene", "canonicalTranscript", "canonicalEffect", "canonicalCodingEffect", "canonicalHgvsCodingImpact", "canonicalHgvsProteinImpact")
+
+  result = bind_cols(snpEffWorst, snpEffCanonical)
+  result = bind_cols(vcf.df, result)
+  return (result)
+}
+
 info_data_frame <- function(vcf) {
   vcf.info = info(vcf)
   vcf.fixed = fixed(vcf)
@@ -28,6 +51,9 @@ info_data_frame <- function(vcf) {
     trinucleotideContext = vcf.info$TNC,
     referenceRepeatSequence = vcf.info$REP_S,
     referenceRepeatCount = vcf.info$REP_C,
+    rightAlignedMicrohomology = vcf.info$RAM,
+    phasedInframeIndel = vcf.info$PII,
+    mixedSomaticGermline = vcf.info$MSG,
     
     #preStrelka = vcf.info$PRE_STRELKA,
     #postStrelka = vcf.info$POST_STRELKA,
