@@ -69,8 +69,8 @@ public class SageVCF implements AutoCloseable {
     private final static String TIER_DESCRIPTION = "Tier: [HOTSPOT, PANEL, HIGH_CONFIDENCE, LOW_CONFIDENCE]";
     public final static String PHASE = "LPS";
     private final static String PHASE_DESCRIPTION = "Local Phase Set";
-    public final static String MIXED_GERMLINE_IMPACT = "MGI";
-    public final static String MIXED_GERMLINE_IMPACT_DESCRIPTION = "Mixed Germline Impact";
+    public final static String MIXED_SOMATIC_GERMLINE = "MSG";
+    public final static String MIXED_SOMATIC_GERMLINE_DESCRIPTION = "Mixed Somatic and Germline variants";
     public final static String PHASED_INFRAME_INDEL = "PII";
     public final static String PHASED_INFRAME_INDEL_DESCRIPTION = "Phased inframe indel";
     public final static String RIGHT_ALIGNED_MICROHOMOLOGY = "RAM";
@@ -162,10 +162,9 @@ public class SageVCF implements AutoCloseable {
                 READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASE, 1, VCFHeaderLineType.Integer, PHASE_DESCRIPTION));
-        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_GERMLINE_IMPACT,
+        header.addMetaDataLine(new VCFInfoHeaderLine(MIXED_SOMATIC_GERMLINE,
                 1,
-                VCFHeaderLineType.Integer,
-                MIXED_GERMLINE_IMPACT_DESCRIPTION));
+                VCFHeaderLineType.Integer, MIXED_SOMATIC_GERMLINE_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(PHASED_INFRAME_INDEL, 1, VCFHeaderLineType.Integer, PHASED_INFRAME_INDEL_DESCRIPTION));
         header.addMetaDataLine(new VCFInfoHeaderLine(RIGHT_ALIGNED_MICROHOMOLOGY,
                 0,

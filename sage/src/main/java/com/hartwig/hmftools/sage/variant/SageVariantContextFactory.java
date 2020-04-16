@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.variant;
 
-import static com.hartwig.hmftools.sage.vcf.SageVCF.MIXED_GERMLINE_IMPACT;
+import static com.hartwig.hmftools.sage.vcf.SageVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PASS;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASE;
 import static com.hartwig.hmftools.sage.vcf.SageVCF.PHASED_INFRAME_INDEL;
@@ -83,7 +83,7 @@ public class SageVariantContextFactory {
         }
 
         if (variant.mixedGermlineImpact() > 0) {
-            builder.attribute(MIXED_GERMLINE_IMPACT, variant.mixedGermlineImpact());
+            builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
         }
 
         if (variant.phasedInframeIndel() > 0) {

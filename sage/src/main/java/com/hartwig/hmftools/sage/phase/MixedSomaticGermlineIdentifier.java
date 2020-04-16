@@ -8,13 +8,13 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MixedGermlineMnv extends BufferedProcessor {
+public class MixedSomaticGermlineIdentifier extends BufferedProcessor {
 
     private static final int MAX_DISTANCE = 10;
 
     private int combinedImpact;
 
-    public MixedGermlineMnv(final Consumer<SageVariant> consumer) {
+    public MixedSomaticGermlineIdentifier(final Consumer<SageVariant> consumer) {
         super(MAX_DISTANCE, consumer);
     }
 

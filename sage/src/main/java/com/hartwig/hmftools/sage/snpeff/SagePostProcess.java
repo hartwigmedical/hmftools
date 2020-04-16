@@ -97,7 +97,7 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
     }
 
     private void processMixedGermlineImpact(@NotNull final VariantContext context) {
-        int mixedImpact = context.getAttributeAsInt(SageVCF.MIXED_GERMLINE_IMPACT, 0);
+        int mixedImpact = context.getAttributeAsInt(SageVCF.MIXED_SOMATIC_GERMLINE, 0);
         if (mixedImpact == 0) {
             return;
         }
@@ -106,7 +106,7 @@ public class SagePostProcess implements AutoCloseable, Consumer<VariantContext> 
         boolean newIsMnv = context.isMNP();
 
         for (VariantContext otherContext : buffer) {
-            if (otherContext.getAttributeAsInt(SageVCF.MIXED_GERMLINE_IMPACT, 0) == mixedImpact) {
+            if (otherContext.getAttributeAsInt(SageVCF.MIXED_SOMATIC_GERMLINE, 0) == mixedImpact) {
 
                 boolean otherIsSnv = otherContext.isSNP();
                 boolean otherIsMnv = otherContext.isMNP();

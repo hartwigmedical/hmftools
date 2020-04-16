@@ -338,13 +338,13 @@ A>T: CAACAATCGA<b>T</b>CGATACAATC
 T>C:       TCGATCGATA<b>C</b>AAATCTGAAA
 </pre>
 
-Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together are given a shared local phase set (`LPS`) identifier.
+Similarly, SNVs, MNVs and INDELs may be phased together. Any variants that are phased together are given a shared `LPS` (local phase set) identifier.
 
 If multiple tumors are supplied, phasing is evaluated only on the primary tumor, ie, the first in the supplied tumor list.
 
 ### Phased Inframe Indels
 
-If two phased frameshift variant in a single coding exon together form an inframe INDEL, then both are given a shared `PII` identifier.
+If two phased frameshift variant in a single coding exon together form an inframe INDEL, then both are given a shared `PII` (phased inframe indel) identifier.
 
 
 ## 7. De-duplication
@@ -378,7 +378,7 @@ Mixed MNV | X |  | X
 Germline SNV | X |  |  
 Somatic SNV |  |  | X  
  
-Regardless of filtering, the MNV and both germline and somatic SNVs are all tagged with a common MGI (Mixed Germline Impact) identifier.
+Regardless of filtering, the MNV and both germline and somatic SNVs are all given a shared `MSG` (mixed somatic germline) identifier.
 
 ## 8. Re-alignment
 

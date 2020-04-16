@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.phase;
 
 import static com.hartwig.hmftools.sage.phase.BufferedProcessorTest.create;
-import static com.hartwig.hmftools.sage.phase.MixedGermlineDedup.codonDifferences;
+import static com.hartwig.hmftools.sage.phase.MixedSomaticGermlineDedup.codonDifferences;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
 import org.junit.Test;
 
-public class MixedGermlineDedupTest {
+public class MixedSomaticGermlineDedupTest {
 
     @Test
     public void testCodonDifferences() {

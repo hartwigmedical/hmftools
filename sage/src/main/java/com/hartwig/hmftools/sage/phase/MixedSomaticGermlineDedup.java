@@ -14,13 +14,13 @@ import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MixedGermlineDedup extends BufferedProcessor {
+public class MixedSomaticGermlineDedup extends BufferedProcessor {
 
     private static final int MAX_DISTANCE = 10;
 
     private final RegionSelector<HmfTranscriptRegion> selector;
 
-    public MixedGermlineDedup(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts) {
+    public MixedSomaticGermlineDedup(final Consumer<SageVariant> consumer, final List<HmfTranscriptRegion> transcripts) {
         super(MAX_DISTANCE, consumer);
         this.selector = new RegionSelector<>(transcripts);
     }

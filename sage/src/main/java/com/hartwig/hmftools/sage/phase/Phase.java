@@ -14,8 +14,8 @@ public class Phase implements Consumer<SageVariant> {
     private final DedupMnv dedupMnv;
     private final LocalPhaseSet localPhaseSet;
     private final DedupIndel dedupIndel;
-    private final MixedGermlineMnv mixedGermlineMnv;
-    private final MixedGermlineDedup mixedGermlineDedup;
+    private final MixedSomaticGermlineIdentifier mixedSomaticGermlineIdentifier;
+    private final MixedSomaticGermlineDedup mixedSomaticGermlineDedup;
     private final PhasedInframeIndel phasedInframeIndel;
     private final RightAlignMicrohomology rightAlignMicrohomology;
 
@@ -26,9 +26,9 @@ public class Phase implements Consumer<SageVariant> {
 
         dedupIndel = new DedupIndel(consumer);
         dedupMnv = new DedupMnv(dedupIndel);
-        mixedGermlineDedup = new MixedGermlineDedup(dedupMnv, transcripts);
-        mixedGermlineMnv = new MixedGermlineMnv(mixedGermlineDedup);
-        phasedInframeIndel = new PhasedInframeIndel(mixedGermlineMnv, transcripts);
+        mixedSomaticGermlineDedup = new MixedSomaticGermlineDedup(dedupMnv, transcripts);
+        mixedSomaticGermlineIdentifier = new MixedSomaticGermlineIdentifier(mixedSomaticGermlineDedup);
+        phasedInframeIndel = new PhasedInframeIndel(mixedSomaticGermlineIdentifier, transcripts);
         rightAlignMicrohomology = new RightAlignMicrohomology(phasedInframeIndel, transcripts);
         localPhaseSet = new LocalPhaseSet(config.readContextFlankSize(), rightAlignMicrohomology);
     }
@@ -42,8 +42,8 @@ public class Phase implements Consumer<SageVariant> {
         localPhaseSet.flush();
         rightAlignMicrohomology.flush();
         phasedInframeIndel.flush();
-        mixedGermlineMnv.flush();
-        mixedGermlineDedup.flush();
+        mixedSomaticGermlineIdentifier.flush();
+        mixedSomaticGermlineDedup.flush();
         dedupMnv.flush();
         dedupIndel.flush();
     }
