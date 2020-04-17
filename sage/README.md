@@ -430,6 +430,9 @@ Threads | Elapsed Time| CPU Time | Peak Mem
 
 # Version History and Download Links
  - Upcoming
+   - Realignment of inframe indels
+   - Improved MNV deduplication
+   - Detection of phased inframe indels
    - Base Quality Recalibration
    - Improved sensitivity in high depth regions
    - Tumor only support
