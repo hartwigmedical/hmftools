@@ -359,24 +359,17 @@ If SAGE finds two phased INDELs of the same type at the same position where one 
 Any passing SNVs that are phased with and part of a passing somatic MNV are filtered with `dedup`. 
 
 In the special case where the MNV is comprised of both somatic and germline SNVs, additional logic applies. 
-Typically, the MNV will be filtered, except when the MNV is in a coding region and impacts more than one base of the codon impacted by the SNV. 
-In this case the SNV is filtered to capture the functional impact of the mixed somatic and germline variant. This is illustrated below.
+Typically, the MNV will be filtered, except when the MNV is in a coding region and impacts more than one base of the same codon impacted by the SNV. 
+In this case the SNV is filtered to capture the functional impact of the mixed somatic and germline variant. 
 
-In the following example, the somatic and germline SNV both impact the same codon so the SNV is filtered.
+The following example illustrated this as the combined impact of the germline and somatic SNVs is different to just the somatic SNV. 
+In this case we keep the MNV and filter the somatic SNV. The germline SNV remains filtered. 
 
-Codon | 1 | 1 | 1 
----|---|---|---
-Mixed MNV | X |  | X 
-Germline SNV | X |  |  
-Somatic SNV |  |  | X 
-
-In this next example, the somatic and germline SNV impact different codons so the MNV is filtered.
-
-Codon | 1 | 1 | 2 
----|---|---|---
-Mixed MNV | X |  | X 
-Germline SNV | X |  |  
-Somatic SNV |  |  | X  
+Chromosome | Position | Ref | Alt | Type | Protein Impact
+---|---|---|---|---|---
+19 | 43,382,367 | GT | AG | Mixed | p.Thr43Leu
+19 | 43,382,367 | G | A | Somatic | p.Thr43Ile
+19 | 43,382,368 | T | G | Germline | p.Thr43Pro
  
 Regardless of filtering, the MNV and both germline and somatic SNVs are all given a shared `MSG` (mixed somatic germline) identifier.
 
