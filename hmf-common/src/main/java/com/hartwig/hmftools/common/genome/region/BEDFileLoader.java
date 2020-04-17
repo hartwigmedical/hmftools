@@ -36,11 +36,11 @@ public final class BEDFileLoader {
                 final long end = bedFeature.getEnd();
 
                 if (end < start) {
-                    LOGGER.warn("Invalid genome region found in chromosome " + chromosome + ": start=" + start + ", end=" + end);
+                    LOGGER.warn("Invalid genome region found in chromosome {}: start={}, end={}", chromosome, start, end);
                 } else {
                     final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
                     if (prevRegion != null && chromosome.equals(prevChromosome) && prevRegion.end() >= start) {
-                        LOGGER.warn("BED file is not sorted, please fix! Current=" + region + ", Previous=" + prevRegion);
+                        LOGGER.warn("BED file is not sorted, please fix! Current={}, Previous={}", region, prevRegion);
                     } else {
                         regionMap.put(chromosome, region);
                         prevChromosome = chromosome;

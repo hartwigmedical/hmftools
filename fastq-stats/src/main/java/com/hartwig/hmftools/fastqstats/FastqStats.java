@@ -39,7 +39,7 @@ class FastqStats {
     @NotNull
     static FastqTracker processFastqs(@NotNull final Multimap<String, File> fastqsPerSample, final int threadCount)
             throws InterruptedException {
-        LOGGER.info("Using " + threadCount + " threads. Processing " + fastqsPerSample.size() + " fastQ files.");
+        LOGGER.info("Using {} threads. Processing {} fastQ files.", threadCount, fastqsPerSample.size());
         final FastqTrackerWrapper tracker = new FastqTrackerWrapper();
         final ListeningExecutorService threadPool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
 
@@ -49,7 +49,7 @@ class FastqStats {
                 final String laneName = getLaneName(fastq);
                 final ListenableFuture<FastqData> futureResult = threadPool.submit(() -> processFile(fastq));
                 addCallback(futureResult, (data) -> tracker.addDataFromSampleFile(sampleName, laneName, data),
-                        (error) -> LOGGER.error("Failed to process file: " + fastq.getName(), error));
+                        (error) -> LOGGER.error("Failed to process file: {}", fastq.getName(), error));
             }
         }
         threadPool.shutdown();
@@ -76,13 +76,13 @@ class FastqStats {
         }
         for (final File file : files) {
             if (file.isDirectory() && file.getName().startsWith("HMFreg")) {
-                LOGGER.info("Found HMFreg folder: " + file.getName());
+                LOGGER.info("Found HMFreg folder: {}", file.getName());
                 final File[] sampleFolders = file.listFiles(File::isDirectory);
                 if (sampleFolders == null) {
                     throw new IOException("List folders in " + file.getName() + " returned null.");
                 }
                 for (final File sampleFolder : sampleFolders) {
-                    LOGGER.info("Found sample folder: " + sampleFolder.getName());
+                    LOGGER.info("Found sample folder: {}", sampleFolder.getName());
                     final File[] fastqFiles =
                             sampleFolder.listFiles((parentDir, fileName) -> fileName.endsWith(".fastq.gz") || fileName.endsWith(".fastq"));
                     if (fastqFiles == null) {
@@ -92,7 +92,7 @@ class FastqStats {
                 }
             } else if (!file.isDirectory() && file.getName().startsWith("Undetermined") && (file.getName().endsWith(".fastq.gz")
                     || file.getName().endsWith(".fastq"))) {
-                LOGGER.info("Found undetermined file: " + file.getName());
+                LOGGER.info("Found undetermined file: {}", file.getName());
                 fastqsPerSample.put("Undetermined", file);
             }
         }
@@ -131,14 +131,14 @@ class FastqStats {
         } else {
             throw new IOException("Unrecognized file format.");
         }
-        LOGGER.info("Processing file: " + file.getName());
+        LOGGER.info("Processing file: {}", file.getName());
         final FastqReader fastqReader = new FastqReader(inputStream, size);
         final long startTime = System.currentTimeMillis();
         final FastqData data = fastqReader.read();
         final long endTime = System.currentTimeMillis();
         fastqReader.close();
 
-        LOGGER.info("Finished processing file: " + file.getName() + " in " + (endTime - startTime) + "ms.");
+        LOGGER.info("Finished processing file: {} in {}ms.", file.getName(), endTime - startTime);
         return data;
     }
 

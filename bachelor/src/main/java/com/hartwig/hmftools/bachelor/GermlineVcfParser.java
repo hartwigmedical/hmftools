@@ -65,11 +65,11 @@ public class GermlineVcfParser
 
         if(!Files.exists(Paths.get(vcfFile)))
         {
-            LOGGER.info("sampleId({}) germline VCF({}) not found", sampleId, vcfFile);
+            LOGGER.info("SampleId({}) germline VCF({}) not found", sampleId, vcfFile);
             return false;
         }
 
-        LOGGER.info("sampleId({}) reading germline VCF({})", sampleId, vcfFile);
+        LOGGER.info("SampleId({}) reading germline VCF({})", sampleId, vcfFile);
 
         final File germlineVcf = new File(vcfFile);
 
@@ -78,7 +78,7 @@ public class GermlineVcfParser
 
         if(mProgram.getVariants().isEmpty())
         {
-            LOGGER.debug("no valid variants found");
+            LOGGER.debug("No valid variants found");
         }
 
         return true;
