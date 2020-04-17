@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
-import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -395,11 +394,7 @@ public class BamFragmentAllocator
             // no valid transcripts but record against the gene further information about these reads
             boolean checkRetainedIntrons = false;
 
-            if(r1OutsideGene || r2OutsideGene)
-            {
-                fragmentType = READ_THROUGH;
-            }
-            else if(read1.containsSplit() || read2.containsSplit())
+            if(read1.containsSplit() || read2.containsSplit())
             {
                 fragmentType = ALT;
 

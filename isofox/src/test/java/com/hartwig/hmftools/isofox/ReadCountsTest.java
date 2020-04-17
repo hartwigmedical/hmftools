@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
-import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;

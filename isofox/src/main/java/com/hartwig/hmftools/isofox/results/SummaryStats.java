@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
-import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -34,7 +33,6 @@ public abstract class SummaryStats
     public abstract double splicedFragmentPerc();
     public abstract double unsplicedFragmentPerc();
     public abstract double altFragmentPerc();
-    public abstract double readThroughFragmentPerc();
     public abstract double chimericFragmentPerc();
 
     public abstract int readLength();
@@ -69,7 +67,6 @@ public abstract class SummaryStats
                 .splicedFragmentPerc(totalCounts[typeAsInt(TRANS_SUPPORTING)] / (double)totalFragments)
                 .unsplicedFragmentPerc(totalCounts[typeAsInt(UNSPLICED)] / (double)totalFragments)
                 .altFragmentPerc(totalCounts[typeAsInt(ALT)] / (double)totalFragments)
-                .readThroughFragmentPerc(totalCounts[typeAsInt(READ_THROUGH)] / (double)totalFragments)
                 .chimericFragmentPerc(totalCounts[typeAsInt(CHIMERIC)] / (double)totalFragments)
                 .readLength(maxReadLength)
                 .fragmentLength5thPercent(!fragLengths.isEmpty() ? fragLengths.get(0) : 0)
@@ -83,7 +80,7 @@ public abstract class SummaryStats
     public static String csvHeader()
     {
         return "SampleId,Version,TotalFragments,DuplicateFragments"
-                + ",SplicedFragmentPerc,UnsplicedFragmentPerc,AltFragmentPerc,ReadThroughFragmentPerc,ChimericFragmentPerc"
+                + ",SplicedFragmentPerc,UnsplicedFragmentPerc,AltFragmentPerc,ChimericFragmentPerc"
                 + ",ReadLength,FragLength5th,FragLength50th,FragLength95th"
                 + ",EnrichedGenePercent,MedianGCRatio";
     }
@@ -98,7 +95,6 @@ public abstract class SummaryStats
                 .add(String.format("%.3f", splicedFragmentPerc()))
                 .add(String.format("%.3f", unsplicedFragmentPerc()))
                 .add(String.format("%.3f", altFragmentPerc()))
-                .add(String.format("%.3f", readThroughFragmentPerc()))
                 .add(String.format("%.3f", chimericFragmentPerc()))
                 .add(String.valueOf(readLength()))
                 .add(String.format("%.0f", fragmentLength5thPercent()))
@@ -121,7 +117,6 @@ public abstract class SummaryStats
                 .splicedFragmentPerc(Double.parseDouble(items[index++]))
                 .unsplicedFragmentPerc(Double.parseDouble(items[index++]))
                 .altFragmentPerc(Double.parseDouble(items[index++]))
-                .readThroughFragmentPerc(Double.parseDouble(items[index++]))
                 .chimericFragmentPerc(Double.parseDouble(items[index++]))
                 .readLength(Integer.parseInt(items[index++]))
                 .fragmentLength5thPercent(Double.parseDouble(items[index++]))

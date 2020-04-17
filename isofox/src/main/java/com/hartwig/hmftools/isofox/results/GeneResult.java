@@ -1,13 +1,5 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
-import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
-import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
-import static com.hartwig.hmftools.isofox.common.FragmentType.READ_THROUGH;
-import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
-import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
-import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
-import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.FLD_GENE_ID;
