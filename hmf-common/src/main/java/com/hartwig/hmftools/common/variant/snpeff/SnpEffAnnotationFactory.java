@@ -34,17 +34,17 @@ public final class SnpEffAnnotationFactory {
     @NotNull
     public static List<SnpEffAnnotation> fromContext(@NotNull final VariantContext context) {
         if (context.hasAttribute(SNPEFF_IDENTIFIER)) {
-            return fromAnnotationList(context.getAttributeAsStringList(SNPEFF_IDENTIFIER, ""));
+            return fromAnnotationList(context.isIndel(), context.getAttributeAsStringList(SNPEFF_IDENTIFIER, ""));
         }
         return Collections.emptyList();
     }
 
     @NotNull
-    static List<SnpEffAnnotation> fromAnnotationList(@NotNull final List<String> annotation) {
+    static List<SnpEffAnnotation> fromAnnotationList(boolean indel, @NotNull final List<String> annotation) {
         return annotation.stream()
                 .map(x -> enforceMinLength(x.trim().split(FIELD_SEPARATOR), EXPECTED_FIELD_SIZE_PER_ANNOTATION))
                 .filter(SnpEffAnnotationFactory::isCorrectNumberOfParts)
-                .map(SnpEffAnnotationFactory::fromParts)
+                .map(x -> fromParts(indel, x))
                 .collect(Collectors.toList());
     }
 
@@ -71,11 +71,11 @@ public final class SnpEffAnnotationFactory {
     }
 
     @NotNull
-    private static SnpEffAnnotation fromParts(@NotNull final String[] parts) {
+    private static SnpEffAnnotation fromParts(boolean indel, @NotNull final String[] parts) {
 
         final String hgvsCoding = parts[9];
         String effects = parts[1];
-        if (effects.contains("splice") && hgvsCoding.contains("+5")) {
+        if (!indel && effects.contains("splice") && hgvsCoding.contains("+5")) {
             effects = "splice_donor_variant" + CONSEQUENCE_SEPARATOR + effects;
         }
         return ImmutableSnpEffAnnotation.builder()

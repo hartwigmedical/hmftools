@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.variant.snpeff;
 
+import static com.hartwig.hmftools.common.variant.snpeff.SnpEffAnnotationFactory.fromAnnotationList;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -32,10 +34,15 @@ public class SnpEffAnnotationFactoryTest {
                         + "A|intron_variant|MODIFIER|TP53|ENSG00000141510|transcript|ENST00000514944|protein_coding|3/5|c.96+393G>T||||||WARNING_TRANSCRIPT_INCOMPLETE";
 
         final List<String> annotationList = Lists.newArrayList(annotation.split(","));
-        final List<SnpEffAnnotation> annotations = SnpEffAnnotationFactory.fromAnnotationList(annotationList);
+        assertEffect(CodingEffect.SPLICE, fromAnnotationList(false, annotationList));
+        assertEffect(CodingEffect.NONE, fromAnnotationList(true, annotationList));
+    }
+
+    private void assertEffect(CodingEffect expected, List<SnpEffAnnotation> annotations) {
         final SnpEffAnnotation first = annotations.get(0);
         final CodingEffect codingEffect = CodingEffect.effect("RANDOM", first.consequences());
-        assertEquals(CodingEffect.SPLICE, codingEffect);
+        assertEquals(expected, codingEffect);
     }
+
 
 }
