@@ -50,7 +50,7 @@ public class IsofoxConfig
     private static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     private static final String DROP_DUPLICATES = "drop_dups";
     private static final String MARK_DUPLICATES = "mark_dups";
-    private static final String FIND_FUSIONS = "find_fusions";
+    private static final String WRITE_CHIMERIC_READS = "write_chimeric_reads";
 
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
@@ -100,6 +100,7 @@ public class IsofoxConfig
     public final boolean WriteExonData;
     public final boolean WriteReadData;
     public final boolean WriteTransComboData;
+    public final boolean WriteChimericReads;
 
     public final String ExpCountsFile;
     public final String ExpGcRatiosFile;
@@ -212,6 +213,7 @@ public class IsofoxConfig
         WriteReadData = cmd.hasOption(WRITE_READ_DATA);
         WriteTransComboData = cmd.hasOption(WRITE_TRANS_COMBO_DATA);
         WriteGcData = cmd.hasOption(WRITE_GC_DATA);
+        WriteChimericReads = cmd.hasOption(WRITE_CHIMERIC_READS);
 
         GC_RATIO_BUCKET = cmd.hasOption(GC_RATIO_BUCKET_SIZE) ?
                 Double.parseDouble(cmd.getOptionValue(GC_RATIO_BUCKET_SIZE)) : DEFAULT_GC_RATIO_BUCKET;
@@ -419,6 +421,7 @@ public class IsofoxConfig
         WriteFragmentLengths = false;
         WriteTransComboData = false;
         WriteGcData = false;
+        WriteChimericReads = false;
 
         WriteExpectedRates = false;
         ApplyFragmentLengthAdjust = false;
@@ -460,6 +463,7 @@ public class IsofoxConfig
         options.addOption(WRITE_READ_DATA, false, "BAM read data");
         options.addOption(WRITE_TRANS_COMBO_DATA, false, "Write transcript group data for EM algo");
         options.addOption(WRITE_FRAG_LENGTHS, false, "Write intronic fragment lengths to log");
+        options.addOption(WRITE_CHIMERIC_READS, false, "Write chimeric read data");
 
         options.addOption(WRITE_GC_DATA, false, "Write GC ratio counts from all genic reads");
         options.addOption(GC_ADJUSTS_FILE, true, "GC-bias file, generate if not found");

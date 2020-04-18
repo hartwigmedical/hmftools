@@ -30,7 +30,7 @@ public class EnsemblDataCache
 
     private final Map<String, List<TranscriptData>> mTranscriptDataMap;
     private final Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
-    private final  Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
+    private final Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
     private final Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
     private final Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
     private final Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name

@@ -82,12 +82,12 @@ public class RegionReadData implements Comparable< RegionReadData>
         return mTransExonRefs.stream().anyMatch(x -> x.TransId == transId);
     }
 
-    public void addExonRef(int transId, final String transName, int exonRank)
+    public void addExonRef(final String geneId, int transId, final String transName, int exonRank)
     {
         if(mTransExonRefs.stream().anyMatch(x -> x.TransId == transId && x.ExonRank == exonRank))
             return;
 
-        mTransExonRefs.add(new TransExonRef(transId, transName, exonRank));
+        mTransExonRefs.add(new TransExonRef(geneId, transId, transName, exonRank));
     }
 
     public final String refBases() { return mRefBases; }
@@ -286,7 +286,7 @@ public class RegionReadData implements Comparable< RegionReadData>
                 .findFirst().orElse(null);
     }
 
-    public static void generateExonicRegions(final String chromosome, final List<RegionReadData> regions, final List<TranscriptData> transcripts)
+    public static void generateExonicRegions(final String geneId, final String chromosome, final List<RegionReadData> regions, final List<TranscriptData> transcripts)
     {
         // form a genomic region for each unique exon amongst the transcripts
         for(final TranscriptData transData : transcripts)
@@ -305,7 +305,7 @@ public class RegionReadData implements Comparable< RegionReadData>
                     regions.add(exonReadData);
                 }
 
-                exonReadData.addExonRef(transData.TransId, transData.TransName, exon.ExonRank);
+                exonReadData.addExonRef(geneId, transData.TransId, transData.TransName, exon.ExonRank);
 
                 if(prevRegionReadData != null)
                 {

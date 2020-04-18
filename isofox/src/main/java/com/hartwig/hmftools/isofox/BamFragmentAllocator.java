@@ -32,7 +32,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
-import static com.hartwig.hmftools.isofox.novel.FusionFinder.addChimericRead;
+import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericRead;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -76,6 +76,7 @@ public class BamFragmentAllocator
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
+    // state relating to the current gene
     // state relating to the current gene
     private GeneCollection mCurrentGenes;
     private final FragmentTracker mFragmentReads; // delay processing of read until both have been read
@@ -186,7 +187,7 @@ public class BamFragmentAllocator
             int chimericCount = mChimericReadMap.size();
             mCurrentGenes.addCount(TOTAL, chimericCount);
             mCurrentGenes.addCount(CHIMERIC, chimericCount);
-            mChimericReadMap.values().forEach(x -> x.stream().forEach(y -> y.cacheTransExonRefs()));
+            mChimericReadMap.values().forEach(x -> x.stream().forEach(y -> y.captureGeneInfo(mCurrentGenes.id())));
         }
 
         ISF_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGenes.geneNames(), mGeneReadCount);
@@ -256,7 +257,7 @@ public class BamFragmentAllocator
             read.processOverlappingRegions(overlappingRegions);
         }
 
-        if(read.isChimeric())
+        if(!read.isDuplicate() && read.isChimeric())
         {
             processChimericRead(read);
             return;
@@ -319,9 +320,13 @@ public class BamFragmentAllocator
         // if either read is chimeric then handle them both as such
         if(r1OutsideGene || r2OutsideGene)
         {
-            // candidate chimeric reads
-            processChimericRead(read1);
-            processChimericRead(read2);
+            if(!read1.isDuplicate() && !read2.isDuplicate())
+            {
+                // candidate chimeric reads
+                processChimericRead(read1);
+                processChimericRead(read2);
+            }
+
             return;
         }
 

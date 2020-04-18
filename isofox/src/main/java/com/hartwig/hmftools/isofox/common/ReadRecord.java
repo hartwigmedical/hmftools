@@ -47,7 +47,8 @@ public class ReadRecord
 
     private int mFlags;
 
-    public final List<long[]> mMappedCoords;
+    private int mGeneCollectionId;
+    private final List<long[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
     private int mFragmentInsertSize;
@@ -65,7 +66,7 @@ public class ReadRecord
                 record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
                 record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(), record.getMateReferenceName());
 
-        read.setSupplementaryAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         return read;
     }
 
@@ -83,6 +84,8 @@ public class ReadRecord
         MateChromosome = mateChromosome;
 
         mFlags = flags;
+
+        mGeneCollectionId = -1;
 
         List<long[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
         mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
@@ -110,8 +113,11 @@ public class ReadRecord
     public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.NOT_PRIMARY_ALIGNMENT.intValue()) != 0; }
 
     public void setFragmentInsertSize(int size) { mFragmentInsertSize = size; }
-    public void setSupplementaryAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
+    public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
+    public String getSuppAlignment() { return mSupplementaryAlignment; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
+
+    public int getGeneCollecton() { return mGeneCollectionId; }
 
     public void setFlag(SAMFlag flag, boolean toggle)
     {
@@ -346,10 +352,11 @@ public class ReadRecord
         }
     }
 
-    public void cacheTransExonRefs()
+    public void captureGeneInfo(int geneCollectionId)
     {
         mMappedRegions.entrySet().forEach(x -> mTransExonRefs.put(x.getValue(), x.getKey().getTransExonRefs()));
         mMappedRegions.clear();
+        mGeneCollectionId = geneCollectionId;
     }
 
     public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)

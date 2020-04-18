@@ -2,12 +2,14 @@ package com.hartwig.hmftools.isofox.common;
 
 public class TransExonRef
 {
+    public final String GeneId;
     public final int TransId;
     public final String TransName;
     public final int ExonRank;
 
-    public TransExonRef(final int transId, final String transName, final int exonRank)
+    public TransExonRef(final String geneId, final int transId, final String transName, final int exonRank)
     {
+        GeneId = geneId;
         TransId = transId;
         TransName = transName;
         ExonRank = exonRank;

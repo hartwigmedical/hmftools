@@ -175,7 +175,7 @@ public class ReadCountsTest
     {
         int trans1 = 1;
 
-        RegionReadData region = createRegion(trans1, 1, "1", 100, 200);
+        RegionReadData region = createRegion("GEN01", trans1, 1, "1", 100, 200);
 
         // unspliced read does not support the transcript
         ReadRecord read = createReadRecord(1, "1", 90, 110, REF_BASE_STR_1, createCigar(0, 21, 0));
@@ -194,9 +194,9 @@ public class ReadCountsTest
         assertEquals(EXONIC, read.getTranscriptClassification(trans1));
 
         // skipped exon
-        RegionReadData region1 = createRegion(trans1, 1, "1", 100, 120);
-        RegionReadData region2 = createRegion(trans1, 2, "1", 140, 160);
-        RegionReadData region3 = createRegion(trans1, 3, "1", 180, 200);
+        RegionReadData region1 = createRegion("GEN01", trans1, 1, "1", 100, 120);
+        RegionReadData region2 = createRegion("GEN01", trans1, 2, "1", 140, 160);
+        RegionReadData region3 = createRegion("GEN01", trans1, 3, "1", 180, 200);
 
         // read covering multiple exons but skips the middle exon
         read = createReadRecord(1, "1", 110, 200, REF_BASE_STR_1, createCigar(0, 11, 59, 21, 0));
@@ -238,11 +238,11 @@ public class ReadCountsTest
         read = createReadRecord(1, "1", 181, 319, REF_BASE_STR_1 + REF_BASE_STR_1,
                 createCigar(0, 20, 99, 20, 0));
 
-        region1 = createRegion(trans1, 1, "1", 100, 200);
-        region2 = createRegion(trans1, 2, "1", 300, 400);
+        region1 = createRegion("GEN01", trans1, 1, "1", 100, 200);
+        region2 = createRegion("GEN01", trans1, 2, "1", 300, 400);
 
         int trans2 = 2;
-        region3 = createRegion(trans2, 1, "1", 100, 220);
+        region3 = createRegion("GEN01", trans2, 1, "1", 100, 220);
 
         regions = Lists.newArrayList(region1, region2, region3);
         read.processOverlappingRegions(regions);
@@ -360,10 +360,10 @@ public class ReadCountsTest
         return read;
     }
 
-    private RegionReadData createRegion(int trans, int exonRank, final String chromosome, long posStart, long posEnd)
+    private RegionReadData createRegion(final String geneId, int trans, int exonRank, final String chromosome, long posStart, long posEnd)
     {
         RegionReadData region = new RegionReadData(chromosome, posStart, posEnd);
-        region.addExonRef(trans, String.valueOf(trans), exonRank);
+        region.addExonRef(geneId, trans, String.valueOf(trans), exonRank);
         return region;
     }
 
@@ -546,7 +546,7 @@ public class ReadCountsTest
     @Test
     public void testBaseAssignment()
     {
-        RegionReadData region = createRegion(1, 1, "1", 100, 119);
+        RegionReadData region = createRegion("GEN01", 1, 1, "1", 100, 119);
         region.setRefBases(REF_BASE_STR_1);
 
         List<long[]> readCoords = Lists.newArrayList();
@@ -569,20 +569,20 @@ public class ReadCountsTest
     @Test
     public void testUniqueRegionBases()
     {
-        RegionReadData region1 = createRegion(1, 1, "1", 100, 119);
+        RegionReadData region1 = createRegion("GEN01", 1, 1, "1", 100, 119);
         region1.setRefBases(REF_BASE_STR_1);
 
         // covers the first region entirely
-        RegionReadData region2 = createRegion(2, 1, "1", 95, 124);
+        RegionReadData region2 = createRegion("GEN01", 2, 1, "1", 95, 124);
         region2.setRefBases(REF_BASE_STR_1 + REF_BASE_STR_1.substring(0, 10));
 
-        RegionReadData region3 = createRegion(3, 1, "1", 80, 99);
+        RegionReadData region3 = createRegion("GEN01", 3, 1, "1", 80, 99);
         region3.setRefBases(REF_BASE_STR_1);
 
-        RegionReadData region4 = createRegion(4, 1, "1", 70, 89);
+        RegionReadData region4 = createRegion("GEN01", 4, 1, "1", 70, 89);
         region4.setRefBases(REF_BASE_STR_1);
 
-        RegionReadData region5 = createRegion(5, 1, "1", 130, 149);
+        RegionReadData region5 = createRegion("GEN01", 5, 1, "1", 130, 149);
         region5.setRefBases(REF_BASE_STR_1);
 
         List<RegionReadData> regions = Lists.newArrayList(region1, region2, region3, region4, region5);

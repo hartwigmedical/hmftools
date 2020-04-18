@@ -143,7 +143,7 @@ public class GeneCollection
                 mRegionBounds[SE_END] = max(mRegionBounds[SE_END], transData.TransEnd);
             }
 
-            generateExonicRegions(mChromosome, mExonRegions, gene.getTranscripts());
+            generateExonicRegions(gene.GeneData.GeneId, mChromosome, mExonRegions, gene.getTranscripts());
 
             // cache the relevant set of exon regions back into the gene for convenience
             for(final TranscriptData transData : gene.getTranscripts())

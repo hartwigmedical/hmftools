@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.novel.FusionFinder.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeChimericReadMaps;
 
 import java.util.List;
 import java.util.Map;
@@ -58,6 +58,7 @@ public class ChromosomeGeneTask implements Callable
     private final ExpectedCountsCache mExpectedCountsCache;
 
     private final List<EnsemblGeneData> mGeneDataList;
+    private final Map<Integer,List<EnsemblGeneData>> mGeneCollectionMap;
     private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
@@ -93,6 +94,7 @@ public class ChromosomeGeneTask implements Callable
         mResultsWriter = resultsWriter;
 
         mGeneDataList = geneDataList;
+        mGeneCollectionMap = Maps.newHashMap();
         mCollectionId = 0;
 
         mCurrentGeneIndex = 0;
@@ -134,6 +136,7 @@ public class ChromosomeGeneTask implements Callable
     public final FragmentSizeCalcs getFragSizeCalcs() { return mFragmentSizeCalc; }
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
     public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReadMap; }
+    public final Map<Integer,List<EnsemblGeneData>> getGeneCollectionMap() { return mGeneCollectionMap; }
     public boolean isValid() { return mIsValid; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
@@ -193,6 +196,7 @@ public class ChromosomeGeneTask implements Callable
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
+            mGeneCollectionMap.put(geneCollection.id(), Lists.newArrayList(overlappingGenes));
 
             for(GeneReadData geneReadData : geneReadDataList)
             {

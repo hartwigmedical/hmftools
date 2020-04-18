@@ -36,7 +36,6 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -49,7 +48,7 @@ import com.hartwig.hmftools.isofox.exp_rates.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.exp_rates.GeneCollectionSummary;
-import com.hartwig.hmftools.isofox.novel.FusionFinder;
+import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.SummaryStats;
 
@@ -96,7 +95,7 @@ public class Isofox
         mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.ApplyGcBiasAdjust ?
                 new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
-        mFusionFinder = mConfig.runFunction(FUSIONS) ? new FusionFinder(mConfig) : null;
+        mFusionFinder = mConfig.runFunction(FUSIONS) ? new FusionFinder(mConfig, mGeneTransCache) : null;
 
         mFragmentLengthDistribution = Lists.newArrayList();
         mIsValid = true;
@@ -229,6 +228,7 @@ public class Isofox
         if(mConfig.runFunction(FUSIONS))
         {
             chrTasks.forEach(x -> mFusionFinder.addChimericReads(x.getChimericReadMap()));
+            chrTasks.forEach(x -> mFusionFinder.addChromosomeGeneCollections(x.chromosome(), x.getGeneCollectionMap()));
             mFusionFinder.findFusions();
         }
 
