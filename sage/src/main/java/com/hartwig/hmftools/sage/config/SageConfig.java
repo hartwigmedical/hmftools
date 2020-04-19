@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -45,6 +47,8 @@ public interface SageConfig {
     String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
     String ASSEMBLY = "assembly";
+    String CHR = "chr";
+    String SLICE_SIZE = "slice_size";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 0;
@@ -52,6 +56,7 @@ public interface SageConfig {
     int DEFAULT_MAX_READ_DEPTH = 1000;
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
+    int DEFAULT_SLICE_SIZE = 500_000;
 
     @NotNull
     static Options createOptions() {
@@ -66,6 +71,8 @@ public interface SageConfig {
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(CHR, true, "Run for single chromosome");
+        options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
@@ -133,13 +140,14 @@ public interface SageConfig {
     @NotNull
     BaseQualityRecalibrationConfig baseQualityRecalibrationConfig();
 
+    @NotNull
+    Set<String> chromosomes();
+
     default int typicalReadLength() {
         return 151;
     }
 
-    default int regionSliceSize() {
-        return 500_000;
-    }
+    int regionSliceSize();
 
     int minMapQuality();
 
@@ -215,16 +223,24 @@ public interface SageConfig {
         final List<HmfTranscriptRegion> transcripts =
                 assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
+        final Set<String> chromosomes = Sets.newHashSet();
+        final String chromosomeList = cmd.getOptionValue(CHR);
+        if (chromosomeList != null) {
+            chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
+        }
+
         return ImmutableSageConfig.builder()
                 .version(version)
                 .transcriptRegions(transcripts)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
+                .chromosomes(chromosomes)
                 .reference(referenceList)
                 .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
                 .refGenome(cmd.getOptionValue(REF_GENOME))
+                .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
                 .maxReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))

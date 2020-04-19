@@ -108,10 +108,12 @@ public class SageApplication implements AutoCloseable {
         SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
-            if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
-                ChromosomePipeline pipeline = createChromosomePipeline(contig, recalibrationMap);
-                pipeline.addAllRegions();
-                chromosomePipelines.add(pipeline.submit());
+            if (config.chromosomes().isEmpty() || config.chromosomes().contains(contig)) {
+                if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
+                    ChromosomePipeline pipeline = createChromosomePipeline(contig, recalibrationMap);
+                    pipeline.addAllRegions();
+                    chromosomePipelines.add(pipeline.submit());
+                }
             }
         }
 
