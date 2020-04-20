@@ -56,7 +56,7 @@ public interface SageConfig {
     int DEFAULT_MAX_READ_DEPTH = 1000;
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
-    int DEFAULT_SLICE_SIZE = 500_000;
+    int DEFAULT_SLICE_SIZE = 100_000;
 
     @NotNull
     static Options createOptions() {
