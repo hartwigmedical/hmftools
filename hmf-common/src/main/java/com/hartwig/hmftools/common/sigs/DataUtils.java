@@ -17,8 +17,6 @@ import org.apache.logging.log4j.Logger;
 
 public class DataUtils {
 
-    private static final Logger LOGGER = LogManager.getLogger(DataUtils.class);
-
     public static double[] convertList(final List<Double> dataSet)
     {
         if(dataSet.isEmpty())
@@ -159,20 +157,6 @@ public class DataUtils {
         {
             dest[i] += source[i];
         }
-    }
-
-    public static double[] listToArray(final List<Double> data)
-    {
-        if(data.isEmpty())
-            return null;
-
-        double[] array = new double[data.size()];
-        for(int i = 0; i < data.size(); ++i)
-        {
-            array[i] = data.get(i);
-        }
-
-        return array;
     }
 
     public static void convertToPercentages(double[] counts)

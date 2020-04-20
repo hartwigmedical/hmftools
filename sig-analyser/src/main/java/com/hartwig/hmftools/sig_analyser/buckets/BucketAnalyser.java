@@ -7,6 +7,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_DIR;
 import static com.hartwig.hmftools.sig_analyser.SigAnalyser.OUTPUT_FILE_ID;
@@ -44,7 +45,6 @@ import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getDiffList;
 import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getMatchingList;
 import static com.hartwig.hmftools.sig_analyser.common.SigUtils.getNewFile;
 import static com.hartwig.hmftools.common.sigs.DataUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.sigs.DataUtils.listToArray;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sumVector;
 import static com.hartwig.hmftools.common.sigs.SigMatrix.redimension;
@@ -2154,7 +2154,7 @@ public class BucketAnalyser
         // report range of group counts across the samples
         if(!sampleGroupCounts.isEmpty())
         {
-            double[] groupCounts = listToArray(sampleGroupCounts);
+            double[] groupCounts = convertList(sampleGroupCounts);
             List<Integer> sortedIndicesGCs = getSortedVectorIndices(groupCounts, false);
 
             if (sortedIndicesGCs.size() > 2)
