@@ -62,7 +62,7 @@ public final class FastqStatsRunner {
             final long startTime = System.currentTimeMillis();
             final Multimap<String, File> fastqsPerSample = getFastqsFromBaseCallsDir(baseCallsDir);
             final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, threadCount);
-            LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
+            LOGGER.info("Total time: {}ms.", System.currentTimeMillis() - startTime);
             writeOutputToCSV(flowcellName, tracker, csvOutPath);
         } else {
             final int threadCount = getThreadCount(threadCountArg);
@@ -70,7 +70,7 @@ public final class FastqStatsRunner {
             final long startTime = System.currentTimeMillis();
             final Multimap<String, File> fastqsPerSample = getFastqsFromDir(fastqDir);
             final FastqTracker tracker = FastqStats.processFastqs(fastqsPerSample, threadCount);
-            LOGGER.info("Total time: " + (System.currentTimeMillis() - startTime) + "ms.");
+            LOGGER.info("Total time: {}ms.", System.currentTimeMillis() - startTime);
             writeFastqDirOutputToCSV(tracker, csvOutPath);
         }
     }
@@ -112,7 +112,7 @@ public final class FastqStatsRunner {
             }
         }
         writer.close();
-        LOGGER.info("Written fastq qc data to " + csvOutPath);
+        LOGGER.info("Written fastq qc data to {}", csvOutPath);
     }
 
     private static void writeFastqDirOutputToCSV(@NotNull final FastqTracker tracker, @NotNull final String csvOutPath) throws IOException {
@@ -124,7 +124,7 @@ public final class FastqStatsRunner {
             }
         }
         writer.close();
-        LOGGER.info("Written fastq qc data to " + csvOutPath);
+        LOGGER.info("Written fastq qc data to {}", csvOutPath);
     }
 
     /**

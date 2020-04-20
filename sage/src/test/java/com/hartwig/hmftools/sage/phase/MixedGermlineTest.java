@@ -2,12 +2,14 @@ package com.hartwig.hmftools.sage.phase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.config.SageConfigTest;
 import com.hartwig.hmftools.sage.config.SoftFilter;
@@ -37,27 +39,30 @@ public class MixedGermlineTest {
         testMixed(115251159, true);
     }
 
+    @Test
+    public void testPsg1() {
+        final SageVariant somaticSnv = createGermline("19", 43382367, "G", "A");
+        final SageVariant mixedMnv = create("19", 43382367, "GT", "AG");
+        final SageVariant germlineSnv = create("19", 43382368, "T", "G");
+
+        process("19", somaticSnv, mixedMnv, germlineSnv);
+
+        assertEquals(1, mixedMnv.mixedGermlineImpact());
+        assertEquals(1, somaticSnv.mixedGermlineImpact());
+        assertEquals(1, germlineSnv.mixedGermlineImpact());
+
+        assertFalse(germlineSnv.isPassing());
+        assertFalse( somaticSnv.isPassing());
+        assertTrue( mixedMnv.isPassing());
+
+    }
 
     private void testMixed(int germlinePosition, boolean mvnPass) {
-        final List<SageVariant> consumer = Lists.newArrayList();
+        final SageVariant germlineSnv = createGermline("1", germlinePosition, "A", "G");
+        final SageVariant somaticSnv = create("1", germlinePosition + 2, "A", "G");
+        final SageVariant mixedMnv = create("1",  germlinePosition, "ACA", "GCG");
 
-        final SageVariant germlineSnv = createGermline(germlinePosition, "A", "G");
-        final SageVariant somaticSnv = create(germlinePosition + 2, "A", "G");
-        final SageVariant mixedMnv = create(germlinePosition, "ACA", "GCG");
-
-        somaticSnv.localPhaseSet(3);
-        mixedMnv.localPhaseSet(3);
-
-        final Phase victim = new Phase(SageConfigTest.testConfig(), "1", consumer::add);
-
-        victim.accept(mixedMnv);
-        victim.accept(germlineSnv);
-        victim.accept(somaticSnv);
-
-        assertEquals(0, consumer.size());
-
-        victim.flush();
-        assertEquals(3, consumer.size());
+        process("1", germlineSnv, somaticSnv, mixedMnv);
 
         assertEquals(1, mixedMnv.mixedGermlineImpact());
         assertEquals(1, somaticSnv.mixedGermlineImpact());
@@ -68,16 +73,29 @@ public class MixedGermlineTest {
         assertEquals(mvnPass, mixedMnv.isPassing());
     }
 
+    private void process(String chromosome, SageVariant... variants) {
+        final List<SageVariant> consumer = Lists.newArrayList();
+        final Phase victim = new Phase(SageConfigTest.testConfig(), chromosome, consumer::add);
+
+        for (SageVariant variant : variants) {
+            variant.localPhaseSet(1);
+            victim.accept(variant);
+        }
+        assertEquals(0, consumer.size());
+        victim.flush();
+        assertEquals(variants.length, consumer.size());
+    }
+
     @NotNull
-    private static SageVariant createGermline(long position, @NotNull String ref, @NotNull String alt) {
-        SageVariant result = create(position, ref, alt);
+    private static SageVariant createGermline(String chromosome, long position, @NotNull String ref, @NotNull String alt) {
+        SageVariant result = create(chromosome, position, ref, alt);
         result.filters().add(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.toString());
         return result;
     }
 
     @NotNull
-    private static SageVariant create(long position, @NotNull String ref, @NotNull String alt) {
-        VariantHotspot variant = LocalPhaseSetTest.create(position, ref, alt);
+    private static SageVariant create(String chromosome, long position, @NotNull String ref, @NotNull String alt) {
+        VariantHotspot variant = ImmutableVariantHotspotImpl.builder().chromosome(chromosome).ref(ref).alt(alt).position(position).build();
         ReadContextCounter counter = dummyCounter(variant, Strings.EMPTY);
         return new SageVariant(SageVariantTier.PANEL, variant, Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(counter));
     }

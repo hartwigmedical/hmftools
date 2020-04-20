@@ -3,12 +3,9 @@ package com.hartwig.hmftools.sage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscript;
 import com.hartwig.hmftools.common.genome.region.CanonicalTranscriptFactory;
-import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
 import com.hartwig.hmftools.common.sage.SagePostProcessVCF;
 import com.hartwig.hmftools.sage.snpeff.SagePostProcess;
 
@@ -71,11 +68,9 @@ public class SagePostProcessApplication implements AutoCloseable {
 
         this.fileReader = new VCFFileReader(new File(inputVCF), false);
         this.fileWriter = new SagePostProcessVCF(outputVCF);
-        Map<String, HmfTranscriptRegion> geneMap =
-                assembly.equals(HG19) ? HmfGenePanelSupplier.allGenesMap37() : HmfGenePanelSupplier.allGenesMap38();
         List<CanonicalTranscript> canonicalTranscripts =
                 assembly.equals(HG19) ? CanonicalTranscriptFactory.create37() : CanonicalTranscriptFactory.create38();
-        this.postProcess = new SagePostProcess(geneMap, canonicalTranscripts, fileWriter::writeVariant);
+        this.postProcess = new SagePostProcess(canonicalTranscripts, fileWriter::writeVariant);
     }
 
     private void run() {

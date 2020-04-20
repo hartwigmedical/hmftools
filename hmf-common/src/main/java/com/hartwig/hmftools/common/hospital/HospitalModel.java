@@ -171,7 +171,7 @@ public abstract class HospitalModel {
         }
 
         if (!missingFields.isEmpty()) {
-            LOGGER.warn("Some address fields (" + Strings.join(missingFields, ',') + ") are missing.");
+            LOGGER.warn("Some address fields ({}) are missing.", Strings.join(missingFields, ','));
         }
     }
 

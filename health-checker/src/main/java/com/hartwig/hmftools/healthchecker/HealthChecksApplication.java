@@ -118,7 +118,7 @@ public final class HealthChecksApplication {
         }
 
         for (QCValue qcValue : qcValues) {
-            LOGGER.info("QC " + qcValue.type() + " has value " + qcValue.value());
+            LOGGER.info("QC '{}' has value '{}'", qcValue.type(), qcValue.value());
         }
 
         if (HealthCheckEvaluation.isPass(qcValues)) {

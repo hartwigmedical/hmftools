@@ -114,7 +114,7 @@ public final class XMLPatientReader extends EcrfReader {
                     value = datamodel.resolveValue(OID, reader.getAttributeValue("", ITEM_VALUE_ATTRIBUTE));
                 } catch (EcrfResolveException exception) {
                     if (!DROPDOWN_ITEMS_TO_IGNORE_FOR_WARNING.contains(OID)) {
-                        LOGGER.warn("Resolve issue for " + patientId + ": " + exception.getMessage());
+                        LOGGER.warn("Resolve issue for {}: {}", patientId, exception.getMessage());
                     }
                 }
                 currentItemGroup.addItem(OID, value);

@@ -192,19 +192,11 @@ public class TreatmentCurator implements CleanableCurator {
             }
 
             if (hits.length == 1) {
-                if (searchTerm.contains(",")) {
-                    Document searchResult = indexSearcher.doc(hits[0].doc);
-                    return Optional.of(ImmutableCuratedDrug.of(searchResult.get(searchTerm),
-                            searchResult.get("Combined"),
-                            searchResult.get("Combined"),
-                            searchTerm));
-                } else {
-                    Document searchResult = indexSearcher.doc(hits[0].doc);
-                    return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
-                            searchResult.get(DRUG_TYPE_FIELD),
-                            searchResult.get(DRUG_MECHANISM_FIELD),
-                            searchTerm));
-                }
+                Document searchResult = indexSearcher.doc(hits[0].doc);
+                return Optional.of(ImmutableCuratedDrug.of(searchResult.get(CANONICAL_DRUG_NAME_FIELD),
+                        searchResult.get(DRUG_TYPE_FIELD),
+                        searchResult.get(DRUG_MECHANISM_FIELD),
+                        searchTerm));
             }
 
             return Optional.empty();
@@ -253,7 +245,7 @@ public class TreatmentCurator implements CleanableCurator {
                     .sorted(Comparator.comparing(SearchToken::length).reversed().thenComparing(SearchToken::startOffset))
                     .collect(Collectors.toList());
         } catch (IOException exception) {
-            LOGGER.warn("Caught IOException in treatment curation: " + exception.getMessage());
+            LOGGER.warn("Caught IOException in treatment curation: {}", exception.getMessage());
             return Lists.newArrayList();
         }
     }

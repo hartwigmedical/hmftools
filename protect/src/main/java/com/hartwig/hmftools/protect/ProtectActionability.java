@@ -363,7 +363,7 @@ public class ProtectActionability {
     private static boolean valueExists(@NotNull CommandLine cmd, @NotNull String param) {
         String value = cmd.getOptionValue(param);
         if (value == null) {
-            LOGGER.warn(param + " has to be provided");
+            LOGGER.warn("'{}' has to be provided", param);
             return false;
         }
         return true;
@@ -373,7 +373,7 @@ public class ProtectActionability {
         String value = cmd.getOptionValue(param);
 
         if (value == null || !pathExists(value)) {
-            LOGGER.warn(param + " has to be an existing file: " + value);
+            LOGGER.warn("'{}' has to be an existing file: {}", param, value);
             return false;
         }
 
@@ -384,7 +384,7 @@ public class ProtectActionability {
         String value = cmd.getOptionValue(param);
 
         if (value == null || !pathExists(value) || !pathIsDirectory(value)) {
-            LOGGER.warn(param + " has to be an existing directory: " + value);
+            LOGGER.warn("'{}' has to be an existing directory: {}", param, value);
             return false;
         }
 

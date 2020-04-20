@@ -145,6 +145,11 @@ public class ChromosomePipeline implements AutoCloseable {
             return true;
         }
 
+        // Its not always 100% transparent whats happening with the mixed germline dedup logic unless we keep all the associated records.
+        if (entry.mixedGermlineImpact() > 0) {
+            return true;
+        }
+
         if (!entry.isNormalEmpty() && !entry.isTumorEmpty() && !MitochondrialChromosome.contains(entry.chromosome())) {
             final ReadContextCounter normal = entry.normalAltContexts().get(0);
             if (normal.altSupport() > config.filter().hardMaxNormalAltSupport()) {

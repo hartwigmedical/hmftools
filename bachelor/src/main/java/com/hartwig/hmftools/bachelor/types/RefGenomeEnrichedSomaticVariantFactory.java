@@ -137,7 +137,7 @@ public class RefGenomeEnrichedSomaticVariantFactory {
                     reference.getSubsequenceAt(variant.chromosome(), Math.max(1, variant.position() - 1), variant.position() + 1);
             builder.trinucleotideContext(sequence.getBaseString());
         } else {
-            LOGGER.warn("Requested ref sequence beyond contig length! variant = " + variant);
+            LOGGER.warn("Requested ref sequence beyond contig length! variant = {}", variant);
         }
     }
 }
