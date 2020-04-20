@@ -347,6 +347,19 @@ public class ReadCountsTest
         return new GeneReadData(geneData);
     }
 
+    private String generateRandomBases(int length)
+    {
+        char[] str = new char[length];
+        String bases = "ACGT";
+
+        for(int i = 0; i < length; ++i)
+        {
+            str[i] = bases.charAt(i % 3);
+        }
+
+        return String.valueOf(str);
+    }
+
     public static ReadRecord createReadRecord(
             final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
     {

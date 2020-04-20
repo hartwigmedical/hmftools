@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.variant.structural.annotation.Transcript.POST_CODING_PHASE;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.getCodingBases;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.getCodingBases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

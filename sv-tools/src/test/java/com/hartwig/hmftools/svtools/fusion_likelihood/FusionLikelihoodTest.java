@@ -31,7 +31,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
-import com.hartwig.hmftools.linx.gene.GeneTestUtils;
+import com.hartwig.hmftools.common.ensemblcache.GeneTestUtils;
 
 import org.junit.Test;
 

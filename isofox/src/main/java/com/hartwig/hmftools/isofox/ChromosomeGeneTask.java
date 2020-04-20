@@ -202,7 +202,7 @@ public class ChromosomeGeneTask implements Callable
             {
                 if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
                 {
-                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId), mConfig);
+                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
                 }
             }
 
@@ -250,7 +250,7 @@ public class ChromosomeGeneTask implements Callable
             {
                 if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
                 {
-                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId), mConfig);
+                    geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
                 }
             }
 

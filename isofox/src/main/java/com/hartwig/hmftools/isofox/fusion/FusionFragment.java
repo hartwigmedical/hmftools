@@ -2,6 +2,9 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_ONE;
@@ -10,8 +13,11 @@ import static com.hartwig.hmftools.isofox.fusion.FusionReadData.formChromosomePa
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.lowerChromosome;
 
 import java.util.List;
+import java.util.Map;
 
 import com.hartwig.hmftools.isofox.common.ReadRecord;
+import com.hartwig.hmftools.isofox.common.RegionMatchType;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.CigarOperator;
 
@@ -40,8 +46,6 @@ public class FusionFragment
             if(!read.Cigar.containsOperator(CigarOperator.S))
                 continue;
 
-            final List<long[]> readCoords = read.getMappedRegionCoords();
-
             boolean useLeft;
             long sjPosition = 0;
             byte sjOrientation = 0;
@@ -58,17 +62,18 @@ public class FusionFragment
 
             if(useLeft)
             {
-                sjPosition = readCoords.get(0)[SE_START];
+                sjPosition = read.getCoordsBoundary(true);
                 sjOrientation = -1;
             }
             else
             {
-                sjPosition = readCoords.get(readCoords.size() - 1)[SE_END];
+                sjPosition = read.getCoordsBoundary(false);
                 sjOrientation = 1;
             }
 
             if(sjCount == 0)
             {
+                ++sjCount;
                 mChromosomes[SE_START] = read.Chromosome;
                 mSjPositions[SE_START] = sjPosition;
                 mSjOrientations[SE_START] = sjOrientation;
@@ -97,14 +102,14 @@ public class FusionFragment
                     mSjOrientations[SE_START] = sjOrientation;
                     mSjValid[SE_START] = true;
                 }
-            }
 
-            break;
+                break;
+            }
         }
 
         mType = UNKNOWN;
 
-            if(mSjValid[SE_START] && mSjValid[SE_END])
+        if(mSjValid[SE_START] && mSjValid[SE_END])
         {
             mType = SPLICED_BOTH;
         }
@@ -118,13 +123,43 @@ public class FusionFragment
         }
     }
 
+    public final List<ReadRecord> getReads() { return mReads; }
     public FusionFragmentType type() { return mType; }
+    public final String[] chromosomes() { return mChromosomes; }
+
     public final long[] splicePositions() { return mSjPositions; }
     public final byte[] spliceOrientations() { return mSjOrientations; }
-    public final String[] chromosomes() { return mChromosomes; }
+    public boolean hasValidSpliceData() { return mSjValid[SE_START] && mSjValid[SE_END]; }
 
     public String chrPair() { return formChromosomePair(mChromosomes[SE_START], mChromosomes[SE_END]); }
 
     public static boolean validPositions(final long[] position) { return position[SE_START] > 0 && position[SE_END] > 0; }
 
+    public void populateGeneCandidates(final List<List<String>> spliceGeneIds)
+    {
+        // each fragment supporting the splice junction will have the same set of candidate genes
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            for(final ReadRecord read : mReads)
+            {
+                if(!read.Chromosome.equals(mChromosomes[se]))
+                    continue;
+
+                for(Map.Entry<RegionMatchType,List<TransExonRef>> entry : read.getTransExonRefs().entrySet())
+                {
+                    if(entry.getKey() != EXON_BOUNDARY && entry.getKey() != EXON_MATCH)
+                        continue;
+
+                    if(read.getCoordsBoundary(true) == mSjPositions[se] || read.getCoordsBoundary(false) == mSjPositions[se])
+                    {
+                        for(TransExonRef transData : entry.getValue())
+                        {
+                            if(!spliceGeneIds.get(se).contains(transData.GeneId))
+                                spliceGeneIds.get(se).add(transData.GeneId);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

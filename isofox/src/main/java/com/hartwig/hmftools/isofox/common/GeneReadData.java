@@ -24,7 +24,6 @@ public class GeneReadData
 
     private final List<TranscriptData> mTranscripts;
 
-
     public GeneReadData(final EnsemblGeneData geneData)
     {
         GeneData = geneData;

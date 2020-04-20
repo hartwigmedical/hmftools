@@ -1,19 +1,15 @@
-package com.hartwig.hmftools.linx.gene;
+package com.hartwig.hmftools.common.ensemblcache;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
 public class GeneTestUtils
 {
@@ -59,6 +55,18 @@ public class GeneTestUtils
             long[] exonStarts, int[] exonEndPhases, int exonLength)
     {
         return createTransExons(geneId, transId, strand,exonStarts, exonEndPhases, exonLength, false);
+    }
+
+    public static long[] generateExonStarts(long startBase, int exonCount, int exonLength, int intronLength)
+    {
+        long[] exonStarts = new long[exonCount];
+
+        for(int i = 0; i < exonCount; ++i)
+        {
+            exonStarts[i] = startBase + i * (exonLength + intronLength);
+        }
+
+        return exonStarts;
     }
 
     public static String generateTransName(int transId) { return String.format("TRAN%04d", transId); }

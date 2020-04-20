@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -161,6 +162,11 @@ public class ReadRecord
     public boolean overlapsMappedReads(long posStart, long posEnd)
     {
         return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
+    }
+
+    public long getCoordsBoundary(boolean isStart)
+    {
+        return isStart ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
     }
 
     public static final List<long[]> generateMappedCoords(final Cigar cigar, long posStart)

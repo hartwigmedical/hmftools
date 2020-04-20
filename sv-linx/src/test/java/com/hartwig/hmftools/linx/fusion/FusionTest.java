@@ -1,20 +1,19 @@
 package com.hartwig.hmftools.linx.fusion;
 
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROCESSED_TRANS;
-import static com.hartwig.hmftools.linx.fusion.FusionFinder.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createBnd;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createInv;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDel;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.createDup;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

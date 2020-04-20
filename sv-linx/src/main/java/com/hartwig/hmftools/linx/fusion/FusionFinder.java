@@ -5,6 +5,11 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_LINC_RNA;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_NONSENSE_MED_DECAY;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_RETAINED_INTRON;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_3P_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_5P_PROM;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_BOTH_PROM;
@@ -39,12 +44,6 @@ public class FusionFinder
     private EnsemblDataCache mGeneTransCache;
     private List<String> mProteinsRequiredKept;
     private List<String> mProteinsRequiredLost;
-
-    public static final String BIOTYPE_PROTEIN_CODING = "protein_coding";
-    public static final String BIOTYPE_NONSENSE_MED_DECAY = "nonsense_mediated_decay";
-    public static final String BIOTYPE_RETAINED_INTRON = "retained_intron";
-    public static final String BIOTYPE_PROCESSED_TRANS = "processed_transcript";
-    public static final String BIOTYPE_LINC_RNA = "lincRNA";
 
     private static List<String> mRequiredBiotypes = Lists.newArrayList(
             BIOTYPE_PROCESSED_TRANS, BIOTYPE_PROTEIN_CODING, BIOTYPE_NONSENSE_MED_DECAY, BIOTYPE_RETAINED_INTRON, BIOTYPE_LINC_RNA);

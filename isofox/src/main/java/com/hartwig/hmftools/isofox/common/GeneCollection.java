@@ -82,7 +82,6 @@ public class GeneCollection
     public final long[] regionBounds() { return mRegionBounds; }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
-    public void setTranscripts(final List<TranscriptData> transDataList) { mTranscripts.addAll(transDataList); }
 
     public final List<RegionReadData> getExonRegions() { return mExonRegions; }
     public List<long[]> getCommonExonicRegions() { return mCommonExonicRegions; }
@@ -113,7 +112,7 @@ public class GeneCollection
     public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
     public long[] getEnrichedRegion() { return mEnrichedRegion; }
 
-    public void setEnrichedTranscripts(final List<TranscriptData> transDataList, final IsofoxConfig config)
+    public void setEnrichedTranscripts(final List<TranscriptData> transDataList)
     {
         mEnrichedTranscripts = Lists.newArrayList(transDataList);
         mEnrichedRegion = new long[SE_PAIR];

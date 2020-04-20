@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.extractTranscriptExonData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneAnnotation;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneAnnotation;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

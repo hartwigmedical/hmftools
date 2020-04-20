@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createGeneDataCache;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.START_CODON;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.STOP_CODON_1;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.convertAminoAcidToDnaCodon;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.reverseStrandBases;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.swapDnaToRna;
 import static com.hartwig.hmftools.linx.neoepitope.AminoAcidConverter.swapRnaToDna;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addGeneData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.addTransExonData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createEnsemblGeneData;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.linx.gene.GeneTestUtils.generateTransName;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.addTransExonData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createEnsemblGeneData;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createTransExons;
+import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.generateTransName;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
