@@ -14,8 +14,7 @@ public enum SoftFilter {
     MIN_GERMLINE_DEPTH_ALLOSOME("min_germline_depth_allosome", false, true),
     MAX_GERMLINE_VAF("max_germline_vaf", false, true),
     MAX_GERMLINE_REL_RAW_BASE_QUAL("max_germline_rel_raw_base_qual", false, true),
-    MAX_GERMLINE_ALT_SUPPORT("max_germline_alt_support", false, true),
-    MIXED_GERMLINE_SOMATIC_MNV("mixed_germline_somatic_mnv", false, true);
+    MAX_GERMLINE_ALT_SUPPORT("max_germline_alt_support", false, true);
 
     private static Set<String> TUMOR_FILTERS = Sets.newHashSet();
     private static Set<String> GERMLINE_FILTERS = Sets.newHashSet();
