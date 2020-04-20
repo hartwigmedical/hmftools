@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -11,7 +10,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 
@@ -104,38 +102,21 @@ public class SageApplication implements AutoCloseable {
         long timeStamp = System.currentTimeMillis();
 
         final Map<String, QualityRecalibrationMap> recalibrationMap = qualityRecalibration();
-        final List<Future<ChromosomePipeline>> chromosomePipelines = Lists.newArrayList();
-        SAMSequenceDictionary dictionary = dictionary();
+        final SAMSequenceDictionary dictionary = dictionary();
         for (final SAMSequenceRecord samSequenceRecord : dictionary.getSequences()) {
             final String contig = samSequenceRecord.getSequenceName();
             if (config.chromosomes().isEmpty() || config.chromosomes().contains(contig)) {
                 if (HumanChromosome.contains(contig) || MitochondrialChromosome.contains(contig)) {
-                    ChromosomePipeline pipeline = createChromosomePipeline(contig, recalibrationMap);
-                    pipeline.addAllRegions();
-                    chromosomePipelines.add(pipeline.submit());
+                    try (final ChromosomePipeline pipeline = createChromosomePipeline(contig, recalibrationMap)) {
+                        pipeline.process();
+                    }
+                    System.gc();
                 }
             }
         }
 
-        //                ChromosomePipeline custom = createChromosomePipeline("17", recalibrationMap);
-        //                custom.addAllRegions();
-        //                custom.addAllRegions(1_000_000);
-        //                custom.addRegion(6385360, 6385360);
-        //                custom.addRegion(25268011, 25268011);
-        //                custom.addRegion(79223325, 79223325);
-        //                custom.addRegion(997610, 997610);
-        //                chromosomePipelines.add(custom.submit());
+//        createChromosomePipeline("17", recalibrationMap).process(1, 1_000_000);
 
-        final Iterator<Future<ChromosomePipeline>> chromosomeIterator = chromosomePipelines.iterator();
-        while (chromosomeIterator.hasNext()) {
-            Future<ChromosomePipeline> future = chromosomeIterator.next();
-            ChromosomePipeline pipeline = future.get();
-            vcf.addVCF(pipeline.vcfFilename());
-            pipeline.close();
-            LOGGER.info("Finished writing chromosome  {} ", pipeline.chromosome());
-            chromosomeIterator.remove();
-            System.gc();
-        }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         LOGGER.info("Completed in {} seconds", timeTaken / 1000);
@@ -159,7 +140,8 @@ public class SageApplication implements AutoCloseable {
                 hotspots.get(chromosome),
                 panel.get(chromosome),
                 highConfidence.get(chromosome),
-                qualityRecalibrationMap);
+                qualityRecalibrationMap,
+                vcf::write);
     }
 
     @Override
