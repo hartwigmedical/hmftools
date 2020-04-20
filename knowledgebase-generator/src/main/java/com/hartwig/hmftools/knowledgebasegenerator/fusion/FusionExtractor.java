@@ -13,7 +13,13 @@ public class FusionExtractor {
     private static final Logger LOGGER = LogManager.getLogger(FusionExtractor.class);
 
     @NotNull
-    public static KnownFusions determinePromiscuousFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene) {
+    public static KnownFusions determinePromiscuousFusions(@NotNull ViccSource source, @NotNull String typeEvent, @NotNull String gene,
+            @NotNull String function) {
+
+        if (function.equals("Likely Loss-of-function")) {
+            gene = Strings.EMPTY;
+            typeEvent = Strings.EMPTY;
+        }
 
         return ImmutableKnownFusions.builder()
                 .gene(gene)

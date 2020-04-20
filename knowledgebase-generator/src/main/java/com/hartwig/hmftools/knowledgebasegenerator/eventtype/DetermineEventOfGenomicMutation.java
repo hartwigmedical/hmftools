@@ -126,9 +126,12 @@ public class DetermineEventOfGenomicMutation {
 
     @NotNull
     public static KnownFusions checkFusionPromiscuous(@NotNull ViccEntry viccEntry, @NotNull String gene, @NotNull String event) {
+        String function =
+                viccEntry.association().evidence().description() == null ? Strings.EMPTY : viccEntry.association().evidence().description();
+
         if (FUSIONS_PROMISCUOUS.contains(event)) {
             GenomicEvents typeEvent = GenomicEvents.genomicEvents("fusion promiscuous");
-            return FusionExtractor.determinePromiscuousFusions(viccEntry.source(), typeEvent.toString(), gene);
+            return FusionExtractor.determinePromiscuousFusions(viccEntry.source(), typeEvent.toString(), gene, function);
         }
         return ImmutableKnownFusions.builder().gene("").eventType("").source("").sourceLink("").build();
     }
