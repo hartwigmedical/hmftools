@@ -202,7 +202,7 @@ public class KnowledgebaseGeneratorApplication {
         for (KnownFusions five : listKnownFusionPromiscuous) {
             if (!five.eventType().isEmpty()) {
                 if (countsPromiscuousFive.containsKey(five.gene())) {
-                    if (countsPromiscuousFive.get(five.gene()) >= 3 || countsPromiscuousFive.get(five.gene()) == 1) {
+                    if (countsPromiscuousFive.get(five.gene()) >= 3 || countsPromiscuousFive.get(five.gene()) >= 1) {
                         promiscuousFiveGenes.add(five.gene());
                     }
                 }
@@ -223,7 +223,7 @@ public class KnowledgebaseGeneratorApplication {
         for (KnownFusions three : listKnownFusionPromiscuous) {
             if (!three.eventType().isEmpty()) {
                 if (countsPromiscuousThree.containsKey(three.gene())) {
-                    if (countsPromiscuousThree.get(three.gene()) >= 3 || countsPromiscuousThree.get(three.gene()) == 1) {
+                    if (countsPromiscuousThree.get(three.gene()) >= 3 || countsPromiscuousThree.get(three.gene()) >= 1) {
                         promiscuousThreeGenes.add(three.gene());
                     }
                 }
