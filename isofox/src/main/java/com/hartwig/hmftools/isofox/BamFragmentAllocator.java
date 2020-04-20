@@ -32,7 +32,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
-import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericRead;
+import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -279,7 +279,7 @@ public class BamFragmentAllocator
         }
         else
         {
-            addChimericRead(mChimericReadMap, read);
+            addChimericReads(mChimericReadMap, read);
         }
     }
 

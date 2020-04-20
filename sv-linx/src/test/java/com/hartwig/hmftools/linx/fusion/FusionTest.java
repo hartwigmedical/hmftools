@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROCESSED_TRANS;
+import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIOTYPE_PROTEIN_CODING;
 import static com.hartwig.hmftools.common.variant.structural.annotation.GeneFusion.REPORTABLE_TYPE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.determineReportableFusion;

@@ -4,14 +4,7 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
-import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.validPositions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
@@ -25,9 +18,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionReadData
 {
@@ -75,8 +65,13 @@ public class FusionReadData
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
     {
         mFusionIndices[FS_UPSTREAM] = startIsUpstream ? SE_START : SE_END;
+        mFusionIndices[FS_DOWNSTREAM] = startIsUpstream ? SE_END : SE_START;
         mCandidateGenes.set(FS_UPSTREAM, upstreamGenes);
         mCandidateGenes.set(FS_DOWNSTREAM, downstreamGenes);
+
+        // until a more informed decision can be made
+        mFusionGeneIds[FS_UPSTREAM] = upstreamGenes.get(0).GeneId;
+        mFusionGeneIds[FS_DOWNSTREAM] = downstreamGenes.get(0).GeneId;
     }
 
     public String chrPair() { return formChromosomePair(mChromosomes[SE_START], mChromosomes[SE_END]); }
@@ -151,15 +146,27 @@ public class FusionReadData
 
             csvData.add(geneId);
 
-            final String geneName = genes.stream()
-                    .filter(x -> x.GeneId.equals(geneId)).findFirst().map(x -> x.GeneName).orElse("");
+            final EnsemblGeneData geneData = genes.stream()
+                    .filter(x -> x.GeneId.equals(geneId)).findFirst().map(x -> x).orElse(null);
 
-            csvData.add(geneName);
+            if(geneData != null)
+            {
+                csvData.add(geneData.GeneName);
 
-            final int[] streamIndices = hasValidStreamData() ? mFusionIndices : new int[] { SE_START, SE_END };
-            csvData.add(mChromosomes[streamIndices[fs]]);
-            csvData.add(String.valueOf(mSjPositions[streamIndices[fs]]));
-            csvData.add(String.valueOf(mSjOrientations[streamIndices[fs]]));
+                final int[] streamIndices = hasValidStreamData() ? mFusionIndices : new int[] { SE_START, SE_END };
+                csvData.add(mChromosomes[streamIndices[fs]]);
+                csvData.add(String.valueOf(mSjPositions[streamIndices[fs]]));
+                csvData.add(String.valueOf(mSjOrientations[streamIndices[fs]]));
+                csvData.add(String.valueOf(geneData.Strand));
+            }
+            else
+            {
+                csvData.add("");
+                csvData.add(mChromosomes[fs]);
+                csvData.add(String.valueOf(mSjPositions[fs]));
+                csvData.add(String.valueOf(mSjOrientations[fs]));
+                csvData.add("0");
+            }
         }
 
         csvData.add(getImpliedSvType().toString());
@@ -201,9 +208,11 @@ public class FusionReadData
                 csvData.add(otherGenes[fs]);
             }
         }
-
-        csvData.add("NONE");
-        csvData.add("NONE");
+        else
+        {
+            csvData.add("NONE");
+            csvData.add("NONE");
+        }
 
         if(!mRelatedFusions.isEmpty())
         {

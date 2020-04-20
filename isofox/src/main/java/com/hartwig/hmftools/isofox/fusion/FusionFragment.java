@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
@@ -15,7 +17,11 @@ import static com.hartwig.hmftools.isofox.fusion.FusionReadData.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -27,6 +33,7 @@ public class FusionFragment
 {
     private final List<ReadRecord> mReads;
 
+    private final int[] mGeneCollections;
     private final String[] mChromosomes;
     private final long[] mSjPositions;
     private final byte[] mSjOrientations;
@@ -37,75 +44,119 @@ public class FusionFragment
     {
         mReads = reads;
 
+        mGeneCollections = new int[SE_PAIR];
         mSjPositions = new long[] {-1, -1};
         mChromosomes = new String[]{"", ""};
         mSjOrientations = new byte[]{0, 0};
         mSjValid = new boolean[]{false, false};
-        int sjCount = 0;
+
+        // divide reads into the 2 gene collections
+        final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
+        final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
+        final List<Long> positions = Lists.newArrayListWithCapacity(2);
+        final Map<String,List<ReadRecord>> readGroups = Maps.newHashMap();
 
         for(final ReadRecord read : reads)
         {
-            if(!read.Cigar.containsOperator(CigarOperator.S))
-                continue;
+            final String chrGeneId = read.chromosomeGeneId();
 
-            boolean useLeft;
+            List<ReadRecord> readGroup = readGroups.get(chrGeneId);
+
+            if(readGroup == null)
+            {
+                readGroups.put(chrGeneId, Lists.newArrayList(read));
+
+                chrGeneCollections.add(chrGeneId);
+                chromosomes.add(read.Chromosome);
+                positions.add(read.PosStart); // no overlap in gene collections so doesn't matter which position is used
+            }
+            else
+            {
+                readGroup.add(read);
+            }
+        }
+
+        // first determine which is the start and end chromosome & position as for SVs
+        int lowerIndex;
+
+        if(chromosomes.get(0).equals(chromosomes.get(1)))
+            lowerIndex = positions.get(0) < positions.get(1) ? 0 : 1;
+        else
+            lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
+            final String chrGeneId = chrGeneCollections.get(index);
+
+            // find the outermost soft-clipped read to use for the splice junction position
             long sjPosition = 0;
             byte sjOrientation = 0;
+            int maxSoftClipping = 0;
 
-            if(read.Cigar.isLeftClipped() && read.Cigar.isRightClipped())
+            final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
+            for(ReadRecord read : readGroup)
             {
-                // should be very unlikely since implies a very short exon and even then would expect it to be mapped
-                useLeft = read.Cigar.getFirstCigarElement().getLength() > read.Cigar.getLastCigarElement().getLength();
-            }
-            else
-            {
-                useLeft = read.Cigar.isLeftClipped();
-            }
+                if(!read.Cigar.containsOperator(CigarOperator.S))
+                    continue;
 
-            if(useLeft)
-            {
-                sjPosition = read.getCoordsBoundary(true);
-                sjOrientation = -1;
-            }
-            else
-            {
-                sjPosition = read.getCoordsBoundary(false);
-                sjOrientation = 1;
-            }
+                int scLeft = read.Cigar.isLeftClipped() ? read.Cigar.getFirstCigarElement().getLength() : 0;
+                int scRight = read.Cigar.isRightClipped() ? read.Cigar.getLastCigarElement().getLength() : 0;
 
-            if(sjCount == 0)
-            {
-                ++sjCount;
-                mChromosomes[SE_START] = read.Chromosome;
-                mSjPositions[SE_START] = sjPosition;
-                mSjOrientations[SE_START] = sjOrientation;
-                mSjValid[SE_START] = true;
-            }
-            else
-            {
-                if((mChromosomes[SE_START].equals(read.Chromosome) && mSjPositions[SE_START] < sjPosition)
-                || (!mChromosomes[SE_START].equals(read.Chromosome) && lowerChromosome(mChromosomes[SE_START], read.Chromosome)))
+                boolean useLeft = false;
+
+                if(scLeft > 0 && scRight > 0)
                 {
-                    // already in correct positions
-                    mChromosomes[SE_END] = read.Chromosome;
-                    mSjPositions[SE_END] = sjPosition;
-                    mSjOrientations[SE_END] = sjOrientation;
-                    mSjValid[SE_END] = true;
+                    // should be very unlikely since implies a very short exon and even then would expect it to be mapped
+                    if(scLeft >= scRight && scLeft > maxSoftClipping)
+                    {
+                        maxSoftClipping = scLeft;
+                        useLeft = true;
+                    }
+                    else if(scRight > scLeft && scRight > maxSoftClipping)
+                    {
+                        maxSoftClipping = scRight;
+                        useLeft = false;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                else if(scLeft > maxSoftClipping)
+                {
+                    maxSoftClipping = scLeft;
+                    useLeft = true;
+                }
+                else if(scRight > maxSoftClipping)
+                {
+                    maxSoftClipping = scRight;
+                    useLeft = false;
                 }
                 else
                 {
-                    mChromosomes[SE_END] = mChromosomes[SE_START];
-                    mSjPositions[SE_END] = mSjPositions[SE_START];
-                    mSjOrientations[SE_END] = mSjOrientations[SE_START];
-                    mSjValid[SE_END] = mSjValid[SE_START];
-
-                    mChromosomes[SE_START] = read.Chromosome;
-                    mSjPositions[SE_START] = sjPosition;
-                    mSjOrientations[SE_START] = sjOrientation;
-                    mSjValid[SE_START] = true;
+                    continue;
                 }
 
-                break;
+                if(useLeft)
+                {
+                    sjPosition = read.getCoordsBoundary(true);
+                    sjOrientation = -1;
+                }
+                else
+                {
+                    sjPosition = read.getCoordsBoundary(false);
+                    sjOrientation = 1;
+                }
+            }
+
+            if(maxSoftClipping > 0)
+            {
+                mChromosomes[se] = chromosomes.get(index);
+                mSjPositions[se] = sjPosition;
+                mSjOrientations[se] = sjOrientation;
+                mSjValid[se] = true;
+                mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
             }
         }
 

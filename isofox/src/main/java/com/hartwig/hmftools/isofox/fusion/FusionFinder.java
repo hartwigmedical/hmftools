@@ -18,19 +18,19 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-import com.hartwig.hmftools.isofox.novel.AltSpliceJunction;
 
 public class FusionFinder
 {
@@ -63,12 +63,23 @@ public class FusionFinder
         mReadWriter = null;
     }
 
+    public final Map<String,List<FusionFragment>> getUnsplicedFragments() { return mUnsplicedFragments; }
+    public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
+
+    public void clearState()
+    {
+        mNextFusionId = 0;
+        mFusionCandidates.clear();
+        mUnsplicedFragments.clear();
+        mReadsMap.clear();
+    }
+
     public void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap)
     {
         mergeChimericReadMaps(mReadsMap, chimericReadMap);
     }
 
-    public static void addChimericRead(final Map<String,List<ReadRecord>> chimericReadMap, final ReadRecord read)
+    public static void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap, final ReadRecord read)
     {
         List<ReadRecord> chimericReads = chimericReadMap.get(read.Id);
         if (chimericReads == null)
@@ -128,7 +139,7 @@ public class FusionFinder
 
         ISF_LOGGER.info("chimeric fragments({}) unpaired({}) filtered({}) unspliced({}) fusions({})",
                 mReadsMap.size(), unpairedReads, filteredFragments, mUnsplicedFragments.values().stream().count(),
-                mFusionCandidates.values().stream().count());
+                mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
         mReadsMap.clear();
 
@@ -149,13 +160,11 @@ public class FusionFinder
 
     private boolean isInvalidFragment(final List<ReadRecord> reads)
     {
-        final String firstChr = reads.get(0).Chromosome;
-        int firstGeneCollection = reads.get(0).getGeneCollecton();
+        final Set<String> chrGeneCollections = Sets.newHashSet();
+        reads.forEach(x -> chrGeneCollections.add(String.format("%s_%d", x.Chromosome, x.getGeneCollecton())));
 
-        boolean spansGenes = (reads.stream().anyMatch(x -> !x.Chromosome.equals(firstChr) || x.getGeneCollecton() != firstGeneCollection));
-
-        if(!spansGenes)
-            return false;
+        if(chrGeneCollections.size() != 2)
+            return true;
 
         return false;
     }

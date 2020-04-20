@@ -119,6 +119,7 @@ public class ReadRecord
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
     public int getGeneCollecton() { return mGeneCollectionId; }
+    public String chromosomeGeneId() { return String.format("%s_%d", Chromosome, mGeneCollectionId); }
 
     public void setFlag(SAMFlag flag, boolean toggle)
     {

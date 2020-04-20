@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.createCigar;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.createReadRecord;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
-import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
 
 import static org.junit.Assert.assertEquals;
@@ -28,51 +27,49 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.ExonData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
 
-public class FusionsTest
+public class FusionFragmentsTest
 {
-    private static final String CHR_1 = "1";
+    public static final String CHR_1 = "1";
 
-    private static final String GENE_NAME_1 = "GENE1"; // +ve strand
-    private static final String GENE_ID_1 = "ENSG0001";
-    private static final long GENE_START_1 = 1000;
+    public static final String GENE_NAME_1 = "GENE1"; // +ve strand
+    public static final String GENE_ID_1 = "ENSG0001";
+    public static final long GENE_START_1 = 1000;
 
-    private static final String GENE_NAME_2 = "GENE2"; // +ve strand
-    private static final String GENE_ID_2 = "ENSG0002";
-    private static final long GENE_START_2 = 10000;
+    public static final String GENE_NAME_2 = "GENE2"; // +ve strand
+    public static final String GENE_ID_2 = "ENSG0002";
+    public static final long GENE_START_2 = 10000;
 
-    private static final String GENE_NAME_3 = "GENE3"; // -ve strand
-    private static final String GENE_ID_3 = "ENSG0003";
-    private static final long GENE_START_3 = 20000;
+    public static final String GENE_NAME_3 = "GENE3"; // -ve strand
+    public static final String GENE_ID_3 = "ENSG0003";
+    public static final long GENE_START_3 = 20000;
 
-    private static final String CHR_2 = "2";
+    public static final String CHR_2 = "2";
 
-    private static final String GENE_NAME_4 = "GENE4"; // +ve strand
-    private static final String GENE_ID_4 = "ENSG0004";
-    private static final long GENE_START_4 = 1000;
+    public static final String GENE_NAME_4 = "GENE4"; // +ve strand
+    public static final String GENE_ID_4 = "ENSG0004";
+    public static final long GENE_START_4 = 1000;
 
-    private static final String GENE_NAME_5 = "GENE5"; // -ve strand
-    private static final String GENE_ID_5 = "ENSG0005";
-    private static final long GENE_START_5 = 10000;
+    public static final String GENE_NAME_5 = "GENE5"; // -ve strand
+    public static final String GENE_ID_5 = "ENSG0005";
+    public static final long GENE_START_5 = 10000;
 
-    private static final byte POS_STRAND = 1;
-    private static final byte NEG_STRAND = -1;
+    public static final byte POS_STRAND = 1;
+    public static final byte NEG_STRAND = -1;
 
-    private static final int EXON_LENGTH = 100;
-    private static final int INTRON_LENGTH = 200;
+    public static final int EXON_LENGTH = 100;
+    public static final int INTRON_LENGTH = 200;
 
-    private static int getGeneCollection(final String geneId)
+    public static int getGeneCollection(final String geneId)
     {
         if(geneId == GENE_ID_1)
             return 0;
@@ -88,7 +85,7 @@ public class FusionsTest
         return -1;
     }
 
-    private static void addTestGenes(EnsemblDataCache geneTransCache)
+    public static void addTestGenes(EnsemblDataCache geneTransCache)
     {
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(GENE_ID_1, GENE_NAME_1, CHR_1, POS_STRAND, GENE_START_1, GENE_START_1 + 1000));
@@ -102,13 +99,13 @@ public class FusionsTest
         addGeneData(geneTransCache, CHR_2, geneList);
     }
 
-    private static final int TRANS_1 = 1;
-    private static final int TRANS_2 = 2;
-    private static final int TRANS_3 = 3;
-    private static final int TRANS_4 = 4;
-    private static final int TRANS_5 = 5;
+    public static final int TRANS_1 = 1;
+    public static final int TRANS_2 = 2;
+    public static final int TRANS_3 = 3;
+    public static final int TRANS_4 = 4;
+    public static final int TRANS_5 = 5;
 
-    private static void addTestTranscripts(EnsemblDataCache geneTransCache)
+    public static void addTestTranscripts(EnsemblDataCache geneTransCache)
     {
         Long codingStart = null;
         Long codingEnd = null;
@@ -165,7 +162,7 @@ public class FusionsTest
         addTransExonData(geneTransCache, GENE_ID_5, transDataList);
     }
 
-    private static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, long posStart, long posEnd, final Cigar cigar)
+    public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, long posStart, long posEnd, final Cigar cigar)
     {
         ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, REF_BASE_STR_1, cigar);
 
@@ -175,7 +172,7 @@ public class FusionsTest
         return read;
     }
 
-    private GeneCollection createGeneCollection(final EnsemblDataCache geneTransCache, int id, final List<EnsemblGeneData> genes)
+    public static GeneCollection createGeneCollection(final EnsemblDataCache geneTransCache, int id, final List<EnsemblGeneData> genes)
     {
         List<GeneReadData> geneReadData = Lists.newArrayList();
         genes.forEach(x -> geneReadData.add(new GeneReadData(x)));
