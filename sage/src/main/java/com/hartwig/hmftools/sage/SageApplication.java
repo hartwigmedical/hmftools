@@ -134,6 +134,7 @@ public class SageApplication implements AutoCloseable {
             pipeline.close();
             LOGGER.info("Finished writing chromosome  {} ", pipeline.chromosome());
             chromosomeIterator.remove();
+            System.gc();
         }
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
