@@ -52,6 +52,7 @@ public class SageConfigTest {
                 .maxReadDepth(DEFAULT_MAX_READ_DEPTH)
                 .maxReadDepthPanel(DEFAULT_MAX_READ_DEPTH_PANEL)
                 .qualityConfig(defaultQualityConfig())
+                .regionSliceSize(500_000)
                 .filter(defaultFilterConfig())
                 .baseQualityRecalibrationConfig(defaultQualityRecalibrationConfig())
                 .build();
