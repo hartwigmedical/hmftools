@@ -24,7 +24,7 @@ public class RightAlignMicrohomologyTest {
     public void testRightAlignDel() {
 
         final String microhomology = "AG";
-        final VariantHotspot leftAligned = BufferedProcessorTest.create(100, "CAGAAACCCATGTATGAAGTACAGTGGA", "C");
+        final VariantHotspot leftAligned = BufferedPostProcessorTest.create(100, "CAGAAACCCATGTATGAAGTACAGTGGA", "C");
         final VariantHotspot rightAligned = RightAlignMicrohomology.rightAlignDel(leftAligned, microhomology);
 
         assertEquals(102, rightAligned.position());

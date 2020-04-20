@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.phase;
 
-import static com.hartwig.hmftools.sage.phase.BufferedProcessorTest.create;
+import static com.hartwig.hmftools.sage.phase.BufferedPostProcessorTest.create;
 import static com.hartwig.hmftools.sage.phase.MixedSomaticGermlineDedup.codonDifferences;
 
 import static org.junit.Assert.assertEquals;

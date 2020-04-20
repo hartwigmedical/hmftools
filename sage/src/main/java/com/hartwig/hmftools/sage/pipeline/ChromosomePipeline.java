@@ -2,13 +2,13 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
@@ -29,7 +29,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class ChromosomePipeline implements AutoCloseable {
 
@@ -39,7 +38,7 @@ public class ChromosomePipeline implements AutoCloseable {
     private final String chromosome;
     private final SageConfig config;
     private final SageChromosomeVCF sageVCF;
-    private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
+    private final List<RegionFuture<List<SageVariant>>> regions = Lists.newArrayList();
     private final IndexedFastaSequenceFile refGenome;
     private final SageVariantPipeline sageVariantPipeline;
 
@@ -88,27 +87,23 @@ public class ChromosomePipeline implements AutoCloseable {
 
     public void addRegion(int start, int end) {
         final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
-        regions.add(sageVariantPipeline.variants(region));
+        final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
+        final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
+        regions.add(regionFuture);
     }
 
     @NotNull
     public CompletableFuture<ChromosomePipeline> submit() {
+        // Even if regions were executed out of order, they must be phased in order
+        regions.sort(Comparator.comparing(RegionFuture::region));
 
-        final Consumer<SageVariant> phasedConsumer = variant -> {
-            if (include(variant)) {
-                final VariantContext context = SageVariantContextFactory.create(variant);
-                sageVCF.write(context);
-            }
-        };
-
-        final Phase phase = new Phase(config, chromosome, phasedConsumer);
-
-        // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
+        // Phasing must be done in order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        Iterator<CompletableFuture<List<SageVariant>>> regionsIterator = regions.iterator();
+        final Phase phase = new Phase(config, chromosome, this::write);
+        final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = regions.iterator();
         while (regionsIterator.hasNext()) {
-            CompletableFuture<List<SageVariant>> region = regionsIterator.next();
+            CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
             done = done.thenCombine(region, (aVoid, sageVariants) -> {
 
                 sageVariants.forEach(phase);
@@ -125,6 +120,12 @@ public class ChromosomePipeline implements AutoCloseable {
             return ChromosomePipeline.this;
         });
 
+    }
+
+    private void write(@NotNull final SageVariant entry) {
+        if (include(entry)) {
+            sageVCF.write(SageVariantContextFactory.create(entry));
+        }
     }
 
     private boolean include(@NotNull final SageVariant entry) {
@@ -165,4 +166,24 @@ public class ChromosomePipeline implements AutoCloseable {
     public void close() throws IOException {
         refGenome.close();
     }
+
+    private static class RegionFuture<T> {
+
+        private final CompletableFuture<T> future;
+        private final GenomeRegion region;
+
+        public RegionFuture(final GenomeRegion region, final CompletableFuture<T> future) {
+            this.region = region;
+            this.future = future;
+        }
+
+        public CompletableFuture<T> future() {
+            return future;
+        }
+
+        public GenomeRegion region() {
+            return region;
+        }
+    }
+
 }
