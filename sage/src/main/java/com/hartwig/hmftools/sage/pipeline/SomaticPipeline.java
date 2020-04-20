@@ -120,7 +120,7 @@ public class SomaticPipeline implements SageVariantPipeline {
             final CompletableFuture<List<Candidate>> candidates, final CompletableFuture<ReadContextCounters> doneTumor,
             final CompletableFuture<ReadContextCounters> doneNormal) {
         return doneNormal.thenCombine(doneTumor, (normalCandidates, tumorCandidates) -> {
-            LOGGER.info("Gathering evidence in {}:{}", region.chromosome(), region.start());
+            LOGGER.debug("Gathering evidence in {}:{}", region.chromosome(), region.start());
             final SageVariantFactory variantFactory = new SageVariantFactory(config.filter());
 
             // Combine normal and tumor together and create variants
