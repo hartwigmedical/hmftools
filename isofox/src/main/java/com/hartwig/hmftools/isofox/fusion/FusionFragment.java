@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
@@ -15,6 +16,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionReadData.lowerChromosome;
 import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
@@ -135,11 +137,21 @@ public class FusionFragment
 
     public static boolean validPositions(final long[] position) { return position[SE_START] > 0 && position[SE_END] > 0; }
 
+    public StructuralVariantType getImpliedSvType()
+    {
+        return impliedSvType(mChromosomes, mSjOrientations);
+    }
+
     public void populateGeneCandidates(final List<List<String>> spliceGeneIds)
     {
+        if(spliceGeneIds.size() != 2)
+            return;
+
         // each fragment supporting the splice junction will have the same set of candidate genes
         for(int se = SE_START; se <= SE_END; ++se)
         {
+            spliceGeneIds.get(se).clear();
+
             for(final ReadRecord read : mReads)
             {
                 if(!read.Chromosome.equals(mChromosomes[se]))

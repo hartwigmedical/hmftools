@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.structural.StructuralVariantTy
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.validPositions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
@@ -88,27 +89,9 @@ public class FusionReadData
             mRelatedFusions.add(id);
     }
 
-    public StructuralVariantType impliedSvType()
+    public StructuralVariantType getImpliedSvType()
     {
-        if(mChromosomes[SE_START].equals(mChromosomes[SE_END]))
-        {
-            if(mSjOrientations[SE_START] == mSjOrientations[SE_END])
-            {
-                return INV;
-            }
-            else if(mSjOrientations[SE_START] == 1)
-            {
-                return DEL;
-            }
-            else
-            {
-                return DUP;
-            }
-        }
-        else
-        {
-            return BND;
-        }
+        return impliedSvType(mChromosomes, mSjOrientations);
     }
 
     public final List<FusionFragment> getFragments() { return mFragments; }
@@ -142,7 +125,7 @@ public class FusionReadData
     {
         return String.format("%d: chr(%s-%s) sj(%d-%d %d-%d %s) genes(%s-%s) frags(%d)",
                 mId, mChromosomes[SE_START], mChromosomes[SE_END], mSjPositions[SE_START], mSjPositions[SE_END],
-                mSjOrientations[SE_START], mSjOrientations[SE_END], impliedSvType(),
+                mSjOrientations[SE_START], mSjOrientations[SE_END], getImpliedSvType(),
                 getGeneName(FS_UPSTREAM), getGeneName(FS_DOWNSTREAM), mFragments.size());
     }
 
@@ -179,7 +162,7 @@ public class FusionReadData
             csvData.add(String.valueOf(mSjOrientations[streamIndices[fs]]));
         }
 
-        csvData.add(impliedSvType().toString());
+        csvData.add(getImpliedSvType().toString());
 
         int totalFragments = 0;
         int spliceFragments = 0;

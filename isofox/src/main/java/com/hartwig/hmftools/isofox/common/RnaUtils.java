@@ -7,12 +7,17 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DUP;
+import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.INV;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
 public class RnaUtils
 {
@@ -249,5 +254,29 @@ public class RnaUtils
             percentileValues[i] = tpmTotal / sampleTotal;
         }
     }
+
+    public static StructuralVariantType impliedSvType(final String[] chromosomes, final byte[] orientations)
+    {
+        if(chromosomes[SE_START].equals(chromosomes[SE_END]))
+        {
+            if(orientations[SE_START] == orientations[SE_END])
+            {
+                return INV;
+            }
+            else if(orientations[SE_START] == 1)
+            {
+                return DEL;
+            }
+            else
+            {
+                return DUP;
+            }
+        }
+        else
+        {
+            return BND;
+        }
+    }
+
 
 }
