@@ -1,29 +1,23 @@
 package com.hartwig.hmftools.sage.phase;
 
-import java.util.ArrayDeque;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.function.Consumer;
 
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.jetbrains.annotations.NotNull;
 
-public class DedupIndel implements Consumer<SageVariant> {
-
-    private final Consumer<SageVariant> consumer;
-    private final ArrayDeque<SageVariant> list =  new ArrayDeque<>();
+public class DedupIndel extends BufferedPostProcessor {
 
     DedupIndel(final Consumer<SageVariant> consumer) {
-        this.consumer = consumer;
+        super(0, consumer);
     }
 
     @Override
-    public void accept(final SageVariant variant) {
-        flush(variant);
+    protected void processSageVariant(@NotNull final SageVariant variant, @NotNull final Collection<SageVariant> buffer) {
         if (isPassingPhasedIndel(variant)) {
-            for (final SageVariant other : list) {
+            for (final SageVariant other : buffer) {
                 if (isPassingPhasedIndel(other) && variant.localPhaseSet() == other.localPhaseSet()) {
 
                     if (variant.isDelete() && other.isDelete()) {
@@ -36,9 +30,6 @@ public class DedupIndel implements Consumer<SageVariant> {
                 }
             }
         }
-
-        list.add(variant);
-
     }
 
     private void processDel(@NotNull final SageVariant left, @NotNull final SageVariant right) {
@@ -80,24 +71,6 @@ public class DedupIndel implements Consumer<SageVariant> {
             longer.filters().add(SageVCF.DEDUP_FILTER);
         }
 
-    }
-
-    private void flush(@NotNull final GenomePosition position) {
-        final Iterator<SageVariant> iterator = list.iterator();
-        while (iterator.hasNext()) {
-            final SageVariant entry = iterator.next();
-            if (!entry.chromosome().equals(position.chromosome()) || entry.position() < position.position()) {
-                iterator.remove();
-                consumer.accept(entry);
-            } else {
-                return;
-            }
-        }
-    }
-
-    public void flush() {
-        list.forEach(consumer);
-        list.clear();
     }
 
     private boolean isPassingPhasedIndel(@NotNull final SageVariant newEntry) {
