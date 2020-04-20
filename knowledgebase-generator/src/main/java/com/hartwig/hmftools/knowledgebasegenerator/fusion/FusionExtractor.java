@@ -86,7 +86,7 @@ public class FusionExtractor {
             gene = "PAX8-PPARA";
         } else if (gene.contains("IGH") || gene.contains("IGK") || gene.contains("TRB") || gene.contains("Delta")
                 || gene.equals("RET-TPCN1") || gene.equals("PVT1-MYC") || gene.equals("ESR1-CCDC170") || gene.equals("BRAF-CUL1")
-                || function.equals("Loss-of-function")) {
+                || function.contains("Loss-of-function")) {
             gene = Strings.EMPTY;
             typeEvent = Strings.EMPTY;
         }
