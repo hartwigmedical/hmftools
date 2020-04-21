@@ -6,21 +6,33 @@ public enum RegionMatchType
     EXON_BOUNDARY,  // read matches one exon boundary
     WITHIN_EXON,    // read fully contained within the exon
     EXON_MATCH,     // read fully contained within the exon
-    EXON_INTRON;      // reads spanning to unmapped regions where adjacent regions exist
+    EXON_INTRON,      // reads spanning to unmapped regions where adjacent regions exist
+    INTRON;
 
+    public static boolean validExonMatch(RegionMatchType type)
+    {
+        return type == EXON_BOUNDARY || type == WITHIN_EXON || type == EXON_MATCH;
+    }
+
+    public static boolean exonBoundary(RegionMatchType type)
+    {
+        return type == EXON_BOUNDARY || type == EXON_MATCH;
+    }
 
     public static int matchRank(RegionMatchType type)
     {
         switch(type)
         {
-            case EXON_INTRON:
-                return 1;
-            case WITHIN_EXON:
-                return 2;
             case EXON_BOUNDARY:
-                return 3;
+                return 4;
             case EXON_MATCH:
+                return 4;
+            case WITHIN_EXON:
                 return 3;
+            case EXON_INTRON:
+                return 2;
+            case INTRON:
+                return 1;
             case NONE:
             default:
                 return 0;

@@ -4,15 +4,10 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_PAIR;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,6 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -41,7 +37,7 @@ public class FusionFinder
     private final Map<String,List<ReadRecord>> mReadsMap;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
 
-    private final Map<String,List<FusionFragment>> mUnsplicedFragments;
+    private final Map<String,List<FusionFragment>> mUnfusedFragments;
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
 
     private BufferedWriter mReadWriter;
@@ -57,20 +53,20 @@ public class FusionFinder
         mFusionCandidates = Maps.newHashMap();
         mChrGeneCollectionMap = Maps.newHashMap();
 
-        mUnsplicedFragments = Maps.newHashMap();
+        mUnfusedFragments = Maps.newHashMap();
 
         mPerfCounter = new PerformanceCounter("Fusions");
         mReadWriter = null;
     }
 
-    public final Map<String,List<FusionFragment>> getUnsplicedFragments() { return mUnsplicedFragments; }
+    public final Map<String,List<FusionFragment>> getUnsplicedFragments() { return mUnfusedFragments; }
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
 
     public void clearState()
     {
         mNextFusionId = 0;
         mFusionCandidates.clear();
-        mUnsplicedFragments.clear();
+        mUnfusedFragments.clear();
         mReadsMap.clear();
     }
 
@@ -125,10 +121,10 @@ public class FusionFinder
             {
                 FusionFragment fragment = new FusionFragment(reads);
 
-                if(fragment.type() == SPLICED_BOTH)
+                if(fragment.type() == BOTH_JUNCTIONS)
                     createOrUpdateFusion(fragment);
                 else
-                    cacheUnsplicedFragment(fragment);
+                    cacheUnfusedFragment(fragment);
 
                 groupStatus = fragment.type().toString();
             }
@@ -137,9 +133,9 @@ public class FusionFinder
                 writeReadData(reads, groupStatus);
         }
 
-        ISF_LOGGER.info("chimeric fragments({}) unpaired({}) filtered({}) unspliced({}) fusions({})",
-                mReadsMap.size(), unpairedReads, filteredFragments, mUnsplicedFragments.values().stream().count(),
-                mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
+        ISF_LOGGER.info("chimeric fragments({}) unpaired({}) filtered({}) unspliced({}) fusions(loc={} total={})",
+                mReadsMap.size(), unpairedReads, filteredFragments, mUnfusedFragments.values().stream().count(),
+                mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
         mReadsMap.clear();
 
@@ -148,6 +144,8 @@ public class FusionFinder
         {
             fusions.forEach(x -> setGeneData(x));
         }
+
+        mergeFusions();
 
         // write results
         writeFusionData();
@@ -169,14 +167,14 @@ public class FusionFinder
         return false;
     }
 
-    private void cacheUnsplicedFragment(final FusionFragment fragment)
+    private void cacheUnfusedFragment(final FusionFragment fragment)
     {
-        List<FusionFragment> fragments = mUnsplicedFragments.get(fragment.chrPair());
+        List<FusionFragment> fragments = mUnfusedFragments.get(fragment.chrPair());
 
         if(fragments == null)
         {
             fragments = Lists.newArrayList();
-            mUnsplicedFragments.put(fragment.chrPair(), fragments);
+            mUnfusedFragments.put(fragment.chrPair(), fragments);
         }
 
         fragments.add(fragment);
@@ -191,14 +189,13 @@ public class FusionFinder
         // 3. Potential discordant read
         // 4. Invalid fragments for various reasons
 
-        // fusions will be stored in a map keyed by their chromosomal pair
-        List<FusionReadData> fusions = mFusionCandidates.get(fragment.chrPair());
+        // fusions will be stored in a map keyed by their location pair (chromosome + geneCollectionId)
+        List<FusionReadData> fusions = mFusionCandidates.get(fragment.locationPair());
 
         if(fusions == null)
         {
             fusions = Lists.newArrayList();
-            mFusionCandidates.put(fragment.chrPair(), fusions);
-            return;
+            mFusionCandidates.put(fragment.locationPair(), fusions);
         }
 
         for(final FusionReadData fusionData : fusions)
@@ -211,33 +208,56 @@ public class FusionFinder
         }
 
         final FusionReadData fusionData = new FusionReadData(mNextFusionId++, fragment);
-
         fusions.add(fusionData);
+    }
 
-        // need to determine possible orientation and up/downstreams
-
+    private List<EnsemblGeneData> findGeneCollection(final String chromosome, int geneCollectionId)
+    {
+        final Map<Integer,List<EnsemblGeneData>> geneCollectionMap = mChrGeneCollectionMap.get(chromosome);
+        return geneCollectionMap != null && geneCollectionId >= 0 ? geneCollectionMap.get(geneCollectionId) : Lists.newArrayList();
     }
 
     private void setGeneData(final FusionReadData fusionData)
     {
         // get the genes supporting the splice junction in the terms of an SV (ie lower chromosome and lower position first)
-        final List<List<String>> spliceGeneIds = Lists.newArrayList(Lists.newArrayList(), Lists.newArrayList());
-        fusionData.getFragments().get(0).populateGeneCandidates(spliceGeneIds);
 
-        final List<List<EnsemblGeneData>> genesByPosition = Lists.newArrayList();
+        final FusionFragment fragment = fusionData.getFragments().get(0);
+
+        final List<List<EnsemblGeneData>> genesByPosition = Lists.newArrayList(Lists.newArrayList(), Lists.newArrayList());
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
-            genesByPosition.add(spliceGeneIds.get(se).stream()
-                    .map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList()));
+            // first extract gene info from any matched exons
+            final int seIndex = se;
+            fusionData.getFragments().forEach(x -> x.setSplicedTransExonRefs(seIndex));
+
+            if(fragment.getTransExonRefs().get(se).isEmpty())
+            {
+                // for intronic / unspliced junctions, use orientation to find the next splice acceptor or donor
+                final List<EnsemblGeneData> geneDataList = findGeneCollection(fragment.chromosomes()[se], fragment.geneCollections()[se]);
+
+                if(geneDataList != null && !geneDataList.isEmpty())
+                {
+                    final List<TranscriptData> transDataList = Lists.newArrayList();
+                    geneDataList.forEach(x -> transDataList.addAll(mGeneTransCache.getTranscripts(x.GeneId)));
+
+                    fusionData.getFragments().forEach(x -> x.populateUnsplicedTransExonRefs(transDataList, seIndex));
+                }
+            }
+
+            final List<String> spliceGeneIds = fragment.getGeneIds(se);
+
+            if(!spliceGeneIds.isEmpty())
+            {
+                genesByPosition.set(se, spliceGeneIds.stream()
+                        .map(x -> mGeneTransCache.getGeneDataById(x)).collect(Collectors.toList()));
+            }
         }
 
         // organise genes by strand based on the orientations around the splice junction
         // a positive orientation implies either an upstream +ve strand gene or a downstream -ve strand gene
         final byte[] sjOrientations = fusionData.spliceOrientations();
 
-        final List<EnsemblGeneData> upstreamGenes = Lists.newArrayList();
-        final List<EnsemblGeneData> downstreamGenes = Lists.newArrayList();
         boolean foundCandidates = false;
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -245,14 +265,14 @@ public class FusionFinder
             int upstreamIndex = se;
             int downstreamIndex = switchIndex(se);
 
-            // for the start being the upstream gene, if the orientation is +1 the require a +ve strand gene,
+            // for the start being the upstream gene, if the orientation is +1 then require a +ve strand gene,
             // and so the end is the downstream gene and will set the orientation as required
 
-            upstreamGenes.addAll(genesByPosition.get(upstreamIndex).stream()
-                    .filter(x -> x.Strand == sjOrientations[upstreamIndex]).collect(Collectors.toList()));
+            final List<EnsemblGeneData> upstreamGenes = genesByPosition.get(upstreamIndex).stream()
+                    .filter(x -> x.Strand == sjOrientations[upstreamIndex]).collect(Collectors.toList());
 
-            downstreamGenes.addAll(genesByPosition.get(downstreamIndex).stream()
-                    .filter(x -> x.Strand == -sjOrientations[downstreamIndex]).collect(Collectors.toList()));
+            final List<EnsemblGeneData> downstreamGenes = genesByPosition.get(downstreamIndex).stream()
+                    .filter(x -> x.Strand == -sjOrientations[downstreamIndex]).collect(Collectors.toList());
 
             if(!upstreamGenes.isEmpty() && !downstreamGenes.isEmpty())
             {
@@ -260,11 +280,53 @@ public class FusionFinder
                 {
                     // both combinations have possible gene-pairings
                     ISF_LOGGER.warn("fusion({}) has multiple gene pairings by strand and orientation", fusionData.toString());
+                    fusionData.setIncompleteData();
                     break;
                 }
 
                 foundCandidates = true;
                 fusionData.setStreamData(upstreamGenes, downstreamGenes, se == SE_START);
+            }
+        }
+    }
+
+    private void mergeFusions()
+    {
+        for( Map.Entry<String,List<FusionReadData>> entry : mFusionCandidates.entrySet())
+        {
+            final String locationId = entry.getKey();
+            final List<FusionReadData> fusions = entry.getValue();
+
+            if(fusions.size() == 1)
+                continue;
+
+            final List<FusionReadData> splicedFusions = fusions.stream().filter(x -> x.hasSplicedFragments()).collect(Collectors.toList());
+            final List<FusionReadData> unsplicedFusions = fusions.stream().filter(x -> x.hasUnsplicedFragments()).collect(Collectors.toList());
+
+            for(FusionReadData splicedFusion : splicedFusions)
+            {
+                int index = 0;
+                while(index < unsplicedFusions.size())
+                {
+                    FusionReadData unsplicedFusion = unsplicedFusions.get(index);
+
+                    if(splicedFusion.matchesTranscriptExons(unsplicedFusion))
+                    {
+                        ISF_LOGGER.debug("loc({}) spliced fusion({} frags={}) merges unspliced fusion({} frags={})",
+                                locationId, splicedFusion.id(), splicedFusion.getFragments().size(),
+                                unsplicedFusion.id(), unsplicedFusion.getFragments().size());
+
+                        splicedFusion.mergeFusionData(unsplicedFusion);
+                        unsplicedFusions.remove(index);
+                        fusions.remove(unsplicedFusion);
+                        continue;
+                    }
+
+                    ++index;
+                }
+
+                if(unsplicedFusions.isEmpty())
+                    break;
             }
         }
     }
@@ -329,7 +391,8 @@ public class FusionFinder
                 String transExonData = "";
 
                 int transExonRefCount = 0;
-                RegionMatchType highestTransMatchType = RegionMatchType.NONE;
+                RegionMatchType highestTransMatchType = read.getHighestMatchType();
+
                 for(final Map.Entry<RegionMatchType,List<TransExonRef>> entry : read.getTransExonRefs().entrySet())
                 {
                     for(final TransExonRef transExonRef : entry.getValue())
@@ -337,9 +400,6 @@ public class FusionFinder
                         ++transExonRefCount;
                         transExonData = appendStr(transExonData, String.format("%s:%d:%s",
                                 transExonRef.TransName, transExonRef.ExonRank, entry.getKey()), ';');
-
-                        if(matchRank(entry.getKey()) > matchRank(highestTransMatchType))
-                            highestTransMatchType = entry.getKey();
                     }
                 }
 

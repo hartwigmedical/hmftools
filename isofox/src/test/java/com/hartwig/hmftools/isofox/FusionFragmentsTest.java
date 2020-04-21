@@ -17,7 +17,7 @@ import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.createCigar;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.createReadRecord;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -203,24 +203,67 @@ public class FusionFragmentsTest
         List<ReadRecord> reads = Lists.newArrayList(read1, read2, read3);
         FusionFragment fragment = new FusionFragment(reads);
 
-        assertEquals(SPLICED_BOTH, fragment.type());
+        assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
         assertEquals(1100, fragment.splicePositions()[SE_START]);
         assertEquals(10200, fragment.splicePositions()[SE_END]);
         assertEquals(1, fragment.spliceOrientations()[SE_START]);
         assertEquals(-1, fragment.spliceOrientations()[SE_END]);
-        assertEquals(SPLICED_BOTH, fragment.type());
         assertTrue(fragment.hasValidSpliceData());
         assertEquals(DEL, fragment.getImpliedSvType());
 
         final List<List<String>> spliceGeneIds = Lists.newArrayList(Lists.newArrayList(), Lists.newArrayList());
-        fragment.populateGeneCandidates(spliceGeneIds);
 
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            fragment.setSplicedTransExonRefs(se);
+            spliceGeneIds.get(se).addAll(fragment.getGeneIds(se));
+        }
+
+        assertTrue(fragment.isSpliced());
         assertEquals(1, spliceGeneIds.get(SE_START).size());
         assertEquals(GENE_ID_1, spliceGeneIds.get(SE_START).get(0));
         assertEquals(1, spliceGeneIds.get(SE_END).size());
         assertEquals(GENE_ID_2, spliceGeneIds.get(SE_END).get(0));
+
+        // unspliced DEL - imagining an SV at 1150 to 10150
+        read1 = createMappedRead(1, gc1, 1110, 1149, createCigar(0, 40, 0));
+        read2 = createMappedRead(1, gc1, 1131, 1150, createCigar(0, 20, 20));
+        read3 = createMappedRead(1, gc2, 10150, 10169, createCigar(20, 20, 0));
+
+        reads = Lists.newArrayList(read1, read2, read3);
+        fragment = new FusionFragment(reads);
+
+        assertEquals(BOTH_JUNCTIONS, fragment.type());
+        assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
+        assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
+        assertEquals(1150, fragment.splicePositions()[SE_START]);
+        assertEquals(10150, fragment.splicePositions()[SE_END]);
+        assertEquals(1, fragment.spliceOrientations()[SE_START]);
+        assertEquals(-1, fragment.spliceOrientations()[SE_END]);
+        assertTrue(fragment.hasValidSpliceData());
+        assertEquals(DEL, fragment.getImpliedSvType());
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            fragment.setSplicedTransExonRefs(se);
+            assertTrue(fragment.getTransExonRefs().get(se).isEmpty());
+
+            final List<TranscriptData> transDataList = Lists.newArrayList(geneTransCache.getTranscripts(se == SE_START ? GENE_ID_1 : GENE_ID_2));
+            fragment.populateUnsplicedTransExonRefs(transDataList, se);
+
+            spliceGeneIds.get(se).clear();
+            spliceGeneIds.get(se).addAll(fragment.getGeneIds(se));
+        }
+
+        assertTrue(fragment.isUnspliced());
+        assertEquals(1, spliceGeneIds.get(SE_START).size());
+        assertEquals(GENE_ID_1, spliceGeneIds.get(SE_START).get(0));
+        assertEquals(1, spliceGeneIds.get(SE_END).size());
+        assertEquals(GENE_ID_2, spliceGeneIds.get(SE_END).get(0));
+
+
 
         // DUP
         read1 = createMappedRead(1, gc2, 10220, 10259, createCigar(0, 40, 0));
@@ -230,18 +273,22 @@ public class FusionFragmentsTest
         reads = Lists.newArrayList(read1, read2, read3);
         fragment = new FusionFragment(reads);
 
-        assertEquals(SPLICED_BOTH, fragment.type());
+        assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
         assertEquals(1200, fragment.splicePositions()[SE_START]);
         assertEquals(10300, fragment.splicePositions()[SE_END]);
         assertEquals(-1, fragment.spliceOrientations()[SE_START]);
         assertEquals(1, fragment.spliceOrientations()[SE_END]);
-        assertEquals(SPLICED_BOTH, fragment.type());
         assertTrue(fragment.hasValidSpliceData());
         assertEquals(DUP, fragment.getImpliedSvType());
 
-        fragment.populateGeneCandidates(spliceGeneIds);
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            fragment.setSplicedTransExonRefs(se);
+            spliceGeneIds.get(se).clear();
+            spliceGeneIds.get(se).addAll(fragment.getGeneIds(se));
+        }
 
         assertEquals(1, spliceGeneIds.get(SE_START).size());
         assertEquals(GENE_ID_1, spliceGeneIds.get(SE_START).get(0));
@@ -258,18 +305,22 @@ public class FusionFragmentsTest
         reads = Lists.newArrayList(read1, read2, read3);
         fragment = new FusionFragment(reads);
 
-        assertEquals(SPLICED_BOTH, fragment.type());
+        assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
         assertEquals(1100, fragment.splicePositions()[SE_START]);
         assertEquals(20300, fragment.splicePositions()[SE_END]);
         assertEquals(1, fragment.spliceOrientations()[SE_START]);
         assertEquals(1, fragment.spliceOrientations()[SE_END]);
-        assertEquals(SPLICED_BOTH, fragment.type());
         assertTrue(fragment.hasValidSpliceData());
         assertEquals(INV, fragment.getImpliedSvType());
 
-        fragment.populateGeneCandidates(spliceGeneIds);
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            fragment.setSplicedTransExonRefs(se);
+            spliceGeneIds.get(se).clear();
+            spliceGeneIds.get(se).addAll(fragment.getGeneIds(se));
+        }
 
         assertEquals(1, spliceGeneIds.get(SE_START).size());
         assertEquals(GENE_ID_1, spliceGeneIds.get(SE_START).get(0));
@@ -286,18 +337,22 @@ public class FusionFragmentsTest
         reads = Lists.newArrayList(read1, read2, read3);
         fragment = new FusionFragment(reads);
 
-        assertEquals(SPLICED_BOTH, fragment.type());
+        assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_2, fragment.chromosomes()[SE_END]);
         assertEquals(20300, fragment.splicePositions()[SE_START]);
         assertEquals(10300, fragment.splicePositions()[SE_END]);
         assertEquals(1, fragment.spliceOrientations()[SE_START]);
         assertEquals(1, fragment.spliceOrientations()[SE_END]);
-        assertEquals(SPLICED_BOTH, fragment.type());
         assertTrue(fragment.hasValidSpliceData());
         assertEquals(BND, fragment.getImpliedSvType());
 
-        fragment.populateGeneCandidates(spliceGeneIds);
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            fragment.setSplicedTransExonRefs(se);
+            spliceGeneIds.get(se).clear();
+            spliceGeneIds.get(se).addAll(fragment.getGeneIds(se));
+        }
 
         assertEquals(1, spliceGeneIds.get(SE_START).size());
         assertEquals(GENE_ID_3, spliceGeneIds.get(SE_START).get(0));

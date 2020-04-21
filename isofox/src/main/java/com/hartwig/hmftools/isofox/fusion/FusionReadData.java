@@ -7,26 +7,31 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.validPositions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.SPLICED_BOTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionReadData
 {
     private final int mId;
+    private final String mLocationId;
+
     private final List<FusionFragment> mFragments;
+
+    private boolean mIncompleteData;
 
     private final List<Integer> mRelatedFusions;
 
     private final String[] mChromosomes;
+    private final int[] mGeneCollections;
     private final long[] mSjPositions;
     private final byte[] mSjOrientations;
 
@@ -43,10 +48,13 @@ public class FusionReadData
         mId = id;
 
         mChromosomes = new String[] { fragment.chromosomes()[SE_START], fragment.chromosomes()[SE_END] };
+        mGeneCollections = new int[] { fragment.geneCollections()[SE_START], fragment.geneCollections()[SE_END] };
         mSjPositions = new long[] { fragment.splicePositions()[SE_START], fragment.splicePositions()[SE_END] };
         mSjOrientations = new byte[]{ fragment.spliceOrientations()[SE_START], fragment.spliceOrientations()[SE_END] };
 
         mFragments = Lists.newArrayList(fragment);
+
+        mLocationId = formLocationPair(mChromosomes, mGeneCollections);
 
         mRelatedFusions = Lists.newArrayList();
         mFusionGeneIds = new String[] {"", ""};
@@ -55,12 +63,21 @@ public class FusionReadData
         mCandidateGenes = Lists.newArrayListWithCapacity(FS_PAIR);
         mCandidateGenes.add(Lists.newArrayList());
         mCandidateGenes.add(Lists.newArrayList());
+        mIncompleteData = false;
     }
 
     public int id() { return mId; }
+    public String locationId() { return mLocationId; }
     public final String[] chromosomes() { return mChromosomes; }
+    public final int[] geneCollections() { return mGeneCollections; }
     public final long[] splicePositions() { return mSjPositions; }
     public final byte[] spliceOrientations() { return mSjOrientations; }
+
+    public boolean hasIncompleteData() { return mIncompleteData; }
+    public void setIncompleteData() { mIncompleteData = true; }
+
+    public boolean hasSplicedFragments() { return mFragments.stream().anyMatch(x -> x.isSpliced()); }
+    public boolean hasUnsplicedFragments() { return mFragments.stream().anyMatch(x -> x.isUnspliced()); }
 
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
     {
@@ -104,6 +121,43 @@ public class FusionReadData
     public boolean hasViableGenes() { return !mCandidateGenes.get(FS_UPSTREAM).isEmpty() && !mCandidateGenes.get(FS_DOWNSTREAM).isEmpty(); }
     public boolean hasValidStreamData() { return mFusionIndices[FS_UPSTREAM] >= 0 && mFusionIndices[FS_DOWNSTREAM] >= 0; }
 
+    public boolean matchesTranscriptExons(final FusionReadData other)
+    {
+        final FusionFragment thisFragment = mFragments.get(0);
+        final FusionFragment otherFragment = other.getFragments().get(0);
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            boolean hasMatch = false;
+
+            for(List<TransExonRef> thisList : thisFragment.getTransExonRefs().get(se).values())
+            {
+                for(List<TransExonRef> otherList : otherFragment.getTransExonRefs().get(se).values())
+                {
+                    if(thisList.stream().anyMatch(x -> otherList.stream().anyMatch(y -> x.matches(y))))
+                    {
+                        hasMatch = true;
+                        break;
+                    }
+                }
+
+                if(hasMatch)
+                    break;
+            }
+
+            if(!hasMatch)
+                return false;
+        }
+
+        return true;
+    }
+
+    public void mergeFusionData(final FusionReadData other)
+    {
+        other.getFragments().forEach(x -> mFragments.add(x));
+        other.getRelatedFusions().forEach(x -> mRelatedFusions.add(x));
+    }
+
     public String getGeneName(int stream)
     {
         if(mCandidateGenes.get(stream).isEmpty())
@@ -118,7 +172,7 @@ public class FusionReadData
 
     public String toString()
     {
-        return String.format("%d: chr(%s-%s) sj(%d-%d %d-%d %s) genes(%s-%s) frags(%d)",
+        return String.format("%d: chr(%s-%s) sj(%d-%d %d/%d %s) genes(%s-%s) frags(%d)",
                 mId, mChromosomes[SE_START], mChromosomes[SE_END], mSjPositions[SE_START], mSjPositions[SE_END],
                 mSjOrientations[SE_START], mSjOrientations[SE_END], getImpliedSvType(),
                 getGeneName(FS_UPSTREAM), getGeneName(FS_DOWNSTREAM), mFragments.size());
@@ -128,7 +182,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChromosomeUp,PositionUp,OrientUp,StrandUp"
                 + ",GeneIdDown,GeneNameDown,ChromosomeDown,PositionDown,OrientDown,StrandDown"
-                + ",SvType,TotalFragments,SpliceFragments,DiscordantFragments"
+                + ",SvType,TotalFragments,SpliceFragments,UnspliceFragments,DiscordantFragments"
                 + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
@@ -137,7 +191,7 @@ public class FusionReadData
         StringJoiner csvData = new StringJoiner(DELIMITER);
 
         csvData.add(String.format("Id_%d", mId));
-        csvData.add(String.valueOf(hasViableGenes() && hasValidStreamData()));
+        csvData.add(String.valueOf(hasViableGenes() && hasValidStreamData() && !hasIncompleteData()));
 
         for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {
@@ -172,20 +226,24 @@ public class FusionReadData
         csvData.add(getImpliedSvType().toString());
 
         int totalFragments = 0;
-        int spliceFragments = 0;
+        int splicedFragments = 0;
+        int unsplicedFragments = 0;
         int discordantFragments = 0;
         for(final FusionFragment fragment : mFragments)
         {
             ++totalFragments;
 
-            if(fragment.type() == SPLICED_BOTH)
-                ++spliceFragments;
+            if(fragment.isSpliced())
+                ++splicedFragments;
+            else if(fragment.isUnspliced())
+                ++unsplicedFragments;
             else if(fragment.type() == DISCORDANT)
                 ++discordantFragments;
         }
 
         csvData.add(String.valueOf(totalFragments));
-        csvData.add(String.valueOf(spliceFragments));
+        csvData.add(String.valueOf(splicedFragments));
+        csvData.add(String.valueOf(unsplicedFragments));
         csvData.add(String.valueOf(discordantFragments));
 
         csvData.add("TransUp");
@@ -199,7 +257,7 @@ public class FusionReadData
             {
                 for (final EnsemblGeneData geneData : mCandidateGenes.get(fs))
                 {
-                    if (!geneData.GeneId.equals(mFusionGeneIds[FS_UPSTREAM]))
+                    if (!geneData.GeneId.equals(mFusionGeneIds[fs]))
                     {
                         otherGenes[fs] = appendStr(otherGenes[fs], geneData.GeneName, ';');
                     }
@@ -240,6 +298,12 @@ public class FusionReadData
             return 24;
         else
             return Integer.parseInt(chromosome);
+    }
+
+    public static String formLocationPair(final String[] chromosomes, final int[] geneCollectionIds)
+    {
+        return String.format("%s:%d_%s:%d",
+                chromosomes[SE_START], geneCollectionIds[SE_START], chromosomes[SE_START], geneCollectionIds[SE_END]);
     }
 
     public static String formChromosomePair(final String chr1, final String chr2) { return chr1 + "_" + chr2; }

@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
@@ -165,6 +168,17 @@ public class ReadRecord
         return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
     }
 
+    public RegionMatchType getHighestMatchType()
+    {
+        RegionMatchType highest = RegionMatchType.NONE;
+        for(RegionMatchType type : mTransExonRefs.keySet())
+        {
+            highest = matchRank(type) > matchRank(highest) ? type : highest;
+        }
+
+        return highest;
+    }
+
     public long getCoordsBoundary(boolean isStart)
     {
         return isStart ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
@@ -233,8 +247,7 @@ public class ReadRecord
             RegionMatchType matchType = getRegionMatchType(region);
             mMappedRegions.put(region, matchType);
 
-            boolean checkMissedJunctions = matchType == EXON_INTRON
-                    || (Cigar.containsOperator(CigarOperator.S) && (matchType == EXON_BOUNDARY || matchType == EXON_MATCH));
+            boolean checkMissedJunctions = matchType == EXON_INTRON || (Cigar.containsOperator(CigarOperator.S) && exonBoundary(matchType));
 
             if(checkMissedJunctions)
                 checkMissedJunctions(region);
@@ -369,11 +382,11 @@ public class ReadRecord
     public static final List<RegionReadData> getUniqueValidRegion(final ReadRecord read1, final ReadRecord read2)
     {
         final List<RegionReadData> regions = read1.getMappedRegions().entrySet().stream()
-                .filter(x -> validRegionMatchType(x.getValue()))
+                .filter(x -> validExonMatch(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         final List<RegionReadData> regions2 = read2.getMappedRegions().entrySet().stream()
-                .filter(x -> validRegionMatchType(x.getValue()))
+                .filter(x -> validExonMatch(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         for(RegionReadData region : regions2)
@@ -415,11 +428,6 @@ public class ReadRecord
     public static boolean validTranscriptType(TransMatchType transType)
     {
         return transType == EXONIC || transType == SPLICE_JUNCTION;
-    }
-
-    public static boolean validRegionMatchType(RegionMatchType matchType)
-    {
-        return matchType == EXON_BOUNDARY || matchType == WITHIN_EXON || matchType == EXON_MATCH;
     }
 
     public int getRegionMappingIndex(final RegionReadData region)

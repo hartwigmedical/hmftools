@@ -196,7 +196,6 @@ public class ChromosomeGeneTask implements Callable
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
-            mGeneCollectionMap.put(geneCollection.id(), Lists.newArrayList(overlappingGenes));
 
             for(GeneReadData geneReadData : geneReadDataList)
             {
@@ -245,6 +244,7 @@ public class ChromosomeGeneTask implements Callable
             final List<GeneReadData> geneReadDataList = createGeneReadData(overlappingGenes);
 
             GeneCollection geneCollection = new GeneCollection(mCollectionId++, geneReadDataList);
+            mGeneCollectionMap.put(geneCollection.id(), Lists.newArrayList(overlappingGenes));
 
             for(GeneReadData geneReadData : geneReadDataList)
             {

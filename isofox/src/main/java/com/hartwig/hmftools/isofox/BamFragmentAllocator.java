@@ -20,9 +20,9 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.validRegionMatchType;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
@@ -623,7 +623,7 @@ public class BamFragmentAllocator
     {
         List<RegionReadData> regions = read.getMappedRegions().entrySet().stream()
                 .filter(x -> x.getKey().hasTransId(transId))
-                .filter(x -> validRegionMatchType(x.getValue()))
+                .filter(x -> validExonMatch(x.getValue()))
                 .map(x -> x.getKey()).collect(Collectors.toList());
 
         for(RegionReadData region : regions)
