@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox.common;
 
+import java.util.Iterator;
+import java.util.Set;
+
 public enum RegionMatchType
 {
     NONE,
@@ -37,5 +40,18 @@ public enum RegionMatchType
             default:
                 return 0;
         }
+    }
+
+    public static RegionMatchType getHighestMatchType(final Set<RegionMatchType> types)
+    {
+        RegionMatchType highest = RegionMatchType.NONE;
+
+        for(RegionMatchType type : types)
+        {
+            highest = matchRank(type) > matchRank(highest) ? type : highest;
+        }
+
+        return highest;
+
     }
 }

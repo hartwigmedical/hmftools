@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -8,8 +11,10 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
@@ -107,6 +112,10 @@ public class FusionFragment
             RegionMatchType topMatchType = RegionMatchType.NONE;
 
             final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
+
+            mChromosomes[se] = chromosomes.get(index);
+            mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
+
             for(ReadRecord read : readGroup)
             {
                 if(!read.Cigar.containsOperator(CigarOperator.S))
@@ -161,16 +170,14 @@ public class FusionFragment
                     sjOrientation = 1;
                 }
 
-                topMatchType = read.getHighestMatchType();
+                topMatchType = getHighestMatchType(read.getTransExonRefs().keySet());
             }
 
             if(maxSoftClipping > 0)
             {
-                mChromosomes[se] = chromosomes.get(index);
                 mSjPositions[se] = sjPosition;
                 mSjOrientations[se] = sjOrientation;
                 mSjValid[se] = true;
-                mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
                 mSjMatchTypes[se] = topMatchType;
             }
         }
@@ -290,11 +297,51 @@ public class FusionFragment
 
                     TransExonRef transExonRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, exonRank);
                     mTransExonRefs.get(seIndex).put(INTRON, Lists.newArrayList(transExonRef));
+                    break;
                 }
             }
         }
 
-        if(mSjMatchTypes[seIndex] == RegionMatchType.NONE)
+        if(!mTransExonRefs.get(seIndex).isEmpty() && mSjMatchTypes[seIndex] == RegionMatchType.NONE)
             mSjMatchTypes[seIndex] = INTRON;
+    }
+
+    public void populateDiscordantTransExonRefs(int geneCollectionId, final List<TranscriptData> transDataList, int seIndex)
+    {
+        long[] readBounds = {-1, -1};
+
+        for(ReadRecord read : mReads)
+        {
+            if(!read.Chromosome.equals(mChromosomes[seIndex]) || read.getGeneCollecton() != geneCollectionId)
+                continue;
+
+            readBounds[SE_START] = readBounds[SE_START] == -1 ?
+                    read.getCoordsBoundary(true) : min(read.getCoordsBoundary(true), readBounds[SE_START]);
+
+            readBounds[SE_END] = max(read.getCoordsBoundary(false), readBounds[SE_END]);
+        }
+
+        for(final TranscriptData transData : transDataList)
+        {
+            if(!positionWithin(readBounds[SE_START], transData.TransStart, transData.TransEnd)
+            || !positionWithin(readBounds[SE_END], transData.TransStart, transData.TransEnd))
+            {
+                continue;
+            }
+
+            for(int i = 0; i < transData.exons().size() - 1; ++i)
+            {
+                final ExonData exon = transData.exons().get(i);
+                final ExonData nextExon = transData.exons().get(i + 1);
+
+                if(positionsWithin(readBounds[SE_START], readBounds[SE_END], exon.ExonEnd, nextExon.ExonStart))
+                {
+                    int minExonRank = min(exon.ExonRank, nextExon.ExonRank);
+                    TransExonRef transExonRef = new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, minExonRank);
+                    mTransExonRefs.get(seIndex).put(INTRON, Lists.newArrayList(transExonRef));
+                    break;
+                }
+            }
+        }
     }
 }

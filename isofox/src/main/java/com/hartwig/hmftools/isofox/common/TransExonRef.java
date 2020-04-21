@@ -20,6 +20,11 @@ public class TransExonRef
         return other.TransId == TransId && other.ExonRank == ExonRank;
     }
 
+    public boolean matchesNext(final TransExonRef other)
+    {
+        return other.TransId == TransId && other.ExonRank == ExonRank + 1;
+    }
+
     public String toString()
     {
         return String.format("%d:%s:%d", TransId, TransName, ExonRank);

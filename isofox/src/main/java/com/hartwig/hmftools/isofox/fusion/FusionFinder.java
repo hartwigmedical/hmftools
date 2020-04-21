@@ -7,7 +7,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.hasTranscriptExonMatch;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -59,7 +65,6 @@ public class FusionFinder
         mReadWriter = null;
     }
 
-    public final Map<String,List<FusionFragment>> getUnsplicedFragments() { return mUnfusedFragments; }
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
 
     public void clearState()
@@ -105,17 +110,17 @@ public class FusionFinder
         {
             final List<ReadRecord> reads = entry.getValue();
 
-            String groupStatus = "";
+            String readGroupStatus = "";
 
             if(reads.size() == 1)
             {
                 ++unpairedReads;
-                groupStatus = "UNPAIRED";
+                readGroupStatus = "UNPAIRED";
             }
             else if(isInvalidFragment(reads))
             {
                 ++filteredFragments;
-                groupStatus = "SINGLE_GENE";
+                readGroupStatus = "SINGLE_GENE";
             }
             else
             {
@@ -126,11 +131,12 @@ public class FusionFinder
                 else
                     cacheUnfusedFragment(fragment);
 
-                groupStatus = fragment.type().toString();
+                // will write after further evaluation of fusions
+                continue;
             }
 
             if(mConfig.WriteChimericReads)
-                writeReadData(reads, groupStatus);
+                writeReadData(reads, readGroupStatus);
         }
 
         ISF_LOGGER.info("chimeric fragments({}) unpaired({}) filtered({}) unspliced({}) fusions(loc={} total={})",
@@ -142,13 +148,23 @@ public class FusionFinder
         // classify / analyse fusions
         for(List<FusionReadData> fusions : mFusionCandidates.values())
         {
-            fusions.forEach(x -> setGeneData(x));
+            for(FusionReadData fusion : fusions)
+            {
+                setGeneData(fusion);
+                fusion.cacheTranscriptData();
+            }
         }
 
         mergeFusions();
 
+        // assign any discordant reads
+        assignUnfusedFragments();
+
         // write results
         writeFusionData();
+
+        if(mConfig.WriteChimericReads)
+            writeUnfilteredFragments();
 
         mPerfCounter.stop();
         mPerfCounter.logStats();
@@ -169,12 +185,12 @@ public class FusionFinder
 
     private void cacheUnfusedFragment(final FusionFragment fragment)
     {
-        List<FusionFragment> fragments = mUnfusedFragments.get(fragment.chrPair());
+        List<FusionFragment> fragments = mUnfusedFragments.get(fragment.locationPair());
 
         if(fragments == null)
         {
             fragments = Lists.newArrayList();
-            mUnfusedFragments.put(fragment.chrPair(), fragments);
+            mUnfusedFragments.put(fragment.locationPair(), fragments);
         }
 
         fragments.add(fragment);
@@ -310,7 +326,8 @@ public class FusionFinder
                 {
                     FusionReadData unsplicedFusion = unsplicedFusions.get(index);
 
-                    if(splicedFusion.matchesTranscriptExons(unsplicedFusion))
+                    if(hasTranscriptExonMatch(splicedFusion.getTransExonRefsByStream(FS_UPSTREAM), unsplicedFusion.getTransExonRefsByStream(FS_UPSTREAM))
+                    && hasTranscriptExonMatch(splicedFusion.getTransExonRefsByStream(FS_DOWNSTREAM), unsplicedFusion.getTransExonRefsByStream(FS_DOWNSTREAM)))
                     {
                         ISF_LOGGER.debug("loc({}) spliced fusion({} frags={}) merges unspliced fusion({} frags={})",
                                 locationId, splicedFusion.id(), splicedFusion.getFragments().size(),
@@ -328,6 +345,69 @@ public class FusionFinder
                 if(unsplicedFusions.isEmpty())
                     break;
             }
+        }
+    }
+
+    private void assignUnfusedFragments()
+    {
+        for(Map.Entry<String,List<FusionFragment>> entry : mUnfusedFragments.entrySet())
+        {
+            final List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
+
+            if(fusions == null)
+                continue;
+
+            final List<FusionFragment> fragments = entry.getValue();
+
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                final String chromosome = fragments.get(0).chromosomes()[se];
+                int geneCollectionId = fragments.get(0).geneCollections()[se];
+
+                final List<EnsemblGeneData> geneDataList = findGeneCollection(chromosome, geneCollectionId);
+
+                if (geneDataList != null && !geneDataList.isEmpty())
+                {
+                    final List<TranscriptData> transDataList = Lists.newArrayList();
+                    geneDataList.forEach(x -> transDataList.addAll(mGeneTransCache.getTranscripts(x.GeneId)));
+
+                    for (FusionFragment fragment : entry.getValue())
+                    {
+                        // first extract gene info from any matched exons
+                        final int seIndex = se;
+                        fragment.populateDiscordantTransExonRefs(geneCollectionId, transDataList, seIndex);
+                    }
+                }
+            }
+
+            final List<FusionFragment> allocatedFragments = Lists.newArrayList();
+
+            for (FusionFragment fragment : fragments)
+            {
+                // discordant reads don't have assigned
+                final List<TransExonRef> startTrans = fragment.getTransExonRefs().get(SE_START).get(INTRON);
+                final List<TransExonRef> endTrans = fragment.getTransExonRefs().get(SE_END).get(INTRON);
+
+                if(startTrans == null || endTrans == null)
+                    continue;
+
+                // if the fusion has unspliced reads, then these ought to set bounds for an discordant reads
+
+                for(FusionReadData fusion : fusions)
+                {
+                    if(!fusion.isValid())
+                        continue;
+
+                    if(fusion.canAddDiscordantFragment(fragment))
+                    {
+                        fusion.addFusionFragment(fragment);
+                        allocatedFragments.add(fragment);
+                        break;
+                    }
+                }
+            }
+
+            allocatedFragments.forEach(x -> fragments.remove(x));
         }
     }
 
@@ -363,6 +443,28 @@ public class FusionFinder
         }
     }
 
+    private void writeUnfilteredFragments()
+    {
+        for(List<FusionFragment> fragments : mUnfusedFragments.values())
+        {
+            for(FusionFragment fragment : fragments)
+            {
+                writeReadData(fragment.getReads(), "UNLINKED");
+            }
+        }
+
+        for(List<FusionReadData> fusions : mFusionCandidates.values())
+        {
+            for(FusionReadData fusion : fusions)
+            {
+                for(FusionFragment fragment : fusion.getFragments())
+                {
+                    writeReadData(fragment.getReads(), fusionId(fusion.id()));
+                }
+            }
+        }
+    }
+
     private void writeReadData(final List<ReadRecord> reads, final String groupStatus)
     {
         try
@@ -372,26 +474,26 @@ public class FusionFinder
                 final String outputFileName = mConfig.formOutputFile("chimeric_reads.csv");
 
                 mReadWriter = createBufferedWriter(outputFileName, false);
-                mReadWriter.write("ReadSetCount,ReadId,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
-                mReadWriter.write(",Secondary,Supplementary,NegStrand,ProperPair,SuppAlign,Status,TransExons,BestMatch,TransExonData");
+                mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
+                mReadWriter.write(",Secondary,Supplementary,NegStrand,ProperPair,SuppAlign,TransExons,BestMatch,TransExonData");
                 mReadWriter.newLine();
             }
 
             for(final ReadRecord read : reads)
             {
-                mReadWriter.write(String.format("%s,%s,%s,%d,%d,%s,%d",
-                        reads.size(), read.Id, read.Chromosome, read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
+                mReadWriter.write(String.format("%s,%s,%s,%s,%d,%d,%s,%d",
+                        reads.size(), read.Id, groupStatus, read.Chromosome,
+                        read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
 
-                mReadWriter.write(String.format(",%s,%s,%s,%s,%s,%s",
-                        read.isSecondaryAlignment(), read.isSupplementaryAlignment(), read.isNegStrand(), read.isProperPair(), groupStatus,
-
+                mReadWriter.write(String.format(",%s,%s,%s,%s,%s",
+                        read.isSecondaryAlignment(), read.isSupplementaryAlignment(), read.isNegStrand(), read.isProperPair(),
                         read.getSuppAlignment() != null ? read.getSuppAlignment().replaceAll(",", ";") : "NONE"));
 
                 // log the transcript exons affected, and the highest matching transcript
                 String transExonData = "";
 
                 int transExonRefCount = 0;
-                RegionMatchType highestTransMatchType = read.getHighestMatchType();
+                RegionMatchType highestTransMatchType = getHighestMatchType(read.getTransExonRefs().keySet());
 
                 for(final Map.Entry<RegionMatchType,List<TransExonRef>> entry : read.getTransExonRefs().entrySet())
                 {
