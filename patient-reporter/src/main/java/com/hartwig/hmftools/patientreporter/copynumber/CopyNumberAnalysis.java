@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -29,5 +31,17 @@ public abstract class CopyNumberAnalysis {
 
     @NotNull
     public abstract List<EvidenceItem> evidenceItems();
+
+    public abstract double microsatelliteIndelsPerMb();
+
+    public abstract double tumorMutationalBurdenPerMb();
+
+    public abstract double tumorMutationalLoad();
+
+    @NotNull
+    public abstract MicrosatelliteStatus microsatelliteStatus();
+
+    @NotNull
+    public abstract TumorMutationalStatus tumorMutationalLoadStatus();
 
 }

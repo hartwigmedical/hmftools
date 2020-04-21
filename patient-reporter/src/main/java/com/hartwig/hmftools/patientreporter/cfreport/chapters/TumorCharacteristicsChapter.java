@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 
 import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.BarChart;
@@ -51,7 +52,7 @@ public class TumorCharacteristicsChapter implements ReportChapter {
 
         double microSatelliteStability = patientReport.microsatelliteIndelsPerMb();
 
-        MicrosatelliteStatus msiStatus = MicrosatelliteStatus.fromIndelsPerMb(microSatelliteStability);
+        MicrosatelliteStatus msiStatus = patientReport.microsatelliteStatus();
         String microSatelliteStabilityString =
                 hasReliablePurity ? msiStatus.display() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
@@ -102,8 +103,10 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 false));
 
         int mutationalLoad = patientReport.tumorMutationalLoad();
+        TumorMutationalStatus tmlStatus = patientReport.tumorMutationalLoadStatus();
+
         String mutationalLoadString = hasReliablePurity
-                ? MutationalLoad.interpretToString(mutationalLoad) + " " + noDecimalFormat.format(mutationalLoad)
+                ? tmlStatus + " " + noDecimalFormat.format(mutationalLoad)
                 : DataUtil.NA_STRING;
         BarChart mutationalLoadChart =
                 new BarChart(mutationalLoad, MutationalLoad.RANGE_MIN, MutationalLoad.RANGE_MAX, "Low", "High", false);
