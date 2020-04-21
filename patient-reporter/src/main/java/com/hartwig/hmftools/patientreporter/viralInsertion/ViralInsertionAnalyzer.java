@@ -17,6 +17,8 @@ public final class ViralInsertionAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(ViralInsertionAnalyzer.class);
 
+    private static final List<String> excludedViralInsertions = Lists.newArrayList("virus");
+
     private ViralInsertionAnalyzer() {
 
     }
@@ -45,8 +47,9 @@ public final class ViralInsertionAnalyzer {
             int count = itemsForKey.size();
             assert count > 0;
             String virusName = itemsForKey.get(0).VirusName;
-
-            viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
+            if (!excludedViralInsertions.contains(virusName)) {
+                viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
+            }
         }
         return viralInsertions;
     }
