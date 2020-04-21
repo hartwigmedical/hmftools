@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.MathUtil;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -22,6 +23,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
 import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
@@ -156,6 +158,11 @@ public class SummaryChapter implements ReportChapter {
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
+
+        String hrdString = hasReliablePurity ? HrDeficiency.interpretChordStatusToString(patientReport.chordAnalysis().hrdValue()) : DataUtil.NA_STRING;
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
+
         reportDocument.add(div);
     }
 

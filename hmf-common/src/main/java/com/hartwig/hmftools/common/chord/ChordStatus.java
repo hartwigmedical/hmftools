@@ -5,8 +5,8 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import org.jetbrains.annotations.NotNull;
 
 public enum ChordStatus {
-    HRD("HR-Deficeincy"),
-    HRP("HR-Proficient"),
+    HRD("HR Deficient"),
+    HRP("HR Proficient"),
     UNKNOWN("Unknown");
 
 
