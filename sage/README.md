@@ -268,10 +268,11 @@ Filter | Default Value | Field
 hard_min_tumor_qual |30**| `QUAL`
 hard_min_tumor_raw_alt_support |2| `RAD[1]`
 hard_min_tumor_raw_base_quality |0| `RABQ[1]`
+hard_max_normal_alt_support*** |2| Normal `AD[1]`
 
 ** Hotspots are kept regardless of tumor quality
 
-These variants are excluded from this point onwards and have no further processing applied to them.  
+The first 3 filters are excluded from this point onwards and have no further processing applied to them.  The hard_max_normal_alt_support is applied at the final step of the algorithm, solely to reduce file size.
  
 ## 4. Normal Counts and Quality
 
@@ -383,16 +384,6 @@ For example, because of the `AG` microhomology at this (hg19) location, the foll
 4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C
 4:55593581 GAAACCCATGTATGAAGTACAGTGGAAG > G
 ```
-
-## 9. Output
-
-There is one final 'hard' filter that is lazily applied at the end of the process just before writing to file that only apply to variants that are already filtered. 
-They do not save any processing time but do reduce the output file size. 
-
-Filter | Default Value | Field
----|---|---
-hard_max_normal_alt_support |2| Normal `AD[1]`
-
 
 # Variant Pipeline
 A number of post processing steps are applied to the SAGE output.
