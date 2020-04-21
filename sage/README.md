@@ -398,9 +398,9 @@ hard_max_normal_alt_support |2| Normal `AD[1]`
 A number of post processing steps are applied to the SAGE output.
 
 ## PON Filtering
-To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 200 germline samples and recording any variants with at least 3 reads and total base quality 30. 
-The frequency (`PON_COUNT`) of each variant was then aggregated into the PON file.
-We use the PON file to filter SAGE output of any variant that appears in more than 2 samples.
+To eliminate recurrent variants and artifacts we constructed a Panel of Normal (PON) by first running SAGE over 200 germline samples and recording any variants with at least 3 reads and total base quality 30. The frequency (`PON_COUNT`) of each variant was then aggregated into the PON file.  Variants with more than 1 observation is retained.
+
+We use the PON file to filter SAGE output of any variant that appears in more than 3 samples for the LOW_CONFIDENCE & HIGH_CONFIDENCE & PANEL tiers and 10 samples for HOTSPOTS.  Additionally, PANEL and HOTSPOT variants must have at least 1 sample with 5 or more reads support to be PON filtered
 
 ## Post Process
 
