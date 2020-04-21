@@ -7,9 +7,9 @@ Key features include:
   - 4 tiered (`HOTSPOT`,`PANEL`, `HIGH_CONFIDENCE`, `LOW_CONFIDENCE`) calling allows high sensitivity calling in regions of high prior likelihood including hotspots in low mappability regions such as HIST2H3C K28M
   - kmer based model which determines a unique [read context](#read-context) for the variant + 25 bases of anchoring flanks and rigorously checks for partial or full evidence in tumor and normal regardless of local mapping alignment
   - Modified [quality score](#modified-tumor-quality-score) incorporates different sources of error (MAPQ, BASEQ, edge distance, improper pair, distance from ref genome, repeat sequencing errors) without hard cutoffs
-  - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatelites while ignoring common sequencing errors
+  - Explicit modelling of ‘jitter’ sequencing errors in microsatellite allows improved sensitivity in microsatellites while ignoring common sequencing errors
   - No cutoff for homopolymer repeat length for improved INDEL handling 
-  - [Phasing](#5-phasing) of somatic + somatic and somatic + germline up to 25 bases
+  - [Phasing](#6-phasing) of somatic + somatic and somatic + germline up to 25 bases
   - Native MNV handling 
   - Tumor sample only support
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
@@ -94,7 +94,7 @@ java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  This read context is used to search for evidence supporting the variant and also to calculate the allelic depth and frequency.
  
  The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome.
- A 'repeat' in this context, a repeat is defined as having 1 - 10 bases repeated at least 2 times. 
+ A 'repeat' in this context, is defined as having 1 - 10 bases repeated at least 2 times. 
  The core is a minimum of 5 bases long.  
  
  For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. 
@@ -154,9 +154,9 @@ This idea is inspired by the GATK BQSR tool, but instead of using a covariate mo
 The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
 
-For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determing the quality. 
+For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
 SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.
-These files are writing into the same directory as the output file.
+These files are written into the same directory as the output file.
 
 A typical example of the chart is shown below: 
 
@@ -168,7 +168,7 @@ The base quality recalibration chart can be independently disabled by including 
  
 ## 2. Candidate Variants And Read Contexts
 
-In this first parse of the tumor BAM(s), SAGE looks for candidate variants. 
+In this first pass of the tumor BAM(s), SAGE looks for candidate variants. 
 INDELS are located using the `I` and `D` flag in the CIGAR.
 SNVs and MNVs are located by comparing the bases in every aligned region (flags `M`, `X` or `=`) with the provided reference genome.
 MNVs can be of any length but with no more than one matching base between un-matching bases, ie, MNVs with CIGARs `1X1M1X` and `3X` are both considered valid MNVs of length 3.  
