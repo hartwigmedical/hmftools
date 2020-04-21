@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.text.DecimalFormat;
 
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -55,7 +56,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
                 hasReliablePurity ? msiStatus.display() + " " + doubleDecimalFormat.format(microSatelliteStability) : DataUtil.NA_STRING;
 
         double hrDeficiency = patientReport.chordAnalysis().hrdValue();
-        String hrDeficiencyLabel = hasReliablePurity ? HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
+        ChordStatus hrStatus = ChordStatus.fromHRD(hrDeficiency);
+        String hrDeficiencyLabel = hasReliablePurity ? hrStatus.display() + " " + HrDeficiency.interpretToString(hrDeficiency) : DataUtil.NA_STRING;
 
         String hrFootnote = "* HRD score can not be determined reliably when a tumor is microsatellite unstable (MSI) "
                 + "and is therefore not reported for this sample.";
@@ -68,6 +70,8 @@ public class TumorCharacteristicsChapter implements ReportChapter {
         BarChart hrChart = new BarChart(hrDeficiency, HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, "Low", "High", false);
         hrChart.enabled(hasReliablePurity && msiStatus == MicrosatelliteStatus.MSS);
         hrChart.setTickMarks(HrDeficiency.RANGE_MIN, HrDeficiency.RANGE_MAX, 0.1, singleDecimalFormat);
+        hrChart.setIndicator(ChordStatus.HRD_THRESHOLD,
+                "HRD status (" + doubleDecimalFormat.format(ChordStatus.HRD_THRESHOLD) + ")");
 
         reportDocument.add(createCharacteristicDiv("HR-Deficiency score",
                 hrDeficiencyLabel,
