@@ -203,72 +203,73 @@ public class ReadContextCounter implements VariantHotspot {
             rawAltBaseQuality += rawContext.altQuality();
             rawRefBaseQuality += rawContext.refQuality();
 
-            if (readIndex > -1) {
+            if (readIndex < 0) {
+                return;
+            }
 
-                boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
-                if (!covered) {
-                    return;
-                }
+            boolean covered = readContext.isCentreCovered(readIndex, record.getReadBases());
+            if (!covered) {
+                return;
+            }
 
-                final QualityConfig qualityConfig = sageConfig.qualityConfig();
-                double quality = calculateQualityScore(readIndex, record, qualityConfig);
+            final QualityConfig qualityConfig = sageConfig.qualityConfig();
+            double quality = calculateQualityScore(readIndex, record, qualityConfig);
 
-                coverage++;
-                totalQuality += quality;
+            coverage++;
+            totalQuality += quality;
 
-                // Check if FULL, PARTIAL, OR CORE
-                if (!baseDeleted) {
-                    final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
-                    if (!match.equals(ReadContextMatch.NONE)) {
-                        switch (match) {
-                            case FULL:
-                                incrementQualityFlags(record);
-                                full++;
-                                fullQuality += quality;
-                                break;
-                            case PARTIAL:
-                                incrementQualityFlags(record);
-                                partial++;
-                                partialQuality += quality;
-                                break;
-                            case CORE:
-                                incrementQualityFlags(record);
-                                core++;
-                                coreQuality += quality;
-                                break;
-                        }
-
-                        return;
+            // Check if FULL, PARTIAL, OR CORE
+            if (!baseDeleted) {
+                final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
+                if (!match.equals(ReadContextMatch.NONE)) {
+                    switch (match) {
+                        case FULL:
+                            incrementQualityFlags(record);
+                            full++;
+                            fullQuality += quality;
+                            break;
+                        case PARTIAL:
+                            incrementQualityFlags(record);
+                            partial++;
+                            partialQuality += quality;
+                            break;
+                        case CORE:
+                            incrementQualityFlags(record);
+                            core++;
+                            coreQuality += quality;
+                            break;
                     }
-                }
 
-                // Check if realigned
-                final RealignedContext realignment = realignmentContext(realign, readIndex, record);
-                if (realignment.type().equals(RealignedType.EXACT)) {
-                    realigned++;
-                    realignedQuality += quality;
                     return;
                 }
+            }
 
-                // Check if lengthened, shortened AND/OR reference!
-                switch (realignment.type()) {
-                    case LENGTHENED:
-                        jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
-                        lengthened++;
-                        break;
-                    case SHORTENED:
-                        jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
-                        shortened++;
-                        break;
-                }
+            // Check if realigned
+            final RealignedContext realignment = realignmentContext(realign, readIndex, record);
+            if (realignment.type().equals(RealignedType.EXACT)) {
+                realigned++;
+                realignedQuality += quality;
+                return;
+            }
 
-                byte refBase = (byte) this.variant.ref().charAt(0);
-                byte readBase = record.getReadBases()[readIndex];
+            // Check if lengthened, shortened AND/OR reference!
+            switch (realignment.type()) {
+                case LENGTHENED:
+                    jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
+                    lengthened++;
+                    break;
+                case SHORTENED:
+                    jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
+                    shortened++;
+                    break;
+            }
 
-                if (refBase == readBase && !rawContext.isReadIndexInDelete() && !rawContext.isIndelAtPosition()) {
-                    reference++;
-                    referenceQuality += quality;
-                }
+            byte refBase = (byte) this.variant.ref().charAt(0);
+            byte readBase = record.getReadBases()[readIndex];
+
+            if (refBase == readBase && !rawContext.isReadIndexInDelete() && !rawContext.isIndelAtPosition()) {
+                reference++;
+                referenceQuality += quality;
             }
         } catch (Exception e) {
             LOGGER.error("Error at chromosome: {}, position: {}", chromosome(), position());
