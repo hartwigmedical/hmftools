@@ -144,7 +144,6 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   6. [Phasing](#6-phasing)
   7. [De-duplication](#7-de-duplication)
   8. [Re-alignment](#8-re-alignment)
-  8. [Output](#9-output)
 
 ## 1. Base Quality Recalibration
 
