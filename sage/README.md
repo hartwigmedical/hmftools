@@ -158,6 +158,40 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
  
  The complete read context is the core read context flanked on either side by an additional 25 bases. 
  
+The following example illustrate how we construct and use a read context for a simple T > A SNV.  
+
+The read context core is the variant itself expanded to cover at least 5 bases. 
+We then flank with an additional 5 bases on either side (SAGE uses 25 bases) to get the complete read context. 
+ 
+<pre>
+Reference:             ...ACCATGGATACCATCA<b>T</b>AACATACGA...
+Variant:                                  <b>A</b>
+Core read context:                      <b>CAACA</b>
+Flanked read context:              GATAC<b>CAACA</b>TAACA
+</pre>
+
+In the following table we match the read context against bam reads in numerous ways. 
+A `FULL` match includes both flanks, a `PARIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
+A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
+
+<pre>
+Read context:                      GATAC<b>CAACA</b>TAACA
+Full Match:               ...ACCATGGATAC<b>CAACA</b>TAACATACGA...
+Partial Match:                       TAC<b>CAACA</b>TAACATACGA...
+Core Match:               ...ACCATGGATAT<b>CAACA</b>TAACATACGA...
+Realigned Match:          ...ACCCATGGATAC<b>CAACA</b>TAACATACG...
+</pre>
+
+If the core does not match a read it does not add support for the variant. If the variant itself is the ref (regardless of whatever else happens in the core), the read supports the ref.
+ 
+<pre>
+Read context:                      GATAC<b>CAACA</b>TAACA
+No Match:                 ...ACCATGGATAC<b>AAACA</b>TAACATACGA...
+No Match:                 ...ACCATGGATAC<b>CAAGA</b>TAACATACGA...
+Ref Match:                ...ACCATGGATAC<b>CATCA</b>TAACATACGA...
+Ref Match:                ...ACCATGGATAC<b>CATGA</b>TAACATACGA...
+</pre>
+ 
 # Algorithm
 
 There are 8 key steps in the SAGE algorithm described in detail below:
