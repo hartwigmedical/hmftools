@@ -115,7 +115,8 @@ public interface SageConfig {
 
     @NotNull
     default String baseQualityRecalibrationFile(@NotNull final String sample) {
-        return new File(outputFile()).getParent() + File.separator + sample + ".sage.bqr.tsv";
+        String parent = new File(outputFile()).getParent();
+        return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
     }
 
     @NotNull
