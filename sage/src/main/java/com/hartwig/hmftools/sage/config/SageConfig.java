@@ -50,7 +50,6 @@ public interface SageConfig {
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 10;
-    int DEFAULT_MIN_BASE_QUALITY = 13;
     int DEFAULT_MAX_READ_DEPTH = 1000;
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
@@ -67,7 +66,7 @@ public interface SageConfig {
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
-        options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
+        options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(CHR, true, "Run for single chromosome");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 

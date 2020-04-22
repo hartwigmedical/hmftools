@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MAX_ALT_COUNT;
+import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_SAMPLE_SIZE;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
@@ -19,7 +20,6 @@ import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_READ_EDGE_F
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_REALIGNMENT_DEPTH;
-import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_THREADS;
 
@@ -90,6 +90,7 @@ public class SageConfigTest {
                 .plot(false)
                 .maxAltCount(DEFAULT_BQR_MAX_ALT_COUNT)
                 .sampleSize(DEFAULT_BQR_SAMPLE_SIZE)
+                .minMapQuality(DEFAULT_BQR_MIN_MAP_QUAL)
                 .build();
     }
 
