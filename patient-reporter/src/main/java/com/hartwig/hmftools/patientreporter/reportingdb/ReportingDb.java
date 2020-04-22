@@ -81,22 +81,24 @@ public final class ReportingDb {
         String reportDate = ReportResources.REPORT_DATE;
 
         String reportType = report.reason().identifier();
+        String reportTypeInterpret = report.isCorrectedReport() ? reportType+"_corrected" : reportType;
+
 
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (type != LimsSampleType.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
-                        && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
-                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportType, reportDate);
+                        && reportTypeInterpret.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
+                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportTypeInterpret, reportDate);
                     present = true;
                 }
             }
 
             if (!present) {
-                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
+                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportTypeInterpret);
                 String stringToAppend =
-                        tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING + "\t" + NA_STRING + "\t"
+                        tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportTypeInterpret + "\t" + NA_STRING + "\t" + NA_STRING + "\t"
                                 + NA_STRING + "\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }

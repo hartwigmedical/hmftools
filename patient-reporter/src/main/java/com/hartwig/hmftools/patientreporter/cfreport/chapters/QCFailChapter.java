@@ -30,7 +30,7 @@ public class QCFailChapter implements ReportChapter {
     @NotNull
     @Override
     public String name() {
-        return failReport.reason().title();
+        return failReport.isCorrectedReport() ? failReport.reason().title() + " (Corrected)" : failReport.reason().title();
     }
 
     @Override
@@ -145,6 +145,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
         divColumn.add(sampleHasMolecularTumorPercentage());
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+
         return divColumn;
     }
 
@@ -181,6 +183,7 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
         divColumn.add(sampleHasMolecularTumorPercentage());
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
         return divColumn;
     }
 
@@ -216,6 +219,8 @@ public class QCFailChapter implements ReportChapter {
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
         divColumn.add(sampleHasMolecularTumorPercentage());
+        failReport.comments().ifPresent(comments -> divColumn.add(createContentParagraph("Comments: " + comments)));
+
         return divColumn;
     }
 
