@@ -51,6 +51,7 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class SageApplication implements AutoCloseable {
@@ -115,8 +116,7 @@ public class SageApplication implements AutoCloseable {
             }
         }
 
-//        createChromosomePipeline("17", recalibrationMap).process(1, 1_000_000);
-
+        //        createChromosomePipeline("1", recalibrationMap).process(50084006, 50084106);
 
         long timeTaken = System.currentTimeMillis() - timeStamp;
         LOGGER.info("Completed in {} seconds", timeTaken / 1000);
@@ -124,7 +124,7 @@ public class SageApplication implements AutoCloseable {
 
     private SAMSequenceDictionary dictionary() throws IOException {
         final String bam = config.referenceBam().isEmpty() ? config.tumorBam().get(0) : config.referenceBam().get(0);
-        SamReader tumorReader = SamReaderFactory.makeDefault().open(new File(bam));
+        SamReader tumorReader = SamReaderFactory.makeDefault().referenceSource(new ReferenceSource(refGenome)).open(new File(bam));
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
         tumorReader.close();
         return dictionary;
