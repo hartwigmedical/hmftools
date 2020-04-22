@@ -21,12 +21,6 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class MicrosatelliteIndels implements Consumer<VariantContext> {
 
-    public static double determineMicrosatelliteIndelsPerMb(@NotNull List<SomaticVariant> variants) {
-        MicrosatelliteIndels indelCount = new MicrosatelliteIndels();
-        variants.forEach(indelCount::accept);
-        return indelCount.microsatelliteIndelsPerMb();
-    }
-
     public static final double NUMBER_OF_MB_PER_GENOME = 2859D;
     private static final int MIN_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 2;
     private static final int MAX_SEQUENCE_LENGTH_FOR_LONG_REPEATS = 4;

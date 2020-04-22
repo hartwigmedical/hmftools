@@ -53,6 +53,11 @@ public class CopyNumberAnalyzer {
                 .ploidy(bestFit.ploidy())
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
+                .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
+                .microsatelliteStatus(purityContext.microsatelliteStatus())
+                .tumorMutationalLoad(purityContext.tumorMutationalLoad())
+                .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
+                .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .build();
     }
 }
