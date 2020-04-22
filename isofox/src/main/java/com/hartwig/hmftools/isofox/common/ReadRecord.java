@@ -20,6 +20,8 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNKNOWN;
 
+import static htsjdk.samtools.CigarOperator.D;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -198,7 +200,12 @@ public class ReadRecord
             {
                 // nothing to skip
             }
-            else if(element.getOperator() == CigarOperator.D || element.getOperator() == CigarOperator.I)
+            else if(element.getOperator() == D)
+            {
+                posOffset += element.getLength();
+                continueRegion = true;
+            }
+            else if(element.getOperator() == CigarOperator.I)
             {
                 // nothing to skip
                 continueRegion = true;
@@ -550,6 +557,8 @@ public class ReadRecord
         long readStartPos = readSection[SE_START];
         long readEndPos = readSection[SE_END];
 
+        int deletedLength = Cigar.getCigarElements().stream().filter(x -> x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
+
         int extraBaseLength = 0;
 
         if(region.start() > readStartPos && readEndPos > region.start())
@@ -562,8 +571,11 @@ public class ReadRecord
             extraBaseLength += Cigar.getFirstCigarElement().getLength();
         }
 
+        // less any deleted bases
+        extraBaseLength = max(extraBaseLength - deletedLength, 0);
+
         // allow a single base match if only 1 region matches
-        if(extraBaseLength >= 1)
+        if(extraBaseLength >= 1 && extraBaseLength <= 10)
         {
             // first check for a match with the next exon on the lower side
             final String extraBases = ReadBases.substring(0, extraBaseLength);
@@ -612,7 +624,9 @@ public class ReadRecord
             extraBaseLength += Cigar.getLastCigarElement().getLength();
         }
 
-        if(extraBaseLength >= 1)
+        extraBaseLength = max(extraBaseLength - deletedLength, 0);
+
+        if(extraBaseLength >= 1 && extraBaseLength <= 10)
         {
             // now check for a match to the next exon up
             final String extraBases = ReadBases.substring(ReadBases.length() - extraBaseLength, ReadBases.length());

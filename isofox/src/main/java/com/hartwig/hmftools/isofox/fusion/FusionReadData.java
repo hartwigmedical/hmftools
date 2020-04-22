@@ -46,7 +46,7 @@ public class FusionReadData
     private final byte[] mSjOrientations;
 
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
-    private final String[] mFusionGeneIds;
+    private final String[] mFusionGeneIds; // stored by stream
     private final int[] mFusionIndices; // mapping of up & down stream to position data which is in SV terms
     private final List<List<TransExonRef>> mTransExonRefs;
 
@@ -146,6 +146,7 @@ public class FusionReadData
 
     public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
     public boolean hasValidStreamData() { return mFusionIndices[FS_UPSTREAM] >= 0 && mFusionIndices[FS_DOWNSTREAM] >= 0; }
+    public int streamStartEnd(int fs) { return mFusionIndices[fs] >= 0 ? mFusionIndices[fs] : SE_START; }
 
     public boolean isValid() { return hasViableGenes() && hasValidStreamData() && !hasIncompleteData(); }
 
@@ -359,7 +360,7 @@ public class FusionReadData
                     }
                 }
 
-                csvData.add(otherGenes[fs]);
+                csvData.add(!otherGenes[fs].isEmpty() ? otherGenes[fs] : "NONE");
             }
         }
         else

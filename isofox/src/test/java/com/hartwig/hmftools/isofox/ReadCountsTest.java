@@ -51,6 +51,71 @@ public class ReadCountsTest
     public static final String REF_BASE_STR_2 = REF_BASE_STR_1 + REF_BASE_STR_1;
 
     @Test
+    public void testReadCoordinates()
+    {
+        // single matched region
+        ReadRecord read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1, createCigar(0, 20, 0));
+
+        // simple matched read
+        assertEquals(1, read.getMappedRegionCoords().size());
+        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(119, read.getMappedRegionCoords().get(0)[SE_END]);
+
+        // with soft-clippings
+        read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1, createCigar(10, 20, 10));
+
+        assertEquals(1, read.getMappedRegionCoords().size());
+        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(119, read.getMappedRegionCoords().get(0)[SE_END]);
+
+        // with 2 splits
+        Cigar cigar = new Cigar();
+        cigar.add(new CigarElement(5, CigarOperator.M)); // matches half of first exon
+        cigar.add(new CigarElement(20, CigarOperator.N));
+        cigar.add(new CigarElement(10, CigarOperator.M)); // matches all of second exon
+        cigar.add(new CigarElement(30, CigarOperator.N));
+        cigar.add(new CigarElement(5, CigarOperator.M)); // matches past last exon into intron
+
+        read = createReadRecord(1, "1", 100, 159, REF_BASE_STR_1, cigar);
+
+        assertEquals(3, read.getMappedRegionCoords().size());
+        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(104, read.getMappedRegionCoords().get(0)[SE_END]);
+        assertEquals(125, read.getMappedRegionCoords().get(1)[SE_START]);
+        assertEquals(134, read.getMappedRegionCoords().get(1)[SE_END]);
+        assertEquals(165, read.getMappedRegionCoords().get(2)[SE_START]);
+        assertEquals(169, read.getMappedRegionCoords().get(2)[SE_END]);
+
+        // with a delete
+        // 10M2D8M
+
+        cigar = new Cigar();
+        cigar.add(new CigarElement(10, CigarOperator.M));
+        cigar.add(new CigarElement(2, CigarOperator.D));
+        cigar.add(new CigarElement(8, CigarOperator.M));
+
+        read = createReadRecord(1, "1", 100, 119, REF_BASE_STR_1.substring(0, 18), cigar);
+
+        assertEquals(1, read.getMappedRegionCoords().size());
+        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(119, read.getMappedRegionCoords().get(0)[SE_END]);
+
+        // with an insert
+        // 10M2D8M
+
+        cigar = new Cigar();
+        cigar.add(new CigarElement(10, CigarOperator.M));
+        cigar.add(new CigarElement(2, CigarOperator.I));
+        cigar.add(new CigarElement(8, CigarOperator.M));
+
+        read = createReadRecord(1, "1", 100, 117, REF_BASE_STR_1, cigar);
+
+        assertEquals(1, read.getMappedRegionCoords().size());
+        assertEquals(100, read.getMappedRegionCoords().get(0)[SE_START]);
+        assertEquals(117, read.getMappedRegionCoords().get(0)[SE_END]);
+    }
+
+    @Test
     public void testReadRegionTypes()
     {
         String REF_BASE_STR_1 = "ABCDEFGHIJKLMNOPQRST"; // currently unused

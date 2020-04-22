@@ -393,12 +393,15 @@ public class ChromosomeGeneTask implements Callable
             double allCategoryTotals = mBamFragmentAllocator.getTransComboData().stream()
                     .mapToDouble(x -> x.fragmentCount()).sum();
 
-            double transCategoryTotals = mBamFragmentAllocator.getTransComboData().stream()
-                    .filter(x -> !x.transcriptIds().isEmpty())
-                    .mapToDouble(x -> x.fragmentCount()).sum();
+            if(allCategoryTotals > 0)
+            {
+                double transCategoryTotals = mBamFragmentAllocator.getTransComboData().stream()
+                        .filter(x -> !x.transcriptIds().isEmpty())
+                        .mapToDouble(x -> x.fragmentCount()).sum();
 
-            ISF_LOGGER.debug(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
-                    geneCollection.geneNames(), allCategoryTotals, transCategoryTotals));
+                ISF_LOGGER.debug(String.format("genes(%s) catCounts(all=%.2f trans=%.1f)",
+                        geneCollection.geneNames(), allCategoryTotals, transCategoryTotals));
+            }
         }
 
         if(mExpTransRates != null)

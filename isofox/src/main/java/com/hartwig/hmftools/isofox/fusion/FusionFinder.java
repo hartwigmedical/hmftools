@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
@@ -345,8 +347,38 @@ public class FusionFinder
                 if(unsplicedFusions.isEmpty())
                     break;
             }
+
+            // annotate similar fusions for post-run analysis
+            for(int i = 0; i < fusions.size() - 1; ++i)
+            {
+                FusionReadData fusion1 = fusions.get(i);
+
+                for(int j = i + 1; j < fusions.size() - 1; ++j)
+                {
+                    FusionReadData fusion2 = fusions.get(j);
+
+                    boolean isSimilar = false;
+
+                    for(int se = SE_START; se <= SE_END; ++se)
+                    {
+                        if (abs(fusion1.splicePositions()[se] - fusion2.splicePositions()[se]) <= POSITION_REALIGN_DISTANCE)
+                        {
+                            isSimilar = true;
+                            break;
+                        }
+                    }
+
+                    if(isSimilar)
+                    {
+                        fusion1.addRelatedFusion(fusion2.id());
+                        fusion2.addRelatedFusion(fusion1.id());
+                    }
+                }
+            }
         }
     }
+
+    private static final int POSITION_REALIGN_DISTANCE = 20;
 
     private void assignUnfusedFragments()
     {
