@@ -40,7 +40,6 @@ public interface SageConfig {
     String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     String PANEL_BED = "panel_bed";
     String PANEL_ONLY = "panel_only";
-    String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
     String MAX_READ_DEPTH = "max_read_depth";
     String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
@@ -78,7 +77,6 @@ public interface SageConfig {
         options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
         options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
-        options.addOption(GERMLINE_ONLY, false, "Germline only mode");
         options.addOption(HOTSPOTS, true, "Hotspots");
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
