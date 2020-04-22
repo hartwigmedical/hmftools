@@ -327,7 +327,7 @@ Filter | Default Value | Field
 hard_min_tumor_qual |30**| `QUAL`
 hard_min_tumor_raw_alt_support |2| `RAD[1]`
 hard_min_tumor_raw_base_quality |0| `RABQ[1]`
-hard_max_normal_alt_support*** |2| Normal `AD[1]`
+hard_max_normal_alt_support** |2| Normal `AD[1]`
 
 ** Hotspots are kept regardless of tumor quality
 
