@@ -33,8 +33,6 @@ R is not required if the charts are disable with the `-bqr_plot false` argument.
 
 Argument | Description 
 ---|---
-reference | Comma separated names of the reference sample
-reference_bam | Comma separated paths to indexed reference BAM file
 tumor | Comma separated names of the tumor sample
 tumor_bam | Comma separated paths to indexed tumor BAM file
 out | Name of the output VCF
@@ -42,51 +40,77 @@ ref_genome | Path to reference genome fasta file
 hotspots | Path to hotspots vcf
 panel_bed | Path to panel bed
 high_confidence_bed | Path to high confidence bed
+assembly | One of `hg19` or `hg38`
 
-The cardinality of `reference` must match `reference_bams`. Similarly with `tumor` and `tumor_bams`. At least one tumor must be supplied.
+The cardinality of `tumor` must match `tumor_bams`. At least one tumor must be supplied.
+
+## Optional Arguments
+Argument | Default | Description 
+---|---
+threads | 2 | Number of threads to use
+reference | NA | Comma separated names of the reference sample
+reference_bam | NA | Comma separated paths to indexed reference BAM file
+chr | NA | Limit sage to comma separated list of chromosomes
+max_read_depth | 1000 | Maximum depth to examine for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant
+max_read_depth_panel | 100,000 | Maximum depth to examine for evidence of any `HOTSPOT` or `PANEL` variant
+max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
+
+The cardinality of `reference` must match `reference_bams`.
+
+## Optional Base Quality Recalibration Arguments
+
+The following arguments control the [base quality recalibration](#1-base-quality-recalibration) process described below.
+
+Argument | Default | Description 
+---|---
+bqr_enabled | true | Enable base quality recalibration
+bqr_plot | true | Plot BQR charts
+bqr_sample_size | 2,000,000 | Sample size of each autosome
+bqr_max_alt_count | 3 | Max support of variant before it is considered likely to be real and not a sequencing error
+bqr_min_map_qual | 10 | Min mapping quality of bam record
+
+## Optional Quality Arguments
+
+The following arguments are used to calculate the [modified tumor quality score](#modified-tumor-quality-score)
+
+Argument | Default | Description 
+---|---
+jitter_penalty | 0.25 | Penalty to apply to qual score when read context matches with jitter
+jitter_min_repeat_count | 3 | Minimum repeat count before applying jitter penalty
+base_qual_fixed_penalty | 12 | Fixed penalty to apply to base quality
+map_qual_fixed_penalty | 15 | Fixed penalty to apply to map quality
+map_qual_improper_pair_penalty | 15 | Penalty to apply to map qual when SAM record does not have the ProperPair flag
+map_qual_distance_from_ref_penalty | 10 | Penalty to apply to map qual for additional distance from ref
 
 ## Example Usage
 
-Minimum set of arguments:
+Minimum set of arguments (running in tumor only mode):
 
 ```
-java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
-    -threads 8 \
+java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
-    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
-    -ref_genome /path/to/ref_genome.fasta \
+    -assembly hg19 \
+    -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
-With RNA as an additional reference:
+Typical arguments running in paired tumor-normal mode:
+
 ```
-java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
-    -threads 8 \
+java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
+    -threads 16 
+    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
     -tumor COLO829v003T -tumor_bam /path/to/COLO829v003T.bam \
-    -reference COLO829v003R,COLO829v003RNA -reference_bam /path/to/COLO829v003R.bam,/path/to/COLO829v003RNA.bam \
-    -ref_genome /path/to/ref_genome.fasta \
+    -assembly hg19 \
+    -ref_genome /path/to/refGenome.fasta \
     -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
     -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
-
-With multiple tumors:
-```
-java -Xmx200G -Xms32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
-    -threads 8 \
-    -tumor COLO829v003T,COLO829v004T -tumor_bam /path/to/COLO829v003T.bam,/path/to/COLO829v004T.bam \
-    -reference COLO829v003R -reference_bam /path/to/COLO829v003R.bam \
-    -ref_genome /path/to/ref_genome.fasta \
-    -hotspots /path/to/KnownHotspots.hg19.vcf.gz \
-    -panel_bed /path/to/ActionableCodingPanel.hg19.bed.gz \
-    -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
-    -out /path/to/COLO829v003.sage.vcf.gz
-```
-
 
  # Read context 
  
@@ -150,7 +174,8 @@ There are 8 key steps in the SAGE algorithm described in detail below:
 SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
 This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
 
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  
+This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
 
 For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
@@ -346,7 +371,6 @@ If multiple tumors are supplied, phasing is evaluated only on the primary tumor,
 
 If two phased frameshift variant in a single coding exon together form an inframe INDEL, then both are given a shared `PII` (phased inframe indel) identifier.
 
-
 ## 7. De-duplication
 
 ### INDEL
@@ -356,9 +380,9 @@ If SAGE finds two phased INDELs of the same type at the same position where one 
 
 ### SNV / MNV
 
-Any passing SNVs that are phased with and part of a passing somatic MNV are filtered with `dedup`. 
+Any passing SNVs that are phased with and contribute to a passing somatic MNV are filtered with `dedup`. 
 
-In the special case where the MNV is comprised of both somatic and germline SNVs, additional logic applies. 
+If the MNV is comprised of both somatic and germline SNVs, additional logic applies. 
 Typically, the MNV will be filtered, except when the MNV is in a coding region and impacts more than one base of the same codon impacted by the SNV. 
 In this case the SNV is filtered to capture the functional impact of the mixed somatic and germline variant. 
 
@@ -370,8 +394,10 @@ Chromosome | Position | Ref | Alt | Type | Protein Impact
 19 | 43,382,367 | GT | AG | Mixed | p.Thr43Leu
 19 | 43,382,367 | G | A | Somatic | p.Thr43Ile
 19 | 43,382,368 | T | G | Germline | p.Thr43Pro
+
+If the MNV is comprised of only germline SNVs but does not appear itself at all in the germline, it remains unfiltered.  
  
-Regardless of filtering, the MNV and both germline and somatic SNVs are all given a shared `MSG` (mixed somatic germline) identifier.
+Any MNVs that have a germline component and all associated SNVs (including somatic) are given a shared `MSG` (mixed somatic germline) identifier.
 
 ## 8. Re-alignment
 
@@ -392,31 +418,22 @@ To eliminate recurrent variants and artifacts we constructed a Panel of Normal (
 
 We use the PON file to filter SAGE output of any variant that appears in more than 3 samples for the LOW_CONFIDENCE & HIGH_CONFIDENCE & PANEL tiers and 10 samples for HOTSPOTS.  Additionally, PANEL and HOTSPOT variants must have at least 1 sample with 5 or more reads support to be PON filtered
 
-## Post Process
-
-SAGE post process is a separate application that can make some readjustments to the SAGE output. It depends on the SAGE phasing (`LPS` field) and snpEff annotations.   
-
-The application applies the following rules:
-1. If a left-aligned indel with micro-homology in a splice region can equally be represented as an inframe indel in a coding region when right-aligned, then add an inframe_insertion/deletion annotation to the canonical snpEff record.
-2. Add a splice_donor_variant snpEff annotation to any +5 splice donor SNVs. 
-3. If two phased frameshift indels in the same exon when considered together are inframe, then add the Phased Inframe Indel `PII` flag to both entries.
-
+## SnpEff
+SnpEff is run over the output and then summarised for each variant with a separate post processing application.
 
 # Performance Characteristics
-Performance numbers were taken from a 72 core machine using COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
+Performance numbers were taken from a 72 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
 Elapsed time is measured in minutes. 
 CPU time is minutes spent in user mode. 
 Peak memory is measure in gigabytes.
 
-
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
-1 | 529 | 539 | 55
-8 | 77 | 594 | 68
-16 | 46 | 675 | 68 
-24 | 32 | 671 | 67 
-32 | 28 | 748 | 67
-48 | 27 | 1047 | 66
+1 | 696 | 751 | 10
+8 | 98 | 776 | 13
+16 | 62 | 873 | 13 
+24 | 49 | 880 | 14 
+32 | 45 | 943 | 15
 
 # Version History and Download Links
  - Upcoming
