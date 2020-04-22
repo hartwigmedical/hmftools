@@ -125,7 +125,7 @@ class AnalysedPatientReporter {
                 .reportableVariants(reportableVariantsAnalysis.variantsToReport())
                 .microsatelliteIndelsPerMb(copyNumberAnalysis.microsatelliteIndelsPerMb())
                 .microsatelliteStatus(copyNumberAnalysis.microsatelliteStatus())
-                .tumorMutationalLoad(1) //TODO: use real data copyNumberAnalysis.tumorMutationalLoad()
+                .tumorMutationalLoad((int) Math.round(copyNumberAnalysis.tumorMutationalLoad()))
                 .tumorMutationalLoadStatus(copyNumberAnalysis.tumorMutationalLoadStatus())
                 .tumorMutationalBurden(copyNumberAnalysis.tumorMutationalBurdenPerMb())
                 .chordAnalysis(chordAnalysis)
