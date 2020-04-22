@@ -24,12 +24,12 @@ public class SamSlicerFactory {
 
     @NotNull
     private SamSlicer fullSlice(@NotNull final GenomeRegion slice) {
-        return new SamSlicer(config.minMapQuality(), slice);
+        return new SamSlicer(0, slice);
     }
 
     @NotNull
     private SamSlicer panelOnly(@NotNull final GenomeRegion slice) {
-        return new SamSlicer(config.minMapQuality(), slice, panel);
+        return new SamSlicer(0, slice, panel);
     }
 
 }
