@@ -426,7 +426,7 @@ SnpEff is run over the output and then summarised for each variant with a separa
 Performance numbers were taken from a 72 core machine using paired normal tumor COLO829 data with an average read depth of 35 and 93 in the normal and tumor respectively. 
 Elapsed time is measured in minutes. 
 CPU time is minutes spent in user mode. 
-Peak memory is measure in gigabytes.
+Peak memory is measured in gigabytes.
 
 Threads | Elapsed Time| CPU Time | Peak Mem
 ---|---|---|---
