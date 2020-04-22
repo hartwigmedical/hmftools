@@ -67,7 +67,7 @@ public class QualityRecalibration {
 
     public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end) {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(bam, refGenome, config.maxAltCount()).regionCount(bounds),
+        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(config, bam, refGenome).regionCount(bounds),
                 executorService);
     }
 
