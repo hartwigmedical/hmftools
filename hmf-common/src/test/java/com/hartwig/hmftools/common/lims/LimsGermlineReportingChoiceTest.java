@@ -28,7 +28,7 @@ public class LimsGermlineReportingChoiceTest {
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "DRUP02991111T"));
         assertEquals(LimsGermlineReportingChoice.UNKNOWN,
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "COLO02991111T"));
-        assertEquals(LimsGermlineReportingChoice.UNKNOWN,
+        assertEquals(LimsGermlineReportingChoice.NONE,
                 LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString("", "CORE02991111T"));
     }
 

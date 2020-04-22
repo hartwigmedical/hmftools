@@ -28,6 +28,8 @@ public enum LimsGermlineReportingChoice {
                     throw new IllegalStateException(
                             "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingChoiceString);
             }
+        } else if (type == LimsSampleType.CORE) {
+            return NONE;
         }
 
         return UNKNOWN;
