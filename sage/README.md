@@ -46,7 +46,7 @@ The cardinality of `tumor` must match `tumor_bams`. At least one tumor must be s
 
 ## Optional Arguments
 Argument | Default | Description 
----|---
+---|---|---
 threads | 2 | Number of threads to use
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
@@ -63,7 +63,7 @@ The cardinality of `reference` must match `reference_bams`.
 The following arguments control the [base quality recalibration](#1-base-quality-recalibration) process described below.
 
 Argument | Default | Description 
----|---
+---|---|---
 bqr_enabled | true | Enable base quality recalibration
 bqr_plot | true | Plot BQR charts
 bqr_sample_size | 2,000,000 | Sample size of each autosome
@@ -75,7 +75,7 @@ bqr_min_map_qual | 10 | Min mapping quality of bam record
 The following arguments are used to calculate the [modified tumor quality score](#modified-tumor-quality-score)
 
 Argument | Default | Description 
----|---
+---|---|---
 jitter_penalty | 0.25 | Penalty to apply to qual score when read context matches with jitter
 jitter_min_repeat_count | 3 | Minimum repeat count before applying jitter penalty
 base_qual_fixed_penalty | 12 | Fixed penalty to apply to base quality
