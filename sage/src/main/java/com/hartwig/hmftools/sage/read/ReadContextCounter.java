@@ -215,9 +215,6 @@ public class ReadContextCounter implements VariantHotspot {
             final QualityConfig qualityConfig = sageConfig.qualityConfig();
             double quality = calculateQualityScore(readIndex, record, qualityConfig);
 
-            coverage++;
-            totalQuality += quality;
-
             // Check if FULL, PARTIAL, OR CORE
             if (!baseDeleted) {
                 final ReadContextMatch match = readContext.matchAtPosition(readIndex, record.getReadBases());
@@ -240,20 +237,32 @@ public class ReadContextCounter implements VariantHotspot {
                             break;
                     }
 
+                    coverage++;
+                    totalQuality += quality;
                     return;
                 }
             }
 
-            // Check if realigned
+            // Check if REALIGNED
             final RealignedContext realignment = realignmentContext(realign, readIndex, record);
-            if (realignment.type().equals(RealignedType.EXACT)) {
+            final RealignedType realignmentType = realignment.type();
+            if (realignmentType.equals(RealignedType.EXACT)) {
                 realigned++;
                 realignedQuality += quality;
+                coverage++;
+                totalQuality += quality;
                 return;
             }
 
+            if (realignmentType.equals(RealignedType.NONE) && rawContext.isReadIndexInSoftClip()) {
+                return;
+            }
+
+            coverage++;
+            totalQuality += quality;
+
             // Check if lengthened, shortened AND/OR reference!
-            switch (realignment.type()) {
+            switch (realignmentType) {
                 case LENGTHENED:
                     jitterPenalty += qualityConfig.jitterPenalty(realignment.repeatCount());
                     lengthened++;

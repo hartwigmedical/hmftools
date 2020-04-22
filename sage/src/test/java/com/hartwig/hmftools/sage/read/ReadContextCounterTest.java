@@ -53,6 +53,35 @@ public class ReadContextCounterTest {
         assertEquals(1, victim.altSupport());
     }
 
+
+    @Test
+    public void testSnvInLeftSoftClip() {
+        final IndexedBases refBases = new IndexedBases(554, 1, "TGTTTC".getBytes());
+        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 2, 0, "CAT".getBytes(), Strings.EMPTY);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
+
+        final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
+        victim.accept(record, CONFIG);
+
+        assertEquals(1, victim.depth());
+        assertEquals(1, victim.altSupport());
+    }
+
+    @Test
+    public void testRefInLeftSoftClipDoesNotContributeToDepth() {
+        final IndexedBases refBases = new IndexedBases(554, 1, "TGTTTC".getBytes());
+        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
+        final ReadContext readContext = new ReadContext(Strings.EMPTY, 554, 1, 0, 2, 0, "CAT".getBytes(), Strings.EMPTY);
+        final ReadContextCounter victim = new ReadContextCounter(SAMPLE, hotspot, readContext, RECALIBRATION, TIER, MAX_COVERAGE, true);
+
+        final SAMRecord record = buildSamRecord(555, "2S1M", "CGT", "#####");
+        victim.accept(record, CONFIG);
+
+        assertEquals(0, victim.depth());
+        assertEquals(0, victim.altSupport());
+    }
+
     @Test
     public void testMnvInLeftSoftClip() {
         final IndexedBases refBases = new IndexedBases(550, 0, "GATCGATC".getBytes());
