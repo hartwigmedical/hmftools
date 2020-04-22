@@ -37,7 +37,6 @@ public interface SageConfig {
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
     String MIN_MAP_QUALITY = "min_map_quality";
-    String MIN_BASE_QUALITY = "min_base_quality";
     String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     String PANEL_BED = "panel_bed";
     String PANEL_ONLY = "panel_only";
@@ -70,7 +69,6 @@ public interface SageConfig {
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
-        options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
         options.addOption(CHR, true, "Run for single chromosome");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
@@ -150,8 +148,6 @@ public interface SageConfig {
     int regionSliceSize();
 
     int minMapQuality();
-
-    int minBaseQuality();
 
     int maxRealignmentDepth();
 
@@ -242,7 +238,6 @@ public interface SageConfig {
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
-                .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
                 .maxReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
                 .maxReadDepthPanel(defaultIntValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
                 .maxRealignmentDepth(defaultIntValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))
