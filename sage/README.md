@@ -287,7 +287,7 @@ The quality is incremented as follows:
 distanceFromReadEdge = minimum distance from either end of the complete read context to the edge of the read  
 baseQuality (SNV/MNV) = BASEQ at variant location(s)  
 baseQuality (Indel) = min BASEQ over core read context  
-modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge - `distanceFromReadEdgeFixedPenalty (0)` ) 
+modifiedBaseQuality = min(baseQuality - `baseQualityFixedPenalty (12)` , 3 * distanceFromReadEdge) 
 
 improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if improper pair flag set else 0  
 distanceFromReference = number of somatic alterations to get to reference from the complete read context  
