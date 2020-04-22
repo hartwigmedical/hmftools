@@ -351,7 +351,7 @@ The specific filters and default settings for each tier are:
 
 Filter  | Hotspot | Panel | High Confidence | Low Confidence | Field
 ---|---|---|---|---|---
-min_tumor_qual|70**|100|125|200|`QUAL`
+min_tumor_qual|70**|100|150|225|`QUAL`
 min_tumor_vaf|0.5%|1.5%|2.5%|2.5%|`AF`
 min_germline_depth|0|0|10 | 10 | Normal `RC_CNT[6]`
 min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
