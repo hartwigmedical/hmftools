@@ -50,7 +50,7 @@ public interface SageConfig {
     String SLICE_SIZE = "slice_size";
 
     int DEFAULT_THREADS = 2;
-    int DEFAULT_MIN_MAP_QUALITY = 0;
+    int DEFAULT_MIN_MAP_QUALITY = 10;
     int DEFAULT_MIN_BASE_QUALITY = 13;
     int DEFAULT_MAX_READ_DEPTH = 1000;
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;

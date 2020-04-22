@@ -47,7 +47,6 @@ public class SageConfigTest {
                 .hotspots("hotspots")
                 .threads(DEFAULT_THREADS)
                 .minMapQuality(DEFAULT_MIN_MAP_QUALITY)
-                .minBaseQuality(DEFAULT_MIN_BASE_QUALITY)
                 .maxRealignmentDepth(DEFAULT_MAX_REALIGNMENT_DEPTH)
                 .maxReadDepth(DEFAULT_MAX_READ_DEPTH)
                 .maxReadDepthPanel(DEFAULT_MAX_READ_DEPTH_PANEL)
