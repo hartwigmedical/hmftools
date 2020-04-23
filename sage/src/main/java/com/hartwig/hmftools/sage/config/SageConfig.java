@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.config;
 
+import static com.hartwig.hmftools.common.cli.Configs.defaultBooleanValue;
 import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 
 import java.io.File;
@@ -47,6 +48,7 @@ public interface SageConfig {
     String ASSEMBLY = "assembly";
     String CHR = "chr";
     String SLICE_SIZE = "slice_size";
+    String MNV = "mnv_enabled";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 10;
@@ -54,11 +56,13 @@ public interface SageConfig {
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
     int DEFAULT_SLICE_SIZE = 100_000;
+    boolean DEFAULT_MNV = true;
 
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
-        options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38");
+        options.addOption(MNV, true, "Enable MNVs [" + DEFAULT_MNV + "]");
+        options.addOption(ASSEMBLY, true, "Assembly, must be one of [hg19, hg38]");
         options.addOption(THREADS, true, "Number of threads [" + DEFAULT_THREADS + "]");
         options.addOption(REFERENCE, true, "Name of reference sample");
         options.addOption(REFERENCE_BAM, true, "Path to reference bam file");
@@ -123,6 +127,8 @@ public interface SageConfig {
     String panelBed();
 
     boolean panelOnly();
+
+    boolean mnvEnabled();
 
     @NotNull
     String hotspots();
@@ -233,6 +239,7 @@ public interface SageConfig {
                 .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
+                .mnvEnabled(defaultBooleanValue(cmd, MNV, DEFAULT_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))

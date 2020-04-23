@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_REALIGNMENT_DEPTH;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MNV;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_THREADS;
 
 import static org.junit.Assert.assertEquals;
@@ -58,6 +59,7 @@ public class SageConfigTest {
                 .panelBed("panel")
                 .highConfidenceBed("highConfidence")
                 .hotspots("hotspots")
+                .mnvEnabled(DEFAULT_MNV)
                 .threads(DEFAULT_THREADS)
                 .minMapQuality(DEFAULT_MIN_MAP_QUALITY)
                 .maxRealignmentDepth(DEFAULT_MAX_REALIGNMENT_DEPTH)
