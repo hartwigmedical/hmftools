@@ -42,14 +42,6 @@ abstract class LimsJsonSampleData {
     public abstract String samplingDate();
 
     @NotNull
-    @SerializedName("requester_email")
-    public abstract String requesterEmail();
-
-    @NotNull
-    @SerializedName("requester_name")
-    public abstract String requesterName();
-
-    @NotNull
     @SerializedName("shallowseq")
     public abstract String shallowSeq();
 

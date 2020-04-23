@@ -132,6 +132,20 @@ public class Lims {
         return submissionData != null ? submissionData.projectName() : NOT_AVAILABLE_STRING;
     }
 
+    @NotNull
+    public String requesterEmail(@NotNull String sampleBarcode) {
+        String submission = submission(sampleBarcode);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.reportContactEmail() : NOT_AVAILABLE_STRING;
+    }
+
+    @NotNull
+    public String requesterName(@NotNull String sampleBarcode) {
+        String submission = submission(sampleBarcode);
+        LimsJsonSubmissionData submissionData = dataPerSubmission.get(submission);
+        return submissionData != null ? submissionData.reportContactName() : NOT_AVAILABLE_STRING;
+    }
+
     @Nullable
     public Integer dnaNanograms(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
@@ -211,18 +225,6 @@ public class Lims {
         }
         LOGGER.warn("Could not find lab SOP versions for sample: {} in LIMS", sampleBarcode);
         return NOT_AVAILABLE_STRING;
-    }
-
-    @NotNull
-    public String requesterEmail(@NotNull String sampleBarcode) {
-        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        return sampleData != null ? sampleData.requesterEmail() : NOT_AVAILABLE_STRING;
-    }
-
-    @NotNull
-    public String requesterName(@NotNull String sampleBarcode) {
-        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
-        return sampleData != null ? sampleData.requesterName() : NOT_AVAILABLE_STRING;
     }
 
     @NotNull

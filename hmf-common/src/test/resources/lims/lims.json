@@ -16,8 +16,6 @@
       "ptum": "NA",
       "label": "CPCT",
       "unused": "hello world",
-      "requester_email": "henk@hmf.nl",
-      "requester_name": "henk",
       "shallowseq": 0,
       "germline_findings": "",
       "hospital_pa_sample_id": ""
@@ -38,8 +36,6 @@
       "ptum": "NA",
       "label": "CPCT",
       "hospital_patient_id": "something",
-      "requester_email": "henk@hmf.nl",
-      "requester_name": "henk",
       "shallowseq": 1,
       "germline_findings": "",
       "hospital_pa_sample_id": ""
@@ -60,8 +56,6 @@
       "ptum": "NA",
       "label": "CPCT",
       "hospital_patient_id": "something",
-      "requester_email": "henk@hmf.nl",
-      "requester_name": "henk",
       "shallowseq": 1,
       "germline_findings": "",
       "hospital_pa_sample_id": ""
@@ -79,12 +73,16 @@
     "ABCDEF123": {
       "submission": "ABCDEF123",
       "project_type": "CORE",
-      "project_name": "ABC"
+      "project_name": "ABC",
+      "report_contact_email": "henk@hmf.nl",
+      "report_contact_name": "henk"
     },
     "ABCDEF124": {
       "submission": "ABCDEF1234",
       "project_type": "RESEARCH",
-      "project_name": "ABC"
+      "project_name": "ABC",
+      "report_contact_email": "henk@hmf.nl",
+      "report_contact_name": "henk"
     }
   }
 }
