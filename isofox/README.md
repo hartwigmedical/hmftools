@@ -154,9 +154,9 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 <TO DO>
 
-### 10. Panel of Normals  <TO DO>
+### 10. Cohort frequency <TO DO>
 
-We have developed a 'panel of normals' for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The panel of normals is created to estimate population level frequencies of each of the 'novel' features.   
+We have determined a cohort frequency for both novel splice junctions and novel retained introns across a cohort of 1700 samples.  In this context 'novel' means any splice event that does not exist in an ensembl annotated transcript. The purpose of this is created to estimate population level frequencies of each of the 'novel' features.   
 
 For each novel splice junction  we count
 * Number of unique samples with novel splice junction
