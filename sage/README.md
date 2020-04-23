@@ -51,7 +51,7 @@ threads | 2 | Number of threads to use
 reference | NA | Comma separated names of the reference sample
 reference_bam | NA | Comma separated paths to indexed reference BAM file
 chr | NA | Limit sage to comma separated list of chromosomes
-max_read_depth | 1000 | Maximum depth to examine for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant
+max_read_depth | 1000 | Maximum depth to examine for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant.  only first 1000 reads are considered for genomic segments with greater depth.
 max_read_depth_panel | 100,000 | Maximum depth to examine for evidence of any `HOTSPOT` or `PANEL` variant
 max_realignment_depth | 1000 | Do not look for evidence of realigned variant if its read depth exceeds this value
 min_map_quality | 10 | Min mapping quality to apply to non-hotspot variants
