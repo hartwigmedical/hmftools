@@ -171,7 +171,7 @@ Flanked read context:              <b>GATACCAACATAACA</b>
 </pre>
 
 In the following table we match the read context against bam reads in numerous ways. 
-A `FULL` match includes both flanks, a `PARIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
+A `FULL` match includes both flanks, a `PARTIAL` match is if the read is truncated over one of the flanks but matches what is remaining, and a `CORE` match is only the core. 
 A `REALIGNED` match must include both flanks but just be offset. All types of matches contribute to the VAF but only `FULL` and `PARTIAL` matches contribute to the `QUAL` score.
 
 <pre>
