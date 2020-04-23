@@ -49,6 +49,7 @@ public interface SageConfig {
     String CHR = "chr";
     String SLICE_SIZE = "slice_size";
     String MNV = "mnv_enabled";
+    String READ_CONTEXT_FLANK_LENGTH = "read_context_flank_length";
 
     int DEFAULT_THREADS = 2;
     int DEFAULT_MIN_MAP_QUALITY = 10;
@@ -56,6 +57,7 @@ public interface SageConfig {
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
     int DEFAULT_SLICE_SIZE = 100_000;
+    int DEFAULT_READ_CONTEXT_FLANK_LENGTH = 25;
     boolean DEFAULT_MNV = true;
 
     @NotNull
@@ -73,6 +75,7 @@ public interface SageConfig {
         options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
         options.addOption(CHR, true, "Run for single chromosome");
         options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
+        options.addOption(READ_CONTEXT_FLANK_LENGTH, true, "Length of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_LENGTH + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
@@ -163,9 +166,7 @@ public interface SageConfig {
         return 50;
     }
 
-    default int readContextFlankSize() {
-        return 25;
-    }
+    int readContextFlankSize();
 
     @NotNull
     static SageConfig createConfig(@NotNull final String version, @NotNull final CommandLine cmd) throws ParseException {
@@ -242,6 +243,7 @@ public interface SageConfig {
                 .mnvEnabled(defaultBooleanValue(cmd, MNV, DEFAULT_MNV))
                 .refGenome(cmd.getOptionValue(REF_GENOME))
                 .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
+                .readContextFlankSize(defaultIntValue(cmd, READ_CONTEXT_FLANK_LENGTH, DEFAULT_READ_CONTEXT_FLANK_LENGTH))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
                 .maxReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
                 .maxReadDepthPanel(defaultIntValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
