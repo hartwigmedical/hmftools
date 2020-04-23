@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.validPositions;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_SIDED;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
@@ -22,11 +21,11 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
-import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionReadData
@@ -34,7 +33,7 @@ public class FusionReadData
     private final int mId;
     private final String mLocationId;
 
-    private final List<FusionFragment> mFragments;
+    private final Map<FusionFragmentType,List<FusionFragment>> mFragments;
 
     private boolean mIncompleteData;
 
@@ -42,9 +41,8 @@ public class FusionReadData
 
     private final String[] mChromosomes;
     private final int[] mGeneCollections;
-    private final long[] mSjPositions;
-    private long[] mUnsplicedPositions; // used when this fusion has both spliced and unspliced fragments
-    private final byte[] mSjOrientations;
+    private final long[] mJunctionPositions;
+    private final byte[] mJunctionOrientations;
 
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
     private final String[] mFusionGeneIds; // stored by stream
@@ -61,12 +59,10 @@ public class FusionReadData
 
         mChromosomes = new String[] { fragment.chromosomes()[SE_START], fragment.chromosomes()[SE_END] };
         mGeneCollections = new int[] { fragment.geneCollections()[SE_START], fragment.geneCollections()[SE_END] };
-        mSjPositions = new long[] { fragment.splicePositions()[SE_START], fragment.splicePositions()[SE_END] };
-        mSjOrientations = new byte[]{ fragment.spliceOrientations()[SE_START], fragment.spliceOrientations()[SE_END] };
+        mJunctionPositions = new long[] { fragment.junctionPositions()[SE_START], fragment.junctionPositions()[SE_END] };
+        mJunctionOrientations = new byte[]{ fragment.junctionOrientations()[SE_START], fragment.junctionOrientations()[SE_END] };
 
-        mUnsplicedPositions = null;
-
-        mFragments = Lists.newArrayList();
+        mFragments = Maps.newHashMap();
         addFusionFragment(fragment);
 
         mLocationId = formLocationPair(mChromosomes, mGeneCollections);
@@ -83,16 +79,14 @@ public class FusionReadData
         mTransExonRefs = new List[FS_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
         mTransExonRefs[SE_END] = Lists.newArrayList();
-
-        List<String>[] tmp = new List[SE_PAIR];
     }
 
     public int id() { return mId; }
     public String locationId() { return mLocationId; }
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
-    public final long[] splicePositions() { return mSjPositions; }
-    public final byte[] spliceOrientations() { return mSjOrientations; }
+    public final long[] junctionPositions() { return mJunctionPositions; }
+    public final byte[] junctionOrientations() { return mJunctionOrientations; }
 
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }
@@ -107,8 +101,39 @@ public class FusionReadData
         return mTransExonRefs[fs];
     }
 
-    public boolean hasSplicedFragments() { return mFragments.stream().anyMatch(x -> x.isSpliced()); }
-    public boolean hasUnsplicedFragments() { return mFragments.stream().anyMatch(x -> x.isUnspliced()); }
+    public final List<FusionFragment> getAllFragments()
+    {
+        if(mFragments.size() == 1)
+            return mFragments.values().iterator().next();
+
+        final List<FusionFragment> fragments = Lists.newArrayList();
+        mFragments.values().forEach(x -> fragments.addAll(x));
+        return fragments;
+    }
+
+    public final Map<FusionFragmentType,List<FusionFragment>> getFragments() { return mFragments; }
+    public final List<FusionFragment> getFragments(FusionFragmentType type)
+    {
+        return mFragments.containsKey(type) ? mFragments.get(type) : Lists.newArrayList();
+    }
+
+    public void addFusionFragment(final FusionFragment fragment)
+    {
+        List<FusionFragment> fragments = mFragments.get(fragment.type());
+
+        if(fragments == null)
+        {
+            mFragments.put(fragment.type(), Lists.newArrayList(fragment));
+            return;
+        }
+
+        fragments.add(fragment);
+    }
+
+    public boolean hasJunctionFragments() { return mFragments.containsKey(BOTH_JUNCTIONS); }
+
+    public boolean isKnownSpliced() { return getSampleFragment().isSpliced(); }
+    public boolean isUnspliced() { return getSampleFragment().isUnspliced() && getSampleFragment().hasBothJunctions(); }
 
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
     {
@@ -134,27 +159,20 @@ public class FusionReadData
 
     public StructuralVariantType getImpliedSvType()
     {
-        return impliedSvType(mChromosomes, mSjOrientations);
+        return impliedSvType(mChromosomes, mJunctionOrientations);
     }
 
-    public final List<FusionFragment> getFragments() { return mFragments; }
-    public void addFusionFragment(final FusionFragment fragment)
+    public boolean junctionMatch(final FusionFragment fragment)
     {
-        mFragments.add(fragment);
-    }
-
-    public boolean spliceJunctionMatch(final FusionFragment fragment)
-    {
-        return validPositions(fragment.splicePositions()) && validPositions(mSjPositions)
-                && mSjPositions[SE_START] == fragment.splicePositions()[SE_START] && mSjPositions[SE_END] == fragment.splicePositions()[SE_END]
-                && mSjOrientations[SE_START] == fragment.spliceOrientations()[SE_START] && mSjOrientations[SE_END] == fragment.spliceOrientations()[SE_END];
+        return validPositions(fragment.junctionPositions()) && validPositions(mJunctionPositions)
+                && mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START] && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
+                && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START] && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
     }
 
     public List<EnsemblGeneData>[] getCandidateGenes() { return mCandidateGenes; }
 
     public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
     public boolean hasValidStreamData() { return mFusionIndices[FS_UPSTREAM] >= 0 && mFusionIndices[FS_DOWNSTREAM] >= 0; }
-    public int streamStartEnd(int fs) { return mFusionIndices[fs] >= 0 ? mFusionIndices[fs] : SE_START; }
 
     public boolean isValid() { return hasViableGenes() && hasValidStreamData() && !hasIncompleteData(); }
 
@@ -168,69 +186,37 @@ public class FusionReadData
         return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matchesNext(y)));
     }
 
-    public void mergeFusionData(final FusionReadData other)
+    public FusionFragment getSampleFragment()
     {
-        other.getFragments().forEach(x -> mFragments.add(x));
-        other.getRelatedFusions().forEach(x -> mRelatedFusions.add(x));
-
-        if(other.hasUnsplicedFragments())
+        if(mFragments.containsKey(BOTH_JUNCTIONS))
         {
-            final FusionFragment fragment = other.getFragments().stream().filter(x -> x.isUnspliced()).findFirst().orElse(null);
-            mUnsplicedPositions = new long[] { fragment.splicePositions()[SE_START], fragment.splicePositions()[SE_END] };
+            return mFragments.get(BOTH_JUNCTIONS).get(0);
+        }
+        else if(mFragments.containsKey(ONE_JUNCTION))
+        {
+            return mFragments.get(ONE_JUNCTION).get(0);
+        }
+        else
+        {
+            return mFragments.values().iterator().next().get(0);
         }
     }
 
     public void cacheTranscriptData()
     {
-        // every fragment supports the same fusion junction so any can be used to extract transcript info
-        final FusionFragment fragment = mFragments.get(0);
+        // select a sample fragment from which to extract transcript-exon data
+        final FusionFragment sampleFragment = getSampleFragment();
 
         for (int se = SE_START; se <= SE_END; ++se)
         {
-            /*
-            final Map<RegionMatchType, List<TransExonRef>> transExonRefs = fragment.getTransExonRefs()[fs];
-            RegionMatchType highestMatchType = getHighestMatchType(transExonRefs.keySet());
-            List<TransExonRef> teData = transExonRefs.get(highestMatchType);
-
-            if(teData != null)
-                mTransExonRefs.get(fs).addAll(teData);
-
-            */
-
-            mTransExonRefs[se].addAll(fragment.getTransExonRefs()[se]);
+            mTransExonRefs[se].addAll(sampleFragment.getTransExonRefs()[se]);
         }
     }
 
     public boolean canAddDiscordantFragment(final FusionFragment fragment)
     {
         // the 2 reads' bounds need to fall within a correct intron relative to the SJs
-        // and additionally be bound by any unspliced SJ positions
-        if(mUnsplicedPositions != null)
-        {
-            for(ReadRecord read : fragment.getReads())
-            {
-                long[] readBounds = { read.getCoordsBoundary(true), read.getCoordsBoundary(false) };
 
-                if(read.Chromosome.equals(mChromosomes[SE_START]) && read.getGeneCollecton() == mGeneCollections[SE_START])
-                {
-                    long minBound = min(mSjPositions[SE_START], mUnsplicedPositions[SE_START]);
-                    long maxBound = max(mSjPositions[SE_START], mUnsplicedPositions[SE_START]);
-                    if(!positionsWithin(readBounds[SE_START], readBounds[SE_END], minBound, maxBound))
-                        return false;
-                }
-                else
-                {
-                    long minBound = min(mSjPositions[SE_END], mUnsplicedPositions[SE_END]);
-                    long maxBound = max(mSjPositions[SE_END], mUnsplicedPositions[SE_END]);
-                    if(!positionsWithin(readBounds[SE_START], readBounds[SE_END], minBound, maxBound))
-                        return false;
-                }
-            }
-
-            return true;
-        }
-
-        // otherwise check whether the correct exon is closest for each applicable transcript
         boolean[] hasMatch = { false, false };
 
         final List<TransExonRef> upstreamRefs = getTransExonRefsByStream(FS_UPSTREAM);
@@ -272,17 +258,17 @@ public class FusionReadData
 
     public String toString()
     {
-        return String.format("%d: chr(%s-%s) sj(%d-%d %d/%d %s) genes(%s-%s) frags(%d)",
-                mId, mChromosomes[SE_START], mChromosomes[SE_END], mSjPositions[SE_START], mSjPositions[SE_END],
-                mSjOrientations[SE_START], mSjOrientations[SE_END], getImpliedSvType(),
+        return String.format("%d: chr(%s-%s) junc(%d-%d %d/%d %s) genes(%s-%s) frags(%d)",
+                mId, mChromosomes[SE_START], mChromosomes[SE_END], mJunctionPositions[SE_START], mJunctionPositions[SE_END],
+                mJunctionOrientations[SE_START], mJunctionOrientations[SE_END], getImpliedSvType(),
                 getGeneName(FS_UPSTREAM), getGeneName(FS_DOWNSTREAM), mFragments.size());
     }
 
     public static String csvHeader()
     {
-        return "FusionId,Valid,GeneIdUp,GeneNameUp,ChromosomeUp,PositionUp,UnsplicedPosUp,OrientUp,StrandUp"
-                + ",GeneIdDown,GeneNameDown,ChromosomeDown,PositionDown,UnsplicedPosDown,OrientDown,StrandDown"
-                + ",SvType,TotalFragments,SplicedFragments,UnsplicedFragments,DiscordantFragments"
+        return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
+                + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
+                + ",SvType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrag,SingleFrags"
                 + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
@@ -294,6 +280,8 @@ public class FusionReadData
 
         csvData.add(fusionId(mId));
         csvData.add(String.valueOf(hasViableGenes() && hasValidStreamData() && !hasIncompleteData()));
+
+        final FusionFragment sampleFragment = getSampleFragment();
 
         for(int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {
@@ -311,44 +299,37 @@ public class FusionReadData
 
                 final int[] streamIndices = hasValidStreamData() ? mFusionIndices : new int[] { SE_START, SE_END };
                 csvData.add(mChromosomes[streamIndices[fs]]);
-                csvData.add(String.valueOf(mSjPositions[streamIndices[fs]]));
-                csvData.add(mUnsplicedPositions != null ? String.valueOf(mUnsplicedPositions[streamIndices[fs]]) : "-1");
-                csvData.add(String.valueOf(mSjOrientations[streamIndices[fs]]));
+                csvData.add(String.valueOf(mJunctionPositions[streamIndices[fs]]));
+                csvData.add(String.valueOf(mJunctionOrientations[streamIndices[fs]]));
                 csvData.add(String.valueOf(geneData.Strand));
+                csvData.add(sampleFragment.junctionTypes()[streamIndices[fs]].toString());
             }
             else
             {
                 csvData.add("");
                 csvData.add(mChromosomes[fs]);
-                csvData.add(String.valueOf(mSjPositions[fs]));
-                csvData.add("-1");
-                csvData.add(String.valueOf(mSjOrientations[fs]));
+                csvData.add(String.valueOf(mJunctionPositions[fs]));
+                csvData.add(String.valueOf(mJunctionOrientations[fs]));
                 csvData.add("0");
+                csvData.add(FusionJunctionType.UNKNOWN.toString());
             }
         }
 
         csvData.add(getImpliedSvType().toString());
 
-        int totalFragments = 0;
-        int splicedFragments = 0;
-        int unsplicedFragments = 0;
-        int discordantFragments = 0;
-        for(final FusionFragment fragment : mFragments)
-        {
-            ++totalFragments;
+        int splitFragments = mFragments.containsKey(BOTH_JUNCTIONS) ? mFragments.get(BOTH_JUNCTIONS).size() : 0;
+        int realignedFragments = mFragments.containsKey(REALIGNED) ? mFragments.get(REALIGNED).size() : 0;
+        int discordantFragments = mFragments.containsKey(DISCORDANT) ? mFragments.get(DISCORDANT).size() : 0;
+        int singleJuncFragments = (mFragments.containsKey(ONE_JUNCTION) ? mFragments.get(ONE_JUNCTION).size() : 0)
+                + (mFragments.containsKey(ONE_SIDED) ? mFragments.get(ONE_SIDED).size() : 0);
 
-            if(fragment.isSpliced())
-                ++splicedFragments;
-            else if(fragment.isUnspliced())
-                ++unsplicedFragments;
-            else if(fragment.type() == DISCORDANT)
-                ++discordantFragments;
-        }
+        int totalFragments = splitFragments + realignedFragments + discordantFragments + singleJuncFragments;
 
         csvData.add(String.valueOf(totalFragments));
-        csvData.add(String.valueOf(splicedFragments));
-        csvData.add(String.valueOf(unsplicedFragments));
+        csvData.add(String.valueOf(splitFragments));
+        csvData.add(String.valueOf(realignedFragments));
         csvData.add(String.valueOf(discordantFragments));
+        csvData.add(String.valueOf(singleJuncFragments));
 
         for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.variant.structural.StructuralVariantType.DEL;
@@ -19,7 +18,6 @@ import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
 import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
 import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
 import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 
 import static org.junit.Assert.assertEquals;
@@ -28,19 +26,12 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
-import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.fusion.FusionFinder;
 import com.hartwig.hmftools.isofox.fusion.FusionFragment;
 
 import org.junit.Test;
-
-import htsjdk.samtools.Cigar;
 
 public class FusionFragmentsTest
 {
@@ -68,11 +59,11 @@ public class FusionFragmentsTest
         assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
-        assertEquals(1100, fragment.splicePositions()[SE_START]);
-        assertEquals(10200, fragment.splicePositions()[SE_END]);
-        assertEquals(1, fragment.spliceOrientations()[SE_START]);
-        assertEquals(-1, fragment.spliceOrientations()[SE_END]);
-        assertTrue(fragment.hasValidSpliceData());
+        assertEquals(1100, fragment.junctionPositions()[SE_START]);
+        assertEquals(10200, fragment.junctionPositions()[SE_END]);
+        assertEquals(1, fragment.junctionOrientations()[SE_START]);
+        assertEquals(-1, fragment.junctionOrientations()[SE_END]);
+        assertTrue(fragment.hasBothJunctions());
         assertEquals(DEL, fragment.getImpliedSvType());
 
         final List<String>[] spliceGeneIds = new List[] { Lists.newArrayList(), Lists.newArrayList() };
@@ -94,20 +85,17 @@ public class FusionFragmentsTest
         read3 = createMappedRead(1, gc2, 10150, 10169, createCigar(20, 20, 0));
 
         reads = Lists.newArrayList(read1, read2, read3);
-        read1.addIntronicTranscriptRefs(gc1.getTranscripts());
-        read2.addIntronicTranscriptRefs(gc1.getTranscripts());
-        read3.addIntronicTranscriptRefs(gc2.getTranscripts());
 
         fragment = new FusionFragment(reads);
 
         assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
-        assertEquals(1150, fragment.splicePositions()[SE_START]);
-        assertEquals(10150, fragment.splicePositions()[SE_END]);
-        assertEquals(1, fragment.spliceOrientations()[SE_START]);
-        assertEquals(-1, fragment.spliceOrientations()[SE_END]);
-        assertTrue(fragment.hasValidSpliceData());
+        assertEquals(1150, fragment.junctionPositions()[SE_START]);
+        assertEquals(10150, fragment.junctionPositions()[SE_END]);
+        assertEquals(1, fragment.junctionOrientations()[SE_START]);
+        assertEquals(-1, fragment.junctionOrientations()[SE_END]);
+        assertTrue(fragment.hasBothJunctions());
         assertEquals(DEL, fragment.getImpliedSvType());
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -133,11 +121,11 @@ public class FusionFragmentsTest
         assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
-        assertEquals(1200, fragment.splicePositions()[SE_START]);
-        assertEquals(10300, fragment.splicePositions()[SE_END]);
-        assertEquals(-1, fragment.spliceOrientations()[SE_START]);
-        assertEquals(1, fragment.spliceOrientations()[SE_END]);
-        assertTrue(fragment.hasValidSpliceData());
+        assertEquals(1200, fragment.junctionPositions()[SE_START]);
+        assertEquals(10300, fragment.junctionPositions()[SE_END]);
+        assertEquals(-1, fragment.junctionOrientations()[SE_START]);
+        assertEquals(1, fragment.junctionOrientations()[SE_END]);
+        assertTrue(fragment.hasBothJunctions());
         assertEquals(DUP, fragment.getImpliedSvType());
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -164,11 +152,11 @@ public class FusionFragmentsTest
         assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_1, fragment.chromosomes()[SE_END]);
-        assertEquals(1100, fragment.splicePositions()[SE_START]);
-        assertEquals(20300, fragment.splicePositions()[SE_END]);
-        assertEquals(1, fragment.spliceOrientations()[SE_START]);
-        assertEquals(1, fragment.spliceOrientations()[SE_END]);
-        assertTrue(fragment.hasValidSpliceData());
+        assertEquals(1100, fragment.junctionPositions()[SE_START]);
+        assertEquals(20300, fragment.junctionPositions()[SE_END]);
+        assertEquals(1, fragment.junctionOrientations()[SE_START]);
+        assertEquals(1, fragment.junctionOrientations()[SE_END]);
+        assertTrue(fragment.hasBothJunctions());
         assertEquals(INV, fragment.getImpliedSvType());
 
         for(int se = SE_START; se <= SE_END; ++se)
@@ -195,11 +183,11 @@ public class FusionFragmentsTest
         assertEquals(BOTH_JUNCTIONS, fragment.type());
         assertEquals(CHR_1, fragment.chromosomes()[SE_START]);
         assertEquals(CHR_2, fragment.chromosomes()[SE_END]);
-        assertEquals(20300, fragment.splicePositions()[SE_START]);
-        assertEquals(10300, fragment.splicePositions()[SE_END]);
-        assertEquals(1, fragment.spliceOrientations()[SE_START]);
-        assertEquals(1, fragment.spliceOrientations()[SE_END]);
-        assertTrue(fragment.hasValidSpliceData());
+        assertEquals(20300, fragment.junctionPositions()[SE_START]);
+        assertEquals(10300, fragment.junctionPositions()[SE_END]);
+        assertEquals(1, fragment.junctionOrientations()[SE_START]);
+        assertEquals(1, fragment.junctionOrientations()[SE_END]);
+        assertTrue(fragment.hasBothJunctions());
         assertEquals(BND, fragment.getImpliedSvType());
 
         for(int se = SE_START; se <= SE_END; ++se)

@@ -222,6 +222,10 @@ public class TestUtils
         ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, REF_BASE_STR_1, cigar);
 
         read.processOverlappingRegions(findOverlappingRegions(geneCollection.getExonRegions(), read));
+
+        if(read.getMappedRegions().isEmpty())
+            read.addIntronicTranscriptRefs(geneCollection.getTranscripts());
+
         read.captureGeneInfo(geneCollection.id());
 
         return read;
