@@ -5,8 +5,8 @@ ISOFOX is a tool for counting fragment support for gene and transcript features 
 
 ISOFOX uses a similar methodology to several previous transcript abundance estimation tools, but may offer several advantages by using a genome based mapping:
 * Explicit estimates of the abundance of unspliced transcripts in each gene
-* Avoids overfitting of 'retained intron' transcripts on the basse
-* Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons (eg. B2M)
+* Avoids overfitting of 'retained intron' transcripts which may simply be intronic reads 
+* Individual or combinations of splice junctions which are unique to a transcript will be weighed strongly.  Does not overfit variability of coverage within exons
 
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
 
@@ -54,7 +54,7 @@ The fragment length distribution of the sample is measured by sampling the inser
 
 For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
-The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed
+The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed fragment length distribution.
 
 For example a gene with 2 transcripts (A & B) and an UNSPLICED transcript might have the following expected rates:
 
