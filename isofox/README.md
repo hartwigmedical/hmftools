@@ -12,7 +12,7 @@ ISOFOX uses a similar methodology to several previous transcript abundance estim
 
 We recommend to mark duplicates in your pipeline.  They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.   
 
-We find that 6 genes in particular (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and  are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts.    ISOFOX excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression diffences.   For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.   We suggest to use the adjusted TPM for expression analysis.
+We find that 6 genes in particular (RN7SL2, RN7SL1,RN7SL3,RN7SL4P,RN7SL5P & RN7SK) and  are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts.    ISOFOX excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.   For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.   We suggest to use the adjusted TPM for expression analysis.
 
 ## Install
 
@@ -46,13 +46,13 @@ Genes that overlap each other on the same chromosome (either sense, anti-sense o
 
 ### 2. Modelling sample specific fragment distribution
 
-The fragment length distibution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
+The fragment length distribution of the sample is measured by sampling the insert size of up to 1 million genic intronic fragments.   Any fragment with an N in the cigar or which overlaps an exon is excluded from the fragment distribution.  A maximum of 1000 fragments is permitted to be sampled per gene so no individual gene can dominate the sample distribution.   
 
-### 3. Expected rates per 'category' and expected GC distibution per transcript
+### 3. Expected rates per 'category' and expected GC distribution per transcript
 
-#### A. Expected rates per catageory
+#### A. Expected rates per category
 
-For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a indpendent transcript that could be expressed.  
+For each transcript in a group of overlapping genes, ISOFOX measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in ISOFOX, but generally referred to as an equivalence class in other tools such as Salmon).   For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
 
 The proportion is calculated by determining which category or set of transcripts that fragments of length {50, 100, 150,200,250,300,350,400,450,500,550} bases starting at each possible base in the transcript in question could be a part of.    This is then weighted by the empirically observed
 
@@ -90,7 +90,7 @@ Note that reads which marginally overhang an exon boundary or are soft clipped a
 
 ### 5. Fit abundance estimate per transcript
 
-For each group of transcripts conidered together we aim to fit the relative abundance.   Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximastion algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
+For each group of transcripts considered together we aim to fit the relative abundance.   Like many previous tools (RSEM, Salmon, Kallisto, etc), we use an expectation maximisation algorithm to find the allocation of fragments to each transcript which give the least residuals compared to the expected rates for each transcript.
 
 <TO DO: Add a step which improves on this by removing or limiting allocation to transcripts where fitted fragments >> observed fragments for private allocations >
 
@@ -98,7 +98,7 @@ For each group of transcripts conidered together we aim to fit the relative abun
 
 #### A. GC Bias estimate
 
-Expected GC distribution for sample is calculated as the sum of the estimated distribution for each transcript (as calcluated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology implemented in Salmon).  We also count the actual distribution across all genes per 1% GC content bucket.   The GC bias for each percentile is the ratio of the actual to the estimated.
+Expected GC distribution for sample is calculated as the sum of the estimated distribution for each transcript (as calculated above) multiplied by the proportion of fragments in the sample which have been estimated (nb - this is similar to the methodology implemented in Salmon).  We also count the actual distribution across all genes per 1% GC content bucket.   The GC bias for each percentile is the ratio of the actual to the estimated.
 
 <TO DO - decide on min max GC range and also max ratio change for GC Bias>
 
@@ -115,7 +115,7 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 
 <TO DO>
 
-#### E. Adjust expected rates for biases and restimate abundances per transcript
+#### E. Adjust expected rates for biases and re-estimate abundances per transcript
 
 The calculated biases are applied as a weighting to each raw fragment based on it's GC, positional and fragment length characteristics.  Steps 4 and 5 are then repeated.
 
@@ -165,7 +165,7 @@ For each novel splice junction  we count
 For intron retention cases we count
 * Number of unique samples with at least 3 fragments or at least one fragment with a known splice event supporting intron retention
 * Total # of fragments supporting intron retention from those unique samples
-* Total # of fragments supporting intron retention from those unique samples which also have splcing.
+* Total # of fragments supporting intron retention from those unique samples which also have splicing.
 
 Each novel splice junction and retained intron for each sample is annotated with the population level frequencies
 
@@ -231,8 +231,8 @@ TPM | Transcripts per million
 TranscriptBasesCovered | Number of bases in transcript with at least 1 supporting fragment
 SJSupported | Count of splice junctions in transcript with at least 1 supporting fragment
 UniqueSJSupported | Count of unique splice junctions in transcript with at least 1 supporting fragment
-UniqueSJFragments | Count of fragmnents supporting a splice junction unique to the transcript
-UniqueNonSJFragments | Count of fragmnents uniquely supporting transcript but without a unique splice junction
+UniqueSJFragments | Count of fragments supporting a splice junction unique to the transcript
+UniqueNonSJFragments | Count of fragments uniquely supporting transcript but without a unique splice junction
 
 ### Novel splice junctions
 
@@ -250,12 +250,12 @@ EndDepth | Total depth at SJEnd position
 Type | Type of novel splice junction.  One of:  'SKIPPED_EXON','NOVEL_EXON','NOVEL_3_PRIME_SS','NOVEL_5_PRIME_SS','NOVEL_INTRON','MIXED_TRANSCRIPT','INTRONIC' or 'INTRONIC_TO_EXONIC'
 SJStartContext| Gene context at SJStart position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
 SJEndContext |  Gene context at SJEnd position.  One of 'SPLICE_JUNC','EXONIC' or 'INTRONIC'
-SJStartDistance | Distance of SJStart position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
-SJEndDistance | Distance of SJEnd position from nearest splice site (0 if splic junction, >0 if intronic and <0 if exonic)
+SJStartDistance | Distance of SJStart position from nearest splice site (0 if splice junction, >0 if intronic and <0 if exonic)
+SJEndDistance | Distance of SJEnd position from nearest splice site (0 if splice junction, >0 if intronic and <0 if exonic)
 SJStartBases | 2 previous and 10 next ref genome bases from SJStart position
 SJEndBases | 10 previous and 2 next ref genome bases from SJStart position
-SJStartTranscripts | Transcript ids which contain a splice junciton which includes the SJStart splice site
-SJEndTranscripts | Transcript ids which contain a splice junciton which includes the SJEnd splice site
+SJStartTranscripts | Transcript ids which contain a splice junction which includes the SJStart splice site
+SJEndTranscripts | Transcript ids which contain a splice junction which includes the SJEnd splice site
 OverlappingGenes | List of all genes which overlap the novel splice junction
 
 ### Novel retained introns
@@ -268,7 +268,7 @@ Chromosome | Chromosome of gene
 Strand | Strand of gene
 Position | Chromosomal base position of exon boundary with overlapping fragments suggesting retained intron
 Type | 'DONOR' or 'ACCEPTOR' splice site
-FragmentCount | Count of all fragments which overlapp splice site boundary
+FragmentCount | Count of all fragments which overlap splice site boundary
 SplicedFragmentCount | Count of fragments which overlap splice site boundary which contain another splice site (ie. evidence of being part of a spliced transcript)
 TotalDepth | Depth at splice boundary
 TranscriptInfo | Transcript id and exon rank of all transcripts that match splice site boundary
