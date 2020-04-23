@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createGeneReadData;
+import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
+import static com.hartwig.hmftools.isofox.TestUtils.createRegion;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.typeAsInt;
@@ -406,45 +410,6 @@ public class ReadCountsTest
         assertEquals(1, geneCounts[typeAsInt(FragmentType.ALT)]);
     }
 
-    private GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)
-    {
-        EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, strand, posStart, posEnd, "");
-        return new GeneReadData(geneData);
-    }
-
-    private String generateRandomBases(int length)
-    {
-        char[] str = new char[length];
-        String bases = "ACGT";
-
-        for(int i = 0; i < length; ++i)
-        {
-            str[i] = bases.charAt(i % 3);
-        }
-
-        return String.valueOf(str);
-    }
-
-    public static ReadRecord createReadRecord(
-            final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
-    {
-        Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
-
-        ReadRecord read = new ReadRecord(String.valueOf(id), chromosome, posStart, posEnd, readBases, readCigar,
-                0, 0, chromosome);
-
-        read.setFlag(SAMFlag.PROPER_PAIR, true);
-        read.setStrand(false, true);
-        return read;
-    }
-
-    private RegionReadData createRegion(final String geneId, int trans, int exonRank, final String chromosome, long posStart, long posEnd)
-    {
-        RegionReadData region = new RegionReadData(chromosome, posStart, posEnd);
-        region.addExonRef(geneId, trans, String.valueOf(trans), exonRank);
-        return region;
-    }
-
     @Test
     public void testCigarCreation()
     {
@@ -456,51 +421,6 @@ public class ReadCountsTest
 
         cigar = createCigar(2, 10, 100, 12, 4);
         assertTrue(cigar.toString().equals("2S10M100N12M4S"));
-    }
-
-    public static Cigar createCigar(int preSc, int match, int postSc)
-    {
-        if (preSc == 0 && match == 0 && postSc == 0)
-            return null;
-
-        Cigar cigar = new Cigar();
-
-        if (preSc > 0)
-            cigar.add(new CigarElement(preSc, CigarOperator.SOFT_CLIP));
-
-        if (match > 0)
-            cigar.add(new CigarElement(match, CigarOperator.MATCH_OR_MISMATCH));
-
-        if (postSc > 0)
-            cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
-
-        return cigar;
-
-    }
-
-    public static Cigar createCigar(int preSc, int preMatch, int nonRef, int postMatch, int postSc)
-    {
-        if (preSc == 0 && preMatch == 0 && nonRef == 0 && postMatch == 0 && postSc == 0)
-            return null;
-
-        Cigar cigar = new Cigar();
-
-        if (preSc > 0)
-            cigar.add(new CigarElement(preSc, CigarOperator.SOFT_CLIP));
-
-        if (preMatch > 0)
-            cigar.add(new CigarElement(preMatch, CigarOperator.MATCH_OR_MISMATCH));
-
-        if (nonRef > 0)
-            cigar.add(new CigarElement(nonRef, CigarOperator.SKIPPED_REGION));
-
-        if (postMatch > 0)
-            cigar.add(new CigarElement(postMatch, CigarOperator.MATCH_OR_MISMATCH));
-
-        if (postSc > 0)
-            cigar.add(new CigarElement(postSc, CigarOperator.SOFT_CLIP));
-
-        return cigar;
     }
 
     @Test

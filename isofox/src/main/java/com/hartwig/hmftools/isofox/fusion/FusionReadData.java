@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
@@ -48,7 +49,7 @@ public class FusionReadData
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
     private final String[] mFusionGeneIds; // stored by stream
     private final int[] mFusionIndices; // mapping of up & down stream to position data which is in SV terms
-    private final List<List<TransExonRef>> mTransExonRefs;
+    private final List<TransExonRef>[] mTransExonRefs;
 
     public static final int FS_UPSTREAM = 0;
     public static final int FS_DOWNSTREAM = 1;
@@ -79,9 +80,9 @@ public class FusionReadData
         mCandidateGenes[SE_END] = Lists.newArrayList();
         mIncompleteData = false;
 
-        mTransExonRefs = Lists.newArrayListWithCapacity(FS_PAIR);
-        mTransExonRefs.add(Lists.newArrayList());
-        mTransExonRefs.add(Lists.newArrayList());
+        mTransExonRefs = new List[FS_PAIR];
+        mTransExonRefs[SE_START] = Lists.newArrayList();
+        mTransExonRefs[SE_END] = Lists.newArrayList();
 
         List<String>[] tmp = new List[SE_PAIR];
     }
@@ -96,8 +97,15 @@ public class FusionReadData
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }
 
-    public List<TransExonRef> getTransExonRefsByPos(int se) { return mTransExonRefs.get(se); }
-    public List<TransExonRef> getTransExonRefsByStream(int fs) { return mTransExonRefs.get(mFusionIndices[fs]); }
+    public List<TransExonRef> getTransExonRefsByPos(int se) { return mTransExonRefs[se]; }
+
+    public List<TransExonRef> getTransExonRefsByStream(int fs)
+    {
+        if(hasValidStreamData())
+            return mTransExonRefs[mFusionIndices[fs]];
+
+        return mTransExonRefs[fs];
+    }
 
     public boolean hasSplicedFragments() { return mFragments.stream().anyMatch(x -> x.isSpliced()); }
     public boolean hasUnsplicedFragments() { return mFragments.stream().anyMatch(x -> x.isUnspliced()); }
@@ -174,16 +182,22 @@ public class FusionReadData
 
     public void cacheTranscriptData()
     {
+        // every fragment supports the same fusion junction so any can be used to extract transcript info
         final FusionFragment fragment = mFragments.get(0);
 
-        for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
+        for (int se = SE_START; se <= SE_END; ++se)
         {
-            final Map<RegionMatchType, List<TransExonRef>> transExonRefs = fragment.getTransExonRefs().get(fs);
+            /*
+            final Map<RegionMatchType, List<TransExonRef>> transExonRefs = fragment.getTransExonRefs()[fs];
             RegionMatchType highestMatchType = getHighestMatchType(transExonRefs.keySet());
             List<TransExonRef> teData = transExonRefs.get(highestMatchType);
 
             if(teData != null)
                 mTransExonRefs.get(fs).addAll(teData);
+
+            */
+
+            mTransExonRefs[se].addAll(fragment.getTransExonRefs()[se]);
         }
     }
 
@@ -217,22 +231,29 @@ public class FusionReadData
         }
 
         // otherwise check whether the correct exon is closest for each applicable transcript
-        final List<TransExonRef> startTrans = fragment.getTransExonRefs().get(SE_START).get(INTRON);
-        final List<TransExonRef> endTrans = fragment.getTransExonRefs().get(SE_END).get(INTRON);
+        boolean[] hasMatch = { false, false };
 
-        if(startTrans.isEmpty() || endTrans.isEmpty())
-            return false;
+        final List<TransExonRef> upstreamRefs = getTransExonRefsByStream(FS_UPSTREAM);
+        final List<TransExonRef> downstreamRefs = getTransExonRefsByStream(FS_DOWNSTREAM);
 
-        if(hasTranscriptExonMatch(startTrans, getTransExonRefsByStream(FS_UPSTREAM))
-        && hasTranscriptNextExonMatch(endTrans, getTransExonRefsByStream(FS_DOWNSTREAM)))
+        for(int se = SE_START; se <= SE_END; ++se)
         {
-            return true;
+            final List<TransExonRef> fragmentRefs = fragment.getTransExonRefs()[se];
+
+            if(fragment.regionMatchTypes()[se] == INTRON)
+            {
+                if(hasTranscriptExonMatch(fragmentRefs, upstreamRefs) || hasTranscriptNextExonMatch(fragmentRefs, downstreamRefs))
+                    hasMatch[se] = true;
+            }
+            else
+            {
+                if(hasTranscriptExonMatch(fragmentRefs, upstreamRefs) || hasTranscriptExonMatch(fragmentRefs, downstreamRefs))
+                    hasMatch[se] = true;
+            }
         }
-        else if(hasTranscriptExonMatch(endTrans, getTransExonRefsByStream(FS_UPSTREAM))
-        && hasTranscriptNextExonMatch(startTrans, getTransExonRefsByStream(FS_DOWNSTREAM)))
-        {
+
+        if(hasMatch[SE_START] && hasMatch[SE_END])
             return true;
-        }
 
         return false;
     }
@@ -261,7 +282,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChromosomeUp,PositionUp,UnsplicedPosUp,OrientUp,StrandUp"
                 + ",GeneIdDown,GeneNameDown,ChromosomeDown,PositionDown,UnsplicedPosDown,OrientDown,StrandDown"
-                + ",SvType,TotalFragments,SpliceFragments,UnspliceFragments,DiscordantFragments"
+                + ",SvType,TotalFragments,SplicedFragments,UnsplicedFragments,DiscordantFragments"
                 + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
@@ -331,14 +352,15 @@ public class FusionReadData
 
         for (int fs = FS_UPSTREAM; fs <= FS_DOWNSTREAM; ++fs)
         {
-            if(mTransExonRefs.get(fs).isEmpty())
+            final List<TransExonRef> transExonRefs = getTransExonRefsByStream(fs);
+            if(transExonRefs.isEmpty())
             {
                 csvData.add("NONE");
                 continue;
             }
 
             String transData = "";
-            for(final TransExonRef transExonRef : mTransExonRefs.get(fs))
+            for(final TransExonRef transExonRef : transExonRefs)
             {
                 transData = appendStr(transData, String.format("%s-%d", transExonRef.TransName, transExonRef.ExonRank), ';');
             }
@@ -389,10 +411,15 @@ public class FusionReadData
 
     public static int chromosomeRank(final String chromosome)
     {
+        if(!HumanChromosome.contains(chromosome))
+            return -1;
+
         if(chromosome.equals("X"))
             return 23;
         else if(chromosome.equals("Y"))
             return 24;
+        else if(chromosome.equals("MT"))
+            return 25;
         else
             return Integer.parseInt(chromosome);
     }

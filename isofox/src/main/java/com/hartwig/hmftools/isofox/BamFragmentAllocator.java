@@ -22,8 +22,10 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
@@ -44,6 +46,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
@@ -55,6 +59,7 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -179,9 +184,8 @@ public class BamFragmentAllocator
             {
                 final ReadRecord read = (ReadRecord)object;
 
-                final List<ReadRecord> chimericReads = mChimericReadMap.get(read.Id);
-                if(chimericReads != null)
-                    chimericReads.add(read);
+                if(!read.isMateUnmapped())
+                    addChimericReads(mChimericReadMap, read);
             }
 
             int chimericCount = mChimericReadMap.size();
@@ -228,8 +232,16 @@ public class BamFragmentAllocator
         processRead(ReadRecord.from(record));
     }
 
+    private static final String LOG_READ_ID = "";
+    // private static final String LOG_READ_ID = "NB500901:18:HTYNHBGX2:2:12207:11868:1517";
+
     private void processRead(ReadRecord read)
     {
+        if(read.Id.equals(LOG_READ_ID))
+        {
+            ISF_LOGGER.debug("specific read: {}", read.toString());
+        }
+
         // for each record find all exons with an overlap
         // skip records if either end isn't in one of the exons for this gene
 
@@ -257,7 +269,7 @@ public class BamFragmentAllocator
             read.processOverlappingRegions(overlappingRegions);
         }
 
-        if(!read.isDuplicate() && read.isChimeric())
+        if(read.isChimeric())
         {
             processChimericRead(read);
             return;
@@ -279,6 +291,12 @@ public class BamFragmentAllocator
         }
         else
         {
+            // populate transcript info for intronic reads since it will be used in fusion matching
+            if(read.getMappedRegions().isEmpty())
+            {
+                read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+            }
+
             addChimericReads(mChimericReadMap, read);
         }
     }
@@ -318,15 +336,11 @@ public class BamFragmentAllocator
         boolean r2OutsideGene = !positionsOverlap(read2.PosStart, read2.PosEnd, genesRange[SE_START], genesRange[SE_END]);;
 
         // if either read is chimeric then handle them both as such
-        if(r1OutsideGene || r2OutsideGene)
+        if(read1.isChimeric() || read2.isChimeric() || r1OutsideGene || r2OutsideGene)
         {
-            if(!read1.isDuplicate() && !read2.isDuplicate())
-            {
-                // candidate chimeric reads
-                processChimericRead(read1);
-                processChimericRead(read2);
-            }
-
+            // candidate chimeric reads
+            processChimericRead(read1);
+            processChimericRead(read2);
             return;
         }
 

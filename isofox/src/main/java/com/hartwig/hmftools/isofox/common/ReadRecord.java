@@ -10,11 +10,14 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_BOUNDARY;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
+import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
@@ -30,6 +33,8 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.ensemblcache.ExonData;
+import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -49,9 +54,10 @@ public class ReadRecord
     public final String ReadBases;
     public final int Length; // of bases
     public final Cigar Cigar;
-    public final String MateChromosome;
 
     private int mFlags;
+    private String mMateChromosome;
+    private long mMatePosStart;
 
     private int mGeneCollectionId;
     private final List<long[]> mMappedCoords;
@@ -70,7 +76,8 @@ public class ReadRecord
     {
         ReadRecord read = new ReadRecord(
                 record.getReadName(), record.getReferenceName(), record.getStart(), record.getEnd(),
-                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(), record.getMateReferenceName());
+                record.getReadString(), record.getCigar(), record.getInferredInsertSize(), record.getFlags(),
+                record.getMateReferenceName(), record.getMateAlignmentStart());
 
         read.setSuppAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         return read;
@@ -78,7 +85,7 @@ public class ReadRecord
 
     public ReadRecord(
             final String id, final String chromosome, long posStart, long posEnd, final String readBases, @NotNull final Cigar cigar,
-            int insertSize, int flags, final String mateChromosome)
+            int insertSize, int flags, final String mateChromosome, long matePosStart)
     {
         Id = id;
         Chromosome = chromosome;
@@ -87,9 +94,10 @@ public class ReadRecord
         ReadBases = readBases;
         Length = ReadBases.length();
         Cigar = cigar;
-        MateChromosome = mateChromosome;
 
         mFlags = flags;
+        mMateChromosome = mateChromosome;
+        mMatePosStart = matePosStart;
 
         mGeneCollectionId = -1;
 
@@ -111,8 +119,9 @@ public class ReadRecord
     public boolean isNegStrand() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
-    public boolean isTranslocation() { return !Chromosome.equals(MateChromosome); }
+    public boolean isTranslocation() { return !Chromosome.equals(mMateChromosome); }
     public boolean isMateNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
+    public boolean isMateUnmapped() { return (mFlags & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
     public boolean isInversion() { return isNegStrand() == isMateNegStrand(); }
     public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
@@ -122,6 +131,9 @@ public class ReadRecord
     public void setSuppAlignment(final String suppAlign) { mSupplementaryAlignment = suppAlign; }
     public String getSuppAlignment() { return mSupplementaryAlignment; }
     public int fragmentInsertSize() { return mFragmentInsertSize; }
+
+    public String mateChromosome() { return mMateChromosome; }
+    public long mateStartPosition() { return mMatePosStart; }
 
     public int getGeneCollecton() { return mGeneCollectionId; }
     public String chromosomeGeneId() { return String.format("%s_%d", Chromosome, mGeneCollectionId); }
@@ -383,6 +395,7 @@ public class ReadRecord
     {
         mMappedRegions.entrySet().forEach(x -> mTransExonRefs.put(x.getValue(), x.getKey().getTransExonRefs()));
         mMappedRegions.clear();
+        mTranscriptClassification.clear();
         mGeneCollectionId = geneCollectionId;
     }
 
@@ -716,6 +729,33 @@ public class ReadRecord
         return regions.stream()
                 .filter(x -> read.overlapsMappedReads(x.PosStart, x.PosEnd))
                 .collect(Collectors.toList());
+    }
+
+    public void addIntronicTranscriptRefs(final List<TranscriptData> transDataList)
+    {
+        final List<TransExonRef> transRefList = Lists.newArrayList();
+
+        for(final TranscriptData transData : transDataList)
+        {
+            if(!positionsWithin(PosStart, PosEnd, transData.TransStart, transData.TransEnd))
+                continue;
+
+            for(int i = 0; i < transData.exons().size() - 1; ++i)
+            {
+                final ExonData exon = transData.exons().get(i);
+                final ExonData nextExon = transData.exons().get(i + 1);
+
+                if(exon.ExonEnd < PosStart && PosEnd < nextExon.ExonStart)
+                {
+                    int minExonRank = min(exon.ExonRank, nextExon.ExonRank);
+                    transRefList.add(new TransExonRef(transData.GeneId, transData.TransId, transData.TransName, minExonRank));
+                    break;
+                }
+            }
+        }
+
+        if(!transRefList.isEmpty())
+            mTransExonRefs.put(INTRON, transRefList);
     }
 
 

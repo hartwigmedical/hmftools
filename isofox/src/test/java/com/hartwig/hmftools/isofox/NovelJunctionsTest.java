@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.isofox;
 
+import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createReadRecord;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.SPLICE_JUNC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.INTRONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionType.MIXED_TRANS;
@@ -13,8 +17,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_2;
-import static com.hartwig.hmftools.isofox.ReadCountsTest.createCigar;
-import static com.hartwig.hmftools.isofox.ReadCountsTest.createReadRecord;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -48,8 +50,8 @@ public class NovelJunctionsTest
         config.FragmentLengthData.add(new int[] { 30, 1 });
         config.ReadLength = 10;
 
-        String chromosome = "1";
-        String geneId = "GENE01";
+        String chromosome = CHR_1;
+        String geneId = GENE_ID_1;
 
         EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
 
@@ -243,8 +245,8 @@ public class NovelJunctionsTest
         config.FragmentLengthData.add(new int[] { 30, 1 });
         config.ReadLength = 10;
 
-        String chromosome = "1";
-        String geneId = "GENE01";
+        String chromosome = CHR_1;
+        String geneId = GENE_ID_1;
 
         EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, (byte) 1, 100, 1500, "");
 

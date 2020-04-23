@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.common.ensemblcache.GeneTestUtils.createGeneDataCache;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.CHR_1;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.CHR_2;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.GENE_ID_1;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.GENE_ID_2;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.GENE_ID_3;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.GENE_ID_4;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.GENE_ID_5;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.addTestGenes;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.addTestTranscripts;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.createGeneCollection;
-import static com.hartwig.hmftools.isofox.FusionFragmentsTest.createMappedRead;
-import static com.hartwig.hmftools.isofox.ReadCountsTest.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.CHR_1;
+import static com.hartwig.hmftools.isofox.TestUtils.CHR_2;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_1;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_2;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_3;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_4;
+import static com.hartwig.hmftools.isofox.TestUtils.GENE_ID_5;
+import static com.hartwig.hmftools.isofox.TestUtils.addTestGenes;
+import static com.hartwig.hmftools.isofox.TestUtils.createGeneCollection;
+import static com.hartwig.hmftools.isofox.TestUtils.addTestTranscripts;
+import static com.hartwig.hmftools.isofox.TestUtils.createCigar;
+import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 
 import static junit.framework.TestCase.assertEquals;
@@ -120,7 +120,7 @@ public class FusionDataTest
         read3 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2, read3));
 
-        // 1 unspliced read
+        // 1 unspliced read - will remain its own fusion
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
         read2 = createMappedRead(readId, gc1, 1131, 1150, createCigar(0, 20, 20));
         read3 = createMappedRead(readId, gc2, 10150, 10169, createCigar(20, 20, 0));
@@ -128,7 +128,9 @@ public class FusionDataTest
 
         // and 1 discordant read
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
+        read1.addIntronicTranscriptRefs(gc1.getTranscripts());
         read2 = createMappedRead(readId, gc2, 10160, 10199, createCigar(0, 40, 0));
+        read2.addIntronicTranscriptRefs(gc2.getTranscripts());
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
 
         finder.addChimericReads(chimericReadMap);
@@ -136,13 +138,18 @@ public class FusionDataTest
         finder.findFusions();
 
         assertEquals(1, finder.getFusionCandidates().size());
-        FusionReadData fusion = finder.getFusionCandidates().values().iterator().next().get(0);
+        List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(2, fusions.size());
+        FusionReadData fusion = fusions.stream().filter(x -> x.hasSplicedFragments()).findFirst().orElse(null);
+        assertTrue(fusion != null);
         assertEquals(2, fusion.getFragments().stream().filter(x -> x.isSpliced()).count());
-        assertEquals(1, fusion.getFragments().stream().filter(x -> x.isUnspliced()).count());
         assertEquals(1, fusion.getFragments().stream().filter(x -> x.type() == DISCORDANT).count());
 
-        // check again with the discordant read having to match the correct transcript & exon
+        fusion = fusions.stream().filter(x -> x.hasUnsplicedFragments()).findFirst().orElse(null);
+        assertTrue(fusion != null);
+        assertEquals(1, fusion.getFragments().stream().filter(x -> x.isUnspliced()).count());
 
+        // check again with the discordant read having to fall within the correct transcript & exon
         finder.clearState();
         chimericReadMap.clear();
 
@@ -153,15 +160,18 @@ public class FusionDataTest
 
         // and 1 discordant read
         read1 = createMappedRead(++readId, gc1, 1110, 1149, createCigar(0, 40, 0));
+        read1.addIntronicTranscriptRefs(gc1.getTranscripts());
         read2 = createMappedRead(readId, gc2, 10160, 10199, createCigar(0, 40, 0));
+        read2.addIntronicTranscriptRefs(gc2.getTranscripts());
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
 
         finder.addChimericReads(chimericReadMap);
 
         finder.findFusions();
 
-        assertEquals(1, finder.getFusionCandidates().size());
-        fusion = finder.getFusionCandidates().values().iterator().next().get(0);
+        fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+        fusion = fusions.get(0);
         assertEquals(1, fusion.getFragments().stream().filter(x -> x.isSpliced()).count());
         assertEquals(1, fusion.getFragments().stream().filter(x -> x.type() == DISCORDANT).count());
 
@@ -174,19 +184,29 @@ public class FusionDataTest
         read3 = createMappedRead(readId, gc3, 20281, 20300, createCigar(0, 20, 20)); // junction at exon 2, downstream trans 3
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2, read3));
 
-        // and 1 discordant read
+        // 1 intronic discordant read
         read1 = createMappedRead(++readId, gc3, 20350, 20389, createCigar(0, 40, 0)); // between exons 1 & 2
+        read1.addIntronicTranscriptRefs(gc3.getTranscripts());
         read2 = createMappedRead(readId, gc5, 10120, 10159, createCigar(0, 40, 0));
+        read2.addIntronicTranscriptRefs(gc5.getTranscripts());
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+
+        // 1 exonic discordant read
+        read1 = createMappedRead(++readId, gc3, 20250, 20289, createCigar(0, 40, 0)); // between exons 1 & 2
+        read1.addIntronicTranscriptRefs(gc3.getTranscripts());
+        read2 = createMappedRead(readId, gc5, 10210, 10249, createCigar(0, 40, 0));
+        read2.addIntronicTranscriptRefs(gc5.getTranscripts());
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
 
         finder.addChimericReads(chimericReadMap);
 
         finder.findFusions();
 
-        assertEquals(1, finder.getFusionCandidates().size());
-        fusion = finder.getFusionCandidates().values().iterator().next().get(0);
+        fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+        fusion = fusions.get(0);
         assertEquals(1, fusion.getFragments().stream().filter(x -> x.isSpliced()).count());
-        assertEquals(1, fusion.getFragments().stream().filter(x -> x.type() == DISCORDANT).count());
+        assertEquals(2, fusion.getFragments().stream().filter(x -> x.type() == DISCORDANT).count());
     }
 
 }
