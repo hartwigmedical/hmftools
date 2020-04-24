@@ -31,25 +31,25 @@ public class TestUtils
 
     public static final String GENE_NAME_1 = "GENE1"; // +ve strand
     public static final String GENE_ID_1 = "ENSG0001";
-    public static final long GENE_START_1 = 1000;
+    public static final int GENE_START_1 = 1000;
 
     public static final String GENE_NAME_2 = "GENE2"; // +ve strand
     public static final String GENE_ID_2 = "ENSG0002";
-    public static final long GENE_START_2 = 10000;
+    public static final int GENE_START_2 = 10000;
 
     public static final String GENE_NAME_3 = "GENE3"; // -ve strand
     public static final String GENE_ID_3 = "ENSG0003";
-    public static final long GENE_START_3 = 20000;
+    public static final int GENE_START_3 = 20000;
 
     public static final String CHR_2 = "2";
 
     public static final String GENE_NAME_4 = "GENE4"; // +ve strand
     public static final String GENE_ID_4 = "ENSG0004";
-    public static final long GENE_START_4 = 1000;
+    public static final int GENE_START_4 = 1000;
 
     public static final String GENE_NAME_5 = "GENE5"; // -ve strand
     public static final String GENE_ID_5 = "ENSG0005";
-    public static final long GENE_START_5 = 10000;
+    public static final int GENE_START_5 = 10000;
 
     public static final byte POS_STRAND = 1;
     public static final byte NEG_STRAND = -1;
@@ -95,8 +95,8 @@ public class TestUtils
 
     public static void addTestTranscripts(EnsemblDataCache geneTransCache)
     {
-        Long codingStart = null;
-        Long codingEnd = null;
+        Integer codingStart = null;
+        Integer codingEnd = null;
         boolean canonical = true;
 
         List<TranscriptData> transDataList = Lists.newArrayList();
@@ -198,14 +198,14 @@ public class TestUtils
     }
 
     public static ReadRecord createReadRecord(
-            final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar)
+            final int id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar)
     {
         return createReadRecord(id, chromosome, posStart, posEnd, readBases, cigar, 0, chromosome, posStart);
     }
 
     public static ReadRecord createReadRecord(
-            final int id, final String chromosome, long posStart, long posEnd, final String readBases, final Cigar cigar,
-            int flags, final String mateChr, long mateStartPos)
+            final int id, final String chromosome, int posStart, int posEnd, final String readBases, final Cigar cigar,
+            int flags, final String mateChr, int mateStartPos)
     {
         Cigar readCigar = cigar != null ? cigar : createCigar(0, (int) (posEnd - posStart + 1), 0);
 
@@ -217,7 +217,7 @@ public class TestUtils
         return read;
     }
 
-    public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, long posStart, long posEnd, final Cigar cigar)
+    public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
     {
         ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, REF_BASE_STR_1, cigar);
 
@@ -231,14 +231,14 @@ public class TestUtils
         return read;
     }
 
-    public static RegionReadData createRegion(final String geneId, int trans, int exonRank, final String chromosome, long posStart, long posEnd)
+    public static RegionReadData createRegion(final String geneId, int trans, int exonRank, final String chromosome, int posStart, int posEnd)
     {
         RegionReadData region = new RegionReadData(chromosome, posStart, posEnd);
         region.addExonRef(geneId, trans, String.valueOf(trans), exonRank);
         return region;
     }
 
-    public static GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, long posStart, long posEnd)
+    public static GeneReadData createGeneReadData(final String geneId, final String chromosome, byte strand, int posStart, int posEnd)
     {
         EnsemblGeneData geneData = new EnsemblGeneData(geneId, geneId, chromosome, strand, posStart, posEnd, "");
         return new GeneReadData(geneData);

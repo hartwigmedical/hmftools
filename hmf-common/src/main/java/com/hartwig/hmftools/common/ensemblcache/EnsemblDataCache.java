@@ -591,7 +591,8 @@ public class EnsemblDataCache
                 upExonRank, upExonPhase, downExonRank, downExonPhase,
                 (int)codingBases, (int)totalCodingBases,
                 exonMax, transData.IsCanonical, transData.TransStart, transData.TransEnd,
-                transData.CodingStart, transData.CodingEnd);
+                transData.CodingStart != null ? Long.valueOf(transData.CodingStart) : null,
+                transData.CodingEnd != null ? Long.valueOf(transData.CodingEnd) : null);
 
         transcript.setBioType(transData.BioType);
 
@@ -823,15 +824,15 @@ public class EnsemblDataCache
         return true;
     }
 
-    public static Long[] getProteinDomainPositions(final TranscriptProteinData proteinData, final TranscriptData transData)
+    public static Integer[] getProteinDomainPositions(final TranscriptProteinData proteinData, final TranscriptData transData)
     {
-        Long[] domainPositions = {null, null};
+        Integer[] domainPositions = {null, null};
 
         if(transData.exons().isEmpty())
             return domainPositions;
 
-        Long codingStart = transData.CodingStart;
-        Long codingEnd = transData.CodingEnd;
+        Integer codingStart = transData.CodingStart;
+        Integer codingEnd = transData.CodingEnd;
 
         if(codingStart == null || codingEnd == null)
             return domainPositions;
@@ -839,8 +840,8 @@ public class EnsemblDataCache
         int preProteinBases = proteinData.SeqStart * 3;
         int proteinBases = (proteinData.SeqEnd - proteinData.SeqStart) * 3;
 
-        long proteinStart = -1;
-        long proteinEnd = -1;
+        int proteinStart = -1;
+        int proteinEnd = -1;
 
         if(transData.Strand == 1)
         {
@@ -853,8 +854,8 @@ public class EnsemblDataCache
 
                 if(preProteinBases > 0)
                 {
-                    long refStartPos = max(codingStart, exonData.ExonStart);
-                    long exonCodingBases = exonData.ExonEnd - refStartPos;
+                    int refStartPos = max(codingStart, exonData.ExonStart);
+                    int exonCodingBases = exonData.ExonEnd - refStartPos;
 
                     if(exonCodingBases >= preProteinBases)
                     {
@@ -868,8 +869,8 @@ public class EnsemblDataCache
                     }
                 }
 
-                long startPos = max(exonData.ExonStart, proteinStart);
-                long exonBases = exonData.ExonEnd - startPos;
+                int startPos = max(exonData.ExonStart, proteinStart);
+                int exonBases = exonData.ExonEnd - startPos;
 
                 if(exonBases >= proteinBases)
                 {
@@ -893,8 +894,8 @@ public class EnsemblDataCache
 
                 if(preProteinBases > 0)
                 {
-                    long refStartPos = min(codingEnd, exonData.ExonEnd);
-                    long exonCodingBases = refStartPos - exonData.ExonStart;
+                    int refStartPos = min(codingEnd, exonData.ExonEnd);
+                    int exonCodingBases = refStartPos - exonData.ExonStart;
 
                     if(exonCodingBases >= preProteinBases)
                     {
@@ -908,8 +909,8 @@ public class EnsemblDataCache
                     }
                 }
 
-                long startPos = min(exonData.ExonEnd, proteinEnd);
-                long exonBases = startPos - exonData.ExonStart;
+                int startPos = min(exonData.ExonEnd, proteinEnd);
+                int exonBases = startPos - exonData.ExonStart;
 
                 if(exonBases >= proteinBases)
                 {

@@ -52,7 +52,7 @@ public class GeneCollectionTest
         int transId = 1;
         byte strand = 1;
 
-        long[] exonStarts = new long[]{10500, 11500, 12500, 13500};
+        int[] exonStarts = new int[]{10500, 11500, 12500, 13500};
         int[] exonPhases = new int[]{-1, 1, 2, -1};
 
         TranscriptData transData = createTransExons(geneId, transId, strand, exonStarts, exonPhases, 100, true);
@@ -60,7 +60,7 @@ public class GeneCollectionTest
 
         int transId2 = 2;
 
-        exonStarts = new long[]{12500, 13500, 14500};
+        exonStarts = new int[]{12500, 13500, 14500};
         exonPhases = new int[]{-1, -1, -1};
 
         transData = createTransExons(geneId, transId2, strand, exonStarts, exonPhases, 100);
@@ -133,7 +133,7 @@ public class GeneCollectionTest
         int transId = 1;
         byte strand = 1;
 
-        long[] exonStarts = new long[]{100, 300, 500, 700, 900};
+        int[] exonStarts = new int[]{100, 300, 500, 700, 900};
         int[] exonPhases = new int[]{-1, 1, 2, 0, -1};
 
         TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
@@ -141,7 +141,7 @@ public class GeneCollectionTest
 
         GeneTestUtils.addTransExonData(geneTransCache, geneId, transDataList);
 
-        long position = 250;
+        int position = 250;
         byte posOrientation = 1;
         byte negOrientation = -1;
         Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
@@ -222,7 +222,7 @@ public class GeneCollectionTest
         transId = 2;
         strand = -1;
 
-        exonStarts = new long[]{100, 300, 500, 700, 900};
+        exonStarts = new int[]{100, 300, 500, 700, 900};
         exonPhases = new int[]{-1, -1, 1, 0, 2};
 
         transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
@@ -287,16 +287,16 @@ public class GeneCollectionTest
         int transId = 1;
         byte strand = 1;
 
-        long[] exonStarts = new long[]{100, 200, 300, 400, 500};
+        int[] exonStarts = new int[]{100, 200, 300, 400, 500};
 
         // coding taking up exactly the first exon
-        Long codingStart = new Long(100);
-        Long codingEnd = new Long(110);
+        Integer codingStart = new Integer(100);
+        Integer codingEnd = new Integer(110);
 
         TranscriptData transData = createTransExons(
                 geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
 
-        long position = 150;
+        int position = 150;
         Transcript trans = extractTranscriptExonData(transData, position, genePosStrand);
 
         assertEquals(5, trans.ExonMax);
@@ -309,8 +309,8 @@ public class GeneCollectionTest
         assertEquals(8, trans.totalCodingBases());
 
         //
-        codingStart = new Long(105);
-        codingEnd = new Long(405);
+        codingStart = new Integer(105);
+        codingEnd = new Integer(405);
 
         transData = createTransExons(
                 geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
@@ -334,11 +334,9 @@ public class GeneCollectionTest
 
         GeneAnnotation geneNegStrand = GeneTestUtils.createGeneAnnotation(0, true, geneName, geneId, strand, chromosome, 0, 1);
 
-        // long[] exonStarts = new long[]{100, 200, 300, 400, 500};
-
         // coding taking up exactly the first exon
-        codingStart = new Long(500);
-        codingEnd = new Long(510);
+        codingStart = new Integer(500);
+        codingEnd = new Integer(510);
 
         transData = createTransExons(
                 geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
@@ -357,8 +355,8 @@ public class GeneCollectionTest
         assertEquals(8, trans.totalCodingBases());
 
         //
-        codingStart = new Long(205);
-        codingEnd = new Long(505);
+        codingStart = new Integer(205);
+        codingEnd = new Integer(505);
 
         transData = createTransExons(
                 geneId, transId++, strand, exonStarts, 10, codingStart, codingEnd, true, BIOTYPE_PROTEIN_CODING);
@@ -383,14 +381,14 @@ public class GeneCollectionTest
 
         byte strand = (byte)1;
 
-        long[] exonStarts = new long[]{100, 300, 500};
+        int[] exonStarts = new int[]{100, 300, 500};
         int[] exonPhases = new int[]{0, 0, -1};
 
         TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);
 
         TranscriptProteinData proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
 
-        Long[] domainPositions = getProteinDomainPositions(proteinData, transData);
+        Integer[] domainPositions = getProteinDomainPositions(proteinData, transData);
         assertEquals(165, (long)domainPositions[SE_START]);
         assertEquals(515, (long)domainPositions[SE_END]);
 
@@ -406,7 +404,7 @@ public class GeneCollectionTest
 
         proteinData = new TranscriptProteinData(transId, 0, 0, 5, 55, "hd");
 
-        exonStarts = new long[]{100, 300, 500};
+        exonStarts = new int[]{100, 300, 500};
         exonPhases = new int[]{-1, 0, 0};
 
         transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100);

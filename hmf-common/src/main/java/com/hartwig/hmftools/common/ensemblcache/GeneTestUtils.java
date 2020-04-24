@@ -14,7 +14,7 @@ import com.hartwig.hmftools.common.variant.structural.annotation.GeneAnnotation;
 public class GeneTestUtils
 {
     public static GeneAnnotation createGeneAnnotation(int svId, boolean isStart, final String geneName, String stableId, int strand,
-            final String chromosome, long position, int orientation)
+            final String chromosome, int position, int orientation)
     {
         String karyotypeBand = "";
 
@@ -29,7 +29,7 @@ public class GeneTestUtils
     {
         return new EnsemblDataCache("", RefGenomeVersion.HG37);
     }
-    public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, long geneStart, long geneEnd)
+    public static EnsemblGeneData createEnsemblGeneData(String geneId, String geneName, String chromosome, int strand, int geneStart, int geneEnd)
     {
         return new EnsemblGeneData(geneId, geneName, chromosome, (byte)strand, geneStart, geneEnd,  "");
     }
@@ -52,14 +52,14 @@ public class GeneTestUtils
     }
 
     public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
-            long[] exonStarts, int[] exonEndPhases, int exonLength)
+            int[] exonStarts, int[] exonEndPhases, int exonLength)
     {
-        return createTransExons(geneId, transId, strand,exonStarts, exonEndPhases, exonLength, false);
+        return createTransExons(geneId, transId, strand, exonStarts, exonEndPhases, exonLength, false);
     }
 
-    public static long[] generateExonStarts(long startBase, int exonCount, int exonLength, int intronLength)
+    public static int[] generateExonStarts(int startBase, int exonCount, int exonLength, int intronLength)
     {
-        long[] exonStarts = new long[exonCount];
+        int[] exonStarts = new int[exonCount];
 
         for(int i = 0; i < exonCount; ++i)
         {
@@ -72,24 +72,24 @@ public class GeneTestUtils
     public static String generateTransName(int transId) { return String.format("TRAN%04d", transId); }
 
     public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
-            long[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
+            int[] exonStarts, int[] exonEndPhases, int exonLength, boolean isCanonical)
     {
         if(exonStarts.length == 0 || exonStarts.length != exonEndPhases.length)
             return null;
 
         int exonCount = exonStarts.length;
-        long transStart = exonStarts[0];
-        long transEnd = exonStarts[exonCount-1] + exonLength;
+        int transStart = exonStarts[0];
+        int transEnd = exonStarts[exonCount-1] + exonLength;
 
-        Long codingStart = null;
-        Long codingEnd = null;
+        Integer codingStart = null;
+        Integer codingEnd = null;
 
         int[] exonPhases = new int[exonCount];
 
         // work out phases and coding start & end
         for(int i = 0; i < exonCount; ++i)
         {
-            long exonStart = exonStarts[i];
+            int exonStart = exonStarts[i];
 
             int exonEndPhase = exonEndPhases[i];
 
@@ -100,12 +100,12 @@ public class GeneTestUtils
 
             if(codingStart == null && ((strand == 1 && exonEndPhase != -1) || (strand == -1 && exonPhases[i] != -1)))
             {
-                codingStart = new Long(exonStart + exonLength / 2);
+                codingStart = new Integer(exonStart + exonLength / 2);
             }
             else if(codingStart != null && codingEnd == null
             && ((strand == 1 && exonEndPhase == -1) || (strand == -1 && exonPhases[i] == -1)))
             {
-                codingEnd = new Long(exonStart + exonLength / 2);
+                codingEnd = new Integer(exonStart + exonLength / 2);
             }
         }
 
@@ -116,8 +116,8 @@ public class GeneTestUtils
 
         for(int i = 0; i < exonCount; ++i)
         {
-            long exonStart = exonStarts[i];
-            long exonEnd = exonStarts[i] + exonLength;
+            int exonStart = exonStarts[i];
+            int exonEnd = exonStarts[i] + exonLength;
             int exonRank = strand == 1 ? i + 1 : exonCount - i;
 
             exons.add(new ExonData(transId, exonStart, exonEnd, exonRank, exonPhases[i], exonEndPhases[i]));
@@ -129,14 +129,14 @@ public class GeneTestUtils
     }
 
     public static TranscriptData createTransExons(final String geneId, int transId, byte strand,
-            long[] exonStarts, int exonLength, Long codingStart, Long codingEnd, boolean isCanonical, final String biotype)
+            int[] exonStarts, int exonLength, Integer codingStart, Integer codingEnd, boolean isCanonical, final String biotype)
     {
         if(exonStarts.length == 0 || exonLength <= 0)
             return null;
 
         int exonCount = exonStarts.length;
-        long transStart = exonStarts[0];
-        long transEnd = exonStarts[exonCount-1] + exonLength;
+        int transStart = exonStarts[0];
+        int transEnd = exonStarts[exonCount-1] + exonLength;
 
         final List<ExonData> exons = Lists.newArrayList();
 
@@ -151,14 +151,14 @@ public class GeneTestUtils
         {
             for (int i = 0; i < exonCount; ++i)
             {
-                long exonStart = exonStarts[i];
-                long exonEnd = exonStart + exonLength;
+                int exonStart = exonStarts[i];
+                int exonEnd = exonStart + exonLength;
                 int exonRank = i + 1;
 
                 int exonPhase = 0;
                 int exonStartPhase = -1;
                 int exonEndPhase = -1;
-                long exonCodingStart = 0;
+                int exonCodingStart = 0;
 
                 if (hasCodingBases && !finishedCoding)
                 {
@@ -181,7 +181,7 @@ public class GeneTestUtils
 
                     if (inCoding)
                     {
-                        long exonCodingBases = min(exonEnd, codingEnd) - exonCodingStart + 1;
+                        int exonCodingBases = min(exonEnd, codingEnd) - exonCodingStart + 1;
                         exonEndPhase = (int) ((exonPhase + exonCodingBases) % 3);
                         lastExonEndPhase = exonEndPhase;
 
@@ -201,14 +201,14 @@ public class GeneTestUtils
         {
             for (int i = exonCount-1; i >= 0; --i)
             {
-                long exonStart = exonStarts[i];
-                long exonEnd = exonStart + exonLength;
+                int exonStart = exonStarts[i];
+                int exonEnd = exonStart + exonLength;
                 int exonRank = exonCount - i;
 
                 int exonPhase = 0;
                 int exonStartPhase = -1;
                 int exonEndPhase = -1;
-                long exonCodingEnd = 0;
+                int exonCodingEnd = 0;
 
                 if (hasCodingBases && !finishedCoding)
                 {
@@ -231,7 +231,7 @@ public class GeneTestUtils
 
                     if (inCoding)
                     {
-                        long exonCodingBases = exonCodingEnd - max(exonStart, codingStart) + 1;
+                        int exonCodingBases = exonCodingEnd - max(exonStart, codingStart) + 1;
                         exonEndPhase = (int) ((exonPhase + exonCodingBases) % 3);
                         lastExonEndPhase = exonEndPhase;
 

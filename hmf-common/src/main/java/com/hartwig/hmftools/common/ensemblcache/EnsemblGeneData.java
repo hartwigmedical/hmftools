@@ -10,12 +10,12 @@ public class EnsemblGeneData
     public final String GeneName;
     public final String Chromosome;
     public final byte Strand;
-    public final long GeneStart;
-    public final long GeneEnd;
+    public final int GeneStart;
+    public final int GeneEnd;
     public final String KaryotypeBand;
 
     public EnsemblGeneData(
-            String geneId, String geneName, String chromosome, byte strand, long geneStart, long geneEnd, String karyotypeBand)
+            String geneId, String geneName, String chromosome, byte strand, int geneStart, int geneEnd, String karyotypeBand)
     {
         GeneId = geneId;
         GeneName = geneName;
@@ -29,7 +29,7 @@ public class EnsemblGeneData
     public boolean forwardStrand() { return Strand == 1; }
     public boolean reverseStrand() { return Strand == -1; }
 
-    public long length() { return GeneEnd - GeneStart; }
+    public int length() { return GeneEnd - GeneStart; }
 
     public String toString()
     {

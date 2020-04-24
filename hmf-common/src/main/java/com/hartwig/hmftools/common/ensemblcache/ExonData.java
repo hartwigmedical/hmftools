@@ -3,13 +3,13 @@ package com.hartwig.hmftools.common.ensemblcache;
 public class ExonData
 {
     public final int TransId;
-    public final long ExonStart;
-    public final long ExonEnd;
+    public final int ExonStart;
+    public final int ExonEnd;
     public final int ExonRank;
     public final int ExonPhase;
     public final int ExonPhaseEnd;
 
-    public ExonData(int transId, long exonStart, long exonEnd, int exonRank, int exonPhase, int exonPhaseEnd)
+    public ExonData(int transId, int exonStart, int exonEnd, int exonRank, int exonPhase, int exonPhaseEnd)
     {
         TransId = transId;
         ExonStart = exonStart;
@@ -25,7 +25,7 @@ public class ExonData
         return !(ExonStart > other.ExonEnd || ExonEnd < other.ExonStart);
     }
 
-    public int length() { return (int)(ExonEnd - ExonStart); }
+    public int length() { return ExonEnd - ExonStart; }
     public int baseLength() { return length() + 1; }
 
     public String toString()

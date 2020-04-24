@@ -52,7 +52,7 @@ public class RnaFusionTest
         int transId = 1;
         byte strand = 1;
 
-        long[] exonStarts = new long[]{10500, 11500, 12500, 13500};
+        int[] exonStarts = new int[]{10500, 11500, 12500, 13500};
         int[] exonPhases = new int[]{-1, 1, 2, -1};
 
         TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
@@ -78,7 +78,7 @@ public class RnaFusionTest
 
         // test positive strand
 
-        long svPos1 = 12700;
+        int svPos1 = 12700;
         GeneAnnotation geneAnnot1 = createGeneAnnotation(0, true, geneName, geneId, 1, chromosome, svPos1, 1);
 
         transData = geneTransCache.getTranscriptData(geneId, transName);
@@ -89,7 +89,7 @@ public class RnaFusionTest
         assertTrue(trans != null);
 
         // test upstream scenarios
-        long rnaPosition = 12600;
+        int rnaPosition = 12600;
         boolean isValid = rnaFusionMapper.isTranscriptBreakendViableForRnaBoundary(
                 trans, true, geneAnnot1.position(), rnaPosition, true);
 
@@ -152,7 +152,7 @@ public class RnaFusionTest
 
         // now test the negative strand
 
-        long svPos2 = 12700;
+        int svPos2 = 12700;
         GeneAnnotation geneAnnot2 = createGeneAnnotation(1, true, geneName2, geneId2, -1, chromosome, svPos2, -1);
 
         transData = geneTransCache.getTranscriptData(geneId2, transName2);

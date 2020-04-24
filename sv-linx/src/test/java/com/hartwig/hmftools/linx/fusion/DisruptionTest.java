@@ -112,7 +112,7 @@ public class DisruptionTest
 
         int transId = 1;
 
-        long[] exonStarts = new long[] { 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 110000 };
+        int[] exonStarts = new int[] { 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 110000 };
         int[] exonPhases = new int[exonStarts.length];
 
         for(int i = 0; i < exonPhases.length; ++i)

@@ -68,7 +68,7 @@ public class FusionTest
 
         int transId = 1;
 
-        long[] exonStarts = new long[]{100, 300, 500, 700, 900};
+        int[] exonStarts = new int[]{100, 300, 500, 700, 900};
         int[] exonPhases = new int[]{-1, 1, 2, 0, -1};
 
         TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
@@ -87,7 +87,7 @@ public class FusionTest
 
         transDataList = Lists.newArrayList();
 
-        exonStarts = new long[]{10100, 10300, 10500, 10700, 10900};
+        exonStarts = new int[]{10100, 10300, 10500, 10700, 10900};
         exonPhases = new int[]{1, 2, 0, -1, -1};
 
         transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);
@@ -156,20 +156,20 @@ public class FusionTest
 
         GeneAnnotation upGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
 
-        Long codingStart = new Long(350);
-        Long codingEnd = new Long(950);
+        Integer codingStart = new Integer(350);
+        Integer codingEnd = new Integer(950);
 
         Transcript upTrans1 = new Transcript(upGene, 1, "TRANS01", 2, 1, 3, 1,
-                50, 300,5, true, 100, 1000, codingStart, codingEnd);
+                50, 300,5, true, 100, 1000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
         upTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
 
         GeneAnnotation downGene = createGeneAnnotation(0, true, geneId1, geneId1, 1, chromosome, 450, 1);
 
-        codingStart = new Long(10350);
-        codingEnd = new Long(10950);
+        codingStart = new Integer(10350);
+        codingEnd = new Integer(10950);
 
         Transcript downTrans1 = new Transcript(downGene, 11, "TRANS11", 2, 1, 3, 1,
-                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
+                50, 300,5, true, 10000, 11000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
         downTrans1.setBioType(BIOTYPE_PROTEIN_CODING);
 
         GeneFusion fusion1 = new GeneFusion(upTrans1, downTrans1, true);
@@ -200,7 +200,7 @@ public class FusionTest
 
         // 3. down protein coding
         Transcript downTrans2 = new Transcript(downGene, 12, "TRANS12", 2, 1, 3, 1,
-                50, 300,5, true, 10000, 11000, codingStart, codingEnd);
+                50, 300,5, true, 10000, 11000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
         downTrans2.setBioType(BIOTYPE_PROCESSED_TRANS);
 
         fusion1.setAnnotations(null);
@@ -219,7 +219,7 @@ public class FusionTest
 
         // 5. 3P partner canonical
         Transcript downTrans3 = new Transcript(downGene, 13, "TRANS13", 2, 1, 3, 1,
-                50, 300,5, false, 10000, 11000, codingStart, codingEnd);
+                50, 300,5, false, 10000, 11000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
         downTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
 
         fusion1 = new GeneFusion(upTrans1, downTrans3, true);
@@ -229,7 +229,7 @@ public class FusionTest
 
         // 6. 5P partner canonical
         Transcript upTrans2 = new Transcript(upGene, 2, "TRANS02", 2, 1, 3, 1,
-                50, 300,5, false, 100, 1000, codingStart, codingEnd);
+                50, 300,5, false, 100, 1000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
         upTrans2.setBioType(BIOTYPE_PROTEIN_CODING);
 
         fusion1 = new GeneFusion(upTrans2, downTrans1, true);
@@ -239,7 +239,7 @@ public class FusionTest
 
         // 7. 5P partner less coding bases
         Transcript upTrans3 = new Transcript(upGene, 3, "TRANS03", 2, 1, 3, 1,
-                40, 200,5, true, 100, 1000, codingStart, codingEnd);
+                40, 200,5, true, 100, 1000, Long.valueOf(codingStart), Long.valueOf(codingEnd));
         upTrans3.setBioType(BIOTYPE_PROTEIN_CODING);
 
         fusion1 = new GeneFusion(upTrans3, downTrans1, true);
@@ -271,10 +271,10 @@ public class FusionTest
 
         byte strand = (byte)1;
         boolean isCanonical = true;
-        long transStart = 1000;
-        long transEnd = 2000;
-        long codingStart = 1400;
-        long codingEnd = 1900;
+        int transStart = 1000;
+        int transEnd = 2000;
+        int codingStart = 1400;
+        int codingEnd = 1900;
 
         TranscriptData transData = new TranscriptData(transId1, transName1, geneId1, isCanonical, strand, transStart, transEnd,
                 codingStart, codingEnd, BIOTYPE_PROTEIN_CODING);
@@ -467,7 +467,7 @@ public class FusionTest
         addGeneData(geneTransCache, remoteChromosome, geneList);
 
         int transId3 = 3;
-        long[] exonStarts = new long[]{1000, 2000, 3000};
+        int[] exonStarts = new int[]{1000, 2000, 3000};
         int[] exonPhases = new int[]{0, 0, 0,};
         TranscriptData transData3 = createTransExons(geneId3, transId3, strand, exonStarts, exonPhases, 100);
         transDataList.add(transData3);
@@ -547,7 +547,7 @@ public class FusionTest
 
         int transId = 1;
 
-        long[] exonStarts = new long[]{100, 300, 500, 700, 900, 1100, 1300};
+        int[] exonStarts = new int[]{100, 300, 500, 700, 900, 1100, 1300};
         int[] exonPhases = new int[]{-1, 1, 1, 1, 1, 1, -1};
 
         TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 100, true);

@@ -44,8 +44,8 @@ public class HomDisruptionsTest
         String chromosome = "17";
         byte strand = 1;
 
-        long transStart = 10000;
-        long transEnd = 55000;
+        int transStart = 10000;
+        int transEnd = 55000;
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
@@ -53,7 +53,7 @@ public class HomDisruptionsTest
         List<TranscriptData> transDataList = Lists.newArrayList();
 
         int transId = 1;
-        long[] exonStarts = new long[] { 10000, 20000, 30000, 40000, 50000};
+        int[] exonStarts = new int[] { 10000, 20000, 30000, 40000, 50000};
         int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
 
         TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);
@@ -139,8 +139,8 @@ public class HomDisruptionsTest
         String chromosome = "17";
         byte strand = 1;
 
-        long transStart = 10000;
-        long transEnd = 55000;
+        int transStart = 10000;
+        int transEnd = 55000;
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));
@@ -148,7 +148,7 @@ public class HomDisruptionsTest
         List<TranscriptData> transDataList = Lists.newArrayList();
 
         int transId = 1;
-        long[] exonStarts = new long[] { 10000, 20000, 30000, 40000, 50000};
+        int[] exonStarts = new int[] { 10000, 20000, 30000, 40000, 50000};
         int[] exonPhases = new int[] {-1, 0, 0, 0, -1};
 
         TranscriptData transData = createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 100, true);

@@ -11,16 +11,16 @@ public class TranscriptData
     public final String GeneId;
     public final boolean IsCanonical;
     public final byte Strand;
-    public final long TransStart;
-    public final long TransEnd;
-    public final Long CodingStart;
-    public final Long CodingEnd;
+    public final int TransStart;
+    public final int TransEnd;
+    public final Integer CodingStart;
+    public final Integer CodingEnd;
     public final String BioType;
 
     private List<ExonData> mExons;
 
     public TranscriptData(final int transId, final String transName, final String geneId, final boolean isCanonical, final byte strand,
-            long transStart, long transEnd, Long codingStart, Long codingEnd, String bioType)
+            int transStart, int transEnd, Integer codingStart, Integer codingEnd, String bioType)
     {
         TransId = transId;
         TransName = transName;
@@ -38,7 +38,7 @@ public class TranscriptData
     public void setExons(final List<ExonData> exons) { mExons = exons; }
     public List<ExonData> exons() { return mExons; }
 
-    public long length() { return TransEnd - TransStart; }
+    public int length() { return TransEnd - TransStart; }
 
     public String toString()
     {

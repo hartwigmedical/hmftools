@@ -80,7 +80,7 @@ public class EnsemblDataLoader
 
                 EnsemblGeneData geneData = new EnsemblGeneData(
                         geneId, items[GD_NAME], chromosome, Byte.parseByte(items[GD_STRAND]),
-                        Long.parseLong(items[GD_START]), Long.parseLong(items[GD_END]), items[GD_BAND]);
+                        Integer.parseInt(items[GD_START]), Integer.parseInt(items[GD_END]), items[GD_BAND]);
 
                 if(!currentChr.equals(chromosome))
                 {
@@ -200,12 +200,12 @@ public class EnsemblDataLoader
 
                     exonDataList = Lists.newArrayList();
 
-                    Long codingStart = !items[TE_CODING_START].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_START]) : null;
-                    Long codingEnd = !items[TE_CODING_END].equalsIgnoreCase("NULL") ? Long.parseLong(items[TE_CODING_END]) : null;
+                    Integer codingStart = !items[TE_CODING_START].equalsIgnoreCase("NULL") ? Integer.parseInt(items[TE_CODING_START]) : null;
+                    Integer codingEnd = !items[TE_CODING_END].equalsIgnoreCase("NULL") ? Integer.parseInt(items[TE_CODING_END]) : null;
 
                     currentTrans = new TranscriptData(
                             transId, items[TE_TRANS_NAME], geneId, isCanonical, Byte.parseByte(items[TE_STRAND]),
-                            Long.parseLong(items[TE_TRANS_START]), Long.parseLong(items[TE_TRANS_END]),
+                            Integer.parseInt(items[TE_TRANS_START]), Integer.parseInt(items[TE_TRANS_END]),
                             codingStart, codingEnd, items[TE_BIOTYPE]);
 
                     ++transcriptCount;
@@ -217,7 +217,7 @@ public class EnsemblDataLoader
                 if(cacheExons || currentTrans.IsCanonical)
                 {
                     ExonData exonData = new ExonData(
-                            transId, Long.parseLong(items[TE_EXON_START]), Long.parseLong(items[TE_EXON_END]),
+                            transId, Integer.parseInt(items[TE_EXON_START]), Integer.parseInt(items[TE_EXON_END]),
                             Integer.parseInt(items[TE_EXON_RANK]), Integer.parseInt(items[TE_PHASE]), Integer.parseInt(items[TE_PHASE_END]));
 
                     exonDataList.add(exonData);

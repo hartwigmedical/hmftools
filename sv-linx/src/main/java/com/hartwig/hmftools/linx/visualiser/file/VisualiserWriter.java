@@ -426,7 +426,7 @@ public class VisualiserWriter
             {
                 for (final TranscriptProteinData proteinData : transProteinData)
                 {
-                    final Long[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, transData);
+                    final Integer[] domainPositions = mGeneTranscriptCollection.getProteinDomainPositions(proteinData, transData);
 
                     if(domainPositions[SE_START] != null && domainPositions[SE_END] != null)
                     {

@@ -71,7 +71,7 @@ public class NeoEpitopeTest
 
         int transId = 1;
 
-        long[] exonStarts = new long[]{5, 15, 25, 35, 45, 55, 65, 75};
+        int[] exonStarts = new int[]{5, 15, 25, 35, 45, 55, 65, 75};
         int[] exonPhases = new int[]{-1, 0, 2, 1, 0, 2, 1, -1};
 
         TranscriptData transData = createTransExons(geneId1, transId++, strand, exonStarts, exonPhases, 4, true);
@@ -130,13 +130,13 @@ public class NeoEpitopeTest
         // create fusions between various phases sections of these transcripts
         // add upstream breakends
         List<GeneAnnotation> upGenes = Lists.newArrayList();
-        long upPos = 22;
+        int upPos = 22;
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(chromosome1, upPos, posOrient);
 
         // add downstream breakends
         List<GeneAnnotation> downGenes = Lists.newArrayList();
-        long downPos = 22;
+        int downPos = 22;
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
@@ -270,14 +270,14 @@ public class NeoEpitopeTest
 
         String revBases = reverseStrandBases(nonGenicDna + transBases + nonGenicDna);
 
-        long transStart = nonGenicDna.length();
-        long transEnd = transStart + transBases.length() - 1;
+        int transStart = nonGenicDna.length();
+        int transEnd = transStart + transBases.length() - 1;
 
         // exons added from lower to higher positions
         List<ExonData> exons = Lists.newArrayList();
         exons.add(new ExonData(transId, transStart, transStart + exon3.length() - 1, 3, 1, -1));
 
-        long nextExonStart = exons.get(exons.size() - 1).ExonEnd + intron.length() + 1;
+        int nextExonStart = exons.get(exons.size() - 1).ExonEnd + intron.length() + 1;
         exons.add(new ExonData(transId, nextExonStart, nextExonStart + exon2.length() - 1, 2, 0, 1));
 
         nextExonStart = exons.get(exons.size() - 1).ExonEnd + intron.length() + 1;
@@ -322,13 +322,13 @@ public class NeoEpitopeTest
         // create fusions between various phases sections of these transcripts
         // add upstream breakends
         List<GeneAnnotation> upGenes = Lists.newArrayList();
-        long upPos = 51;
+        int upPos = 51;
         upGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, true, chromosome1, upPos, posOrient, PRE_GENE_PROMOTOR_DISTANCE));
         upGenes.get(0).setPositionalData(chromosome1, upPos, posOrient);
 
         // add downstream breakends
         List<GeneAnnotation> downGenes = Lists.newArrayList();
-        long downPos = 51;
+        int downPos = 51;
         downGenes.addAll(geneTransCache.findGeneAnnotationsBySv(0, false, chromosome2, downPos, negOrient, PRE_GENE_PROMOTOR_DISTANCE));
         downGenes.get(0).setPositionalData(chromosome2, downPos, negOrient);
 
@@ -455,8 +455,8 @@ public class NeoEpitopeTest
         nextExonStart = exons.get(exons.size() - 1).ExonEnd + intron.length() + 1;
         exons.add(new ExonData(transId, nextExonStart, nextExonStart + nonCodingExon.length() - 1, 6, -1, -1));
 
-        long codingStart = exons.get(1).ExonStart + nonCodingExon.length() - 1;
-        long codingEnd = exons.get(2).ExonStart + 6 - 1;
+        int codingStart = exons.get(1).ExonStart + nonCodingExon.length() - 1;
+        int codingEnd = exons.get(2).ExonStart + 6 - 1;
 
         transData = new TranscriptData(++transId, generateTransName(transId), geneId3, true, strand, transStart, transEnd,
                 codingStart, codingEnd, "");

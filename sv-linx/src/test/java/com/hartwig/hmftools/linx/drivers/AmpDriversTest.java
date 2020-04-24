@@ -51,8 +51,8 @@ public class AmpDriversTest
         String chromosome = "1";
         byte strand = 1;
 
-        long transStart = 100000;
-        long transEnd = 120000;
+        int transStart = 100000;
+        int transEnd = 120000;
 
         List<EnsemblGeneData> geneList = Lists.newArrayList();
         geneList.add(createEnsemblGeneData(geneId, geneName, chromosome, strand, transStart, transEnd));

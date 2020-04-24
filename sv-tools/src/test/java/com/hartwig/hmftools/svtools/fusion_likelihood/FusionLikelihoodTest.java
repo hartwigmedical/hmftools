@@ -56,7 +56,7 @@ public class FusionLikelihoodTest
 
         int transId = 1;
 
-        long[] exonStarts = new long[]{110, 130, 150, 170};
+        int[] exonStarts = new int[]{110, 130, 150, 170};
         int[] exonPhases = new int[]{-1, 1, 2, -1};
         TranscriptData transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
@@ -84,7 +84,7 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(phaseRegions, 130, 149, 100, 0));
 
         // and a non-coding transcript
-        exonStarts = new long[]{110, 170};
+        exonStarts = new int[]{110, 170};
         exonPhases = new int[]{-1, -1};
         transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
@@ -132,14 +132,14 @@ public class FusionLikelihoodTest
 
         transDataList.clear();
 
-        exonStarts = new long[]{10, 30, 50, 70};
+        exonStarts = new int[]{10, 30, 50, 70};
         exonPhases = new int[]{-1, -1, 1, 2};
         transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
         // converts to 41-60 1, 61-80 2
 
-        exonStarts = new long[]{10, 30, 50, 70};
+        exonStarts = new int[]{10, 30, 50, 70};
         exonPhases = new int[]{-1, 0, 0, -1};
         transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
@@ -147,7 +147,7 @@ public class FusionLikelihoodTest
         // converts to 21-40 0, 41-60 0, 61-80 -1
 
         // and a non-coding transcript
-        exonStarts = new long[]{10, 70};
+        exonStarts = new int[]{10, 70};
         exonPhases = new int[]{-1, -1};
 
         // converts to 20-80 -1 NC
@@ -184,12 +184,12 @@ public class FusionLikelihoodTest
 
         geneRangeData = new GeneRangeData(geneData);
 
-        exonStarts = new long[]{10, 30, 50, 70, 90};
+        exonStarts = new int[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 1, 1, 1, -1};
         transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
 
-        exonStarts = new long[]{10, 30, 50, 70, 90};
+        exonStarts = new int[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 1, 1, 1, -1};
         transData = GeneTestUtils.createTransExons(geneId, transId++, strand, exonStarts, exonPhases, 10);
         transDataList.add(transData);
@@ -214,11 +214,11 @@ public class FusionLikelihoodTest
         // test again but with no phase matches within the same transcript
         transExonDataList.clear();
         geneRangeData.clearOverlapCounts();
-        exonStarts = new long[]{10, 30, 50, 70, 90};
+        exonStarts = new int[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 0, 1, 2, -1};
         createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
 
-        exonStarts = new long[]{10, 30, 50, 70, 90};
+        exonStarts = new int[]{10, 30, 50, 70, 90};
         exonPhases = new int[]{-1, 2, 1, 0, -1};
         createTransExons(transExonDataList, geneId, transId++, strand, exonStarts, exonPhases, 10);
 
