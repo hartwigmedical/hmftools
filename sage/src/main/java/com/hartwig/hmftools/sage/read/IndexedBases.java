@@ -101,7 +101,7 @@ public class IndexedBases {
     @NotNull
     public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
 
-        if (otherReadIndex < 0 || !flanksComplete()) {
+        if (otherReadIndex < 0) {
             return NONE;
         }
 

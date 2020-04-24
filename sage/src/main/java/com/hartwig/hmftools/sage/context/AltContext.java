@@ -41,6 +41,7 @@ public class AltContext implements VariantHotspot {
         }
 
         int fullMatch = 0;
+        int partialMatch = 0;
         int coreMatch = 0;
         for (ReadContextCandidate candidate : interimReadContexts) {
             final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
@@ -50,6 +51,9 @@ public class AltContext implements VariantHotspot {
                     fullMatch++;
                     break;
                 case PARTIAL:
+                    candidate.incrementPartial(1);
+                    partialMatch++;
+                    break;
                 case CORE:
                     candidate.incrementCore(1);
                     coreMatch++;
@@ -60,6 +64,7 @@ public class AltContext implements VariantHotspot {
         if (fullMatch == 0) {
             final ReadContextCandidate candidate = new ReadContextCandidate(newReadContext);
             candidate.incrementCore(coreMatch);
+            candidate.incrementPartial(partialMatch);
             interimReadContexts.add(candidate);
         }
 
@@ -149,10 +154,10 @@ public class AltContext implements VariantHotspot {
 
         private final ReadContext readContext;
         private int fullMatch;
+        private int partialMatch;
         private int coreMatch;
 
         ReadContextCandidate(@NotNull final ReadContext readContext) {
-            assert (readContext.isComplete());
             this.readContext = readContext.minimiseFootprint();
         }
 
@@ -160,12 +165,16 @@ public class AltContext implements VariantHotspot {
             fullMatch += count;
         }
 
+        public void incrementPartial(int count) {
+            partialMatch += count;
+        }
+
         public void incrementCore(int count) {
             coreMatch += count;
         }
 
         public int count() {
-            return fullMatch;
+            return fullMatch + partialMatch;
         }
 
         @NotNull
@@ -176,11 +185,16 @@ public class AltContext implements VariantHotspot {
         @Override
         public int compareTo(@NotNull final ReadContextCandidate o) {
             int fullCompare = -Integer.compare(fullMatch, o.fullMatch);
-            if (fullCompare == 0) {
-                return -Integer.compare(coreMatch, o.coreMatch);
+            if (fullCompare != 0) {
+                return fullCompare;
             }
 
-            return fullCompare;
+            int partialCompare = -Integer.compare(partialMatch, o.partialMatch);
+            if (partialCompare != 0) {
+                return partialCompare;
+            }
+
+            return -Integer.compare(coreMatch, o.coreMatch);
         }
     }
 

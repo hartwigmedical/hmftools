@@ -71,6 +71,36 @@ public class AltContextTest {
     }
 
 
+    @Test
+    public void testPartialMatchAfterFullMatch() {
+
+        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final AltContext victim = new AltContext(refContext, "C", "T");
+
+        final String core1 = "GATAC";
+        final String core2 = "GATAA";
+        assertNotEquals(core1, core2);
+
+        final List<ReadContext> readContexts = Lists.newArrayList();
+        // At this point either is valid
+        readContexts.add(simpleSnv("AG", core2, "AG"));
+        readContexts.add(simpleSnv("AG", core2, "AG"));
+
+        readContexts.add(simpleSnv("AG", core1, "AG"));
+        readContexts.add(simpleSnv("AG", core1, "AG"));
+
+        // Add new core1 (with different flanks)
+        readContexts.add(simpleSnv("", core1, "AG"));
+
+        // Ordering should not matter!
+        Collections.shuffle(readContexts);
+        readContexts.forEach(victim::addReadContext);
+
+        assertTrue(victim.finaliseAndValidate());
+        assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
+    }
+
+
 
 
     @NotNull
