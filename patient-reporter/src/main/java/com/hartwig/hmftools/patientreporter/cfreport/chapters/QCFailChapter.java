@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
+import com.hartwig.hmftools.common.lims.LimsCohortType;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
 import com.hartwig.hmftools.patientreporter.cfreport.components.LineDivider;
@@ -174,9 +175,13 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private Div createCOREContentBodyColumn1() {
+        LimsCohortType type = LimsCohortType.fromSampleId(failReport.sampleReport().tumorSampleId());
         Div divColumn = new Div();
         divColumn.add(sampleNotAdequateForWGS());
         divColumn.add(resubmitInSameDVOWithProjectName());
+        if (type == LimsCohortType.CORELR11 || type == LimsCohortType.CORESC11) {
+            divColumn.add(reportIsForPathologyTissueID());
+        }
         divColumn.add(reportIsForHospitalPatientID());
         divColumn.add(reportIsForProjectAndSubmission());
         divColumn.add(resultsAreObtainedBetweenDates());
