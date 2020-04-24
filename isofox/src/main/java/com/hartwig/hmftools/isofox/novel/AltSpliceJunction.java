@@ -4,10 +4,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_1;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_NEG_STRAND_2;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_POS_STRAND_1;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.SP_SEQ_POS_STRAND_2;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.formDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.setJunctionBaseContext;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.EXONIC;
 import static com.hartwig.hmftools.isofox.novel.AltSpliceJunctionContext.MIXED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -186,25 +192,12 @@ public class AltSpliceJunction
 
     public void setBaseContext(final IndexedFastaSequenceFile refGenome, final String chromosome)
     {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            long position = SpliceJunction[se];
-            int startOffset = (se == SE_START) ? 1 : 10;
-            int endOffset = startOffset == 1 ? 10: 1;
-
-            mBaseContext[se] = refGenome.getSubsequenceAt(
-                    chromosome, position - startOffset, position + endOffset).getBaseString();
-        }
+        setJunctionBaseContext(refGenome, new String[] { chromosome, chromosome }, SpliceJunction, mBaseContext);
     }
-
-    private static final String SP_SEQ_POS_STRAND_1 = "GT-AG";
-    private static final String SP_SEQ_POS_STRAND_2 = "GC-AG";
-    private static final String SP_SEQ_NEG_STRAND_1 = "CT-AC";
-    private static final String SP_SEQ_NEG_STRAND_2 = "CT-GC";
 
     public void setDonorAcceptorBases(final String[] baseContext)
     {
-        mDonorAcceptorBases = String.format("%s-%s", baseContext[SE_START].substring(2,4), baseContext[SE_END].substring(8,10));
+        mDonorAcceptorBases = formDonorAcceptorBases(baseContext);
     }
 
     public String getDonorAcceptorBases() { return mDonorAcceptorBases; }

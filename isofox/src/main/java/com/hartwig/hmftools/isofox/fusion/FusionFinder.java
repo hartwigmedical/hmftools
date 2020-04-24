@@ -374,6 +374,13 @@ public class FusionFinder
 
                 foundCandidates = true;
                 fusionData.setStreamData(upstreamGenes, downstreamGenes, se == SE_START);
+
+                for(FusionFragment fragment : fusionData.getAllFragments())
+                {
+                    fragment.setJunctionTypes(
+                            mConfig.RefFastaSeqFile, new byte[] { upstreamGenes.get(0).Strand, downstreamGenes.get(0).Strand} ) ;
+                }
+
             }
         }
 

@@ -19,6 +19,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+
 public class RnaUtils
 {
     public static boolean positionsOverlap(long posStart1, long posEnd1, long posStart2, long posEnd2)
@@ -278,5 +280,63 @@ public class RnaUtils
         }
     }
 
+    public static void setJunctionBaseContext(
+            final IndexedFastaSequenceFile refGenome, final String[] chromosomes, final long[] junctions, final String[] baseContext)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            int startOffset = (se == SE_START) ? 1 : 10;
+            int endOffset = startOffset == 1 ? 10: 1;
+
+            baseContext[se] = refGenome.getSubsequenceAt(
+                    chromosomes[se], junctions[se] - startOffset, junctions[se] + endOffset).getBaseString();
+        }
+    }
+
+    public static final String SP_SEQ_DONOR_1 = "GT";
+    public static final String SP_SEQ_DONOR_2 = "GC";
+    public static final String SP_SEQ_ACCEPTOR = "AG";
+
+    public static final String SP_SEQ_NEG_STRAND_DONOR_1 = "AC";
+    public static final String SP_SEQ_NEG_STRAND_DONOR_2 = "GC";
+    public static final String SP_SEQ_NEG_STRAND_ACCEPTOR = "CT";
+
+    private static final String DA_DELIM = "-";
+
+    public static boolean canonicalAcceptor(final String context, byte strand)
+    {
+        if(strand == 1)
+            return context.equals(SP_SEQ_ACCEPTOR);
+        else
+            return context.equals(SP_SEQ_NEG_STRAND_ACCEPTOR);
+    }
+
+    public static boolean canonicalDonor(final String context, byte strand)
+    {
+        if(strand == 1)
+            return context.equals(SP_SEQ_DONOR_1) || context.equals(SP_SEQ_DONOR_2);
+        else
+            return context.equals(SP_SEQ_NEG_STRAND_DONOR_1) || context.equals(SP_SEQ_NEG_STRAND_DONOR_2);
+    }
+
+    public static final String SP_SEQ_POS_STRAND_1 = SP_SEQ_DONOR_1 + DA_DELIM + SP_SEQ_ACCEPTOR;// "GT-AG";
+    public static final String SP_SEQ_POS_STRAND_2 = SP_SEQ_DONOR_2 + DA_DELIM + SP_SEQ_ACCEPTOR; // "GC-AG";
+    public static final String SP_SEQ_NEG_STRAND_1 = SP_SEQ_NEG_STRAND_ACCEPTOR + DA_DELIM + SP_SEQ_NEG_STRAND_DONOR_1; // "CT-AC";
+    public static final String SP_SEQ_NEG_STRAND_2 = SP_SEQ_NEG_STRAND_ACCEPTOR + DA_DELIM + SP_SEQ_NEG_STRAND_DONOR_2; // "CT-GC";
+
+    public static String startDonorAcceptorBases(final String baseContext)
+    {
+        return baseContext.substring(2,4);
+    }
+
+    public static String endDonorAcceptorBases(final String baseContext)
+    {
+        return baseContext.substring(8,10);
+    }
+
+    public static String formDonorAcceptorBases(final String[] baseContext)
+    {
+        return startDonorAcceptorBases(baseContext[SE_START]) + DA_DELIM + endDonorAcceptorBases(baseContext[SE_END]);
+    }
 
 }

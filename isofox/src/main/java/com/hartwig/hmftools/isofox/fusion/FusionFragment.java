@@ -6,13 +6,18 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.START_STR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalAcceptor;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.canonicalDonor;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.endDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.startDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
@@ -29,9 +34,11 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
+import com.hartwig.hmftools.isofox.common.RnaUtils;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class FusionFragment
 {
@@ -43,6 +50,7 @@ public class FusionFragment
     private final byte[] mJunctionOrientations; // orientation at junction
     private final boolean[] mJunctionValid;
     private final FusionJunctionType[] mJunctionTypes;
+    private final String[] mJunctionBaseContext;
     private FusionFragmentType mType;
 
     private final RegionMatchType[] mRegionMatchTypes; // top-ranking region match type from the reads
@@ -59,6 +67,7 @@ public class FusionFragment
         mJunctionValid = new boolean[] {false, false};
         mRegionMatchTypes = new RegionMatchType[] { RegionMatchType.NONE, RegionMatchType.NONE };
         mJunctionTypes = new FusionJunctionType[] { FusionJunctionType.UNKNOWN, FusionJunctionType.UNKNOWN };
+        mJunctionBaseContext = new String[] {"", ""};
 
         mTransExonRefs = new List[SE_PAIR];
         mTransExonRefs[SE_START] = Lists.newArrayList();
@@ -322,6 +331,35 @@ public class FusionFragment
             }
 
             ++index;
+        }
+    }
+
+    public void setJunctionTypes(final IndexedFastaSequenceFile refGenome, final byte[] junctionStrands)
+    {
+        if(refGenome == null)
+            return;
+
+        if(hasBothJunctions())
+        {
+            RnaUtils.setJunctionBaseContext(refGenome, mChromosomes, mJunctionPositions, mJunctionBaseContext);
+        }
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            if (exonBoundary(mRegionMatchTypes[se]))
+            {
+                mJunctionTypes[se] = FusionJunctionType.KNOWN;
+            }
+            else if(mJunctionValid[se])
+            {
+                boolean isDonor = (mJunctionOrientations[se] == junctionStrands[se]);
+                String daBases = se == SE_START ? startDonorAcceptorBases(mJunctionBaseContext[se]) : endDonorAcceptorBases(mJunctionBaseContext[se]);
+
+                if(isDonor && canonicalDonor(daBases, junctionStrands[se]))
+                    mJunctionTypes[se] =  FusionJunctionType.CANONICAL;
+                if(!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
+                    mJunctionTypes[se] =  FusionJunctionType.CANONICAL;
+            }
         }
     }
 

@@ -268,7 +268,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
-                + ",SvType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrag,SingleFrags"
+                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrag,SingleFrags"
                 + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
