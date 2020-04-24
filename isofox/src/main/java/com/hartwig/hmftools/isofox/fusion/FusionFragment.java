@@ -1,12 +1,8 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.START_STR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
@@ -127,8 +123,8 @@ public class FusionFragment
                 if(!read.Cigar.containsOperator(CigarOperator.S))
                     continue;
 
-                int scLeft = read.Cigar.isLeftClipped() ? read.Cigar.getFirstCigarElement().getLength() : 0;
-                int scRight = read.Cigar.isRightClipped() ? read.Cigar.getLastCigarElement().getLength() : 0;
+                int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
+                int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
 
                 boolean useLeft = false;
 
@@ -190,7 +186,7 @@ public class FusionFragment
         mType = calcType();
     }
 
-    private void setType(FusionFragmentType type) { mType = type; }
+    public void setType(FusionFragmentType type) { mType = type; }
 
     private FusionFragmentType calcType()
     {
@@ -226,8 +222,6 @@ public class FusionFragment
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
 
     public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections); }
-
-    public static boolean validPositions(final long[] position) { return position[SE_START] > 0 && position[SE_END] > 0; }
 
     public StructuralVariantType getImpliedSvType()
     {
@@ -352,13 +346,26 @@ public class FusionFragment
             }
             else if(mJunctionValid[se])
             {
-                boolean isDonor = (mJunctionOrientations[se] == junctionStrands[se]);
                 String daBases = se == SE_START ? startDonorAcceptorBases(mJunctionBaseContext[se]) : endDonorAcceptorBases(mJunctionBaseContext[se]);
 
-                if(isDonor && canonicalDonor(daBases, junctionStrands[se]))
-                    mJunctionTypes[se] =  FusionJunctionType.CANONICAL;
-                if(!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
-                    mJunctionTypes[se] =  FusionJunctionType.CANONICAL;
+                if(junctionStrands != null)
+                {
+                    boolean isDonor = (mJunctionOrientations[se] == junctionStrands[se]);
+
+                    if (isDonor && canonicalDonor(daBases, junctionStrands[se]))
+                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
+                    else if (!isDonor && canonicalAcceptor(daBases, junctionStrands[se]))
+                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
+                }
+                else
+                {
+                    // try them both
+                    byte asDonorStrand = mJunctionOrientations[se];
+                    byte asAcceptorStrand = (byte)(-mJunctionOrientations[se]);
+
+                    if (canonicalDonor(daBases, asDonorStrand) || canonicalAcceptor(daBases, asAcceptorStrand))
+                        mJunctionTypes[se] = FusionJunctionType.CANONICAL;
+                }
             }
         }
     }

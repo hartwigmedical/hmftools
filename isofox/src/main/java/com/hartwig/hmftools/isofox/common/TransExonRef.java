@@ -22,6 +22,7 @@ public class TransExonRef
 
     public boolean matchesNext(final TransExonRef other)
     {
+        // other is one exon ahead of this
         return other.TransId == TransId && other.ExonRank == ExonRank + 1;
     }
 

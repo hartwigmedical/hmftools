@@ -63,6 +63,7 @@ public class ReadRecord
     private final List<long[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
+    private final int[] mSoftClipRegionsMatched;
     private int mFragmentInsertSize;
     private String mSupplementaryAlignment;
 
@@ -110,6 +111,7 @@ public class ReadRecord
         mTranscriptClassification = Maps.newHashMap();
         mLowerInferredAdded = false;
         mUpperInferredAdded = false;
+        mSoftClipRegionsMatched = new int[] {0, 0};
         mFragmentInsertSize = insertSize;
         mSupplementaryAlignment = null;
     }
@@ -598,6 +600,7 @@ public class ReadRecord
 
             if(!matchedRegions.isEmpty())
             {
+                mSoftClipRegionsMatched[SE_START] = matchedRegions.size();
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
                 if (matchedRegions.size() > 1 && extraBaseLength < MIN_BASE_MATCH && region.start() > readStartPos)
@@ -649,6 +652,8 @@ public class ReadRecord
 
             if(!matchedRegions.isEmpty())
             {
+                mSoftClipRegionsMatched[SE_END] = matchedRegions.size();
+
                 mMappedRegions.put(region, EXON_BOUNDARY);
 
                 if (matchedRegions.size() > 1 && extraBaseLength < MIN_BASE_MATCH && readEndPos > region.end())
@@ -690,6 +695,14 @@ public class ReadRecord
     }
 
     public boolean inferredCoordAdded(boolean isLower) { return isLower ? mLowerInferredAdded : mUpperInferredAdded; }
+
+    public boolean isSoftClipped(int se)
+    {
+        if(mSoftClipRegionsMatched[se] > 0)
+            return false;
+
+        return se == SE_START ? Cigar.isLeftClipped() : Cigar.isRightClipped();
+    }
 
     private void addInferredMappingRegion(boolean isLower, long posStart, long posEnd)
     {

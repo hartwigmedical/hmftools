@@ -3,15 +3,12 @@ package com.hartwig.hmftools.isofox.fusion;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragment.validPositions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_SIDED;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -23,7 +20,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
+
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
@@ -43,11 +40,12 @@ public class FusionReadData
     private final int[] mGeneCollections;
     private final long[] mJunctionPositions;
     private final byte[] mJunctionOrientations;
+    private final List<TransExonRef>[] mTransExonRefs; // not stored by stream
 
+    // the following data is stored by stream, not start/end
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
-    private final String[] mFusionGeneIds; // stored by stream
+    private final String[] mFusionGeneIds;
     private final int[] mFusionIndices; // mapping of up & down stream to position data which is in SV terms
-    private final List<TransExonRef>[] mTransExonRefs;
 
     public static final int FS_UPSTREAM = 0;
     public static final int FS_DOWNSTREAM = 1;
@@ -135,6 +133,13 @@ public class FusionReadData
     public boolean isKnownSpliced() { return getSampleFragment().isSpliced(); }
     public boolean isUnspliced() { return getSampleFragment().isUnspliced() && getSampleFragment().hasBothJunctions(); }
 
+    public List<EnsemblGeneData>[] getCandidateGenes() { return mCandidateGenes; }
+
+    public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
+    public boolean hasValidStreamData() { return mFusionIndices[FS_UPSTREAM] >= 0 && mFusionIndices[FS_DOWNSTREAM] >= 0; }
+
+    public boolean isValid() { return hasViableGenes() && hasValidStreamData() && !hasIncompleteData(); }
+
     public void setStreamData(final List<EnsemblGeneData> upstreamGenes, final List<EnsemblGeneData> downstreamGenes, boolean startIsUpstream)
     {
         mFusionIndices[FS_UPSTREAM] = startIsUpstream ? SE_START : SE_END;
@@ -145,6 +150,17 @@ public class FusionReadData
         // until a more informed decision can be made
         mFusionGeneIds[FS_UPSTREAM] = upstreamGenes.get(0).GeneId;
         mFusionGeneIds[FS_DOWNSTREAM] = downstreamGenes.get(0).GeneId;
+    }
+
+    public byte[] getGeneStrands()
+    {
+        if(!hasViableGenes())
+            return null;
+
+        if(mFusionIndices[FS_UPSTREAM] == SE_START)
+            return new byte[] { mCandidateGenes[SE_START].get(0).Strand, mCandidateGenes[SE_END].get(0).Strand };
+        else
+            return new byte[] { mCandidateGenes[SE_END].get(0).Strand, mCandidateGenes[SE_START].get(0).Strand };
     }
 
     public String chrPair() { return formChromosomePair(mChromosomes[SE_START], mChromosomes[SE_END]); }
@@ -164,17 +180,10 @@ public class FusionReadData
 
     public boolean junctionMatch(final FusionFragment fragment)
     {
-        return validPositions(fragment.junctionPositions()) && validPositions(mJunctionPositions)
+        return fragment.hasBothJunctions()
                 && mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START] && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
                 && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START] && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
     }
-
-    public List<EnsemblGeneData>[] getCandidateGenes() { return mCandidateGenes; }
-
-    public boolean hasViableGenes() { return !mCandidateGenes[FS_UPSTREAM].isEmpty() && !mCandidateGenes[FS_DOWNSTREAM].isEmpty(); }
-    public boolean hasValidStreamData() { return mFusionIndices[FS_UPSTREAM] >= 0 && mFusionIndices[FS_DOWNSTREAM] >= 0; }
-
-    public boolean isValid() { return hasViableGenes() && hasValidStreamData() && !hasIncompleteData(); }
 
     public static boolean hasTranscriptExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
     {
@@ -183,6 +192,7 @@ public class FusionReadData
 
     public static boolean hasTranscriptNextExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
     {
+        // true if of any of list 2's exons are 1 ahead of list 1's exons
         return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matchesNext(y)));
     }
 
@@ -216,6 +226,8 @@ public class FusionReadData
     public boolean canAddDiscordantFragment(final FusionFragment fragment)
     {
         // the 2 reads' bounds need to fall within a correct intron relative to the SJs
+
+        // apply max fragment distance criteria
 
         boolean[] hasMatch = { false, false };
 
@@ -268,7 +280,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
-                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrag,SingleFrags"
+                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,SingleFrags"
                 + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
@@ -320,8 +332,7 @@ public class FusionReadData
         int splitFragments = mFragments.containsKey(BOTH_JUNCTIONS) ? mFragments.get(BOTH_JUNCTIONS).size() : 0;
         int realignedFragments = mFragments.containsKey(REALIGNED) ? mFragments.get(REALIGNED).size() : 0;
         int discordantFragments = mFragments.containsKey(DISCORDANT) ? mFragments.get(DISCORDANT).size() : 0;
-        int singleJuncFragments = (mFragments.containsKey(ONE_JUNCTION) ? mFragments.get(ONE_JUNCTION).size() : 0)
-                + (mFragments.containsKey(ONE_SIDED) ? mFragments.get(ONE_SIDED).size() : 0);
+        int singleJuncFragments = mFragments.containsKey(ONE_JUNCTION) ? mFragments.get(ONE_JUNCTION).size() : 0;
 
         int totalFragments = splitFragments + realignedFragments + discordantFragments + singleJuncFragments;
 

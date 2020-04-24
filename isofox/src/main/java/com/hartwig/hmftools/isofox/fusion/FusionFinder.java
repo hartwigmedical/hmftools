@@ -15,10 +15,12 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.fusion.FusionReadData.hasTranscriptNextExonMatch;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -374,14 +376,15 @@ public class FusionFinder
 
                 foundCandidates = true;
                 fusionData.setStreamData(upstreamGenes, downstreamGenes, se == SE_START);
-
-                for(FusionFragment fragment : fusionData.getAllFragments())
-                {
-                    fragment.setJunctionTypes(
-                            mConfig.RefFastaSeqFile, new byte[] { upstreamGenes.get(0).Strand, downstreamGenes.get(0).Strand} ) ;
-                }
-
             }
+        }
+
+        // mark donor-acceptor types whether strands are known or not
+        final byte[] geneStrands = fusionData.getGeneStrands();
+
+        for(FusionFragment fragment : fusionData.getAllFragments())
+        {
+            fragment.setJunctionTypes(mConfig.RefFastaSeqFile, geneStrands) ;
         }
 
         fusionData.cacheTranscriptData();
@@ -410,10 +413,20 @@ public class FusionFinder
                 {
                     FusionReadData fusion2 = fusions.get(j);
 
-                    if(isSpliced == fusion2.isUnspliced() || isUnspliced == fusion2.isKnownSpliced())
+                    if(isSpliced && fusion2.isUnspliced())
                     {
                         if(hasTranscriptExonMatch(fusion1.getTransExonRefsByStream(FS_UPSTREAM), fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                        && hasTranscriptExonMatch(fusion1.getTransExonRefsByStream(FS_DOWNSTREAM), fusion2.getTransExonRefsByStream(FS_DOWNSTREAM)))
+                        && hasTranscriptNextExonMatch(fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), fusion1.getTransExonRefsByStream(FS_DOWNSTREAM)))
+                        {
+                            fusion1.addRelatedFusion(fusion2.id());
+                            fusion2.addRelatedFusion(fusion1.id());
+                            continue;
+                        }
+                    }
+                    else if(isUnspliced && fusion2.isKnownSpliced())
+                    {
+                        if(hasTranscriptExonMatch(fusion1.getTransExonRefsByStream(FS_UPSTREAM), fusion2.getTransExonRefsByStream(FS_UPSTREAM))
+                        && hasTranscriptNextExonMatch(fusion1.getTransExonRefsByStream(FS_DOWNSTREAM), fusion2.getTransExonRefsByStream(FS_DOWNSTREAM)))
                         {
                             fusion1.addRelatedFusion(fusion2.id());
                             fusion2.addRelatedFusion(fusion1.id());
@@ -459,11 +472,8 @@ public class FusionFinder
 
             for (FusionFragment fragment : fragments)
             {
-                // discordant reads don't have assigned
                 if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
                     continue;
-
-                // if the fusion has unspliced reads, then these ought to set bounds for an discordant reads
 
                 for(FusionReadData fusion : fusions)
                 {
@@ -472,6 +482,15 @@ public class FusionFinder
 
                     if(fusion.canAddDiscordantFragment(fragment))
                     {
+                        for(int se = SE_START; se <= SE_END; ++se)
+                        {
+                            if (fragment.junctionValid()[se] && abs(fusion.junctionPositions()[se] - fragment.junctionPositions()[se]) <= POSITION_REALIGN_DISTANCE)
+                            {
+                                fragment.setType(REALIGNED);
+                                break;
+                            }
+                        }
+
                         fusion.addFusionFragment(fragment);
                         allocatedFragments.add(fragment);
                         break;
@@ -610,8 +629,8 @@ public class FusionFinder
                 {
                     final String prefix = se == SE_START ? "Start" : "End";
                     mFragmentWriter.write(",Chr" + prefix);
-                    mFragmentWriter.write(",Pos" + prefix);
-                    mFragmentWriter.write(",Orient" + prefix);
+                    mFragmentWriter.write(",JuncPos" + prefix);
+                    mFragmentWriter.write(",JuncOrient" + prefix);
                     mFragmentWriter.write(",Region" + prefix);
                     mFragmentWriter.write(",JuncType" + prefix);
                 }
