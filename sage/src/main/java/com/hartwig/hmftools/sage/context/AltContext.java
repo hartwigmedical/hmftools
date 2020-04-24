@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.read.ReadContext;
+import com.hartwig.hmftools.sage.read.ReadContextMatch;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -39,19 +40,29 @@ public class AltContext implements VariantHotspot {
             throw new IllegalStateException();
         }
 
-        if (newReadContext.isComplete()) {
-            boolean readContextMatch = false;
-            for (ReadContextCandidate counter : interimReadContexts) {
-                if (counter.incrementCounters(newReadContext)) {
-                    readContextMatch = true;
+        int fullMatch = 0;
+        int coreMatch = 0;
+        for (ReadContextCandidate candidate : interimReadContexts) {
+            final ReadContextMatch match = candidate.readContext().matchAtPosition(newReadContext);
+            switch (match) {
+                case FULL:
+                    candidate.incrementFull(1);
+                    fullMatch++;
                     break;
-                }
-            }
-
-            if (!readContextMatch) {
-                interimReadContexts.add(new ReadContextCandidate(newReadContext));
+                case PARTIAL:
+                case CORE:
+                    candidate.incrementCore(1);
+                    coreMatch++;
+                    break;
             }
         }
+
+        if (fullMatch == 0) {
+            final ReadContextCandidate candidate = new ReadContextCandidate(newReadContext);
+            candidate.incrementCore(coreMatch);
+            interimReadContexts.add(candidate);
+        }
+
     }
 
     public int readContextSupport() {
@@ -59,7 +70,7 @@ public class AltContext implements VariantHotspot {
     }
 
     public boolean finaliseAndValidate() {
-        interimReadContexts.sort(Comparator.comparingInt(ReadContextCandidate::count).reversed());
+        Collections.sort(interimReadContexts);
         if (!interimReadContexts.isEmpty()) {
             candidate = interimReadContexts.get(0);
         }
@@ -134,32 +145,42 @@ public class AltContext implements VariantHotspot {
         return h;
     }
 
-    static class ReadContextCandidate {
+    static class ReadContextCandidate implements Comparable<ReadContextCandidate> {
 
         private final ReadContext readContext;
-        private int count;
+        private int fullMatch;
+        private int coreMatch;
 
         ReadContextCandidate(@NotNull final ReadContext readContext) {
             assert (readContext.isComplete());
-            this.readContext = readContext;
+            this.readContext = readContext.minimiseFootprint();
         }
 
-        public boolean incrementCounters(@NotNull final ReadContext other) {
-            if (readContext.isFullMatch(other)) {
-                count++;
-                return true;
-            }
+        public void incrementFull(int count) {
+            fullMatch += count;
+        }
 
-            return false;
+        public void incrementCore(int count) {
+            coreMatch += count;
         }
 
         public int count() {
-            return count;
+            return fullMatch;
         }
 
         @NotNull
         public ReadContext readContext() {
             return readContext;
+        }
+
+        @Override
+        public int compareTo(@NotNull final ReadContextCandidate o) {
+            int fullCompare = -Integer.compare(fullMatch, o.fullMatch);
+            if (fullCompare == 0) {
+                return -Integer.compare(coreMatch, o.coreMatch);
+            }
+
+            return fullCompare;
         }
     }
 
