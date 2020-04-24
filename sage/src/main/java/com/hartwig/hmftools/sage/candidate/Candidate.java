@@ -30,7 +30,7 @@ public class Candidate implements GenomePosition {
         int altContextSupport = altContext.readContextSupport();
         if (altContextSupport > readContextSupport) {
             readContextSupport = altContextSupport;
-            readContext = altContext.readContext();
+            readContext = altContext.readContext().minimiseFootprint();
         }
         maxDepth = Math.max(maxDepth, altContext.rawDepth());
     }

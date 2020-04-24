@@ -2,11 +2,13 @@ package com.hartwig.hmftools.sage.pipeline;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
@@ -22,7 +24,6 @@ import com.hartwig.hmftools.sage.read.ReadContextCounter;
 import com.hartwig.hmftools.sage.variant.SageVariant;
 import com.hartwig.hmftools.sage.variant.SageVariantContextFactory;
 import com.hartwig.hmftools.sage.variant.SageVariantTier;
-import com.hartwig.hmftools.sage.vcf.SageChromosomeVCF;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,19 +39,20 @@ public class ChromosomePipeline implements AutoCloseable {
 
     private final String chromosome;
     private final SageConfig config;
-    private final SageChromosomeVCF sageVCF;
-    private final List<CompletableFuture<List<SageVariant>>> regions = Lists.newArrayList();
+    private final List<RegionFuture<List<SageVariant>>> regions = Lists.newArrayList();
     private final IndexedFastaSequenceFile refGenome;
     private final SageVariantPipeline sageVariantPipeline;
+    private final Consumer<VariantContext> consumer;
 
     public ChromosomePipeline(@NotNull final String chromosome, @NotNull final SageConfig config, @NotNull final Executor executor,
             @NotNull final List<VariantHotspot> hotspots, @NotNull final List<GenomeRegion> panelRegions,
-            @NotNull final List<GenomeRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap)
+            @NotNull final List<GenomeRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
+            final Consumer<VariantContext> consumer)
             throws IOException {
         this.chromosome = chromosome;
         this.config = config;
-        this.sageVCF = new SageChromosomeVCF(chromosome, config);
         this.refGenome = new IndexedFastaSequenceFile(new File(config.refGenome()));
+        this.consumer = consumer;
         this.sageVariantPipeline =
                 new SomaticPipeline(config, executor, refGenome, hotspots, panelRegions, highConfidenceRegions, qualityRecalibrationMap);
     }
@@ -60,23 +62,17 @@ public class ChromosomePipeline implements AutoCloseable {
         return chromosome;
     }
 
-    @NotNull
-    public String vcfFilename() {
-        return sageVCF.filename();
+    public void process() throws ExecutionException, InterruptedException {
+        process(1, refGenome.getSequence(chromosome).length());
     }
 
-    public void addAllRegions() {
-        int maxPosition = refGenome.getSequence(chromosome).length();
-        addAllRegions(maxPosition);
-    }
-
-    public void addAllRegions(int maxPosition) {
+    public void process(int minPosition, int maxPosition) throws ExecutionException, InterruptedException {
         // This is for the benefit of MT
         int dynamicSliceSize = maxPosition / Math.min(config.threads(), 4) + 1;
 
         final int regionSliceSize = Math.min(dynamicSliceSize, config.regionSliceSize());
         for (int i = 0; ; i++) {
-            int start = 1 + i * regionSliceSize;
+            int start = minPosition + i * regionSliceSize;
             int end = Math.min(start + regionSliceSize - 1, maxPosition);
             addRegion(start, end);
 
@@ -84,31 +80,30 @@ public class ChromosomePipeline implements AutoCloseable {
                 break;
             }
         }
+
+        submit().get();
     }
 
-    public void addRegion(int start, int end) {
+    private void addRegion(int start, int end) {
         final GenomeRegion region = GenomeRegions.create(chromosome, start, end);
-        regions.add(sageVariantPipeline.variants(region));
+        final CompletableFuture<List<SageVariant>> future = sageVariantPipeline.variants(region);
+        final RegionFuture<List<SageVariant>> regionFuture = new RegionFuture<>(region, future);
+        regions.add(regionFuture);
     }
+
 
     @NotNull
-    public CompletableFuture<ChromosomePipeline> submit() {
+    private CompletableFuture<ChromosomePipeline> submit() {
+        // Even if regions were executed out of order, they must be phased in order
+        regions.sort(Comparator.comparing(RegionFuture::region));
 
-        final Consumer<SageVariant> phasedConsumer = variant -> {
-            if (include(variant)) {
-                final VariantContext context = SageVariantContextFactory.create(variant);
-                sageVCF.write(context);
-            }
-        };
-
-        final Phase phase = new Phase(config, chromosome, phasedConsumer);
-
-        // Phasing must be done in (positional) order but we can do it eagerly as each new region comes in.
+        // Phasing must be done in order but we can do it eagerly as each new region comes in.
         // It is not necessary to wait for the entire chromosome to be finished to start.
         CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-        Iterator<CompletableFuture<List<SageVariant>>> regionsIterator = regions.iterator();
+        final Phase phase = new Phase(config, chromosome, this::write);
+        final Iterator<RegionFuture<List<SageVariant>>> regionsIterator = regions.iterator();
         while (regionsIterator.hasNext()) {
-            CompletableFuture<List<SageVariant>> region = regionsIterator.next();
+            CompletableFuture<List<SageVariant>> region = regionsIterator.next().future();
             done = done.thenCombine(region, (aVoid, sageVariants) -> {
 
                 sageVariants.forEach(phase);
@@ -120,11 +115,16 @@ public class ChromosomePipeline implements AutoCloseable {
 
         return done.thenApply(aVoid -> {
             phase.flush();
-            sageVCF.close();
             LOGGER.info("Processing chromosome {} complete", chromosome);
             return ChromosomePipeline.this;
         });
 
+    }
+
+    private void write(@NotNull final SageVariant entry) {
+        if (include(entry)) {
+            consumer.accept(SageVariantContextFactory.create(entry));
+        }
     }
 
     private boolean include(@NotNull final SageVariant entry) {
@@ -165,4 +165,24 @@ public class ChromosomePipeline implements AutoCloseable {
     public void close() throws IOException {
         refGenome.close();
     }
+
+    private static class RegionFuture<T> {
+
+        private final CompletableFuture<T> future;
+        private final GenomeRegion region;
+
+        public RegionFuture(final GenomeRegion region, final CompletableFuture<T> future) {
+            this.region = region;
+            this.future = future;
+        }
+
+        public CompletableFuture<T> future() {
+            return future;
+        }
+
+        public GenomeRegion region() {
+            return region;
+        }
+    }
+
 }

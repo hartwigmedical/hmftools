@@ -11,14 +11,14 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public abstract class BufferedProcessor implements Consumer<SageVariant> {
+public abstract class BufferedPostProcessor implements Consumer<SageVariant> {
 
     private final int maxDistance;
 
     private final ArrayDeque<SageVariant> buffer = new ArrayDeque<>();
     private final Consumer<SageVariant> consumer;
 
-    public BufferedProcessor(int maxDistance, final Consumer<SageVariant> consumer) {
+    public BufferedPostProcessor(int maxDistance, final Consumer<SageVariant> consumer) {
         this.maxDistance = maxDistance;
         this.consumer = consumer;
     }

@@ -14,7 +14,7 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PhasedInframeIndel extends BufferedProcessor {
+public class PhasedInframeIndel extends BufferedPostProcessor {
 
     private static final int MAX_DISTANCE = 50;
 

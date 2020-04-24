@@ -14,7 +14,7 @@ import com.hartwig.hmftools.sage.vcf.SageVCF;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MixedSomaticGermlineDedup extends BufferedProcessor {
+public class MixedSomaticGermlineDedup extends BufferedPostProcessor {
 
     private static final int MAX_DISTANCE = 10;
 

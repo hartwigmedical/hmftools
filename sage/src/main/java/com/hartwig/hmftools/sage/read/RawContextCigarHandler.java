@@ -10,7 +10,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class RawContextCigarHandler implements CigarHandler {
 
-
     private final VariantHotspot variant;
     private final int maxSkippedReferenceRegions;
     private final boolean isInsert;
@@ -38,7 +37,7 @@ public class RawContextCigarHandler implements CigarHandler {
         if (variant.position() < record.getAlignmentStart()) {
             int readIndex = record.getReadPositionAtReferencePosition(record.getAlignmentStart()) - 1 - record.getAlignmentStart()
                     + (int) variant.position() - variant.alt().length() + variant.ref().length();
-            result = RawContext.clipped(readIndex);
+            result = RawContext.inSoftClip(readIndex);
         }
     }
 
@@ -57,7 +56,7 @@ public class RawContextCigarHandler implements CigarHandler {
         if (variant.position() >= refPosition && variant.position() <= refPositionEnd) {
             int alignmentEnd = record.getAlignmentEnd();
             int actualIndex = record.getReadPositionAtReferencePosition(alignmentEnd) - 1 - alignmentEnd + (int) variant.position();
-            result = RawContext.clipped(actualIndex);
+            result = RawContext.inSoftClip(actualIndex);
         }
 
     }

@@ -20,9 +20,4 @@ public abstract class SomaticVariantAnalysis {
     @NotNull
     public abstract List<DriverCatalog> driverCatalog();
 
-    public abstract double microsatelliteIndelsPerMb();
-
-    public abstract int tumorMutationalLoad();
-
-    public abstract double tumorMutationalBurden();
 }

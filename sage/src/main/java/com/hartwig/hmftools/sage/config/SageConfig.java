@@ -5,8 +5,10 @@ import static com.hartwig.hmftools.common.cli.Configs.defaultIntValue;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.cli.Configs;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 import com.hartwig.hmftools.common.genome.region.HmfTranscriptRegion;
@@ -35,23 +37,23 @@ public interface SageConfig {
     String REF_GENOME = "ref_genome";
     String OUTPUT_VCF = "out";
     String MIN_MAP_QUALITY = "min_map_quality";
-    String MIN_BASE_QUALITY = "min_base_quality";
     String HIGH_CONFIDENCE_BED = "high_confidence_bed";
     String PANEL_BED = "panel_bed";
     String PANEL_ONLY = "panel_only";
-    String GERMLINE_ONLY = "germline";
     String HOTSPOTS = "hotspots";
     String MAX_READ_DEPTH = "max_read_depth";
     String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
     String MAX_REALIGNMENT_DEPTH = "max_realignment_depth";
     String ASSEMBLY = "assembly";
+    String CHR = "chr";
+    String SLICE_SIZE = "slice_size";
 
     int DEFAULT_THREADS = 2;
-    int DEFAULT_MIN_MAP_QUALITY = 0;
-    int DEFAULT_MIN_BASE_QUALITY = 13;
+    int DEFAULT_MIN_MAP_QUALITY = 10;
     int DEFAULT_MAX_READ_DEPTH = 1000;
     int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     int DEFAULT_MAX_REALIGNMENT_DEPTH = 1000;
+    int DEFAULT_SLICE_SIZE = 100_000;
 
     @NotNull
     static Options createOptions() {
@@ -64,8 +66,9 @@ public interface SageConfig {
         options.addOption(TUMOR_BAM, true, "Path to tumor bam file");
         options.addOption(REF_GENOME, true, "Path to indexed ref genome fasta file");
         options.addOption(OUTPUT_VCF, true, "Path to output vcf");
-        options.addOption(MIN_MAP_QUALITY, true, "Min map quality [" + DEFAULT_MIN_MAP_QUALITY + "]");
-        options.addOption(MIN_BASE_QUALITY, true, "Min base quality [" + DEFAULT_MIN_BASE_QUALITY + "]");
+        options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
+        options.addOption(CHR, true, "Run for single chromosome");
+        options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
 
         options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
         options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
@@ -73,7 +76,6 @@ public interface SageConfig {
         options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
         options.addOption(PANEL_BED, true, "Panel regions bed file");
         options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
-        options.addOption(GERMLINE_ONLY, false, "Germline only mode");
         options.addOption(HOTSPOTS, true, "Hotspots");
         FilterConfig.createOptions().getOptions().forEach(options::addOption);
         QualityConfig.createOptions().getOptions().forEach(options::addOption);
@@ -113,7 +115,8 @@ public interface SageConfig {
 
     @NotNull
     default String baseQualityRecalibrationFile(@NotNull final String sample) {
-        return new File(outputFile()).getParent() + File.separator + sample + ".sage.bqr.tsv";
+        String parent = new File(outputFile()).getParent();
+        return parent == null ? sample + ".sage.bqr.tsv" : parent + File.separator + sample + ".sage.bqr.tsv";
     }
 
     @NotNull
@@ -133,17 +136,16 @@ public interface SageConfig {
     @NotNull
     BaseQualityRecalibrationConfig baseQualityRecalibrationConfig();
 
+    @NotNull
+    Set<String> chromosomes();
+
     default int typicalReadLength() {
         return 151;
     }
 
-    default int regionSliceSize() {
-        return 500_000;
-    }
+    int regionSliceSize();
 
     int minMapQuality();
-
-    int minBaseQuality();
 
     int maxRealignmentDepth();
 
@@ -215,18 +217,25 @@ public interface SageConfig {
         final List<HmfTranscriptRegion> transcripts =
                 assembly.equals("hg19") ? HmfGenePanelSupplier.allGeneList37() : HmfGenePanelSupplier.allGeneList38();
 
+        final Set<String> chromosomes = Sets.newHashSet();
+        final String chromosomeList = cmd.getOptionValue(CHR);
+        if (chromosomeList != null) {
+            chromosomes.addAll(Lists.newArrayList(chromosomeList.split(",")));
+        }
+
         return ImmutableSageConfig.builder()
                 .version(version)
                 .transcriptRegions(transcripts)
                 .outputFile(cmd.getOptionValue(OUTPUT_VCF))
                 .threads(threads)
+                .chromosomes(chromosomes)
                 .reference(referenceList)
                 .referenceBam(referenceBamList)
                 .tumor(tumorList)
                 .tumorBam(tumorBamList)
                 .refGenome(cmd.getOptionValue(REF_GENOME))
+                .regionSliceSize(defaultIntValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE))
                 .minMapQuality(defaultIntValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY))
-                .minBaseQuality(defaultIntValue(cmd, MIN_BASE_QUALITY, DEFAULT_MIN_BASE_QUALITY))
                 .maxReadDepth(defaultIntValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH))
                 .maxReadDepthPanel(defaultIntValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL))
                 .maxRealignmentDepth(defaultIntValue(cmd, MAX_REALIGNMENT_DEPTH, DEFAULT_MAX_REALIGNMENT_DEPTH))

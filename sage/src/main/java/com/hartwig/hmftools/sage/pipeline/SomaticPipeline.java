@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 import java.util.List;
@@ -82,19 +81,15 @@ public class SomaticPipeline implements SageVariantPipeline {
             LOGGER.debug("Processing candidates in {}:{}", region.chromosome(), region.start());
 
             final Candidates initialCandidates = new Candidates(hotspots, panelRegions, highConfidenceRegions);
-            final List<CompletableFuture<Void>> candidateFutures = Lists.newArrayList();
 
+            CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
             for (int i = 0; i < config.tumor().size(); i++) {
                 final String sample = config.tumor().get(i);
                 final String sampleBam = config.tumorBam().get(i);
-
-                final CompletableFuture<Void> candidateFuture =
-                        refSequenceFuture.thenApply(x -> candidateEvidence.get(sample, sampleBam, refSequence, region))
-                                .thenAccept(initialCandidates::add);
-
-                candidateFutures.add(candidateFuture);
+                done = done.thenApply(aVoid -> candidateEvidence.get(sample, sampleBam, refSequence, region))
+                        .thenAccept(initialCandidates::add);
             }
-            return allOf(candidateFutures.toArray(new CompletableFuture[candidateFutures.size()])).thenApply(y -> initialCandidates.candidates());
+            return done.thenApply(y -> initialCandidates.candidates());
         });
     }
 
@@ -107,20 +102,16 @@ public class SomaticPipeline implements SageVariantPipeline {
             final String primarySample = samples.isEmpty() ? "PRIMARY" : samples.get(0);
 
             final ReadContextCounters result = new ReadContextCounters(primarySample, initialCandidates);
-            final List<CompletableFuture<Void>> tumorFutures = Lists.newArrayList();
 
+            CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
             for (int i = 0; i < samples.size(); i++) {
                 final String sample = samples.get(i);
                 final String sampleBam = sampleBams.get(i);
 
-                final CompletableFuture<Void> tumorFuture = CompletableFuture.completedFuture(this)
-                        .thenApply(x -> readContextEvidence.get(initialCandidates, sample, sampleBam))
-                        .thenAccept(result::addCounters);
-
-                tumorFutures.add(tumorFuture);
+                done = done.thenApply(x -> readContextEvidence.get(initialCandidates, sample, sampleBam)).thenAccept(result::addCounters);
             }
 
-            return allOf(tumorFutures.toArray(new CompletableFuture[tumorFutures.size()])).thenApply(x -> result);
+            return done.thenApply(x -> result);
         });
     }
 

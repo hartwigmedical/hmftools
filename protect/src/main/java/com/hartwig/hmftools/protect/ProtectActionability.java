@@ -196,9 +196,9 @@ public class ProtectActionability {
 
         LOGGER.info("Extract tumor characteristics from sample {}", tumorSampleId);
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSampleId, somaticVariantVcf);
-        int tumorMTL = TumorMutationalLoad.determineTumorMutationalLoad(variants);
-        double tumorMSI = MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants);
-        double tumorMTB = TumorMutationalLoad.determineTumorMutationalBurden(variants);
+        int tumorMTL = (int) Math.round(copyNumberAnalysis.tumorMutationalLoad());
+        double tumorMSI = copyNumberAnalysis.microsatelliteIndelsPerMb();
+        double tumorMTB = copyNumberAnalysis.tumorMutationalBurdenPerMb();
 
         LOGGER.info("Create actionability for sample {}", tumorSampleId);
 

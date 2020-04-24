@@ -65,10 +65,7 @@ public class SomaticVariantAnalyzer {
         }
 
         return ImmutableSomaticVariantAnalysis.of(variantsToReport,
-                driverCatalog,
-                MicrosatelliteIndels.determineMicrosatelliteIndelsPerMb(variants),
-                TumorMutationalLoad.determineTumorMutationalLoad(variants),
-                TumorMutationalLoad.determineTumorMutationalBurden(variants));
+                driverCatalog);
 
     }
 

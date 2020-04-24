@@ -10,7 +10,7 @@ import htsjdk.samtools.SAMRecord;
 public class RawContextFactory {
 
     private final VariantHotspot variant;
-    private static final RawContext DUMMY = RawContext.clipped(-1);
+    private static final RawContext DUMMY = RawContext.inSoftClip(-1);
 
     public RawContextFactory(final VariantHotspot variant) {
         this.variant = variant;
@@ -23,5 +23,4 @@ public class RawContextFactory {
         RawContext result = handler.result();
         return result == null ? DUMMY : result;
     }
-
 }

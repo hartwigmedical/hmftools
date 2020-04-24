@@ -46,7 +46,8 @@ prepare_data <- function(input) {
     ungroup() %>%
     spread(originalQual, changeInQual, fill = 0) %>%
     gather(originalQual, changeInQual, -1, -2) %>%
-    select(substitution, context, originalQual, changeInQual)
+    select(substitution, context, originalQual, changeInQual) %>%
+    mutate(originalQual = as.numeric(originalQual))
 }
 
 plot_data <- function(df) {
@@ -65,10 +66,10 @@ plot_data <- function(df) {
 }
 
 args <- commandArgs(trailing=T)
-#input <- "/Users/jon/hmf/analysis/COLO829T/sage/COLO829T.sage.bqr.tsv"
+#input <- "/Users/jon/hmf/analysis/bqr/COLO829Tv001.sage.bqr.tsv"
 input <- args[1]
 output <- gsub("tsv","png", input)
 
 bqrData = prepare_data(input)
 bqrPlot = plot_data(bqrData)
-ggsave(filename = output, bqrPlot, units = "in", height = (dim(bqrData)[2] - 1), width = 12, scale = 1, dpi = 300)
+ggsave(filename = output, bqrPlot, units = "in", height = length(unique(bqrData$originalQual)), width = 12, scale = 1, dpi = 300)

@@ -8,7 +8,7 @@ import com.hartwig.hmftools.sage.variant.SageVariant;
 
 import org.jetbrains.annotations.NotNull;
 
-public class MixedSomaticGermlineIdentifier extends BufferedProcessor {
+public class MixedSomaticGermlineIdentifier extends BufferedPostProcessor {
 
     private static final int MAX_DISTANCE = 10;
 

@@ -25,8 +25,10 @@ import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ImmutableReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.copynumber.ImmutableReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ImmutableReportableHomozygousDisruption;
@@ -61,6 +63,8 @@ public final class ExampleAnalysisTestFactory {
         final int tumorMutationalLoad = 180;
         final double tumorMutationalBurden = 13.6;
         final double microsatelliteIndelsPerMb = 0.11;
+        final MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
+        final TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
 
         final ReportData reportData = testReportData();
 
@@ -98,7 +102,9 @@ public final class ExampleAnalysisTestFactory {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
+                .microsatelliteStatus(msiStatus)
                 .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordAnalysis(chordAnalysis)
                 .gainsAndLosses(gainsAndLosses)
@@ -124,6 +130,8 @@ public final class ExampleAnalysisTestFactory {
         final int tumorMutationalLoad = 182;
         final double tumorMutationalBurden = 13.6;
         final double microsatelliteIndelsPerMb = 0.1089;
+        final MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
+        final TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
 
         final ReportData reportData = testReportData();
 
@@ -153,7 +161,9 @@ public final class ExampleAnalysisTestFactory {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
+                .microsatelliteStatus(msiStatus)
                 .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordAnalysis(chordAnalysis)
                 .gainsAndLosses(gainsAndLosses)
@@ -179,6 +189,8 @@ public final class ExampleAnalysisTestFactory {
         final int tumorMutationalLoad = 182;
         final double tumorMutationalBurden = 13.6;
         final double microsatelliteIndelsPerMb = 0.1089;
+        final MicrosatelliteStatus msiStatus = MicrosatelliteStatus.MSS;
+        final TumorMutationalStatus tmlStatus = TumorMutationalStatus.HIGH;
 
         final ReportData reportData = testReportData();
 
@@ -208,7 +220,9 @@ public final class ExampleAnalysisTestFactory {
                 .offLabelEvidence(offLabelEvidence)
                 .reportableVariants(reportableVariants)
                 .microsatelliteIndelsPerMb(microsatelliteIndelsPerMb)
+                .microsatelliteStatus(msiStatus)
                 .tumorMutationalLoad(tumorMutationalLoad)
+                .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordAnalysis(chordAnalysis)
                 .gainsAndLosses(gainsAndLosses)

@@ -1,25 +1,27 @@
 package com.hartwig.hmftools.sage.quality;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.jetbrains.annotations.NotNull;
 
 class QualityCounter implements QualityCounterKey, Comparable<QualityCounter> {
     private final QualityCounterKey key;
-    private int count;
+    private AtomicInteger count = new AtomicInteger();
 
     public QualityCounter(final QualityCounterKey key) {
         this.key = key;
     }
 
     public int count() {
-        return count;
+        return count.get();
     }
 
     public void increment() {
-        count++;
+        increment(1);
     }
 
     public void increment(int increment) {
-        count += increment;
+        count.addAndGet(increment);
     }
 
     public int position() {

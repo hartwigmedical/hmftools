@@ -22,8 +22,7 @@ import com.hartwig.hmftools.patientreporter.cfreport.data.EvidenceItems;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GainsAndLosses;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneFusions;
 import com.hartwig.hmftools.patientreporter.cfreport.data.GeneUtil;
-import com.hartwig.hmftools.patientreporter.cfreport.data.MicroSatelliteStatus;
-import com.hartwig.hmftools.patientreporter.cfreport.data.MutationalLoad;
+import com.hartwig.hmftools.patientreporter.cfreport.data.HrDeficiency;
 import com.hartwig.hmftools.patientreporter.cfreport.data.SomaticVariants;
 import com.hartwig.hmftools.patientreporter.cfreport.data.TumorPurity;
 import com.itextpdf.layout.Document;
@@ -147,15 +146,20 @@ public class SummaryChapter implements ReportChapter {
                 hasReliablePurity)).addStyle(dataStyle)));
 
         String mutationalLoadString =
-                hasReliablePurity ? MutationalLoad.interpretToString(patientReport.tumorMutationalLoad()) : DataUtil.NA_STRING;
+                hasReliablePurity ? patientReport.tumorMutationalLoadStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Tumor mutational load").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(mutationalLoadString).addStyle(dataStyle)));
 
         String microSatelliteStabilityString =
-                hasReliablePurity ? MicroSatelliteStatus.interpret(patientReport.microsatelliteIndelsPerMb()) : DataUtil.NA_STRING;
+                hasReliablePurity ? patientReport.microsatelliteStatus().display() : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("Microsatellite (in)stability").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(microSatelliteStabilityString).addStyle(dataStyle)));
         div.add(table);
+
+        String hrdString = hasReliablePurity ? HrDeficiency.interpretChordStatusToString(patientReport.chordAnalysis().hrdValue()) : DataUtil.NA_STRING;
+        table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
+        table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));
+
         reportDocument.add(div);
     }
 

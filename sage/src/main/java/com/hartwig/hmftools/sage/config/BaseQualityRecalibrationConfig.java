@@ -17,11 +17,13 @@ public interface BaseQualityRecalibrationConfig {
     String BQR_ENABLED = "bqr_enabled";
     String BQR_SAMPLE_SIZE = "bqr_sample_size";
     String BQR_MAX_ALT_COUNT = "bqr_max_alt_count";
+    String BQR_MIN_MAP_QUAL = "bqr_min_map_qual";
 
     boolean DEFAULT_BQR_PLOT = true;
     boolean DEFAULT_BQR_ENABLED = true;
     int DEFAULT_BQR_MAX_ALT_COUNT = 3;
     int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
+    int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
     boolean enabled();
 
@@ -31,13 +33,16 @@ public interface BaseQualityRecalibrationConfig {
 
     int sampleSize();
 
+    int minMapQuality();
+
     @NotNull
     static Options createOptions() {
         final Options options = new Options();
-        options.addOption(BQR_ENABLED, true, "Enabled base quality recalibration [" + DEFAULT_BQR_ENABLED + "]");
-        options.addOption(BQR_PLOT, true, "Plot base quality changes  [" + DEFAULT_BQR_PLOT + "]");
-        options.addOption(BQR_MAX_ALT_COUNT, true, "Maximum alt count to be an error [" + DEFAULT_BQR_MAX_ALT_COUNT + "]");
-        options.addOption(BQR_SAMPLE_SIZE, true, "Sampling size per autosome [" + DEFAULT_BQR_SAMPLE_SIZE + "]");
+        options.addOption(BQR_ENABLED, true, "BQR (Base Quality Recalibration) enabled [" + DEFAULT_BQR_ENABLED + "]");
+        options.addOption(BQR_PLOT, true, "BQR plots [" + DEFAULT_BQR_PLOT + "]");
+        options.addOption(BQR_MAX_ALT_COUNT, true, "BQR maximum alt count to be an error [" + DEFAULT_BQR_MAX_ALT_COUNT + "]");
+        options.addOption(BQR_SAMPLE_SIZE, true, "BQR sampling size per autosome [" + DEFAULT_BQR_SAMPLE_SIZE + "]");
+        options.addOption(BQR_MIN_MAP_QUAL, true, "BQR min base quality remap qual [" + DEFAULT_BQR_MIN_MAP_QUAL + "]");
         return options;
     }
 
@@ -48,6 +53,7 @@ public interface BaseQualityRecalibrationConfig {
                 .plot(defaultBooleanValue(cmd, BQR_PLOT, DEFAULT_BQR_PLOT))
                 .maxAltCount(defaultIntValue(cmd, BQR_MAX_ALT_COUNT, DEFAULT_BQR_MAX_ALT_COUNT))
                 .sampleSize(defaultIntValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE))
+                .minMapQuality(defaultIntValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL))
                 .build();
     }
 

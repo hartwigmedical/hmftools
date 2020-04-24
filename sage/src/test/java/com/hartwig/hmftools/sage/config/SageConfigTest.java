@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sage.config;
 
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MAX_ALT_COUNT;
+import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.config.BaseQualityRecalibrationConfig.DEFAULT_BQR_SAMPLE_SIZE;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.config.FilterConfig.DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
@@ -19,23 +20,35 @@ import static com.hartwig.hmftools.sage.config.QualityConfig.DEFAULT_READ_EDGE_F
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MAX_REALIGNMENT_DEPTH;
-import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.config.SageConfig.DEFAULT_THREADS;
+
+import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.genepanel.HmfGenePanelSupplier;
 
 import org.jetbrains.annotations.NotNull;
+import org.junit.Test;
 
 public class SageConfigTest {
+
+    @Test
+    public void testBqrFile() {
+        SageConfig config = testConfig();
+        assertEquals("SAMPLE.sage.bqr.tsv", config.baseQualityRecalibrationFile("SAMPLE"));
+
+        config = ImmutableSageConfig.builder().from(testConfig()).outputFile("./out.vcf").build();
+        assertEquals("./SAMPLE.sage.bqr.tsv", config.baseQualityRecalibrationFile("SAMPLE"));
+    }
+
 
     @NotNull
     public static SageConfig testConfig() {
         return ImmutableSageConfig.builder()
                 .panelOnly(false)
                 .version("2.2")
-                .outputFile("output file")
+                .outputFile("out.vcf")
                 .transcriptRegions(HmfGenePanelSupplier.allGeneList37())
                 .reference(Lists.newArrayList("reference"))
                 .referenceBam(Lists.newArrayList("referenceBam"))
@@ -47,11 +60,11 @@ public class SageConfigTest {
                 .hotspots("hotspots")
                 .threads(DEFAULT_THREADS)
                 .minMapQuality(DEFAULT_MIN_MAP_QUALITY)
-                .minBaseQuality(DEFAULT_MIN_BASE_QUALITY)
                 .maxRealignmentDepth(DEFAULT_MAX_REALIGNMENT_DEPTH)
                 .maxReadDepth(DEFAULT_MAX_READ_DEPTH)
                 .maxReadDepthPanel(DEFAULT_MAX_READ_DEPTH_PANEL)
                 .qualityConfig(defaultQualityConfig())
+                .regionSliceSize(500_000)
                 .filter(defaultFilterConfig())
                 .baseQualityRecalibrationConfig(defaultQualityRecalibrationConfig())
                 .build();
@@ -90,6 +103,7 @@ public class SageConfigTest {
                 .plot(false)
                 .maxAltCount(DEFAULT_BQR_MAX_ALT_COUNT)
                 .sampleSize(DEFAULT_BQR_SAMPLE_SIZE)
+                .minMapQuality(DEFAULT_BQR_MIN_MAP_QUAL)
                 .build();
     }
 

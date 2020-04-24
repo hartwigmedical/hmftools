@@ -50,16 +50,18 @@ public class LimsTest {
                 .submission(SUBMISSION)
                 .refBarcode(REF_SAMPLE_BARCODE)
                 .tumorBarcode(TUMOR_SAMPLE_BARCODE)
-                .requesterEmail(requesterEmail)
-                .requesterName(requesterName)
                 .shallowSeq("1")
                 .germlineReportingChoice(Strings.EMPTY)
                 .hospitalPatientId(hospitalPatientId)
                 .hospitalPathologySampleId(hospitalPathologySampleId)
                 .build();
 
-        LimsJsonSubmissionData submissionData =
-                ImmutableLimsJsonSubmissionData.builder().submission(SUBMISSION).projectName(projectName).build();
+        LimsJsonSubmissionData submissionData = ImmutableLimsJsonSubmissionData.builder()
+                .submission(SUBMISSION)
+                .projectName(projectName)
+                .reportContactName(requesterName)
+                .reportContactEmail(requesterEmail)
+                .build();
 
         LimsShallowSeqData shallowSeqData = ImmutableLimsShallowSeqData.builder()
                 .sampleBarcode(TUMOR_SAMPLE_BARCODE)

@@ -2,10 +2,10 @@ package com.hartwig.hmftools.sage.quality;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.Lists;
@@ -25,7 +25,6 @@ public class QualityRecalibration {
     private final ExecutorService executorService;
     private final IndexedFastaSequenceFile refGenome;
     private final BaseQualityRecalibrationConfig config;
-    private final List<CompletableFuture<Collection<QualityCounter>>> counters = Lists.newArrayList();
 
     public QualityRecalibration(final BaseQualityRecalibrationConfig config, final ExecutorService executorService,
             final IndexedFastaSequenceFile refGenome) {
@@ -37,52 +36,46 @@ public class QualityRecalibration {
     @NotNull
     public CompletableFuture<List<QualityRecalibrationRecord>> qualityRecalibrationRecords(@NotNull final String bamFile) {
 
+        final Map<QualityCounterKey, QualityCounter> map = new ConcurrentHashMap<>(Maps.newHashMap());
+        final List<CompletableFuture<Void>> doneList = Lists.newArrayList();
+
         for (final SAMSequenceRecord sequenceRecord : refGenome.getSequenceDictionary().getSequences()) {
-            if (HumanChromosome.contains(sequenceRecord.getSequenceName())) {
-                final HumanChromosome chromosome = HumanChromosome.fromString(sequenceRecord.getSequenceName());
-                if (chromosome.isAutosome()) {
-                    int start = sequenceRecord.getSequenceLength() - 1_000_000 - config.sampleSize();
-                    int end = sequenceRecord.getSequenceLength() - 1_000_001;
-                    submitAllRegions(bamFile, sequenceRecord.getSequenceName(), start, end);
+            final String contig = sequenceRecord.getSequenceName();
+
+            if (HumanChromosome.contains(contig) && HumanChromosome.fromString(contig).isAutosome()) {
+                int start = sequenceRecord.getSequenceLength() - 1_000_000 - config.sampleSize();
+                int end = sequenceRecord.getSequenceLength() - 1_000_001;
+                for (CompletableFuture<Collection<QualityCounter>> region : submitAllRegions(bamFile, contig, start, end)) {
+                    final CompletableFuture<Void> done = region.thenAccept(counts -> {
+                        for (QualityCounter count : counts) {
+                            final QualityCounterKey key = withoutPosition(count);
+                            map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
+                        }
+                    });
+                    doneList.add(done);
                 }
             }
         }
 
-        final Map<QualityCounterKey, QualityCounter> map = Maps.newHashMap();
-        CompletableFuture<Void> done = CompletableFuture.completedFuture(null);
-
-        final Iterator<CompletableFuture<Collection<QualityCounter>>> counterIterator = counters.iterator();
-        // Merge each region as it comes in
-        while (counterIterator.hasNext()) {
-            CompletableFuture<Collection<QualityCounter>> region = counterIterator.next();
-            done = done.thenCombine(region, (aVoid, qualityCounters) -> {
-
-                for (QualityCounter count : qualityCounters) {
-                    final QualityCounterKey key = withoutPosition(count);
-                    map.computeIfAbsent(key, QualityCounter::new).increment(count.count());
-                }
-
-                return null;
-            });
-
-            counterIterator.remove();
-        }
-
-        return done.thenApply(aVoid -> {
+        return CompletableFuture.allOf(doneList.toArray(new CompletableFuture[0])).thenApply(aVoid -> {
             final List<QualityCounter> sortedList = Lists.newArrayList(map.values());
             Collections.sort(sortedList);
             return QualityRecalibrationFactory.create(sortedList);
         });
+
     }
 
-    public void addRegion(String bam, String contig, int start, int end) {
+    public CompletableFuture<Collection<QualityCounter>> addRegion(String bam, String contig, int start, int end) {
         final GenomeRegion bounds = GenomeRegions.create(contig, start, end);
-        counters.add(CompletableFuture.supplyAsync(() -> new QualityCounterFactory(bam,
-                refGenome,
-                config.maxAltCount()).regionCount(bounds), executorService));
+        return CompletableFuture.supplyAsync(() -> new QualityCounterFactory(config, bam, refGenome).regionCount(bounds),
+                executorService);
     }
 
-    public void submitAllRegions(@NotNull final String bam, @NotNull final String contig, int minPosition, int maxPosition) {
+    public List<CompletableFuture<Collection<QualityCounter>>> submitAllRegions(@NotNull final String bam, @NotNull final String contig,
+            int minPosition, int maxPosition) {
+
+        final List<CompletableFuture<Collection<QualityCounter>>> result = Lists.newArrayList();
+
         final int regionSliceSize = 100_000;
         for (int i = 0; ; i++) {
             int start = minPosition + i * regionSliceSize;
@@ -92,12 +85,14 @@ public class QualityRecalibration {
                 continue;
             }
 
-            addRegion(bam, contig, Math.max(start, minPosition), Math.min(end, maxPosition));
+            result.add(addRegion(bam, contig, Math.max(start, minPosition), Math.min(end, maxPosition)));
 
             if (end >= maxPosition) {
                 break;
             }
         }
+
+        return result;
     }
 
     @NotNull

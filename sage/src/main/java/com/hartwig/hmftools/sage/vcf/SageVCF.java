@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.sage.vcf;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,13 +12,10 @@ import com.hartwig.hmftools.sage.config.SoftFilter;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
@@ -89,12 +83,8 @@ public class SageVCF implements AutoCloseable {
         writer.writeHeader(header);
     }
 
-    public void addVCF(@NotNull final String filename) throws IOException {
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(filename, new VCFCodec(), false)) {
-            for (VariantContext context : reader.iterator()) {
-                refContextEnrichment.accept(context);
-            }
-        }
+    public void write(@NotNull final VariantContext context) {
+        refContextEnrichment.accept(context);
     }
 
     private void writeToFile(@NotNull final VariantContext context) {
@@ -171,8 +161,6 @@ public class SageVCF implements AutoCloseable {
 
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_FILTER, "Variant was removed as duplicate"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIXED_GERMLINE_SOMATIC_MNV.toString(),
-                "MNV contains combination of somatic and germline SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.toString(), "Insufficient tumor quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.toString(), "Insufficient tumor VAF"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.toString(), "Insufficient germline depth"));

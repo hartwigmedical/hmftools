@@ -45,6 +45,11 @@ public final class CopyNumberAnalyzer {
                 .exomeGeneCopyNumbers(exomeGeneCopyNumbers)
                 .reportableGainsAndLosses(reportableGainsAndLosses)
                 .evidenceItems(filteredEvidenceItems)
+                .microsatelliteIndelsPerMb(purityContext.microsatelliteIndelsPerMb())
+                .microsatelliteStatus(purityContext.microsatelliteStatus())
+                .tumorMutationalLoad(purityContext.tumorMutationalLoad())
+                .tumorMutationalLoadStatus(purityContext.tumorMutationalLoadStatus())
+                .tumorMutationalBurdenPerMb(purityContext.tumorMutationalBurdenPerMb())
                 .build();
     }
 }

@@ -17,18 +17,6 @@ import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 
 public class TumorMutationalLoad  {
 
-    public static int determineTumorMutationalLoad(@NotNull final List<? extends SomaticVariant> variants) {
-        TumorMutationalLoad load = new TumorMutationalLoad();
-        variants.forEach(load::accept);
-        return load.load();
-    }
-
-    public static double determineTumorMutationalBurden(@NotNull final List<? extends SomaticVariant> variants) {
-        TumorMutationalLoad load = new TumorMutationalLoad();
-        variants.forEach(load::accept);
-        return load.burdenPerMb();
-    }
-
     private static final VariantContextFilter PASS = new PassingVariantFilter();
 
     private int load;

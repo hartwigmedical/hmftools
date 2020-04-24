@@ -27,8 +27,6 @@ final class LimsTestUtil {
                 .primaryTumor(Strings.EMPTY)
                 .labSopVersions(Strings.EMPTY)
                 .submission(Strings.EMPTY)
-                .requesterName(Strings.EMPTY)
-                .requesterEmail(Strings.EMPTY)
                 .germlineReportingChoice(Strings.EMPTY)
                 .shallowSeq(Strings.EMPTY);
     }

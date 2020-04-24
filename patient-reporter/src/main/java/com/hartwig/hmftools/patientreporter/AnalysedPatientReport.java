@@ -6,7 +6,9 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
+import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
 import com.hartwig.hmftools.patientreporter.copynumber.ReportableGainLoss;
 import com.hartwig.hmftools.patientreporter.homozygousdisruption.ReportableHomozygousDisruption;
 import com.hartwig.hmftools.patientreporter.structural.ReportableGeneDisruption;
@@ -54,6 +56,12 @@ public abstract class AnalysedPatientReport implements PatientReport {
     public abstract int tumorMutationalLoad();
 
     public abstract double tumorMutationalBurden();
+
+    @NotNull
+    public abstract MicrosatelliteStatus microsatelliteStatus();
+
+    @NotNull
+    public abstract TumorMutationalStatus tumorMutationalLoadStatus();
 
     @NotNull
     public abstract ChordAnalysis chordAnalysis();

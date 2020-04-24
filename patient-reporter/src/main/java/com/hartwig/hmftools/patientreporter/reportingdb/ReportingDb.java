@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.lims.LimsCohortType;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
@@ -41,11 +42,12 @@ public final class ReportingDb {
 
         String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
+        LimsCohortType cohortTypeCore = LimsCohortType.fromSampleId(sampleId);
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (type == LimsSampleType.WIDE && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
-        } else if (type == LimsSampleType.CORE && report.clinicalSummary().isEmpty() && !sampleId.startsWith("CORELR")
-                && !sampleId.startsWith("CORERI")) {
+        } else if (type == LimsSampleType.CORE && report.clinicalSummary().isEmpty() && cohortTypeCore != LimsCohortType.CORELR02
+                && cohortTypeCore != LimsCohortType.CORERI02) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
         } else if (type != LimsSampleType.OTHER) {
             addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
@@ -79,22 +81,24 @@ public final class ReportingDb {
         String reportDate = ReportResources.REPORT_DATE;
 
         String reportType = report.reason().identifier();
+        String reportTypeInterpret = report.isCorrectedReport() ? reportType+"_corrected" : reportType;
+
 
         LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
         if (type != LimsSampleType.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
-                        && reportType.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
-                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportType, reportDate);
+                        && reportTypeInterpret.equals(entry.reportType()) && reportDate.equals(entry.reportDate())) {
+                    LOGGER.warn("Sample {} has already been reported with report type '{}' on {}!", sampleId, reportTypeInterpret, reportDate);
                     present = true;
                 }
             }
 
             if (!present) {
-                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
+                LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportTypeInterpret);
                 String stringToAppend =
-                        tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportType + "\t" + NA_STRING + "\t" + NA_STRING + "\t"
+                        tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportTypeInterpret + "\t" + NA_STRING + "\t" + NA_STRING + "\t"
                                 + NA_STRING + "\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }

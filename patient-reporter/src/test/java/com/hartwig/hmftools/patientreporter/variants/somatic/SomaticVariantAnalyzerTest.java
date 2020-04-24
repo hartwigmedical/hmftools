@@ -46,8 +46,6 @@ public class SomaticVariantAnalyzerTest {
 
         SomaticVariantAnalysis analysis = SomaticVariantAnalyzer.run(variants, driverGeneView, Collections.emptyList());
 
-        assertEquals(2, analysis.tumorMutationalLoad());
-
         // Report the missense variant on RIGHT_GENE plus the synonymous hotspot.
         assertEquals(2, analysis.variantsToReport().size());
     }

@@ -91,7 +91,6 @@ public class RightAlignMicrohomology implements Consumer<SageVariant> {
 
         rightAlignedList.add(realignedVariant);
 
-        System.out.println(rightAligned);
         return true;
     }
 
