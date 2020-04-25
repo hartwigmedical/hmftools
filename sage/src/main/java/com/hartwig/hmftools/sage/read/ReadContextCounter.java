@@ -58,7 +58,6 @@ public class ReadContextCounter implements VariantHotspot {
             final QualityRecalibrationMap recalibrationMap, final SageVariantTier tier, final int maxCoverage, boolean realign) {
         this.sample = sample;
         this.tier = tier;
-        assert (readContext.isComplete());
         this.variant = variant;
         this.readContext = readContext;
         this.rawFactory = new RawContextFactory(variant);
@@ -185,7 +184,7 @@ public class ReadContextCounter implements VariantHotspot {
 
     public void accept(final SAMRecord record, final SageConfig sageConfig) {
         try {
-            if (coverage >= maxCoverage || !readContext.isComplete()) {
+            if (coverage >= maxCoverage) {
                 return;
             }
 

@@ -75,13 +75,23 @@ public class AltContext implements VariantHotspot {
     }
 
     public boolean finaliseAndValidate() {
+        interimReadContexts.removeIf(x -> !x.readContext().isCoreComplete());
+        if (containsCompleteRecord() ) {
+            interimReadContexts.removeIf(x -> !x.readContext().isComplete());
+        }
+
         Collections.sort(interimReadContexts);
         if (!interimReadContexts.isEmpty()) {
             candidate = interimReadContexts.get(0);
         }
         interimReadContexts.clear();
-        return candidate != null && candidate.readContext().isComplete();
+        return candidate != null;
     }
+
+    private boolean containsCompleteRecord() {
+        return interimReadContexts.stream().anyMatch(x -> x.readContext().isComplete());
+    }
+
 
     public ReadContext readContext() {
         return candidate.readContext();
@@ -184,6 +194,7 @@ public class AltContext implements VariantHotspot {
 
         @Override
         public int compareTo(@NotNull final ReadContextCandidate o) {
+
             int fullCompare = -Integer.compare(fullMatch, o.fullMatch);
             if (fullCompare != 0) {
                 return fullCompare;

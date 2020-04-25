@@ -21,6 +21,26 @@ public class AltContextTest {
     private static final int POS = 1000;
 
     @Test
+    public void testIncompleteReadContext() {
+        final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
+        final AltContext victim = new AltContext(refContext, "C", "T");
+        final String core1 = "GATAC";
+        final String core2 = "GATAA";
+
+        final List<ReadContext> readContexts = Lists.newArrayList();
+        readContexts.add(simpleSnv("A", core1, "AG"));
+        readContexts.add(simpleSnv("A", core1, "AG"));
+        readContexts.add(simpleSnv("T", core2, "TT"));
+
+        // Ordering should not matter!
+        Collections.shuffle(readContexts);
+        readContexts.forEach(victim::addReadContext);
+
+        assertTrue(victim.finaliseAndValidate());
+        assertEquals("A" + core1 + "AG", new String(victim.readContext().readBases()));
+    }
+
+    @Test
     public void testFullMatch() {
 
         final RefContext refContext = new RefContext("SAMPLE", CHROM, POS, 1000);
@@ -39,7 +59,6 @@ public class AltContextTest {
         assertTrue(victim.finaliseAndValidate());
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
-
 
     @Test
     public void testCoreMatchAfterFullMatch() {
@@ -70,7 +89,6 @@ public class AltContextTest {
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
 
-
     @Test
     public void testPartialMatchAfterFullMatch() {
 
@@ -99,9 +117,6 @@ public class AltContextTest {
         assertTrue(victim.finaliseAndValidate());
         assertEquals("AG" + core1 + "AG", new String(victim.readContext().readBases()));
     }
-
-
-
 
     @NotNull
     public static ReadContext simpleSnv(@NotNull final String leftFlank, @NotNull final String core, @NotNull final String rightFlank) {

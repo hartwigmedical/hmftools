@@ -52,10 +52,10 @@ public class ReadContext {
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
 
-        this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
+        this.readBases = new IndexedBases(position, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
 
         int refIndex = refSequence.index(position);
-        this.refBases = IndexedBases.resize(position,
+        this.refBases = new IndexedBases(position,
                 refIndex,
                 refIndex + leftCentreIndex - readIndex,
                 refIndex + rightCentreIndex - readIndex,
@@ -70,7 +70,12 @@ public class ReadContext {
         this.microhomology = clone.microhomology;
         this.distance = clone.distance;
         this.distanceCigar = clone.distanceCigar;
-        this.refBases = clone.refBases;
+        this.refBases = IndexedBases.resize(position,
+                clone.refBases.index(),
+                clone.refBases.leftCentreIndex(),
+                clone.refBases.rightCentreIndex(),
+                clone.refBases.flankSize(),
+                clone.refBases.bases());
 
         this.readBases = IndexedBases.resize(position,
                 clone.readBases.index(),
@@ -92,6 +97,10 @@ public class ReadContext {
 
     public boolean isComplete() {
         return readBases.flanksComplete();
+    }
+
+    public boolean isCoreComplete() {
+        return readBases.coreComplete();
     }
 
     int minCentreQuality(int readIndex, SAMRecord record) {
@@ -137,7 +146,7 @@ public class ReadContext {
 
     @NotNull
     public ReadContextMatch matchAtPosition(@NotNull final ReadContext other) {
-        return readBases.matchAtPosition(other.readIndex(), other.readBases());
+        return readBases.matchAtPosition(other.readBases);
     }
 
     public int readBasesPositionIndex() {

@@ -48,7 +48,7 @@ public class RefContext implements GenomePosition {
         altContext.incrementAltRead(baseQuality);
         this.rawDepth++;
 
-        if (readContext != null && readContext.isComplete()) {
+        if (readContext != null) {
             altContext.addReadContext(readContext);
         }
     }

@@ -99,7 +99,17 @@ public class IndexedBases {
     }
 
     @NotNull
+    public ReadContextMatch matchAtPosition(@NotNull final IndexedBases other) {
+        return matchAtPosition(other.index(), other.length(), other.bases());
+    }
+
+    @NotNull
     public ReadContextMatch matchAtPosition(int otherReadIndex, byte[] otherBases) {
+        return matchAtPosition(otherReadIndex, length(), otherBases);
+    }
+
+    @NotNull
+    public ReadContextMatch matchAtPosition(int otherReadIndex, int otherLength, byte[] otherBases) {
 
         if (otherReadIndex < 0) {
             return NONE;
@@ -120,11 +130,14 @@ public class IndexedBases {
             return CORE;
         }
 
-        if (leftFlankingBases != flankSize && rightFlankingBases != flankSize) {
+        int leftFlankLength = leftFlankLength();
+        int rightFlankLength = rightFlankLength();
+
+        if (leftFlankingBases != leftFlankLength && rightFlankingBases != rightFlankLength) {
             return CORE;
         }
 
-        return leftFlankingBases == rightFlankingBases ? FULL : PARTIAL;
+        return length() == otherLength && leftFlankingBases == leftFlankLength && rightFlankingBases == rightFlankLength ? FULL : PARTIAL;
     }
 
     boolean coreMatch(final int otherRefIndex, final byte[] otherBases) {
