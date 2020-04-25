@@ -17,8 +17,8 @@ public class GenePhaseRegion
     public final String GeneId;
     public GenePhaseType Phase;
 
-    private long mStart;
-    private long mEnd;
+    private int mStart;
+    private int mEnd;
 
     private boolean[] mPhaseArray;
     private boolean[] mPreGenePhaseStatus;
@@ -29,7 +29,7 @@ public class GenePhaseRegion
     private int mTransId;
     private boolean mProteinCoding;
 
-    public GenePhaseRegion(final String geneId, long start, long end, GenePhaseType phase)
+    public GenePhaseRegion(final String geneId, int start, int end, GenePhaseType phase)
     {
         GeneId = geneId;
         Phase = phase;
@@ -47,7 +47,7 @@ public class GenePhaseRegion
         calcCombinedPhase();
     }
 
-    public GenePhaseRegion(final String geneId, long start, long end, final boolean[] phaseArray, final boolean[] preGeneArray)
+    public GenePhaseRegion(final String geneId, int start, int end, final boolean[] phaseArray, final boolean[] preGeneArray)
     {
         GeneId = geneId;
         Phase = PHASE_5P_UTR; // will not be used
@@ -61,7 +61,7 @@ public class GenePhaseRegion
         calcCombinedPhase();
     }
 
-    public static GenePhaseRegion from(final GenePhaseRegion other, long start, long end)
+    public static GenePhaseRegion from(final GenePhaseRegion other, int start, int end)
     {
         // copy with new region
         GenePhaseRegion newRegion = new GenePhaseRegion(
@@ -107,13 +107,13 @@ public class GenePhaseRegion
             return PHASE_5P_UTR;
     }
 
-    public long start() { return mStart; }
-    public void setStart(long start) { mStart = start; }
+    public int start() { return mStart; }
+    public void setStart(int start) { mStart = start; }
 
-    public long end() { return mEnd; }
-    public void setEnd(long end) { mEnd = end; }
+    public int end() { return mEnd; }
+    public void setEnd(int end) { mEnd = end; }
 
-    public long length() { return mEnd - mStart; }
+    public int length() { return mEnd - mStart; }
 
     public final boolean[] getPhaseArray() { return mPhaseArray; }
     public final boolean[] getPreGenePhaseStatus() { return mPreGenePhaseStatus; }
@@ -231,7 +231,7 @@ public class GenePhaseRegion
         return (int)Math.pow(10, typeAsInt(phase));
     }
 
-    public void populateLengthCounts(long[] counts, boolean allowPreGene)
+    public void populateLengthCounts(int[] counts, boolean allowPreGene)
     {
         if(counts.length != PHASE_MAX)
             return;

@@ -21,10 +21,10 @@ public class LikelihoodCalc
 {
     private static final Logger LOGGER = LogManager.getLogger(LikelihoodCalc.class);
 
-    public static long calcNonProximateLikelihood(final GeneRangeData geneUp, final GeneRangeData geneDown)
+    public static int calcNonProximateLikelihood(final GeneRangeData geneUp, final GeneRangeData geneDown)
     {
         // calculate the overlap area for 2 non-proximate genes
-        long totalOverlap = 0;
+        int totalOverlap = 0;
 
         for (GenePhaseRegion regionUp : geneUp.getPhaseRegions())
         {
@@ -34,7 +34,7 @@ public class LikelihoodCalc
                 if(hasAnyPhaseMatch(regionUp, regionDown, false)
                 || regionsPhaseMatched(regionUp, regionDown))
                 {
-                    long regionOverlap = regionUp.length() * regionDown.length();
+                    int regionOverlap = regionUp.length() * regionDown.length();
                     totalOverlap += regionOverlap;
                 }
             }
@@ -43,12 +43,12 @@ public class LikelihoodCalc
         return totalOverlap;
     }
 
-    public static Map<Integer, Long> calcOverlapBucketAreas(
-            final List<Long> bucketLengths, final List<RegionAllocator> regionAllocators,
+    public static Map<Integer, Integer> calcOverlapBucketAreas(
+            final List<Integer> bucketLengths, final List<RegionAllocator> regionAllocators,
             GeneRangeData lowerGene, GeneRangeData upperGene,
             GenePhaseRegion lowerRegion, GenePhaseRegion upperRegion, boolean isDel)
     {
-        Map<Integer, Long> bucketOverlapCounts = Maps.newHashMap();
+        Map<Integer,Integer> bucketOverlapCounts = Maps.newHashMap();
 
         if(lowerRegion.length() < 0 || upperRegion.length() < 0)
         {
@@ -58,8 +58,8 @@ public class LikelihoodCalc
 
         for (int i = 0; i < bucketLengths.size() - 1; ++i)
         {
-            long minBucketLen = bucketLengths.get(i);
-            long maxBucketLen = bucketLengths.get(i + 1);
+            int minBucketLen = bucketLengths.get(i);
+            int maxBucketLen = bucketLengths.get(i + 1);
 
             // first check whether the bucket can link these 2 genes
             if(lowerRegion.start() + minBucketLen >= upperRegion.end() || lowerRegion.end() + maxBucketLen <= upperRegion.start())
@@ -77,7 +77,7 @@ public class LikelihoodCalc
                 - if the max bucket length = 150 then 100 + 150 doesn't reach the start of the upper gene, so the base overlap region must start from 150+
             */
 
-            long baseOverlapArea = 0;
+            int baseOverlapArea = 0;
 
             if(minBucketLen <= upperRegion.start() - lowerRegion.end() && maxBucketLen >= upperRegion.end() - lowerRegion.start())
             {
@@ -95,9 +95,9 @@ public class LikelihoodCalc
             }
             else
             {
-                long lowerStart, lowerEnd, upperStart;
+                int lowerStart, lowerEnd, upperStart;
 
-                long upperEnd = min(upperRegion.end(), lowerRegion.end() + maxBucketLen);
+                int upperEnd = min(upperRegion.end(), lowerRegion.end() + maxBucketLen);
 
                 if(lowerRegion.start() + minBucketLen > upperRegion.start())
                 {
@@ -130,8 +130,8 @@ public class LikelihoodCalc
                     }
                 }
 
-                long actUpperStart = max(upperStart, lowerStart + minBucketLen);
-                long actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
+                int actUpperStart = max(upperStart, lowerStart + minBucketLen);
+                int actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
 
                 if(regionAllocators != null)
                 {
@@ -141,9 +141,9 @@ public class LikelihoodCalc
                 else
                 {
                     // per-base allocation without memory
-                    for (long base = lowerStart; base <= lowerEnd; ++base)
+                    for (int base = lowerStart; base <= lowerEnd; ++base)
                     {
-                        long overlap = min(upperEnd, base + maxBucketLen) - max(upperStart, base + minBucketLen);
+                        int overlap = min(upperEnd, base + maxBucketLen) - max(upperStart, base + minBucketLen);
 
                         if (overlap > 0)
                             baseOverlapArea += overlap;
@@ -168,18 +168,18 @@ public class LikelihoodCalc
         return bucketOverlapCounts;
     }
 
-    public static long calcGeneOverlapAreas(GeneRangeData geneUp, GeneRangeData geneDown,
-            boolean isDel, long minBucketLen, long maxBucketLen, final RegionAllocator regionAllocator)
+    public static int calcGeneOverlapAreas(GeneRangeData geneUp, GeneRangeData geneDown,
+            boolean isDel, int minBucketLen, int maxBucketLen, final RegionAllocator regionAllocator)
     {
-        long upGeneTransStart = geneUp.getPhaseRegions().stream().mapToLong(x -> x.start()).min().orElse(0);
-        long upGeneTransEnd = geneUp.getPhaseRegions().stream().mapToLong(x -> x.end()).max().orElse(0);
-        long downGeneTransStart = geneDown.getPhaseRegions().stream().mapToLong(x -> x.start()).min().orElse(0);
-        long downGeneTransEnd = geneDown.getPhaseRegions().stream().mapToLong(x -> x.end()).max().orElse(0);
+        int upGeneTransStart = geneUp.getPhaseRegions().stream().mapToInt(x -> x.start()).min().orElse(0);
+        int upGeneTransEnd = geneUp.getPhaseRegions().stream().mapToInt(x -> x.end()).max().orElse(0);
+        int downGeneTransStart = geneDown.getPhaseRegions().stream().mapToInt(x -> x.start()).min().orElse(0);
+        int downGeneTransEnd = geneDown.getPhaseRegions().stream().mapToInt(x -> x.end()).max().orElse(0);
 
-        long upGeneStart = geneUp.GeneData.GeneStart;
-        long upGeneEnd = geneUp.GeneData.GeneEnd;
-        long downGeneStart = geneDown.GeneData.GeneStart;
-        long downGeneEnd = geneDown.GeneData.GeneEnd;
+        int upGeneStart = geneUp.GeneData.GeneStart;
+        int upGeneEnd = geneUp.GeneData.GeneEnd;
+        int downGeneStart = geneDown.GeneData.GeneStart;
+        int downGeneEnd = geneDown.GeneData.GeneEnd;
 
         int strand = geneDown.GeneData.Strand;
         boolean sameGene = geneUp.GeneData.GeneId.equals(geneDown.GeneData.GeneId);
@@ -197,7 +197,7 @@ public class LikelihoodCalc
         downGeneStart = min(downGeneStart, downGeneTransStart);
         downGeneEnd = max(downGeneEnd, downGeneTransEnd);
 
-        long lowerRegionStart, lowerRegionEnd, upperRegionStart, upperRegionEnd;
+        int lowerRegionStart, lowerRegionEnd, upperRegionStart, upperRegionEnd;
 
         if(sameGene)
         {
@@ -234,7 +234,7 @@ public class LikelihoodCalc
             return 0;
         }
 
-        long baseOverlapArea = 0;
+        int baseOverlapArea = 0;
 
         if(minBucketLen <= upperRegionStart - lowerRegionEnd && maxBucketLen >= upperRegionEnd - lowerRegionStart)
         {
@@ -245,9 +245,9 @@ public class LikelihoodCalc
         }
         else
         {
-            long lowerStart, lowerEnd, upperStart;
+            int lowerStart, lowerEnd, upperStart;
 
-            long upperEnd = min(upperRegionEnd, lowerRegionEnd + maxBucketLen);
+            int upperEnd = min(upperRegionEnd, lowerRegionEnd + maxBucketLen);
 
             if(lowerRegionStart + minBucketLen > upperRegionStart)
             {
@@ -280,8 +280,8 @@ public class LikelihoodCalc
                 }
             }
 
-            long actUpperStart = max(upperStart, lowerStart + minBucketLen);
-            long actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
+            int actUpperStart = max(upperStart, lowerStart + minBucketLen);
+            int actUpperEnd = min(upperEnd, lowerEnd + maxBucketLen);
 
             baseOverlapArea += regionAllocator.allocateBases(
                     lowerStart, lowerEnd, actUpperStart, actUpperEnd, minBucketLen, maxBucketLen, true);
@@ -290,13 +290,13 @@ public class LikelihoodCalc
         return baseOverlapArea;
     }
 
-    public static void setBucketLengthData(Map<Integer,Long> countsData, int bucketIndex, long newCounts)
+    public static void setBucketLengthData(Map<Integer,Integer> countsData, int bucketIndex, int newCounts)
     {
         if(newCounts <= 0)
             return;
 
         // initialise the array if empty
-        Long bucketCount = countsData.get(bucketIndex);
+        Integer bucketCount = countsData.get(bucketIndex);
 
         if(bucketCount == null)
         {
@@ -332,7 +332,7 @@ public class LikelihoodCalc
                 int strand = (s == 0) ? 1 : -1;
 
                 ChromosomeArm currentArm = geneRangeList.get(0).Arm;
-                long totalGenicRegion = 0;
+                int totalGenicRegion = 0;
 
                 for(int i = 0; i < geneRangeList.size(); ++i)
                 {
@@ -353,8 +353,8 @@ public class LikelihoodCalc
                     }
 
                     /*
-                    long geneStart = gene.getPhaseRegions().get(0).start();
-                    long geneEnd = gene.getPhaseRegions().get(gene.getPhaseRegions().size() - 1).end();
+                    int geneStart = gene.getPhaseRegions().get(0).start();
+                    int geneEnd = gene.getPhaseRegions().get(gene.getPhaseRegions().size() - 1).end();
 
                     totalGenicRegion += (geneEnd - geneStart);
 
@@ -383,7 +383,7 @@ public class LikelihoodCalc
                         if (!gene2.Arm.equals(gene.Arm))
                             break;
 
-                        long totalOverlap = 0;
+                        int totalOverlap = 0;
 
                         for (GenePhaseRegion region1 : gene.getPhaseRegions())
                         {
@@ -398,8 +398,8 @@ public class LikelihoodCalc
                                 if (!haveOverlap(region1, region2, 0))
                                     continue;
 
-                                long overlapStart = max(region1.start(), region2.start());
-                                long overlapEnd = min(region1.end(), region2.end());
+                                int overlapStart = max(region1.start(), region2.start());
+                                int overlapEnd = min(region1.end(), region2.end());
 
                                 if(overlapEnd > overlapStart)
                                     totalOverlap += (overlapEnd - overlapStart);
@@ -427,7 +427,7 @@ public class LikelihoodCalc
     }
 
     private static void logArmStats(final String chromosome, final String arm, int strand,
-            final int[] overlapBuckets, long totalGenicRegion, int blockSize)
+            final int[] overlapBuckets, int totalGenicRegion, int blockSize)
     {
         int overlapRegions = 0;
 

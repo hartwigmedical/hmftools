@@ -134,8 +134,8 @@ public class PhaseRegionUtils
                     extraRegion.addPhases(region.getPhaseArray(), region.getPreGenePhaseStatus());
                     extraRegion.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
-                    long regionStart = newRegion.end() + 1;
-                    long newRegionEnd = region.start() - 1;
+                    int regionStart = newRegion.end() + 1;
+                    int newRegionEnd = region.start() - 1;
 
                     region.setStart(regionStart);
 
@@ -149,8 +149,8 @@ public class PhaseRegionUtils
                     extraRegion.addPhases(region.getPhaseArray(), region.getPreGenePhaseStatus());
                     extraRegion.setProteinCoding(region.proteinCoding() || newRegion.proteinCoding());
 
-                    long regionEnd = newRegion.start() - 1;
-                    long newRegionStart = region.end() + 1;
+                    int regionEnd = newRegion.start() - 1;
+                    int newRegionStart = region.end() + 1;
 
                     region.setEnd(regionEnd);
 
@@ -328,17 +328,17 @@ public class PhaseRegionUtils
     {
         // 2 regions overlap - if they both have the same protein-coding status, then split the overlapping region between them
         // otherwise remove the overlap region from the non-protein-coding region
-        long overlapStart = max(region1.start(), region2.start());
-        long overlapEnd = min(region1.end(), region2.end());
+        int overlapStart = max(region1.start(), region2.start());
+        int overlapEnd = min(region1.end(), region2.end());
 
-        long midBase = (overlapEnd + overlapStart) / 2;
+        int midBase = (overlapEnd + overlapStart) / 2;
 
         boolean proteinCodingMatch = region1.proteinCoding() == region2.proteinCoding();
 
         if(region1.start() < overlapStart && region1.end() > overlapEnd)
         {
             // region 1 encloses region 2 - if match on protein coding then split the region, otherwise remove one or the other
-            long regionEnd = region1.end();
+            int regionEnd = region1.end();
             if(proteinCodingMatch)
             {
                 region1.setEnd(midBase);
@@ -357,7 +357,7 @@ public class PhaseRegionUtils
         }
         else if(region2.start() < overlapStart && region2.end() > overlapEnd)
         {
-            long regionEnd = region2.end();
+            int regionEnd = region2.end();
             if(proteinCodingMatch)
             {
                 region2.setEnd(midBase);
@@ -419,7 +419,7 @@ public class PhaseRegionUtils
             if(phaseMatch && region.getCombinedPhase() != otherRegion.getCombinedPhase())
                 continue;
 
-            long overlap = min(region.end(), otherRegion.end()) - max(region.start(), otherRegion.start());
+            int overlap = min(region.end(), otherRegion.end()) - max(region.start(), otherRegion.start());
             double overlapPerc = overlap / (double)max(region.length(), otherRegion.length());
 
             if(overlapPerc >= permittedOverlapPercent)
@@ -437,8 +437,8 @@ public class PhaseRegionUtils
         for(int j = 0; j <= 1; ++j)
         {
             boolean includePreGene = (j == 0);
-            long[] phaseCounts = new long[PHASE_MAX];
-            long[] combinedPhaseCounts = new long[PHASE_MAX];
+            int[] phaseCounts = new int[PHASE_MAX];
+            int[] combinedPhaseCounts = new int[PHASE_MAX];
 
             simpleRegions.stream().forEach(x -> x.populateLengthCounts(phaseCounts, includePreGene));
             combinedRegions.stream().forEach(x -> x.populateLengthCounts(combinedPhaseCounts, includePreGene));

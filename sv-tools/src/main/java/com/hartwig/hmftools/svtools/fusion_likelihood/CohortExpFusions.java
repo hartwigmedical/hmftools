@@ -48,18 +48,18 @@ import org.apache.logging.log4j.Logger;
 public class CohortExpFusions
 {
     // config
-    private final List<Long> mProximateBucketLengths;
+    private final List<Integer> mProximateBucketLengths;
 
     private final Map<String, List<GeneRangeData>> mChrGeneDataMap;
 
-    private final Map<String,Map<Integer,Long>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
-    private final Map<String,Map<Integer,Long>> mDupGenePairCounts;
+    private final Map<String,Map<Integer,Integer>> mDelGenePairCounts; // pair of gene-pairs to their overlap counts keyed by bucket index
+    private final Map<String,Map<Integer,Integer>> mDupGenePairCounts;
 
     // global counts by type and buck length
     private List<Integer> mGlobalProximateCounts; // indexed as per the proximate lengths
     private int mGlobalShortInvCount;
     private int mGlobalLongDelDupInvCount;
-    private long mArmLengthFactor;
+    private int mArmLengthFactor;
     private final List<RegionAllocator> mDelRegionAllocators;
     private final List<RegionAllocator> mDupRegionAllocators;
 
@@ -92,19 +92,19 @@ public class CohortExpFusions
     }
 
     public final Map<String, List<GeneRangeData>> getChrGeneRangeDataMap() { return mChrGeneDataMap; }
-    public Map<String,Map<Integer,Long>> getDelGenePairCounts() { return mDelGenePairCounts; }
-    public Map<String,Map<Integer,Long>> getDupGenePairCounts() { return mDupGenePairCounts; }
+    public Map<String,Map<Integer,Integer>> getDelGenePairCounts() { return mDelGenePairCounts; }
+    public Map<String,Map<Integer,Integer>> getDupGenePairCounts() { return mDupGenePairCounts; }
 
-    public long getArmLengthFactor() { return mArmLengthFactor; }
+    public int getArmLengthFactor() { return mArmLengthFactor; }
 
-    public void initialiseLengths(final List<Long> proximateBucketLengths, final List<String> restrictedChromosomes)
+    public void initialiseLengths(final List<Integer> proximateBucketLengths, final List<String> restrictedChromosomes)
     {
         mProximateBucketLengths.addAll(proximateBucketLengths);
 
         mProximateBucketLengths.stream().forEach(x -> mGlobalProximateCounts.add(0));
 
         // sum up all arm lengths to adjust same-arm fusion rates
-        long maxBucketLength = max(getMaxBucketLength(), 4000000);
+        int maxBucketLength = max(getMaxBucketLength(), 4000000);
 
         for(Map.Entry<Chromosome,Long> entry : SvUtilities.refGenomeLengths().lengths().entrySet())
         {
@@ -113,12 +113,12 @@ public class CohortExpFusions
             if(!restrictedChromosomes.isEmpty() && !restrictedChromosomes.contains(chromosome))
                 continue;
 
-            long armLength = getChromosomalArmLength(chromosome, P_ARM);
+            int armLength = (int)getChromosomalArmLength(chromosome, P_ARM);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += pow(armLength - maxBucketLength, 2);
 
-            armLength = getChromosomalArmLength(chromosome, Q_ARM);
+            armLength = (int)getChromosomalArmLength(chromosome, Q_ARM);
 
             if(armLength > maxBucketLength)
                 mArmLengthFactor += armLength * (armLength - maxBucketLength);
@@ -292,7 +292,7 @@ public class CohortExpFusions
         for(TranscriptData transcript : transDataList)
         {
             int transId = transcript.TransId;
-            long precedingGeneSAPos = geneTransCache.findPrecedingGeneSpliceAcceptorPosition(transId);
+            int precedingGeneSAPos = geneTransCache.findPrecedingGeneSpliceAcceptorPosition(transId);
 
             List<GenePhaseRegion> transcriptRegions = createPhaseRegionsFromTranscript(geneRangeData.GeneData, transcript, precedingGeneSAPos);
 
@@ -319,7 +319,7 @@ public class CohortExpFusions
     }
 
     public static List<GenePhaseRegion> createPhaseRegionsFromTranscript(
-            final EnsemblGeneData geneData, final TranscriptData transcript, long precSpliceAcceptorPos)
+            final EnsemblGeneData geneData, final TranscriptData transcript, int precSpliceAcceptorPos)
     {
         // 5-prime rules - must be post-promotor
         // 3-prime rules: must be coding and > 1 exon, needs to find first splice acceptor and then uses its phasing
@@ -360,10 +360,10 @@ public class CohortExpFusions
             {
                 int regionPhase = (transcript.CodingStart < exonData.ExonEnd) ? nextExonData.ExonPhase : -1;
 
-                long preDistance = max(transcript.TransStart - precSpliceAcceptorPos, 0);
-                long upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
-                long regionStart = transcript.TransStart - upstreamDistance;
-                long regionEnd = exonData.ExonStart - 1;
+                int preDistance = max(transcript.TransStart - precSpliceAcceptorPos, 0);
+                int upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
+                int regionStart = transcript.TransStart - upstreamDistance;
+                int regionEnd = exonData.ExonStart - 1;
 
                 if(regionStart < regionEnd)
                 {
@@ -378,11 +378,11 @@ public class CohortExpFusions
             {
                 int regionPhase = (transcript.CodingEnd > nextExonData.ExonStart) ? exonData.ExonPhase : -1;
 
-                long regionStart = nextExonData.ExonEnd + 1;
+                int regionStart = nextExonData.ExonEnd + 1;
 
-                long preDistance = max(precSpliceAcceptorPos - transcript.TransEnd, 0);
-                long upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
-                long regionEnd = transcript.TransEnd + upstreamDistance;
+                int preDistance = max(precSpliceAcceptorPos - transcript.TransEnd, 0);
+                int upstreamDistance = min(preDistance, PRE_GENE_3P_DISTANCE);
+                int regionEnd = transcript.TransEnd + upstreamDistance;
 
                 if(regionStart < regionEnd)
                 {
@@ -461,14 +461,14 @@ public class CohortExpFusions
         }
     }
 
-    public long getMaxBucketLength()
+    public int getMaxBucketLength()
     {
         return !mProximateBucketLengths.isEmpty() ? mProximateBucketLengths.get(mProximateBucketLengths.size() - 1) : MIN_BUCKET_LENGTH;
     }
 
     public void generateProximateCounts(final List<GeneRangeData> geneList, int strandMatch)
     {
-        long rangeLimit = getMaxBucketLength();
+        int rangeLimit = getMaxBucketLength();
 
         for(int lowerIndex = 0; lowerIndex < geneList.size(); ++lowerIndex)
         {
@@ -508,7 +508,7 @@ public class CohortExpFusions
     public void generateNonProximateCounts(final List<GeneRangeData> geneList, int strandMatch)
     {
         // test for candidate fusions between long DELs and DUPs, and then for INVs of various lengths
-        long proximateLimit = getMaxBucketLength();
+        int proximateLimit = getMaxBucketLength();
 
         for(int i = 0; i < geneList.size(); ++i)
         {
@@ -538,7 +538,7 @@ public class CohortExpFusions
                 }
 
                 // find furthest distance between these 2 genes
-                long maxDistance = max(abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart),
+                int maxDistance = max(abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneStart),
                         abs(gene1.GeneData.GeneEnd - gene2.GeneData.GeneEnd));
 
                 maxDistance = max(maxDistance, abs(gene1.GeneData.GeneStart - gene2.GeneData.GeneEnd));
@@ -606,7 +606,7 @@ public class CohortExpFusions
                         if(!matchGene1AsUp && !matchGene1AsDown)
                             continue;
 
-                        long regionOverlap = region1.length() * region2.length();
+                        int regionOverlap = region1.length() * region2.length();
 
                         if(matchGene1AsUp)
                         {
@@ -763,7 +763,7 @@ public class CohortExpFusions
             if (!phaseMatched)
                 continue;
 
-            Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(
+            Map<Integer,Integer> bucketOverlapCounts = calcOverlapBucketAreas(
                     mProximateBucketLengths, trackAllocations ? (isDel ? mDelRegionAllocators : mDupRegionAllocators) : null,
                     lowerGene, upperGene, lowerRegion, upperRegion, isDel);
 
@@ -780,15 +780,15 @@ public class CohortExpFusions
                             lowerRegion.getCombinedPhase());
                 }
 
-                for (Map.Entry<Integer, Long> entry : bucketOverlapCounts.entrySet())
+                for (Map.Entry<Integer,Integer> entry : bucketOverlapCounts.entrySet())
                 {
                     int bucketIndex = entry.getKey();
-                    long overlap = entry.getValue();
+                    int overlap = entry.getValue();
                     addGeneFusionData(lowerGene, upperGene, overlap, isDel, bucketIndex);
 
                     if (mLogVerbose)
                     {
-                        long bucketLen = mProximateBucketLengths.get(bucketIndex);
+                        int bucketLen = mProximateBucketLengths.get(bucketIndex);
                         LOGGER.debug("matched-region bucketLength({}: {}) overlap({})", bucketIndex, bucketLen, overlap);
                     }
                 }
@@ -801,18 +801,18 @@ public class CohortExpFusions
     public static final int BUCKET_MIN = 0;
     public static final int BUCKET_MAX = 1;
 
-    public long[] getBucketLengthMinMax(boolean isDel, int bucketIndex)
+    public int[] getBucketLengthMinMax(boolean isDel, int bucketIndex)
     {
         if(bucketIndex >= mProximateBucketLengths.size())
-            return new long[2];
+            return new int[2];
 
-        return new long[] {mProximateBucketLengths.get(bucketIndex), mProximateBucketLengths.get(bucketIndex + 1)};
+        return new int[] {mProximateBucketLengths.get(bucketIndex), mProximateBucketLengths.get(bucketIndex + 1)};
     }
 
-    public void addGeneFusionData(final GeneRangeData lowerGene, final GeneRangeData upperGene, long overlapCount, boolean isDel, int bucketIndex)
+    public void addGeneFusionData(final GeneRangeData lowerGene, final GeneRangeData upperGene, int overlapCount, boolean isDel, int bucketIndex)
     {
-        long[] bucketMinMax = getBucketLengthMinMax(isDel, bucketIndex);
-        long bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
+        int[] bucketMinMax = getBucketLengthMinMax(isDel, bucketIndex);
+        int bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
         double fusionRate = overlapCount / (bucketWidth * GENOME_BASE_COUNT);
 
         if(fusionRate < MIN_FUSION_RATE)
@@ -825,10 +825,10 @@ public class CohortExpFusions
                     isDel ? "DEL" : "DUP", overlapCount, bucketIndex);
         }
 
-        Map<String, Map<Integer,Long>> genePairCounts = isDel ? mDelGenePairCounts : mDupGenePairCounts;
+        Map<String, Map<Integer,Integer>> genePairCounts = isDel ? mDelGenePairCounts : mDupGenePairCounts;
 
         final String genePair = lowerGene.GeneData.GeneId + GENE_PAIR_DELIM + upperGene.GeneData.GeneId;
-        Map<Integer,Long> bucketOverlapCounts = genePairCounts.get(genePair);
+        Map<Integer,Integer> bucketOverlapCounts = genePairCounts.get(genePair);
 
         if(bucketOverlapCounts == null)
         {
@@ -894,8 +894,8 @@ public class CohortExpFusions
         // assign to correct bucket length
         for(int b = 0; b < mProximateBucketLengths.size() - 1; ++b)
         {
-            long minLength = mProximateBucketLengths.get(b);
-            long maxLength = mProximateBucketLengths.get(b + 1);
+            int minLength = mProximateBucketLengths.get(b);
+            int maxLength = mProximateBucketLengths.get(b + 1);
 
             LOGGER.info("GLOBAL_COUNTS: DEL,{},{},{}", mGlobalProximateCounts.get(b), minLength, maxLength);
             LOGGER.info("GLOBAL_COUNTS: DUP,{},{},{}", mGlobalProximateCounts.get(b), minLength, maxLength);

@@ -71,7 +71,7 @@ public class FusionLikelihood
     private final CohortExpFusions mCohortCalculator;
 
     // bucket demarcations - the actual buckets will be a set of consecutive pairs - eg length 0 -> length 1 etc
-    private final List<Long> mProximateBucketLengths;
+    private final List<Integer> mProximateBucketLengths;
 
     private final List<String> mRestrictedChromosomes;
     private final List<String> mRestrictedGeneIds;
@@ -199,7 +199,7 @@ public class FusionLikelihood
     // public void setRestrictedGeneIds(final List<String> geneIds) { mRestrictedGeneIds.addAll(geneIds); }
 
     @VisibleForTesting
-    public void initialise(final EnsemblDataCache geneTransCache, final List<Long> delDepLengths)
+    public void initialise(final EnsemblDataCache geneTransCache, final List<Integer> delDepLengths)
     {
         mGeneTransCache = geneTransCache;
         mProximateBucketLengths.addAll(delDepLengths);
@@ -211,22 +211,22 @@ public class FusionLikelihood
         mCohortCalculator.setLogVerbose(toggle);
     }
 
-    private void setBucketLengths(final String lengthData, List<Long> bucketLengths)
+    private void setBucketLengths(final String lengthData, List<Integer> bucketLengths)
     {
         if(lengthData.contains(";"))
         {
-            Arrays.stream(lengthData.split(";")).forEach(x -> bucketLengths.add(Long.parseLong(x)));
+            Arrays.stream(lengthData.split(";")).forEach(x -> bucketLengths.add(Integer.parseInt(x)));
         }
         else if(lengthData.contains("-exp-"))
         {
             String[] startEnds = lengthData.split("-exp-");
-            long startLength = Long.parseLong(startEnds[0]);
-            long endLength = Long.parseLong(startEnds[1]);
+            int startLength = Integer.parseInt(startEnds[0]);
+            int endLength = Integer.parseInt(startEnds[1]);
 
             // add a bucket from the min to the first specified length
-            bucketLengths.add((long)MIN_BUCKET_LENGTH);
+            bucketLengths.add((int)MIN_BUCKET_LENGTH);
 
-            long bucketLength = startLength;
+            int bucketLength = startLength;
             while(bucketLength <= endLength)
             {
                 bucketLengths.add(bucketLength);
@@ -263,7 +263,7 @@ public class FusionLikelihood
             // adjustment factors to convert overlap base count into rates
             double remoteFusionFactor = 1.0 / (GENOME_BASE_COUNT * GENOME_BASE_COUNT);
             double sameArmFusionFactor = 1.0 / mCohortCalculator.getArmLengthFactor();
-            long maxBucketLength = mCohortCalculator.getMaxBucketLength();
+            int maxBucketLength = mCohortCalculator.getMaxBucketLength();
             double mediumInvFusionFactor = 1.0 / ((maxBucketLength - SHORT_INV_BUCKET) * GENOME_BASE_COUNT);
             double shortInvFusionFactor = 1.0 / (SHORT_INV_BUCKET * GENOME_BASE_COUNT);
 
@@ -271,8 +271,8 @@ public class FusionLikelihood
             {
                 for(final GeneRangeData geneData :entry.getValue())
                 {
-                    long[] phaseCounts = new long[PHASE_MAX];
-                    long[] phaseCountsPreGene = new long[PHASE_MAX];
+                    int[] phaseCounts = new int[PHASE_MAX];
+                    int[] phaseCountsPreGene = new int[PHASE_MAX];
 
                     geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCounts, false));
                     geneData.getPhaseRegions().stream().forEach(x -> x.populateLengthCounts(phaseCountsPreGene, true));
@@ -328,9 +328,9 @@ public class FusionLikelihood
             for(int i = 0; i <= 1; ++i)
             {
                 boolean isDel = (i == 0);
-                Map<String, Map<Integer, Long>> genePairCounts = isDel ? mCohortCalculator.getDelGenePairCounts() : mCohortCalculator.getDupGenePairCounts();
+                Map<String, Map<Integer, Integer>> genePairCounts = isDel ? mCohortCalculator.getDelGenePairCounts() : mCohortCalculator.getDupGenePairCounts();
 
-                for (Map.Entry<String, Map<Integer, Long>> entry : genePairCounts.entrySet())
+                for (Map.Entry<String, Map<Integer,Integer>> entry : genePairCounts.entrySet())
                 {
                     final String genePair[] = entry.getKey().split(GENE_PAIR_DELIM);
                     final String geneIdLower = genePair[0];
@@ -339,16 +339,16 @@ public class FusionLikelihood
                     EnsemblGeneData geneUp = null;
                     EnsemblGeneData geneDown = null;
 
-                    Map<Integer, Long> bucketLengthCounts = entry.getValue();
+                    Map<Integer,Integer> bucketLengthCounts = entry.getValue();
 
-                    for (Map.Entry<Integer, Long> bEntry : bucketLengthCounts.entrySet())
+                    for (Map.Entry<Integer,Integer> bEntry : bucketLengthCounts.entrySet())
                     {
-                        long overlapCount = bEntry.getValue();
+                        int overlapCount = bEntry.getValue();
 
                         int bucketIndex = bEntry.getKey();
 
-                        long[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
-                        long bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
+                        int[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
+                        int bucketWidth = bucketMinMax[BUCKET_MAX] - bucketMinMax[BUCKET_MIN];
 
                         double fusionRate = overlapCount / (bucketWidth * GENOME_BASE_COUNT);
 
@@ -446,7 +446,7 @@ public class FusionLikelihood
             writer.write("GeneIdUp,GeneNameUp,GeneIdDown,GeneNameDown,Type,LengthMin,LengthMax,FusionRate,GenePairRate");
             writer.newLine();
 
-            long proximateLimit = mCohortCalculator.getMaxBucketLength();
+            int proximateLimit = mCohortCalculator.getMaxBucketLength();
 
             int bucketLengths = mProximateBucketLengths.size() - 1;
             final RegionAllocator[] regionAllocators = new RegionAllocator[bucketLengths];
@@ -490,7 +490,7 @@ public class FusionLikelihood
 
                     if(!sameGene && sameStrand)
                     {
-                        long minDistance = min(abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneStart),
+                        int minDistance = min(abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneStart),
                                 abs(geneUp.GeneData.GeneEnd - geneDown.GeneData.GeneEnd));
 
                         minDistance = min(minDistance, abs(geneUp.GeneData.GeneStart - geneDown.GeneData.GeneEnd));
@@ -519,23 +519,23 @@ public class FusionLikelihood
                         for(int i = 0; i <= 1; ++i)
                         {
                             boolean isDel = (i == 0);
-                            Map<Integer, Long> proximateCounts = isDel ? geneUp.getDelFusionBaseCounts() : geneUp.getDupFusionBaseCounts();
+                            Map<Integer,Integer> proximateCounts = isDel ? geneUp.getDelFusionBaseCounts() : geneUp.getDupFusionBaseCounts();
 
-                            for (Map.Entry<Integer, Long> bEntry : proximateCounts.entrySet())
+                            for (Map.Entry<Integer,Integer> bEntry : proximateCounts.entrySet())
                             {
-                                long overlapArea = bEntry.getValue();
+                                int overlapArea = bEntry.getValue();
 
                                 if(overlapArea == 0)
                                     continue;
 
                                 int bucketIndex = bEntry.getKey();
 
-                                long[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
-                                long minBucketLen = bucketMinMax[BUCKET_MIN];
-                                long maxBucketLen = bucketMinMax[BUCKET_MAX];
-                                long bucketWidth = maxBucketLen - minBucketLen;
+                                int[] bucketMinMax = mCohortCalculator.getBucketLengthMinMax(isDel, bucketIndex);
+                                int minBucketLen = bucketMinMax[BUCKET_MIN];
+                                int maxBucketLen = bucketMinMax[BUCKET_MAX];
+                                int bucketWidth = maxBucketLen - minBucketLen;
 
-                                long geneOverlapArea = calcGeneOverlapAreas(
+                                int geneOverlapArea = calcGeneOverlapAreas(
                                         geneUp, geneDown, isDel, minBucketLen, maxBucketLen, regionAllocators[bucketIndex]);
 
                                 if(geneOverlapArea < overlapArea)
@@ -579,7 +579,7 @@ public class FusionLikelihood
 
                         if(geneUp.getBaseOverlapCountUpstream(NON_PROX_TYPE_MEDIUM_INV) > 0)
                         {
-                            long maxBucketLength = mCohortCalculator.getMaxBucketLength();
+                            int maxBucketLength = mCohortCalculator.getMaxBucketLength();
                             double mediumInvFusionFactor = 1.0 / ((maxBucketLength - SHORT_INV_BUCKET) * GENOME_BASE_COUNT);
 
                             writer.write(String.format("%s,%s,%s,%s,%s,%d,%d,%.12f,0",
@@ -606,7 +606,7 @@ public class FusionLikelihood
                 else
                 {
                     // translocation fusion just require a check of overlapping bases regardless of any bucket length
-                    long overlapArea = 0;
+                    int overlapArea = 0;
 
                     for (GenePhaseRegion regionUp : geneUp.getPhaseRegions())
                     {

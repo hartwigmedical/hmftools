@@ -100,7 +100,7 @@ public class FusionLikelihoodTest
         CohortExpFusions likelihoodCalc = new CohortExpFusions();
 
         // for testing same-gene fusions
-        List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
+        List<Integer> delLengths = Lists.newArrayList((int)1, (int)1000);
         likelihoodCalc.initialiseLengths(delLengths, Lists.newArrayList());
 
         likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
@@ -112,9 +112,9 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(phaseRegions, 150, 169, 10001, 0));
         assertTrue(hasPhaseRegion(phaseRegions, 170, 180, 1, 0));
 
-        Map<Integer,Long> transSAMap = geneTransCache.getTransSpliceAcceptorPosDataMap();
+        Map<Integer,Integer> transSAMap = geneTransCache.getTransSpliceAcceptorPosDataMap();
 
-        transDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)60));
+        transDataList.stream().forEach(x -> transSAMap.put(x.TransId, (int)60));
 
         // test again but with a preceding gene region distance
         likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
@@ -166,7 +166,7 @@ public class FusionLikelihoodTest
         assertTrue(hasPhaseRegion(phaseRegions, 41, 60, 1101, 0));
         assertTrue(hasPhaseRegion(phaseRegions, 61, 80, 10011, 0));
 
-        transDataList.stream().forEach(x -> transSAMap.put(x.TransId, (long)100000));
+        transDataList.stream().forEach(x -> transSAMap.put(x.TransId, (int)100000));
 
         // test again but with a preceding gene region distance - will be capped at 10K
         likelihoodCalc.generatePhaseRegions(geneRangeData, transDataList, geneTransCache);
@@ -208,7 +208,7 @@ public class FusionLikelihoodTest
         likelihoodCalc.generatePhaseRegions(geneRangeData, transExonDataList, geneTransCache);
         assertEquals(1, geneRangeData.getDelFusionBaseCounts().size());
 
-        Long overlapCount = new Long(19*19 +19*19 + 19*19);
+        Integer overlapCount = new Integer(19*19 +19*19 + 19*19);
         assertEquals(overlapCount, geneRangeData.getDelFusionBaseCounts().get(0));
 
         // test again but with no phase matches within the same transcript
@@ -227,7 +227,7 @@ public class FusionLikelihoodTest
         */
     }
 
-    private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, int combinedPhase, int combinedPreGene)
+    private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, int start, int end, int combinedPhase, int combinedPreGene)
     {
         for(GenePhaseRegion region : regionsList)
         {
@@ -457,7 +457,7 @@ public class FusionLikelihoodTest
         assertTrue(regionsPhaseMatched(region1, region2));
     }
 
-    private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, long start, long end, int combinedPhase)
+    private static boolean hasPhaseRegion(List<GenePhaseRegion> regionsList, int start, int end, int combinedPhase)
     {
         for(GenePhaseRegion region : regionsList)
         {
@@ -480,7 +480,7 @@ public class FusionLikelihoodTest
         int blockArea = regionAllocator.blockSize() * regionAllocator.blockSize();
 
         // first test without any restricting bucket lengths
-        long overlap = regionAllocator.allocateBases(10, 45, 55, 99);
+        int overlap = regionAllocator.allocateBases(10, 45, 55, 99);
         assertEquals(blockArea, overlap);
 
         // cannot reallocate
@@ -512,7 +512,7 @@ public class FusionLikelihoodTest
         EnsemblGeneData gene = createEnsemblGeneData("ESNG001", "GEN1", "1", 1, 10000, 12000);
         GeneRangeData geneData = new GeneRangeData(gene);
 
-        List<Long> delLengths = Lists.newArrayList((long)1, (long)1000);
+        List<Integer> delLengths = Lists.newArrayList((int)1, (int)1000);
 
         List<GenePhaseRegion> transcriptRegions = Lists.newArrayList();
 
@@ -549,7 +549,7 @@ public class FusionLikelihoodTest
         likelihoodCalc.initialise(delLengths, 0);
         likelihoodCalc.generateSameGeneCounts(geneData);
 
-        Long overlapCount = new Long((100 * 100) * 3);
+        Integer overlapCount = new Integer((100 * 100) * 3);
 
         assertEquals(1, geneData.getDelFusionBaseCounts().size());
         assertEquals(overlapCount, geneData.getDelFusionBaseCounts().get(0));
@@ -565,20 +565,20 @@ public class FusionLikelihoodTest
         EnsemblGeneData gene2 = GeneTestUtils.createEnsemblGeneData("ESNG002", "GEN2", "1", 1, 10000, 12000);
         GeneRangeData upperGene = new GeneRangeData(gene2);
 
-        List<Long> delLengths = Lists.newArrayList((long)50, (long)400);
+        List<Integer> delLengths = Lists.newArrayList((int)50, (int)400);
 
         // first test 2 regions where the overlap is full within one of the del buckets (the second one)
         GenePhaseRegion lowerRegion = new GenePhaseRegion(gene1.GeneId, 100, 200, PHASE_1);
         GenePhaseRegion upperRegion = new GenePhaseRegion(gene2.GeneId, 300, 400, PHASE_1);
 
-        Map<Integer, Long> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
+        Map<Integer,Integer> bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
         assertEquals(1, bucketOverlapCounts.size());
-        long overlap = bucketOverlapCounts.get(0);
+        int overlap = bucketOverlapCounts.get(0);
         assertEquals(10000, overlap);
 
         // with a max bucket length restriction
-        delLengths.set(1, (long)150);
+        delLengths.set(1, (int)150);
 
         bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
@@ -587,8 +587,8 @@ public class FusionLikelihoodTest
         assertEquals(1275, overlap);
 
         // now with a min bucket length restriction
-        delLengths.set(0, (long)250);
-        delLengths.set(1, (long)400);
+        delLengths.set(0, (int)250);
+        delLengths.set(1, (int)400);
 
         bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 
@@ -597,8 +597,8 @@ public class FusionLikelihoodTest
         assertEquals(1275, overlap);
 
         // and with both
-        delLengths.set(0, (long)225);
-        delLengths.set(1, (long)275);
+        delLengths.set(0, (int)225);
+        delLengths.set(1, (int)275);
 
         bucketOverlapCounts = calcOverlapBucketAreas(delLengths, null, lowerGene, upperGene, lowerRegion, upperRegion, true);
 

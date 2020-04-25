@@ -16,7 +16,7 @@ import com.google.common.collect.Maps;
 public class RegionAllocator
 {
     private final int mBlockSize;
-    private final long mBlockArea;
+    private final int mBlockArea;
 
     private Map<String,Boolean> mAllocations;
 
@@ -27,7 +27,7 @@ public class RegionAllocator
     public RegionAllocator(int blockSize)
     {
         mBlockSize = blockSize;
-        mBlockArea = (long)blockSize * blockSize;
+        mBlockArea = blockSize * blockSize;
 
         mAllocations = Maps.newHashMap();
     }
@@ -35,7 +35,7 @@ public class RegionAllocator
     public int blockSize() { return mBlockSize; }
     public int allocationCount() { return mAllocations.size(); }
 
-    public int baseToIndex(long base)
+    public int baseToIndex(int base)
     {
         double rawIndex = base/(double)mBlockSize;
         return (int)floor(rawIndex);
@@ -59,16 +59,16 @@ public class RegionAllocator
         return true;
     }
 
-    public long allocateBases(
-            long lowerStart, long lowerEnd, long upperStart, long upperEnd,
-            long minBucketLen, long maxBucketLen, boolean requireAllocation)
+    public int allocateBases(
+            int lowerStart, int lowerEnd, int upperStart, int upperEnd,
+            int minBucketLen, int maxBucketLen, boolean requireAllocation)
     {
         if(lowerStart >= lowerEnd || upperStart >= upperEnd)
             return 0;
 
-        long overlapCount = 0;
+        int overlapCount = 0;
 
-        for (long base = lowerStart; base <= lowerEnd;)
+        for (int base = lowerStart; base <= lowerEnd;)
         {
             int baseIndex = baseToIndex(base);
 
@@ -92,14 +92,14 @@ public class RegionAllocator
         return overlapCount * mBlockArea;
     }
 
-    public long allocateBases(long lowerStart, long lowerEnd, long upperStart, long upperEnd)
+    public int allocateBases(int lowerStart, int lowerEnd, int upperStart, int upperEnd)
     {
         if(lowerStart >= lowerEnd || upperStart >= upperEnd)
             return 0;
 
         int overlapCount = 0;
 
-        for (long base = lowerStart; base <= lowerEnd;)
+        for (int base = lowerStart; base <= lowerEnd;)
         {
             int baseIndex = baseToIndex(base);
 
