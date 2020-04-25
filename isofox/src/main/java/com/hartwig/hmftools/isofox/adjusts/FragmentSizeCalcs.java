@@ -56,7 +56,7 @@ public class FragmentSizeCalcs
     private BufferedWriter mGeneWriter;
 
     private String mCurrentGenes;
-    private final long[] mCurrentGenesRange;
+    private final int[] mCurrentGenesRange;
     private List<TranscriptData> mCurrentTransDataList;
     private int mCurrentFragmentCount;
     private int mTotalFragmentCount;
@@ -85,7 +85,7 @@ public class FragmentSizeCalcs
         mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
 
         mCurrentGenes = "";
-        mCurrentGenesRange = new long[SE_PAIR];
+        mCurrentGenesRange = new int[SE_PAIR];
         mCurrentTransDataList = Lists.newArrayList();
         mCurrentFragmentCount = 0;
         mTotalFragmentCount = 0;
@@ -118,7 +118,7 @@ public class FragmentSizeCalcs
         // walk through each chromosome, taking groups of overlapping genes together
         ISF_LOGGER.info("calculating fragment size for chromosome({}) geneCount({})", chromosome, geneDataList.size());
 
-        List<long[]> excludedRegions = generateExcludedRegions(chromosome);
+        List<int[]> excludedRegions = generateExcludedRegions(chromosome);
 
         final List<EnsemblGeneData> overlappingGenes = Lists.newArrayList();
         int currentGeneIndex = 0;
@@ -150,7 +150,7 @@ public class FragmentSizeCalcs
             if (mCurrentTransDataList.isEmpty() || mCurrentTransDataList.size() > MAX_GENE_TRANS)
                 continue;
 
-            long geneLength = mCurrentGenesRange[SE_END] - mCurrentGenesRange[SE_START];
+            int geneLength = mCurrentGenesRange[SE_END] - mCurrentGenesRange[SE_START];
 
             if (geneLength < MIN_GENE_LENGTH || geneLength > MAX_GENE_LENGTH)
                 continue;
@@ -197,12 +197,12 @@ public class FragmentSizeCalcs
         ISF_LOGGER.debug("chromosome({}) processing complete", chromosome);
     }
 
-    private List<long[]> generateExcludedRegions(final String chromosome)
+    private List<int[]> generateExcludedRegions(final String chromosome)
     {
         // create a buffer around the enriched gene to avoid excessive reads in this vacinity
         int buffer = 100000;
 
-        final List<long[]> excludedRegions = Lists.newArrayList();
+        final List<int[]> excludedRegions = Lists.newArrayList();
         for(final String geneId : mConfig.EnrichedGeneIds)
         {
             final EnsemblGeneData geneData = mGeneTransCache.getGeneDataById(geneId);
@@ -211,7 +211,7 @@ public class FragmentSizeCalcs
 
             if(geneData.Chromosome.equals(chromosome))
             {
-                excludedRegions.add(new long[] { geneData.GeneStart - buffer, geneData.GeneEnd + buffer});
+                excludedRegions.add(new int[] { geneData.GeneStart - buffer, geneData.GeneEnd + buffer});
             }
         }
 
@@ -273,13 +273,13 @@ public class FragmentSizeCalcs
         }
 
         // both reads must fall in the current gene
-        long otherStartPos = record.getMateAlignmentStart();
+        int otherStartPos = record.getMateAlignmentStart();
         if(!positionWithin(otherStartPos, mCurrentGenesRange[SE_START], mCurrentGenesRange[SE_END]))
             return false;
 
         // reads cannot cover any part of an exon
-        long posStart = record.getStart();
-        long posEnd = record.getEnd();
+        int posStart = record.getStart();
+        int posEnd = record.getEnd();
 
         for(final TranscriptData transData : mCurrentTransDataList)
         {
@@ -423,7 +423,7 @@ public class FragmentSizeCalcs
 
         for(Double percentile : percentiles)
         {
-            long currentTotal = 0;
+            int currentTotal = 0;
             int prevLength = 0;
 
             for (final int[] fragLengthCount : fragmentLengths)
@@ -510,7 +510,7 @@ public class FragmentSizeCalcs
 
     public synchronized static void writeGeneFragmentLengths(
             final BufferedWriter writer, final List<int[]> fragmentLengths, final String geneNames, int geneCount,
-            final String chromosome, final long[] genesRegion)
+            final String chromosome, final int[] genesRegion)
     {
         if(writer == null)
             return;

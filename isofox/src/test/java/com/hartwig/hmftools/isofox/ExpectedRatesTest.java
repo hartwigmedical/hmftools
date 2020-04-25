@@ -54,9 +54,9 @@ public class ExpectedRatesTest
         transData.exons().add(new ExonData(transId1, 600, 800, 5, -1, -1));
 
         // fully contained fragment
-        long startPos = 100;
-        List<long[]> readRegions = Lists.newArrayList();
-        List<long[]> spliceJunctions = Lists.newArrayList();
+        int startPos = 100;
+        List<int[]> readRegions = Lists.newArrayList();
+        List<int[]> spliceJunctions = Lists.newArrayList();
         FragmentMatchType matchType = expRatesCalc.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
         assertEquals(SHORT, matchType);
@@ -348,7 +348,7 @@ public class ExpectedRatesTest
 
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
 
-        List<long[]> commonExonicRegions = genes.getCommonExonicRegions();
+        List<int[]> commonExonicRegions = genes.getCommonExonicRegions();
         assertEquals(5, commonExonicRegions.size());
         assertEquals(100, commonExonicRegions.get(0)[SE_START]);
         assertEquals(200, commonExonicRegions.get(0)[SE_END]);
@@ -494,7 +494,7 @@ public class ExpectedRatesTest
 
         genes = new GeneCollection(0, Lists.newArrayList(geneReadData));
 
-        List<long[]> commonExonicRegions = genes.getCommonExonicRegions();
+        List<int[]> commonExonicRegions = genes.getCommonExonicRegions();
         assertEquals(1, commonExonicRegions.size());
         assertEquals(100, commonExonicRegions.get(0)[SE_START]);
         assertEquals(400, commonExonicRegions.get(0)[SE_END]);
@@ -553,7 +553,7 @@ public class ExpectedRatesTest
 
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(geneReadData1, geneReadData2));
 
-        List<long[]> commonExonicRegions = genes.getCommonExonicRegions();
+        List<int[]> commonExonicRegions = genes.getCommonExonicRegions();
         assertEquals(5, commonExonicRegions.size());
 
         expRatesCalc.generateExpectedRates(genes);

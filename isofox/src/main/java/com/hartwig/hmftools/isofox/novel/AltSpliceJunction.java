@@ -34,7 +34,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class AltSpliceJunction
 {
     public final String Chromosome;
-    public final long[] SpliceJunction;
+    public final int[] SpliceJunction;
 
     private final List<RegionReadData> mSjStartRegions; // regions which match this alt-SJ at the start
     private final List<RegionReadData> mSjEndRegions;
@@ -55,7 +55,7 @@ public class AltSpliceJunction
     private final int[] mNearestExonDistance;
 
     public AltSpliceJunction(
-            final String chromosome, final long[] spliceJunction, AltSpliceJunctionType type,
+            final String chromosome, final int[] spliceJunction, AltSpliceJunctionType type,
             final AltSpliceJunctionContext[] regionContexts, final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions)
     {
         Chromosome = chromosome;
@@ -149,7 +149,7 @@ public class AltSpliceJunction
             - 3' in exon - go back to exon start, record as -ve value
         */
 
-        long position = SpliceJunction[seIndex];
+        int position = SpliceJunction[seIndex];
         boolean forwardStrand = gene.GeneData.Strand == 1;
         boolean isFivePrime = (seIndex == SE_START) == forwardStrand;
         boolean isExonic = RegionContexts[seIndex].equals(EXONIC) || RegionContexts[seIndex].equals(MIXED);
@@ -342,8 +342,8 @@ public class AltSpliceJunction
     {
         final String[] items = data.split(DELIMITER);
 
-        final long[] spliceJunction =
-                { Long.parseLong(items[fieldIndexMap.get("SjStart")]), Long.parseLong(items[fieldIndexMap.get("SjEnd")]) };
+        final int[] spliceJunction =
+                { Integer.parseInt(items[fieldIndexMap.get("SjStart")]), Integer.parseInt(items[fieldIndexMap.get("SjEnd")]) };
 
         final AltSpliceJunctionContext[] contexts =
                 { AltSpliceJunctionContext.valueOf(items[fieldIndexMap.get("ContextStart")]),

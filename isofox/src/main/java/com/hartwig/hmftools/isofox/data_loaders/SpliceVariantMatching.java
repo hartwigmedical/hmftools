@@ -123,11 +123,11 @@ public class SpliceVariantMatching
             final EnsemblGeneData geneData = entry.getKey();
 
             TranscriptData topTransData = null;
-            long[] topExonMatchData = null;
+            int[] topExonMatchData = null;
 
             for(final TranscriptData transData : entry.getValue())
             {
-                long[] exonMatchData = getTranscriptExonMatchData(transData, variant.Position, geneData.Strand);
+                int[] exonMatchData = getTranscriptExonMatchData(transData, variant.Position, geneData.Strand);
 
                 if(exonMatchData[ED_REGION_START] == -1 || exonMatchData[ED_REGION_END] == -1)
                     continue;
@@ -214,12 +214,12 @@ public class SpliceVariantMatching
         return matchedTrans;
     }
 
-    private boolean isCandidateExon(final ExonData exon, long position)
+    private boolean isCandidateExon(final ExonData exon, int position)
     {
         if(positionWithin(position, exon.ExonStart, exon.ExonEnd))
             return true;
 
-        long distanceFromExon = min(abs(position - exon.ExonStart), abs(position - exon.ExonEnd));
+        int distanceFromExon = min(abs(position - exon.ExonStart), abs(position - exon.ExonEnd));
         return distanceFromExon <= MAX_EXON_SPLICE_DISTANCE;
     }
 
@@ -235,9 +235,9 @@ public class SpliceVariantMatching
     private static final int ED_CONTEXT_INTRONIC = 2;
     private static final int ED_CONTEXT_EXONIC = 3;
 
-    private long[] getTranscriptExonMatchData(final TranscriptData transData, long splicePosition, int geneStrand)
+    private int[] getTranscriptExonMatchData(final TranscriptData transData, int splicePosition, int geneStrand)
     {
-        final long[] exonMatchData = new long[ED_MIN_DISTANCE+1];
+        final int[] exonMatchData = new int[ED_MIN_DISTANCE+1];
 
         int exonCount = transData.exons().size();
         if(splicePosition < transData.exons().get(0).ExonStart)
@@ -312,7 +312,7 @@ public class SpliceVariantMatching
 
     private void writeMatchData(
             final String sampleId, final SpliceVariant variant, final EnsemblGeneData geneData,
-            final TranscriptData transData, final long[] exonMatchData, final List<AltSpliceJunction> candidateAltSJs)
+            final TranscriptData transData, final int[] exonMatchData, final List<AltSpliceJunction> candidateAltSJs)
     {
         try
         {

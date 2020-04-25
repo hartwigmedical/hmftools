@@ -42,7 +42,7 @@ public class FusionFragment
 
     private final int[] mGeneCollections;
     private final String[] mChromosomes;
-    private final long[] mJunctionPositions; // fusion junction is exists
+    private final int[] mJunctionPositions; // fusion junction is exists
     private final byte[] mJunctionOrientations; // orientation at junction
     private final boolean[] mJunctionValid;
     private final FusionJunctionType[] mJunctionTypes;
@@ -57,7 +57,7 @@ public class FusionFragment
         mReads = reads;
 
         mGeneCollections = new int[SE_PAIR];
-        mJunctionPositions = new long[] {-1, -1};
+        mJunctionPositions = new int[] {-1, -1};
         mChromosomes = new String[] {"", ""};
         mJunctionOrientations = new byte[] {0, 0};
         mJunctionValid = new boolean[] {false, false};
@@ -72,7 +72,7 @@ public class FusionFragment
         // divide reads into the 2 gene collections
         final List<String> chrGeneCollections = Lists.newArrayListWithCapacity(2);
         final List<String> chromosomes = Lists.newArrayListWithCapacity(2);
-        final List<Long> positions = Lists.newArrayListWithCapacity(2);
+        final List<Integer> positions = Lists.newArrayListWithCapacity(2);
         final Map<String,List<ReadRecord>> readGroups = Maps.newHashMap();
 
         for(final ReadRecord read : reads)
@@ -109,7 +109,7 @@ public class FusionFragment
             final String chrGeneId = chrGeneCollections.get(index);
 
             // find the outermost soft-clipped read to use for the splice junction position
-            long sjPosition = 0;
+            int sjPosition = 0;
             byte sjOrientation = 0;
             int maxSoftClipping = 0;
 
@@ -211,7 +211,7 @@ public class FusionFragment
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
 
-    public final long[] junctionPositions() { return mJunctionPositions; }
+    public final int[] junctionPositions() { return mJunctionPositions; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
     public final boolean[] junctionValid() { return mJunctionValid; }
     public boolean hasBothJunctions() { return mJunctionValid[SE_START] && mJunctionValid[SE_END]; }
@@ -301,7 +301,7 @@ public class FusionFragment
         if(!mJunctionValid[seIndex] || !exonBoundary(mRegionMatchTypes[seIndex]))
             return;
 
-        long junctionPosition = mJunctionPositions[seIndex];
+        int junctionPosition = mJunctionPositions[seIndex];
 
         int index = 0;
         while(index < mTransExonRefs[seIndex].size())

@@ -32,16 +32,16 @@ public class GeneCollection
     private final List<GeneReadData> mGenes;
     private final List<String> mGeneIds;
     private final String mChromosome;
-    private final long[] mRegionBounds;
+    private final int[] mRegionBounds;
 
     private final Map<Integer,GeneReadData> mTransIdsGeneMap;
 
     private final List<RegionReadData> mExonRegions; // set of unique exons ie with differing start and end positions
-    private final List<long[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
+    private final List<int[]> mCommonExonicRegions; // merge any overlapping exons, to form a set of exonic regions for the gene
     private final List<TranscriptData> mTranscripts;
 
     private List<TranscriptData> mEnrichedTranscripts;
-    private long[] mEnrichedRegion; // special regions of high read density
+    private int[] mEnrichedRegion; // special regions of high read density
 
     // summary results
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
@@ -55,7 +55,7 @@ public class GeneCollection
         mGeneIds = Lists.newArrayList();
         mGenes.forEach(x -> mGeneIds.add(x.GeneData.GeneId));
 
-        mRegionBounds = new long[SE_PAIR];
+        mRegionBounds = new int[SE_PAIR];
 
         mChromosome = genes.get(0).GeneData.Chromosome;
 
@@ -79,12 +79,12 @@ public class GeneCollection
     public final String chromosome() { return mChromosome; }
     public final List<GeneReadData> genes() { return mGenes; }
     public final List<String> geneIds() { return mGeneIds; }
-    public final long[] regionBounds() { return mRegionBounds; }
+    public final int[] regionBounds() { return mRegionBounds; }
 
     public final List<TranscriptData> getTranscripts() { return mTranscripts; }
 
     public final List<RegionReadData> getExonRegions() { return mExonRegions; }
-    public List<long[]> getCommonExonicRegions() { return mCommonExonicRegions; }
+    public List<int[]> getCommonExonicRegions() { return mCommonExonicRegions; }
 
     public int getStrand(int transId)
     {
@@ -110,12 +110,12 @@ public class GeneCollection
     }
 
     public List<TranscriptData> getEnrichedTranscripts() { return mEnrichedTranscripts; }
-    public long[] getEnrichedRegion() { return mEnrichedRegion; }
+    public int[] getEnrichedRegion() { return mEnrichedRegion; }
 
     public void setEnrichedTranscripts(final List<TranscriptData> transDataList)
     {
         mEnrichedTranscripts = Lists.newArrayList(transDataList);
-        mEnrichedRegion = new long[SE_PAIR];
+        mEnrichedRegion = new int[SE_PAIR];
 
         for(TranscriptData transData : mEnrichedTranscripts)
         {
@@ -171,7 +171,7 @@ public class GeneCollection
         return mTransIdsGeneMap.get(transId);
     }
 
-    public List<GeneReadData> findGenesCoveringRange(long posStart, long posEnd)
+    public List<GeneReadData> findGenesCoveringRange(int posStart, int posEnd)
     {
         return mGenes.stream()
                 .filter(x -> positionsOverlap(x.GeneData.GeneStart, x.GeneData.GeneEnd, posStart, posEnd))
@@ -218,8 +218,8 @@ public class GeneCollection
     {
         String geneNamesStr = "";
         int transcriptCount = 0;
-        long minRange = -1;
-        long maxRange = 0;
+        int minRange = -1;
+        int maxRange = 0;
 
         for(GeneReadData geneReadData : overlappingGenes)
         {

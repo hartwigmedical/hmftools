@@ -159,11 +159,11 @@ public class GcRatioCounts
     }
 
     public static double calcGcRatioFromReadRegions(
-            final IndexedFastaSequenceFile refFastaSeqFile, final String chromosome, final List<long[]> readRegions)
+            final IndexedFastaSequenceFile refFastaSeqFile, final String chromosome, final List<int[]> readRegions)
     {
         double gcRatioTotal = 0;
         int basesTotal = 0;
-        for(final long[] region : readRegions)
+        for(final int[] region : readRegions)
         {
             final String bases = refFastaSeqFile.getSubsequenceAt(chromosome, region[SE_START], region[SE_END]).getBaseString();
             basesTotal += bases.length();

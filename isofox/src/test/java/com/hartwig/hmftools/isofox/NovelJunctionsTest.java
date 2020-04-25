@@ -104,7 +104,7 @@ public class NovelJunctionsTest
         GeneCollection genes = new GeneCollection(0, Lists.newArrayList(gene));
         asjFinder.setGeneData(genes);
 
-        long[] spliceJunction = new long[SE_PAIR];
+        int[] spliceJunction = new int[SE_PAIR];
 
         spliceJunction[SE_START] = 300;
         spliceJunction[SE_END] = 400;

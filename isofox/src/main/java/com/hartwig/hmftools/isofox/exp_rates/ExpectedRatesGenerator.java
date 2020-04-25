@@ -84,7 +84,7 @@ public class ExpectedRatesGenerator
         mTransCategoryCounts.clear();
         mCurrentExpRatesData = new ExpectedRatesData(mGeneCollection.chrId());
 
-        final List<long[]> commonExonicRegions = mGeneCollection.getCommonExonicRegions();
+        final List<int[]> commonExonicRegions = mGeneCollection.getCommonExonicRegions();
 
         // apply fragment reads across each transcript as though it were fully transcribed
         final List<TranscriptData> transDataList = mGeneCollection.getTranscripts();
@@ -103,7 +103,7 @@ public class ExpectedRatesGenerator
 
                 for (ExonData exon : transData.exons())
                 {
-                    for (long startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
+                    for (int startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
                     {
                         cullTranscripts(candidateTrans, startPos);
 
@@ -124,16 +124,16 @@ public class ExpectedRatesGenerator
 
             if(commonExonicRegions.size() > 1)
             {
-                long regionStart = mGeneCollection.regionBounds()[SE_START];
-                long regionEnd = mGeneCollection.regionBounds()[SE_END];
+                int regionStart = mGeneCollection.regionBounds()[SE_START];
+                int regionEnd = mGeneCollection.regionBounds()[SE_END];
 
                 int exonicRegionIndex = 0;
-                long currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
-                long nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
+                int currentExonicEnd = commonExonicRegions.get(exonicRegionIndex)[SE_END];
+                int nextExonicStart = commonExonicRegions.get(exonicRegionIndex + 1)[SE_START];
 
                 List<TranscriptData> candidateTrans = Lists.newArrayList(transDataList);
 
-                for (long startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
+                for (int startPos = regionStart; startPos <= regionEnd - mCurrentFragSize; ++startPos)
                 {
                     final List<String> unsplicedGenes = findUnsplicedGenes(startPos);
 
@@ -218,7 +218,7 @@ public class ExpectedRatesGenerator
         }
     }
 
-    private void cullTranscripts(final List<TranscriptData> transcripts, long startPos)
+    private void cullTranscripts(final List<TranscriptData> transcripts, int startPos)
     {
         int index = 0;
         while(index < transcripts.size())
@@ -230,22 +230,22 @@ public class ExpectedRatesGenerator
         }
     }
 
-    private List<String> findUnsplicedGenes(long fragStart)
+    private List<String> findUnsplicedGenes(int fragStart)
     {
         if(mGeneCollection.genes().size() == 1)
             return Lists.newArrayList(mGeneCollection.genes().get(0).GeneData.GeneId);
 
-        long fragEnd = fragStart + mCurrentFragSize - 1;
+        int fragEnd = fragStart + mCurrentFragSize - 1;
 
         return mGeneCollection.genes().stream()
                 .filter(x -> positionsWithin(fragStart,fragEnd, x.GeneData.GeneStart, x.GeneData.GeneEnd))
                 .map(x -> x.GeneData.GeneId).collect(Collectors.toList());
     }
 
-    private boolean allocateTranscriptCounts(final TranscriptData transData, final List<TranscriptData> transDataList, long startPos)
+    private boolean allocateTranscriptCounts(final TranscriptData transData, final List<TranscriptData> transDataList, int startPos)
     {
-        List<long[]> readRegions = Lists.newArrayList();
-        List<long[]> spliceJunctions = Lists.newArrayList();
+        List<int[]> readRegions = Lists.newArrayList();
+        List<int[]> spliceJunctions = Lists.newArrayList();
 
         FragmentMatchType matchType = generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
 
@@ -288,25 +288,25 @@ public class ExpectedRatesGenerator
         return true;
     }
 
-    private void allocateUnsplicedCounts(final List<TranscriptData> transDataList, long startPos, final List<String> unsplicedGenes)
+    private void allocateUnsplicedCounts(final List<TranscriptData> transDataList, int startPos, final List<String> unsplicedGenes)
     {
-        List<long[]> readRegions = Lists.newArrayList();
-        List<long[]> noSpliceJunctions = Lists.newArrayList();
+        List<int[]> readRegions = Lists.newArrayList();
+        List<int[]> noSpliceJunctions = Lists.newArrayList();
 
         // the unspliced case
-        long firstReadEnd = startPos + mReadLength - 1;
-        long secondReadEnd = startPos + mCurrentFragSize - 1;
-        long secondReadStart = secondReadEnd - mReadLength + 1;
+        int firstReadEnd = startPos + mReadLength - 1;
+        int secondReadEnd = startPos + mCurrentFragSize - 1;
+        int secondReadStart = secondReadEnd - mReadLength + 1;
 
         if(firstReadEnd >= secondReadStart - 1)
         {
             // continuous reads so merge into one
-            readRegions.add(new long[] {startPos, secondReadEnd});
+            readRegions.add(new int[] {startPos, secondReadEnd});
         }
         else
         {
-            readRegions.add(new long[] {startPos, firstReadEnd});
-            readRegions.add(new long[] {secondReadStart, secondReadEnd});
+            readRegions.add(new int[] {startPos, firstReadEnd});
+            readRegions.add(new int[] {secondReadStart, secondReadEnd});
         }
 
         final List<Integer> shortTrans = Lists.newArrayList();
@@ -359,7 +359,7 @@ public class ExpectedRatesGenerator
     }
 
     public FragmentMatchType generateImpliedFragment(
-            final TranscriptData transData, long startPos, List<long[]> readRegions, List<long[]> spliceJunctions)
+            final TranscriptData transData, int startPos, List<int[]> readRegions, List<int[]> spliceJunctions)
     {
         readRegions.clear();
         spliceJunctions.clear();
@@ -376,7 +376,7 @@ public class ExpectedRatesGenerator
         int remainingReadBases = mReadLength;
         boolean overlappingReads = (mCurrentFragSize - 2 * mReadLength) < 1;
         int remainingInterimBases = !overlappingReads ? mCurrentFragSize - 2 * mReadLength + 1 : 0;
-        long nextRegionStart = startPos;
+        int nextRegionStart = startPos;
         int readsAdded = 0;
 
         for(int i = 0; i < exonCount; ++i)
@@ -413,10 +413,10 @@ public class ExpectedRatesGenerator
                 remainingInterimBases = 0;
             }
 
-            long regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.ExonEnd);
-            long regionLength = (int)(regionEnd - nextRegionStart + 1);
+            int regionEnd = min(nextRegionStart + remainingReadBases - 1, exon.ExonEnd);
+            int regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
-            readRegions.add(new long[] {nextRegionStart, regionEnd});
+            readRegions.add(new int[] {nextRegionStart, regionEnd});
             boolean spansExonEnd = remainingReadBases > 0;
 
             if(remainingReadBases == 0)
@@ -459,7 +459,7 @@ public class ExpectedRatesGenerator
                 if(spansExonEnd && regionEnd == exon.ExonEnd)
                 {
                     matchType = SPLICED;
-                    spliceJunctions.add(new long[] {exon.ExonEnd, nextRegionStart});
+                    spliceJunctions.add(new int[] {exon.ExonEnd, nextRegionStart});
                 }
 
                 remainingInterimBases -= exon.ExonEnd - regionEnd;
@@ -475,7 +475,7 @@ public class ExpectedRatesGenerator
             regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
 
-            readRegions.add(new long[] { nextRegionStart, regionEnd });
+            readRegions.add(new int[] { nextRegionStart, regionEnd });
 
             if(remainingReadBases > 0 && regionEnd == exon.ExonEnd)
                 matchType = SPLICED;
@@ -499,8 +499,8 @@ public class ExpectedRatesGenerator
             int index = 0;
             while(index < readRegions.size() - 1)
             {
-                long regionEnd = readRegions.get(index)[SE_END];
-                long regionStart = readRegions.get(index + 1)[SE_START];
+                int regionEnd = readRegions.get(index)[SE_END];
+                int regionStart = readRegions.get(index + 1)[SE_START];
 
                 if(regionStart == regionEnd + 1)
                 {
@@ -517,10 +517,10 @@ public class ExpectedRatesGenerator
     }
 
     public boolean readsSupportTranscript(
-            final TranscriptData transData, List<long[]> readRegions, FragmentMatchType requiredMatchType, List<long[]> spliceJunctions)
+            final TranscriptData transData, List<int[]> readRegions, FragmentMatchType requiredMatchType, List<int[]> spliceJunctions)
     {
-        long regionsStart = readRegions.get(0)[SE_START];
-        long regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
+        int regionsStart = readRegions.get(0)[SE_START];
+        int regionsEnd = readRegions.get(readRegions.size() - 1)[SE_END];
 
         if(!positionsOverlap(regionsStart, regionsEnd, transData.TransStart, transData.TransEnd))
             return false;
@@ -532,10 +532,10 @@ public class ExpectedRatesGenerator
         else
         {
             // first check for matching splice junctions
-            for(long[] spliceJunction : spliceJunctions)
+            for(int[] spliceJunction : spliceJunctions)
             {
-                long spliceStart = spliceJunction[SE_START];
-                long spliceEnd = spliceJunction[SE_END];
+                int spliceStart = spliceJunction[SE_START];
+                int spliceEnd = spliceJunction[SE_END];
                 boolean matched = false;
 
                 for (int i = 0; i < transData.exons().size() - 1; ++i)
@@ -556,8 +556,8 @@ public class ExpectedRatesGenerator
 
             // none of the reads can breach an exon boundary or skip an exon
             int readIndex = 0;
-            long regionStart = readRegions.get(readIndex)[SE_START];
-            long regionEnd = readRegions.get(readIndex)[SE_END];
+            int regionStart = readRegions.get(readIndex)[SE_START];
+            int regionEnd = readRegions.get(readIndex)[SE_END];
             int exonsMatched = 0;
 
             for(int i = 0; i < transData.exons().size(); ++i)
@@ -731,7 +731,7 @@ public class ExpectedRatesGenerator
 
                 for(CategoryCountsData tcData : countsList)
                 {
-                    final long[] lengthCounts = tcData.fragmentCountsByLength();
+                    final int[] lengthCounts = tcData.fragmentCountsByLength();
 
                     writer.write(String.format("%s,%s,%s,%d", collectionId, transId, tcData.combinedKey(), lengthCounts[0]));
 

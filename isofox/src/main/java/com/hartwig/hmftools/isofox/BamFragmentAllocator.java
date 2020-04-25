@@ -90,7 +90,7 @@ public class BamFragmentAllocator
     private int mTotalBamReadCount;
     private int mNextGeneCountLog;
 
-    private final Map<Long,List<long[]>> mDuplicateCache;
+    private final Map<Integer,List<int[]>> mDuplicateCache;
     private final List<String> mDuplicateReadIds;
 
     private final List<CategoryCountsData> mTransComboData;
@@ -331,7 +331,7 @@ public class BamFragmentAllocator
         if(read1.isDuplicate() || read2.isDuplicate())
             mCurrentGenes.addCount(DUPLICATE, 1);
 
-        final long[] genesRange = mCurrentGenes.regionBounds();
+        final int[] genesRange = mCurrentGenes.regionBounds();
         boolean r1OutsideGene = !positionsOverlap(read1.PosStart, read1.PosEnd, genesRange[SE_START], genesRange[SE_END]);
         boolean r2OutsideGene = !positionsOverlap(read2.PosStart, read2.PosEnd, genesRange[SE_START], genesRange[SE_END]);;
 
@@ -344,8 +344,8 @@ public class BamFragmentAllocator
             return;
         }
 
-        long readPosMin = min(read1.PosStart, read2.PosStart);
-        long readPosMax = max(read1.PosEnd, read2.PosEnd);
+        int readPosMin = min(read1.PosStart, read2.PosStart);
+        int readPosMax = max(read1.PosEnd, read2.PosEnd);
 
         final List<GeneReadData> overlapGenes = mCurrentGenes.findGenesCoveringRange(readPosMin, readPosMax);
         mCurrentGenes.addCount(TOTAL, 1);
@@ -461,7 +461,7 @@ public class BamFragmentAllocator
                 List<String> unsplicedGeneIds = overlapGenes.stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
                 CategoryCountsData catCounts = getCategoryCountsData(validTranscripts, unsplicedGeneIds);
-                final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+                final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
                 addGcCounts(catCounts, commonMappings);
             }
         }
@@ -482,11 +482,11 @@ public class BamFragmentAllocator
                     .forEach(x -> x.setValue(OTHER_TRANS));
 
             // now record the bases covered by the read in these matched regions
-            final List<long[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+            final List<int[]> commonMappings = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
 
             if(mConfig.RunValidations)
             {
-                for(long[] readRegion : commonMappings)
+                for(int[] readRegion : commonMappings)
                 {
                     if(commonMappings.stream().filter(x -> x[SE_START] == readRegion[SE_START] && x[SE_END] == readRegion[SE_END]).count() > 1)
                     {
@@ -556,7 +556,7 @@ public class BamFragmentAllocator
     private boolean checkDuplicateEnrichedReads(final SAMRecord record)
     {
         // returns true if both this read and its pair are handled by the optimised routine, and NOT by normal fragment processing
-        final long[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
+        final int[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
 
         if(enrichedRegion == null || !positionsOverlap(record.getStart(), record.getEnd(), enrichedRegion[SE_START], enrichedRegion[SE_END]))
             return false;
@@ -582,7 +582,7 @@ public class BamFragmentAllocator
         mCurrentGenes.addCount(TRANS_SUPPORTING, mEnrichedGeneFragments);
 
         // add to category counts
-        final long[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
+        final int[] enrichedRegion = mCurrentGenes.getEnrichedRegion();
         final List<String> unsplicedGeneIds = mCurrentGenes.findGenesCoveringRange(enrichedRegion[SE_START], enrichedRegion[SE_END])
                 .stream().map(x -> x.GeneData.GeneId).collect(Collectors.toList());
 
@@ -696,13 +696,13 @@ public class BamFragmentAllocator
 
         CategoryCountsData catCounts = getCategoryCountsData(Lists.newArrayList(), unsplicedGeneIds);
 
-        List<long[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
+        List<int[]> readRegions = deriveCommonRegions(read1.getMappedRegionCoords(), read2.getMappedRegionCoords());
         addGcCounts(catCounts, readRegions);
 
         mCurrentGenes.addCount(UNSPLICED, 1);
     }
 
-    private void addGcCounts(final CategoryCountsData catCounts, final List<long[]> readRegions)
+    private void addGcCounts(final CategoryCountsData catCounts, final List<int[]> readRegions)
     {
         int[] gcRatioIndices = { -1, -1 };
         double[] gcRatioCounts = { 0, 0 };
@@ -790,7 +790,7 @@ public class BamFragmentAllocator
         // finally feed through any unmatched reads (eg if the other read is out of the specified range)
         for(Object object : mFragmentTracker.getValues())
         {
-            final List<long[]> readCoords = (List<long[]>)object;
+            final List<int[]> readCoords = (List<int[]>)object;
             mAltSpliceJunctionFinder.setPositionDepthFromRead(readCoords);
             mRetainedIntronFinder.setPositionDepthFromRead(readCoords);
         }
@@ -800,13 +800,13 @@ public class BamFragmentAllocator
 
     private void setPositionDepthFromRead(@NotNull final SAMRecord record)
     {
-        final List<long[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
-        final List<long[]> otherReadCoords = (List<long[]>)mFragmentTracker.checkRead(record.getReadName(), readCoords);
+        final List<int[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
+        final List<int[]> otherReadCoords = (List<int[]>)mFragmentTracker.checkRead(record.getReadName(), readCoords);
 
         if(otherReadCoords == null)
             return;
 
-        final List<long[]> commonMappings = deriveCommonRegions(readCoords, otherReadCoords);
+        final List<int[]> commonMappings = deriveCommonRegions(readCoords, otherReadCoords);
 
         mAltSpliceJunctionFinder.setPositionDepthFromRead(commonMappings);
         mRetainedIntronFinder.setPositionDepthFromRead(commonMappings);
@@ -833,12 +833,12 @@ public class BamFragmentAllocator
         if(!record.getReferenceName().equals(record.getMateReferenceName()) || record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
             return false;
 
-        long firstStartPos = record.getFirstOfPairFlag() ? record.getStart() : record.getMateAlignmentStart();
-        long secondStartPos = record.getFirstOfPairFlag() ? record.getMateAlignmentStart() : record.getStart();
+        int firstStartPos = record.getFirstOfPairFlag() ? record.getStart() : record.getMateAlignmentStart();
+        int secondStartPos = record.getFirstOfPairFlag() ? record.getMateAlignmentStart() : record.getStart();
         int readLength = record.getReadLength();
         int insertSize = record.getInferredInsertSize();
 
-        List<long[]> dupDataList = mDuplicateCache.get(firstStartPos);
+        List<int[]> dupDataList = mDuplicateCache.get(firstStartPos);
 
         if(dupDataList == null)
         {
@@ -860,7 +860,7 @@ public class BamFragmentAllocator
             }
         }
 
-        long[] dupData = {secondStartPos, readLength, insertSize};
+        int[] dupData = {secondStartPos, readLength, insertSize};
         dupDataList.add(dupData);
 
         return false;

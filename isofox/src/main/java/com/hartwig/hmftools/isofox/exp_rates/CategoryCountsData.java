@@ -14,7 +14,7 @@ public class CategoryCountsData
     private final List<Integer> mTranscripts;
     private final List<String> mUnsplicedGenes;
     private double mFragmentCount;
-    private long[] mFragmentCountsByLength;
+    private int[] mFragmentCountsByLength;
     private double[] mFragmentCountsByGcRatio;
 
     private final String mCombinedKey;
@@ -37,7 +37,7 @@ public class CategoryCountsData
         mTranscripts = Lists.newArrayList();
         mUnsplicedGenes = Lists.newArrayList();
         mFragmentCount = 0;
-        mFragmentCountsByLength = new long[fragLengths];
+        mFragmentCountsByLength = new int[fragLengths];
 
         parseCombinedKey();
     }
@@ -45,7 +45,7 @@ public class CategoryCountsData
     public void initialiseLengthCounts(int fragLengths)
     {
         if(fragLengths > 0)
-            mFragmentCountsByLength = new long[fragLengths];
+            mFragmentCountsByLength = new int[fragLengths];
     }
 
     public void initialiseGcRatioCounts(int gcRatioBuckets)
@@ -89,7 +89,7 @@ public class CategoryCountsData
     }
 
     public final double fragmentCount() { return mFragmentCount; }
-    public final long[] fragmentCountsByLength() { return mFragmentCountsByLength; }
+    public final int[] fragmentCountsByLength() { return mFragmentCountsByLength; }
     public final double[] fragmentCountsByGcRatio() { return mFragmentCountsByGcRatio; }
 
     public void addCounts(int count)

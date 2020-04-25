@@ -48,8 +48,8 @@ public class ReadRecord
 {
     public final String Id;
     public final String Chromosome;
-    public final long PosStart;
-    public final long PosEnd;
+    public final int PosStart;
+    public final int PosEnd;
 
     public final String ReadBases;
     public final int Length; // of bases
@@ -57,10 +57,10 @@ public class ReadRecord
 
     private int mFlags;
     private String mMateChromosome;
-    private long mMatePosStart;
+    private int mMatePosStart;
 
     private int mGeneCollectionId;
-    private final List<long[]> mMappedCoords;
+    private final List<int[]> mMappedCoords;
     private boolean mLowerInferredAdded;
     private boolean mUpperInferredAdded;
     private final int[] mSoftClipRegionsMatched;
@@ -85,8 +85,8 @@ public class ReadRecord
     }
 
     public ReadRecord(
-            final String id, final String chromosome, long posStart, long posEnd, final String readBases, @NotNull final Cigar cigar,
-            int insertSize, int flags, final String mateChromosome, long matePosStart)
+            final String id, final String chromosome, int posStart, int posEnd, final String readBases, @NotNull final Cigar cigar,
+            int insertSize, int flags, final String mateChromosome, int matePosStart)
     {
         Id = id;
         Chromosome = chromosome;
@@ -102,7 +102,7 @@ public class ReadRecord
 
         mGeneCollectionId = -1;
 
-        List<long[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
+        List<int[]> mappedCoords = generateMappedCoords(Cigar, PosStart);
         mMappedCoords = Lists.newArrayListWithCapacity(mappedCoords.size());
         mMappedCoords.addAll(mappedCoords);
 
@@ -116,7 +116,7 @@ public class ReadRecord
         mSupplementaryAlignment = null;
     }
 
-    public long range() { return PosEnd - PosStart; }
+    public int range() { return PosEnd - PosStart; }
 
     public boolean isNegStrand() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
@@ -135,7 +135,7 @@ public class ReadRecord
     public int fragmentInsertSize() { return mFragmentInsertSize; }
 
     public String mateChromosome() { return mMateChromosome; }
-    public long mateStartPosition() { return mMatePosStart; }
+    public int mateStartPosition() { return mMatePosStart; }
 
     public int getGeneCollecton() { return mGeneCollectionId; }
     public String chromosomeGeneId() { return String.format("%s_%d", Chromosome, mGeneCollectionId); }
@@ -177,9 +177,9 @@ public class ReadRecord
         return false;
     }
 
-    public List<long[]> getMappedRegionCoords() { return mMappedCoords; }
+    public List<int[]> getMappedRegionCoords() { return mMappedCoords; }
 
-    public boolean overlapsMappedReads(long posStart, long posEnd)
+    public boolean overlapsMappedReads(int posStart, int posEnd)
     {
         return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
     }
@@ -195,14 +195,14 @@ public class ReadRecord
         return highest;
     }
 
-    public long getCoordsBoundary(boolean isStart)
+    public int getCoordsBoundary(boolean isStart)
     {
         return isStart ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
     }
 
-    public static final List<long[]> generateMappedCoords(final Cigar cigar, long posStart)
+    public static final List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
     {
-        final List<long[]> mappedCoords = Lists.newArrayList();
+        final List<int[]> mappedCoords = Lists.newArrayList();
 
         // first establish whether the read is split across 2 distant regions, and if so which it maps to
         int posOffset = 0;
@@ -231,17 +231,17 @@ public class ReadRecord
             }
             else if(element.getOperator() == CigarOperator.M)
             {
-                long readStartPos = posStart + posOffset;
-                long readEndPos = readStartPos + element.getLength() - 1;
+                int readStartPos = posStart + posOffset;
+                int readEndPos = readStartPos + element.getLength() - 1;
 
                 if(continueRegion && !mappedCoords.isEmpty())
                 {
-                    long[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
+                    int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
                     lastRegion[SE_END] = readEndPos;
                 }
                 else
                 {
-                    mappedCoords.add(new long[] { readStartPos, readEndPos });
+                    mappedCoords.add(new int[] { readStartPos, readEndPos });
                 }
 
                 posOffset += element.getLength();
@@ -339,9 +339,9 @@ public class ReadRecord
                     }
                     else
                     {
-                        final long[] readSection = mMappedCoords.get(mappingIndex);
-                        long readStartPos = readSection[SE_START];
-                        long readEndPos = readSection[SE_END];
+                        final int[] readSection = mMappedCoords.get(mappingIndex);
+                        int readStartPos = readSection[SE_START];
+                        int readEndPos = readSection[SE_END];
 
                         boolean missStart = readStartPos > region.start();
                         boolean missEnd = readEndPos < region.end();
@@ -426,8 +426,8 @@ public class ReadRecord
         int maxExonRank = 0;
         int regionCount = 0;
 
-        long minRegionPos = -1;
-        long maxRegionPos = 0;
+        int minRegionPos = -1;
+        int maxRegionPos = 0;
 
         for(RegionReadData region : regions)
         {
@@ -456,9 +456,9 @@ public class ReadRecord
     {
         for(int i = 0; i < mMappedCoords.size(); ++i)
         {
-            final long[] readSection = mMappedCoords.get(i);
-            long readStartPos = readSection[SE_START];
-            long readEndPos = readSection[SE_END];
+            final int[] readSection = mMappedCoords.get(i);
+            int readStartPos = readSection[SE_START];
+            int readEndPos = readSection[SE_END];
 
             if (!(readStartPos > region.end() || readEndPos < region.start()))
                 return i;
@@ -481,9 +481,9 @@ public class ReadRecord
         if(mappingIndex < 0 || mappingIndex >= mMappedCoords.size())
             return RegionMatchType.NONE;
 
-        final long[] readSection = mMappedCoords.get(mappingIndex);
-        long readStartPos = readSection[SE_START];
-        long readEndPos = readSection[SE_END];
+        final int[] readSection = mMappedCoords.get(mappingIndex);
+        int readStartPos = readSection[SE_START];
+        int readEndPos = readSection[SE_END];
 
         if (readEndPos < region.start() || readStartPos > region.end())
             return RegionMatchType.NONE;
@@ -500,17 +500,17 @@ public class ReadRecord
         return EXON_BOUNDARY;
     }
 
-    public static void markRegionBases(final List<long[]> readCoords, final RegionReadData region)
+    public static void markRegionBases(final List<int[]> readCoords, final RegionReadData region)
     {
         int[] regionBaseDepth = region.refBasesMatched();
 
         if(regionBaseDepth == null)
             return;
 
-        for(final long[] readSection : readCoords)
+        for(final int[] readSection : readCoords)
         {
-            long readStartPos = readSection[SE_START];
-            long readEndPos = readSection[SE_END];
+            int readStartPos = readSection[SE_START];
+            int readEndPos = readSection[SE_END];
 
             if (readStartPos > region.end() || readEndPos < region.start())
                 continue;
@@ -568,9 +568,9 @@ public class ReadRecord
         // check for reads either soft-clipped or apparently unspliced, where the extra bases can match with the next exon
 
         // check start of read
-        long[] readSection = mLowerInferredAdded ? mMappedCoords.get(1) : mMappedCoords.get(0);
-        long readStartPos = readSection[SE_START];
-        long readEndPos = readSection[SE_END];
+        int[] readSection = mLowerInferredAdded ? mMappedCoords.get(1) : mMappedCoords.get(0);
+        int readStartPos = readSection[SE_START];
+        int readEndPos = readSection[SE_END];
 
         int deletedLength = Cigar.getCigarElements().stream().filter(x -> x.getOperator() == D).mapToInt(x -> x.getLength()).sum();
 
@@ -704,19 +704,19 @@ public class ReadRecord
         return se == SE_START ? Cigar.isLeftClipped() : Cigar.isRightClipped();
     }
 
-    private void addInferredMappingRegion(boolean isLower, long posStart, long posEnd)
+    private void addInferredMappingRegion(boolean isLower, int posStart, int posEnd)
     {
         if(isLower)
         {
             if (!mLowerInferredAdded)
             {
                 mLowerInferredAdded = true;
-                mMappedCoords.add(0, new long[] { posStart, posEnd });
+                mMappedCoords.add(0, new int[] { posStart, posEnd });
             }
             else
             {
                 // lengthen the new region if required
-                long[] newSection = mMappedCoords.get(0);
+                int[] newSection = mMappedCoords.get(0);
                 newSection[SE_START] = min(newSection[SE_START], posStart);
             }
         }
@@ -725,11 +725,11 @@ public class ReadRecord
             if(!mUpperInferredAdded)
             {
                 mUpperInferredAdded = true;
-                mMappedCoords.add(new long[] {posStart, posEnd});
+                mMappedCoords.add(new int[] {posStart, posEnd});
             }
             else
             {
-                long[] newSection = mMappedCoords.get(mMappedCoords.size() - 1);
+                int[] newSection = mMappedCoords.get(mMappedCoords.size() - 1);
                 newSection[SE_END] = max(newSection[SE_END], posEnd);
             }
         }

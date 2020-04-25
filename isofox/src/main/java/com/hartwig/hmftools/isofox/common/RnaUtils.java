@@ -23,33 +23,33 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class RnaUtils
 {
-    public static boolean positionsOverlap(long posStart1, long posEnd1, long posStart2, long posEnd2)
+    public static boolean positionsOverlap(int posStart1, int posEnd1, int posStart2, int posEnd2)
     {
         return !(posStart1 > posEnd2 || posEnd1 < posStart2);
     }
 
-    public static boolean positionWithin(long position, long otherPosStart, long otherPosEnd)
+    public static boolean positionWithin(int position, int otherPosStart, int otherPosEnd)
     {
         return (position >= otherPosStart && position <= otherPosEnd);
     }
 
-    public static boolean positionsWithin(long innerStart, long innerEnd, long outerStart, long outerEnd)
+    public static boolean positionsWithin(int innerStart, int innerEnd, int outerStart, int outerEnd)
     {
         return (innerStart < innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
     }
 
-    public static List<long[]> deriveCommonRegions(final List<long[]> regions1, final List<long[]> regions2)
+    public static List<int[]> deriveCommonRegions(final List<int[]> regions1, final List<int[]> regions2)
     {
         // merges any overlapping regoins to create a combined set without overlaps
-        List<long[]> newRegions = Lists.newArrayList();
+        List<int[]> newRegions = Lists.newArrayList();
 
         int index1 = 0;
         int index2 = 0;
 
         while(index1 < regions1.size() || index2 < regions2.size())
         {
-            long[] region1 = index1 < regions1.size() ? regions1.get(index1) : null;
-            long[] region2 = index2 < regions2.size() ? regions2.get(index2) : null;
+            int[] region1 = index1 < regions1.size() ? regions1.get(index1) : null;
+            int[] region2 = index2 < regions2.size() ? regions2.get(index2) : null;
 
             if(region1 != null && region2 != null)
             {
@@ -68,7 +68,7 @@ public class RnaUtils
                 }
 
                 // merge the overlapping regions
-                long[] newRegion = new long[] { min(region1[SE_START], region2[SE_START]), max(region1[SE_END], region2[SE_END]) };
+                int[] newRegion = new int[] { min(region1[SE_START], region2[SE_START]), max(region1[SE_END], region2[SE_END]) };
                 newRegions.add(newRegion);
 
                 ++index1;
@@ -281,7 +281,7 @@ public class RnaUtils
     }
 
     public static void setJunctionBaseContext(
-            final IndexedFastaSequenceFile refGenome, final String[] chromosomes, final long[] junctions, final String[] baseContext)
+            final IndexedFastaSequenceFile refGenome, final String[] chromosomes, final int[] junctions, final String[] baseContext)
     {
         for(int se = SE_START; se <= SE_END; ++se)
         {

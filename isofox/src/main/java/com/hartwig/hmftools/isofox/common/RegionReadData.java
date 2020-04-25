@@ -22,8 +22,8 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 public class RegionReadData implements Comparable< RegionReadData>
 {
     public final String Chromosome;
-    public final long PosStart;
-    public final long PosEnd;
+    public final int PosStart;
+    public final int PosEnd;
 
     private final List<TransExonRef> mTransExonRefs; // identifiers for this region, eg transcript & exon
 
@@ -39,10 +39,10 @@ public class RegionReadData implements Comparable< RegionReadData>
 
     public RegionReadData from(final GenomeRegion region)
     {
-        return new RegionReadData(region.chromosome(), region.start(), region.end());
+        return new RegionReadData(region.chromosome(), (int)region.start(), (int)region.end());
     }
 
-    public RegionReadData(final String chromosome, long posStart, long posEnd)
+    public RegionReadData(final String chromosome, int posStart, int posEnd)
     {
         Chromosome = chromosome;
         PosStart = posStart;
@@ -59,8 +59,8 @@ public class RegionReadData implements Comparable< RegionReadData>
         mTranscriptJunctionCounts = Maps.newHashMap();
     }
 
-    public long start() { return PosStart; }
-    public long end() { return PosEnd; }
+    public int start() { return PosStart; }
+    public int end() { return PosEnd; }
 
     public static final int NO_EXON = -1;
 
@@ -274,12 +274,12 @@ public class RegionReadData implements Comparable< RegionReadData>
         }
     }
 
-    public static boolean regionExists(final List<RegionReadData> regions, long posStart, long posEnd)
+    public static boolean regionExists(final List<RegionReadData> regions, int posStart, int posEnd)
     {
         return regions.stream().anyMatch(x -> x.PosStart == posStart && x.PosEnd == posEnd);
     }
 
-    public static RegionReadData findExonRegion(final List<RegionReadData> regions, long posStart, long posEnd)
+    public static RegionReadData findExonRegion(final List<RegionReadData> regions, int posStart, int posEnd)
     {
         return regions.stream()
                 .filter(x -> x.PosStart == posStart && x.PosEnd == posEnd)

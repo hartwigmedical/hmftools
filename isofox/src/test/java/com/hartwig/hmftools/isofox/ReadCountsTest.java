@@ -426,20 +426,20 @@ public class ReadCountsTest
     @Test
     public void testMappingCoords()
     {
-        List<long[]> mappings1 = Lists.newArrayList();
+        List<int[]> mappings1 = Lists.newArrayList();
 
-        mappings1.add(new long[] { 10, 20 });
-        mappings1.add(new long[] { 40, 50 });
-        mappings1.add(new long[] { 70, 80 });
+        mappings1.add(new int[] { 10, 20 });
+        mappings1.add(new int[] { 40, 50 });
+        mappings1.add(new int[] { 70, 80 });
 
-        List<long[]> mappings2 = Lists.newArrayList();
+        List<int[]> mappings2 = Lists.newArrayList();
 
         // no overlaps
-        mappings2.add(new long[] { 25, 35 });
-        mappings2.add(new long[] { 55, 65 });
-        mappings2.add(new long[] { 85, 95 });
+        mappings2.add(new int[] { 25, 35 });
+        mappings2.add(new int[] { 55, 65 });
+        mappings2.add(new int[] { 85, 95 });
 
-        List<long[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
+        List<int[]> commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(6, commonMappings.size());
         assertTrue(commonMappings.contains(mappings1.get(0)));
         assertTrue(commonMappings.contains(mappings1.get(1)));
@@ -451,9 +451,9 @@ public class ReadCountsTest
         // widening of all regions only
         mappings2.clear();
 
-        mappings2.add(new long[] { 5, 15 });
-        mappings2.add(new long[] { 35, 45 });
-        mappings2.add(new long[] { 55, 75 });
+        mappings2.add(new int[] { 5, 15 });
+        mappings2.add(new int[] { 35, 45 });
+        mappings2.add(new int[] { 55, 75 });
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(3, commonMappings.size());
@@ -467,7 +467,7 @@ public class ReadCountsTest
         // one other region overlapping all others
         mappings2.clear();
 
-        mappings2.add(new long[] { 5, 95 });
+        mappings2.add(new int[] { 5, 95 });
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(1, commonMappings.size());
@@ -478,18 +478,18 @@ public class ReadCountsTest
         mappings1.clear();
 
         // a mix of various scenarios
-        mappings1.add(new long[] { 10, 20 });
+        mappings1.add(new int[] { 10, 20 });
 
-        mappings2.add(new long[] { 30, 40 });
+        mappings2.add(new int[] { 30, 40 });
 
-        mappings2.add(new long[] { 50, 60 });
-        mappings1.add(new long[] { 55, 75 });
-        mappings1.add(new long[] { 85, 95 });
-        mappings2.add(new long[] { 70, 110 });
+        mappings2.add(new int[] { 50, 60 });
+        mappings1.add(new int[] { 55, 75 });
+        mappings1.add(new int[] { 85, 95 });
+        mappings2.add(new int[] { 70, 110 });
 
-        mappings2.add(new long[] { 120, 130 });
+        mappings2.add(new int[] { 120, 130 });
 
-        mappings1.add(new long[] { 140, 150 });
+        mappings1.add(new int[] { 140, 150 });
 
         commonMappings = deriveCommonRegions(mappings1, mappings2);
         assertEquals(5, commonMappings.size());
@@ -547,8 +547,8 @@ public class ReadCountsTest
         RegionReadData region = createRegion("GEN01", 1, 1, "1", 100, 119);
         region.setRefBases(REF_BASE_STR_1);
 
-        List<long[]> readCoords = Lists.newArrayList();
-        readCoords.add(new long[] { 100, 119 });
+        List<int[]> readCoords = Lists.newArrayList();
+        readCoords.add(new int[] { 100, 119 });
 
         markRegionBases(readCoords, region);
         assertEquals(20, region.baseCoverage(1));
@@ -556,9 +556,9 @@ public class ReadCountsTest
         region.clearState();
 
         readCoords.clear();
-        readCoords.add(new long[] { 100, 104 });
-        readCoords.add(new long[] { 110, 114 });
-        readCoords.add(new long[] { 118, 119 });
+        readCoords.add(new int[] { 100, 104 });
+        readCoords.add(new int[] { 110, 114 });
+        readCoords.add(new int[] { 118, 119 });
 
         markRegionBases(readCoords, region);
         assertEquals(12, region.baseCoverage(1));

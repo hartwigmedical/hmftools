@@ -114,7 +114,7 @@ public class AltSpliceJunctionFinder
         return true;
     }
 
-    public boolean junctionMatchesGene(final List<GeneReadData> genes, final long[] spliceJunction, final List<Integer> transIds)
+    public boolean junctionMatchesGene(final List<GeneReadData> genes, final int[] spliceJunction, final List<Integer> transIds)
     {
         for(GeneReadData gene : genes)
         {
@@ -138,10 +138,10 @@ public class AltSpliceJunctionFinder
     public AltSpliceJunction createFromRead(final ReadRecord read, final List<Integer> relatedTransIds)
     {
         // related transcripts will any of those where either read covers one or more of its exons
-        long[] spliceJunction = new long[SE_PAIR];
+        int[] spliceJunction = new int[SE_PAIR];
 
         // find the novel splice junction, and all associated transcripts
-        final List<long[]> mappedCoords = read.getMappedRegionCoords();
+        final List<int[]> mappedCoords = read.getMappedRegionCoords();
 
         if(read.inferredCoordAdded(true))
         {
@@ -171,7 +171,7 @@ public class AltSpliceJunctionFinder
     }
 
     private void classifyRegions(
-            final ReadRecord read, final long[] spliceJunction,
+            final ReadRecord read, final int[] spliceJunction,
             final List<RegionReadData> sjStartRegions, final List<RegionReadData> sjEndRegions, AltSpliceJunctionContext[] regionContexts)
     {
         // collect up all exon regions matching the observed novel splice junction
@@ -385,10 +385,10 @@ public class AltSpliceJunctionFinder
         /*
         if(RE_LOGGER.isDebugEnabled() && (mAltSpliceJunctions.size() >= 50 || totalReadCount > 100000))
         {
-            long totalSJRange =
+            int totalSJRange =
                     mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_END] - x.SpliceJunction[SE_START]).sum();
             double avgSJLength = totalSJRange / (double) mAltSpliceJunctions.size();
-            long geneLength = mGene.GeneData.GeneEnd - mGene.GeneData.GeneStart;
+            int geneLength = mGene.GeneData.GeneEnd - mGene.GeneData.GeneStart;
             double expReadsPerSJ = avgSJLength / (double) geneLength * totalReadCount;
 
             RE_LOGGER.debug(String.format("gene(%s) length(%d) totalReads(%d) altSJs(count=%d totalLen=%d avgLen=%.0f) expReads(%.0f)",
@@ -399,10 +399,10 @@ public class AltSpliceJunctionFinder
         return positionsRange;
     }
 
-    public void setPositionDepthFromRead(final List<long[]> readCoords)
+    public void setPositionDepthFromRead(final List<int[]> readCoords)
     {
-        long readMinPos = readCoords.get(0)[SE_START];
-        long readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
+        int readMinPos = readCoords.get(0)[SE_START];
+        int readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
 
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
         {

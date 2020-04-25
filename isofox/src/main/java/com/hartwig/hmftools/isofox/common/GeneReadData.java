@@ -48,27 +48,27 @@ public class GeneReadData
             mExonRegions.add(region);
     }
 
-    public static void generateCommonExonicRegions(final List<RegionReadData> regions, final List<long[]> allCommonRegions)
+    public static void generateCommonExonicRegions(final List<RegionReadData> regions, final List<int[]> allCommonRegions)
     {
         if(regions.isEmpty())
             return;
 
-        List<long[]> commonRegions = Lists.newArrayList(new long[] {regions.get(0).start(), regions.get(0).end()});
+        List<int[]> commonRegions = Lists.newArrayList(new int[] {regions.get(0).start(), regions.get(0).end()});
 
         for(int i = 1; i < regions.size(); ++i)
         {
-            List<long[]> nextRegion = Lists.newArrayList(new long[] {regions.get(i).start(), regions.get(i).end()});
+            List<int[]> nextRegion = Lists.newArrayList(new int[] {regions.get(i).start(), regions.get(i).end()});
             commonRegions = deriveCommonRegions(commonRegions, nextRegion);
         }
 
         allCommonRegions.addAll(commonRegions);
     }
 
-    public long calcExonicRegionLength()
+    public int calcExonicRegionLength()
     {
-        final List<long[]> commonExonicRegions = Lists.newArrayList();
+        final List<int[]> commonExonicRegions = Lists.newArrayList();
         generateCommonExonicRegions(mExonRegions, commonExonicRegions);
-        return commonExonicRegions.stream().mapToLong(x -> x[SE_END] - x[SE_START]).sum();
+        return commonExonicRegions.stream().mapToInt(x -> x[SE_END] - x[SE_START]).sum();
     }
 
     public List<RegionReadData> findOverlappingRegions(final ReadRecord read)

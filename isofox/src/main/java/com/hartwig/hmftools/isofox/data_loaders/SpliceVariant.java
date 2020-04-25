@@ -9,14 +9,14 @@ public class SpliceVariant
     public final String GeneName;
     public final String Chromosome;
 
-    public final long Position;
+    public final int Position;
     public final String Ref;
     public final String Alt;
     public final String TransName;
     public final String CodingEffect;
 
     public SpliceVariant(
-            final String geneName, final String chromosome, long position, final String ref, final String alt,
+            final String geneName, final String chromosome, int position, final String ref, final String alt,
             final String transName, final String codingEffect)
     {
         GeneName = geneName;
@@ -33,7 +33,7 @@ public class SpliceVariant
         return new SpliceVariant(
                 items[fieldIndexMap.get("GeneName")],
                 items[fieldIndexMap.get("Chromosome")],
-                Long.parseLong(items[fieldIndexMap.get("Position")]),
+                Integer.parseInt(items[fieldIndexMap.get("Position")]),
                 items[fieldIndexMap.get("Ref")],
                 items[fieldIndexMap.get("Alt")],
                 items[fieldIndexMap.get("TransName")],

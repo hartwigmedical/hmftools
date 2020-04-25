@@ -139,7 +139,7 @@ public class RetainedIntronFinder
 
     private RetainedIntron evaluateRead(ReadRecord read)
     {
-        long spannedPosition = 0;
+        int spannedPosition = 0;
         boolean spannedIsStart = false;
 
         final List<RegionReadData> candidateRegions = Lists.newArrayList();
@@ -155,7 +155,7 @@ public class RetainedIntronFinder
             for (int se = SE_START; se <= SE_END; ++se)
             {
                 boolean usesStart = se == SE_START;
-                long regionPos = usesStart ? region.start() : region.end();
+                int regionPos = usesStart ? region.start() : region.end();
 
                 if (!read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(regionPos, x[SE_START], x[SE_END])))
                     continue;
@@ -211,10 +211,10 @@ public class RetainedIntronFinder
         return retIntron;
     }
 
-    public void setPositionDepthFromRead(final List<long[]> readCoords)
+    public void setPositionDepthFromRead(final List<int[]> readCoords)
     {
-        long readMinPos = readCoords.get(0)[SE_START];
-        long readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
+        int readMinPos = readCoords.get(0)[SE_START];
+        int readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
 
         for(RetainedIntron retIntron : mRetainedIntrons)
         {

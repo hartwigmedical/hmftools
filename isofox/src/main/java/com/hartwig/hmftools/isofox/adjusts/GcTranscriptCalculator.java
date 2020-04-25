@@ -139,8 +139,8 @@ public class GcTranscriptCalculator
         else
         {
             // rather than measure GC content for each shifting read, just apply diffs to from the base lost and added
-            List<long[]> readRegions = Lists.newArrayListWithExpectedSize(1);
-            long[] geneRegion = new long[] { 0, 0 };
+            List<int[]> readRegions = Lists.newArrayListWithExpectedSize(1);
+            int[] geneRegion = new int[] { 0, 0 };
             readRegions.add(geneRegion);
 
             final String geneBases =
@@ -185,9 +185,9 @@ public class GcTranscriptCalculator
         boolean endOfTrans = false;
         for (final ExonData exon : transData.exons())
         {
-            for (long startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
+            for (int startPos = exon.ExonStart; startPos <= exon.ExonEnd; ++startPos)
             {
-                final List<long[]> readRegions = generateReadRegions(transData, startPos, readLength);
+                final List<int[]> readRegions = generateReadRegions(transData, startPos, readLength);
 
                 if(readRegions.isEmpty())
                 {
@@ -209,9 +209,9 @@ public class GcTranscriptCalculator
         writeExpectedGcRatios(mWriter, transData.TransName, gcRatioCounts.getCounts());
     }
 
-    public List<long[]> generateReadRegions(final TranscriptData transData, long startPos, int readLength)
+    public List<int[]> generateReadRegions(final TranscriptData transData, int startPos, int readLength)
     {
-        List<long[]> readRegions = Lists.newArrayListWithExpectedSize(10);
+        List<int[]> readRegions = Lists.newArrayListWithExpectedSize(10);
 
         // set out the fragment reads either within a single exon or spanning one or more
         int exonCount = transData.exons().size();
@@ -221,7 +221,7 @@ public class GcTranscriptCalculator
             return readRegions;
 
         int remainingReadBases = readLength;
-        long nextRegionStart = startPos;
+        int nextRegionStart = startPos;
 
         for(int i = 0; i < exonCount; ++i)
         {
@@ -232,15 +232,15 @@ public class GcTranscriptCalculator
 
             if(nextRegionStart + remainingReadBases - 1 <= exon.ExonEnd)
             {
-                long regionEnd = nextRegionStart + remainingReadBases - 1;
-                readRegions.add(new long[] {nextRegionStart, regionEnd});
+                int regionEnd = nextRegionStart + remainingReadBases - 1;
+                readRegions.add(new int[] {nextRegionStart, regionEnd});
                 return readRegions;
             }
 
-            long regionEnd = exon.ExonEnd;
-            long regionLength = (int)(regionEnd - nextRegionStart + 1);
+            int regionEnd = exon.ExonEnd;
+            int regionLength = (int)(regionEnd - nextRegionStart + 1);
             remainingReadBases -= regionLength;
-            readRegions.add(new long[] {nextRegionStart, regionEnd});
+            readRegions.add(new int[] {nextRegionStart, regionEnd});
 
             if(i == exonCount - 1)
             {
