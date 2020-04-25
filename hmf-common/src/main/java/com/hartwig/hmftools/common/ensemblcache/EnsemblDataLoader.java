@@ -324,7 +324,7 @@ public class EnsemblDataLoader
     private static int TA_DISTANCE = 5;
 
     public static boolean loadTranscriptSpliceAcceptorData(
-            final String dataPath, Map<Integer,Long> transSaPositionDataMap, final List<Integer> restrictedTransIds)
+            final String dataPath, Map<Integer,Integer> transSaPositionDataMap, final List<Integer> restrictedTransIds)
     {
         String filename = dataPath;
 
@@ -361,7 +361,7 @@ public class EnsemblDataLoader
                     continue;
                 }
 
-                final long saPosition = Long.parseLong(items[TA_SA_POSITION]);
+                int saPosition = Integer.parseInt(items[TA_SA_POSITION]);
 
                 transSaPositionDataMap.put(transId, saPosition);
 

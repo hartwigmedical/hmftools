@@ -31,9 +31,9 @@ public class EnsemblDataCache
     private final Map<String, List<TranscriptData>> mTranscriptDataMap;
     private final Map<String, List<EnsemblGeneData>> mChrGeneDataMap;
     private final Map<Integer, List<TranscriptProteinData>> mEnsemblProteinDataMap;
-    private final Map<Integer,Long> mTransSpliceAcceptorPosDataMap;
-    private final Map<String, EnsemblGeneData> mGeneDataMap; // keyed by geneId
-    private final Map<String, EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
+    private final Map<Integer,Integer> mTransSpliceAcceptorPosDataMap;
+    private final Map<String,EnsemblGeneData> mGeneDataMap; // keyed by geneId
+    private final Map<String,EnsemblGeneData> mGeneNameIdMap; // for faster look-up by name
 
     // whether to load more details information for each transcript - exons, protein domains, splice positions etc
     private boolean mRequireExons;
@@ -77,7 +77,7 @@ public class EnsemblDataCache
     public final Map<String, List<TranscriptData>> getTranscriptDataMap() { return mTranscriptDataMap; }
     public final Map<String, List<EnsemblGeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
     public Map<Integer, List<TranscriptProteinData>> getTranscriptProteinDataMap() { return mEnsemblProteinDataMap; }
-    public Map<Integer,Long> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
+    public Map<Integer,Integer> getTransSpliceAcceptorPosDataMap() { return mTransSpliceAcceptorPosDataMap; }
 
     public final EnsemblGeneData getGeneDataByName(final String geneName)
     {
@@ -339,12 +339,12 @@ public class EnsemblDataCache
         return matchedGenes;
     }
 
-    public long findPrecedingGeneSpliceAcceptorPosition(int transId)
+    public int findPrecedingGeneSpliceAcceptorPosition(int transId)
     {
         if(mTransSpliceAcceptorPosDataMap.isEmpty())
             return -1;
 
-        Long spliceAcceptorPos = mTransSpliceAcceptorPosDataMap.get(transId);
+        Integer spliceAcceptorPos = mTransSpliceAcceptorPosDataMap.get(transId);
         return spliceAcceptorPos != null ? spliceAcceptorPos : -1;
     }
 
