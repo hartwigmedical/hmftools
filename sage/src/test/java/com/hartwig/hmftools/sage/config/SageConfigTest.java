@@ -68,6 +68,7 @@ public class SageConfigTest {
                 .qualityConfig(defaultQualityConfig())
                 .regionSliceSize(500_000)
                 .filter(defaultFilterConfig())
+                .readContextFlankSize(SageConfig.DEFAULT_READ_CONTEXT_FLANK_SIZE)
                 .baseQualityRecalibrationConfig(defaultQualityRecalibrationConfig())
                 .build();
 
