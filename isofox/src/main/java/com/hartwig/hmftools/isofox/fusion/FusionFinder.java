@@ -1,20 +1,26 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
+import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
@@ -40,9 +46,12 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
+import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMRecord;
@@ -64,6 +73,9 @@ public class FusionFinder
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
     private final Map<String,List<FusionFragment>> mUnfusedFragments;
 
+    private final FragmentTracker mReadDepthTracker;
+    private final List<FusionReadData> mReadDepthFusions;
+
     private BufferedWriter mReadWriter;
     private BufferedWriter mFragmentWriter;
     private final PerformanceCounter mPerfCounter;
@@ -84,6 +96,9 @@ public class FusionFinder
         mChrGeneCollectionMap = Maps.newHashMap();
 
         mUnfusedFragments = Maps.newHashMap();
+
+        mReadDepthTracker = new FragmentTracker();
+        mReadDepthFusions = Lists.newArrayList();
 
         mPerfCounter = new PerformanceCounter("Fusions");
         mReadWriter = null;
@@ -199,12 +214,13 @@ public class FusionFinder
                 mUnfusedFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
-        mReadsMap.clear();
+        // mReadsMap.clear();
 
         // classify / analyse fusions
         for(List<FusionReadData> fusions : mFusionCandidates.values())
         {
             fusions.forEach(x -> setGeneData(x));
+            calcFusionReadDepth(fusions);
         }
 
         markRelatedFusions();
@@ -455,6 +471,117 @@ public class FusionFinder
         }
     }
 
+    private void calcFusionReadDepth(final List<FusionReadData> fusions)
+    {
+        mReadDepthTracker.clear();
+        mReadDepthFusions.clear();
+        mReadDepthFusions.addAll(fusions);
+
+        QueryInterval[] queryInterval = new QueryInterval[SE_PAIR];
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            int[] fusionJuncRange = {-1, -1};
+
+            for(final FusionReadData fusionData : fusions)
+            {
+                fusionJuncRange[SE_START] = fusionJuncRange[se] == -1 ?
+                        fusionData.junctionPositions()[se] : min(fusionJuncRange[SE_START], fusionData.junctionPositions()[se]);
+
+                fusionJuncRange[SE_END] = max(fusionJuncRange[SE_END], fusionData.junctionPositions()[se]);
+
+                // set depth from existing fragments
+            }
+
+            int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(fusions.get(0).chromosomes()[se]);
+            queryInterval[se] = new QueryInterval(chrSeqIndex, fusionJuncRange[SE_START], fusionJuncRange[SE_END]);
+        }
+
+        mBamSlicer.slice(mSamReader, queryInterval, this::processReadDepthRecord);
+    }
+
+    private final static int SOFT_CLIP_JUNCTION_DISTANCE = 5;
+
+    private void processReadDepthRecord(@NotNull final SAMRecord record)
+    {
+        if(mReadsMap.containsKey(record.getReadName()))
+            return;
+
+        final ReadRecord read1 = ReadRecord.from(record);
+        final ReadRecord read2 = mReadDepthTracker.checkRead(read1);
+
+        if(read2 == null)
+            return;
+
+        if(!read1.containsSoftClipping() && !read2.containsSoftClipping())
+            return;
+
+        if(!read1.Chromosome.equals(read2.Chromosome))
+        {
+            ISF_LOGGER.warn("read-depth read({}) spans chromosomes({} & {})", read1.Id, read1.Chromosome, read2.Chromosome);
+            return;
+        }
+
+        // test these pairs against each fusion junction
+        FusionFragment fragment = new FusionFragment(Lists.newArrayList(read1, read2));
+
+        for(final FusionReadData fusionData : mReadDepthFusions)
+        {
+            for(int se = SE_START; se <= SE_END; ++se)
+            {
+                boolean hasReadSupport = false;
+                boolean addedFragment = false;
+
+                for(ReadRecord read : fragment.getReads())
+                {
+                    final List<int[]> readCoords = read.getMappedRegionCoords();
+                    final int[] readBoundaries = { readCoords.get(0)[SE_START], readCoords.get(readCoords.size() - 1)[SE_END] };
+
+                    if(!read.Chromosome.equals(fusionData.chromosomes()[se]))
+                        continue;
+
+                    final int seIndex = se;
+
+                    if(!hasReadSupport && readCoords.stream()
+                            .anyMatch(x -> positionWithin(fusionData.junctionPositions()[seIndex], x[SE_START], x[SE_END])))
+                    {
+                        hasReadSupport = true;
+                    }
+
+                    if(fusionData.junctionOrientations()[se] == 1 && read.isSoftClipped(SE_END))
+                    {
+                        if(positionWithin(
+                                fusionData.junctionPositions()[se],
+                                readBoundaries[SE_END], readBoundaries[SE_END] + SOFT_CLIP_JUNCTION_DISTANCE))
+                        {
+                            fragment.setType(ONE_JUNCTION);
+                            fragment.setGeneData(fusionData.geneCollections()[se], fusionData.getTransExonRefsByPos(se));
+                            fusionData.addFusionFragment(fragment);
+                            addedFragment = true;
+                            break;
+                        }
+                    }
+                    else if(fusionData.junctionOrientations()[se] == -1 && read.isSoftClipped(SE_START))
+                    {
+                        if(positionWithin(
+                                fusionData.junctionPositions()[se],
+                                readBoundaries[SE_START] - SOFT_CLIP_JUNCTION_DISTANCE, readBoundaries[SE_START]))
+                        {
+                            fragment.setType(ONE_JUNCTION);
+                            fragment.setGeneData(fusionData.geneCollections()[se], fusionData.getTransExonRefsByPos(se));
+                            fusionData.addFusionFragment(fragment);
+                            addedFragment = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(hasReadSupport && !addedFragment)
+                    ++fusionData.getReadDepth()[se];
+            }
+        }
+    }
+
     private static final int POSITION_REALIGN_DISTANCE = 20;
 
     private void assignUnfusedFragments()
@@ -493,7 +620,6 @@ public class FusionFinder
 
                         fusion.addFusionFragment(fragment);
                         allocatedFragments.add(fragment);
-                        break;
                     }
                 }
             }
@@ -623,7 +749,7 @@ public class FusionFinder
                 final String outputFileName = mConfig.formOutputFile("chimeric_frags.csv");
 
                 mFragmentWriter = createBufferedWriter(outputFileName, false);
-                mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type");
+                mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type,SameGene,ScCount");
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
@@ -634,11 +760,14 @@ public class FusionFinder
                     mFragmentWriter.write(",Region" + prefix);
                     mFragmentWriter.write(",JuncType" + prefix);
                 }
+
                 mFragmentWriter.newLine();
             }
 
-            mFragmentWriter.write(String.format("%s,%d,%s,%s",
-                    fragment.readId(), fragment.getReads().size(), fusionId, fragment.type()));
+            mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
+                    fragment.readId(), fragment.getReads().size(), fusionId, fragment.type(),
+                    fragment.geneCollections()[SE_START] == fragment.geneCollections()[SE_END],
+                    fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
 
             for(int se = SE_START; se <= SE_END; ++se)
             {

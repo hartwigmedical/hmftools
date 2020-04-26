@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.startDonorAcceptorBase
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.formLocationPair;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.lowerChromosome;
 
@@ -96,15 +97,52 @@ public class FusionFragment
         }
 
         // first determine which is the start and end chromosome & position as for SVs
-        int lowerIndex;
+        if(readGroups.size() > 1)
+        {
+            int lowerIndex;
 
-        if(chromosomes.get(0).equals(chromosomes.get(1)))
-            lowerIndex = positions.get(0) < positions.get(1) ? 0 : 1;
+            if (chromosomes.get(0).equals(chromosomes.get(1)))
+                lowerIndex = positions.get(0) < positions.get(1) ? 0 : 1;
+            else
+                lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;
+
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
+                final String chrGeneId = chrGeneCollections.get(index);
+
+                final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
+
+                mChromosomes[se] = chromosomes.get(index);
+                mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
+            }
+
+            setJunctionData(readGroups, chrGeneCollections, lowerIndex);
+
+            extractTranscriptExonData();
+
+            mType = calcType();
+        }
         else
-            lowerIndex = lowerChromosome(chromosomes.get(0), chromosomes.get(1)) ? 0 : 1;
+        {
+            // these fragments are from secondary searches for one-side support of the fusion, and so will only have one gene collection
+            // and will be missing transcript and exon information
+            mChromosomes[SE_START] = mChromosomes[SE_END] = chromosomes.get(0);
+            mGeneCollections[SE_START] = mGeneCollections[SE_END] = reads.get(0).getGeneCollecton();
 
+            setJunctionData(readGroups, chrGeneCollections, 0);
+
+            mType = UNKNOWN;
+        }
+    }
+
+    private void setJunctionData(final Map<String,List<ReadRecord>> readGroups, final List<String> chrGeneCollections, int lowerIndex)
+    {
         for(int se = SE_START; se <= SE_END; ++se)
         {
+            if(readGroups.size() == 1 && se == SE_END)
+                return;
+
             int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
             final String chrGeneId = chrGeneCollections.get(index);
 
@@ -114,9 +152,6 @@ public class FusionFragment
             int maxSoftClipping = 0;
 
             final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
-
-            mChromosomes[se] = chromosomes.get(index);
-            mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
 
             for(ReadRecord read : readGroup)
             {
@@ -180,10 +215,6 @@ public class FusionFragment
                 mJunctionValid[se] = true;
             }
         }
-
-        extractTranscriptExonData();
-
-        mType = calcType();
     }
 
     public void setType(FusionFragmentType type) { mType = type; }
@@ -222,6 +253,15 @@ public class FusionFragment
     public boolean isSpliced() { return exonBoundary(mRegionMatchTypes[SE_START]) && exonBoundary(mRegionMatchTypes[SE_END]); }
 
     public String locationPair() { return formLocationPair(mChromosomes, mGeneCollections); }
+
+    public void setGeneData(int geneCollection, final List<TransExonRef> transExonRefs)
+    {
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            mGeneCollections[se] = geneCollection;
+            mTransExonRefs[se].addAll(transExonRefs);
+        }
+    }
 
     public StructuralVariantType getImpliedSvType()
     {

@@ -558,7 +558,12 @@ public class ReadRecord
 
     public boolean containsSplit()
     {
-        return Cigar != null && Cigar.containsOperator(CigarOperator.N);
+        return Cigar.containsOperator(CigarOperator.N);
+    }
+
+    public boolean containsSoftClipping()
+    {
+        return Cigar.containsOperator(CigarOperator.S);
     }
 
     private static int MIN_BASE_MATCH = 2;
