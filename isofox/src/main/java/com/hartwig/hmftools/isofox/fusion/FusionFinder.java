@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.isofox.fusion;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -13,7 +11,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QU
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
@@ -38,10 +35,6 @@ import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
-import org.jetbrains.annotations.NotNull;
-
-import htsjdk.samtools.QueryInterval;
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -50,9 +43,6 @@ public class FusionFinder
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    private final SamReader mSamReader;
-    private final BamSlicer mBamSlicer;
-
     private final Map<String,List<ReadRecord>> mReadsMap;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
 
@@ -60,8 +50,7 @@ public class FusionFinder
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
     private final Map<String,List<FusionFragment>> mUnfusedFragments;
 
-    private final FragmentTracker mReadDepthTracker;
-    private final List<FusionReadData> mReadDepthFusions;
+    private final FusionReadDepth mFusionReadDepth;
     private final FusionWriter mFusionWriter;
 
     private final PerformanceCounter mPerfCounter;
@@ -71,11 +60,6 @@ public class FusionFinder
         mConfig = config;
         mGeneTransCache = geneTransCache;
 
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
-
-        mBamSlicer = mSamReader != null ? new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true) : null;
-
         mNextFusionId = 0;
         mReadsMap = Maps.newHashMap();
         mFusionCandidates = Maps.newHashMap();
@@ -83,8 +67,7 @@ public class FusionFinder
 
         mUnfusedFragments = Maps.newHashMap();
 
-        mReadDepthTracker = new FragmentTracker();
-        mReadDepthFusions = Lists.newArrayList();
+        mFusionReadDepth = new FusionReadDepth(mConfig, mReadsMap);
 
         mPerfCounter = new PerformanceCounter("Fusions");
         mFusionWriter = new FusionWriter(mConfig);
@@ -203,7 +186,7 @@ public class FusionFinder
         for(List<FusionReadData> fusions : mFusionCandidates.values())
         {
             fusions.forEach(x -> setGeneData(x));
-            calcFusionReadDepth(fusions);
+            mFusionReadDepth.calcFusionReadDepth(fusions);
         }
 
         markRelatedFusions();
@@ -434,120 +417,6 @@ public class FusionFinder
                         fusion2.addRelatedFusion(fusion1.id());
                     }
                 }
-            }
-        }
-    }
-
-    private void calcFusionReadDepth(final List<FusionReadData> fusions)
-    {
-        if(mBamSlicer == null)
-            return;
-
-        mReadDepthTracker.clear();
-        mReadDepthFusions.clear();
-        mReadDepthFusions.addAll(fusions);
-
-        QueryInterval[] queryInterval = new QueryInterval[SE_PAIR];
-
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            int[] fusionJuncRange = {-1, -1};
-
-            for(final FusionReadData fusionData : fusions)
-            {
-                fusionJuncRange[SE_START] = fusionJuncRange[se] == -1 ?
-                        fusionData.junctionPositions()[se] : min(fusionJuncRange[SE_START], fusionData.junctionPositions()[se]);
-
-                fusionJuncRange[SE_END] = max(fusionJuncRange[SE_END], fusionData.junctionPositions()[se]);
-
-                // set depth from existing fragments
-            }
-
-            int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(fusions.get(0).chromosomes()[se]);
-            queryInterval[se] = new QueryInterval(chrSeqIndex, fusionJuncRange[SE_START], fusionJuncRange[SE_END]);
-        }
-
-        mBamSlicer.slice(mSamReader, queryInterval, this::processReadDepthRecord);
-    }
-
-    private final static int SOFT_CLIP_JUNCTION_DISTANCE = 5;
-
-    private void processReadDepthRecord(@NotNull final SAMRecord record)
-    {
-        if(mReadsMap.containsKey(record.getReadName()))
-            return;
-
-        final ReadRecord read1 = ReadRecord.from(record);
-        final ReadRecord read2 = mReadDepthTracker.checkRead(read1);
-
-        if(read2 == null)
-            return;
-
-        if(!read1.containsSoftClipping() && !read2.containsSoftClipping())
-            return;
-
-        if(!read1.Chromosome.equals(read2.Chromosome))
-        {
-            ISF_LOGGER.warn("read-depth read({}) spans chromosomes({} & {})", read1.Id, read1.Chromosome, read2.Chromosome);
-            return;
-        }
-
-        // test these pairs against each fusion junction
-        FusionFragment fragment = new FusionFragment(Lists.newArrayList(read1, read2));
-
-        for(final FusionReadData fusionData : mReadDepthFusions)
-        {
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                boolean hasReadSupport = false;
-                boolean addedFragment = false;
-
-                for(ReadRecord read : fragment.getReads())
-                {
-                    final List<int[]> readCoords = read.getMappedRegionCoords();
-                    final int[] readBoundaries = { readCoords.get(0)[SE_START], readCoords.get(readCoords.size() - 1)[SE_END] };
-
-                    if(!read.Chromosome.equals(fusionData.chromosomes()[se]))
-                        continue;
-
-                    final int seIndex = se;
-
-                    if(!hasReadSupport && readCoords.stream()
-                            .anyMatch(x -> positionWithin(fusionData.junctionPositions()[seIndex], x[SE_START], x[SE_END])))
-                    {
-                        hasReadSupport = true;
-                    }
-
-                    if(fusionData.junctionOrientations()[se] == 1 && read.isSoftClipped(SE_END))
-                    {
-                        if(positionWithin(
-                                fusionData.junctionPositions()[se],
-                                readBoundaries[SE_END], readBoundaries[SE_END] + SOFT_CLIP_JUNCTION_DISTANCE))
-                        {
-                            fragment.setType(ONE_JUNCTION);
-                            fragment.setGeneData(fusionData.geneCollections()[se], fusionData.getTransExonRefsByPos(se));
-                            fusionData.addFusionFragment(fragment);
-                            addedFragment = true;
-                            break;
-                        }
-                    }
-                    else if(fusionData.junctionOrientations()[se] == -1 && read.isSoftClipped(SE_START))
-                    {
-                        if(positionWithin(
-                                fusionData.junctionPositions()[se],
-                                readBoundaries[SE_START] - SOFT_CLIP_JUNCTION_DISTANCE, readBoundaries[SE_START]))
-                        {
-                            fragment.setType(ONE_JUNCTION);
-                            fragment.setGeneData(fusionData.geneCollections()[se], fusionData.getTransExonRefsByPos(se));
-                            fusionData.addFusionFragment(fragment);
-                            addedFragment = true;
-                            break;
-                        }
-                    }
-                }
-
-                if(hasReadSupport && !addedFragment)
-                    ++fusionData.getReadDepth()[se];
             }
         }
     }
