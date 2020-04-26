@@ -155,8 +155,6 @@ public class FusionFinder
                     continue;
                 }
 
-                reads.addAll(findMissingReads(reads.get(0)));
-
                 if(reads.size() > 1)
                 {
                     ISF_LOGGER.warn("read({}) found missing reads", reads.get(0).Id);
@@ -262,18 +260,6 @@ public class FusionFinder
         }
 
         return false;
-    }
-
-    private List<ReadRecord> findMissingReads(final ReadRecord read)
-    {
-        int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(read.mateChromosome());
-
-        QueryInterval[] queryInterval = new QueryInterval[1];
-        queryInterval[0] = new QueryInterval(chrSeqIndex, (int)read.mateStartPosition(), (int)read.mateStartPosition());
-
-        List<SAMRecord> records = mBamSlicer.slice(mSamReader, queryInterval);
-
-        return records.stream().filter(x -> x.getReadName().equals(read.Id)).map(x -> ReadRecord.from(x)).collect(Collectors.toList());
     }
 
     private void createOrUpdateFusion(final FusionFragment fragment)

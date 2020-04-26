@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.fusion;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -25,9 +27,12 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class FusionReadData
 {
@@ -40,12 +45,14 @@ public class FusionReadData
 
     private final List<Integer> mRelatedFusions;
 
+    // not stored by stream
     private final String[] mChromosomes;
     private final int[] mGeneCollections;
     private final int[] mJunctionPositions;
     private final byte[] mJunctionOrientations;
-    private final List<TransExonRef>[] mTransExonRefs; // not stored by stream
+    private final List<TransExonRef>[] mTransExonRefs;
     private final int[] mReadDepth;
+    private final String[] mJunctionBases;
 
     // the following data is stored by stream, not start/end
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
@@ -64,9 +71,11 @@ public class FusionReadData
         mGeneCollections = new int[] { fragment.geneCollections()[SE_START], fragment.geneCollections()[SE_END] };
         mJunctionPositions = new int[] { fragment.junctionPositions()[SE_START], fragment.junctionPositions()[SE_END] };
         mJunctionOrientations = new byte[]{ fragment.junctionOrientations()[SE_START], fragment.junctionOrientations()[SE_END] };
+        mJunctionBases = new String[] {"", ""};
 
         mFragments = Maps.newHashMap();
         addFusionFragment(fragment);
+        setJunctionBases(fragment);
 
         mLocationId = formLocationPair(mChromosomes, mGeneCollections);
 
@@ -119,6 +128,25 @@ public class FusionReadData
     public final List<FusionFragment> getFragments(FusionFragmentType type)
     {
         return mFragments.containsKey(type) ? mFragments.get(type) : Lists.newArrayList();
+    }
+
+    private void setJunctionBases(final FusionFragment fragment)
+    {
+        for (int se = SE_START; se <= SE_END; ++se)
+        {
+            int seIndex = se;
+            final ReadRecord read = fragment.getReads().stream()
+                    .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]) && x.getGeneCollecton() == mGeneCollections[seIndex])
+                    .filter(x -> x.PosStart == mJunctionPositions[seIndex] || x.PosEnd == mJunctionPositions[seIndex])
+                    .findFirst().orElse(null);
+
+            if(read == null)
+                continue;
+
+            int baseLength = min(10, read.Length);
+            mJunctionBases[se] = mJunctionOrientations[se] == 1 ?
+                    read.ReadBases.substring(read.Length - baseLength, read.Length) : read.ReadBases.substring(0, baseLength);
+        }
     }
 
     public void addFusionFragment(final FusionFragment fragment)
