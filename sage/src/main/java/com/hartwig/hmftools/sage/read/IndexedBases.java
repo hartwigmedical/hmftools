@@ -61,10 +61,6 @@ public class IndexedBases {
         return leftFlankLength() == flankSize && rightFlankLength() == flankSize;
     }
 
-    boolean coreComplete() {
-        return leftFlankIndex < leftCoreIndex && rightCoreIndex < rightFlankIndex;
-    }
-
     public boolean phased(int offset, @NotNull final IndexedBases other) {
         int otherReadIndex = other.index + offset;
 

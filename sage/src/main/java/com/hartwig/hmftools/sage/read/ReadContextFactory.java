@@ -58,8 +58,8 @@ public class ReadContextFactory {
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
-                Math.max(startIndex, 0),
-                Math.min(endIndex, record.getReadBases().length - 1),
+                startIndex,
+                endIndex,
                 flankSize,
                 refBases,
                 record);
@@ -98,16 +98,15 @@ public class ReadContextFactory {
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
-                Math.max(startIndex, 0),
-                Math.min(endIndex, record.getReadBases().length - 1),
+                startIndex,
+                endIndex,
                 flankSize,
                 refBases,
                 record);
     }
 
     @NotNull
-    public ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record,
-            final IndexedBases refBases) {
+    public ReadContext createSNVContext(int refPosition, int readIndex, @NotNull final SAMRecord record, final IndexedBases refBases) {
         return createMNVContext(refPosition, readIndex, 1, record, refBases);
     }
 
@@ -149,8 +148,8 @@ public class ReadContextFactory {
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
                 refPosition,
                 readIndex,
-                Math.max(startIndex, 0),
-                Math.min(endIndex, record.getReadBases().length - 1),
+                startIndex,
+                endIndex,
                 flankSize,
                 refBases,
                 record);

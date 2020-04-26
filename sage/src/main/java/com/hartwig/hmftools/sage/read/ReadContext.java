@@ -18,11 +18,15 @@ public class ReadContext {
     private final IndexedBases readBases;
     private final IndexedBases refBases;
 
+    private final boolean incompleteCore;
+
     @VisibleForTesting
     ReadContext(final String repeat, final int refPosition, final int readIndex, final int leftCentreIndex, final int rightCentreIndex,
             final int flankSize, final byte[] readBases, final String microhomology) {
-        assert (leftCentreIndex >= 0);
-        assert (rightCentreIndex >= leftCentreIndex);
+
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readBases.length - 1);
+        this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
         this.position = refPosition;
         this.distance = 0;
@@ -30,37 +34,40 @@ public class ReadContext {
         this.repeat = repeat;
         this.microhomology = microhomology;
         this.repeatCount = 0;
-        this.readBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
-        this.refBases = new IndexedBases(refPosition, readIndex, leftCentreIndex, rightCentreIndex, flankSize, readBases);
+        this.readBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
+        this.refBases = new IndexedBases(refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
     }
 
     ReadContext(final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
             final int leftCentreIndex, final int rightCentreIndex, final int flankSize, @NotNull final IndexedBases refSequence,
             @NotNull final SAMRecord record) {
-        assert (leftCentreIndex >= 0);
-        assert (rightCentreIndex >= leftCentreIndex);
+
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, record.getReadBases().length - 1);
 
         this.position = refPosition;
         this.repeat = repeat;
         this.repeatCount = repeatCount;
         this.microhomology = microhomology;
 
-        int recordLeftFlankStartIndex = Math.max(0, leftCentreIndex - flankSize);
-        int recordRightFlankEndIndex = Math.min(record.getReadBases().length - 1, rightCentreIndex + flankSize);
+        int recordLeftFlankStartIndex = Math.max(0, adjLeftCentreIndex - flankSize);
+        int recordRightFlankEndIndex = Math.min(record.getReadBases().length - 1, adjRightCentreIndex + flankSize);
 
         ReadContextDistance distance = new ReadContextDistance(recordLeftFlankStartIndex, recordRightFlankEndIndex, record, refSequence);
         this.distance = distance.distance();
         this.distanceCigar = distance.cigar();
 
-        this.readBases = new IndexedBases(position, readIndex, leftCentreIndex, rightCentreIndex, flankSize, record.getReadBases());
+        this.readBases = new IndexedBases(position, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
 
         int refIndex = refSequence.index(position);
         this.refBases = new IndexedBases(position,
                 refIndex,
-                refIndex + leftCentreIndex - readIndex,
-                refIndex + rightCentreIndex - readIndex,
+                refIndex + adjLeftCentreIndex - readIndex,
+                refIndex + adjRightCentreIndex - readIndex,
                 0,
                 refSequence.bases());
+
+        this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
     private ReadContext(@NotNull final ReadContext clone) {
@@ -70,6 +77,8 @@ public class ReadContext {
         this.microhomology = clone.microhomology;
         this.distance = clone.distance;
         this.distanceCigar = clone.distanceCigar;
+        this.incompleteCore = clone.incompleteCore;
+
         this.refBases = IndexedBases.resize(position,
                 clone.refBases.index(),
                 clone.refBases.leftCentreIndex(),
@@ -95,12 +104,12 @@ public class ReadContext {
         return position;
     }
 
-    public boolean isComplete() {
-        return readBases.flanksComplete();
+    public boolean incompleteFlanks() {
+        return !readBases.flanksComplete();
     }
 
-    public boolean isCoreComplete() {
-        return readBases.coreComplete();
+    public boolean incompleteCore() {
+        return incompleteCore;
     }
 
     int minCentreQuality(int readIndex, SAMRecord record) {

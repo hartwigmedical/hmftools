@@ -14,26 +14,6 @@ public class IndexedBasesTest {
 
 
     @Test
-    public void testCoreComplete() {
-        IndexedBases flankComplete = new IndexedBases(1000, 5, 1, 3, 1, "GATCA".getBytes());
-        assertTrue(flankComplete.coreComplete());
-        assertTrue(flankComplete.flanksComplete());
-
-        IndexedBases bothComplete = new IndexedBases(1000, 5, 1, 3, 2, "GATCA".getBytes());
-        assertTrue(bothComplete.coreComplete());
-        assertFalse(bothComplete.flanksComplete());
-
-        IndexedBases leftIncomplete = new IndexedBases(1000, 5, 0, 3, 2, "GATCA".getBytes());
-        assertFalse(leftIncomplete.coreComplete());
-        assertFalse(leftIncomplete.flanksComplete());
-
-        IndexedBases rightIncomplete = new IndexedBases(1000, 5, 1, 4, 2, "GATCA".getBytes());
-        assertFalse(leftIncomplete.coreComplete());
-        assertFalse(leftIncomplete.flanksComplete());
-    }
-
-
-    @Test
     public void testRightFlankMatchingBases() {
         assertEquals(-1, victim.rightFlankMatchingBases(3, "TCTCCTCG".getBytes()));
 
