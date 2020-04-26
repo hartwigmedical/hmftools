@@ -4,9 +4,11 @@ import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
@@ -213,17 +215,6 @@ public class FusionReadData
                 && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START] && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
     }
 
-    public static boolean hasTranscriptExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
-    {
-        return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matches(y)));
-    }
-
-    public static boolean hasTranscriptNextExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
-    {
-        // true if of any of list 2's exons are 1 ahead of list 1's exons
-        return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matchesNext(y)));
-    }
-
     public FusionFragment getSampleFragment()
     {
         if(mFragments.containsKey(BOTH_JUNCTIONS))
@@ -251,37 +242,54 @@ public class FusionReadData
         }
     }
 
-    public boolean canAddDiscordantFragment(final FusionFragment fragment)
+    public boolean canAddDiscordantFragment(final FusionFragment fragment, int maxFragmentDistance)
     {
-        // the 2 reads' bounds need to fall within a correct intron relative to the SJs
+        // a discordant read spans both reads and cannot be outside the standard long fragment length either in intronic terms
+        // or by exons if exonic
 
+        // the 2 reads' bounds need to fall within 2 or less exons away
         // apply max fragment distance criteria
 
-        boolean[] hasMatch = { false, false };
-
-        final List<TransExonRef> upstreamRefs = getTransExonRefsByStream(FS_UPSTREAM);
-        final List<TransExonRef> downstreamRefs = getTransExonRefsByStream(FS_DOWNSTREAM);
+        int impliedFragmentLength = fragment.getReads().get(0).Length * 2;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
             final List<TransExonRef> fragmentRefs = fragment.getTransExonRefs()[se];
+            final List<TransExonRef> fusionRefs = getTransExonRefsByPos(se);
+
+            boolean isUpstream = (mStreamIndices[FS_UPSTREAM] == se);
+
+            int permittedExonDiff;
+
+            if(isUpstream)
+                permittedExonDiff = -2;
+            else if(fragment.regionMatchTypes()[se] == INTRON)
+                permittedExonDiff = 1;
+            else
+                permittedExonDiff = 2;
+
+            if(!hasTranscriptExonMatch(fusionRefs, fragmentRefs, permittedExonDiff))
+                return false;
+
+            int fragmentPosition = fragment.getReadBoundary(mChromosomes[se], mGeneCollections[se], switchIndex(se));
+
+            // cannot be on the wrong side of the junction
+            if((mJunctionOrientations[se] == 1) == (fragmentPosition > mJunctionPositions[se]))
+                return false;
 
             if(fragment.regionMatchTypes()[se] == INTRON)
             {
-                if(hasTranscriptExonMatch(fragmentRefs, upstreamRefs) || hasTranscriptNextExonMatch(fragmentRefs, downstreamRefs))
-                    hasMatch[se] = true;
-            }
-            else
-            {
-                if(hasTranscriptExonMatch(fragmentRefs, upstreamRefs) || hasTranscriptExonMatch(fragmentRefs, downstreamRefs))
-                    hasMatch[se] = true;
+                if (fragmentPosition < mJunctionPositions[se])
+                    impliedFragmentLength += mJunctionPositions[se] - fragmentPosition;
+                else
+                    impliedFragmentLength += fragmentPosition - mJunctionPositions[se];
             }
         }
 
-        if(hasMatch[SE_START] && hasMatch[SE_END])
-            return true;
+        if(impliedFragmentLength > maxFragmentDistance)
+            return false;
 
-        return false;
+        return true;
     }
 
     public int[] getReadDepth() { return mReadDepth; }

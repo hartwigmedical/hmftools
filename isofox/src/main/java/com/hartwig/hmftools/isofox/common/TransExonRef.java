@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.common;
 
+import java.util.List;
+
 public class TransExonRef
 {
     public final String GeneId;
@@ -20,10 +22,27 @@ public class TransExonRef
         return other.TransId == TransId && other.ExonRank == ExonRank;
     }
 
-    public boolean matchesNext(final TransExonRef other)
+    private boolean matches(final TransExonRef other, int maxDiffVsOther)
     {
-        // other is one exon ahead of this
-        return other.TransId == TransId && other.ExonRank == ExonRank + 1;
+        // if argument is +ve then the other trans ref's exon must be equal or higher than this one by the permitted diff
+        if(TransId != other.TransId)
+            return false;
+
+        if(maxDiffVsOther >= 0)
+            return other.ExonRank >= ExonRank && other.ExonRank <= ExonRank + maxDiffVsOther;
+        else
+            return other.ExonRank >= ExonRank + maxDiffVsOther && other.ExonRank <= ExonRank;
+    }
+
+    public static boolean hasTranscriptExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2)
+    {
+        return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matches(y)));
+    }
+
+    public static boolean hasTranscriptExonMatch(final List<TransExonRef> list1, final List<TransExonRef> list2, int maxList2Diff)
+    {
+        // list 2 is allowed a buffer of difference
+        return list1.stream().anyMatch(x -> list2.stream().anyMatch(y -> x.matches(y, maxList2Diff)));
     }
 
     public String toString()

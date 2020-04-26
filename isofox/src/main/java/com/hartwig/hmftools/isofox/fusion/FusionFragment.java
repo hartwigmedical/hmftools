@@ -198,12 +198,12 @@ public class FusionFragment
 
                 if(useLeft)
                 {
-                    sjPosition = read.getCoordsBoundary(true);
+                    sjPosition = read.getCoordsBoundary(SE_START);
                     sjOrientation = -1;
                 }
                 else
                 {
-                    sjPosition = read.getCoordsBoundary(false);
+                    sjPosition = read.getCoordsBoundary(SE_END);
                     sjOrientation = 1;
                 }
             }
@@ -407,6 +407,22 @@ public class FusionFragment
                         mJunctionTypes[se] = FusionJunctionType.CANONICAL;
                 }
             }
+        }
+    }
+
+    public int getReadBoundary(final String chromosome, int geneCollection, int seIndex)
+    {
+        if(seIndex == SE_START)
+        {
+            return mReads.stream()
+                    .filter(x -> x.Chromosome.equals(chromosome) && x.getGeneCollecton() == geneCollection)
+                    .mapToInt(x -> x.getCoordsBoundary(seIndex)).min().orElse(0);
+        }
+        else
+        {
+            return mReads.stream()
+                    .filter(x -> x.Chromosome.equals(chromosome) && x.getGeneCollecton() == geneCollection)
+                    .mapToInt(x -> x.getCoordsBoundary(seIndex)).max().orElse(0);
         }
     }
 

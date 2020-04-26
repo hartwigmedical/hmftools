@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.ExonData;
@@ -195,9 +194,9 @@ public class ReadRecord
         return highest;
     }
 
-    public int getCoordsBoundary(boolean isStart)
+    public int getCoordsBoundary(int se)
     {
-        return isStart ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
+        return se == SE_START ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
     }
 
     public static final List<int[]> generateMappedCoords(final Cigar cigar, int posStart)

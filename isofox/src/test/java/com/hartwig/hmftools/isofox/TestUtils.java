@@ -114,7 +114,7 @@ public class TestUtils
         transDataList = Lists.newArrayList();
 
         transData = createTransExons(
-                GENE_ID_2, TRANS_2, POS_STRAND, generateExonStarts(GENE_START_2, 3, EXON_LENGTH, 100),
+                GENE_ID_2, TRANS_2, POS_STRAND, generateExonStarts(GENE_START_2, 5, EXON_LENGTH, 100),
                 EXON_LENGTH, codingStart, codingEnd, canonical, BIOTYPE_PROTEIN_CODING);
 
         transDataList.add(transData);

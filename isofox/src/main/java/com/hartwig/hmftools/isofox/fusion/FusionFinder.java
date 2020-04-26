@@ -4,33 +4,21 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.io.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.NONE;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.getHighestMatchType;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.fusionId;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.hasTranscriptExonMatch;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.hasTranscriptNextExonMatch;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +36,6 @@ import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
-import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 import org.jetbrains.annotations.NotNull;
@@ -87,7 +74,7 @@ public class FusionFinder
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
+        mBamSlicer = mSamReader != null ? new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true) : null;
 
         mNextFusionId = 0;
         mReadsMap = Maps.newHashMap();
@@ -104,6 +91,7 @@ public class FusionFinder
     }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
+    public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mUnfusedFragments; }
 
     public void clearState()
     {
@@ -228,6 +216,7 @@ public class FusionFinder
         // write results
         mFusionWriter.writeFusionData(mFusionCandidates);
         mFusionWriter.writeUnfusedFragments(mUnfusedFragments);
+        mFusionWriter.close();
 
         mPerfCounter.stop();
         mPerfCounter.logStats();
@@ -414,14 +403,17 @@ public class FusionFinder
                 boolean isSpliced = fusion1.isKnownSpliced();
                 boolean isUnspliced = fusion1.isUnspliced();
 
+                final List<TransExonRef> upRefs1 = fusion1.getTransExonRefsByStream(FS_UPSTREAM);
+                final List<TransExonRef> downRefs1 = fusion1.getTransExonRefsByStream(FS_DOWNSTREAM);
+
                 for(int j = i + 1; j < fusions.size() - 1; ++j)
                 {
                     FusionReadData fusion2 = fusions.get(j);
 
                     if(isSpliced && fusion2.isUnspliced())
                     {
-                        if(hasTranscriptExonMatch(fusion1.getTransExonRefsByStream(FS_UPSTREAM), fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                        && hasTranscriptNextExonMatch(fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), fusion1.getTransExonRefsByStream(FS_DOWNSTREAM)))
+                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UPSTREAM))
+                        && hasTranscriptExonMatch(downRefs1, fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), -1))
                         {
                             fusion1.addRelatedFusion(fusion2.id());
                             fusion2.addRelatedFusion(fusion1.id());
@@ -430,8 +422,8 @@ public class FusionFinder
                     }
                     else if(isUnspliced && fusion2.isKnownSpliced())
                     {
-                        if(hasTranscriptExonMatch(fusion1.getTransExonRefsByStream(FS_UPSTREAM), fusion2.getTransExonRefsByStream(FS_UPSTREAM))
-                        && hasTranscriptNextExonMatch(fusion1.getTransExonRefsByStream(FS_DOWNSTREAM), fusion2.getTransExonRefsByStream(FS_DOWNSTREAM)))
+                        if(hasTranscriptExonMatch(upRefs1, fusion2.getTransExonRefsByStream(FS_UPSTREAM))
+                        && hasTranscriptExonMatch(fusion2.getTransExonRefsByStream(FS_DOWNSTREAM), downRefs1, -1))
                         {
                             fusion1.addRelatedFusion(fusion2.id());
                             fusion2.addRelatedFusion(fusion1.id());
@@ -462,6 +454,9 @@ public class FusionFinder
 
     private void calcFusionReadDepth(final List<FusionReadData> fusions)
     {
+        if(mBamSlicer == null)
+            return;
+
         mReadDepthTracker.clear();
         mReadDepthFusions.clear();
         mReadDepthFusions.addAll(fusions);
@@ -596,7 +591,7 @@ public class FusionFinder
                     if(!fusion.isValid())
                         continue;
 
-                    if(fusion.canAddDiscordantFragment(fragment))
+                    if(fusion.canAddDiscordantFragment(fragment, mConfig.MaxFragmentLength))
                     {
                         for(int se = SE_START; se <= SE_END; ++se)
                         {
