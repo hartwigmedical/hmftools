@@ -75,9 +75,8 @@ public class FusionFinder
 
     private final FragmentTracker mReadDepthTracker;
     private final List<FusionReadData> mReadDepthFusions;
+    private final FusionWriter mFusionWriter;
 
-    private BufferedWriter mReadWriter;
-    private BufferedWriter mFragmentWriter;
     private final PerformanceCounter mPerfCounter;
 
     public FusionFinder(final IsofoxConfig config, final EnsemblDataCache geneTransCache)
@@ -101,8 +100,7 @@ public class FusionFinder
         mReadDepthFusions = Lists.newArrayList();
 
         mPerfCounter = new PerformanceCounter("Fusions");
-        mReadWriter = null;
-        mFragmentWriter = null;
+        mFusionWriter = new FusionWriter(mConfig);
     }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
@@ -205,8 +203,7 @@ public class FusionFinder
                 continue;
             }
 
-            if(mConfig.WriteChimericReads)
-                writeReadData(reads, readGroupStatus);
+            mFusionWriter.writeReadData(reads, readGroupStatus);
         }
 
         ISF_LOGGER.info("chimeric fragments({} unpaired={} dups={} skip={} filtered={} unfused={} junc={}) fusions(loc={} total={})",
@@ -229,19 +226,11 @@ public class FusionFinder
         assignUnfusedFragments();
 
         // write results
-        writeFusionData();
-
-        if(mConfig.WriteChimericReads)
-        {
-            mFusionCandidates.values().forEach(x -> x.forEach(y -> y.getAllFragments().forEach(z -> writeFragmentData(z, fusionId(y.id())))));
-            writeUnfilteredFragments();
-        }
+        mFusionWriter.writeFusionData(mFusionCandidates);
+        mFusionWriter.writeUnfusedFragments(mUnfusedFragments);
 
         mPerfCounter.stop();
         mPerfCounter.logStats();
-
-        closeBufferedWriter(mReadWriter);
-        closeBufferedWriter(mFragmentWriter);
     }
 
     private boolean isInvalidFragment(final List<ReadRecord> reads)
@@ -626,164 +615,6 @@ public class FusionFinder
 
             allocatedFragments.forEach(x -> fragments.remove(x));
         }
-    }
-
-    public static final String FUSION_FILE_ID = "fusions.csv";
-
-    private void writeFusionData()
-    {
-        if(mConfig.OutputDir == null)
-            return;
-
-        try
-        {
-            final String outputFileName = mConfig.formOutputFile(FUSION_FILE_ID);
-
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write(FusionReadData.csvHeader());
-            writer.newLine();
-
-            for(Map.Entry<String,List<FusionReadData>> entry : mFusionCandidates.entrySet())
-            {
-                for (final FusionReadData fusion : entry.getValue())
-                {
-                    writer.write(fusion.toCsv());
-                    writer.newLine();
-                }
-            }
-
-            writer.close();
-
-            if(mConfig.WriteChimericReads)
-            {
-                for (List<FusionReadData> fusions : mFusionCandidates.values())
-                {
-                    for (FusionReadData fusion : fusions)
-                    {
-                        for (FusionFragment fragment : fusion.getAllFragments())
-                        {
-                            writeReadData(fragment.getReads(), fusionId(fusion.id()));
-                        }
-                    }
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write fusions file: {}", e.toString());
-        }
-    }
-
-    private void writeUnfilteredFragments()
-    {
-        for(List<FusionFragment> fragments : mUnfusedFragments.values())
-        {
-            for(FusionFragment fragment : fragments)
-            {
-                writeFragmentData(fragment, "UNFUSED");
-                writeReadData(fragment.getReads(), "UNFUSED");
-            }
-        }
-    }
-
-    private void writeReadData(final List<ReadRecord> reads, final String groupStatus)
-    {
-        try
-        {
-            if(mReadWriter == null)
-            {
-                final String outputFileName = mConfig.formOutputFile("chimeric_reads.csv");
-
-                mReadWriter = createBufferedWriter(outputFileName, false);
-                mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
-                mReadWriter.write(",Secondary,Supplementary,NegStrand,ProperPair,SuppAlign,TransExons,BestMatch,TransExonData");
-                mReadWriter.newLine();
-            }
-
-            for(final ReadRecord read : reads)
-            {
-                mReadWriter.write(String.format("%s,%s,%s,%s,%d,%d,%s,%d",
-                        reads.size(), read.Id, groupStatus, read.Chromosome,
-                        read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
-
-                mReadWriter.write(String.format(",%s,%s,%s,%s,%s",
-                        read.isSecondaryAlignment(), read.isSupplementaryAlignment(), read.isNegStrand(), read.isProperPair(),
-                        read.getSuppAlignment() != null ? read.getSuppAlignment().replaceAll(",", ";") : "NONE"));
-
-                // log the transcript exons affected, and the highest matching transcript
-                String transExonData = "";
-
-                int transExonRefCount = 0;
-                RegionMatchType highestTransMatchType = getHighestMatchType(read.getTransExonRefs().keySet());
-
-                if(highestTransMatchType != NONE)
-                {
-                    for (final TransExonRef transExonRef : read.getTransExonRefs().get(highestTransMatchType))
-                    {
-                        ++transExonRefCount;
-                        transExonData = appendStr(transExonData, String.format("%s:%d",
-                                transExonRef.TransName, transExonRef.ExonRank), ';');
-                    }
-                }
-
-                mReadWriter.write(String.format(",%d,%s,%s",
-                        transExonRefCount, highestTransMatchType, transExonRefCount == 0 ? "NONE" : transExonData));
-                mReadWriter.newLine();
-            }
-
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
-            return;
-        }
-
-    }
-
-    private void writeFragmentData(final FusionFragment fragment, final String fusionId)
-    {
-        try
-        {
-            if(mFragmentWriter == null)
-            {
-                final String outputFileName = mConfig.formOutputFile("chimeric_frags.csv");
-
-                mFragmentWriter = createBufferedWriter(outputFileName, false);
-                mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type,SameGene,ScCount");
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    final String prefix = se == SE_START ? "Start" : "End";
-                    mFragmentWriter.write(",Chr" + prefix);
-                    mFragmentWriter.write(",JuncPos" + prefix);
-                    mFragmentWriter.write(",JuncOrient" + prefix);
-                    mFragmentWriter.write(",Region" + prefix);
-                    mFragmentWriter.write(",JuncType" + prefix);
-                }
-
-                mFragmentWriter.newLine();
-            }
-
-            mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
-                    fragment.readId(), fragment.getReads().size(), fusionId, fragment.type(),
-                    fragment.geneCollections()[SE_START] == fragment.geneCollections()[SE_END],
-                    fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
-
-            for(int se = SE_START; se <= SE_END; ++se)
-            {
-                mFragmentWriter.write(String.format(",%s,%d,%d,%s,%s",
-                        fragment.chromosomes()[se], fragment.junctionPositions()[se], fragment.junctionOrientations()[se],
-                        fragment.regionMatchTypes()[se], fragment.junctionTypes()[se]));
-            }
-
-            mFragmentWriter.newLine();
-        }
-        catch (IOException e)
-        {
-            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
-            return;
-        }
-
     }
 
     public static void mergeChimericReadMaps(final Map<String,List<ReadRecord>> destMap, final Map<String,List<ReadRecord>> sourceMap)
