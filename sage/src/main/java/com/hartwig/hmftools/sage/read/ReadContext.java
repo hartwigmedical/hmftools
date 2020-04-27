@@ -227,4 +227,12 @@ public class ReadContext {
         return refBases.trinucleotideContext(position);
     }
 
+    public int length() {
+        return readBasesRightFlankIndex() - readBasesLeftFlankIndex() + 1;
+    }
+
+    public int coreLength() {
+        return readBasesRightCentreIndex() - readBasesLeftCentreIndex() + 1;
+    }
+
 }
