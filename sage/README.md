@@ -195,7 +195,7 @@ Ref Match:                ...ACCATGGATACCA<b>T</b>GATAACATACGA...
 # Algorithm
 
 There are 8 key steps in the SAGE algorithm described in detail below:
-  1. [Base Quality Recalibration](#1-base-quality-recalibration)
+  1. [Alt Specific Base Quality Recalibration](#1-base-quality-recalibration)
   2. [Candidate Variants And Read Contexts](#2-candidate-variants-and-read-contexts)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
   4. [Normal Counts and Quality](#4-normal-counts-and-quality)
@@ -204,7 +204,7 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   7. [De-duplication](#7-de-duplication)
   8. [Re-alignment](#8-re-alignment)
 
-## 1. Base Quality Recalibration
+## 1. Alt Specific Base Quality Recalibration
 
 SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
 This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
