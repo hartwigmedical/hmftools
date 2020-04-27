@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.isofox.TestUtils.createMappedRead;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -259,6 +260,70 @@ public class FusionDataTest
         fusion = fusions.get(0);
         assertEquals(1, fusion.getFragments(BOTH_JUNCTIONS).size());
         assertEquals(2, fusion.getFragments(DISCORDANT).size());
+    }
+
+    @Test
+    public void testSoftClippedFragmentRealignment()
+    {
+        Configurator.setRootLevel(Level.DEBUG);
+
+        final EnsemblDataCache geneTransCache = createGeneDataCache();
+
+        addTestGenes(geneTransCache);
+        addTestTranscripts(geneTransCache);
+
+        IsofoxConfig config = new IsofoxConfig();
+
+        FusionFinder finder = new FusionFinder(config, geneTransCache);
+
+        int gcId = 0;
+
+        final GeneCollection gc1 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_1)));
+        final GeneCollection gc2 = createGeneCollection(geneTransCache, gcId++, Lists.newArrayList(geneTransCache.getGeneDataById(GENE_ID_2)));
+
+        Map<Integer,List<EnsemblGeneData>> gcMap = Maps.newHashMap();
+
+        gcMap.put(gc1.id(), gc1.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        gcMap.put(gc2.id(), gc2.genes().stream().map(x -> x.GeneData).collect(Collectors.toList()));
+        finder.addChromosomeGeneCollections(CHR_1, gcMap);
+
+        final Map<String,List<ReadRecord>> chimericReadMap = Maps.newHashMap();
+
+        // a spliced fragment to establish the fusion
+        int readId = 0;
+        ReadRecord read1 = createMappedRead(readId, gc1, 1050, 1089, createCigar(0, 40, 0));
+        ReadRecord read2 = createMappedRead(readId, gc1, 1081, 1100, createCigar(0, 20, 20));
+        ReadRecord read3 = createMappedRead(readId, gc2, 10200, 10219, createCigar(20, 20, 0));
+        chimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2, read3));
+
+        finder.addChimericReads(chimericReadMap);
+
+        finder.findFusions();
+
+        // a soft-clipped read matching the other side of the fusion junction
+        String junctionBases = read2.ReadBases.substring(10, 40) + read3.ReadBases.substring(0, 10);
+        ReadRecord read4 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
+        ReadRecord read5 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
+
+        assertEquals(1, finder.getFusionCandidates().size());
+        List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
+        assertEquals(1, fusions.size());
+
+        finder.getFusionReadDepth().calcFusionReadDepth(fusions);
+        finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
+
+        FusionReadData fusion = fusions.stream().filter(x -> x.isKnownSpliced()).findFirst().orElse(null);
+        assertTrue(fusion != null);
+        assertEquals(1, fusion.getFragments(BOTH_JUNCTIONS).size());
+        assertEquals(1, fusion.getFragments(REALIGNED).size());
+
+        // a soft-clipped read matching 2 bases into the ref due to homology with the other side of the fusion junction
+        junctionBases = read2.ReadBases.substring(30, 40) + read3.ReadBases.substring(0, 30);
+        read4 = createMappedRead(++readId, gc2, 10198, 10229, createCigar(8, 32, 0), junctionBases);
+        read5 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+
+        finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
+        assertEquals(2, fusion.getFragments(REALIGNED).size());
     }
 
 }

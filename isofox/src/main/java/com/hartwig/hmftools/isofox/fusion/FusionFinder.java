@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -483,5 +484,9 @@ public class FusionFinder
             }
         }
     }
+
+    @VisibleForTesting
+    public final FusionReadDepth getFusionReadDepth() { return mFusionReadDepth; }
+
 
 }

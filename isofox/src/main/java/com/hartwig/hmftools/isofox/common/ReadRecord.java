@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
@@ -649,7 +648,7 @@ public class ReadRecord
         if(extraBaseLength >= 1 && extraBaseLength <= 10)
         {
             // now check for a match to the next exon up
-            final String extraBases = ReadBases.substring(ReadBases.length() - extraBaseLength, ReadBases.length());
+            final String extraBases = ReadBases.substring(Length - extraBaseLength, Length);
 
             final List<RegionReadData> matchedRegions = region.getPostRegions().stream()
                     .filter(x -> matchesOtherRegionBases(extraBases, x, true)).collect(Collectors.toList());

@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.ensemblcache.TranscriptProteinData.BIO
 import static com.hartwig.hmftools.isofox.ReadCountsTest.REF_BASE_STR_1;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.N;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -219,7 +222,19 @@ public class TestUtils
 
     public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
     {
-        ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, REF_BASE_STR_1, cigar);
+        int readBaseLength = cigar.getCigarElements().stream()
+                .filter(x -> x.getOperator() != N || x.getOperator() != D)
+                .mapToInt(x -> x.getLength()).sum();
+
+        String readBases = generateRandomBases(readBaseLength);
+
+        return createMappedRead(id, geneCollection, posStart, posEnd, cigar, readBases);
+    }
+
+    public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd,
+            final Cigar cigar, final String readBases)
+    {
+        ReadRecord read = createReadRecord(id, geneCollection.chromosome(), posStart, posEnd, readBases, cigar);
 
         read.processOverlappingRegions(findOverlappingRegions(geneCollection.getExonRegions(), read));
 
@@ -259,9 +274,16 @@ public class TestUtils
         char[] str = new char[length];
         String bases = "ACGT";
 
+
+        int baseIndex = 0;
         for(int i = 0; i < length; ++i)
         {
-            str[i] = bases.charAt(i % 3);
+            str[i] = bases.charAt(baseIndex);
+
+            if(baseIndex == 3)
+                baseIndex = 0;
+            else
+                ++baseIndex;
         }
 
         return String.valueOf(str);

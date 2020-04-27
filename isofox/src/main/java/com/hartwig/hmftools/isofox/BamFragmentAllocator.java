@@ -941,7 +941,6 @@ public class BamFragmentAllocator
         mAltSpliceJunctionFinder.setGeneData(mCurrentGenes);
         mRetainedIntronFinder.setGeneData(mCurrentGenes);
 
-
         if(readRecords.size() == 2)
         {
             readRecords.get(0).setFlag(SAMFlag.FIRST_OF_PAIR, true);

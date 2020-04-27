@@ -27,12 +27,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class FusionReadData
 {
@@ -144,8 +141,17 @@ public class FusionReadData
                 continue;
 
             int baseLength = min(10, read.Length);
-            mJunctionBases[se] = mJunctionOrientations[se] == 1 ?
-                    read.ReadBases.substring(read.Length - baseLength, read.Length) : read.ReadBases.substring(0, baseLength);
+
+            if(mJunctionOrientations[se] == 1)
+            {
+                int scLength = read.Cigar.getLastCigarElement().getLength();
+                mJunctionBases[se] = read.ReadBases.substring(read.Length - baseLength - scLength, read.Length - scLength);
+            }
+            else
+            {
+                int scLength = read.Cigar.getFirstCigarElement().getLength();
+                mJunctionBases[se] = read.ReadBases.substring(scLength, baseLength + scLength);
+            }
         }
     }
 
@@ -318,6 +324,66 @@ public class FusionReadData
             return false;
 
         return true;
+    }
+
+    private final static int SOFT_CLIP_JUNC_BUFFER = 3;
+    private final static int SOFT_CLIP_MIN_BASE_MATCH = 3;
+    private final static int SOFT_CLIP_MAX_BASE_MATCH = 5;
+
+    public boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
+    {
+        // compare a minimum number of soft-clipped bases to the other side of the exon junction
+        // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
+        if(mJunctionOrientations[juncSeIndex] == 1)
+        {
+            if(!read.isSoftClipped(SE_END))
+                return false;
+
+            int readBoundary = read.getCoordsBoundary(SE_END);
+
+            if(!positionWithin(readBoundary, mJunctionPositions[juncSeIndex], mJunctionPositions[juncSeIndex] + SOFT_CLIP_JUNC_BUFFER))
+                return false;
+
+            // test that soft-clipped bases match the other junction's bases
+            int scLength = read.Cigar.getLastCigarElement().getLength();
+
+            if(scLength < SOFT_CLIP_MIN_BASE_MATCH)
+                return false;
+
+            // if the junction is 1 base higher, then take 1 base off the soft-clipped bases
+            int posAdjust = readBoundary > mJunctionPositions[juncSeIndex] ? readBoundary - mJunctionPositions[juncSeIndex] : 0;
+
+            String extraBases = read.ReadBases.substring(read.Length - scLength - posAdjust, read.Length);
+
+            if(extraBases.length() > SOFT_CLIP_MAX_BASE_MATCH)
+                extraBases = extraBases.substring(0, SOFT_CLIP_MAX_BASE_MATCH);
+
+            return mJunctionBases[switchIndex(juncSeIndex)].startsWith(extraBases);
+        }
+        else
+        {
+            if(!read.isSoftClipped(SE_START))
+                return false;
+
+            int readBoundary = read.getCoordsBoundary(SE_START);
+
+            if(!positionWithin(readBoundary, mJunctionPositions[juncSeIndex] - SOFT_CLIP_JUNC_BUFFER, mJunctionPositions[juncSeIndex]))
+                return false;
+
+            int scLength = read.Cigar.getFirstCigarElement().getLength();
+
+            if(scLength < SOFT_CLIP_MIN_BASE_MATCH)
+                return false;
+
+            int posAdjust = readBoundary < mJunctionPositions[juncSeIndex] ? mJunctionPositions[juncSeIndex] - readBoundary : 0;
+
+            String extraBases = read.ReadBases.substring(0, scLength + posAdjust);
+
+            if(extraBases.length() > SOFT_CLIP_MAX_BASE_MATCH)
+                extraBases = extraBases.substring(extraBases.length() - SOFT_CLIP_MAX_BASE_MATCH, extraBases.length());
+
+            return mJunctionBases[switchIndex(juncSeIndex)].endsWith(extraBases);
+        }
     }
 
     public int[] getReadDepth() { return mReadDepth; }
