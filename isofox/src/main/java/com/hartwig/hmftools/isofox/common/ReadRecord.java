@@ -182,17 +182,6 @@ public class ReadRecord
         return mMappedCoords.stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x[SE_START], x[SE_END]));
     }
 
-    public RegionMatchType getHighestMatchType()
-    {
-        RegionMatchType highest = RegionMatchType.NONE;
-        for(RegionMatchType type : mTransExonRefs.keySet())
-        {
-            highest = matchRank(type) > matchRank(highest) ? type : highest;
-        }
-
-        return highest;
-    }
-
     public int getCoordsBoundary(int se)
     {
         return se == SE_START ? mMappedCoords.get(0)[SE_START] : mMappedCoords.get(mMappedCoords.size() - 1)[SE_END];
@@ -393,7 +382,20 @@ public class ReadRecord
 
     public void captureGeneInfo(int geneCollectionId)
     {
-        mMappedRegions.entrySet().forEach(x -> mTransExonRefs.put(x.getValue(), x.getKey().getTransExonRefs()));
+        for(Map.Entry<RegionReadData,RegionMatchType> entry : mMappedRegions.entrySet())
+        {
+            List<TransExonRef> transRefList = mTransExonRefs.get(entry.getValue());
+
+            if(transRefList == null)
+            {
+                mTransExonRefs.put(entry.getValue(), Lists.newArrayList(entry.getKey().getTransExonRefs()));
+            }
+            else
+            {
+                transRefList.addAll(entry.getKey().getTransExonRefs());
+            }
+        }
+
         mMappedRegions.clear();
         mTranscriptClassification.clear();
         mGeneCollectionId = geneCollectionId;

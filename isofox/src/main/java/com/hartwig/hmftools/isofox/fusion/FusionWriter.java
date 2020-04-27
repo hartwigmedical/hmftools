@@ -191,8 +191,7 @@ public class FusionWriter
 
             mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
                     fragment.readId(), fragment.getReads().size(), fusionId, type,
-                    fragment.geneCollections()[SE_START] == fragment.geneCollections()[SE_END],
-                    fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
+                    fragment.isSingleGene(), fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
 
             for(int se = SE_START; se <= SE_END; ++se)
             {

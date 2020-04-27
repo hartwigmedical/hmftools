@@ -237,6 +237,11 @@ public class FusionFragment
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
 
+    public boolean isSingleGene()
+    {
+        return mChromosomes[SE_START].equals(mChromosomes[SE_END]) && mGeneCollections[SE_START] == mGeneCollections[SE_END];
+    }
+
     public final int[] junctionPositions() { return mJunctionPositions; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
     public final boolean[] junctionValid() { return mJunctionValid; }
@@ -402,22 +407,6 @@ public class FusionFragment
                         mJunctionTypes[se] = FusionJunctionType.CANONICAL;
                 }
             }
-        }
-    }
-
-    public int getReadBoundary(final String chromosome, int geneCollection, int seIndex)
-    {
-        if(seIndex == SE_START)
-        {
-            return mReads.stream()
-                    .filter(x -> x.Chromosome.equals(chromosome) && x.getGeneCollecton() == geneCollection)
-                    .mapToInt(x -> x.getCoordsBoundary(seIndex)).min().orElse(0);
-        }
-        else
-        {
-            return mReads.stream()
-                    .filter(x -> x.Chromosome.equals(chromosome) && x.getGeneCollecton() == geneCollection)
-                    .mapToInt(x -> x.getCoordsBoundary(seIndex)).max().orElse(0);
         }
     }
 

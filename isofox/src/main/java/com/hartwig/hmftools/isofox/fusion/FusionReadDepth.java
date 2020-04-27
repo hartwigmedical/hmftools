@@ -82,7 +82,38 @@ public class FusionReadDepth
             queryInterval[se] = new QueryInterval(chrSeqIndex, fusionJuncRange[SE_START], fusionJuncRange[SE_END]);
         }
 
+        if(queryInterval[0].referenceIndex == queryInterval[1].referenceIndex && queryInterval[0].start == queryInterval[1].start
+        && queryInterval[0].end == queryInterval[1].end)
+        {
+            ISF_LOGGER.error("invalid query region: fusion(count={} first={})", fusions.size(), fusions.get(0).toString());
+            return;
+        }
+
         mBamSlicer.slice(mSamReader, queryInterval, this::processReadDepthRecord);
+
+        // process unpaired fragments for their depth over fusion junctions
+        for(Object object : mReadDepthTracker.getValues())
+        {
+            final ReadRecord read = (ReadRecord) object;
+
+            for(final FusionReadData fusionData : mReadDepthFusions)
+            {
+                for (int se = SE_START; se <= SE_END; ++se)
+                {
+                    final List<int[]> readCoords = read.getMappedRegionCoords();
+
+                    if (!read.Chromosome.equals(fusionData.chromosomes()[se]))
+                        continue;
+
+                    final int seIndex = se;
+
+                    if (readCoords.stream().anyMatch(x -> positionWithin(fusionData.junctionPositions()[seIndex], x[SE_START], x[SE_END])))
+                    {
+                        ++fusionData.getReadDepth()[se];
+                    }
+                }
+            }
+        }
     }
 
     private void processReadDepthRecord(@NotNull final SAMRecord record)
@@ -102,9 +133,6 @@ public class FusionReadDepth
     @VisibleForTesting
     public void processReadDepthRecord(final ReadRecord read1, final ReadRecord read2)
     {
-        if(!read1.containsSoftClipping() && !read2.containsSoftClipping())
-            return;
-
         if(!read1.Chromosome.equals(read2.Chromosome))
         {
             ISF_LOGGER.warn("read-depth read({}) spans chromosomes({} & {})", read1.Id, read1.Chromosome, read2.Chromosome);

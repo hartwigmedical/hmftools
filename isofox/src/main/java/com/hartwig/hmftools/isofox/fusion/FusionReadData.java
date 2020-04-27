@@ -300,11 +300,23 @@ public class FusionReadData
             if(!hasTranscriptExonMatch(fusionRefs, fragmentRefs, permittedExonDiff))
                 return false;
 
-            int fragmentPosition = fragment.getReadBoundary(mChromosomes[se], mGeneCollections[se], switchIndex(se));
+            final int seIndex = se;
+            final ReadRecord read = fragment.getReads().stream()
+                .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]) && x.getGeneCollecton() == mGeneCollections[seIndex])
+                    .findFirst().orElse(null);
+
+            if(read == null)
+                return false;
+
+            int fragmentPosition = read.getCoordsBoundary(switchIndex(se));
 
             // cannot be on the wrong side of the junction
             if((mJunctionOrientations[se] == 1) == (fragmentPosition > mJunctionPositions[se]))
-                return false;
+            {
+                // check if a mis-mapping explains the over-hang
+                if(!softClippedReadSupportsJunction(read, se))
+                    return false;
+            }
 
             if(fragment.regionMatchTypes()[se] == INTRON)
             {

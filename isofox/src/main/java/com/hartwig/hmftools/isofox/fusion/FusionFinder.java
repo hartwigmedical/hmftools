@@ -199,13 +199,20 @@ public class FusionFinder
 
     private boolean isInvalidFragment(final List<ReadRecord> reads)
     {
-        final Set<String> chrGeneCollections = Sets.newHashSet();
-        reads.forEach(x -> chrGeneCollections.add(String.format("%s_%d", x.Chromosome, x.getGeneCollecton())));
+        for(int i = 0; i < reads.size() - 1; ++i)
+        {
+            final ReadRecord read1 = reads.get(i);
 
-        if(chrGeneCollections.size() != 2)
-            return true;
+            for(int j = i + 1; j < reads.size(); ++j)
+            {
+                final ReadRecord read2 = reads.get(j);
 
-        return false;
+                if(!read1.Chromosome.equals(read2.Chromosome) || read1.getGeneCollecton() != read2.getGeneCollecton())
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private void cacheUnfusedFragment(final FusionFragment fragment)
@@ -444,7 +451,7 @@ public class FusionFinder
                     {
                         allocatedFragments.add(fragment);
 
-                        if(fusion.isRelignedFragment(fragment))
+                        if(fragment.isSingleGene() && fusion.isRelignedFragment(fragment))
                         {
                             fragment.setType(REALIGNED);
                         }
