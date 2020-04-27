@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -255,10 +254,6 @@ public class FusionReadData
         {
             return mFragments.get(BOTH_JUNCTIONS).get(0);
         }
-        else if(mFragments.containsKey(ONE_JUNCTION))
-        {
-            return mFragments.get(ONE_JUNCTION).get(0);
-        }
         else
         {
             return mFragments.values().iterator().next().get(0);
@@ -278,7 +273,7 @@ public class FusionReadData
 
     public boolean canAddDiscordantFragment(final FusionFragment fragment, int maxFragmentDistance)
     {
-        // a discordant read spans both reads and cannot be outside the standard long fragment length either in intronic terms
+        // a discordant read spans both genes and cannot be outside the standard long fragment length either in intronic terms
         // or by exons if exonic
 
         // the 2 reads' bounds need to fall within 2 or less exons away
@@ -326,11 +321,33 @@ public class FusionReadData
         return true;
     }
 
+    public boolean isRelignedFragment(final FusionFragment fragment)
+    {
+        for (int se = SE_START; se <= SE_END; ++se)
+        {
+            for (ReadRecord read : fragment.getReads())
+            {
+                if (!read.Chromosome.equals(mChromosomes[se]))
+                    continue;
+
+                if (softClippedReadSupportsJunction(read, se))
+                {
+                    if(fragment.geneCollections()[se] == 0 && fragment.getTransExonRefs()[se].isEmpty())
+                        fragment.setGeneData(mGeneCollections[se], getTransExonRefsByPos(se));
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private final static int SOFT_CLIP_JUNC_BUFFER = 3;
     private final static int SOFT_CLIP_MIN_BASE_MATCH = 3;
     private final static int SOFT_CLIP_MAX_BASE_MATCH = 5;
 
-    public boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
+    private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
     {
         // compare a minimum number of soft-clipped bases to the other side of the exon junction
         // if the read extends past break junction, include these bases in what is compared against the next junction to account for homology
@@ -412,7 +429,7 @@ public class FusionReadData
     {
         return "FusionId,Valid,GeneIdUp,GeneNameUp,ChrUp,PosUp,OrientUp,StrandUp,JuncTypeUp"
                 + ",GeneIdDown,GeneNameDown,ChrDown,PosDown,OrientDown,StrandDown,JuncTypeDown"
-                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,SingleFrags,JuncDepthUp,JuncDepthDown"
+                + ",SVType,TotalFragments,SplitFrags,RealignedFrags,DiscordantFrags,JuncDepthUp,JuncDepthDown"
                 + ",TransDataUp,TransDataDown,OtherGenesUp,OtherGenesDown,RelatedFusions";
     }
 
@@ -463,15 +480,13 @@ public class FusionReadData
         int splitFragments = mFragments.containsKey(BOTH_JUNCTIONS) ? mFragments.get(BOTH_JUNCTIONS).size() : 0;
         int realignedFragments = mFragments.containsKey(REALIGNED) ? mFragments.get(REALIGNED).size() : 0;
         int discordantFragments = mFragments.containsKey(DISCORDANT) ? mFragments.get(DISCORDANT).size() : 0;
-        int singleJuncFragments = mFragments.containsKey(ONE_JUNCTION) ? mFragments.get(ONE_JUNCTION).size() : 0;
 
-        int totalFragments = splitFragments + realignedFragments + discordantFragments + singleJuncFragments;
+        int totalFragments = splitFragments + realignedFragments + discordantFragments;
 
         csvData.add(String.valueOf(totalFragments));
         csvData.add(String.valueOf(splitFragments));
         csvData.add(String.valueOf(realignedFragments));
         csvData.add(String.valueOf(discordantFragments));
-        csvData.add(String.valueOf(singleJuncFragments));
         csvData.add(String.valueOf(mReadDepth[mStreamIndices[FS_UPSTREAM]]));
         csvData.add(String.valueOf(mReadDepth[mStreamIndices[FS_DOWNSTREAM]]));
 

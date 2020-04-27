@@ -72,10 +72,13 @@ public class FusionWriter
                 {
                     for (FusionReadData fusion : fusions)
                     {
-                        for (FusionFragment fragment : fusion.getAllFragments())
+                        for(Map.Entry<FusionFragmentType,List<FusionFragment>> entry : fusion.getFragments().entrySet())
                         {
-                            writeFragmentData(fragment, fusionId(fusion.id()));
-                            writeReadData(fragment.getReads(), fusionId(fusion.id()));
+                            for (FusionFragment fragment : entry.getValue())
+                            {
+                                writeFragmentData(fragment, fusionId(fusion.id()), entry.getKey());
+                                writeReadData(fragment.getReads(), fusionId(fusion.id()));
+                            }
                         }
                     }
                 }
@@ -153,13 +156,13 @@ public class FusionWriter
         {
             for(FusionFragment fragment : fragments)
             {
-                writeFragmentData(fragment, "UNFUSED");
+                writeFragmentData(fragment, "UNFUSED", fragment.type());
                 writeReadData(fragment.getReads(), "UNFUSED");
             }
         }
     }
 
-    private void writeFragmentData(final FusionFragment fragment, final String fusionId)
+    private void writeFragmentData(final FusionFragment fragment, final String fusionId, FusionFragmentType type)
     {
         if(!mConfig.WriteChimericReads)
             return;
@@ -187,7 +190,7 @@ public class FusionWriter
             }
 
             mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
-                    fragment.readId(), fragment.getReads().size(), fusionId, fragment.type(),
+                    fragment.readId(), fragment.getReads().size(), fusionId, type,
                     fragment.geneCollections()[SE_START] == fragment.geneCollections()[SE_END],
                     fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
 

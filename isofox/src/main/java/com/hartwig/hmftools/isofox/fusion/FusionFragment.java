@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.startDonorAcceptorBases;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.formLocationPair;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.lowerChromosome;
@@ -224,10 +223,6 @@ public class FusionFragment
         if(mJunctionValid[SE_START] && mJunctionValid[SE_END])
         {
             return BOTH_JUNCTIONS;
-        }
-        else if(mJunctionValid[SE_START] || mJunctionValid[SE_END])
-        {
-            return ONE_JUNCTION;
         }
         else
         {

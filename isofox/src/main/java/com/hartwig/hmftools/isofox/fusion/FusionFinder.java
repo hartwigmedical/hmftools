@@ -3,19 +3,17 @@ package com.hartwig.hmftools.isofox.fusion;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,13 +29,8 @@ import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.common.BamSlicer;
-import com.hartwig.hmftools.isofox.common.FragmentTracker;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class FusionFinder
 {
@@ -449,17 +442,18 @@ public class FusionFinder
 
                     if(fusion.canAddDiscordantFragment(fragment, mConfig.MaxFragmentLength))
                     {
-                        for(int se = SE_START; se <= SE_END; ++se)
+                        allocatedFragments.add(fragment);
+
+                        if(fusion.isRelignedFragment(fragment))
                         {
-                            if (fragment.junctionValid()[se] && abs(fusion.junctionPositions()[se] - fragment.junctionPositions()[se]) <= POSITION_REALIGN_DISTANCE)
-                            {
-                                fragment.setType(REALIGNED);
-                                break;
-                            }
+                            fragment.setType(REALIGNED);
+                        }
+                        else
+                        {
+                            fragment.setType(DISCORDANT);
                         }
 
                         fusion.addFusionFragment(fragment);
-                        allocatedFragments.add(fragment);
                     }
                 }
             }

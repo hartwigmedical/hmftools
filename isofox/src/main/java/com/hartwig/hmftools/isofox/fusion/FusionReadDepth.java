@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.ONE_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 
 import java.io.File;
@@ -117,8 +116,14 @@ public class FusionReadDepth
 
         for(final FusionReadData fusionData : mReadDepthFusions)
         {
+            if(fusionData.isRelignedFragment(fragment))
+            {
+                fragment.setType(REALIGNED);
+                fusionData.addFusionFragment(fragment);
+                continue;
+            }
+
             boolean[] hasReadSupport = { false, false };
-            boolean addedFragment = false;
 
             for (int se = SE_START; se <= SE_END; ++se)
             {
@@ -136,37 +141,13 @@ public class FusionReadDepth
                     {
                         hasReadSupport[se] = true;
                     }
-
-                    if (addedFragment)
-                        continue;
-
-                    if (fusionData.softClippedReadSupportsJunction(read, SE_END))
-                    {
-                        fragment.setType(REALIGNED);
-                        fragment.setGeneData(fusionData.geneCollections()[se], fusionData.getTransExonRefsByPos(se));
-                        fusionData.addFusionFragment(fragment);
-                        addedFragment = true;
-                        break;
-                    }
-                    else if (fusionData.softClippedReadSupportsJunction(read, SE_START))
-                    {
-                        fragment.setType(REALIGNED);
-                        fragment.setGeneData(fusionData.geneCollections()[se], fusionData.getTransExonRefsByPos(se));
-                        fusionData.addFusionFragment(fragment);
-                        addedFragment = true;
-                        break;
-                    }
                 }
-
             }
 
-            if (!addedFragment)
+            for (int se = SE_START; se <= SE_END; ++se)
             {
-                for (int se = SE_START; se <= SE_END; ++se)
-                {
-                    if (hasReadSupport[se])
-                        ++fusionData.getReadDepth()[se];
-                }
+                if (hasReadSupport[se])
+                    ++fusionData.getReadDepth()[se];
             }
         }
     }
