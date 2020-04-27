@@ -75,10 +75,7 @@ public class AltContext implements VariantHotspot {
     }
 
     public boolean finaliseAndValidate() {
-        if (containsCompleteRecord() ) {
-            interimReadContexts.removeIf(x -> x.readContext().incompleteFlanks());
-        }
-
+        interimReadContexts.removeIf(x -> x.readContext().incompleteFlanks());
         Collections.sort(interimReadContexts);
         if (!interimReadContexts.isEmpty()) {
             candidate = interimReadContexts.get(0);
@@ -86,11 +83,6 @@ public class AltContext implements VariantHotspot {
         interimReadContexts.clear();
         return candidate != null;
     }
-
-    private boolean containsCompleteRecord() {
-        return interimReadContexts.stream().anyMatch(x -> !x.readContext().incompleteFlanks());
-    }
-
 
     public ReadContext readContext() {
         return candidate.readContext();

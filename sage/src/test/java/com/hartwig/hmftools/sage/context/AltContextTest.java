@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.context;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,8 +37,7 @@ public class AltContextTest {
         Collections.shuffle(readContexts);
         readContexts.forEach(victim::addReadContext);
 
-        assertTrue(victim.finaliseAndValidate());
-        assertEquals("A" + core1 + "AG", new String(victim.readContext().readBases()));
+        assertFalse(victim.finaliseAndValidate());
     }
 
     @Test
