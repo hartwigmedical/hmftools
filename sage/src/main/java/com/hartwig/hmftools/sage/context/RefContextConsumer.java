@@ -22,46 +22,6 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
     private static final Logger LOGGER = LogManager.getLogger(RefContextConsumer.class);
 
-    /*
-
-    bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' GIABvsSELFv004.sage.vcf.gz -O z -o GIABvsSELFv004.sage.filtered.vcf.gz
-    bcftools filter -i 'FORMAT/QUAL[1:0]>99 && FORMAT/AD[0:1] < 4' COLO829v003.sage.vcf.gz -O z -o COLO829v003.sage.filtered.vcf.gz
-
-
-
-    bgzip colo829.sage.vcf
-    bcftools index colo829.sage.vcf.gz
-
-    input=$1
-
-    bcftools annotate -a /Users/jon/hmf/resources/GERMLINE_PON.vcf.gz -c GERMLINE_PON_COUNT ${input}.vcf.gz -O z -o ${input}.germline.vcf.gz
-    bcftools index ${input}.germline.vcf.gz
-
-    bcftools annotate -a /Users/jon/hmf/resources/SOMATIC_PON.vcf.gz -c SOMATIC_PON_COUNT ${input}.germline.vcf.gz -O z -o ${input}.somatic.vcf.gz
-    bcftools index ${input}.somatic.vcf.gz
-
-    bcftools annotate -a /Users/jon/hmf/resources/SageGermlinePon.hg19.vcf.gz -c PON_COUNT ${input}.somatic.vcf.gz -O z -o ${input}.pon.vcf.gz
-    bcftools index ${input}.pon.vcf.gz
-
-    bcftools annotate -a /Users/jon/hmf/resources/out_150_hg19.mappability.bed.gz -h /Users/jon/hmf/resources/mappability.hdr -c CHROM,FROM,TO,-,MAPPABILITY ${input}.pon.vcf.gz -O z -o ${input}.map.vcf.gz
-    bcftools index ${input}.map.vcf.gz
-
-
-    bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA -c FILTER colo829.sage.map.vcf.gz -O z -o colo829.sage.pre.vcf.gz
-    bcftools index colo829.sage.pre.vcf.gz
-    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA -c FILTER colo829.sage.pre.vcf.gz -O z -o colo829.sage.final.vcf.gz
-
-
-    bcftools annotate -a all.somatic.snvs.vcf.gz -m PRE_STRELKA COLO829v003.sage.map.vcf.gz -O z -o COLO829v003.sage.pre.vcf.gz
-    bcftools index COLO829v003.sage.pre.vcf.gz
-    bcftools annotate -a COLO829v003T.somatic_caller_post_processed.vcf.gz -m POST_STRELKA COLO829v003.sage.pre.vcf.gz -O z -o COLO829v003.sage.final.vcf.gz
-
-
-    bcftools filter -e 'PON_COUNT!= "." && (MIN(PON_COUNT) > 9 || (MIN(PON_COUNT) > 2 && INFO/TIER!="HOTSPOT"))' -s SAGE_PON -m+ COLO829v003.sage.final.vcf.gz -O v -o COLO829v003.sage.filtered.vcf
-    bcftools filter -e 'PON_COUNT!= "." && (MIN(PON_COUNT) > 9 || (MIN(PON_COUNT) > 2 && INFO/TIER!="HOTSPOT"))' -s SAGE_PON -m+ GIABvsSELFv004.sage.map.vcf.gz -O v -o GIABvsSELFv004.sage.filtered.vcf
-
-    */
-
     private final SageConfig config;
     private final GenomeRegion bounds;
     private final RefSequence refGenome;
