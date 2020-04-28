@@ -319,7 +319,7 @@ public class ReadContextCounter implements VariantHotspot {
     private double baseQuality(int readBaseIndex, SAMRecord record) {
         return variant.ref().length() == variant.alt().length()
                 ? baseQuality(readBaseIndex, record, variant.ref().length())
-                : readContext.minCentreQuality(readBaseIndex, record);
+                : readContext.avgCentreQuality(readBaseIndex, record);
     }
 
     private double baseQuality(int startReadIndex, @NotNull final SAMRecord record, int length) {
