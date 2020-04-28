@@ -76,6 +76,7 @@ class AnalysedPatientReporter {
 
         SampleReport sampleReport = SampleReportFactory.fromLimsAndHospitalModel(sampleMetadata,
                 reportData.limsModel(),
+                reportData.limsWideModel(),
                 reportData.hospitalModel(),
                 patientTumorLocation);
 

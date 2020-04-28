@@ -11,6 +11,8 @@ import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
 import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsWide;
+import com.hartwig.hmftools.common.lims.LimsWideFile;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
 import com.hartwig.hmftools.patientreporter.qcfail.ImmutableQCFailReportData;
 import com.hartwig.hmftools.patientreporter.qcfail.QCFailReason;
@@ -50,6 +52,7 @@ public class PatientReporterApplication {
     private static final String TUMOR_LOCATION_CSV = "tumor_location_csv";
     private static final String LIMS_DIRECTORY = "lims_dir";
     private static final String HOSPITAL_DIRECTORY = "hospital_dir";
+    private static final String CONTACT_WIDE_TSV = "contact_wide_tsv";
 
     private static final String RVA_LOGO = "rva_logo";
     private static final String COMPANY_LOGO = "company_logo";
@@ -181,9 +184,14 @@ public class PatientReporterApplication {
         String hospitalsDirectory = cmd.getOptionValue(HOSPITAL_DIRECTORY);
         HospitalModel hospitalModel = HospitalModelFactory.fromHospitalDirectory(hospitalsDirectory);
         LOGGER.info("Loaded data for {} hospitals from {}", hospitalModel.hospitalCount(), hospitalsDirectory);
+
+        LOGGER.info("Reading lims wide file {}", cmd.getOptionValue(CONTACT_WIDE_TSV));
+        LimsWide limsWide = LimsWideFile.read(cmd.getOptionValue(CONTACT_WIDE_TSV));
+
         return ImmutableQCFailReportData.builder()
                 .patientTumorLocations(patientTumorLocations)
                 .limsModel(lims)
+                .limsWideModel(limsWide)
                 .hospitalModel(hospitalModel)
                 .signaturePath(cmd.getOptionValue(SIGNATURE))
                 .logoRVAPath(cmd.getOptionValue(RVA_LOGO))
@@ -204,7 +212,7 @@ public class PatientReporterApplication {
                 cmd,
                 TUMOR_SAMPLE_BARCODE) && dirExists(cmd, OUTPUT_DIRECTORY) && fileExists(cmd, REPORTING_DB_TSV) && fileExists(cmd,
                 TUMOR_LOCATION_CSV) && dirExists(cmd, LIMS_DIRECTORY) && dirExists(cmd, HOSPITAL_DIRECTORY) && fileExists(cmd, SIGNATURE)
-                && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO);
+                && fileExists(cmd, RVA_LOGO) && fileExists(cmd, COMPANY_LOGO) && fileExists(cmd, CONTACT_WIDE_TSV);
     }
 
     private static boolean validInputForAnalysedSample(@NotNull CommandLine cmd) {
@@ -279,6 +287,7 @@ public class PatientReporterApplication {
         options.addOption(TUMOR_LOCATION_CSV, true, "Path towards the (curated) tumor location CSV.");
         options.addOption(LIMS_DIRECTORY, true, "Path towards the directory holding the LIMS data");
         options.addOption(HOSPITAL_DIRECTORY, true, "Path towards the directory containing hospital data.");
+        options.addOption(CONTACT_WIDE_TSV, true, "Path towards the file of contact for WIDE TSV.");
 
         options.addOption(RVA_LOGO, true, "Path towards a image file containing the RVA logo.");
         options.addOption(COMPANY_LOGO, true, "Path towards a image file containing the company logo.");

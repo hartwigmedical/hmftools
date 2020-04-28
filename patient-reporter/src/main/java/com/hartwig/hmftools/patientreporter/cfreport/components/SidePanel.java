@@ -36,14 +36,16 @@ public final class SidePanel {
         LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
 
         if (fullHeight && fullContent) {
-            final String contactNames =
-                    type == LimsSampleType.CORE || type == LimsSampleType.WIDE ? sampleReport.requesterName() : Strings.EMPTY;
+            final String contactNames = type == LimsSampleType.CORE
+                    ? sampleReport.requesterName()
+                    : type == LimsSampleType.WIDE ? sampleReport.studyRequesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
             }
 
-            final String contactEmails =
-                    type == LimsSampleType.CORE || type == LimsSampleType.WIDE ? sampleReport.requesterEmail() : Strings.EMPTY;
+            final String contactEmails = type == LimsSampleType.CORE
+                    ? sampleReport.requesterEmail()
+                    : type == LimsSampleType.WIDE ? sampleReport.studyRequesterEmail() : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
