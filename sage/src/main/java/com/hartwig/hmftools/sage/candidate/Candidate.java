@@ -22,7 +22,7 @@ public class Candidate implements GenomePosition {
         this.tier = tier;
         this.variant = ImmutableVariantHotspotImpl.builder().from(altContext).build();
         this.maxDepth = altContext.rawDepth();
-        this.readContext = altContext.readContext().minimiseFootprint();
+        this.readContext = altContext.readContext();
         this.readContextSupport = altContext.readContextSupport();
     }
 
@@ -30,7 +30,7 @@ public class Candidate implements GenomePosition {
         int altContextSupport = altContext.readContextSupport();
         if (altContextSupport > readContextSupport) {
             readContextSupport = altContextSupport;
-            readContext = altContext.readContext().minimiseFootprint();
+            readContext = altContext.readContext();
         }
         maxDepth = Math.max(maxDepth, altContext.rawDepth());
     }

@@ -28,6 +28,6 @@ final class LimsTestUtil {
                 .labSopVersions(Strings.EMPTY)
                 .submission(Strings.EMPTY)
                 .germlineReportingChoice(Strings.EMPTY)
-                .shallowSeq(Strings.EMPTY);
+                .shallowSeq(false);
     }
 }

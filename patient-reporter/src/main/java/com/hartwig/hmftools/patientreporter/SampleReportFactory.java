@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalQuery;
 import com.hartwig.hmftools.common.lims.Lims;
+import com.hartwig.hmftools.common.lims.LimsWide;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +22,7 @@ public final class SampleReportFactory {
 
     @NotNull
     public static SampleReport fromLimsAndHospitalModel(@NotNull SampleMetadata sampleMetadata, @NotNull Lims lims,
-            @NotNull HospitalModel hospitalModel, @Nullable PatientTumorLocation patientTumorLocation) {
+            @NotNull LimsWide limsWide, @NotNull HospitalModel hospitalModel, @Nullable PatientTumorLocation patientTumorLocation) {
         String refSampleBarcode = sampleMetadata.refSampleBarcode();
         String refSampleId = sampleMetadata.refSampleId();
         String tumorSampleBarcode = sampleMetadata.tumorSampleBarcode();
@@ -55,6 +56,8 @@ public final class SampleReportFactory {
                 .projectName(lims.projectName(tumorSampleBarcode))
                 .requesterName(lims.requesterName(tumorSampleBarcode))
                 .requesterEmail(lims.requesterEmail(tumorSampleBarcode))
+                .studyRequesterName(limsWide.ReportReceiverName())
+                .studyRequesterEmail(limsWide.ReportReceiverEmail())
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(lims.hospitalPathologySampleId(tumorSampleBarcode))

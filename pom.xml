@@ -61,7 +61,7 @@
         <sig-analyser.version>1.0</sig-analyser.version>
         <sv-tools.version>1.0</sv-tools.version>
         <isofox.version>1.0</isofox.version>
-        <amber.version>3.2</amber.version>
+        <amber.version>3.3</amber.version>
         <cobalt.version>1.8</cobalt.version>
         <purple.version>2.41</purple.version>
         <sage.version>2.2</sage.version>
@@ -77,7 +77,7 @@
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.4.4</immutables.version>
-        <htsjdk.version>2.12.0</htsjdk.version>
+        <htsjdk.version>2.21.3</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
         <google.guava.version>23.0</google.guava.version>
         <google.gson.version>2.8.1</google.gson.version>

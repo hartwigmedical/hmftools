@@ -147,6 +147,8 @@ public class CFReportWriterTest {
                 .projectName("COLO-001-002")
                 .requesterName("ContactMe")
                 .requesterEmail("contact@me.com")
+                .studyRequesterName("contact")
+                .studyRequesterEmail("contact@.com")
                 .submissionId("ABC")
                 .hospitalPatientId("123456")
                 .hospitalPathologySampleId("A")

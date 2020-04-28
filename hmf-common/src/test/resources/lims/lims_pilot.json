@@ -16,7 +16,7 @@
       "ptum": "NA",
       "label": "CPCT",
       "unused": "hello world",
-      "shallowseq": 0,
+      "shallowseq": false,
       "germline_findings": "",
       "hospital_pa_sample_id": ""
     },
@@ -36,7 +36,7 @@
       "ptum": "NA",
       "label": "CPCT",
       "hospital_patient_id": "something",
-      "shallowseq": 1,
+      "shallowseq": true,
       "germline_findings": "",
       "hospital_pa_sample_id": ""
     },
@@ -56,7 +56,7 @@
       "ptum": "NA",
       "label": "CPCT",
       "hospital_patient_id": "something",
-      "shallowseq": 1,
+      "shallowseq": true,
       "germline_findings": "",
       "hospital_pa_sample_id": ""
     },

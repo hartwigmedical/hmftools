@@ -195,7 +195,7 @@ Ref Match:                ...ACCATGGATACCA<b>T</b>GATAACATACGA...
 # Algorithm
 
 There are 8 key steps in the SAGE algorithm described in detail below:
-  1. [Base Quality Recalibration](#1-base-quality-recalibration)
+  1. [Alt Specific Base Quality Recalibration](#1-alt-specific-base-quality-recalibration)
   2. [Candidate Variants And Read Contexts](#2-candidate-variants-and-read-contexts)
   3. [Tumor Counts and Quality](#3-tumor-counts-and-quality)
   4. [Normal Counts and Quality](#4-normal-counts-and-quality)
@@ -204,14 +204,15 @@ There are 8 key steps in the SAGE algorithm described in detail below:
   7. [De-duplication](#7-de-duplication)
   8. [Re-alignment](#8-re-alignment)
 
-## 1. Base Quality Recalibration
+## 1. Alt Specific Base Quality Recalibration
 
 SAGE includes a base quality recalibration method to adjust sequencer reported base qualities to empirically observed values since we observe that qualities for certain base contexts and alts can be systematically over or under estimated which can cause either false positives or poor sensitivity respectively.
 This idea is inspired by the GATK BQSR tool, but instead of using a covariate model we create a direct lookup table for base quality adjustments. 
 
-The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.  
-This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
+The empirical base quality is measured in each reference and tumor sample for each {trinucleotide context, alt, sequencer reported base qual} combination and an adjustment is calculated.   This is performed by sampling a 2M base window from each autosome and counting the number of mismatches per {trinucleotide context, alt, sequencer reported base qual}.
 Sites with 4 or more ALT reads are excluded from consideration as they may harbour a genuine germline or somatic variant rather than errors.    
+
+Note that the definition of this recalibrated base quality is slightly different to the sequencer base quality, since it is the probability of making a specific ALT errror given a trinulceotide sequence, whereas the sequencer base quality is the probability of making any error at the base in question.   Since the chance of making an error to a specific base is lower than the chance of making it to a random base, the ALT specific base quality will generally be higher even if the sequencer base quality matches the empirical distribution.
 
 For all SNV and MNV calls the base quality is adjusted to the empirically observed value before determining the quality. 
 SAGE produces both a file output and QC chart which show the magnitude of the base quality adjustment applied for each {trinucleotide context, alt, sequencer reported base qual} combination.

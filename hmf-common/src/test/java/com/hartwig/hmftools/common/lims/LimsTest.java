@@ -50,7 +50,7 @@ public class LimsTest {
                 .submission(SUBMISSION)
                 .refBarcode(REF_SAMPLE_BARCODE)
                 .tumorBarcode(TUMOR_SAMPLE_BARCODE)
-                .shallowSeq("1")
+                .shallowSeq(true)
                 .germlineReportingChoice(Strings.EMPTY)
                 .hospitalPatientId(hospitalPatientId)
                 .hospitalPathologySampleId(hospitalPathologySampleId)
@@ -100,7 +100,7 @@ public class LimsTest {
 
         assertEquals(hospitalPatientId, lims.hospitalPatientId(TUMOR_SAMPLE_BARCODE));
         assertEquals(hospitalPathologySampleId, lims.hospitalPathologySampleId(TUMOR_SAMPLE_BARCODE));
-        assertEquals(LimsGermlineReportingChoice.UNKNOWN, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
+        assertEquals(LimsGermlineReportingChoice.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
     }
 
     @Test
@@ -122,7 +122,7 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.labProcedures(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
-        assertEquals(LimsGermlineReportingChoice.UNKNOWN, lims.germlineReportingChoice(doesNotExistSample));
+        assertEquals(LimsGermlineReportingChoice.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample));
     }
 
     @Test
@@ -159,13 +159,13 @@ public class LimsTest {
     @Test
     public void missingOrMalformedShallowSeqDataForSampleYieldsNA() {
         LimsJsonSampleData sampleData1 =
-                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq(true).build();
 
         Lims lims1 = buildTestLimsWithSample(sampleData1);
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims1.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
 
         LimsJsonSampleData sampleData2 =
-                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq(true).build();
         Lims lims2 = buildTestLimsWithSampleAndShallowSeq(sampleData2, "NotANumber", true, true);
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims2.purityShallowSeq(TUMOR_SAMPLE_BARCODE));
     }
@@ -174,7 +174,7 @@ public class LimsTest {
     public void canRetrievePathologyPercentageForSample() {
         LimsJsonSampleData sampleData1 = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
-                .shallowSeq("0")
+                .shallowSeq(false)
                 .pathologyTumorPercentage("70")
                 .build();
 
@@ -184,7 +184,7 @@ public class LimsTest {
 
         LimsJsonSampleData sampleData2 = createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE)
                 .sampleId(TUMOR_SAMPLE_ID)
-                .shallowSeq("0")
+                .shallowSeq(false)
                 .pathologyTumorPercentage("NotANumber")
                 .build();
 
@@ -196,7 +196,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqPurityForSample() {
         LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq(true).build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.2", false, true);
 
@@ -206,7 +206,7 @@ public class LimsTest {
     @Test
     public void canRetrieveShallowSeqBelowDetectionLimitForSample() {
         LimsJsonSampleData sampleData =
-                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq("1").build();
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq(true).build();
 
         Lims lims = buildTestLimsWithSampleAndShallowSeq(sampleData, "0.10", true, false);
         assertEquals("below detection threshold", lims.purityShallowSeq(TUMOR_SAMPLE_BARCODE));

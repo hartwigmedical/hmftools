@@ -44,7 +44,7 @@ class QualityRecalibrationFactory {
 
     @VisibleForTesting
     static double recalibratedQual(int refCount, int altCount) {
-        double percent = altCount / (double) refCount;
+        double percent = altCount / (double) (altCount + refCount);
         return -10 * Math.log10(percent);
     }
 

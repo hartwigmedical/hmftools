@@ -298,6 +298,8 @@ public final class ExampleAnalysisTestFactory {
                 .submissionId("10")
                 .hospitalPatientId("4567")
                 .hospitalPathologySampleId("1234")
+                .studyRequesterName("contact")
+                .studyRequesterEmail("contact@.nl")
                 .build();
     }
 

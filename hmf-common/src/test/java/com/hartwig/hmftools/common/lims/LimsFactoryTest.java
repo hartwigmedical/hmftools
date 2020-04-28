@@ -39,7 +39,7 @@ public class LimsFactoryTest {
     @Test
     public void readSamplesCorrectlyFromJsonFile() throws FileNotFoundException {
         Map<String, LimsJsonSampleData> dataPerSampleBarcode =
-                LimsFactory.readLimsJsonSamples(LIMS_DIRECTORY + File.separator + "lims.json");
+                LimsFactory.readLimsJsonSamples(LIMS_DIRECTORY + File.separator + "lims_pilot.json");
 
         assertEquals(3, dataPerSampleBarcode.size());
 
@@ -75,7 +75,7 @@ public class LimsFactoryTest {
     @Test
     public void readSubmissionsCorrectlyFromJsonFile() throws FileNotFoundException {
         Map<String, LimsJsonSubmissionData> dataPerSubmission =
-                LimsFactory.readLimsJsonSubmissions(LIMS_DIRECTORY + File.separator + "lims.json");
+                LimsFactory.readLimsJsonSubmissions(LIMS_DIRECTORY + File.separator + "lims_pilot.json");
 
         assertEquals(1, dataPerSubmission.size());
 

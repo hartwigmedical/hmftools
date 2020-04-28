@@ -48,7 +48,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingChoice.ALL,
+                LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
@@ -73,7 +73,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 Lists.newArrayList(),
                 PatientReporterTestFactory.createTestEmptyGermlineGenesReporting(),
-                LimsGermlineReportingChoice.ALL,
+                LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
@@ -101,7 +101,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.ALL,
+                LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 
@@ -133,7 +133,7 @@ public class ReportableVariantAnalyzerTest {
                 TEST_DRIVER_GENE_VIEW,
                 germlineVariantsToReport,
                 germlineReportingModel,
-                LimsGermlineReportingChoice.NONE,
+                LimsGermlineReportingChoice.NO_REPORTING,
                 testAnalysedReportData().actionabilityAnalyzer(),
                 null);
 

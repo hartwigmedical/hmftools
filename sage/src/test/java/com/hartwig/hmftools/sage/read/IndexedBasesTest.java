@@ -12,6 +12,7 @@ public class IndexedBasesTest {
 
     private IndexedBases victim = new IndexedBases(1000, 5, 4, 6, 3, "GATCTCCTCA".getBytes());
 
+
     @Test
     public void testRightFlankMatchingBases() {
         assertEquals(-1, victim.rightFlankMatchingBases(3, "TCTCCTCG".getBytes()));

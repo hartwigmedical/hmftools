@@ -55,6 +55,12 @@ public abstract class SampleReport {
     public abstract String hospitalPIEmail();
 
     @NotNull
+    public abstract String studyRequesterName();
+
+    @NotNull
+    public abstract String studyRequesterEmail();
+
+    @NotNull
     public abstract String submissionId();
 
     @NotNull

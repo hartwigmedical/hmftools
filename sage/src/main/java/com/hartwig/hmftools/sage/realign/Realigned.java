@@ -38,18 +38,22 @@ public class Realigned {
             }
         }
 
+        RealignedContext result = NONE;
         for (int i = -maxDistance; i <= maxDistance; i++) {
             int otherBaseIndexWithOffset = otherBaseIndex + i;
             if (i != 0 && otherBaseIndexWithOffset >= 0) {
                 final RealignedContext context = realigned(baseStartIndex, baseEndIndex, bases, otherBaseIndexWithOffset, otherBases);
                 if (context.type() != RealignedType.NONE) {
-                    return context;
+                    if (context.type() == RealignedType.EXACT) {
+                        return context;
+                    }
+
+                    result = context;
                 }
             }
-
         }
 
-        return NONE;
+        return result;
     }
 
     @NotNull
