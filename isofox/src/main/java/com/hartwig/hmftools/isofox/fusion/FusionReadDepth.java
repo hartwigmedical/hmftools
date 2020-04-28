@@ -18,6 +18,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -33,7 +34,8 @@ import htsjdk.samtools.SamReaderFactory;
 public class FusionReadDepth
 {
     private final IsofoxConfig mConfig;
-    private final Set<String> mReadIds;
+    private final Set<String> mChimericReadIds;
+    private final Set<String> mReadDepthIds;
     private final FragmentTracker mReadDepthTracker;
     private final List<FusionReadData> mReadDepthFusions;
 
@@ -43,7 +45,8 @@ public class FusionReadDepth
     public FusionReadDepth(final IsofoxConfig config, final Set<String> readIds)
     {
         mConfig = config;
-        mReadIds = readIds;
+        mChimericReadIds = readIds;
+        mReadDepthIds = Sets.newHashSet();
         mReadDepthTracker = new FragmentTracker();
         mReadDepthFusions = Lists.newArrayList();
 
@@ -55,7 +58,10 @@ public class FusionReadDepth
 
     public void calcFusionReadDepth(final List<FusionReadData> fusions)
     {
+        // measure the depth at each fusion junction, and at the same time pick up any fragments showing realignment support which
+        // where missed the first tme by not being chimeric
         mReadDepthTracker.clear();
+        mReadDepthIds.clear();
         mReadDepthFusions.clear();
         mReadDepthFusions.addAll(fusions);
 
@@ -63,6 +69,8 @@ public class FusionReadDepth
             return;
 
         QueryInterval[] queryInterval = new QueryInterval[SE_PAIR];
+
+        int rangeBuffer = mConfig.MaxFragmentLength * 2;
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -79,6 +87,8 @@ public class FusionReadDepth
             }
 
             int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(fusions.get(0).chromosomes()[se]);
+            fusionJuncRange[SE_START] -= rangeBuffer;
+            fusionJuncRange[SE_END] += rangeBuffer;
             queryInterval[se] = new QueryInterval(chrSeqIndex, fusionJuncRange[SE_START], fusionJuncRange[SE_END]);
         }
 
@@ -102,30 +112,29 @@ public class FusionReadDepth
         {
             final ReadRecord read = (ReadRecord) object;
 
+            if(mReadDepthIds.contains(read.Id))
+                continue;
+
+            mReadDepthIds.add(read.Id);
+
             for(final FusionReadData fusionData : mReadDepthFusions)
             {
-                for (int se = SE_START; se <= SE_END; ++se)
-                {
-                    final List<int[]> readCoords = read.getMappedRegionCoords();
-
-                    if (!read.Chromosome.equals(fusionData.chromosomes()[se]))
-                        continue;
-
-                    final int seIndex = se;
-
-                    if (readCoords.stream().anyMatch(x -> positionWithin(fusionData.junctionPositions()[seIndex], x[SE_START], x[SE_END])))
-                    {
-                        ++fusionData.getReadDepth()[se];
-                    }
-                }
+                checkFragmentDepthSupport(fusionData, Lists.newArrayList(read));
             }
         }
+
+        /*
+        for (int se = SE_START; se <= SE_END; ++se)
+        {
+            specificTest(mReadDepthFusions.get(0).chromosomes()[se], mReadDepthFusions.get(0).junctionPositions()[se]);
+        }
+        */
     }
 
     private void processReadDepthRecord(@NotNull final SAMRecord record)
     {
-        if(mReadIds.contains(record.getReadName()))
-            return;
+        if(mReadDepthIds.contains(record.getReadName()))
+            return; // prevents handling supplementary fragments again
 
         final ReadRecord read1 = ReadRecord.from(record);
         final ReadRecord read2 = mReadDepthTracker.checkRead(read1);
@@ -136,16 +145,40 @@ public class FusionReadDepth
         processReadDepthRecord(read1, read2);
     }
 
+    private void checkFragmentDepthSupport(final FusionReadData fusionData, final List<ReadRecord> reads)
+    {
+        for (int se = SE_START; se <= SE_END; ++se)
+        {
+            for (ReadRecord read : reads)
+            {
+                if (!read.Chromosome.equals(fusionData.chromosomes()[se]))
+                    continue;
+
+                final int seIndex = se;
+                if (read.getMappedRegionCoords().stream()
+                        .anyMatch(x -> positionWithin(fusionData.junctionPositions()[seIndex], x[SE_START], x[SE_END])))
+                {
+                    ++fusionData.getReadDepth()[se];
+                    break;
+                }
+            }
+        }
+    }
+
     @VisibleForTesting
     public void processReadDepthRecord(final ReadRecord read1, final ReadRecord read2)
     {
-        if(!read1.Chromosome.equals(read2.Chromosome))
+        mReadDepthIds.add(read1.Id);
+
+        for(final FusionReadData fusionData : mReadDepthFusions)
         {
-            ISF_LOGGER.warn("read-depth read({}) spans chromosomes({} & {})", read1.Id, read1.Chromosome, read2.Chromosome);
-            return;
+            checkFragmentDepthSupport(fusionData, Lists.newArrayList(read1, read2));
         }
 
-        // test these pairs against each fusion junction
+        if(mChimericReadIds.contains(read1.Id) || !read1.Chromosome.equals(read2.Chromosome))
+            return;
+
+        // check for potential realgined fragments which would have been missed initially for not being chimeric
         FusionFragment fragment = new FusionFragment(Lists.newArrayList(read1, read2));
 
         for(final FusionReadData fusionData : mReadDepthFusions)
@@ -154,35 +187,43 @@ public class FusionReadDepth
             {
                 fragment.setType(REALIGNED);
                 fusionData.addFusionFragment(fragment);
-                continue;
-            }
-
-            boolean[] hasReadSupport = { false, false };
-
-            for (int se = SE_START; se <= SE_END; ++se)
-            {
-                for (ReadRecord read : fragment.getReads())
-                {
-                    final List<int[]> readCoords = read.getMappedRegionCoords();
-
-                    if (!read.Chromosome.equals(fusionData.chromosomes()[se]))
-                        continue;
-
-                    final int seIndex = se;
-
-                    if (!hasReadSupport[se] && readCoords.stream()
-                            .anyMatch(x -> positionWithin(fusionData.junctionPositions()[seIndex], x[SE_START], x[SE_END])))
-                    {
-                        hasReadSupport[se] = true;
-                    }
-                }
-            }
-
-            for (int se = SE_START; se <= SE_END; ++se)
-            {
-                if (hasReadSupport[se])
-                    ++fusionData.getReadDepth()[se];
             }
         }
     }
+
+    private void specificTest(final String chromosome, int position)
+    {
+        QueryInterval[] queryInterval = new QueryInterval[1];
+        queryInterval[0] = new QueryInterval(mSamReader.getFileHeader().getSequenceIndex(chromosome), position, position);
+        List<SAMRecord> records = mBamSlicer.slice(mSamReader, queryInterval);
+
+        Set<String> ids = Sets.newHashSet();
+
+        for(SAMRecord record : records)
+        {
+            ids.add(record.getReadName());
+        }
+
+        for(String readId : ids)
+        {
+            if(!mReadDepthIds.contains(readId))
+            {
+                SAMRecord record = records.stream().filter(x -> x.getReadName().equals(readId)).findFirst().orElse(null);
+                ReadRecord read = ReadRecord.from(record);
+                ISF_LOGGER.debug("missed read depth id({}): ", readId, read);
+            }
+        }
+
+        /*
+        for(String readId : mReadDepthIds)
+        {
+            if(!ids.contains(readId))
+            {
+                ISF_LOGGER.debug("extra read depth id({})", readId);
+            }
+        }
+
+        */
+    }
+
 }

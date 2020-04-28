@@ -137,31 +137,6 @@ public class FusionReadData
         }
 
         fragments.add(fragment);
-
-        // record depth by any overlap in the fusion's junctions
-        if(fragment.type() == MATCHED_JUNCTION)
-        {
-            ++mReadDepth[SE_START];
-            ++mReadDepth[SE_END];
-        }
-        else
-        {
-            for (int se = SE_START; se <= SE_END; ++se)
-            {
-                for (ReadRecord read : fragment.getReads())
-                {
-                    if (!read.Chromosome.equals(mChromosomes[se]))
-                        continue;
-
-                    final int seIndex = se;
-                    if (read.getMappedRegionCoords().stream().anyMatch(x -> positionWithin(mJunctionPositions[seIndex], x[SE_START], x[SE_END])))
-                    {
-                        ++mReadDepth[se];
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     public boolean hasJunctionFragments() { return mFragments.containsKey(MATCHED_JUNCTION); }
