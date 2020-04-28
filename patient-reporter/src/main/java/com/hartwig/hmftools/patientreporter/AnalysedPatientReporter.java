@@ -119,6 +119,7 @@ class AnalysedPatientReporter {
                 .hasReliablePurity(copyNumberAnalysis.hasReliablePurity())
                 .hasReliableQuality(copyNumberAnalysis.hasReliableQuality())
                 .averageTumorPloidy(copyNumberAnalysis.ploidy())
+                .reportableViralInsertions(reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode()))
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))

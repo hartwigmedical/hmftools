@@ -260,6 +260,18 @@ public class Lims {
         }
     }
 
+    @NotNull
+    public LimsViralInsertionChoice viralInsertionChoice(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            boolean viralInsertionsReportingChoiceString = sampleData.reportViralInsertions();
+            return LimsViralInsertionChoice.fromLimsViralInsertionsReportingChoiceString(viralInsertionsReportingChoiceString, sampleId(sampleBarcode));
+
+        } else {
+            return LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS;
+        }
+    }
+
     @Nullable
     private String submission(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);

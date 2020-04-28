@@ -80,6 +80,9 @@ abstract class LimsJsonSampleData {
     @SerializedName("lab_sop_versions")
     abstract String labSopVersions();
 
+    @SerializedName("report_viral")
+    public abstract boolean reportViralInsertions();
+
     @NotNull
     @Value.Derived
     public String labProcedures() {
