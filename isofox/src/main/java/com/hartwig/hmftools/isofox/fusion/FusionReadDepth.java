@@ -14,14 +14,13 @@ import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
-import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 import org.jetbrains.annotations.NotNull;
@@ -34,17 +33,17 @@ import htsjdk.samtools.SamReaderFactory;
 public class FusionReadDepth
 {
     private final IsofoxConfig mConfig;
-    private final Map<String,List<ReadRecord>> mReadsMap;
+    private final Set<String> mReadIds;
     private final FragmentTracker mReadDepthTracker;
     private final List<FusionReadData> mReadDepthFusions;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
-    public FusionReadDepth(final IsofoxConfig config, final Map<String,List<ReadRecord>> readsMap)
+    public FusionReadDepth(final IsofoxConfig config, final Set<String> readIds)
     {
         mConfig = config;
-        mReadsMap = readsMap;
+        mReadIds = readIds;
         mReadDepthTracker = new FragmentTracker();
         mReadDepthFusions = Lists.newArrayList();
 
@@ -125,7 +124,7 @@ public class FusionReadDepth
 
     private void processReadDepthRecord(@NotNull final SAMRecord record)
     {
-        if(mReadsMap.containsKey(record.getReadName()))
+        if(mReadIds.contains(record.getReadName()))
             return;
 
         final ReadRecord read1 = ReadRecord.from(record);

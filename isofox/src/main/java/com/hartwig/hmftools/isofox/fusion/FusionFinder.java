@@ -38,6 +38,7 @@ public class FusionFinder
     private final EnsemblDataCache mGeneTransCache;
 
     private final Map<String,List<ReadRecord>> mReadsMap;
+    private final Set<String> mReadIds;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
 
     private int mNextFusionId;
@@ -56,12 +57,13 @@ public class FusionFinder
 
         mNextFusionId = 0;
         mReadsMap = Maps.newHashMap();
+        mReadIds = Sets.newHashSet();
         mFusionCandidates = Maps.newHashMap();
         mChrGeneCollectionMap = Maps.newHashMap();
 
         mUnfusedFragments = Maps.newHashMap();
 
-        mFusionReadDepth = new FusionReadDepth(mConfig, mReadsMap);
+        mFusionReadDepth = new FusionReadDepth(mConfig, mReadIds);
 
         mPerfCounter = new PerformanceCounter("Fusions");
         mFusionWriter = new FusionWriter(mConfig);
@@ -76,6 +78,7 @@ public class FusionFinder
         mFusionCandidates.clear();
         mUnfusedFragments.clear();
         mReadsMap.clear();
+        mReadIds.clear();
     }
 
     public void addChimericReads(final Map<String,List<ReadRecord>> chimericReadMap)
@@ -174,7 +177,8 @@ public class FusionFinder
                 mUnfusedFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
-        // mReadsMap.clear();
+        mReadIds.addAll(mReadsMap.keySet());
+        mReadsMap.clear();
 
         // classify / analyse fusions
         int nextLog = 1000;
@@ -454,11 +458,11 @@ public class FusionFinder
                     if(!fusion.isValid())
                         continue;
 
-                    if(fusion.canAddDiscordantFragment(fragment, mConfig.MaxFragmentLength))
+                    if(fusion.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
                     {
                         allocatedFragments.add(fragment);
 
-                        if(fragment.isSingleGene() && fusion.isRelignedFragment(fragment))
+                        if(fusion.isRelignedFragment(fragment)) // was also fragment.isSingleGene()
                         {
                             fragment.setType(REALIGNED);
                         }

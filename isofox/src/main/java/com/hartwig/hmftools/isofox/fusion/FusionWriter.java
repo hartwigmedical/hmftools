@@ -102,16 +102,16 @@ public class FusionWriter
                 final String outputFileName = mConfig.formOutputFile("chimeric_reads.csv");
 
                 mReadWriter = createBufferedWriter(outputFileName, false);
-                mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
+                mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Orientation,Cigar,InsertSize");
                 mReadWriter.write(",FirstInPair,Supplementary,ReadReversed,ProperPair,SuppAlign,TransExons,BestMatch,TransExonData");
                 mReadWriter.newLine();
             }
 
             for(final ReadRecord read : reads)
             {
-                mReadWriter.write(String.format("%s,%s,%s,%s,%d,%d,%s,%d",
+                mReadWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d,%s,%d",
                         reads.size(), read.Id, groupStatus, read.Chromosome,
-                        read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
+                        read.PosStart, read.PosEnd, read.orientation(), read.Cigar.toString(), read.fragmentInsertSize()));
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s",
                         read.isFirstOfPair(), read.isSupplementaryAlignment(), read.isReadReversed(), read.isProperPair(),
@@ -180,6 +180,7 @@ public class FusionWriter
                 {
                     final String prefix = se == SE_START ? "Start" : "End";
                     mFragmentWriter.write(",Chr" + prefix);
+                    mFragmentWriter.write(",Orient" + prefix);
                     mFragmentWriter.write(",JuncPos" + prefix);
                     mFragmentWriter.write(",JuncOrient" + prefix);
                     mFragmentWriter.write(",Region" + prefix);
@@ -195,8 +196,9 @@ public class FusionWriter
 
             for(int se = SE_START; se <= SE_END; ++se)
             {
-                mFragmentWriter.write(String.format(",%s,%d,%d,%s,%s",
-                        fragment.chromosomes()[se], fragment.junctionPositions()[se], fragment.junctionOrientations()[se],
+                mFragmentWriter.write(String.format(",%s,%d,%d,%d,%s,%s",
+                        fragment.chromosomes()[se], fragment.orientations()[se],
+                        fragment.junctionPositions()[se], fragment.junctionOrientations()[se],
                         fragment.regionMatchTypes()[se], fragment.junctionTypes()[se]));
             }
 

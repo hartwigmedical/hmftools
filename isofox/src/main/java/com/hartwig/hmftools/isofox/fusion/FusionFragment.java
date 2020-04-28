@@ -47,8 +47,8 @@ public class FusionFragment
     private final int[] mGeneCollections;
     private final String[] mChromosomes;
     private final byte[] mOrientations;
-    private final int[] mJunctionPositions; // fusion junction is exists
-    private final byte[] mJunctionOrientations; // orientation at junction
+    private final int[] mJunctionPositions; // fusion junction if exists
+    private final byte[] mJunctionOrientations; // orientation at junction if exists
     private final FusionJunctionType[] mJunctionTypes;
     private final String[] mJunctionBases; // the 10 bases leading up to the junction if it exists
     private boolean mJunctionBasesMatched;
@@ -136,7 +136,12 @@ public class FusionFragment
 
                 mChromosomes[se] = chromosomes.get(index);
                 mGeneCollections[se] = readGroup.get(0).getGeneCollecton();
-                //mOrientations[se] = readGroup.get(0).orientation();
+
+                if(readGroup.size() == 2)
+                    mOrientations[se] = readGroup.stream()
+                            .filter(x -> x.getSuppAlignment() == null).findFirst().map(x -> x.orientation()).orElse((byte)0);
+                else
+                    mOrientations[se] = readGroup.get(0).orientation();
             }
 
             if(mReads.stream().anyMatch(x -> x.getSuppAlignment() != null))
@@ -152,6 +157,7 @@ public class FusionFragment
             // and will be missing transcript and exon information
             mChromosomes[SE_START] = mChromosomes[SE_END] = chromosomes.get(0);
             mGeneCollections[SE_START] = mGeneCollections[SE_END] = reads.get(0).getGeneCollecton();
+            mOrientations[SE_START] = mOrientations[SE_END] = reads.get(0).orientation();
 
             setJunctionData(readGroups, chrGeneCollections, 0);
 
@@ -165,6 +171,7 @@ public class FusionFragment
     public FusionFragmentType type() { return mType; }
     public final String[] chromosomes() { return mChromosomes; }
     public final int[] geneCollections() { return mGeneCollections; }
+    public final byte[] orientations() { return mOrientations; }
 
     public boolean isSingleGene()
     {
@@ -173,7 +180,7 @@ public class FusionFragment
 
     public final int[] junctionPositions() { return mJunctionPositions; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
-    public final byte[] orientations() { return mOrientations; }
+    public final String[] junctionBases() { return mJunctionBases; }
 
     public final RegionMatchType[] regionMatchTypes() { return mRegionMatchTypes; }
     public final FusionJunctionType[] junctionTypes() { return mJunctionTypes; }
@@ -296,47 +303,6 @@ public class FusionFragment
             if(mJunctionBases[SE_START].equals(softClipBases[SE_END]) && mJunctionBases[SE_END].equals(softClipBases[SE_START]))
             {
                 mJunctionBasesMatched = true;
-            }
-        }
-    }
-
-    private void setJunctionDatav2(final Map<String,List<ReadRecord>> readGroups, final List<String> chrGeneCollections, int lowerIndex)
-    {
-        for(int se = SE_START; se <= SE_END; ++se)
-        {
-            if(readGroups.size() == 1 && se == SE_END)
-                return;
-
-            int index = se == SE_START ? lowerIndex : switchIndex(lowerIndex);
-            final String chrGeneId = chrGeneCollections.get(index);
-            byte readOrientation = mOrientations[se];
-            int junctionSeIndex = readOrientation == 1 ? SE_END : SE_START;
-
-            // find the outermost soft-clipped read to use for the splice junction position
-            int sjPosition = 0;
-            int maxSoftClipping = 0;
-
-            final List<ReadRecord> readGroup = readGroups.get(chrGeneId);
-
-            for(ReadRecord read : readGroup)
-            {
-                if(!read.isSoftClipped(junctionSeIndex))
-                    continue;
-
-                int scLength = junctionSeIndex == SE_START ?
-                        read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
-
-                if(scLength > maxSoftClipping)
-                {
-                    maxSoftClipping = scLength;
-                    sjPosition = read.getCoordsBoundary(junctionSeIndex);
-                }
-            }
-
-            if(maxSoftClipping > 0)
-            {
-                mJunctionPositions[se] = sjPosition;
-                mJunctionOrientations[se] = readOrientation;
             }
         }
     }

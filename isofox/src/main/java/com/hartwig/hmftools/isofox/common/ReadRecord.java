@@ -115,7 +115,15 @@ public class ReadRecord
 
     public int range() { return PosEnd - PosStart; }
 
-    public byte orientation() { return isReadReversed() ? (byte)-1 : 1; }
+    public byte orientation()
+    {
+        // first in pair has orientation of +1 if not reversed, and vice versa for the second in the pair
+        if(isFirstOfPair())
+            return !isReadReversed() ? 1 : (byte)-1;
+        else
+            return isReadReversed() ? (byte)-1 : 1;
+    }
+
     public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }

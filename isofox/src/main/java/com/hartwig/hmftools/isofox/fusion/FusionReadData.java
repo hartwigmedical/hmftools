@@ -34,6 +34,7 @@ public class FusionReadData
 {
     private final int mId;
     private final String mLocationId;
+    private final FusionFragment mFragment; // the one which establishes this fusion and whose junction data is used
 
     private final Map<FusionFragmentType,List<FusionFragment>> mFragments;
 
@@ -48,7 +49,6 @@ public class FusionReadData
     private final byte[] mJunctionOrientations;
     private final List<TransExonRef>[] mTransExonRefs;
     private final int[] mReadDepth;
-    private final String[] mJunctionBases;
 
     // the following data is stored by stream, not start/end
     private final List<EnsemblGeneData>[] mCandidateGenes; // up and downstream genes
@@ -62,16 +62,15 @@ public class FusionReadData
     public FusionReadData(int id, final FusionFragment fragment)
     {
         mId = id;
+        mFragment = fragment;
 
         mChromosomes = new String[] { fragment.chromosomes()[SE_START], fragment.chromosomes()[SE_END] };
         mGeneCollections = new int[] { fragment.geneCollections()[SE_START], fragment.geneCollections()[SE_END] };
         mJunctionPositions = new int[] { fragment.junctionPositions()[SE_START], fragment.junctionPositions()[SE_END] };
         mJunctionOrientations = new byte[]{ fragment.junctionOrientations()[SE_START], fragment.junctionOrientations()[SE_END] };
-        mJunctionBases = new String[] {"", ""};
 
         mFragments = Maps.newHashMap();
         addFusionFragment(fragment);
-        setJunctionBases(fragment);
 
         mLocationId = formLocationPair(mChromosomes, mGeneCollections);
 
@@ -96,6 +95,7 @@ public class FusionReadData
     public final int[] geneCollections() { return mGeneCollections; }
     public final int[] junctionPositions() { return mJunctionPositions; }
     public final byte[] junctionOrientations() { return mJunctionOrientations; }
+    private final String[] junctionBases() { return mFragment.junctionBases(); }
 
     public boolean hasIncompleteData() { return mIncompleteData; }
     public void setIncompleteData() { mIncompleteData = true; }
@@ -124,34 +124,6 @@ public class FusionReadData
     public final List<FusionFragment> getFragments(FusionFragmentType type)
     {
         return mFragments.containsKey(type) ? mFragments.get(type) : Lists.newArrayList();
-    }
-
-    private void setJunctionBases(final FusionFragment fragment)
-    {
-        for (int se = SE_START; se <= SE_END; ++se)
-        {
-            int seIndex = se;
-            final ReadRecord read = fragment.getReads().stream()
-                    .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]) && x.getGeneCollecton() == mGeneCollections[seIndex])
-                    .filter(x -> x.PosStart == mJunctionPositions[seIndex] || x.PosEnd == mJunctionPositions[seIndex])
-                    .findFirst().orElse(null);
-
-            if(read == null)
-                continue;
-
-            int baseLength = min(10, read.Length);
-
-            if(mJunctionOrientations[se] == 1)
-            {
-                int scLength = read.Cigar.getLastCigarElement().getLength();
-                mJunctionBases[se] = read.ReadBases.substring(read.Length - baseLength - scLength, read.Length - scLength);
-            }
-            else
-            {
-                int scLength = read.Cigar.getFirstCigarElement().getLength();
-                mJunctionBases[se] = read.ReadBases.substring(scLength, baseLength + scLength);
-            }
-        }
     }
 
     public void addFusionFragment(final FusionFragment fragment)
@@ -271,10 +243,12 @@ public class FusionReadData
         }
     }
 
-    public boolean canAddDiscordantFragment(final FusionFragment fragment, int maxFragmentDistance)
+    public boolean canAddUnfusedFragment(final FusionFragment fragment, int maxFragmentDistance)
     {
         // a discordant read spans both genes and cannot be outside the standard long fragment length either in intronic terms
         // or by exons if exonic
+
+        // a realigned fragment must touch one of the fusion junctions with soft-clipping
 
         // the 2 reads' bounds need to fall within 2 or less exons away
         // apply max fragment distance criteria
@@ -285,6 +259,10 @@ public class FusionReadData
         {
             final List<TransExonRef> fragmentRefs = fragment.getTransExonRefs()[se];
             final List<TransExonRef> fusionRefs = getTransExonRefsByPos(se);
+
+            // must match the orientations of the fusion junction
+            if(fragment.orientations()[se] != mJunctionOrientations[se])
+                continue;
 
             boolean isUpstream = (mStreamIndices[FS_UPSTREAM] == se);
 
@@ -387,7 +365,7 @@ public class FusionReadData
             if(extraBases.length() > SOFT_CLIP_MAX_BASE_MATCH)
                 extraBases = extraBases.substring(0, SOFT_CLIP_MAX_BASE_MATCH);
 
-            return mJunctionBases[switchIndex(juncSeIndex)].startsWith(extraBases);
+            return junctionBases()[switchIndex(juncSeIndex)].startsWith(extraBases);
         }
         else
         {
@@ -411,7 +389,7 @@ public class FusionReadData
             if(extraBases.length() > SOFT_CLIP_MAX_BASE_MATCH)
                 extraBases = extraBases.substring(extraBases.length() - SOFT_CLIP_MAX_BASE_MATCH, extraBases.length());
 
-            return mJunctionBases[switchIndex(juncSeIndex)].endsWith(extraBases);
+            return junctionBases()[switchIndex(juncSeIndex)].endsWith(extraBases);
         }
     }
 
