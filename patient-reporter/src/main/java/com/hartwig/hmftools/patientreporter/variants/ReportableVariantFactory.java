@@ -48,8 +48,6 @@ final class ReportableVariantFactory {
                     .build());
         }
 
-        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
-                || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
         for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
             DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
@@ -59,11 +57,12 @@ final class ReportableVariantFactory {
             }
             allReportableVariants.add(fromGermlineVariant(germlineVariant.variant()).driverCategory(category)
                     .driverLikelihood(driverLikelihood)
-                    .notifyClinicalGeneticist(wantsToBeNotified && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
+                    .notifyClinicalGeneticist(germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION
+                            && germlineReportingModel.notifyAboutGene(germlineVariant.variant().gene()))
                     .build());
         }
 
-       return allReportableVariants;
+        return allReportableVariants;
     }
 
     @Nullable

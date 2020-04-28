@@ -254,9 +254,9 @@ public class Lims {
             String germlineReportingChoiceString = sampleData.germlineReportingChoice();
             return germlineReportingChoiceString != null ? LimsGermlineReportingChoice.fromLimsGermlineReportingChoiceString(
                     germlineReportingChoiceString,
-                    sampleId(sampleBarcode)) : LimsGermlineReportingChoice.UNKNOWN;
+                    sampleId(sampleBarcode)) : LimsGermlineReportingChoice.NO_REPORTING;
         } else {
-            return LimsGermlineReportingChoice.UNKNOWN;
+            return LimsGermlineReportingChoice.NO_REPORTING;
         }
     }
 

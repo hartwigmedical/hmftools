@@ -7,21 +7,21 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.lims.Lims;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.gene.GeneCopyNumberFile;
 import com.hartwig.hmftools.common.purple.purity.FittedPurityFile;
 import com.hartwig.hmftools.common.purple.purity.PurityContext;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.Variant;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusionFile;
+import com.hartwig.hmftools.protect.report.chord.ChordAnalysis;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,7 +80,7 @@ public class GenomicData {
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
         LimsGermlineReportingChoice germlineChoice = lims.germlineReportingChoice(sampleBarcode);
-        if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
+        if (germlineChoice == LimsGermlineReportingChoice.NO_REPORTING) {
             LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
             return Lists.newArrayList();
         } else {
@@ -205,8 +205,8 @@ public class GenomicData {
                     .build());
         }
 
-        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.ALL
-                || germlineReportingChoice == LimsGermlineReportingChoice.ACTIONABLE_ONLY;
+        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION
+                || germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION;
         for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
             DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());

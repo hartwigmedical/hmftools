@@ -203,10 +203,7 @@ class AnalysedPatientReporter {
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
-        if (germlineChoice == LimsGermlineReportingChoice.UNKNOWN) {
-            LOGGER.info(" No germline reporting choice known. No germline variants will be reported!");
-            return Lists.newArrayList();
-        } else {
+        if (germlineChoice != LimsGermlineReportingChoice.NO_REPORTING) {
             LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
                     reportData.driverGeneView(),
@@ -214,6 +211,9 @@ class AnalysedPatientReporter {
                     copyNumberAnalysis.exomeGeneCopyNumbers(),
                     somaticVariantAnalysis.variantsToReport(),
                     chordAnalysis);
+        } else {
+            LOGGER.info(" No consent has been given for germline reporting. No germline variants will be reported!");
+            return Lists.newArrayList();
         }
     }
 
