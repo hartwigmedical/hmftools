@@ -270,7 +270,7 @@ public class Lims {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         assert sampleData != null;
 
-        return sampleData.shallowSeq().equalsIgnoreCase("1") || sampleData.shallowSeq().equalsIgnoreCase("true");
+        return sampleData.shallowSeq();
     }
 
     @Nullable

@@ -30,7 +30,7 @@ public final class LimsFactory {
 
     private static final Logger LOGGER = LogManager.getLogger(LimsFactory.class);
 
-    private static final String LIMS_JSON_FILE = "lims.json";
+    private static final String LIMS_JSON_FILE = "lims_pilot.json";
 
     private static final String PRE_LIMS_ARRIVAL_DATES_TSV = "pre_lims_arrival_dates.tsv";
     private static final String SAMPLES_WITHOUT_SAMPLING_DATE_TSV = "samples_without_sampling_date.tsv";

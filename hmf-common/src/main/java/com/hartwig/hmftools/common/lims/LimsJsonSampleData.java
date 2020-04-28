@@ -41,9 +41,8 @@ abstract class LimsJsonSampleData {
     @SerializedName("sampling_date")
     public abstract String samplingDate();
 
-    @NotNull
     @SerializedName("shallowseq")
-    public abstract String shallowSeq();
+    public abstract boolean shallowSeq();
 
     // Tumor biopsies analyzed in research context do not have a pathology tumor percentage. Also WIDE samples are no longer sent to PA.
     @Nullable
