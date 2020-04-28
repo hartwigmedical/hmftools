@@ -12,9 +12,9 @@ public abstract class LimsWide {
     public abstract String studyName();
 
     @NotNull
-    public abstract String ReportReceiverName();
+    public abstract String reportReceiverName();
 
     @NotNull
-    public abstract String ReportReceiverEmail();
+    public abstract String reportReceiverEmail();
 
 }

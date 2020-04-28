@@ -27,15 +27,15 @@ public class LimsWideFile {
         String[] values = findValuesLine(filePath).split(DELIMITER);
 
         builder.studyName(values[0]);
-        builder.ReportReceiverName(values[1]);
-        builder.ReportReceiverEmail(values[2]);
+        builder.reportReceiverName(values[1]);
+        builder.reportReceiverEmail(values[2]);
 
         return builder.build();
     }
 
     @NotNull
     public static LimsWide empty() {
-        return ImmutableLimsWide.builder().studyName(Strings.EMPTY).ReportReceiverName(Strings.EMPTY).ReportReceiverEmail(Strings.EMPTY).build();
+        return ImmutableLimsWide.builder().studyName(Strings.EMPTY).reportReceiverName(Strings.EMPTY).reportReceiverEmail(Strings.EMPTY).build();
     }
 
     @NotNull
