@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegio
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
+import static htsjdk.samtools.SAMFlag.FIRST_OF_PAIR;
+import static htsjdk.samtools.SAMFlag.SECOND_OF_PAIR;
 
 import java.util.List;
 
@@ -220,10 +222,30 @@ public class TestUtils
         return read;
     }
 
+    public static ReadRecord[] createMappedReadPair(final int id, final GeneCollection gc1, final GeneCollection gc2,
+            int posStart1, int posEnd1, int posStart2, int posEnd2, final Cigar cigar1, final Cigar cigar2)
+    {
+        int readBaseLength = cigar1.getCigarElements().stream()
+                .filter(x -> x.getOperator() != N && x.getOperator() != D)
+                .mapToInt(x -> x.getLength()).sum();
+
+        String readBases = generateRandomBases(readBaseLength);
+
+        ReadRecord read1 = createMappedRead(id, gc1, posStart1, posEnd1, cigar1, readBases);
+        ReadRecord read2 = createMappedRead(id, gc2, posStart2, posEnd2, cigar2, readBases);
+        read1.setFlag(FIRST_OF_PAIR, true);
+        read2.setFlag(SECOND_OF_PAIR, true);
+        read1.setSuppAlignment(String.format("%s;%d;%s", read2.Chromosome, read2.PosStart, read2.Cigar.toString()));
+        read2.setSuppAlignment(String.format("%s;%d;%s", read1.Chromosome, read1.PosStart, read1.Cigar.toString()));
+
+        return new ReadRecord[] { read1, read2 };
+    }
+
+
     public static ReadRecord createMappedRead(final int id, final GeneCollection geneCollection, int posStart, int posEnd, final Cigar cigar)
     {
         int readBaseLength = cigar.getCigarElements().stream()
-                .filter(x -> x.getOperator() != N || x.getOperator() != D)
+                .filter(x -> x.getOperator() != N && x.getOperator() != D)
                 .mapToInt(x -> x.getLength()).sum();
 
         String readBases = generateRandomBases(readBaseLength);

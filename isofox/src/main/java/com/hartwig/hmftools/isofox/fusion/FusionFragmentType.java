@@ -3,7 +3,7 @@ package com.hartwig.hmftools.isofox.fusion;
 public enum FusionFragmentType
 {
     UNKNOWN,
-    BOTH_JUNCTIONS,
+    MATCHED_JUNCTION,
     REALIGNED,
     DISCORDANT;
 }

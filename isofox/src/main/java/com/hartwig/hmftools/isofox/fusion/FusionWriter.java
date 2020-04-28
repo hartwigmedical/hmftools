@@ -103,7 +103,7 @@ public class FusionWriter
 
                 mReadWriter = createBufferedWriter(outputFileName, false);
                 mReadWriter.write("ReadSetCount,ReadId,FusionGroup,Chromosome,PosStart,PosEnd,Cigar,InsertSize");
-                mReadWriter.write(",Secondary,Supplementary,NegStrand,ProperPair,SuppAlign,TransExons,BestMatch,TransExonData");
+                mReadWriter.write(",FirstInPair,Supplementary,ReadReversed,ProperPair,SuppAlign,TransExons,BestMatch,TransExonData");
                 mReadWriter.newLine();
             }
 
@@ -114,7 +114,7 @@ public class FusionWriter
                         read.PosStart, read.PosEnd, read.Cigar.toString(), read.fragmentInsertSize()));
 
                 mReadWriter.write(String.format(",%s,%s,%s,%s,%s",
-                        read.isSecondaryAlignment(), read.isSupplementaryAlignment(), read.isNegStrand(), read.isProperPair(),
+                        read.isFirstOfPair(), read.isSupplementaryAlignment(), read.isReadReversed(), read.isProperPair(),
                         read.getSuppAlignment() != null ? read.getSuppAlignment().replaceAll(",", ";") : "NONE"));
 
                 // log the transcript exons affected, and the highest matching transcript

@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_MATCH;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.WITHIN_EXON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.exonBoundary;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.matchRank;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
@@ -116,13 +115,14 @@ public class ReadRecord
 
     public int range() { return PosEnd - PosStart; }
 
-    public boolean isNegStrand() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
+    public byte orientation() { return isReadReversed() ? (byte)-1 : 1; }
+    public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }
     public boolean isTranslocation() { return !Chromosome.equals(mMateChromosome); }
     public boolean isMateNegStrand() { return (mFlags & SAMFlag.MATE_REVERSE_STRAND.intValue()) != 0; }
     public boolean isMateUnmapped() { return (mFlags & SAMFlag.MATE_UNMAPPED.intValue()) != 0; }
-    public boolean isInversion() { return isNegStrand() == isMateNegStrand(); }
+    public boolean isInversion() { return isReadReversed() == isMateNegStrand(); }
     public boolean isProperPair() { return (mFlags & SAMFlag.PROPER_PAIR.intValue()) != 0; }
     public boolean isSupplementaryAlignment() { return (mFlags & SAMFlag.SUPPLEMENTARY_ALIGNMENT.intValue()) != 0; }
     public boolean isSecondaryAlignment() { return (mFlags & SAMFlag.NOT_PRIMARY_ALIGNMENT.intValue()) != 0; }

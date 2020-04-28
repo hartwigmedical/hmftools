@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 
 import java.io.File;
@@ -82,11 +83,17 @@ public class FusionReadDepth
             queryInterval[se] = new QueryInterval(chrSeqIndex, fusionJuncRange[SE_START], fusionJuncRange[SE_END]);
         }
 
-        if(queryInterval[0].referenceIndex == queryInterval[1].referenceIndex && queryInterval[0].start == queryInterval[1].start
-        && queryInterval[0].end == queryInterval[1].end)
+        if(queryInterval[0].referenceIndex == queryInterval[1].referenceIndex)
         {
-            ISF_LOGGER.error("invalid query region: fusion(count={} first={})", fusions.size(), fusions.get(0).toString());
-            return;
+            // check for invalid fusions, suggests mis-intepretation of a fragment
+            if(positionsOverlap(queryInterval[0].start, queryInterval[0].end, queryInterval[1].start, queryInterval[1].end))
+            {
+                ISF_LOGGER.error("invalid query regions: lower({}:{} -> {}|) upper({}:{} -> {}|): fusion(count={} first={})",
+                        queryInterval[0].referenceIndex, queryInterval[0].start, queryInterval[0].end,
+                        queryInterval[0].referenceIndex, queryInterval[1].start, queryInterval[1].end,
+                        fusions.size(), fusions.get(0).toString());
+                return;
+            }
         }
 
         mBamSlicer.slice(mSamReader, queryInterval, this::processReadDepthRecord);

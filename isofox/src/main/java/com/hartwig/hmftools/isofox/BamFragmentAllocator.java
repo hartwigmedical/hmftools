@@ -95,6 +95,7 @@ public class BamFragmentAllocator
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
+    private final boolean mFusionsOnly;
 
     private final BufferedWriter mReadDataWriter;
     private final GcRatioCounts mGcRatioCounts;
@@ -105,12 +106,12 @@ public class BamFragmentAllocator
     {
         mConfig = config;
 
-        // mCurrentGene = null;
         mCurrentGenes = null;
         mFragmentReads = new FragmentTracker();
         mTransComboData = Lists.newArrayList();
 
         mChimericReadMap = Maps.newHashMap();
+        mFusionsOnly = mConfig.Functions.contains(FUSIONS) && mConfig.Functions.size() == 1;
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
@@ -341,6 +342,9 @@ public class BamFragmentAllocator
             processChimericRead(read2);
             return;
         }
+
+        if(mFusionsOnly)
+            return;
 
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);

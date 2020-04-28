@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
@@ -152,7 +152,7 @@ public class FusionFinder
             {
                 FusionFragment fragment = new FusionFragment(reads);
 
-                if(fragment.type() == BOTH_JUNCTIONS)
+                if(fragment.type() == MATCHED_JUNCTION)
                 {
                     ++junctioned;
                     createOrUpdateFusion(fragment);
@@ -177,18 +177,29 @@ public class FusionFinder
         // mReadsMap.clear();
 
         // classify / analyse fusions
+        int nextLog = 1000;
+        int fusionCount = 0;
         for(List<FusionReadData> fusions : mFusionCandidates.values())
         {
             fusions.forEach(x -> setGeneData(x));
             mFusionReadDepth.calcFusionReadDepth(fusions);
+
+            if(++fusionCount >= nextLog)
+            {
+                ISF_LOGGER.info("processed {} fusions", fusionCount);
+                nextLog += 1000;
+            }
         }
 
+        ISF_LOGGER.info("marking related fusions");
         markRelatedFusions();
 
         // assign any discordant reads
+        ISF_LOGGER.info("assigning unfused fragments");
         assignUnfusedFragments();
 
         // write results
+        ISF_LOGGER.info("writing results");
         mFusionWriter.writeFusionData(mFusionCandidates);
         mFusionWriter.writeUnfusedFragments(mUnfusedFragments);
         mFusionWriter.close();
@@ -199,20 +210,16 @@ public class FusionFinder
 
     private boolean isInvalidFragment(final List<ReadRecord> reads)
     {
-        for(int i = 0; i < reads.size() - 1; ++i)
+        Set<String> chrGeneSet = Sets.newHashSetWithExpectedSize(3);
+
+        for(ReadRecord read : reads)
         {
-            final ReadRecord read1 = reads.get(i);
-
-            for(int j = i + 1; j < reads.size(); ++j)
-            {
-                final ReadRecord read2 = reads.get(j);
-
-                if(!read1.Chromosome.equals(read2.Chromosome) || read1.getGeneCollecton() != read2.getGeneCollecton())
-                    return false;
-            }
+            chrGeneSet.add(read.chromosomeGeneId());
+            if(chrGeneSet.size() == 3)
+                return true;
         }
 
-        return true;
+        return chrGeneSet.size() != 2;
     }
 
     private void cacheUnfusedFragment(final FusionFragment fragment)

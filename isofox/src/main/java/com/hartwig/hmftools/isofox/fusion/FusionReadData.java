@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.BOTH_JUNCTIONS;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
@@ -167,7 +167,7 @@ public class FusionReadData
         fragments.add(fragment);
 
         // record depth by any overlap in the fusion's junctions
-        if(fragment.type() == BOTH_JUNCTIONS)
+        if(fragment.type() == MATCHED_JUNCTION)
         {
             ++mReadDepth[SE_START];
             ++mReadDepth[SE_END];
@@ -192,10 +192,10 @@ public class FusionReadData
         }
     }
 
-    public boolean hasJunctionFragments() { return mFragments.containsKey(BOTH_JUNCTIONS); }
+    public boolean hasJunctionFragments() { return mFragments.containsKey(MATCHED_JUNCTION); }
 
     public boolean isKnownSpliced() { return getSampleFragment().isSpliced(); }
-    public boolean isUnspliced() { return getSampleFragment().isUnspliced() && getSampleFragment().hasBothJunctions(); }
+    public boolean isUnspliced() { return getSampleFragment().isUnspliced() && getSampleFragment().type() == MATCHED_JUNCTION; }
 
     public List<EnsemblGeneData>[] getCandidateGenes() { return mCandidateGenes; }
 
@@ -243,16 +243,16 @@ public class FusionReadData
 
     public boolean junctionMatch(final FusionFragment fragment)
     {
-        return fragment.hasBothJunctions()
+        return fragment.type() == MATCHED_JUNCTION
                 && mJunctionPositions[SE_START] == fragment.junctionPositions()[SE_START] && mJunctionPositions[SE_END] == fragment.junctionPositions()[SE_END]
                 && mJunctionOrientations[SE_START] == fragment.junctionOrientations()[SE_START] && mJunctionOrientations[SE_END] == fragment.junctionOrientations()[SE_END];
     }
 
     public FusionFragment getSampleFragment()
     {
-        if(mFragments.containsKey(BOTH_JUNCTIONS))
+        if(mFragments.containsKey(MATCHED_JUNCTION))
         {
-            return mFragments.get(BOTH_JUNCTIONS).get(0);
+            return mFragments.get(MATCHED_JUNCTION).get(0);
         }
         else
         {
@@ -489,7 +489,7 @@ public class FusionReadData
 
         csvData.add(getImpliedSvType().toString());
 
-        int splitFragments = mFragments.containsKey(BOTH_JUNCTIONS) ? mFragments.get(BOTH_JUNCTIONS).size() : 0;
+        int splitFragments = mFragments.containsKey(MATCHED_JUNCTION) ? mFragments.get(MATCHED_JUNCTION).size() : 0;
         int realignedFragments = mFragments.containsKey(REALIGNED) ? mFragments.get(REALIGNED).size() : 0;
         int discordantFragments = mFragments.containsKey(DISCORDANT) ? mFragments.get(DISCORDANT).size() : 0;
 
