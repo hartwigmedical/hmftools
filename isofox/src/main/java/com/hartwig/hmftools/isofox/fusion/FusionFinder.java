@@ -5,15 +5,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
-import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
-import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
 import java.util.ArrayList;
@@ -25,7 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -34,12 +26,9 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
-import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.isofox.ChromosomeGeneTask;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
-import com.hartwig.hmftools.isofox.TaskType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -84,6 +73,11 @@ public class FusionFinder
         }
 
         chimericReads.add(read);
+    }
+
+    public void loadChimericReads()
+    {
+        mReadsMap.putAll(FusionWriter.loadChimericReads(mConfig.Fusions.ReadsFile));
     }
 
     public void addChromosomeGeneCollections(final String chromosome, final Map<Integer,List<EnsemblGeneData>> geneCollectionMap)
@@ -258,6 +252,18 @@ public class FusionFinder
 
     private boolean isInvalidFragment(final List<ReadRecord> reads)
     {
+        if(!mConfig.ExcludedGeneIds.isEmpty())
+        {
+            for(ReadRecord read : reads)
+            {
+                for(List<TransExonRef> transExonList : read.getTransExonRefs().values())
+                {
+                    if(transExonList.stream().anyMatch(x -> mConfig.ExcludedGeneIds.contains(x.GeneId)))
+                        return true;
+                }
+            }
+        }
+
         Set<String> chrGeneSet = Sets.newHashSetWithExpectedSize(3);
 
         for(ReadRecord read : reads)
@@ -311,10 +317,9 @@ public class FusionFinder
         }
     }
 
-
     private void logPerformanceStats()
     {
-        if(!ISF_LOGGER.isDebugEnabled())
+        if(!ISF_LOGGER.isDebugEnabled() && mConfig.Functions.size() > 1)
             return;
 
         final PerformanceCounter[] perfCounters = mFusionTasks.get(0).getPerfCounters();

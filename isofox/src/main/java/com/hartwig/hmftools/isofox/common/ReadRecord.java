@@ -124,6 +124,7 @@ public class ReadRecord
             return isReadReversed() ? (byte)-1 : 1;
     }
 
+    public int flags() { return mFlags; }
     public boolean isReadReversed() { return (mFlags & SAMFlag.READ_REVERSE_STRAND.intValue()) != 0; }
     public boolean isFirstOfPair() { return (mFlags & SAMFlag.FIRST_OF_PAIR.intValue()) != 0; }
     public boolean isDuplicate() { return (mFlags & SAMFlag.DUPLICATE_READ.intValue()) != 0; }

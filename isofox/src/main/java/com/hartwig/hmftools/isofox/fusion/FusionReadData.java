@@ -121,6 +121,8 @@ public class FusionReadData
         return fragments;
     }
 
+    public int fragmentCount() { return mFragments.values().stream().mapToInt(x -> x.size()).sum(); }
+
     public final Map<FusionFragmentType,List<FusionFragment>> getFragments() { return mFragments; }
     public final List<FusionFragment> getFragments(FusionFragmentType type)
     {

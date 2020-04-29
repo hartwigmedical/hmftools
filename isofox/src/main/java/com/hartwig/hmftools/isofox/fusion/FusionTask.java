@@ -91,6 +91,9 @@ public class FusionTask implements Callable
 
         writeData();
 
+        if(mAllFragments.size() > 1000)
+            ISF_LOGGER.info("{}: fusion task complete", mTaskId);
+
         return (long)1;
     }
 
@@ -130,7 +133,7 @@ public class FusionTask implements Callable
         ISF_LOGGER.info("{}: calculating junction depth", mTaskId);
 
         // classify / analyse fusions
-        int nextLog = 1000;
+        int nextLog = 100;
         int fusionCount = 0;
         for (List<FusionReadData> fusions : mFusionCandidates.values())
         {
@@ -138,8 +141,8 @@ public class FusionTask implements Callable
 
             if (++fusionCount >= nextLog)
             {
-                ISF_LOGGER.info("processed {} fusions", fusionCount);
-                nextLog += 1000;
+                ISF_LOGGER.info("{}: processed {} fusions", mTaskId, fusionCount);
+                nextLog += 100;
             }
         }
 
@@ -261,7 +264,7 @@ public class FusionTask implements Callable
                 if(foundCandidates)
                 {
                     // both combinations have possible gene-pairings
-                    ISF_LOGGER.warn("fusion({}) has multiple gene pairings by strand and orientation", fusionData.toString());
+                    ISF_LOGGER.debug("fusion({}) has multiple gene pairings by strand and orientation", fusionData.toString());
                     fusionData.setIncompleteData();
                     break;
                 }

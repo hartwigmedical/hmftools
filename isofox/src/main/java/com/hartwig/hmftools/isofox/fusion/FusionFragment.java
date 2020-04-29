@@ -217,6 +217,7 @@ public class FusionFragment
     {
         // find the reads with supplementary read info and use this to set
         final String[] softClipBases = new String[] {"", ""};
+        boolean[] junctionValid = { false, false };
 
         for(int se = SE_START; se <= SE_END; ++se)
         {
@@ -279,6 +280,7 @@ public class FusionFragment
 
             mJunctionPositions[se] = sjPosition;
             mJunctionOrientations[se] = sjOrientation;
+            junctionValid[se] = true;
 
             int baseLength = min(10, read.Length);
 
@@ -287,17 +289,21 @@ public class FusionFragment
                 int scLength = read.Cigar.getLastCigarElement().getLength();
                 int readEndPos = read.Length - scLength;
                 mJunctionBases[se] = read.ReadBases.substring(readEndPos - baseLength, readEndPos);
-                softClipBases[se] = read.ReadBases.substring(readEndPos, readEndPos + baseLength);
+                // softClipBases[se] = read.ReadBases.substring(readEndPos, readEndPos + baseLength);
             }
             else
             {
                 int scLength = read.Cigar.getFirstCigarElement().getLength();
                 int readStartPos = scLength;
                 mJunctionBases[se] = read.ReadBases.substring(readStartPos, readStartPos + baseLength);
-                softClipBases[se] = read.ReadBases.substring(readStartPos - baseLength, readStartPos);
+                // softClipBases[se] = read.ReadBases.substring(readStartPos - baseLength, readStartPos);
             }
         }
 
+        if(junctionValid[SE_START] && junctionValid[SE_END])
+            mJunctionBasesMatched = true;
+
+        /*
         if(!mJunctionBases[SE_START].isEmpty() && !mJunctionBases[SE_END].isEmpty())
         {
             if(mJunctionBases[SE_START].equals(softClipBases[SE_END]) && mJunctionBases[SE_END].equals(softClipBases[SE_START]))
@@ -305,6 +311,8 @@ public class FusionFragment
                 mJunctionBasesMatched = true;
             }
         }
+
+\       */
     }
 
     public void setType(FusionFragmentType type) { mType = type; }

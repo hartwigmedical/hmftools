@@ -38,6 +38,7 @@ public class FusionReadDepth
     private final Set<String> mReadDepthIds;
     private final FragmentTracker mReadDepthTracker;
     private final List<FusionReadData> mReadDepthFusions;
+    private int mReadDepthLimit;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -54,7 +55,12 @@ public class FusionReadDepth
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
         mBamSlicer = mSamReader != null ? new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true) : null;
+
+        mReadDepthLimit = 0;
     }
+
+    private static final int MIN_DEPTH_FRAGS = 1000;
+    private static final int MAX_DEPTH_FRAGS = 100000;
 
     public void calcFusionReadDepth(final List<FusionReadData> fusions)
     {
@@ -64,6 +70,9 @@ public class FusionReadDepth
         mReadDepthIds.clear();
         mReadDepthFusions.clear();
         mReadDepthFusions.addAll(fusions);
+
+        int maxFusionFrags = fusions.stream().mapToInt(x -> x.fragmentCount()).max().orElse(0);
+        mReadDepthLimit = min(MAX_DEPTH_FRAGS, maxFusionFrags * MIN_DEPTH_FRAGS);
 
         if(mBamSlicer == null)
             return;
@@ -94,8 +103,13 @@ public class FusionReadDepth
 
         if(queryInterval[0].referenceIndex == queryInterval[1].referenceIndex)
         {
-            // check for invalid fusions, suggests mis-intepretation of a fragment
             if(positionsOverlap(queryInterval[0].start, queryInterval[0].end, queryInterval[1].start, queryInterval[1].end))
+            {
+                QueryInterval[] newQueryInterval = new QueryInterval[1];
+                newQueryInterval[0] = new QueryInterval(queryInterval[0].referenceIndex, queryInterval[0].start, queryInterval[1].end);
+                queryInterval = newQueryInterval;
+            }
+            else if(queryInterval[0].start > queryInterval[1].end)
             {
                 ISF_LOGGER.error("invalid query regions: lower({}:{} -> {}|) upper({}:{} -> {}|): fusion(count={} first={})",
                         queryInterval[0].referenceIndex, queryInterval[0].start, queryInterval[0].end,
@@ -105,7 +119,32 @@ public class FusionReadDepth
             }
         }
 
-        mBamSlicer.slice(mSamReader, queryInterval, this::processReadDepthRecord);
+        boolean consumeRecords = false;
+
+        if(consumeRecords)
+        {
+            mBamSlicer.slice(mSamReader, queryInterval, this::processReadDepthRecord);
+        }
+        else
+        {
+            List<SAMRecord> records = mBamSlicer.slice(mSamReader, queryInterval);
+
+            if(records.size() >= 10000)
+            {
+                final FusionReadData fusionData = mReadDepthFusions.get(0);
+
+                ISF_LOGGER.info("high read depth record count({}) vs maxReads({}), fusion({}) queryRange({}->{} and {}->{})",
+                        records.size(), mReadDepthLimit, fusionData.toString(),
+                        queryInterval[0].start, queryInterval[0].end,
+                        queryInterval.length == 2 ? queryInterval[1].start : queryInterval[0].start,
+                        queryInterval.length == 2 ? queryInterval[1].end : queryInterval[0].end);
+            }
+
+            for(int i = 0; i < min(mReadDepthLimit, records.size()); ++i)
+            {
+                processReadDepthRecord(records.get(i));
+            }
+        }
 
         // process unpaired fragments for their depth over fusion junctions
         for(Object object : mReadDepthTracker.getValues())
@@ -143,6 +182,16 @@ public class FusionReadDepth
             return;
 
         processReadDepthRecord(read1, read2);
+
+        if(mReadDepthIds.size() > mReadDepthLimit)
+        {
+            final FusionReadData fusion = mReadDepthFusions.get(0);
+            ISF_LOGGER.warn("exiting read depth at limit({}), fusion({}) frags({}) depth({}-{})",
+                    mReadDepthIds.size(), fusion.toString(), fusion.getAllFragments().size(),
+                    fusion.getReadDepth()[SE_START], fusion.getReadDepth()[SE_END]);
+            mBamSlicer.haltProcessing();
+            return;
+        }
     }
 
     private void checkFragmentDepthSupport(final FusionReadData fusionData, final List<ReadRecord> reads)
