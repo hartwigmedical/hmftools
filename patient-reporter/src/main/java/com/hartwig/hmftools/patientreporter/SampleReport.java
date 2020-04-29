@@ -70,6 +70,9 @@ public abstract class SampleReport {
     public abstract String hospitalPathologySampleId();
 
     @NotNull
+    public abstract String cohortSample();
+
+    @NotNull
     @Value.Derived
     public String refSampleBarcode() {
         return sampleMetadata().refSampleBarcode();

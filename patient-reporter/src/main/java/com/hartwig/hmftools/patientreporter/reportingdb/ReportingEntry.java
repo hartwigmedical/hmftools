@@ -30,4 +30,7 @@ public abstract class ReportingEntry {
     @NotNull
     public abstract String hasReliablePurity();
 
+    @NotNull
+    public abstract String cohort();
+
 }

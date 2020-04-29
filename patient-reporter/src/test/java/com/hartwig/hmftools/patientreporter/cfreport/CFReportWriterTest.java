@@ -152,6 +152,7 @@ public class CFReportWriterTest {
                 .submissionId("ABC")
                 .hospitalPatientId("123456")
                 .hospitalPathologySampleId("A")
+                .cohortSample("A")
                 .build();
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);

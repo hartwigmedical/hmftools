@@ -36,6 +36,7 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         String reportDate = ReportResources.REPORT_DATE;
         String purity = new DecimalFormat("0.00").format(report.impliedPurity());
+        String cohort = report.sampleReport().cohortSample();
 
         boolean hasReliableQuality = report.hasReliableQuality();
         boolean hasReliablePurity = report.hasReliablePurity();
@@ -48,7 +49,7 @@ public final class ReportingDb {
         if (requireSummary(sampleId, report, study, coreCohort) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample {}!", sampleId);
         } else if (study != LimsStudy.NON_STUDY) {
-            addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
+            addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity, cohort);
         }
 
     }
@@ -71,7 +72,7 @@ public final class ReportingDb {
 
     private static void addToReportingDb(@NotNull String reportingDbTsv, @NotNull String tumorBarcode, @NotNull String sampleId,
             @NotNull String reportType, @NotNull String reportDate, @NotNull String purity, boolean hasReliableQuality,
-            boolean hasReliablePurity) throws IOException {
+            boolean hasReliablePurity, @NotNull String cohort) throws IOException {
         boolean present = false;
         for (ReportingEntry entry : read(reportingDbTsv)) {
             if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
@@ -85,7 +86,7 @@ public final class ReportingDb {
             LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportType);
             String stringToAppend =
                     tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportType + "\t" + purity + "\t" + hasReliableQuality
-                            + "\t" + hasReliablePurity + "\n";
+                            + "\t" + hasReliablePurity + "\t" + cohort + "\n";
             appendToTsv(reportingDbTsv, stringToAppend);
         }
     }
@@ -94,6 +95,7 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
+        String cohort = report.sampleReport().cohortSample();
 
         String reportType = report.reason().identifier();
         String reportTypeInterpret = report.isCorrectedReport() ? reportType + "_corrected" : reportType;
@@ -116,7 +118,7 @@ public final class ReportingDb {
                 LOGGER.info("Adding {} to reporting db at {} with type '{}'", sampleId, reportingDbTsv, reportTypeInterpret);
                 String stringToAppend =
                         tumorBarcode + "\t" + sampleId + "\t" + reportDate + "\t" + reportTypeInterpret + "\t" + NA_STRING + "\t"
-                                + NA_STRING + "\t" + NA_STRING + "\n";
+                                + NA_STRING + "\t" + NA_STRING + "\t" + cohort + "\n";
                 appendToTsv(reportingDbTsv, stringToAppend);
             }
         }
@@ -139,6 +141,7 @@ public final class ReportingDb {
                     .purity(values[4])
                     .hasReliableQuality(values[5])
                     .hasReliablePurity(values[6])
+                    .cohort(values[7])
                     .build());
         }
         return reportingEntryList;

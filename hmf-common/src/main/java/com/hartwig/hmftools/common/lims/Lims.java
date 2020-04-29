@@ -272,6 +272,12 @@ public class Lims {
         }
     }
 
+    @NotNull
+    public String cohort(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        return sampleData != null ? sampleData.cohort() : NOT_AVAILABLE_STRING;
+    }
+
     @Nullable
     private String submission(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);

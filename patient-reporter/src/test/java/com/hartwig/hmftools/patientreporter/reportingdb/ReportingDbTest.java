@@ -39,6 +39,7 @@ public class ReportingDbTest {
         assertEquals("0.70", reportingEntry1.purity());
         assertEquals("true", reportingEntry1.hasReliableQuality());
         assertEquals("false", reportingEntry1.hasReliablePurity());
+        assertEquals("A", reportingEntry1.cohort());
 
         ReportingEntry reportingEntry2 = reportingEntries.get(1);
         assertEquals("EFGH", reportingEntry2.tumorBarcode());
@@ -48,6 +49,8 @@ public class ReportingDbTest {
         assertEquals("N/A", reportingEntry2.purity());
         assertEquals("N/A", reportingEntry2.hasReliableQuality());
         assertEquals("N/A", reportingEntry2.hasReliablePurity());
+        assertEquals("B", reportingEntry2.cohort());
+
     }
 
     @Test
@@ -57,7 +60,7 @@ public class ReportingDbTest {
 
             if (reportDatesTsv.createNewFile()) {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(reportDatesTsv, true));
-                writer.write("tumorBarcode\tsampleId\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\n");
+                writer.write("tumorBarcode\tsampleId\treportDate\treportType\tpurity\thasReliableQuality\thasReliablePurity\tcohort\n");
                 writer.close();
             }
 

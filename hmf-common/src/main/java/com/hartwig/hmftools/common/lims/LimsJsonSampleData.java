@@ -84,6 +84,10 @@ abstract class LimsJsonSampleData {
     public abstract boolean reportViralInsertions();
 
     @NotNull
+    @SerializedName("cohort")
+    public abstract String cohort();
+
+    @NotNull
     @Value.Derived
     public String labProcedures() {
         final Pattern pattern = Pattern.compile("PREP(\\d+)V(\\d+)-QC(\\d+)V(\\d+)-SEQ(\\d+)V(\\d+)");

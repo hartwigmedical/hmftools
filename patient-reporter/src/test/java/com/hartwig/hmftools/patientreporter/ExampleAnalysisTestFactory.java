@@ -304,6 +304,7 @@ public final class ExampleAnalysisTestFactory {
                 .hospitalPathologySampleId("1234")
                 .studyRequesterName("contact")
                 .studyRequesterEmail("contact@.nl")
+                .cohortSample("A")
                 .build();
     }
 

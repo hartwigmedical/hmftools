@@ -61,6 +61,7 @@ public final class SampleReportFactory {
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(lims.hospitalPathologySampleId(tumorSampleBarcode))
+                .cohortSample(lims.cohort(tumorSampleBarcode))
                 .build();
     }
 }
