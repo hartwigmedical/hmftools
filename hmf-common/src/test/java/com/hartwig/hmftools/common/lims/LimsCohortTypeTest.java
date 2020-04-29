@@ -14,12 +14,12 @@ public class LimsCohortTypeTest {
 
     @Test
     public void unrecognizedSampleIdGivesOther() {
-        assertEquals(LimsCoreCohort.OTHER, LimsCoreCohort.fromSampleId("Unknown"));
+        assertEquals(LimsCoreCohort.NON_CORE, LimsCoreCohort.fromSampleId("Unknown"));
     }
 
     @Test
     public void lowerCaseGivesOther() {
-        assertEquals(LimsCoreCohort.OTHER, LimsCoreCohort.fromSampleId("xxxcorexxx"));
+        assertEquals(LimsCoreCohort.NON_CORE, LimsCoreCohort.fromSampleId("xxxcorexxx"));
     }
 
 }

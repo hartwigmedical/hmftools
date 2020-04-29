@@ -180,7 +180,7 @@ public final class LoadClinicalData {
             String sampleId = lims.sampleId(sampleBarcode);
             LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
-            if (study != LimsStudy.OTHER) {
+            if (study != LimsStudy.NON_STUDY) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
@@ -479,7 +479,7 @@ public final class LoadClinicalData {
 
         for (SampleData sample : samples) {
             LimsStudy study = LimsStudy.fromSampleId(sample.sampleId());
-            if (study != LimsStudy.OTHER) {
+            if (study != LimsStudy.NON_STUDY) {
                 if (sample.sampleId().substring(12).contains("T")) {
                     tumorSamples.add(sample);
                 }

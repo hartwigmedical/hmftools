@@ -7,7 +7,7 @@ public enum LimsStudy {
     WIDE,
     CPCT,
     DRUP,
-    OTHER;
+    NON_STUDY;
 
     @NotNull
     public static LimsStudy fromSampleId(@NotNull String sampleId) {
@@ -21,6 +21,6 @@ public enum LimsStudy {
             return DRUP;
         }
 
-        return OTHER;
+        return NON_STUDY;
     }
 }

@@ -7,7 +7,7 @@ public enum LimsCoreCohort {
     CORERI02,
     CORELR11,
     CORESC11,
-    OTHER;
+    NON_CORE;
 
     @NotNull
     public static LimsCoreCohort fromSampleId(@NotNull String sampleId) {
@@ -21,6 +21,6 @@ public enum LimsCoreCohort {
             return LimsCoreCohort.CORESC11;
         }
 
-        return OTHER;
+        return NON_CORE;
     }
 }

@@ -15,16 +15,16 @@ public class LimsSampleTypeTest {
 
     @Test
     public void unrecognizedSampleIdGivesOther() {
-        assertEquals(LimsStudy.OTHER, LimsStudy.fromSampleId("Unknown"));
+        assertEquals(LimsStudy.NON_STUDY, LimsStudy.fromSampleId("Unknown"));
     }
 
     @Test
     public void lowerCaseGivesOther() {
-        assertEquals(LimsStudy.OTHER, LimsStudy.fromSampleId("xxxdrupxxx"));
+        assertEquals(LimsStudy.NON_STUDY, LimsStudy.fromSampleId("xxxdrupxxx"));
     }
 
     @Test
     public void doesNotStartWithGivesOther() {
-        assertEquals(LimsStudy.OTHER, LimsStudy.fromSampleId("829COLO"));
+        assertEquals(LimsStudy.NON_STUDY, LimsStudy.fromSampleId("829COLO"));
     }
 }

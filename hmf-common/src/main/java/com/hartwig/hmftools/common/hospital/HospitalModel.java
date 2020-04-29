@@ -190,7 +190,7 @@ public abstract class HospitalModel {
             return hospital.drupPI();
         } else if (type == LimsStudy.WIDE) {
             return hospital.widePI();
-        } else if (type == LimsStudy.CORE || type == LimsStudy.OTHER) {
+        } else if (type == LimsStudy.CORE || type == LimsStudy.NON_STUDY) {
             return Strings.EMPTY;
         }
 

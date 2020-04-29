@@ -49,7 +49,7 @@ public final class ReportingDb {
         } else if (study == LimsStudy.CORE && report.clinicalSummary().isEmpty() && coreCohort != LimsCoreCohort.CORELR02
                 && coreCohort != LimsCoreCohort.CORERI02) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
-        } else if (study != LimsStudy.OTHER) {
+        } else if (study != LimsStudy.NON_STUDY) {
             addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
         }
     }
@@ -85,7 +85,7 @@ public final class ReportingDb {
 
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        if (study != LimsStudy.OTHER) {
+        if (study != LimsStudy.NON_STUDY) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
