@@ -18,6 +18,7 @@ import com.hartwig.hmftools.patientreporter.qcfail.QCFailReport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class ReportingDb {
@@ -36,7 +37,7 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         String reportDate = ReportResources.REPORT_DATE;
         String purity = new DecimalFormat("0.00").format(report.impliedPurity());
-        String cohort = report.sampleReport().cohortSample();
+        String cohort = report.sampleReport().cohortSample().equals(Strings.EMPTY) ? "N/A" : report.sampleReport().cohortSample();
 
         boolean hasReliableQuality = report.hasReliableQuality();
         boolean hasReliablePurity = report.hasReliablePurity();
@@ -93,7 +94,7 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
-        String cohort = report.sampleReport().cohortSample();
+        String cohort = report.sampleReport().cohortSample().equals(Strings.EMPTY) ? "N/A" : report.sampleReport().cohortSample();
 
         String reportType = report.reason().identifier();
         String reportTypeInterpret = report.isCorrectedReport() ? reportType + "_corrected" : reportType;
