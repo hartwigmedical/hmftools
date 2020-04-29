@@ -103,8 +103,8 @@ class AnalysedPatientReporter {
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
-        LOGGER.info("Patient has given the following viral insertion consent: " + reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode()));
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
+        LOGGER.info("Patient has given the following viral insertion consent: " + reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode()));
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
