@@ -59,11 +59,9 @@ public final class ReportingDb {
             @NotNull LimsCoreCohort coreCohort) {
 
         if (study == LimsStudy.WIDE && report.clinicalSummary().isEmpty()) {
-            LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
             return true;
         } else if (study == LimsStudy.CORE && report.clinicalSummary().isEmpty() && coreCohort != LimsCoreCohort.CORELR02
                 && coreCohort != LimsCoreCohort.CORERI02) {
-            LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
             return true;
         } else {
             return false;
