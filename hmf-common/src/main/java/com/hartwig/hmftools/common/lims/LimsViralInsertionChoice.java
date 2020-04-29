@@ -18,13 +18,11 @@ public enum LimsViralInsertionChoice {
         if (viralInsertionsReportingChoiceString) {
             if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT) {
                 LOGGER.warn("Consent of viral insertions are true, but must be false for CPCT/DRUP");
-                return NO_REPORT_VIRAL_INSERTIONS;
             }
             return REPORT_VIRAL_INSERION;
         } else {
             if (type == LimsSampleType.CORE || type == LimsSampleType.WIDE) {
                 LOGGER.warn("Consent of viral insertions are false, but must be true for WIDE/CORE");
-                return REPORT_VIRAL_INSERION;
             }
             return NO_REPORT_VIRAL_INSERTIONS;
         }

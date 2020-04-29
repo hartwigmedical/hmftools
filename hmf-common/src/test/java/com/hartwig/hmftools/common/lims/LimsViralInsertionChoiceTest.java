@@ -11,13 +11,13 @@ public class LimsViralInsertionChoiceTest {
         assertEquals(LimsViralInsertionChoice.REPORT_VIRAL_INSERION,
                 LimsViralInsertionChoice.fromLimsViralInsertionsReportingChoiceString(true, "WIDE00000001T"));
 
-        assertEquals(LimsViralInsertionChoice.REPORT_VIRAL_INSERION,
+        assertEquals(LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS,
                 LimsViralInsertionChoice.fromLimsViralInsertionsReportingChoiceString(false, "WIDE00000001T"));
 
         assertEquals(LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS,
                 LimsViralInsertionChoice.fromLimsViralInsertionsReportingChoiceString(false, "CPCT00000001T"));
 
-        assertEquals(LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS,
+        assertEquals(LimsViralInsertionChoice.REPORT_VIRAL_INSERION,
                 LimsViralInsertionChoice.fromLimsViralInsertionsReportingChoiceString(true, "CPCT00000001T"));
     }
 
