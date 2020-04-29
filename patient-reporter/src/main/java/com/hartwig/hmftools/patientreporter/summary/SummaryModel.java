@@ -26,11 +26,11 @@ public class SummaryModel {
     public String findSummaryForSample(@NotNull String sample) {
         boolean sampleHasSummary = samplePresentInSummaries(sample);
         LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(sample);
-        LimsStudy type = LimsStudy.fromSampleId(sample);
+        LimsStudy study = LimsStudy.fromSampleId(sample);
 
         if (!sampleHasSummary && LimsStudy.fromSampleId(sample) == LimsStudy.WIDE) {
             LOGGER.warn("Could not find a summary for WIDE sample: {}", sample);
-        } else if (type == LimsStudy.CORE && !sampleHasSummary && coreCohort != LimsCoreCohort.CORELR02
+        } else if (study == LimsStudy.CORE && !sampleHasSummary && coreCohort != LimsCoreCohort.CORELR02
                 && coreCohort != LimsCoreCohort.CORERI02) {
             LOGGER.warn("Could not find a summary for CORE sample: {}", sample);
         }

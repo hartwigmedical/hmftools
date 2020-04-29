@@ -33,19 +33,19 @@ public final class SidePanel {
         cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
         cv.add(createSidePanelDiv(++sideTextIndex, "Report date", ReportResources.REPORT_DATE));
 
-        LimsStudy type = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
         if (fullHeight && fullContent) {
-            final String contactNames = type == LimsStudy.CORE
+            final String contactNames = study == LimsStudy.CORE
                     ? sampleReport.requesterName()
-                    : type == LimsStudy.WIDE ? sampleReport.studyRequesterName() : Strings.EMPTY;
+                    : study == LimsStudy.WIDE ? sampleReport.studyRequesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
             }
 
-            final String contactEmails = type == LimsStudy.CORE
+            final String contactEmails = study == LimsStudy.CORE
                     ? sampleReport.requesterEmail()
-                    : type == LimsStudy.WIDE ? sampleReport.studyRequesterEmail() : Strings.EMPTY;
+                    : study == LimsStudy.WIDE ? sampleReport.studyRequesterEmail() : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
@@ -55,7 +55,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }
 
-            final String hospitalPatientId = type == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
+            final String hospitalPatientId = study == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
             if (!hospitalPatientId.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", hospitalPatientId));
             }

@@ -23,9 +23,9 @@ public enum QCFailStudy {
 
     @Nullable
     public static QCFailStudy fromSample(@NotNull final String sample) {
-        LimsStudy type = LimsStudy.fromSampleId(sample);
+        LimsStudy study = LimsStudy.fromSampleId(sample);
 
-        switch (type) {
+        switch (study) {
             case CPCT:
                 return CPCT;
             case DRUP:

@@ -61,9 +61,9 @@ public class QCFailChapter implements ReportChapter {
         reportDocument.add(createFailReasonDiv(failReport.reason()));
         reportDocument.add(LineDivider.createLineDivider(contentWidth()));
 
-        LimsStudy type = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(failReport.sampleReport().tumorSampleId());
 
-        switch (type) {
+        switch (study) {
             case CORE:
                 reportDocument.add(createCOREContentBody());
                 break;

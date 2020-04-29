@@ -178,9 +178,9 @@ public final class LoadClinicalData {
         Map<String, List<SampleData>> samplesPerPatient = Maps.newHashMap();
         for (String sampleBarcode : lims.sampleBarcodes()) {
             String sampleId = lims.sampleId(sampleBarcode);
-            LimsStudy sampleType = LimsStudy.fromSampleId(sampleId);
+            LimsStudy study = LimsStudy.fromSampleId(sampleId);
 
-            if (sampleType != LimsStudy.OTHER) {
+            if (study != LimsStudy.OTHER) {
                 String patientId = lims.patientId(sampleBarcode);
                 SampleData sampleData = sampleReader.read(sampleBarcode, sampleId);
 
@@ -433,9 +433,9 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples);
             if (!tumorSamples.isEmpty()) {
-                LimsStudy sampleType = LimsStudy.fromSampleId(tumorSamples.get(0).sampleId());
+                LimsStudy study = LimsStudy.fromSampleId(tumorSamples.get(0).sampleId());
 
-                if (sampleType == LimsStudy.WIDE) {
+                if (study == LimsStudy.WIDE) {
                     String patientId = entry.getKey();
                     Patient widePatient = widePatientReader.read(patientId,
                             tumorSamples.get(0).limsPrimaryTumor(),
@@ -459,9 +459,9 @@ public final class LoadClinicalData {
             assert samples != null;
             List<SampleData> tumorSamples = extractTumorSamples(samples);
             if (!tumorSamples.isEmpty()) {
-                LimsStudy sampleType = LimsStudy.fromSampleId(tumorSamples.get(0).sampleId());
+                LimsStudy study = LimsStudy.fromSampleId(tumorSamples.get(0).sampleId());
 
-                if (sampleType == LimsStudy.CORE) {
+                if (study == LimsStudy.CORE) {
                     String patientId = entry.getKey();
                     Patient corePatient =
                             corePatientReader.read(patientId, tumorSamples.get(0).limsPrimaryTumor(), sequencedOnly(tumorSamples));
@@ -478,8 +478,8 @@ public final class LoadClinicalData {
         List<SampleData> tumorSamples = Lists.newArrayList();
 
         for (SampleData sample : samples) {
-            LimsStudy sampleType = LimsStudy.fromSampleId(sample.sampleId());
-            if (sampleType != LimsStudy.OTHER) {
+            LimsStudy study = LimsStudy.fromSampleId(sample.sampleId());
+            if (study != LimsStudy.OTHER) {
                 if (sample.sampleId().substring(12).contains("T")) {
                     tumorSamples.add(sample);
                 }

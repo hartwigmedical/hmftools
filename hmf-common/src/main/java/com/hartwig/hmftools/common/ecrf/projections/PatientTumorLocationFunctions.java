@@ -39,9 +39,9 @@ public final class PatientTumorLocationFunctions {
 
     @NotNull
     private static String toPatientIdentifier(@NotNull String sample) {
-        LimsStudy type = LimsStudy.fromSampleId(sample);
-        if (sample.length() >= 12 && (type == LimsStudy.CPCT || type == LimsStudy.DRUP || type == LimsStudy.WIDE
-                || type == LimsStudy.CORE)) {
+        LimsStudy study = LimsStudy.fromSampleId(sample);
+        if (sample.length() >= 12 && (study == LimsStudy.CPCT || study == LimsStudy.DRUP || study == LimsStudy.WIDE
+                || study == LimsStudy.CORE)) {
             return sample.substring(0, 12);
         } else if (sample.toUpperCase().startsWith("COLO829")) {
             return "COLO829";

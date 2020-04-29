@@ -43,13 +43,13 @@ public final class ReportingDb {
         String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
         LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(sampleId);
-        LimsStudy type = LimsStudy.fromSampleId(sampleId);
-        if (type == LimsStudy.WIDE && report.clinicalSummary().isEmpty()) {
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        if (study == LimsStudy.WIDE && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
-        } else if (type == LimsStudy.CORE && report.clinicalSummary().isEmpty() && coreCohort != LimsCoreCohort.CORELR02
+        } else if (study == LimsStudy.CORE && report.clinicalSummary().isEmpty() && coreCohort != LimsCoreCohort.CORELR02
                 && coreCohort != LimsCoreCohort.CORERI02) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
-        } else if (type != LimsStudy.OTHER) {
+        } else if (study != LimsStudy.OTHER) {
             addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
         }
     }
@@ -84,8 +84,8 @@ public final class ReportingDb {
         String reportTypeInterpret = report.isCorrectedReport() ? reportType+"_corrected" : reportType;
 
 
-        LimsStudy type = LimsStudy.fromSampleId(sampleId);
-        if (type != LimsStudy.OTHER) {
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
+        if (study != LimsStudy.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())

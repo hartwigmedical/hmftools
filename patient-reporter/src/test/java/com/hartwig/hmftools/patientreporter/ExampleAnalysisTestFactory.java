@@ -247,9 +247,9 @@ public final class ExampleAnalysisTestFactory {
     public static QCFailReport buildQCFailReport(@NotNull String sampleId, @NotNull QCFailReason reason) {
         SampleReport sampleReport = createSkinMelanomaSampleReport(sampleId);
 
-        LimsStudy sampleType = LimsStudy.fromSampleId(sampleId);
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
         QCFailStudy failStudy;
-        switch (sampleType) {
+        switch (study) {
             case CORE:
                 failStudy = QCFailStudy.CORE;
                 break;

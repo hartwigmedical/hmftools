@@ -154,9 +154,9 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("A")
                 .build();
 
-        LimsStudy sampleType = LimsStudy.fromSampleId(sampleId);
+        LimsStudy study = LimsStudy.fromSampleId(sampleId);
         QCFailStudy failStudy;
-        switch (sampleType) {
+        switch (study) {
             case CORE:
                 failStudy = QCFailStudy.CORE;
                 break;

@@ -143,9 +143,9 @@ public class PatientReporterApplication {
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsStudy type = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
-        String filePrefix = type == LimsStudy.CORE
+        String filePrefix = study == LimsStudy.CORE
                 ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
                 : sampleReport.tumorSampleId();
 

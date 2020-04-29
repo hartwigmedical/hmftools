@@ -58,7 +58,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     @NotNull
     private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
         final SampleReport sampleReport = patientReport.sampleReport();
-        LimsStudy type = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
+        LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
         LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         final String addressee;
@@ -71,7 +71,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         }
 
         final Paragraph sampleIdentificationLineOnReport;
-        if (type == LimsStudy.WIDE || coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
+        if (study == LimsStudy.WIDE || coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().tumorSampleId(),
                     " and the tissue ID of pathology is: ",
@@ -107,7 +107,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         div.add(createContentParagraph("This report is generated and verified by: " + patientReport.user()));
         div.add(createContentParagraph("This report is addressed at: ", addressee));
 
-        if (type == LimsStudy.CORE) {
+        if (study == LimsStudy.CORE) {
             div.add(createContentParagraph("The hospital patient ID is: ", sampleReport.hospitalPatientId()));
             div.add(createContentParagraphTwice("The project name of sample is: ",
                     sampleReport.projectName(),
