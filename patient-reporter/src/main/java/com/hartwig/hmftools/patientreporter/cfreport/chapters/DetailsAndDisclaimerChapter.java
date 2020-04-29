@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
-import com.hartwig.hmftools.common.lims.LimsCohortType;
+import com.hartwig.hmftools.common.lims.LimsCoreCohort;
 import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.SampleReport;
@@ -59,7 +59,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
         final SampleReport sampleReport = patientReport.sampleReport();
         LimsStudy type = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
-        LimsCohortType typeCohort = LimsCohortType.fromSampleId(patientReport.sampleReport().tumorSampleId());
+        LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
         final String addressee;
         if (sampleReport.addressee() != null) {
@@ -71,7 +71,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
         }
 
         final Paragraph sampleIdentificationLineOnReport;
-        if (type == LimsStudy.WIDE || typeCohort == LimsCohortType.CORELR11 || typeCohort == LimsCohortType.CORESC11) {
+        if (type == LimsStudy.WIDE || coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().tumorSampleId(),
                     " and the tissue ID of pathology is: ",
