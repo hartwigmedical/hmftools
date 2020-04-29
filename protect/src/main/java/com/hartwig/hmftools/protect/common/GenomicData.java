@@ -205,8 +205,7 @@ public class GenomicData {
                     .build());
         }
 
-        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION
-                || germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITHOUT_NOTIFICATION;
+        boolean wantsToBeNotified = germlineReportingChoice == LimsGermlineReportingChoice.REPORT_WITH_NOTIFICATION;
         for (ReportableGermlineVariant germlineVariant : germlineVariantsToReport) {
             DriverCategory category = driverGeneView.category(germlineVariant.variant().gene());
             DriverCatalog catalog = catalogEntryForVariant(driverCatalog, germlineVariant.variant().gene());
