@@ -3,7 +3,7 @@ package com.hartwig.hmftools.common.ecrf.projections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,9 +39,9 @@ public final class PatientTumorLocationFunctions {
 
     @NotNull
     private static String toPatientIdentifier(@NotNull String sample) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
-        if (sample.length() >= 12 && (type == LimsSampleType.CPCT || type == LimsSampleType.DRUP || type == LimsSampleType.WIDE
-                || type == LimsSampleType.CORE)) {
+        LimsStudy type = LimsStudy.fromSampleId(sample);
+        if (sample.length() >= 12 && (type == LimsStudy.CPCT || type == LimsStudy.DRUP || type == LimsStudy.WIDE
+                || type == LimsStudy.CORE)) {
             return sample.substring(0, 12);
         } else if (sample.toUpperCase().startsWith("COLO829")) {
             return "COLO829";

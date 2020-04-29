@@ -10,10 +10,10 @@ public enum LimsGermlineReportingChoice {
     @NotNull
     static LimsGermlineReportingChoice fromLimsGermlineReportingChoiceString(@NotNull String germlineReportingChoiceString,
             @NotNull String sampleId) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+        LimsStudy type = LimsStudy.fromSampleId(sampleId);
         // Cases "geen toevalsbevindingen: familie mag deze/wel niet opvragen" have been merged
         // into a single category "geen toevalsbevindingen" per feb 1st 2020
-        if (type == LimsSampleType.WIDE) {
+        if (type == LimsStudy.WIDE) {
             switch (germlineReportingChoiceString) {
                 case "1: Behandelbare toevalsbevindingen":
                 case "2: Alle toevalsbevindingen":
@@ -26,7 +26,7 @@ public enum LimsGermlineReportingChoice {
                     throw new IllegalStateException(
                             "Cannot resolve germline reporting choice for sample: " + sampleId + ": " + germlineReportingChoiceString);
             }
-        } else if (type == LimsSampleType.CORE) {
+        } else if (type == LimsStudy.CORE) {
             return REPORT_WITHOUT_NOTIFICATION;
         }
 

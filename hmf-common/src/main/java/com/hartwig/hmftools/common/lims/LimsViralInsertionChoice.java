@@ -13,15 +13,15 @@ public enum LimsViralInsertionChoice {
     @NotNull
     static LimsViralInsertionChoice fromLimsViralInsertionsReportingChoiceString(boolean viralInsertionsReportingChoiceString,
             @NotNull String sampleId) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
+        LimsStudy type = LimsStudy.fromSampleId(sampleId);
 
         if (viralInsertionsReportingChoiceString) {
-            if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT) {
+            if (type == LimsStudy.DRUP || type == LimsStudy.CPCT) {
                 LOGGER.warn("Consent of viral insertions are true, but must be false for CPCT/DRUP");
             }
             return REPORT_VIRAL_INSERION;
         } else {
-            if (type == LimsSampleType.CORE || type == LimsSampleType.WIDE) {
+            if (type == LimsStudy.CORE || type == LimsStudy.WIDE) {
                 LOGGER.warn("Consent of viral insertions are false, but must be true for WIDE/CORE");
             }
             return NO_REPORT_VIRAL_INSERTIONS;

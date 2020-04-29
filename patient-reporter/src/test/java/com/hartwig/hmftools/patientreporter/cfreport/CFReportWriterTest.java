@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.ExampleAnalysisTestFactory;
 import com.hartwig.hmftools.patientreporter.ImmutableSampleMetadata;
@@ -154,7 +154,7 @@ public class CFReportWriterTest {
                 .hospitalPathologySampleId("A")
                 .build();
 
-        LimsSampleType sampleType = LimsSampleType.fromSampleId(sampleId);
+        LimsStudy sampleType = LimsStudy.fromSampleId(sampleId);
         QCFailStudy failStudy;
         switch (sampleType) {
             case CORE:

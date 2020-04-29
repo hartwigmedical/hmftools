@@ -8,23 +8,23 @@ public class LimsSampleTypeTest {
 
     @Test
     public void canResolveLimsSampleTypes() {
-        assertEquals(LimsSampleType.CPCT, LimsSampleType.fromSampleId("CPCT02990001T"));
-        assertEquals(LimsSampleType.WIDE, LimsSampleType.fromSampleId("WIDEwideWIDE"));
-        assertEquals(LimsSampleType.CORE, LimsSampleType.fromSampleId("CORE0299-CPCT01T"));
+        assertEquals(LimsStudy.CPCT, LimsStudy.fromSampleId("CPCT02990001T"));
+        assertEquals(LimsStudy.WIDE, LimsStudy.fromSampleId("WIDEwideWIDE"));
+        assertEquals(LimsStudy.CORE, LimsStudy.fromSampleId("CORE0299-CPCT01T"));
     }
 
     @Test
     public void unrecognizedSampleIdGivesOther() {
-        assertEquals(LimsSampleType.OTHER, LimsSampleType.fromSampleId("Unknown"));
+        assertEquals(LimsStudy.OTHER, LimsStudy.fromSampleId("Unknown"));
     }
 
     @Test
     public void lowerCaseGivesOther() {
-        assertEquals(LimsSampleType.OTHER, LimsSampleType.fromSampleId("xxxdrupxxx"));
+        assertEquals(LimsStudy.OTHER, LimsStudy.fromSampleId("xxxdrupxxx"));
     }
 
     @Test
     public void doesNotStartWithGivesOther() {
-        assertEquals(LimsSampleType.OTHER, LimsSampleType.fromSampleId("829COLO"));
+        assertEquals(LimsStudy.OTHER, LimsStudy.fromSampleId("829COLO"));
     }
 }

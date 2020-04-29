@@ -10,7 +10,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.lims.LimsCohortType;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.utils.io.reader.LineReader;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -43,13 +43,13 @@ public final class ReportingDb {
         String reportType = report.isCorrectedReport() ? "sequence_report_corrected" : "sequence_report";
 
         LimsCohortType cohortTypeCore = LimsCohortType.fromSampleId(sampleId);
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-        if (type == LimsSampleType.WIDE && report.clinicalSummary().isEmpty()) {
+        LimsStudy type = LimsStudy.fromSampleId(sampleId);
+        if (type == LimsStudy.WIDE && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for WIDE sample {}!", sampleId);
-        } else if (type == LimsSampleType.CORE && report.clinicalSummary().isEmpty() && cohortTypeCore != LimsCohortType.CORELR02
+        } else if (type == LimsStudy.CORE && report.clinicalSummary().isEmpty() && cohortTypeCore != LimsCohortType.CORELR02
                 && cohortTypeCore != LimsCohortType.CORERI02) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for CORE sample {}!", sampleId);
-        } else if (type != LimsSampleType.OTHER) {
+        } else if (type != LimsStudy.OTHER) {
             addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity);
         }
     }
@@ -84,8 +84,8 @@ public final class ReportingDb {
         String reportTypeInterpret = report.isCorrectedReport() ? reportType+"_corrected" : reportType;
 
 
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleId);
-        if (type != LimsSampleType.OTHER) {
+        LimsStudy type = LimsStudy.fromSampleId(sampleId);
+        if (type != LimsStudy.OTHER) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())

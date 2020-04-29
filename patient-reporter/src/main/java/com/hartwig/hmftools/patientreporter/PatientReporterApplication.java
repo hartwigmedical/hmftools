@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.hospital.HospitalModel;
 import com.hartwig.hmftools.common.hospital.HospitalModelFactory;
 import com.hartwig.hmftools.common.lims.Lims;
 import com.hartwig.hmftools.common.lims.LimsFactory;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.common.lims.LimsWide;
 import com.hartwig.hmftools.common.lims.LimsWideFile;
 import com.hartwig.hmftools.patientreporter.cfreport.CFReportWriter;
@@ -143,9 +143,9 @@ public class PatientReporterApplication {
     @NotNull
     private static String generateOutputFilePathForPatientReport(@NotNull String reportDirectory, @NotNull PatientReport patientReport) {
         SampleReport sampleReport = patientReport.sampleReport();
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
+        LimsStudy type = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
-        String filePrefix = type == LimsSampleType.CORE
+        String filePrefix = type == LimsStudy.CORE
                 ? sampleReport.tumorSampleId() + "_" + sampleReport.hospitalPatientId().replace(" ", "_")
                 : sampleReport.tumorSampleId();
 

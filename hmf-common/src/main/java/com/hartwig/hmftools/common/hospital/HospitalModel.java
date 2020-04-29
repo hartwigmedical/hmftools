@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,9 +37,9 @@ public abstract class HospitalModel {
 
     @NotNull
     public HospitalQuery queryHospitalDataForSample(@NotNull String sample) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        LimsStudy type = LimsStudy.fromSampleId(sample);
 
-        if (type == LimsSampleType.CORE) {
+        if (type == LimsStudy.CORE) {
             HospitalCore hospitalCore = findHospitalForSampleCore(sample);
             return ImmutableHospitalQuery.builder()
                     .hospitalName(hospitalCore != null ? hospitalCore.externalHospitalName() : NA_STRING)
@@ -142,10 +142,10 @@ public abstract class HospitalModel {
 
     @Nullable
     private static String extractHospitalIdFromSample(@NotNull String sample) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        LimsStudy type = LimsStudy.fromSampleId(sample);
 
-        if (type == LimsSampleType.DRUP || type == LimsSampleType.CPCT || type == LimsSampleType.WIDE
-                || type == LimsSampleType.CORE && sample.length() >= 12) {
+        if (type == LimsStudy.DRUP || type == LimsStudy.CPCT || type == LimsStudy.WIDE
+                || type == LimsStudy.CORE && sample.length() >= 12) {
             // We assume all these projects follow a structure like CPCT##<hospital><identifier>
             return sample.substring(6, 8);
         }
@@ -156,8 +156,8 @@ public abstract class HospitalModel {
     private static void checkAddresseeFields(@NotNull String sample, @NotNull HospitalData hospital) {
         List<String> missingFields = Lists.newArrayList();
 
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
-        if (type != LimsSampleType.CORE && determinePIName(sample, hospital).isEmpty()) {
+        LimsStudy type = LimsStudy.fromSampleId(sample);
+        if (type != LimsStudy.CORE && determinePIName(sample, hospital).isEmpty()) {
             missingFields.add("requester");
         }
         if (hospital.externalHospitalName().isEmpty()) {
@@ -178,19 +178,19 @@ public abstract class HospitalModel {
     @NotNull
     @VisibleForTesting
     static String determinePIName(@NotNull final String sample, @NotNull final HospitalData hospital) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        LimsStudy type = LimsStudy.fromSampleId(sample);
 
-        if (type == LimsSampleType.CPCT) {
+        if (type == LimsStudy.CPCT) {
             return hospital.cpctPI();
-        } else if (type == LimsSampleType.DRUP) {
+        } else if (type == LimsStudy.DRUP) {
             final String drupPi = hospital.drupPI();
             if (drupPi.trim().equals("*")) {
                 return hospital.cpctPI();
             }
             return hospital.drupPI();
-        } else if (type == LimsSampleType.WIDE) {
+        } else if (type == LimsStudy.WIDE) {
             return hospital.widePI();
-        } else if (type == LimsSampleType.CORE || type == LimsSampleType.OTHER) {
+        } else if (type == LimsStudy.CORE || type == LimsStudy.OTHER) {
             return Strings.EMPTY;
         }
 
@@ -200,16 +200,16 @@ public abstract class HospitalModel {
     @NotNull
     @VisibleForTesting
     static String determinePIEmail(@NotNull final String sample, @NotNull final HospitalData hospital) {
-        LimsSampleType type = LimsSampleType.fromSampleId(sample);
+        LimsStudy type = LimsStudy.fromSampleId(sample);
 
-        if (type == LimsSampleType.CPCT) {
+        if (type == LimsStudy.CPCT) {
             return extractPIEmailFromRecipientList(hospital.cpctRecipients());
-        } else if (type == LimsSampleType.DRUP) {
+        } else if (type == LimsStudy.DRUP) {
             if (hospital.drupPI().trim().equals("*")) {
                 return extractPIEmailFromRecipientList(hospital.cpctRecipients());
             }
             return extractPIEmailFromRecipientList(hospital.drupRecipients());
-        } else if (type == LimsSampleType.WIDE) {
+        } else if (type == LimsStudy.WIDE) {
             return extractPIEmailFromRecipientList(hospital.wideRecipients());
         }
 

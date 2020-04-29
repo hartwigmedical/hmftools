@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.patientreporter.cfreport.components;
 
-import com.hartwig.hmftools.common.lims.LimsSampleType;
+import com.hartwig.hmftools.common.lims.LimsStudy;
 import com.hartwig.hmftools.patientreporter.PatientReporterApplication;
 import com.hartwig.hmftools.patientreporter.SampleReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -33,19 +33,19 @@ public final class SidePanel {
         cv.add(createSidePanelDiv(++sideTextIndex, "HMF sample id", sampleReport.tumorSampleId()));
         cv.add(createSidePanelDiv(++sideTextIndex, "Report date", ReportResources.REPORT_DATE));
 
-        LimsSampleType type = LimsSampleType.fromSampleId(sampleReport.tumorSampleId());
+        LimsStudy type = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
         if (fullHeight && fullContent) {
-            final String contactNames = type == LimsSampleType.CORE
+            final String contactNames = type == LimsStudy.CORE
                     ? sampleReport.requesterName()
-                    : type == LimsSampleType.WIDE ? sampleReport.studyRequesterName() : Strings.EMPTY;
+                    : type == LimsStudy.WIDE ? sampleReport.studyRequesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Requested by", contactNames));
             }
 
-            final String contactEmails = type == LimsSampleType.CORE
+            final String contactEmails = type == LimsStudy.CORE
                     ? sampleReport.requesterEmail()
-                    : type == LimsSampleType.WIDE ? sampleReport.studyRequesterEmail() : Strings.EMPTY;
+                    : type == LimsStudy.WIDE ? sampleReport.studyRequesterEmail() : Strings.EMPTY;
             if (!contactEmails.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
@@ -55,7 +55,7 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }
 
-            final String hospitalPatientId = type == LimsSampleType.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
+            final String hospitalPatientId = type == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
             if (!hospitalPatientId.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", hospitalPatientId));
             }
