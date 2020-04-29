@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class LimsCohortTypeTest {
+public class LimsCoreCohortTest {
 
     @Test
     public void canResolveLimsCohortTypes() {

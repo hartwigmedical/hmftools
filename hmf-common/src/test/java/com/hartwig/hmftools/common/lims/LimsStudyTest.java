@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class LimsSampleTypeTest {
+public class LimsStudyTest {
 
     @Test
     public void canResolveLimsSampleTypes() {
