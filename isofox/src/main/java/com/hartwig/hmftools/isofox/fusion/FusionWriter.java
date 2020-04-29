@@ -23,6 +23,7 @@ import com.hartwig.hmftools.isofox.common.TransExonRef;
 public class FusionWriter
 {
     private final IsofoxConfig mConfig;
+    private BufferedWriter mFusionWriter;
     private BufferedWriter mReadWriter;
     private BufferedWriter mFragmentWriter;
 
@@ -30,19 +31,25 @@ public class FusionWriter
     {
         mConfig = config;
 
+        mFusionWriter = null;
         mReadWriter = null;
         mFragmentWriter = null;
+
+        initialiseFusionWriter();
+        initialiseReadWriter();
+        initialiseFragmentWriter();
     }
 
     public void close()
     {
+        closeBufferedWriter(mFusionWriter);
         closeBufferedWriter(mReadWriter);
         closeBufferedWriter(mFragmentWriter);
     }
 
     public static final String FUSION_FILE_ID = "fusions.csv";
 
-    public void writeFusionData(Map<String,List<FusionReadData>> fusionCandidates)
+    private void initialiseFusionWriter()
     {
         if(mConfig.OutputDir == null)
             return;
@@ -51,20 +58,31 @@ public class FusionWriter
         {
             final String outputFileName = mConfig.formOutputFile(FUSION_FILE_ID);
 
-            BufferedWriter writer = createBufferedWriter(outputFileName, false);
-            writer.write(FusionReadData.csvHeader());
-            writer.newLine();
+            mFusionWriter = createBufferedWriter(outputFileName, false);
+            mFusionWriter.write(FusionReadData.csvHeader());
+            mFusionWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to create fusions file: {}", e.toString());
+        }
+    }
 
+    public synchronized void writeFusionData(Map<String,List<FusionReadData>> fusionCandidates)
+    {
+        if(mConfig.OutputDir == null)
+            return;
+
+        try
+        {
             for(Map.Entry<String, List<FusionReadData>> entry : fusionCandidates.entrySet())
             {
                 for (final FusionReadData fusion : entry.getValue())
                 {
-                    writer.write(fusion.toCsv());
-                    writer.newLine();
+                    mFusionWriter.write(fusion.toCsv());
+                    mFusionWriter.newLine();
                 }
             }
-
-            writer.close();
 
             if(mConfig.WriteChimericReads)
             {
@@ -90,7 +108,7 @@ public class FusionWriter
         }
     }
 
-    public void writeReadData(final List<ReadRecord> reads, final String groupStatus)
+    private void initialiseReadWriter()
     {
         if(!mConfig.WriteChimericReads)
             return;
@@ -106,7 +124,21 @@ public class FusionWriter
                 mReadWriter.write(",FirstInPair,Supplementary,ReadReversed,ProperPair,SuppAlign,TransExons,BestMatch,TransExonData");
                 mReadWriter.newLine();
             }
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
+            return;
+        }
+    }
 
+    public void writeReadData(final List<ReadRecord> reads, final String groupStatus)
+    {
+        if(!mConfig.WriteChimericReads)
+            return;
+
+        try
+        {
             for(final ReadRecord read : reads)
             {
                 mReadWriter.write(String.format("%s,%s,%s,%s,%d,%d,%d,%s,%d",
@@ -162,34 +194,46 @@ public class FusionWriter
         }
     }
 
-    private void writeFragmentData(final FusionFragment fragment, final String fusionId, FusionFragmentType type)
+    private void initialiseFragmentWriter()
     {
         if(!mConfig.WriteChimericReads)
             return;
 
         try
         {
-            if(mFragmentWriter == null)
+            final String outputFileName = mConfig.formOutputFile("chimeric_frags.csv");
+
+            mFragmentWriter = createBufferedWriter(outputFileName, false);
+            mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type,SameGene,ScCount");
+
+            for(int se = SE_START; se <= SE_END; ++se)
             {
-                final String outputFileName = mConfig.formOutputFile("chimeric_frags.csv");
-
-                mFragmentWriter = createBufferedWriter(outputFileName, false);
-                mFragmentWriter.write("ReadId,ReadCount,FusionGroup,Type,SameGene,ScCount");
-
-                for(int se = SE_START; se <= SE_END; ++se)
-                {
-                    final String prefix = se == SE_START ? "Start" : "End";
-                    mFragmentWriter.write(",Chr" + prefix);
-                    mFragmentWriter.write(",Orient" + prefix);
-                    mFragmentWriter.write(",JuncPos" + prefix);
-                    mFragmentWriter.write(",JuncOrient" + prefix);
-                    mFragmentWriter.write(",Region" + prefix);
-                    mFragmentWriter.write(",JuncType" + prefix);
-                }
-
-                mFragmentWriter.newLine();
+                final String prefix = se == SE_START ? "Start" : "End";
+                mFragmentWriter.write(",Chr" + prefix);
+                mFragmentWriter.write(",Orient" + prefix);
+                mFragmentWriter.write(",JuncPos" + prefix);
+                mFragmentWriter.write(",JuncOrient" + prefix);
+                mFragmentWriter.write(",Region" + prefix);
+                mFragmentWriter.write(",JuncType" + prefix);
             }
 
+            mFragmentWriter.newLine();
+
+        }
+        catch (IOException e)
+        {
+            ISF_LOGGER.error("failed to write chimeric fragment data: {}", e.toString());
+            return;
+        }
+    }
+
+    public synchronized void writeFragmentData(final FusionFragment fragment, final String fusionId, FusionFragmentType type)
+    {
+        if(!mConfig.WriteChimericReads)
+            return;
+
+        try
+        {
             mFragmentWriter.write(String.format("%s,%d,%s,%s,%s,%d",
                     fragment.readId(), fragment.getReads().size(), fusionId, type,
                     fragment.isSingleGene(), fragment.getReads().stream().filter(x -> x.containsSoftClipping()).count()));
@@ -206,7 +250,7 @@ public class FusionWriter
         }
         catch (IOException e)
         {
-            ISF_LOGGER.error("failed to write chimeric read data: {}", e.toString());
+            ISF_LOGGER.error("failed to write chimeric fragment data: {}", e.toString());
             return;
         }
 

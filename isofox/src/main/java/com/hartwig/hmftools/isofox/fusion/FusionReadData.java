@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonM
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.List;
@@ -172,8 +173,6 @@ public class FusionReadData
         else
             return new byte[] { mCandidateGenes[SE_END].get(0).Strand, mCandidateGenes[SE_START].get(0).Strand };
     }
-
-    public String chrPair() { return formChromosomePair(mChromosomes[SE_START], mChromosomes[SE_END]); }
 
     public final List<Integer> getRelatedFusions() { return mRelatedFusions; }
 
@@ -508,35 +507,5 @@ public class FusionReadData
 
         return csvData.toString();
     }
-
-    public static boolean lowerChromosome(final String chr, final String otherChr)
-    {
-        return chromosomeRank(chr) < chromosomeRank(otherChr);
-    }
-
-    public static int chromosomeRank(final String chromosome)
-    {
-        if(!HumanChromosome.contains(chromosome))
-            return -1;
-
-        if(chromosome.equals("X"))
-            return 23;
-        else if(chromosome.equals("Y"))
-            return 24;
-        else if(chromosome.equals("MT"))
-            return 25;
-        else
-            return Integer.parseInt(chromosome);
-    }
-
-    public static String formLocationPair(final String[] chromosomes, final int[] geneCollectionIds)
-    {
-        return String.format("%s:%d_%s:%d",
-                chromosomes[SE_START], geneCollectionIds[SE_START], chromosomes[SE_END], geneCollectionIds[SE_END]);
-    }
-
-    public static String formChromosomePair(final String chr1, final String chr2) { return chr1 + "_" + chr2; }
-    public static String[] getChromosomePair(final String chrPair) { return chrPair.split("_"); }
-
 
 }

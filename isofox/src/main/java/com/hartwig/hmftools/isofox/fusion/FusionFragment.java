@@ -21,8 +21,8 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.startDonorAcceptorBase
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.formLocationPair;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.lowerChromosome;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
 import java.util.List;
 import java.util.Map;
