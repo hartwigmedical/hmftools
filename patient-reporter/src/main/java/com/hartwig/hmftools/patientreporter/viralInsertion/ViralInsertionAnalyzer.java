@@ -17,7 +17,8 @@ public final class ViralInsertionAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(ViralInsertionAnalyzer.class);
 
-    private static final List<String> excludedViralInsertions = Lists.newArrayList("virus"); //TODO: blacklist virus
+    private static final List<String> excludedViralInsertions =
+            Lists.newArrayList("Human immunodeficiency virus", "Human immunodeficiency virus 1", "Human immunodeficiency virus 2");
 
     private ViralInsertionAnalyzer() {
 
