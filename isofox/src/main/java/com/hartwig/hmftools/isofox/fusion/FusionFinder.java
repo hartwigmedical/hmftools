@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
 
 import java.util.ArrayList;
@@ -138,10 +139,10 @@ public class FusionFinder
                 ++unpairedReads;
                 readGroupStatus = "UNPAIRED";
             }
-            else if(isInvalidFragment(reads))
+            else if(!isValidFragment(reads))
             {
                 ++filteredFragments;
-                readGroupStatus = "SINGLE_GENE";
+                readGroupStatus = "INVALID";
             }
             else
             {
@@ -204,7 +205,9 @@ public class FusionFinder
         mFusionWriter.close();
 
         mPerfCounter.stop();
-        mPerfCounter.logStats();
+
+        if(mConfig.Fusions.PerformanceStats)
+            mPerfCounter.logStats();
 
         ISF_LOGGER.info("fusion calling complete");
     }
@@ -258,7 +261,7 @@ public class FusionFinder
         return true;
     }
 
-    private boolean isInvalidFragment(final List<ReadRecord> reads)
+    private boolean isValidFragment(final List<ReadRecord> reads)
     {
         if(!mConfig.ExcludedGeneIds.isEmpty())
         {
@@ -267,7 +270,7 @@ public class FusionFinder
                 for(List<TransExonRef> transExonList : read.getTransExonRefs().values())
                 {
                     if(transExonList.stream().anyMatch(x -> mConfig.ExcludedGeneIds.contains(x.GeneId)))
-                        return true;
+                        return false;
                 }
             }
         }
@@ -278,10 +281,16 @@ public class FusionFinder
         {
             chrGeneSet.add(read.chromosomeGeneId());
             if(chrGeneSet.size() == 3)
-                return true;
+                return false;
         }
 
-        return chrGeneSet.size() != 2;
+        if(chrGeneSet.size() == 2)
+            return true;
+
+        if(reads.stream().anyMatch(x -> isRealignedFragmentCandidate(x)))
+            return true;
+
+        return false;
     }
 
     private boolean skipUnpairedRead(final ReadRecord read)
@@ -327,6 +336,9 @@ public class FusionFinder
 
     private void logPerformanceStats()
     {
+        if(!mConfig.Fusions.PerformanceStats)
+            return;
+
         if(!ISF_LOGGER.isDebugEnabled() && mConfig.Functions.size() > 1)
             return;
 
@@ -355,8 +367,6 @@ public class FusionFinder
     {
         return mFusionTasks.isEmpty() ? Maps.newHashMap() : mFusionTasks.get(0).getUnfusedFragments();
     }
-
-    public final FusionReadDepth getFusionReadDepth() { return mFusionTasks.get(0).getFusionReadDepth(); }
 
     public void clearState()
     {

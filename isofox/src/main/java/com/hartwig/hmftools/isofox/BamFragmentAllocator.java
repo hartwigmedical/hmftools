@@ -16,16 +16,13 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegions;
-import static com.hartwig.hmftools.isofox.common.ReadRecord.generateMappedCoords;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.getUniqueValidRegion;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.hasSkippedExons;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.markRegionBases;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
-import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
@@ -35,6 +32,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
+import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -47,7 +45,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -57,7 +54,6 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
-import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 import com.hartwig.hmftools.isofox.exp_rates.CategoryCountsData;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -67,7 +63,6 @@ import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 import org.jetbrains.annotations.NotNull;
 import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFlag;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -95,6 +90,8 @@ public class BamFragmentAllocator
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
+
+    private final boolean mRunFusions;
     private final boolean mFusionsOnly;
 
     private final BufferedWriter mReadDataWriter;
@@ -111,7 +108,9 @@ public class BamFragmentAllocator
         mTransComboData = Lists.newArrayList();
 
         mChimericReadMap = Maps.newHashMap();
-        mFusionsOnly = mConfig.Functions.contains(FUSIONS) && mConfig.Functions.size() == 1;
+
+        mRunFusions = mConfig.Functions.contains(FUSIONS);
+        mFusionsOnly = mRunFusions && mConfig.Functions.size() == 1;
 
         mGeneReadCount = 0;
         mTotalBamReadCount = 0;
@@ -121,7 +120,7 @@ public class BamFragmentAllocator
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, !mConfig.runFunction(FUSIONS));
+        mBamSlicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, false, !mRunFusions);
 
         mDuplicateCache = Maps.newHashMap();
         mDuplicateReadIds = Lists.newArrayList();
@@ -286,7 +285,7 @@ public class BamFragmentAllocator
 
     private void processChimericRead(ReadRecord read)
     {
-        if(!mConfig.runFunction(FUSIONS))
+        if(!mRunFusions)
         {
             // avoid double-counting fragment reads
             if(read.isFirstOfPair())
@@ -350,8 +349,18 @@ public class BamFragmentAllocator
             return;
         }
 
-        if(mFusionsOnly)
-            return;
+        if(mRunFusions)
+        {
+            // reads with sufficient soft-clipping and not mapped to an adjacent region are candidates for fusion re-alignment
+            if(isRealignedFragmentCandidate(read1) || isRealignedFragmentCandidate(read2))
+            {
+                processChimericRead(read1);
+                processChimericRead(read2);
+            }
+
+            if (mFusionsOnly)
+                return;
+        }
 
         int readPosMin = min(read1.PosStart, read2.PosStart);
         int readPosMax = max(read1.PosEnd, read2.PosEnd);
@@ -749,91 +758,13 @@ public class BamFragmentAllocator
         }
     }
 
-    // read depth count state
-    private PerformanceCounter mReadDepthPerf = new PerformanceCounter("NovelSites ReadDepth");
-    private FragmentTracker mFragmentTracker = new FragmentTracker();
-
     private void recordNovelLocationReadDepth()
     {
         if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
             return;
 
-        mFragmentTracker.clear();
-
-        mReadDepthPerf.start();
-
         mAltSpliceJunctionFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
         mRetainedIntronFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
-
-        mReadDepthPerf.stop();
-    }
-
-    private void recordNovelLocationReadDepthOld()
-    {
-        if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
-            return;
-
-        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAPPING_QUALITY, true, true);
-
-        mFragmentTracker.clear();
-
-        mReadDepthPerf.start();
-
-        if(mCurrentGenes.getEnrichedRegion() != null)
-        {
-            mAltSpliceJunctionFinder.setDepthToFragCount();
-            mRetainedIntronFinder.setDepthToFragCount();
-            return;
-        }
-
-        int[] readRange = {0, 0};
-
-        if(!mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && !mRetainedIntronFinder.getRetainedIntrons().isEmpty())
-        {
-            int[] asjPositionsRange = mAltSpliceJunctionFinder.getPositionsRange();
-            int[] riPositionsRange = mRetainedIntronFinder.getPositionsRange();
-
-            readRange[SE_START] = min(asjPositionsRange[SE_START], riPositionsRange[SE_START]);
-            readRange[SE_END] = max(asjPositionsRange[SE_END], riPositionsRange[SE_END]);
-        }
-        else if(!mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty())
-        {
-            readRange = mAltSpliceJunctionFinder.getPositionsRange();
-        }
-        else
-        {
-            readRange = mRetainedIntronFinder.getPositionsRange();
-        }
-
-        QueryInterval[] queryInterval = new QueryInterval[1];
-        int chrSeqIndex = mSamReader.getFileHeader().getSequenceIndex(mCurrentGenes.chromosome());
-        queryInterval[0] = new QueryInterval(chrSeqIndex, readRange[SE_START], readRange[SE_END]);
-
-        slicer.slice(mSamReader, queryInterval, this::setPositionDepthFromRead);
-
-        // finally feed through any unmatched reads (eg if the other read is out of the specified range)
-        for(Object object : mFragmentTracker.getValues())
-        {
-            final List<int[]> readCoords = (List<int[]>)object;
-            mAltSpliceJunctionFinder.setPositionDepthFromRead(readCoords);
-            mRetainedIntronFinder.setPositionDepthFromRead(readCoords);
-        }
-
-        mReadDepthPerf.stop();
-    }
-
-    private void setPositionDepthFromRead(@NotNull final SAMRecord record)
-    {
-        final List<int[]> readCoords = generateMappedCoords(record.getCigar(), record.getStart());
-        final List<int[]> otherReadCoords = (List<int[]>)mFragmentTracker.checkRead(record.getReadName(), readCoords);
-
-        if(otherReadCoords == null)
-            return;
-
-        final List<int[]> commonMappings = deriveCommonRegions(readCoords, otherReadCoords);
-
-        mAltSpliceJunctionFinder.setPositionDepthFromRead(commonMappings);
-        mRetainedIntronFinder.setPositionDepthFromRead(commonMappings);
     }
 
     private static final int DUP_DATA_SECOND_START = 0;

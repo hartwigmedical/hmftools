@@ -30,8 +30,14 @@ public class FusionUtils
 
     public static String formLocationPair(final String[] chromosomes, final int[] geneCollectionIds)
     {
-        return String.format("%s:%d_%s:%d",
-                chromosomes[SE_START], geneCollectionIds[SE_START], chromosomes[SE_END], geneCollectionIds[SE_END]);
+        return String.format("%s_%s",
+                formLocation(chromosomes[SE_START], geneCollectionIds[SE_START]),
+                formLocation(chromosomes[SE_END], geneCollectionIds[SE_END]));
+    }
+
+    public static String formLocation(final String chromosome, final int geneCollectionId)
+    {
+        return String.format("%s:%d", chromosome, geneCollectionId);
     }
 
     public static String formChromosomePair(final String chr1, final String chr2) { return chr1 + "_" + chr2; }

@@ -376,30 +376,6 @@ public class AltSpliceJunctionFinder
         return altSpliceJunc;
     }
 
-    public int[] getPositionsRange()
-    {
-        int[] positionsRange = new int[SE_PAIR];
-
-        positionsRange[SE_START] = mAltSpliceJunctions.stream().mapToInt(x -> (int)x.SpliceJunction[SE_START]).min().orElse(-1);
-        positionsRange[SE_END] = mAltSpliceJunctions.stream().mapToInt(x -> (int)x.SpliceJunction[SE_END]).max().orElse(-1);
-
-        /*
-        if(RE_LOGGER.isDebugEnabled() && (mAltSpliceJunctions.size() >= 50 || totalReadCount > 100000))
-        {
-            int totalSJRange =
-                    mAltSpliceJunctions.stream().mapToLong(x -> x.SpliceJunction[SE_END] - x.SpliceJunction[SE_START]).sum();
-            double avgSJLength = totalSJRange / (double) mAltSpliceJunctions.size();
-            int geneLength = mGene.GeneData.GeneEnd - mGene.GeneData.GeneStart;
-            double expReadsPerSJ = avgSJLength / (double) geneLength * totalReadCount;
-
-            RE_LOGGER.debug(String.format("gene(%s) length(%d) totalReads(%d) altSJs(count=%d totalLen=%d avgLen=%.0f) expReads(%.0f)",
-                    mGene.name(), geneLength, totalReadCount, mAltSpliceJunctions.size(), totalSJRange, avgSJLength, expReadsPerSJ));
-        }
-        */
-
-        return positionsRange;
-    }
-
     public void setPositionDepth(final BaseDepth baseDepth)
     {
         for(AltSpliceJunction altSJ : mAltSpliceJunctions)
@@ -409,37 +385,6 @@ public class AltSpliceJunctionFinder
                 int depth = baseDepth.depthAtBase(altSJ.SpliceJunction[se]);
                 altSJ.addPositionCount(se, depth);
             }
-        }
-    }
-
-    public void setPositionDepthFromRead(final List<int[]> readCoords)
-    {
-        int readMinPos = readCoords.get(0)[SE_START];
-        int readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
-
-        for(AltSpliceJunction altSJ : mAltSpliceJunctions)
-        {
-            for (int se = SE_START; se <= SE_END; ++se)
-            {
-                int position = altSJ.SpliceJunction[se];
-
-                if(!positionWithin(position, readMinPos, readMaxPos))
-                    continue;
-
-                if (readCoords.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
-                {
-                    altSJ.addPositionCount(se);
-                }
-            }
-        }
-    }
-
-    public void setDepthToFragCount()
-    {
-        for(AltSpliceJunction altSJ : mAltSpliceJunctions)
-        {
-            altSJ.addPositionCount(SE_START, altSJ.getFragmentCount());
-            altSJ.addPositionCount(SE_END, altSJ.getFragmentCount());
         }
     }
 

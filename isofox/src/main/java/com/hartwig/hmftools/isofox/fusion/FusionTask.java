@@ -6,13 +6,13 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_DOWNSTREAM;
 import static com.hartwig.hmftools.isofox.fusion.FusionReadData.FS_UPSTREAM;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.List;
 import java.util.Map;
@@ -37,16 +37,16 @@ public class FusionTask implements Callable
     private final IsofoxConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    // private final Map<String,List<FusionFragment>> mChrPairFragments;
     private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
     private final List<FusionFragment> mAllFragments;
     private final Set<String> mReadIds;
 
     private int mNextFusionId;
     private final Map<String,List<FusionReadData>> mFusionCandidates; // keyed by the chromosome pair
-    private final Map<String,List<FusionFragment>> mUnfusedFragments;
+    private final Map<String,List<FusionReadData>> mFusionsByGene; // keyed by the locationId
+    private final Map<String,List<FusionFragment>> mDiscordantFragments; // keyed by the chromosome pair
+    private final Map<String,List<FusionFragment>> mSingleGeneFragments; // keyed by chromosome, since single-sided
 
-    private final FusionReadDepth mFusionReadDepth;
     private final FusionWriter mFusionWriter;
 
     private final PerformanceCounter[] mPerfCounters;
@@ -68,10 +68,11 @@ public class FusionTask implements Callable
 
         mNextFusionId = 0;
         mFusionCandidates = Maps.newHashMap();
-        mUnfusedFragments = Maps.newHashMap();
+        mFusionsByGene = Maps.newHashMap();
+        mDiscordantFragments = Maps.newHashMap();
+        mSingleGeneFragments = Maps.newHashMap();
         mReadIds = Sets.newHashSet();
 
-        mFusionReadDepth = new FusionReadDepth(mConfig, mReadIds);
         mFusionWriter = fusionWriter;
 
         mPerfCounters = new PerformanceCounter[PC_DEPTH + 1];
@@ -81,8 +82,7 @@ public class FusionTask implements Callable
    }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
-    public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mUnfusedFragments; }
-    public final FusionReadDepth getFusionReadDepth() { return mFusionReadDepth; }
+    public final Map<String,List<FusionFragment>> getUnfusedFragments() { return mDiscordantFragments; }
 
     @Override
     public Long call()
@@ -117,15 +117,19 @@ public class FusionTask implements Callable
                 ++junctioned;
                 createOrUpdateFusion(fragment);
             }
+            else if(fragment.isSingleGene())
+            {
+                cacheSingleGeneFragment(fragment);
+            }
             else
             {
-                cacheUnfusedFragment(fragment);
+                cacheDiscordantFragment(fragment);
             }
         }
 
-        ISF_LOGGER.info("{}: chimeric fragments({} unfused={} junc={}) fusions(loc={} total={})",
-                mTaskId, mAllFragments.size(), mUnfusedFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
-                mFusionCandidates.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
+        ISF_LOGGER.info("{}: chimeric fragments({} unfused={} junc={}) fusions(loc={} gene={} total={})",
+                mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
+                mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
         mPerfCounters[PC_DISCOVERY].stop();
     }
@@ -136,9 +140,6 @@ public class FusionTask implements Callable
 
         ISF_LOGGER.info("{}: calculating junction depth", mTaskId);
 
-        // classify / analyse fusions
-        // int nextLog = 100;
-        // int fusionCount = 0;
         for (List<FusionReadData> fusions : mFusionCandidates.values())
         {
             for(FusionReadData fusionData : fusions)
@@ -162,16 +163,6 @@ public class FusionTask implements Callable
                     fusionData.getReadDepth()[se] += baseDepthCount;
                 }
             }
-
-            /*
-            mFusionReadDepth.calcFusionReadDepth(fusions);
-
-            if (++fusionCount >= nextLog)
-            {
-                ISF_LOGGER.info("{}: processed {} fusions", mTaskId, fusionCount);
-                nextLog += 100;
-            }
-            */
         }
 
         mPerfCounters[PC_DEPTH].stop();
@@ -186,7 +177,8 @@ public class FusionTask implements Callable
 
         // assign any discordant reads
         ISF_LOGGER.debug("{}: assigning unfused fragments", mTaskId);
-        assignUnfusedFragments();
+        assignDiscordantFragments();
+        assignRealignedFragments();
 
         mPerfCounters[PC_ANNOTATE].stop();
     }
@@ -196,20 +188,7 @@ public class FusionTask implements Callable
         // write results
         // ISF_LOGGER.debug("{}: writing results", mTaskId);
         mFusionWriter.writeFusionData(mFusionCandidates);
-        mFusionWriter.writeUnfusedFragments(mUnfusedFragments);
-    }
-
-    private void cacheUnfusedFragment(final FusionFragment fragment)
-    {
-        List<FusionFragment> fragments = mUnfusedFragments.get(fragment.locationPair());
-
-        if(fragments == null)
-        {
-            fragments = Lists.newArrayList();
-            mUnfusedFragments.put(fragment.locationPair(), fragments);
-        }
-
-        fragments.add(fragment);
+        mFusionWriter.writeUnfusedFragments(mDiscordantFragments);
     }
 
     private void createOrUpdateFusion(final FusionFragment fragment)
@@ -240,6 +219,38 @@ public class FusionTask implements Callable
         final FusionReadData fusionData = new FusionReadData(fusionId, fragment);
         setGeneData(fusionData);
         fusions.add(fusionData);
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            final String chrGene = formLocation(fragment.chromosomes()[se], fragment.geneCollections()[se]);
+            List<FusionReadData> fusionsByGene = mFusionsByGene.get(chrGene);
+
+            if(fusionsByGene == null)
+                mFusionsByGene.put(chrGene, Lists.newArrayList(fusionData));
+            else
+                fusionsByGene.add(fusionData);
+        }
+    }
+
+    private void cacheDiscordantFragment(final FusionFragment fragment)
+    {
+        List<FusionFragment> fragments = mDiscordantFragments.get(fragment.locationPair());
+
+        if(fragments == null)
+            mDiscordantFragments.put(fragment.locationPair(), Lists.newArrayList(fragment));
+        else
+            fragments.add(fragment);
+    }
+
+    private void cacheSingleGeneFragment(final FusionFragment fragment)
+    {
+        final String locationId = formLocation(fragment.chromosomes()[SE_START], fragment.geneCollections()[SE_START]);
+        List<FusionFragment> fragments = mSingleGeneFragments.get(locationId);
+
+        if(fragments == null)
+            mSingleGeneFragments.put(locationId, Lists.newArrayList(fragment));
+        else
+            fragments.add(fragment);
     }
 
     private void setGeneData(final FusionReadData fusionData)
@@ -383,9 +394,9 @@ public class FusionTask implements Callable
 
     private static final int POSITION_REALIGN_DISTANCE = 20;
 
-    private void assignUnfusedFragments()
+    private void assignDiscordantFragments()
     {
-        for(Map.Entry<String,List<FusionFragment>> entry : mUnfusedFragments.entrySet())
+        for(Map.Entry<String,List<FusionFragment>> entry : mDiscordantFragments.entrySet())
         {
             final List<FusionReadData> fusions = mFusionCandidates.get(entry.getKey());
 
@@ -394,23 +405,21 @@ public class FusionTask implements Callable
 
             final List<FusionFragment> fragments = entry.getValue();
 
-            final List<FusionFragment> allocatedFragments = Lists.newArrayList();
+            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
 
             for (FusionFragment fragment : fragments)
             {
                 if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
                     continue;
 
-                for(FusionReadData fusion : fusions)
+                for(FusionReadData fusionData : fusions)
                 {
-                    if(!fusion.isValid())
+                    if(!fusionData.isValid())
                         continue;
 
-                    if(fusion.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
+                    if(fusionData.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
                     {
-                        allocatedFragments.add(fragment);
-
-                        if(fusion.isRelignedFragment(fragment)) // was also fragment.isSingleGene()
+                        if(fusionData.isRelignedFragment(fragment))
                         {
                             fragment.setType(REALIGNED);
                         }
@@ -419,7 +428,44 @@ public class FusionTask implements Callable
                             fragment.setType(DISCORDANT);
                         }
 
-                        fusion.addFusionFragment(fragment);
+                        fusionData.addFusionFragment(fragment);
+                        allocatedFragments.add(fragment);
+                    }
+                }
+            }
+
+            allocatedFragments.forEach(x -> fragments.remove(x));
+        }
+    }
+
+    private void assignRealignedFragments()
+    {
+        for(Map.Entry<String,List<FusionFragment>> entry : mSingleGeneFragments.entrySet())
+        {
+            final List<FusionReadData> fusions = mFusionsByGene.get(entry.getKey());
+
+            if(fusions == null)
+                continue;
+
+            final List<FusionFragment> fragments = entry.getValue();
+
+            final Set<FusionFragment> allocatedFragments = Sets.newHashSet();
+
+            for (FusionFragment fragment : fragments)
+            {
+                if(fragment.getTransExonRefs()[SE_START].isEmpty() || fragment.getTransExonRefs()[SE_END].isEmpty())
+                    continue;
+
+                for(FusionReadData fusionData : fusions)
+                {
+                    if(!fusionData.isValid())
+                        continue;
+
+                    if(fusionData.isRelignedFragment(fragment))
+                    {
+                        fragment.setType(REALIGNED);
+                        fusionData.addFusionFragment(fragment);
+                        allocatedFragments.add(fragment);
                     }
                 }
             }
@@ -432,7 +478,8 @@ public class FusionTask implements Callable
     {
         mNextFusionId = 0;
         mFusionCandidates.clear();
-        mUnfusedFragments.clear();
+        mDiscordantFragments.clear();
+        mSingleGeneFragments.clear();
         mReadIds.clear();
     }
 

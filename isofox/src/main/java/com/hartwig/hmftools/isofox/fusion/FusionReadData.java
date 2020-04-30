@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.structural.StructuralVariantType;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
@@ -309,8 +308,9 @@ public class FusionReadData
         return false;
     }
 
+    public final static int REALIGN_MIN_SOFT_CLIP_BASE_LENGTH = 3;
+
     private final static int SOFT_CLIP_JUNC_BUFFER = 3;
-    private final static int SOFT_CLIP_MIN_BASE_MATCH = 3;
     private final static int SOFT_CLIP_MAX_BASE_MATCH = 5;
 
     private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
@@ -330,7 +330,7 @@ public class FusionReadData
             // test that soft-clipped bases match the other junction's bases
             int scLength = read.Cigar.getLastCigarElement().getLength();
 
-            if(scLength < SOFT_CLIP_MIN_BASE_MATCH)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
             // if the junction is 1 base higher, then take 1 base off the soft-clipped bases
@@ -355,7 +355,7 @@ public class FusionReadData
 
             int scLength = read.Cigar.getFirstCigarElement().getLength();
 
-            if(scLength < SOFT_CLIP_MIN_BASE_MATCH)
+            if(scLength < REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                 return false;
 
             int posAdjust = readBoundary < mJunctionPositions[juncSeIndex] ? mJunctionPositions[juncSeIndex] - readBoundary : 0;

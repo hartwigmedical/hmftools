@@ -49,16 +49,6 @@ public class RetainedIntronFinder
 
     public final List<RetainedIntron> getRetainedIntrons() { return mRetainedIntrons; }
 
-    public int[] getPositionsRange()
-    {
-        int[] positionsRange = new int[SE_PAIR];
-
-        positionsRange[SE_START] = mRetainedIntrons.stream().mapToInt(x -> (int)x.position()).min().orElse(-1);
-        positionsRange[SE_END] = mRetainedIntrons.stream().mapToInt(x -> (int)x.position()).max().orElse(-1);
-
-        return positionsRange;
-    }
-
     public void evaluateFragmentReads(final ReadRecord read1, final ReadRecord read2)
     {
         if(read1.isDuplicate() || read2.isDuplicate())
@@ -219,36 +209,6 @@ public class RetainedIntronFinder
             retIntron.setReadDepth(baseDepth.depthAtBase(retIntron.position()));
         }
     }
-
-    public void setPositionDepthFromRead(final List<int[]> readCoords)
-    {
-        int readMinPos = readCoords.get(0)[SE_START];
-        int readMaxPos = readCoords.get(readCoords.size() - 1)[SE_END];
-
-        for(RetainedIntron retIntron : mRetainedIntrons)
-        {
-            int position = retIntron.position();
-
-            if(!positionWithin(position, readMinPos, readMaxPos))
-                continue;
-
-            if (readCoords.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END])))
-            {
-                retIntron.addReadDepth();
-            }
-        }
-    }
-
-
-    public void setDepthToFragCount()
-    {
-        mRetainedIntrons.forEach(x -> x.setReadDepth(x.getFragmentCount()));
-    }
-
-    /*
-    Average unspliced coverage of gene
-    Pair intron retentions with novel 5’SS, novel 3’ SS or other retained intron evidence.
-     */
 
     public static BufferedWriter createWriter(final IsofoxConfig config)
     {

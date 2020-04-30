@@ -328,36 +328,41 @@ public class FusionDataTest
 
         chimericReadMap.put(read1.Id, Lists.newArrayList(read1, readPair[0], readPair[1]));
 
-        finder.addChimericReads(chimericReadMap);
-
-        finder.findFusions();
-
         // a soft-clipped read matching the other side of the fusion junction
         String junctionBases = readPair[0].ReadBases.substring(10, 40) + readPair[1].ReadBases.substring(0, 10);
         ReadRecord read4 = createMappedRead(++readId, gc1, 1071, 1100, createCigar(0, 30, 10), junctionBases);
         ReadRecord read5 = createMappedRead(readId, gc1, 1051, 1090, createCigar(0, 40, 0));
         read5.setStrand(true, false);
 
+        chimericReadMap.put(read4.Id, Lists.newArrayList(read4, read5));
+
+        // a soft-clipped read matching 2 bases into the ref due to homology with the other side of the fusion junction
+        junctionBases = readPair[0].ReadBases.substring(30, 40) + readPair[1].ReadBases.substring(0, 30);
+        ReadRecord read6 = createMappedRead(++readId, gc2, 10198, 10229, createCigar(8, 32, 0), junctionBases);
+        ReadRecord read7 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
+        read7.setStrand(true, false);
+
+        chimericReadMap.put(read6.Id, Lists.newArrayList(read6, read7));
+
+        finder.addChimericReads(chimericReadMap);
+
+        finder.findFusions();
+
         assertEquals(1, finder.getFusionCandidates().size());
         List<FusionReadData> fusions = finder.getFusionCandidates().values().iterator().next();
         assertEquals(1, fusions.size());
 
-        finder.getFusionReadDepth().calcFusionReadDepth(fusions);
-        finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
+        // finder.getFusionReadDepth().calcFusionReadDepth(fusions);
+        // finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
 
         FusionReadData fusion = fusions.stream().filter(x -> x.isKnownSpliced()).findFirst().orElse(null);
         assertTrue(fusion != null);
         assertEquals(1, fusion.getFragments(MATCHED_JUNCTION).size());
-        assertEquals(1, fusion.getFragments(REALIGNED).size());
-
-        // a soft-clipped read matching 2 bases into the ref due to homology with the other side of the fusion junction
-        junctionBases = readPair[0].ReadBases.substring(30, 40) + readPair[1].ReadBases.substring(0, 30);
-        read4 = createMappedRead(++readId, gc2, 10198, 10229, createCigar(8, 32, 0), junctionBases);
-        read5 = createMappedRead(readId, gc2, 10210, 10249, createCigar(0, 40, 0));
-        read5.setStrand(true, false);
-
-        finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
         assertEquals(2, fusion.getFragments(REALIGNED).size());
+
+
+        // finder.getFusionReadDepth().processReadDepthRecord(read4, read5);
+        // assertEquals(2, fusion.getFragments(REALIGNED).size());
     }
 
 }
