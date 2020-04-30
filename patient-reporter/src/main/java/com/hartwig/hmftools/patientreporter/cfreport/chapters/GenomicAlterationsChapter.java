@@ -239,7 +239,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
         Table contentTable = TableUtil.createReportContentTable(new float[] { 120, 120, 200 },
                 new Cell[] { TableUtil.createHeaderCell("Virus"),
-                        TableUtil.createHeaderCell("Number of viral insertions").setTextAlignment(TextAlignment.CENTER),
+                        TableUtil.createHeaderCell("Number of viral breakpoints").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("") });
 
         for (ViralInsertion viralInsert : viralInsertions) {
