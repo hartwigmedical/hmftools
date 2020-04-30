@@ -36,6 +36,8 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double averageTumorPloidy();
 
+    public abstract boolean reportableViralInsertions();
+
     @NotNull
     public abstract String clinicalSummary();
 

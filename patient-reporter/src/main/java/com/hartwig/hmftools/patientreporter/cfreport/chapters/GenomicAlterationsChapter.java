@@ -55,7 +55,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
-        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions(), patientReport.reportableViralInsertions()));
 
     }
 
@@ -231,9 +231,12 @@ public class GenomicAlterationsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions) {
+    private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions, boolean reportableViralInsertions) {
         String title = "Tumor specific viral insertions";
-        if (viralInsertions.isEmpty()) {
+
+        if (!reportableViralInsertions) {
+            return TableUtil.createNAReportTable(title);
+        } else if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
