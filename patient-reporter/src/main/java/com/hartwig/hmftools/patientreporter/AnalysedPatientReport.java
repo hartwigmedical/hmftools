@@ -6,7 +6,6 @@ import java.util.Optional;
 import com.hartwig.hmftools.common.actionability.ClinicalTrial;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
-import com.hartwig.hmftools.common.lims.LimsViralInsertionChoice;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.common.variant.tml.TumorMutationalStatus;
@@ -37,7 +36,7 @@ public abstract class AnalysedPatientReport implements PatientReport {
 
     public abstract double averageTumorPloidy();
 
-    public abstract LimsViralInsertionChoice reportableViralInsertions();
+    public abstract boolean reportableViralInsertions();
 
     @NotNull
     public abstract String clinicalSummary();

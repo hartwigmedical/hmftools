@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
 import com.hartwig.hmftools.common.lims.LimsStudy;
-import com.hartwig.hmftools.common.lims.LimsViralInsertionChoice;
 import com.hartwig.hmftools.common.purple.copynumber.CopyNumberInterpretation;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -97,7 +96,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .reportableViralInsertions(LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS)
+                .reportableViralInsertions(false)
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
@@ -157,7 +156,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .reportableViralInsertions(LimsViralInsertionChoice.REPORT_VIRAL_INSERTION)
+                .reportableViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)
@@ -217,7 +216,7 @@ public final class ExampleAnalysisTestFactory {
                 .hasReliablePurity(hasReliablePurity)
                 .hasReliableQuality(true)
                 .averageTumorPloidy(averageTumorPloidy)
-                .reportableViralInsertions(LimsViralInsertionChoice.REPORT_VIRAL_INSERTION)
+                .reportableViralInsertions(true)
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(tumorLocationSpecificEvidence)
                 .clinicalTrials(clinicalTrials)

@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -24,6 +25,23 @@ public class LimsTest {
     private static final String TUMOR_SAMPLE_BARCODE = "FR1";
     private static final String TUMOR_SAMPLE_ID = "CPCT02991111T";
     private static final String SUBMISSION = "ABCDEF123";
+
+    @Test
+    public void canExtractLimsViralInsertionsChoice() {
+        LimsJsonSampleData sampleDataTrue =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq(true).reportViralInsertions(true).build();
+        LimsJsonSampleData sampleDataFalse =
+                createLimsSampleDataBuilder().tumorBarcode(TUMOR_SAMPLE_BARCODE).sampleId(TUMOR_SAMPLE_ID).shallowSeq(true).reportViralInsertions(false).build();
+
+        Lims limsTrue = buildTestLimsWithSample(sampleDataTrue);
+        Lims limsFalse = buildTestLimsWithSample(sampleDataFalse);
+
+
+        assertTrue(limsTrue.viralInsertionChoice(TUMOR_SAMPLE_BARCODE, "WIDE00000001T"));
+        assertFalse(limsFalse.viralInsertionChoice(TUMOR_SAMPLE_BARCODE, "WIDE00000001T"));
+        assertFalse(limsFalse.viralInsertionChoice(TUMOR_SAMPLE_BARCODE, "CPCT00000001T"));
+        assertTrue(limsTrue.viralInsertionChoice(TUMOR_SAMPLE_BARCODE, "CPCT00000001T"));
+    }
 
     @Test
     public void canReadProperlyDefinedSample() {
@@ -102,7 +120,7 @@ public class LimsTest {
         assertEquals(hospitalPatientId, lims.hospitalPatientId(TUMOR_SAMPLE_BARCODE));
         assertEquals(hospitalPathologySampleId, lims.hospitalPathologySampleId(TUMOR_SAMPLE_BARCODE));
         assertEquals(LimsGermlineReportingChoice.NO_REPORTING, lims.germlineReportingChoice(TUMOR_SAMPLE_BARCODE));
-        assertEquals(LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS, lims.viralInsertionChoice(TUMOR_SAMPLE_BARCODE));
+        assertFalse(lims.viralInsertionChoice(TUMOR_SAMPLE_BARCODE, TUMOR_SAMPLE_ID));
     }
 
     @Test
@@ -125,7 +143,7 @@ public class LimsTest {
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPatientId(doesNotExistSample));
         assertEquals(Lims.NOT_AVAILABLE_STRING, lims.hospitalPathologySampleId(doesNotExistSample));
         assertEquals(LimsGermlineReportingChoice.NO_REPORTING, lims.germlineReportingChoice(doesNotExistSample));
-        assertEquals(LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS, lims.viralInsertionChoice(doesNotExistSample));
+        assertFalse(lims.viralInsertionChoice(TUMOR_SAMPLE_BARCODE, doesNotExistSample));
 
     }
 

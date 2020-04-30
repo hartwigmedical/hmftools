@@ -260,16 +260,25 @@ public class Lims {
         }
     }
 
-    @NotNull
-    public LimsViralInsertionChoice viralInsertionChoice(@NotNull String sampleBarcode) {
+    public boolean viralInsertionChoice(@NotNull String sampleBarcode, @NotNull String sampleId) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+
         if (sampleData != null) {
             boolean viralInsertionsReportingChoiceString = sampleData.reportViralInsertions();
-            return LimsViralInsertionChoice.fromLimsViralInsertionsReportingChoiceString(viralInsertionsReportingChoiceString,
-                    sampleId(sampleBarcode));
-
+            LimsStudy study = LimsStudy.fromSampleId(sampleId);
+            if (viralInsertionsReportingChoiceString) {
+                if (study == LimsStudy.DRUP || study == LimsStudy.CPCT) {
+                    LOGGER.warn("Consent of viral insertions is true, but must be false for CPCT/DRUP!");
+                }
+                return true;
+            } else {
+                if (study == LimsStudy.CORE || study == LimsStudy.WIDE) {
+                    LOGGER.warn("Consent of viral insertions is false, but must be true for WIDE/CORE!");
+                }
+                return false;
+            }
         } else {
-            return LimsViralInsertionChoice.NO_REPORT_VIRAL_INSERTIONS;
+            return false;
         }
     }
 

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.patientreporter.cfreport.chapters;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.lims.LimsViralInsertionChoice;
 import com.hartwig.hmftools.common.variant.structural.annotation.ReportableGeneFusion;
 import com.hartwig.hmftools.patientreporter.AnalysedPatientReport;
 import com.hartwig.hmftools.patientreporter.cfreport.ReportResources;
@@ -56,7 +55,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
-        if (patientReport.reportableViralInsertions() == LimsViralInsertionChoice.REPORT_VIRAL_INSERTION) {
+        if (patientReport.reportableViralInsertions()) {
             reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
         }
     }
