@@ -39,14 +39,14 @@ public class IndexedBasesTest {
     @Test
     public void testCoreMatch() {
 
-        assertEquals(true, victim.coreMatch(5, "GATCTCCTCA".getBytes()));
-        assertEquals(true, victim.coreMatch(1, "TCC".getBytes()));
+        assertTrue(victim.coreMatch(5, "GATCTCCTCA".getBytes()));
+        assertTrue(victim.coreMatch(1, "TCC".getBytes()));
 
-        assertEquals(false, victim.coreMatch(1, "CCC".getBytes()));
-        assertEquals(false, victim.coreMatch(1, "TTC".getBytes()));
-        assertEquals(false, victim.coreMatch(1, "TCT".getBytes()));
-        assertEquals(false, victim.coreMatch(1, "TC".getBytes()));
-        assertEquals(false, victim.coreMatch(0, "CC".getBytes()));
+        assertFalse(victim.coreMatch(1, "CCC".getBytes()));
+        assertFalse(victim.coreMatch(1, "TTC".getBytes()));
+        assertFalse(victim.coreMatch(1, "TCT".getBytes()));
+        assertFalse(victim.coreMatch(1, "TC".getBytes()));
+        assertFalse(victim.coreMatch(0, "CC".getBytes()));
     }
 
 
@@ -89,6 +89,16 @@ public class IndexedBasesTest {
 
         assertTrue(victim1.phased(-1, victim2));
         assertTrue(victim2.phased(1, victim1));
+    }
+
+    @Test
+    public void testLongReadShortFlanks() {
+        final String read = "TACCACAAATACATATACGTGTATCTGTCTGTGTGTTATGAACTTATATAAACCATCAC";
+        ReadContext victim1 = new ReadContext(Strings.EMPTY, 1010, 10, 9, 11, 3, read.getBytes(), Strings.EMPTY);
+        ReadContext victim2 = new ReadContext(Strings.EMPTY, 1030, 40, 39, 41, 3, read.getBytes(), Strings.EMPTY);
+
+        assertTrue(victim1.phased(-30, victim2));
+        assertTrue(victim2.phased(30, victim1));
     }
 
     @Test
