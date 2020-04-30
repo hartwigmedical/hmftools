@@ -11,9 +11,10 @@ public enum ChordStatus {
 
     public static final double HRD_THRESHOLD = 0.5;
 
+    @NotNull
     private final String display;
 
-    ChordStatus(final String display) {
+    ChordStatus(@NotNull final String display) {
         this.display = display;
     }
 

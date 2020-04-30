@@ -45,15 +45,15 @@ public final class ChordFileReader {
         if (lines.isEmpty()) {
             throw new EmptyFileException(filename);
         }
-        final int index = findHeaderLineIndex(lines);
+        int index = findHeaderLineIndex(lines);
         if (index >= lines.size()) {
             throw new MalformedFileException(String.format("No value line found after header line in CHORD file %s.", filename));
         }
         return lines.get(index + 1);
     }
 
-    private static int findHeaderLineIndex(@NotNull final List<String> lines) throws MalformedFileException {
-        final Optional<Integer> lineNumbers =
+    private static int findHeaderLineIndex(@NotNull List<String> lines) throws MalformedFileException {
+        Optional<Integer> lineNumbers =
                 IntStream.range(0, lines.size()).filter(index -> lines.get(index).contains("hrd")).boxed().findFirst();
         if (!lineNumbers.isPresent()) {
             throw new MalformedFileException(String.format("Could not find header line in CHORD file with %s lines.", lines.size()));
