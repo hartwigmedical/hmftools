@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formChromosomePair;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,12 +72,9 @@ public class FusionFinder
     {
         List<ReadRecord> chimericReads = chimericReadMap.get(read.Id);
         if (chimericReads == null)
-        {
-            chimericReads = Lists.newArrayList();
-            chimericReadMap.put(read.Id, chimericReads);
-        }
-
-        chimericReads.add(read);
+            chimericReadMap.put(read.Id, Lists.newArrayList(read));
+        else
+            chimericReads.add(read);
     }
 
     public void loadChimericReads()
@@ -279,7 +277,7 @@ public class FusionFinder
 
         for(ReadRecord read : reads)
         {
-            chrGeneSet.add(read.chromosomeGeneId());
+            chrGeneSet.add(formLocation(read.Chromosome, read.getGeneCollecton()));
             if(chrGeneSet.size() == 3)
                 return false;
         }

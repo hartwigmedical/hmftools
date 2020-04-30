@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.isofox.common.TransMatchType.ALT;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.EXONIC;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.UNKNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 
 import static htsjdk.samtools.CigarOperator.D;
 
@@ -145,7 +146,6 @@ public class ReadRecord
     public int mateStartPosition() { return mMatePosStart; }
 
     public int getGeneCollecton() { return mGeneCollectionId; }
-    public String chromosomeGeneId() { return String.format("%s_%d", Chromosome, mGeneCollectionId); }
 
     public void setFlag(SAMFlag flag, boolean toggle)
     {

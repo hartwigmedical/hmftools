@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
 
@@ -23,7 +24,6 @@ public class BaseDepth
     private Map<Integer,Integer> mDepthMap;
 
     private static final int MIN_DEPTH_COUNT = 2;
-    private static final int RANGE_THRESHOLD = 3000; // little over the median gene length
     private static final int MAX_MAP_SIZE = 100000;
 
     public BaseDepth(final int geneCollection, final String chromosome, final int[] baseRange)
@@ -63,13 +63,29 @@ public class BaseDepth
         }
     }
 
+    public void cullToPositions(final Set<Integer> candidateJunctions)
+    {
+        mDepthMap = Maps.newHashMap();
+
+        for(final Integer position : candidateJunctions)
+        {
+            if(!positionWithin(position, BaseRange[SE_START], BaseRange[SE_END]))
+                continue;
+
+            int index = position - BaseRange[SE_START];
+
+            if(mDepth[index] > MIN_DEPTH_COUNT)
+                mDepthMap.put(position, mDepth[index]);
+        }
+
+        mDepth = null;
+    }
+
     public void collapse()
     {
         // move depth into a map if the coverage is relatively small over a large range
-        if(basesWithDepth() > MAX_MAP_SIZE)
-            return;
-
         mDepthMap = Maps.newHashMap();
+
         int index = 0;
         for(int pos = BaseRange[SE_START]; pos <= BaseRange[SE_END]; ++pos)
         {
@@ -77,6 +93,12 @@ public class BaseDepth
                 mDepthMap.put(pos, mDepth[index]);
 
             ++index;
+        }
+
+        if(mDepthMap.size() > MAX_MAP_SIZE)
+        {
+            ISF_LOGGER.warn("large map({} len={} perc={}) for baseDepth({})",
+                    mDepthMap.size(), length(), String.format("%.2f", mDepthMap.size()/(double)length()), toString());
         }
 
         mDepth = null;
@@ -97,11 +119,14 @@ public class BaseDepth
         return mDepth[index];
     }
 
-    public int length() { return mDepth.length; }
+    public int length() { return BaseRange[SE_END] - BaseRange[SE_START] + 1; }
 
     public int basesWithDepth()
     {
-        return (int)Arrays.stream(mDepth).filter(x -> x > MIN_DEPTH_COUNT).count();
+        if(mDepth != null)
+            return (int)Arrays.stream(mDepth).filter(x -> x > MIN_DEPTH_COUNT).count();
+        else
+            return (int)mDepthMap.values().stream().filter(x -> x > MIN_DEPTH_COUNT).count();
     }
 
     public double basesWithDepthPerc()
@@ -111,7 +136,10 @@ public class BaseDepth
 
     public int maxDepth()
     {
-        return Arrays.stream(mDepth).max().orElse(0);
+        if(mDepth != null)
+            return Arrays.stream(mDepth).max().orElse(0);
+        else
+            return mDepthMap.values().stream().mapToInt(x -> x).max().orElse(0);
     }
 
     public String toString()

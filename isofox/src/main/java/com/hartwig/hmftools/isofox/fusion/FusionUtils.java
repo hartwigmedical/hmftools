@@ -2,12 +2,18 @@ package com.hartwig.hmftools.isofox.fusion;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.isofox.common.ReadRecord;
 
 public class FusionUtils
 {
-
     public static boolean lowerChromosome(final String chr, final String otherChr)
     {
         return chromosomeRank(chr) < chromosomeRank(otherChr);
@@ -43,4 +49,26 @@ public class FusionUtils
     public static String formChromosomePair(final String chr1, final String chr2) { return chr1 + "_" + chr2; }
     public static String[] getChromosomePair(final String chrPair) { return chrPair.split("_"); }
 
+    public static Set<Integer> collectCandidateJunctions(final Map<String, List<ReadRecord>> readsMap, final String chromosome)
+    {
+        Set<Integer> candidateJunctions = Sets.newHashSet();
+
+        for(Map.Entry<String,List<ReadRecord>> entry : readsMap.entrySet())
+        {
+            for(ReadRecord read : entry.getValue())
+            {
+                if(!read.Chromosome.equals(chromosome))
+                    continue;
+
+                if(read.isSoftClipped(SE_START) && read.Cigar.getFirstCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+                    candidateJunctions.add(read.getCoordsBoundary(SE_START));
+
+                if(read.isSoftClipped(SE_END) && read.Cigar.getLastCigarElement().getLength() >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
+                    candidateJunctions.add(read.getCoordsBoundary(SE_END));
+            }
+        }
+
+        return candidateJunctions;
+
+    }
 }

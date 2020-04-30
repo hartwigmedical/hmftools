@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.validTranscriptType;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.EXON_INTRON;
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.deriveCommonRegions;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsWithin;
 import static com.hartwig.hmftools.isofox.common.TransMatchType.OTHER_TRANS;
@@ -31,6 +32,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.addChimericReads;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragment.isRealignedFragmentCandidate;
 
@@ -39,11 +41,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.isofox.common.BamSlicer;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
@@ -90,6 +94,7 @@ public class BamFragmentAllocator
     private final AltSpliceJunctionFinder mAltSpliceJunctionFinder;
     private final RetainedIntronFinder mRetainedIntronFinder;
     private final Map<String,List<ReadRecord>> mChimericReadMap;
+    private final Map<String,List<ReadRecord>> mCandidateRealignedReadMap;
 
     private final boolean mRunFusions;
     private final boolean mFusionsOnly;
@@ -108,6 +113,7 @@ public class BamFragmentAllocator
         mTransComboData = Lists.newArrayList();
 
         mChimericReadMap = Maps.newHashMap();
+        mCandidateRealignedReadMap = Maps.newHashMap();
 
         mRunFusions = mConfig.Functions.contains(FUSIONS);
         mFusionsOnly = mRunFusions && mConfig.Functions.size() == 1;
@@ -160,6 +166,7 @@ public class BamFragmentAllocator
         mEnrichedGeneFragments = 0;
         mTransComboData.clear();
         mChimericReadMap.clear();
+        mCandidateRealignedReadMap.clear();
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
         {
@@ -176,21 +183,7 @@ public class BamFragmentAllocator
             processEnrichedGeneFragments();
 
         if(!mChimericReadMap.isEmpty())
-        {
-            // check any lone reads where the other read is chimeric
-            for(Object object : mFragmentReads.getValues())
-            {
-                final ReadRecord read = (ReadRecord)object;
-
-                if(!read.isMateUnmapped())
-                    addChimericReads(mChimericReadMap, read);
-            }
-
-            int chimericCount = mChimericReadMap.size();
-            mCurrentGenes.addCount(TOTAL, chimericCount);
-            mCurrentGenes.addCount(CHIMERIC, chimericCount);
-            mChimericReadMap.values().forEach(x -> x.stream().forEach(y -> y.captureGeneInfo(mCurrentGenes.id())));
-        }
+            postProcessChimericReads();
 
         ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
                 mCurrentGenes.geneNames(), mGeneReadCount, mCurrentGenes.getBaseDepth().basesWithDepth(),
@@ -274,12 +267,6 @@ public class BamFragmentAllocator
             mCurrentGenes.getBaseDepth().processRead(read);
         }
 
-        if(read.isChimeric())
-        {
-            processChimericRead(read);
-            return;
-        }
-
         checkFragmentRead(read);
     }
 
@@ -298,12 +285,27 @@ public class BamFragmentAllocator
         {
             // populate transcript info for intronic reads since it will be used in fusion matching
             if(read.getMappedRegions().isEmpty())
-            {
                 read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-            }
 
             addChimericReads(mChimericReadMap, read);
         }
+    }
+
+    private void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
+    {
+        // add the pair when it's clear there aren't others with the same ID in the map
+        if(mChimericReadMap.containsKey(read1.Id))
+        {
+            ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
+        }
+
+        if(read1.getMappedRegions().isEmpty())
+            read1.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+
+        if(read2.getMappedRegions().isEmpty())
+            read2.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+
+        mChimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
     }
 
     private boolean checkFragmentRead(ReadRecord read)
@@ -344,8 +346,16 @@ public class BamFragmentAllocator
         if(read1.isChimeric() || read2.isChimeric() || r1OutsideGene || r2OutsideGene)
         {
             // candidate chimeric reads
-            processChimericRead(read1);
-            processChimericRead(read2);
+            if(mRunFusions)
+            {
+                addChimericReadPair(read1, read2);
+            }
+            else
+            {
+                processChimericRead(read1);
+                processChimericRead(read2);
+            }
+
             return;
         }
 
@@ -354,8 +364,7 @@ public class BamFragmentAllocator
             // reads with sufficient soft-clipping and not mapped to an adjacent region are candidates for fusion re-alignment
             if(isRealignedFragmentCandidate(read1) || isRealignedFragmentCandidate(read2))
             {
-                processChimericRead(read1);
-                processChimericRead(read2);
+                mCandidateRealignedReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
             }
 
             if (mFusionsOnly)
@@ -765,6 +774,67 @@ public class BamFragmentAllocator
 
         mAltSpliceJunctionFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
         mRetainedIntronFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
+    }
+
+    private void postProcessChimericReads()
+    {
+        // check any lone reads where the other read is chimeric
+        for(Object object : mFragmentReads.getValues())
+        {
+            final ReadRecord read = (ReadRecord)object;
+
+            if(!read.isMateUnmapped())
+                addChimericReads(mChimericReadMap, read);
+        }
+
+        // find any split chimeric reads and use this to select from the candidates for realignment
+        Set<Integer> chimericJunctions = Sets.newHashSet();
+        for(List<ReadRecord> reads : mChimericReadMap.values())
+        {
+            for(ReadRecord read : reads)
+            {
+                if(read.getSuppAlignment() == null)
+                    continue;
+
+                int scLeft = read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0;
+                int scRight = read.isSoftClipped(SE_END) ? read.Cigar.getLastCigarElement().getLength() : 0;
+
+                int junctionSeIndex = scLeft > scRight ? SE_START : SE_END;
+                chimericJunctions.add(read.getCoordsBoundary(junctionSeIndex));
+            }
+        }
+
+        int chimericCount = mChimericReadMap.size();
+        mCurrentGenes.addCount(TOTAL, chimericCount);
+        mCurrentGenes.addCount(CHIMERIC, chimericCount);
+
+        for(List<ReadRecord> reads : mCandidateRealignedReadMap.values())
+        {
+            boolean addRead = false;
+
+            for(ReadRecord read : reads)
+            {
+                for(int se = SE_START; se <= SE_END; ++se)
+                {
+                    final int seIndex = se;
+                    if(read.isSoftClipped(se))
+                    {
+                        if(chimericJunctions.stream().anyMatch(x -> positionWithin(read.getCoordsBoundary(seIndex),
+                                x - SOFT_CLIP_JUNC_BUFFER, x + SOFT_CLIP_JUNC_BUFFER)))
+                        {
+                            addRead = true;
+                            mChimericReadMap.put(read.Id, reads);
+                            break;
+                        }
+                    }
+                }
+
+                if(addRead)
+                    break;
+            }
+        }
+
+        mChimericReadMap.values().forEach(x -> x.stream().forEach(y -> y.captureGeneInfo(mCurrentGenes.id())));
     }
 
     private static final int DUP_DATA_SECOND_START = 0;

@@ -12,9 +12,14 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.fusion.FusionFinder.mergeChimericReadMaps;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.collectCandidateJunctions;
+
+import static org.apache.logging.log4j.Level.DEBUG;
+import static org.apache.logging.log4j.Level.INFO;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -43,6 +48,8 @@ import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
+
+import org.apache.logging.log4j.Level;
 
 public class ChromosomeGeneTask implements Callable
 {
@@ -263,12 +270,6 @@ public class ChromosomeGeneTask implements Callable
             // at the moment it is one or the other
             analyseBamReads(geneCollection);
 
-            if(mConfig.runFunction(FUSIONS))
-            {
-                geneCollection.getBaseDepth().collapse();
-                mGeneDepthMap.put(geneCollection.id(), geneCollection.getBaseDepth());
-            }
-
             mPerfCounters[PERF_TOTAL].stop();
 
             ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
@@ -379,11 +380,6 @@ public class ChromosomeGeneTask implements Callable
         mPerfCounters[PERF_READS].start();
         mBamFragmentAllocator.produceBamCounts(geneCollection, geneRegion);
 
-        if(mConfig.runFunction(FUSIONS))
-        {
-            mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
-        }
-
         mPerfCounters[PERF_READS].stop();
 
         if(mConfig.runFunction(NOVEL_LOCATIONS))
@@ -391,6 +387,29 @@ public class ChromosomeGeneTask implements Callable
             mPerfCounters[PERF_NOVEL_LOCATIONS].start();
             mBamFragmentAllocator.annotateNovelLocations();
             mPerfCounters[PERF_NOVEL_LOCATIONS].stop();
+        }
+
+        if(mConfig.runFunction(FUSIONS))
+        {
+            if(!mBamFragmentAllocator.getChimericReadMap().isEmpty())
+            {
+                final Set<Integer> candidateJunctions = collectCandidateJunctions(mBamFragmentAllocator.getChimericReadMap(), mChromosome);
+
+                mergeChimericReadMaps(mChimericReadMap, mBamFragmentAllocator.getChimericReadMap());
+
+                geneCollection.getBaseDepth().cullToPositions(candidateJunctions);
+
+                mGeneDepthMap.put(geneCollection.id(), geneCollection.getBaseDepth());
+
+                if(mBamFragmentAllocator.getChimericReadMap().size() > 50)
+                {
+                    ISF_LOGGER.debug("chromosome({}) genes({}) chimericReads(new={} total={}) candJunc({}) baseDepth(new={} total={})",
+                            mChromosome, geneCollection.geneNames(), mBamFragmentAllocator.getChimericReadMap()
+                                    .size(), mChimericReadMap.size(),
+                            candidateJunctions.size(), geneCollection.getBaseDepth().basesWithDepth(),
+                            mGeneDepthMap.values().stream().mapToInt(x -> x.basesWithDepth()).sum());
+                }
+            }
         }
 
         GeneCollectionSummary geneCollectionSummary = new GeneCollectionSummary(

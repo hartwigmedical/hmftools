@@ -53,7 +53,6 @@ public class FusionTask implements Callable
 
     private static final int PC_DISCOVERY = 0;
     private static final int PC_ANNOTATE = 1;
-    private static final int PC_DEPTH = 2;
 
     public FusionTask(
             int taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
@@ -75,10 +74,9 @@ public class FusionTask implements Callable
 
         mFusionWriter = fusionWriter;
 
-        mPerfCounters = new PerformanceCounter[PC_DEPTH + 1];
+        mPerfCounters = new PerformanceCounter[PC_ANNOTATE + 1];
         mPerfCounters[PC_DISCOVERY] = new PerformanceCounter("Discovery");
         mPerfCounters[PC_ANNOTATE] = new PerformanceCounter("Annotate");
-        mPerfCounters[PC_DEPTH] = new PerformanceCounter("ReadDepth");
    }
 
     public final Map<String,List<FusionReadData>> getFusionCandidates() { return mFusionCandidates; }
@@ -128,8 +126,9 @@ public class FusionTask implements Callable
             }
         }
 
-        ISF_LOGGER.info("{}: chimeric fragments({} unfused={} junc={}) fusions(loc={} gene={} total={})",
-                mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
+        ISF_LOGGER.info("{}: chimeric fragments({} disc={} canRealgn={} junc={}) fusions(loc={} gene={} total={})",
+                mTaskId, mAllFragments.size(), mDiscordantFragments.values().stream().mapToInt(x -> x.size()).sum(),
+                mSingleGeneFragments.values().stream().mapToInt(x -> x.size()).sum(), junctioned,
                 mFusionCandidates.size(), mFusionsByGene.size(), mFusionCandidates.values().stream().mapToInt(x -> x.size()).sum());
 
         mPerfCounters[PC_DISCOVERY].stop();
@@ -137,10 +136,6 @@ public class FusionTask implements Callable
 
     private void calculateReadDepth()
     {
-        mPerfCounters[PC_DEPTH].start();
-
-        ISF_LOGGER.info("{}: calculating junction depth", mTaskId);
-
         for (List<FusionReadData> fusions : mFusionCandidates.values())
         {
             for(FusionReadData fusionData : fusions)
@@ -165,8 +160,6 @@ public class FusionTask implements Callable
                 }
             }
         }
-
-        mPerfCounters[PC_DEPTH].stop();
     }
 
     private void annotateFusions()

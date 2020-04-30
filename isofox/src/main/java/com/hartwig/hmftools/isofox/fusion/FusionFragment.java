@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOF
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
+import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocation;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
@@ -89,7 +90,7 @@ public class FusionFragment
 
         for(final ReadRecord read : reads)
         {
-            final String chrGeneId = read.chromosomeGeneId();
+            final String chrGeneId = formLocation(read.Chromosome, read.getGeneCollecton());
 
             List<ReadRecord> readGroup = readGroups.get(chrGeneId);
 
@@ -202,6 +203,7 @@ public class FusionFragment
             {
                 int scLength =
                         se == SE_START ? read.Cigar.getFirstCigarElement().getLength() : read.Cigar.getLastCigarElement().getLength();
+
                 if (scLength >= REALIGN_MIN_SOFT_CLIP_BASE_LENGTH)
                     return true;
             }
@@ -536,19 +538,47 @@ public class FusionFragment
         if(mType != MATCHED_JUNCTION)
             return;
 
-        for(int se = SE_START; se <= SE_END; ++se)
+        if(refGenome != null)
         {
-            int junctionBase = mJunctionPositions[se];
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                int junctionBase = mJunctionPositions[se];
 
-            if(junctionOrientations()[se] == 1)
-            {
-                mJunctionBases[se] = refGenome.getSubsequenceAt(
-                        mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH, junctionBase).getBaseString();
+                if (junctionOrientations()[se] == 1)
+                {
+                    mJunctionBases[se] = refGenome.getSubsequenceAt(
+                            mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH, junctionBase).getBaseString();
+                }
+                else
+                {
+                    mJunctionBases[se] = refGenome.getSubsequenceAt(
+                            mChromosomes[se], junctionBase, junctionBase + JUNCTION_BASE_LENGTH).getBaseString();
+                }
             }
-            else
+        }
+        else
+        {
+            for (int se = SE_START; se <= SE_END; ++se)
             {
-                mJunctionBases[se] = refGenome.getSubsequenceAt(
-                        mChromosomes[se], junctionBase, junctionBase + JUNCTION_BASE_LENGTH).getBaseString();
+                final int seIndex = se;
+                int junctionBase = mJunctionPositions[se];
+
+                if (junctionOrientations()[se] == 1)
+                {
+                    ReadRecord read = mReads.stream()
+                            .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
+                            .filter(x -> x.getCoordsBoundary(SE_END) == junctionBase).findFirst().orElse(null);
+
+                    mJunctionBases[se] = read.ReadBases.substring(read.Length - JUNCTION_BASE_LENGTH, read.Length);
+                }
+                else
+                {
+                    ReadRecord read = mReads.stream()
+                            .filter(x -> x.Chromosome.equals(mChromosomes[seIndex]))
+                            .filter(x -> x.getCoordsBoundary(SE_START) == junctionBase).findFirst().orElse(null);
+
+                    mJunctionBases[se] = read.ReadBases.substring(0, JUNCTION_BASE_LENGTH);
+                }
             }
         }
     }
