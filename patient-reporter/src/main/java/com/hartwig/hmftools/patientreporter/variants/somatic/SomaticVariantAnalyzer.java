@@ -43,7 +43,7 @@ public final class SomaticVariantAnalyzer {
         driverCatalog.addAll(OncoDrivers.drivers(variants, exomeGeneCopyNumbers));
         driverCatalog.addAll(TsgDrivers.drivers(variants, exomeGeneCopyNumbers));
 
-        // Check that we miss no drivers
+        // Check that we miss no driver genes.
         for (DriverCatalog driver : driverCatalog) {
             boolean reported = false;
             for (SomaticVariant variant : variantsToReport) {
@@ -52,12 +52,11 @@ public final class SomaticVariantAnalyzer {
                 }
             }
             if (!reported) {
-                LOGGER.warn("Driver {} not added to reported somatic variants", driver.gene());
+                LOGGER.warn("Driver gene '{}' not added to reported somatic variants!", driver.gene());
             }
         }
 
-        return ImmutableSomaticVariantAnalysis.of(variantsToReport,
-                driverCatalog);
+        return ImmutableSomaticVariantAnalysis.of(variantsToReport, driverCatalog);
     }
 
     @NotNull

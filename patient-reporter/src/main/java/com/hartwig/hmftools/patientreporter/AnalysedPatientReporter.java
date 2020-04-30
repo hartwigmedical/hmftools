@@ -104,7 +104,8 @@ class AnalysedPatientReporter {
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
         List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
-        LOGGER.info("Patient has given the following viral insertion consent: " + reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode()));
+        LOGGER.info("Patient has given the following viral insertion consent: '{}'",
+                reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode()));
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
 
@@ -152,13 +153,13 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private List<ReportableHomozygousDisruption> extractHomozygousDisruptionsFromLinxDrivers(@NotNull String linxDriversTsv)
+    private static List<ReportableHomozygousDisruption> extractHomozygousDisruptionsFromLinxDrivers(@NotNull String linxDriversTsv)
             throws IOException {
         return HomozygousDisruptionAnalyzer.extractFromLinxDriversTsv(linxDriversTsv);
     }
 
     @NotNull
-    private List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
+    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
         return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv);
     }
 
@@ -189,7 +190,6 @@ class AnalysedPatientReporter {
     @NotNull
     private SomaticVariantAnalysis analyzeSomaticVariants(@NotNull String sample, @NotNull String somaticVariantVcf,
             @NotNull List<GeneCopyNumber> exomeGeneCopyNumbers) throws IOException {
-
         List<SomaticVariant> variants = SomaticVariantFactory.passOnlyInstance().fromVCFFile(sample, somaticVariantVcf);
         LOGGER.info("Loaded {} PASS somatic variants from {}", variants.size(), somaticVariantVcf);
 
@@ -200,14 +200,13 @@ class AnalysedPatientReporter {
     private List<ReportableGermlineVariant> analyzeGermlineVariants(@NotNull String sampleBarcode, @NotNull String bachelorTsv,
             @NotNull CopyNumberAnalysis copyNumberAnalysis, @NotNull SomaticVariantAnalysis somaticVariantAnalysis,
             @NotNull ChordAnalysis chordAnalysis) throws IOException {
-
         List<GermlineVariant> variants =
                 BachelorFile.loadBachelorTsv(bachelorTsv).stream().filter(GermlineVariant::passFilter).collect(Collectors.toList());
         LOGGER.info("Loaded {} PASS germline variants from {}", variants.size(), bachelorTsv);
 
         LimsGermlineReportingChoice germlineChoice = reportData.limsModel().germlineReportingChoice(sampleBarcode);
         if (germlineChoice != LimsGermlineReportingChoice.NO_REPORTING) {
-            LOGGER.info(" Patient has given the following germline consent: {}", germlineChoice);
+            LOGGER.info(" Patient has given the following germline consent: '{}'", germlineChoice);
             return FilterGermlineVariants.filterGermlineVariantsForReporting(variants,
                     reportData.driverGeneView(),
                     reportData.germlineReportingModel(),
