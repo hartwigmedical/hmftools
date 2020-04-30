@@ -70,6 +70,37 @@ public class ReadContext {
         this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
     }
 
+    private ReadContext(int leftCentreIndex, int rightCentreIndex, @NotNull final ReadContext readContext) {
+
+        this.position = readContext.position;
+        this.repeat = readContext.repeat;
+        this.repeatCount = readContext.repeatCount;
+        this.microhomology = readContext.microhomology;
+        this.distance = readContext.distance;
+        this.distanceCigar = readContext.distanceCigar;
+
+        int adjLeftCentreIndex = Math.max(leftCentreIndex, 0);
+        int adjRightCentreIndex = Math.min(rightCentreIndex, readContext.readBases.bases().length - 1);
+        int readIndex = readContext.readBases.index();
+        this.readBases = new IndexedBases(position,
+                readIndex,
+                adjLeftCentreIndex,
+                adjRightCentreIndex,
+                readContext.readBases.flankSize(),
+                readContext.readBases());
+
+        int refIndex = readContext.refBases.index(position);
+        this.refBases = new IndexedBases(position,
+                refIndex,
+                refIndex + adjLeftCentreIndex - readIndex,
+                refIndex + adjRightCentreIndex - readIndex,
+                0,
+                readContext.refBases.bases());
+
+        this.incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
+
+    }
+
     private ReadContext(@NotNull final ReadContext clone) {
         this.position = clone.position;
         this.repeat = clone.repeat;
@@ -93,6 +124,11 @@ public class ReadContext {
                 clone.readBases.flankSize(),
                 clone.readBases.bases());
 
+    }
+
+    @NotNull
+    public ReadContext extend(int leftCentreIndex, int rightCentreIndex) {
+        return new ReadContext(leftCentreIndex, rightCentreIndex, this);
     }
 
     @NotNull
