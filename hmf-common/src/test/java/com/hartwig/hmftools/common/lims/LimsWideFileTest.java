@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.lims;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
@@ -22,6 +22,5 @@ public class LimsWideFileTest {
         assertEquals(STUDY_NAME, limsWide.studyName());
         assertEquals(REPORT_RECEIVER_NAME, limsWide.reportReceiverName());
         assertEquals(REPORT_RECEIVER_EMIAL, limsWide.reportReceiverEmail());
-
     }
 }
