@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
@@ -39,6 +40,7 @@ public class FusionFinder
 
     private final Map<String,List<ReadRecord>> mReadsMap;
     private final Map<String,Map<Integer,List<EnsemblGeneData>>> mChrGeneCollectionMap;
+    private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
 
     private List<FusionTask> mFusionTasks;
     private final FusionWriter mFusionWriter;
@@ -52,6 +54,7 @@ public class FusionFinder
 
         mReadsMap = Maps.newHashMap();
         mChrGeneCollectionMap = Maps.newHashMap();
+        mChrGeneDepthMap = Maps.newHashMap();
         mFusionTasks = Lists.newArrayList();
 
         mPerfCounter = new PerformanceCounter("Fusions");
@@ -83,6 +86,11 @@ public class FusionFinder
     public void addChromosomeGeneCollections(final String chromosome, final Map<Integer,List<EnsemblGeneData>> geneCollectionMap)
     {
         mChrGeneCollectionMap.put(chromosome, geneCollectionMap);
+    }
+
+    public void addChromosomeGeneDepth(final String chromosome, final Map<Integer,BaseDepth> geneDepthMap)
+    {
+        mChrGeneDepthMap.put(chromosome, geneDepthMap);
     }
 
     public void findFusions()
@@ -173,7 +181,7 @@ public class FusionFinder
             ++chrPairCount;
             if(chrPairCount >= pairsPerThread || chrPairCount == chrPairFragments.size())
             {
-                mFusionTasks.add(new FusionTask(taskId++, mConfig, mGeneTransCache, allFragments, mFusionWriter));
+                mFusionTasks.add(new FusionTask(taskId++, mConfig, mGeneTransCache, mChrGeneDepthMap, allFragments, mFusionWriter));
                 allFragments = Lists.newArrayList();
                 chrPairCount = 0;
             }

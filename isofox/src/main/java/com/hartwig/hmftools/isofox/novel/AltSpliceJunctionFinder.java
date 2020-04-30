@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -399,6 +400,18 @@ public class AltSpliceJunctionFinder
         return positionsRange;
     }
 
+    public void setPositionDepth(final BaseDepth baseDepth)
+    {
+        for(AltSpliceJunction altSJ : mAltSpliceJunctions)
+        {
+            for (int se = SE_START; se <= SE_END; ++se)
+            {
+                int depth = baseDepth.depthAtBase(altSJ.SpliceJunction[se]);
+                altSJ.addPositionCount(se, depth);
+            }
+        }
+    }
+
     public void setPositionDepthFromRead(final List<int[]> readCoords)
     {
         int readMinPos = readCoords.get(0)[SE_START];
@@ -408,7 +421,7 @@ public class AltSpliceJunctionFinder
         {
             for (int se = SE_START; se <= SE_END; ++se)
             {
-                int position = (int) altSJ.SpliceJunction[se];
+                int position = altSJ.SpliceJunction[se];
 
                 if(!positionWithin(position, readMinPos, readMaxPos))
                     continue;

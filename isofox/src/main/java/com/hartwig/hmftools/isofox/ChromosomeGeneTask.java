@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -59,6 +60,7 @@ public class ChromosomeGeneTask implements Callable
 
     private final List<EnsemblGeneData> mGeneDataList;
     private final Map<Integer,List<EnsemblGeneData>> mGeneCollectionMap;
+    private final Map<Integer, BaseDepth> mGeneDepthMap;
     private int mCollectionId;
     private int mCurrentGeneIndex;
     private int mGenesProcessed;
@@ -95,6 +97,7 @@ public class ChromosomeGeneTask implements Callable
 
         mGeneDataList = geneDataList;
         mGeneCollectionMap = Maps.newHashMap();
+        mGeneDepthMap = Maps.newHashMap();
         mCollectionId = 0;
 
         mCurrentGeneIndex = 0;
@@ -137,6 +140,7 @@ public class ChromosomeGeneTask implements Callable
     public final List<GeneCollectionSummary> getGeneCollectionSummaryData() { return mGeneCollectionSummaryData; }
     public final Map<String,List<ReadRecord>> getChimericReadMap() { return mChimericReadMap; }
     public final Map<Integer,List<EnsemblGeneData>> getGeneCollectionMap() { return mGeneCollectionMap; }
+    public final Map<Integer,BaseDepth> getGeneDepthMap() { return mGeneDepthMap; }
     public boolean isValid() { return mIsValid; }
 
     public void setTaskType(TaskType taskType) { mCurrentTaskType = taskType; }
@@ -258,6 +262,12 @@ public class ChromosomeGeneTask implements Callable
 
             // at the moment it is one or the other
             analyseBamReads(geneCollection);
+
+            if(mConfig.runFunction(FUSIONS))
+            {
+                geneCollection.getBaseDepth().collapse();
+                mGeneDepthMap.put(geneCollection.id(), geneCollection.getBaseDepth());
+            }
 
             mPerfCounters[PERF_TOTAL].stop();
 

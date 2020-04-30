@@ -233,8 +233,13 @@ public class Isofox
 
         if(mConfig.runFunction(FUSIONS))
         {
-            chrTasks.forEach(x -> mFusionFinder.addChimericReads(x.getChimericReadMap()));
-            chrTasks.forEach(x -> mFusionFinder.addChromosomeGeneCollections(x.chromosome(), x.getGeneCollectionMap()));
+            for(ChromosomeGeneTask chrTask : chrTasks)
+            {
+                mFusionFinder.addChimericReads(chrTask.getChimericReadMap());
+                mFusionFinder.addChromosomeGeneCollections(chrTask.chromosome(), chrTask.getGeneCollectionMap());
+                mFusionFinder.addChromosomeGeneDepth(chrTask.chromosome(), chrTask.getGeneDepthMap());
+            }
+
             mFusionFinder.findFusions();
         }
 

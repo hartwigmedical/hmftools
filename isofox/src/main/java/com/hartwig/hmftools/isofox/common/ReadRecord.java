@@ -525,8 +525,8 @@ public class ReadRecord
                 continue;
 
             // process this overlap
-            int regionBaseIndex = readStartPos > region.start() ? (int)(readStartPos - region.start()) : 0;
-            int overlap = (int)(min(readEndPos, region.end()) - max(readStartPos, region.start())) + 1;
+            int regionBaseIndex = readStartPos > region.start() ? readStartPos - region.start() : 0;
+            int overlap = min(readEndPos, region.end()) - max(readStartPos, region.start()) + 1;
 
             if(regionBaseIndex + overlap > regionBaseDepth.length)
             {

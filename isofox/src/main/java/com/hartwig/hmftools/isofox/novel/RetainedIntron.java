@@ -12,7 +12,7 @@ public class RetainedIntron
 {
     private final List<RegionReadData> mRegions;
     private final boolean mIsStart;
-    private final long mPosition;
+    private final int mPosition;
 
     private int mFragmentCount;
     private int mSplicedFragmentCount;
@@ -46,7 +46,7 @@ public class RetainedIntron
 
     public final List<RegionReadData> regions() { return mRegions; }
     public boolean isStart() { return mIsStart; }
-    public long position() { return mPosition; }
+    public int position() { return mPosition; }
 
     public String type(boolean isForwardStrand) { return (isForwardStrand == mIsStart) ? "ACCEPTOR" : "DONOR"; }
 

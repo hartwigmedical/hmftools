@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
@@ -211,6 +212,14 @@ public class RetainedIntronFinder
         return retIntron;
     }
 
+    public void setPositionDepth(final BaseDepth baseDepth)
+    {
+        for(RetainedIntron retIntron : mRetainedIntrons)
+        {
+            retIntron.setReadDepth(baseDepth.depthAtBase(retIntron.position()));
+        }
+    }
+
     public void setPositionDepthFromRead(final List<int[]> readCoords)
     {
         int readMinPos = readCoords.get(0)[SE_START];
@@ -218,7 +227,7 @@ public class RetainedIntronFinder
 
         for(RetainedIntron retIntron : mRetainedIntrons)
         {
-            int position = (int) retIntron.position();
+            int position = retIntron.position();
 
             if(!positionWithin(position, readMinPos, readMaxPos))
                 continue;

@@ -47,6 +47,8 @@ public class GeneCollection
     private final Map<Integer,int[][]> mTranscriptReadCounts; // count of fragments support types for each transcript, and whether unique
     private final int[] mFragmentCounts; // counts by various classifications
 
+    private final BaseDepth mBaseDepth;
+
     public GeneCollection(int id, final List<GeneReadData> genes)
     {
         mId = id;
@@ -72,6 +74,8 @@ public class GeneCollection
 
         mEnrichedTranscripts = null;
         mEnrichedRegion = null;
+
+        mBaseDepth = new BaseDepth(mId, mChromosome, mRegionBounds);
     }
 
     public int id() { return mId; }
@@ -85,6 +89,8 @@ public class GeneCollection
 
     public final List<RegionReadData> getExonRegions() { return mExonRegions; }
     public List<int[]> getCommonExonicRegions() { return mCommonExonicRegions; }
+
+    public BaseDepth getBaseDepth() { return mBaseDepth; }
 
     public int getStrand(int transId)
     {

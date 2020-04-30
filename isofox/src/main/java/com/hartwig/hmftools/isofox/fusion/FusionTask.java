@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
@@ -27,6 +28,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblGeneData;
 import com.hartwig.hmftools.common.ensemblcache.TranscriptData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
+import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
 
 public class FusionTask implements Callable
@@ -36,6 +38,7 @@ public class FusionTask implements Callable
     private final EnsemblDataCache mGeneTransCache;
 
     // private final Map<String,List<FusionFragment>> mChrPairFragments;
+    private final Map<String,Map<Integer,BaseDepth>> mChrGeneDepthMap;
     private final List<FusionFragment> mAllFragments;
     private final Set<String> mReadIds;
 
@@ -53,12 +56,13 @@ public class FusionTask implements Callable
     private static final int PC_DEPTH = 2;
 
     public FusionTask(
-            int taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache, final List<FusionFragment> fragments,
-            final FusionWriter fusionWriter)
+            int taskId, final IsofoxConfig config, final EnsemblDataCache geneTransCache,
+            final Map<String,Map<Integer,BaseDepth>> geneDepthMap, final List<FusionFragment> fragments, final FusionWriter fusionWriter)
     {
         mTaskId = taskId;
         mConfig = config;
         mGeneTransCache = geneTransCache;
+        mChrGeneDepthMap = geneDepthMap;
 
         mAllFragments = Lists.newArrayList(fragments);
 
@@ -133,10 +137,33 @@ public class FusionTask implements Callable
         ISF_LOGGER.info("{}: calculating junction depth", mTaskId);
 
         // classify / analyse fusions
-        int nextLog = 100;
-        int fusionCount = 0;
+        // int nextLog = 100;
+        // int fusionCount = 0;
         for (List<FusionReadData> fusions : mFusionCandidates.values())
         {
+            for(FusionReadData fusionData : fusions)
+            {
+                for (int se = SE_START; se <= SE_END; ++se)
+                {
+                    final Map<Integer,BaseDepth> baseDepthMap = mChrGeneDepthMap.get(fusionData.chromosomes()[se]);
+
+                    if(baseDepthMap == null)
+                        continue;
+
+                    final BaseDepth baseDepth = baseDepthMap != null ? baseDepthMap.get(fusionData.geneCollections()[se]) : null;
+
+                    if(baseDepth == null)
+                    {
+                        ISF_LOGGER.error("fusion({}) gc({}) missing base depth", fusionData, fusionData.geneCollections()[se]);
+                        continue;
+                    }
+
+                    int baseDepthCount = baseDepth.depthAtBase(fusionData.junctionPositions()[se]);
+                    fusionData.getReadDepth()[se] += baseDepthCount;
+                }
+            }
+
+            /*
             mFusionReadDepth.calcFusionReadDepth(fusions);
 
             if (++fusionCount >= nextLog)
@@ -144,6 +171,7 @@ public class FusionTask implements Callable
                 ISF_LOGGER.info("{}: processed {} fusions", mTaskId, fusionCount);
                 nextLog += 100;
             }
+            */
         }
 
         mPerfCounters[PC_DEPTH].stop();
@@ -188,7 +216,7 @@ public class FusionTask implements Callable
     {
         // scenarios:
         // 1. New fusion with correct splice-junction support - may or may not match a known transcript and exon
-        // 3. Potential discordant or realigned fragment
+        // 2. Potential discordant or realigned fragment
 
         // fusions will be stored in a map keyed by their location pair (chromosome + geneCollectionId)
         List<FusionReadData> fusions = mFusionCandidates.get(fragment.locationPair());

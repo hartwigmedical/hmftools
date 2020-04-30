@@ -193,7 +193,9 @@ public class BamFragmentAllocator
             mChimericReadMap.values().forEach(x -> x.stream().forEach(y -> y.captureGeneInfo(mCurrentGenes.id())));
         }
 
-        ISF_LOGGER.debug("gene({}) bamReadCount({})", mCurrentGenes.geneNames(), mGeneReadCount);
+        ISF_LOGGER.debug("genes({}) bamReadCount({}) depth(bases={} perc={} max={})",
+                mCurrentGenes.geneNames(), mGeneReadCount, mCurrentGenes.getBaseDepth().basesWithDepth(),
+                String.format("%.3f", mCurrentGenes.getBaseDepth().basesWithDepthPerc()), mCurrentGenes.getBaseDepth().maxDepth());
     }
 
     public void annotateNovelLocations()
@@ -266,6 +268,11 @@ public class BamFragmentAllocator
         if (!overlappingRegions.isEmpty())
         {
             read.processOverlappingRegions(overlappingRegions);
+        }
+
+        if(!read.isDuplicate())
+        {
+            mCurrentGenes.getBaseDepth().processRead(read);
         }
 
         if(read.isChimeric())
@@ -747,6 +754,21 @@ public class BamFragmentAllocator
     private FragmentTracker mFragmentTracker = new FragmentTracker();
 
     private void recordNovelLocationReadDepth()
+    {
+        if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
+            return;
+
+        mFragmentTracker.clear();
+
+        mReadDepthPerf.start();
+
+        mAltSpliceJunctionFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
+        mRetainedIntronFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
+
+        mReadDepthPerf.stop();
+    }
+
+    private void recordNovelLocationReadDepthOld()
     {
         if(mAltSpliceJunctionFinder.getAltSpliceJunctions().isEmpty() && mRetainedIntronFinder.getRetainedIntrons().isEmpty())
             return;
