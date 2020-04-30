@@ -295,11 +295,18 @@ public class ReadContextCounter implements VariantHotspot {
             return new RealignedContext(RealignedType.NONE, 0);
         }
 
+        int index = readContext.readBasesPositionIndex();
+        int leftIndex = readContext.readBasesLeftCentreIndex();
+        int rightIndex = readContext.readBasesRightCentreIndex();
+
+        int leftOffset = index - leftIndex;
+        int rightOffset = rightIndex - index;
+
         int indelLength = indelLength(record);
         return Realigned.realignedAroundIndex(readContext,
                 readIndex,
                 record.getReadBases(),
-                Math.max(indelLength, Realigned.MAX_REPEAT_SIZE));
+                Math.max(indelLength + Math.max(leftOffset, rightOffset), Realigned.MAX_REPEAT_SIZE));
     }
 
     private double calculateQualityScore(int readBaseIndex, final SAMRecord record, final QualityConfig qualityConfig) {
