@@ -24,7 +24,7 @@ public class TherapyDetailsChapterOffLabel implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull final Document reportDocument) {
+    public void render(@NotNull Document reportDocument) {
         Table chapterTable = new Table(1);
 
         chapterTable.addCell(new Cell().add(TherapyDetailsChapterFunctions.createEvidenceTable("Evidence on other tumor types",

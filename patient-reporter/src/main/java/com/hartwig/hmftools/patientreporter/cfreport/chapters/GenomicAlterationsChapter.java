@@ -49,7 +49,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @Override
     public void render(@NotNull Document reportDocument) {
-        final boolean hasReliablePurity = patientReport.hasReliablePurity();
+        boolean hasReliablePurity = patientReport.hasReliablePurity();
 
         reportDocument.add(createTumorVariantsTable(patientReport.reportableVariants(), hasReliablePurity));
         reportDocument.add(createGainsAndLossesTable(patientReport.gainsAndLosses(), hasReliablePurity));
@@ -63,7 +63,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createTumorVariantsTable(@NotNull List<ReportableVariant> reportableVariants, boolean hasReliablePurity) {
-        final String title = "Tumor specific variants";
+        String title = "Tumor specific variants";
         if (reportableVariants.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -130,7 +130,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createGainsAndLossesTable(@NotNull List<ReportableGainLoss> gainsAndLosses, boolean hasReliablePurity) {
-        final String title = "Tumor specific gains & losses";
+        String title = "Tumor specific gains & losses";
         if (gainsAndLosses.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -156,7 +156,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createHomozygousDisruptionsTable(@NotNull List<ReportableHomozygousDisruption> homozygousDisruptions) {
-        final String title = "Tumor specific homozygous disruptions";
+        String title = "Tumor specific homozygous disruptions";
         if (homozygousDisruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -177,7 +177,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createFusionsTable(@NotNull List<ReportableGeneFusion> fusions, boolean hasReliablePurity) {
-        final String title = "Tumor specific gene fusions";
+        String title = "Tumor specific gene fusions";
         if (fusions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -188,7 +188,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("3' Start"),
                         TableUtil.createHeaderCell("Copies").setTextAlignment(TextAlignment.CENTER) });
 
-        final List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
+        List<ReportableGeneFusion> sortedFusions = GeneFusions.sort(fusions);
         for (ReportableGeneFusion fusion : sortedFusions) {
             contentTable.addCell(TableUtil.createContentCell(GeneFusions.name(fusion)));
             contentTable.addCell(TableUtil.createContentCell(new Paragraph(fusion.geneTranscriptStart()))
@@ -207,7 +207,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createDisruptionsTable(@NotNull List<ReportableGeneDisruption> disruptions, boolean hasReliablePurity) {
-        final String title = "Tumor specific gene disruptions";
+        String title = "Tumor specific gene disruptions";
         if (disruptions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
@@ -218,7 +218,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
                         TableUtil.createHeaderCell("Disrupted copies").setTextAlignment(TextAlignment.CENTER),
                         TableUtil.createHeaderCell("Undisrupted copies").setTextAlignment(TextAlignment.CENTER) });
 
-        final List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
+        List<ReportableGeneDisruption> sortedDisruptions = GeneDisruptions.sort(disruptions);
         for (ReportableGeneDisruption disruption : sortedDisruptions) {
             contentTable.addCell(TableUtil.createContentCell(disruption.location()));
             contentTable.addCell(TableUtil.createContentCell(disruption.gene()));
@@ -234,7 +234,7 @@ public class GenomicAlterationsChapter implements ReportChapter {
 
     @NotNull
     private static Table createViralInsertionTable(@NotNull List<ViralInsertion> viralInsertions) {
-        final String title = "Tumor specific viral insertions";
+        String title = "Tumor specific viral insertions";
         if (viralInsertions.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }

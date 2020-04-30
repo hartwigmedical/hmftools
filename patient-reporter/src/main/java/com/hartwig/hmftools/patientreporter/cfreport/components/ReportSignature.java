@@ -29,7 +29,7 @@ public final class ReportSignature {
         div.setMarginTop(40);
 
         try {
-            final Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
+            Image rvaLogo = new Image(ImageDataFactory.create(rvaLogoPath));
             rvaLogo.setMaxHeight(58);
             div.add(rvaLogo);
         } catch (MalformedURLException e) {
@@ -44,7 +44,7 @@ public final class ReportSignature {
         div.add(signatureText);
 
         try {
-            final Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
+            Image signatureImage = new Image(ImageDataFactory.create(signaturePath));
             signatureImage.setMaxHeight(60);
             signatureImage.setMarginTop(-20); // Set negative margin so the signature slightly overlaps the signature text
             signatureImage.setMarginLeft(10);

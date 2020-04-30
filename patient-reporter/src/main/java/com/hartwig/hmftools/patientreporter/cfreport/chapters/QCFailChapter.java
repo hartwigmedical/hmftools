@@ -47,8 +47,7 @@ public class QCFailChapter implements ReportChapter {
     @Override
     public void render(@NotNull Document reportDocument) {
         if (failReport.sampleReport().addressee() == null) {
-            throw new IllegalStateException(
-                    "No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
+            throw new IllegalStateException("No recipient address present for sample " + failReport.sampleReport().tumorSampleId());
         }
 
         reportDocument.add(TumorLocationAndTypeTable.createTumorLocationAndType(failReport.sampleReport().primaryTumorLocationString(),
@@ -80,9 +79,9 @@ public class QCFailChapter implements ReportChapter {
 
     @NotNull
     private static Div createFailReasonDiv(@NotNull QCFailReason failReason) {
-        final String title;
-        final String reason;
-        final String explanation;
+        String title;
+        String reason;
+        String explanation;
 
         switch (failReason) {
             case LOW_DNA_YIELD: {

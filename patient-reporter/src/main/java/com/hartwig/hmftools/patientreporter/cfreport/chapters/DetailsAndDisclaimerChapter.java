@@ -43,7 +43,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull Document reportDocument) throws IOException {
+    public void render(@NotNull Document reportDocument) throws IOException {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 1, 0.1f, 1 }));
         table.setWidth(contentWidth());
         table.addCell(TableUtil.createLayoutCell().add(createSampleDetailsDiv(patientReport)));
@@ -56,12 +56,12 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
     }
 
     @NotNull
-    private static Div createSampleDetailsDiv(@NotNull final AnalysedPatientReport patientReport) {
-        final SampleReport sampleReport = patientReport.sampleReport();
+    private static Div createSampleDetailsDiv(@NotNull AnalysedPatientReport patientReport) {
+        SampleReport sampleReport = patientReport.sampleReport();
         LimsStudy study = LimsStudy.fromSampleId(patientReport.sampleReport().tumorSampleId());
         LimsCoreCohort coreCohort = LimsCoreCohort.fromSampleId(patientReport.sampleReport().tumorSampleId());
 
-        final String addressee;
+        String addressee;
         if (sampleReport.addressee() != null) {
             addressee = sampleReport.addressee();
             assert addressee != null;
@@ -70,7 +70,7 @@ public class DetailsAndDisclaimerChapter implements ReportChapter {
             addressee = DataUtil.NA_STRING;
         }
 
-        final Paragraph sampleIdentificationLineOnReport;
+        Paragraph sampleIdentificationLineOnReport;
         if (study == LimsStudy.WIDE || coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
             sampleIdentificationLineOnReport = createContentParagraphTwice("The HMF sample ID is: ",
                     patientReport.sampleReport().tumorSampleId(),

@@ -28,7 +28,7 @@ public class ExplanationChapter implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull Document reportDocument) {
+    public  void render(@NotNull Document reportDocument) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10, }));
         table.setWidth(contentWidth());
 

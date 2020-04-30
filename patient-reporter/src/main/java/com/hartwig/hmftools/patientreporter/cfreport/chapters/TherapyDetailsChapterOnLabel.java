@@ -41,7 +41,7 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     }
 
     @Override
-    public final void render(@NotNull final Document reportDocument) {
+    public  void render(@NotNull  Document reportDocument) {
         Table chapterTable = new Table(1);
 
         chapterTable.addCell(new Cell().add(TherapyDetailsChapterFunctions.createEvidenceTable("Tumor type specific evidence",
@@ -59,14 +59,14 @@ public class TherapyDetailsChapterOnLabel implements ReportChapter {
     }
 
     @NotNull
-    private static Table createClinicalTrialsTable(@NotNull final List<ClinicalTrial> trials) {
-        final String title = "Tumor type specific clinical trials (NL)";
+    private static Table createClinicalTrialsTable(@NotNull  List<ClinicalTrial> trials) {
+         String title = "Tumor type specific clinical trials (NL)";
 
         if (trials.isEmpty()) {
             return TableUtil.createNoneReportTable(title);
         }
 
-        final Table contentTable =
+         Table contentTable =
                 TableUtil.createReportContentTable(new float[] { COL_WIDTH_EVENT, COL_WIDTH_MATCH, COL_WIDTH_TREATMENT_ICONS,
                                 COL_WIDTH_TRIAL_NAME, COL_WIDTH_CCMO, COL_WIDTH_SOURCE },
                         new Cell[] { TableUtil.createHeaderCell("Variant"), TableUtil.createHeaderCell("Match"),

@@ -22,8 +22,8 @@ public final class SidePanel {
     private static final float RECTANGLE_HEIGHT_SHORT = 110;
 
     public static void renderSidePanel(PdfPage page, @NotNull final SampleReport sampleReport, boolean fullHeight, boolean fullContent) {
-        final PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
-        final Rectangle pageSize = page.getPageSize();
+        PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
+        Rectangle pageSize = page.getPageSize();
         renderBackgroundRect(fullHeight, canvas, pageSize);
         BaseMarker.renderMarkerGrid(4, (fullHeight ? 20 : 2), CONTENT_X_START, 35, 820, -ROW_SPACING, .05f, .15f, canvas);
 
@@ -36,7 +36,7 @@ public final class SidePanel {
         LimsStudy study = LimsStudy.fromSampleId(sampleReport.tumorSampleId());
 
         if (fullHeight && fullContent) {
-            final String contactNames = study == LimsStudy.CORE
+            String contactNames = study == LimsStudy.CORE
                     ? sampleReport.requesterName()
                     : study == LimsStudy.WIDE ? sampleReport.studyRequesterName() : Strings.EMPTY;
             if (!contactNames.isEmpty()) {
@@ -50,12 +50,12 @@ public final class SidePanel {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Email", contactEmails));
             }
 
-            final String hospitalName = sampleReport.hospitalName();
+            String hospitalName = sampleReport.hospitalName();
             if (!hospitalName.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital", hospitalName));
             }
 
-            final String hospitalPatientId = study == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
+            String hospitalPatientId = study == LimsStudy.CORE ? sampleReport.hospitalPatientId() : Strings.EMPTY;
             if (!hospitalPatientId.isEmpty()) {
                 cv.add(createSidePanelDiv(++sideTextIndex, "Hospital patient id", hospitalPatientId));
             }
@@ -83,9 +83,9 @@ public final class SidePanel {
 
     @NotNull
     private static Div createSidePanelDiv(int index, @NotNull String label, @NotNull String value) {
-        final float Y_START = 802;
-        final float VALUE_TEXT_Y_OFFSET = 18;
-        final float MAX_WIDTH = 120;
+        float Y_START = 802;
+        float VALUE_TEXT_Y_OFFSET = 18;
+        float MAX_WIDTH = 120;
 
         Div div = new Div();
         div.setKeepTogether(true);
@@ -94,7 +94,7 @@ public final class SidePanel {
         div.add(new Paragraph(label.toUpperCase()).addStyle(ReportResources.sidePanelLabelStyle())
                 .setFixedPosition(CONTENT_X_START, yPos, MAX_WIDTH));
 
-        final float valueFontSize = ReportResources.maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
+        float valueFontSize = ReportResources.maxPointSizeForWidth(ReportResources.fontBold(), 11, 6, value, MAX_WIDTH);
         yPos -= VALUE_TEXT_Y_OFFSET;
         div.add(new Paragraph(value).addStyle(ReportResources.sidePanelValueStyle().setFontSize(valueFontSize))
                 .setHeight(15)
