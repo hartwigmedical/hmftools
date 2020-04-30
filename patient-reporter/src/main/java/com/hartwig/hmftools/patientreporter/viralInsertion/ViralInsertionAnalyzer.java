@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.structural.linx.LinxViralInsertFile;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,8 +19,8 @@ public final class ViralInsertionAnalyzer {
 
     private static final Logger LOGGER = LogManager.getLogger(ViralInsertionAnalyzer.class);
 
-    private static final List<String> excludedViralInsertions =
-            Lists.newArrayList("Human immunodeficiency virus", "Human immunodeficiency virus 1", "Human immunodeficiency virus 2");
+    private static final Set<String> EXCLUDED_VIRAL_INSERTIONS =
+            Sets.newHashSet("Human immunodeficiency virus", "Human immunodeficiency virus 1", "Human immunodeficiency virus 2");
 
     private ViralInsertionAnalyzer() {
 
@@ -26,11 +28,11 @@ public final class ViralInsertionAnalyzer {
 
     @NotNull
     public static List<ViralInsertion> loadViralInsertions(@NotNull String viralInsertTsv) throws IOException {
-        List<LinxViralInsertFile> viralInsertFileList = LinxViralInsertFile.read(viralInsertTsv);
-        LOGGER.info("Loaded {} viral insertions from {}", viralInsertFileList.size(), viralInsertTsv);
+        List<LinxViralInsertFile> viralInsertionList = LinxViralInsertFile.read(viralInsertTsv);
+        LOGGER.info("Loaded {} viral insertions from {}", viralInsertionList.size(), viralInsertTsv);
 
         Map<ViralInsertionAnalyzer.VirusKey, List<LinxViralInsertFile>> itemsPerKey = Maps.newHashMap();
-        for (LinxViralInsertFile viralInsertion : viralInsertFileList) {
+        for (LinxViralInsertFile viralInsertion : viralInsertionList) {
             ViralInsertionAnalyzer.VirusKey key = new ViralInsertionAnalyzer.VirusKey(viralInsertion.VirusId);
             List<LinxViralInsertFile> items = itemsPerKey.get(key);
 
@@ -48,7 +50,7 @@ public final class ViralInsertionAnalyzer {
             int count = itemsForKey.size();
             assert count > 0;
             String virusName = itemsForKey.get(0).VirusName;
-            if (!excludedViralInsertions.contains(virusName)) {
+            if (!EXCLUDED_VIRAL_INSERTIONS.contains(virusName)) {
                 viralInsertions.add(ImmutableViralInsertion.builder().virus(virusName).viralInsertionCount(count).build());
             }
         }
