@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.context;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -11,9 +13,11 @@ import com.hartwig.hmftools.sage.ref.RefSequence;
 import com.hartwig.hmftools.sage.sam.CigarHandler;
 import com.hartwig.hmftools.sage.sam.CigarTraversal;
 
+import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -43,32 +47,71 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
         if (inBounds(record) && !reachedDepthLimit(record)) {
 
+            final List<AltRead> altReads = Lists.newArrayList();
             final IndexedBases refBases = refGenome.alignment();
 
             final CigarHandler handler = new CigarHandler() {
                 @Override
                 public void handleAlignment(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    processAlignment(record, readIndex, refPosition, element.getLength(), refBases);
+                    altReads.addAll(processAlignment(record, readIndex, refPosition, element.getLength(), refBases));
+
                 }
 
                 @Override
                 public void handleInsert(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    processInsert(element, record, readIndex, refPosition, refBases);
+                    Optional.ofNullable(processInsert(element, record, readIndex, refPosition, refBases)).ifPresent(altReads::add);
                 }
 
                 @Override
                 public void handleDelete(@NotNull final SAMRecord record, @NotNull final CigarElement element, final int readIndex,
                         final int refPosition) {
-                    processDel(element, record, readIndex, refPosition, refBases);
+                    Optional.ofNullable(processDel(element, record, readIndex, refPosition, refBases)).ifPresent(altReads::add);
                 }
             };
             CigarTraversal.traverseCigar(record, handler);
+
+            // If an snv core overlaps an indel core, then extend the cores of both.
+            for (int i = 0; i < altReads.size(); i++) {
+                final AltRead snv = altReads.get(i);
+                if (!snv.isIndel() && snv.containsReadContext()) {
+                    for (int j = altReads.size() - 1; j > i; j--) {
+                        final AltRead nextIndel = altReads.get(j);
+                        if (nextIndel != null && nextIndel.isIndel() && nextIndel.containsReadContext()) {
+                            if (nextIndel.leftCoreIndex() - nextIndel.length() <= snv.rightCoreIndex()) {
+                                snv.extend(nextIndel);
+                                nextIndel.extend(snv);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = altReads.size() - 1; i >= 0; i--) {
+                final AltRead snv = altReads.get(i);
+                if (!snv.isIndel() && snv.containsReadContext()) {
+                    for (int j = 0; j < i; j++) {
+                        final AltRead previousIndel = altReads.get(j);
+                        if (previousIndel != null && previousIndel.isIndel() && previousIndel.containsReadContext()) {
+                            if (previousIndel.rightCoreIndex() + previousIndel.length() >= snv.leftCoreIndex()) {
+                                previousIndel.extend(snv);
+                                snv.extend(previousIndel);
+                            }
+                        }
+                    }
+
+                }
+            }
+
+
+            altReads.forEach(AltRead::updateRefContext);
         }
+
     }
 
-    private void processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    @Nullable
+    private AltRead processInsert(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
         int refIndex = refBases.index(refPosition);
 
@@ -82,12 +125,15 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, alt.length());
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createInsertContext(alt, refPosition, readIndex, record, refBases) : null;
-                refContext.altRead(ref, alt, baseQuality, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, readContext);
             }
         }
+
+        return null;
     }
 
-    private void processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
+    @Nullable
+    private AltRead processDel(@NotNull final CigarElement e, @NotNull final SAMRecord record, int readIndex, int refPosition,
             final IndexedBases refBases) {
         int refIndex = refBases.index(refPosition);
 
@@ -101,13 +147,18 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 final int baseQuality = baseQuality(readIndex, record, 2);
                 final ReadContext readContext =
                         findReadContext ? readContextFactory.createDelContext(ref, refPosition, readIndex, record, refBases) : null;
-                refContext.altRead(ref, alt, baseQuality, readContext);
+                return new AltRead(refContext, ref, alt, baseQuality, readContext);
             }
         }
+
+        return null;
     }
 
-    private void processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart, int alignmentLength,
-            final IndexedBases refBases) {
+    @NotNull
+    private List<AltRead> processAlignment(@NotNull final SAMRecord record, int readBasesStartIndex, int refPositionStart,
+            int alignmentLength, final IndexedBases refBases) {
+
+        final List<AltRead> result = Lists.newArrayList();
 
         int refIndex = refBases.index(refPositionStart);
 
@@ -128,13 +179,13 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
 
             final RefContext refContext = candidates.refContext(record.getContig(), refPosition);
             if (!refContext.reachedLimit()) {
-
                 int baseQuality = record.getBaseQualities()[readBaseIndex];
                 if (readByte != refByte) {
                     final String alt = String.valueOf((char) readByte);
                     final ReadContext readContext =
                             findReadContext ? readContextFactory.createSNVContext(refPosition, readBaseIndex, record, refBases) : null;
-                    refContext.altRead(ref, alt, baseQuality, readContext);
+
+                    result.add(new AltRead(refContext, ref, alt, baseQuality, readContext));
 
                     if (config.mnvEnabled()) {
                         int mnvMaxLength = mnvLength(refPosition,
@@ -157,7 +208,7 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                                         record,
                                         refBases) : null;
 
-                                refContext.altRead(mnvRef, mnvAlt, baseQuality, mnvReadContext);
+                                result.add(new AltRead(refContext, mnvRef, mnvAlt, baseQuality, mnvReadContext));
                             }
                         }
                     }
@@ -166,6 +217,8 @@ public class RefContextConsumer implements Consumer<SAMRecord> {
                 }
             }
         }
+
+        return result;
     }
 
     private boolean findReadContext(int readIndex, @NotNull final SAMRecord record) {
