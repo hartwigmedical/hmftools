@@ -20,7 +20,6 @@ public class LimsWideFile {
     private LimsWideFile() {
     }
 
-
     @NotNull
     public static LimsWide read(@NotNull String filePath) throws IOException {
         ImmutableLimsWide.Builder builder = ImmutableLimsWide.builder();
@@ -35,7 +34,11 @@ public class LimsWideFile {
 
     @NotNull
     public static LimsWide empty() {
-        return ImmutableLimsWide.builder().studyName(Strings.EMPTY).reportReceiverName(Strings.EMPTY).reportReceiverEmail(Strings.EMPTY).build();
+        return ImmutableLimsWide.builder()
+                .studyName(Strings.EMPTY)
+                .reportReceiverName(Strings.EMPTY)
+                .reportReceiverEmail(Strings.EMPTY)
+                .build();
     }
 
     @NotNull
@@ -44,7 +47,7 @@ public class LimsWideFile {
         if (lines.isEmpty()) {
             throw new EmptyFileException(filename);
         }
-        final int index = findHeaderLineIndex(lines);
+        int index = findHeaderLineIndex(lines);
         if (index >= lines.size()) {
             throw new MalformedFileException(String.format("No value line found after header line in contact file %s.", filename));
         }
@@ -52,12 +55,11 @@ public class LimsWideFile {
     }
 
     private static int findHeaderLineIndex(@NotNull final List<String> lines) throws MalformedFileException {
-        final Optional<Integer> lineNumbers =
+        Optional<Integer> lineNumbers =
                 IntStream.range(0, lines.size()).filter(index -> lines.get(index).contains("StudyName")).boxed().findFirst();
         if (!lineNumbers.isPresent()) {
             throw new MalformedFileException(String.format("Could not find header line in contact file with %s lines.", lines.size()));
         }
         return lineNumbers.get();
     }
-
 }

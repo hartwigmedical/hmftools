@@ -144,6 +144,7 @@ public class CFReportWriterTest {
                 .hospitalName(Strings.EMPTY)
                 .hospitalPIName(Strings.EMPTY)
                 .hospitalPIEmail(Strings.EMPTY)
+                .cohort("A")
                 .projectName("COLO-001-002")
                 .requesterName("ContactMe")
                 .requesterEmail("contact@me.com")
@@ -152,7 +153,6 @@ public class CFReportWriterTest {
                 .submissionId("ABC")
                 .hospitalPatientId("123456")
                 .hospitalPathologySampleId("A")
-                .cohortSample("A")
                 .build();
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);

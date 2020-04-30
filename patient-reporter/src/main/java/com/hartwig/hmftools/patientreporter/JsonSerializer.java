@@ -123,6 +123,7 @@ public class JsonSerializer {
                 .hospitalName(Strings.EMPTY)
                 .hospitalPIName(Strings.EMPTY)
                 .hospitalPIEmail(Strings.EMPTY)
+                .cohort("TEST")
                 .projectName("TEST")
                 .submissionId("10")
                 .hospitalPatientId("4567")

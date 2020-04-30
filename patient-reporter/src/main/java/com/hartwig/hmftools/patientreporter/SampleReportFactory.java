@@ -49,19 +49,19 @@ public final class SampleReportFactory {
                 .tumorArrivalDate(arrivalDateTumorSample)
                 .purityShallowSeq(lims.purityShallowSeq(tumorSampleBarcode))
                 .labProcedures(lims.labProcedures(tumorSampleBarcode))
+                .cohort(lims.cohort(tumorSampleBarcode))
+                .projectName(lims.projectName(tumorSampleBarcode))
+                .requesterName(lims.requesterName(tumorSampleBarcode))
+                .requesterEmail(lims.requesterEmail(tumorSampleBarcode))
                 .addressee(hospitalQuery.fullAddresseeString())
                 .hospitalName(hospitalQuery.hospitalName())
                 .hospitalPIName(hospitalQuery.principalInvestigatorName())
                 .hospitalPIEmail(hospitalQuery.principalInvestigatorEmail())
-                .projectName(lims.projectName(tumorSampleBarcode))
-                .requesterName(lims.requesterName(tumorSampleBarcode))
-                .requesterEmail(lims.requesterEmail(tumorSampleBarcode))
                 .studyRequesterName(limsWide.reportReceiverName())
                 .studyRequesterEmail(limsWide.reportReceiverEmail())
                 .submissionId(lims.submissionId(tumorSampleBarcode))
                 .hospitalPatientId(lims.hospitalPatientId(tumorSampleBarcode))
                 .hospitalPathologySampleId(lims.hospitalPathologySampleId(tumorSampleBarcode))
-                .cohortSample(lims.cohort(tumorSampleBarcode))
                 .build();
     }
 }

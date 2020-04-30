@@ -101,7 +101,7 @@ public class ExplanationChapter implements ReportChapter {
                         "A gene for which no wild type exists anymore in the tumor DNA due to disruption(s) "
                                 + "is reported in a separate section called 'homozygous disruptions'" })));
 
-        if (patientReport.reportableViralInsertions() == LimsViralInsertionChoice.REPORT_VIRAL_INSERION) {
+        if (patientReport.reportableViralInsertions() == LimsViralInsertionChoice.REPORT_VIRAL_INSERTION) {
             table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
             table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported tumor specific viral insertions")));

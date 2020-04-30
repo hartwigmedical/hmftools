@@ -34,6 +34,9 @@ public abstract class SampleReport {
     public abstract String labProcedures();
 
     @NotNull
+    public abstract String cohort();
+
+    @NotNull
     public abstract String projectName();
 
     @NotNull
@@ -68,9 +71,6 @@ public abstract class SampleReport {
 
     @NotNull
     public abstract String hospitalPathologySampleId();
-
-    @NotNull
-    public abstract String cohortSample();
 
     @NotNull
     @Value.Derived

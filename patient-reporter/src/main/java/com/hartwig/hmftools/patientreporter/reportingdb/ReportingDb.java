@@ -37,7 +37,7 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         String reportDate = ReportResources.REPORT_DATE;
         String purity = new DecimalFormat("0.00").format(report.impliedPurity());
-        String cohort = report.sampleReport().cohortSample().equals(Strings.EMPTY) ? "N/A" : report.sampleReport().cohortSample();
+        String cohort = report.sampleReport().cohort().equals(Strings.EMPTY) ? "N/A" : report.sampleReport().cohort();
 
         boolean hasReliableQuality = report.hasReliableQuality();
         boolean hasReliablePurity = report.hasReliablePurity();
@@ -49,7 +49,7 @@ public final class ReportingDb {
 
         if (requireSummary(sampleId, report, study, coreCohort) && report.clinicalSummary().isEmpty()) {
             LOGGER.warn("Skipping addition to reporting db, missing summary for sample {}!", sampleId);
-        } else if (study != LimsStudy.NON_STUDY) {
+        } else if (study != LimsStudy.NON_CANCER_STUDY) {
             addToReportingDb(reportingDbTsv, tumorBarcode, sampleId, reportType, reportDate, purity, hasReliableQuality, hasReliablePurity, cohort);
         }
 
@@ -94,13 +94,13 @@ public final class ReportingDb {
         String sampleId = report.sampleReport().tumorSampleId();
         String tumorBarcode = report.sampleReport().tumorSampleBarcode();
         String reportDate = ReportResources.REPORT_DATE;
-        String cohort = report.sampleReport().cohortSample().equals(Strings.EMPTY) ? "N/A" : report.sampleReport().cohortSample();
+        String cohort = report.sampleReport().cohort().equals(Strings.EMPTY) ? "N/A" : report.sampleReport().cohort();
 
         String reportType = report.reason().identifier();
         String reportTypeInterpret = report.isCorrectedReport() ? reportType + "_corrected" : reportType;
 
         LimsStudy study = LimsStudy.fromSampleId(sampleId);
-        if (study != LimsStudy.NON_STUDY) {
+        if (study != LimsStudy.NON_CANCER_STUDY) {
             boolean present = false;
             for (ReportingEntry entry : read(reportingDbTsv)) {
                 if (!present && sampleId.equals(entry.sampleId()) && tumorBarcode.equals(entry.tumorBarcode())
