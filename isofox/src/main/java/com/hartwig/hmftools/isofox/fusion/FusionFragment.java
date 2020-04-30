@@ -19,10 +19,11 @@ import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionsOverlap;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.startDonorAcceptorBases;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.UNKNOWN;
-import static com.hartwig.hmftools.isofox.fusion.FusionReadData.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.formLocationPair;
 import static com.hartwig.hmftools.isofox.fusion.FusionUtils.lowerChromosome;
 
@@ -326,6 +327,8 @@ public class FusionFragment
 
             int baseLength = min(10, read.Length);
 
+            /*  Junction bases will now be set from the ref genome, not the read, in case they contain SNVs and cause invalid realignments
+
             if(mJunctionOrientations[se] == 1)
             {
                 int scLength = read.Cigar.getLastCigarElement().getLength();
@@ -340,6 +343,7 @@ public class FusionFragment
                 mJunctionBases[se] = read.ReadBases.substring(readStartPos, readStartPos + baseLength);
                 // softClipBases[se] = read.ReadBases.substring(readStartPos - baseLength, readStartPos);
             }
+            */
         }
 
         if(junctionValid[SE_START] && junctionValid[SE_END])
@@ -523,6 +527,28 @@ public class FusionFragment
                     if (canonicalDonor(daBases, asDonorStrand) || canonicalAcceptor(daBases, asAcceptorStrand))
                         mJunctionTypes[se] = FusionJunctionType.CANONICAL;
                 }
+            }
+        }
+    }
+
+    public void setJunctionBases(final IndexedFastaSequenceFile refGenome)
+    {
+        if(mType != MATCHED_JUNCTION)
+            return;
+
+        for(int se = SE_START; se <= SE_END; ++se)
+        {
+            int junctionBase = mJunctionPositions[se];
+
+            if(junctionOrientations()[se] == 1)
+            {
+                mJunctionBases[se] = refGenome.getSubsequenceAt(
+                        mChromosomes[se], junctionBase - JUNCTION_BASE_LENGTH, junctionBase).getBaseString();
+            }
+            else
+            {
+                mJunctionBases[se] = refGenome.getSubsequenceAt(
+                        mChromosomes[se], junctionBase, junctionBase + JUNCTION_BASE_LENGTH).getBaseString();
             }
         }
     }

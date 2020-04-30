@@ -115,6 +115,7 @@ public class FusionTask implements Callable
             if (fragment.type() == MATCHED_JUNCTION)
             {
                 ++junctioned;
+                fragment.setJunctionBases(mConfig.RefFastaSeqFile);
                 createOrUpdateFusion(fragment);
             }
             else if(fragment.isSingleGene())

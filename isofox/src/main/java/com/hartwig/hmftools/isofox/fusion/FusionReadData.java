@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.isofox.common.RegionMatchType.INTRON;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.impliedSvType;
 import static com.hartwig.hmftools.isofox.common.RnaUtils.positionWithin;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasTranscriptExonMatch;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.JUNCTION_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.REALIGN_MIN_SOFT_CLIP_BASE_LENGTH;
+import static com.hartwig.hmftools.isofox.fusion.FusionConstants.SOFT_CLIP_JUNC_BUFFER;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.MATCHED_JUNCTION;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.fusion.FusionFragmentType.REALIGNED;
@@ -308,11 +311,6 @@ public class FusionReadData
         return false;
     }
 
-    public final static int REALIGN_MIN_SOFT_CLIP_BASE_LENGTH = 3;
-
-    private final static int SOFT_CLIP_JUNC_BUFFER = 3;
-    private final static int SOFT_CLIP_MAX_BASE_MATCH = 5;
-
     private boolean softClippedReadSupportsJunction(final ReadRecord read, int juncSeIndex)
     {
         // compare a minimum number of soft-clipped bases to the other side of the exon junction
@@ -324,6 +322,7 @@ public class FusionReadData
 
             int readBoundary = read.getCoordsBoundary(SE_END);
 
+            // the fragment is limited to how far past the junction (into the other fused gene) it can overhang by a mis-map
             if(!positionWithin(readBoundary, mJunctionPositions[juncSeIndex], mJunctionPositions[juncSeIndex] + SOFT_CLIP_JUNC_BUFFER))
                 return false;
 
@@ -338,8 +337,8 @@ public class FusionReadData
 
             String extraBases = read.ReadBases.substring(read.Length - scLength - posAdjust, read.Length);
 
-            if(extraBases.length() > SOFT_CLIP_MAX_BASE_MATCH)
-                extraBases = extraBases.substring(0, SOFT_CLIP_MAX_BASE_MATCH);
+            if(extraBases.length() > JUNCTION_BASE_LENGTH)
+                extraBases = extraBases.substring(0, JUNCTION_BASE_LENGTH);
 
             return junctionBases()[switchIndex(juncSeIndex)].startsWith(extraBases);
         }
@@ -362,8 +361,8 @@ public class FusionReadData
 
             String extraBases = read.ReadBases.substring(0, scLength + posAdjust);
 
-            if(extraBases.length() > SOFT_CLIP_MAX_BASE_MATCH)
-                extraBases = extraBases.substring(extraBases.length() - SOFT_CLIP_MAX_BASE_MATCH, extraBases.length());
+            if(extraBases.length() > JUNCTION_BASE_LENGTH)
+                extraBases = extraBases.substring(extraBases.length() - JUNCTION_BASE_LENGTH, extraBases.length());
 
             return junctionBases()[switchIndex(juncSeIndex)].endsWith(extraBases);
         }
