@@ -9,7 +9,6 @@ public enum ChordStatus {
     HRP("HR Proficient"),
     UNKNOWN("Unknown");
 
-
     public static final double HRD_THRESHOLD = 0.5;
 
     private final String display;
