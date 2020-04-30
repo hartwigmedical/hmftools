@@ -55,9 +55,8 @@ public class GenomicAlterationsChapter implements ReportChapter {
         reportDocument.add(createFusionsTable(patientReport.geneFusions(), hasReliablePurity));
         reportDocument.add(createHomozygousDisruptionsTable(patientReport.reportableHomozygousDisruptions()));
         reportDocument.add(createDisruptionsTable(patientReport.geneDisruptions(), hasReliablePurity));
-        if (patientReport.reportableViralInsertions()) {
-            reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
-        }
+        reportDocument.add(createViralInsertionTable(patientReport.viralInsertions()));
+
     }
 
     @NotNull

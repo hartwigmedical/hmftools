@@ -27,7 +27,7 @@ public class ExplanationChapter implements ReportChapter {
     }
 
     @Override
-    public  void render(@NotNull Document reportDocument) {
+    public void render(@NotNull Document reportDocument) {
         Table table = new Table(UnitValue.createPercentArray(new float[] { 10, 1, 10, 1, 10, }));
         table.setWidth(contentWidth());
 
@@ -100,25 +100,22 @@ public class ExplanationChapter implements ReportChapter {
                         "A gene for which no wild type exists anymore in the tumor DNA due to disruption(s) "
                                 + "is reported in a separate section called 'homozygous disruptions'" })));
 
-        if (patientReport.reportableViralInsertions()) {
-            table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
+        table.addCell(TableUtil.createLayoutCell(1, 5).setHeight(30));
 
-            table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported tumor specific viral insertions")));
-            table.addCell(TableUtil.createLayoutCell());
-            table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
-            table.addCell(TableUtil.createLayoutCell());
-            table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("Details on reported tumor specific viral insertions")));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createSectionTitle("")));
 
-            table.addCell(TableUtil.createLayoutCell()
-                    .add(createContentDiv(new String[] { "The detection of ingerated viral DNA in the tumor's genome is reported. \n "
-                            + "The reported integrated viral DNA can be found on https://resources.hartwigmedicalfoundation.nl "
-                            + "in directory Patient-Reporting" })));
-            table.addCell(TableUtil.createLayoutCell());
-            table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
-            table.addCell(TableUtil.createLayoutCell());
-            table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
-
-        }
+        table.addCell(TableUtil.createLayoutCell()
+                .add(createContentDiv(new String[] { "The detection of ingerated viral DNA in the tumor's genome is reported. \n "
+                        + "The reported integrated viral DNA can be found on https://resources.hartwigmedicalfoundation.nl "
+                        + "in directory Patient-Reporting" })));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
+        table.addCell(TableUtil.createLayoutCell());
+        table.addCell(TableUtil.createLayoutCell().add(createContentDiv(new String[] { "" })));
 
         reportDocument.add(table);
     }

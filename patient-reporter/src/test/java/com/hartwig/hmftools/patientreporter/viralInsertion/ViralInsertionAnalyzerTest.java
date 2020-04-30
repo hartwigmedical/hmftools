@@ -15,8 +15,8 @@ public class ViralInsertionAnalyzerTest {
     private static final String LINX_VIRAL_INSERTIONS_TSV = BASE_DIRECTORY + "/linx/sample.linx.viral_inserts.tsv";
 
     @Test
-    public void canMergeViralInsertions() throws IOException {
-        List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.loadViralInsertions(LINX_VIRAL_INSERTIONS_TSV);
+    public void canMergeViralInsertionsForReporting() throws IOException {
+        List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.loadViralInsertions(LINX_VIRAL_INSERTIONS_TSV, true);
         assertEquals(2, viralInsertions.size());
 
         ViralInsertion viralInsertion1 = viralInsertions.get(0);
@@ -26,5 +26,12 @@ public class ViralInsertionAnalyzerTest {
         ViralInsertion viralInsertion2 = viralInsertions.get(1);
         assertEquals("Human papillomavirus type 16", viralInsertion2.virus());
         assertEquals(2, viralInsertion2.viralInsertionCount());
+    }
+
+    @Test
+    public void canMergeViralInsertionsNoneReporting() throws IOException {
+        List<ViralInsertion> viralInsertions = ViralInsertionAnalyzer.loadViralInsertions(LINX_VIRAL_INSERTIONS_TSV, false);
+        assertEquals(0, viralInsertions.size());
+        
     }
 }

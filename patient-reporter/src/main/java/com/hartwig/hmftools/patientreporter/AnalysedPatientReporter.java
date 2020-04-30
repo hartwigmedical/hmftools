@@ -103,8 +103,7 @@ class AnalysedPatientReporter {
 
         SvAnalysis svAnalysis = analyzeStructuralVariants(linxFusionTsv, linxDisruptionTsv, patientTumorLocation);
         List<ReportableHomozygousDisruption> reportableHomozygousDisruptions = extractHomozygousDisruptionsFromLinxDrivers(linxDriversTsv);
-        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv);
-        LOGGER.info("Patient has given the following viral insertion consent: '{}'",
+        List<ViralInsertion> viralInsertions = analyzeViralInsertions(linxViralInsertionTsv,
                 reportData.limsModel().viralInsertionChoice(sampleMetadata.tumorSampleBarcode(), sampleMetadata.tumorSampleId()));
 
         String clinicalSummary = reportData.summaryModel().findSummaryForSample(sampleMetadata.tumorSampleId());
@@ -121,8 +120,6 @@ class AnalysedPatientReporter {
                 .hasReliablePurity(copyNumberAnalysis.hasReliablePurity())
                 .hasReliableQuality(copyNumberAnalysis.hasReliableQuality())
                 .averageTumorPloidy(copyNumberAnalysis.ploidy())
-                .reportableViralInsertions(reportData.limsModel()
-                        .viralInsertionChoice(sampleMetadata.tumorSampleBarcode(), sampleMetadata.tumorSampleId()))
                 .clinicalSummary(clinicalSummary)
                 .tumorSpecificEvidence(nonTrials.stream().filter(EvidenceItem::isOnLabel).collect(Collectors.toList()))
                 .clinicalTrials(ClinicalTrialFactory.extractOnLabelTrials(allEvidenceItems))
@@ -160,8 +157,8 @@ class AnalysedPatientReporter {
     }
 
     @NotNull
-    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv) throws IOException {
-        return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv);
+    private static List<ViralInsertion> analyzeViralInsertions(@NotNull String linxViralInsertionTsv, boolean viralInsertionsChoice) throws IOException {
+        return ViralInsertionAnalyzer.loadViralInsertions(linxViralInsertionTsv, viralInsertionsChoice);
     }
 
     @NotNull
