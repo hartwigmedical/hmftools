@@ -85,6 +85,8 @@ public class FusionTask implements Callable
     @Override
     public Long call()
     {
+        ISF_LOGGER.info("{}: processing {} chimeric fragments", mTaskId, mAllFragments.size());
+
         formInitialFusions();
 
         calculateReadDepth();
@@ -413,9 +415,6 @@ public class FusionTask implements Callable
 
                 for(FusionReadData fusionData : fusions)
                 {
-                    if(!fusionData.isValid())
-                        continue;
-
                     if(fusionData.canAddUnfusedFragment(fragment, mConfig.MaxFragmentLength))
                     {
                         if(fusionData.isRelignedFragment(fragment))

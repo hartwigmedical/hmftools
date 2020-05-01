@@ -270,43 +270,6 @@ public class BamFragmentAllocator
         checkFragmentRead(read);
     }
 
-    private void processChimericRead(ReadRecord read)
-    {
-        if(!mRunFusions)
-        {
-            // avoid double-counting fragment reads
-            if(read.isFirstOfPair())
-            {
-                mCurrentGenes.addCount(TOTAL, 1);
-                mCurrentGenes.addCount(CHIMERIC, 1);
-            }
-        }
-        else
-        {
-            // populate transcript info for intronic reads since it will be used in fusion matching
-            if(read.getMappedRegions().isEmpty())
-                read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-
-            addChimericReads(mChimericReadMap, read);
-        }
-    }
-
-    private void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
-    {
-        // add the pair when it's clear there aren't others with the same ID in the map
-        if(mChimericReadMap.containsKey(read1.Id))
-        {
-            ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
-        }
-
-        if(read1.getMappedRegions().isEmpty())
-            read1.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-
-        if(read2.getMappedRegions().isEmpty())
-            read2.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
-
-        mChimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
-    }
 
     private boolean checkFragmentRead(ReadRecord read)
     {
@@ -776,6 +739,43 @@ public class BamFragmentAllocator
         mRetainedIntronFinder.setPositionDepth(mCurrentGenes.getBaseDepth());
     }
 
+    private void processChimericRead(ReadRecord read)
+    {
+        if(!mRunFusions)
+        {
+            // avoid double-counting fragment reads
+            if(read.isFirstOfPair())
+            {
+                mCurrentGenes.addCount(TOTAL, 1);
+                mCurrentGenes.addCount(CHIMERIC, 1);
+            }
+        }
+        else
+        {
+            // populate transcript info for intronic reads since it will be used in fusion matching
+            if(read.getMappedRegions().isEmpty())
+                read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+
+            addChimericReads(mChimericReadMap, read);
+        }
+    }
+
+    private void addChimericReadPair(final ReadRecord read1, final ReadRecord read2)
+    {
+        // add the pair when it's clear there aren't others with the same ID in the map
+        if(mChimericReadMap.containsKey(read1.Id))
+        {
+            ISF_LOGGER.error("overriding chimeric read({})", read1.Id);
+        }
+
+        if(read1.getMappedRegions().isEmpty())
+            read1.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+
+        if(read2.getMappedRegions().isEmpty())
+            read2.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+
+        mChimericReadMap.put(read1.Id, Lists.newArrayList(read1, read2));
+    }
     private void postProcessChimericReads()
     {
         // check any lone reads where the other read is chimeric
@@ -784,7 +784,12 @@ public class BamFragmentAllocator
             final ReadRecord read = (ReadRecord)object;
 
             if(!read.isMateUnmapped())
+            {
+                if(read.getMappedRegions().isEmpty())
+                    read.addIntronicTranscriptRefs(mCurrentGenes.getTranscripts());
+
                 addChimericReads(mChimericReadMap, read);
+            }
         }
 
         // find any split chimeric reads and use this to select from the candidates for realignment

@@ -186,8 +186,9 @@ public class FusionFinder
             }
         }
 
-        ISF_LOGGER.info("chimeric fragments({} unpaired={} dups={} skip={} filtered={} candidates={}) tasks({})",
-                mReadsMap.size(), unpairedReads, skipped, duplicates, filteredFragments, fragments, chrPairFragments.size());
+        ISF_LOGGER.info("chimeric fragments({} unpaired={} dups={} skip={} filtered={} candidates={}) chrPairs({}) tasks({})",
+                mReadsMap.size(), unpairedReads, skipped, duplicates, filteredFragments, fragments,
+                chrPairFragments.size(), mFusionTasks.size());
 
         if(mFusionTasks.isEmpty())
         {
