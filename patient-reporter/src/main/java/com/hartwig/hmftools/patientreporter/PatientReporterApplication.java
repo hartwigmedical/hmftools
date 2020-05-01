@@ -58,10 +58,6 @@ public class PatientReporterApplication {
     private static final String COMPANY_LOGO = "company_logo";
     private static final String SIGNATURE = "signature";
 
-    // Params specific for QC Fail reports
-    private static final String QC_FAIL = "qc_fail";
-    private static final String QC_FAIL_REASON = "qc_fail_reason";
-
     // Params specific for actual patient reports
     private static final String PURPLE_PURITY_TSV = "purple_purity_tsv";
     private static final String PURPLE_QC_FILE = "purple_qc_file";
@@ -83,7 +79,6 @@ public class PatientReporterApplication {
     private static final String COMMENTS = "comments";
     private static final String CORRECTED_REPORT = "corrected_report";
     private static final String UNOFFICIAL_REPORT = "unofficial_report";
-    private static final String LOG_DEBUG = "log_debug";
 
     public static void main(final String... args) throws ParseException, IOException {
         final Options options = PatientReporterConfig.createOptions();
