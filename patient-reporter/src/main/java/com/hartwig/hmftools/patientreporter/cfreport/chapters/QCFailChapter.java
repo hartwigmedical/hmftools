@@ -146,7 +146,9 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn = new Div();
         divColumn.add(sampleNotAdequateForWGS());
         divColumn.add(resubmitInSameStudyWithSameNumber());
-        divColumn.add(reportIsForPathologyTissueID());
+        if (failReport.sampleReport().hospitalPathologySampleId() != null) {
+            divColumn.add(reportIsForPathologyTissueID());
+        }
         divColumn.add(resultsAreObtainedBetweenDates());
         divColumn.add(reportIsBasedOnTumorSampleArrivedAt());
         divColumn.add(reportIsBasedOnBloodSampleArrivedAt());
@@ -184,7 +186,7 @@ public class QCFailChapter implements ReportChapter {
         Div divColumn = new Div();
         divColumn.add(sampleNotAdequateForWGS());
         divColumn.add(resubmitInSameDVOWithProjectName());
-        if (coreCohort == LimsCoreCohort.CORELR11 || coreCohort == LimsCoreCohort.CORESC11) {
+        if (failReport.sampleReport().hospitalPathologySampleId() != null) {
             divColumn.add(reportIsForPathologyTissueID());
         }
         divColumn.add(reportIsForHospitalPatientID());
