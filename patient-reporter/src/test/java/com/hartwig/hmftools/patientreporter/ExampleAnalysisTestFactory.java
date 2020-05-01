@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.actionability.EvidenceScope;
 import com.hartwig.hmftools.common.actionability.ImmutableClinicalTrial;
 import com.hartwig.hmftools.common.actionability.ImmutableEvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.chord.ImmutableChordAnalysis;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.ecrf.projections.ImmutablePatientTumorLocation;
@@ -107,6 +108,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordAnalysis(chordAnalysis)
+                .hrdStatus(ChordStatus.HRP)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -166,6 +168,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordAnalysis(chordAnalysis)
+                .hrdStatus(ChordStatus.HRD)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)
@@ -225,6 +228,7 @@ public final class ExampleAnalysisTestFactory {
                 .tumorMutationalLoadStatus(tmlStatus)
                 .tumorMutationalBurden(tumorMutationalBurden)
                 .chordAnalysis(chordAnalysis)
+                .hrdStatus(ChordStatus.HRD)
                 .gainsAndLosses(gainsAndLosses)
                 .geneFusions(fusions)
                 .geneDisruptions(disruptions)

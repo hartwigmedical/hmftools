@@ -155,7 +155,7 @@ public class SummaryChapter implements ReportChapter {
         div.add(table);
 
         String hrdString = hasReliablePurity
-                ? HrDeficiency.interpretChordStatusToString(patientReport.chordAnalysis().hrdValue())
+                ? patientReport.hrdStatus().display()
                 : DataUtil.NA_STRING;
         table.addCell(createMiddleAlignedCell().add(new Paragraph("HR Status").addStyle(ReportResources.bodyTextStyle())));
         table.addCell(createMiddleAlignedCell(2).add(createHighlightParagraph(hrdString).addStyle(dataStyle)));

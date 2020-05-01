@@ -14,11 +14,6 @@ public final class HrDeficiency {
     }
 
     @NotNull
-    public static String interpretChordStatusToString(final double chordHrdScore) {
-        return ChordStatus.fromHRD(chordHrdScore).display();
-    }
-
-    @NotNull
     public static String interpretToString(final double chordHrdScore) {
         return ReportResources.decimalFormat("#.##").format(chordHrdScore);
     }

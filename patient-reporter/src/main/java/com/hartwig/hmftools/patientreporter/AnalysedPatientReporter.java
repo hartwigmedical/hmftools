@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.actionability.EvidenceItem;
 import com.hartwig.hmftools.common.chord.ChordAnalysis;
 import com.hartwig.hmftools.common.chord.ChordFileReader;
+import com.hartwig.hmftools.common.chord.ChordStatus;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocation;
 import com.hartwig.hmftools.common.ecrf.projections.PatientTumorLocationFunctions;
 import com.hartwig.hmftools.common.lims.LimsGermlineReportingChoice;
@@ -131,6 +132,7 @@ class AnalysedPatientReporter {
                 .tumorMutationalLoadStatus(copyNumberAnalysis.tumorMutationalLoadStatus())
                 .tumorMutationalBurden(copyNumberAnalysis.tumorMutationalBurdenPerMb())
                 .chordAnalysis(chordAnalysis)
+                .hrdStatus(ChordStatus.fromHRD(chordAnalysis.hrdValue()))
                 .gainsAndLosses(copyNumberAnalysis.reportableGainsAndLosses())
                 .geneFusions(svAnalysis.reportableFusions())
                 .geneDisruptions(svAnalysis.reportableDisruptions())
